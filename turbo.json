@@ -1,0 +1,45 @@
+{
+	"$schema": "https://turborepo.org/schema.json",
+	"globalDependencies": [
+		".env",
+		"tsconfig.json"
+	],
+	"pipeline": {
+		"lint": {
+			"outputMode": "new-only",
+			"outputs": [],
+			"inputs": [
+				"src/**"
+			]
+		},
+		"build": {
+			"outputMode": "new-only",
+			"dependsOn": [
+				"^build"
+			],
+			"outputs": [
+				"dist/**"
+			],
+			"inputs": [
+				"src/**",
+				"next.config.mjs",
+				"package.json",
+				"tsconfig.json"
+			],
+			"env": [
+				"NEXT_PUBLIC_CACHE",
+				"BUILD_ID",
+				"NEXT_PUBLIC_VERSION",
+				"NEXT_PUBLIC_BUILD",
+				"NODE_ENV",
+				"PORT"
+			]
+		},
+		"cleanup": {
+			"cache": false
+		},
+		"dev": {
+			"cache": false
+		}
+	}
+}

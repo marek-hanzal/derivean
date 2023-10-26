@@ -1,12 +1,11 @@
 import withBundleAnalyzer from '@next/bundle-analyzer';
 import withPlugins from 'next-compose-plugins';
 
-const isDev = process.env.NODE_ENV === 'development';
-
 const transpile = [
     '@use-pico/auth',
     '@use-pico/bulk',
     '@use-pico/calendar',
+    '@use-pico/container',
     '@use-pico/context',
     '@use-pico/file',
     '@use-pico/form',
@@ -20,6 +19,8 @@ const transpile = [
     '@use-pico/schema',
     '@use-pico/sdk',
     '@use-pico/selection',
+    '@use-pico/logger',
+    '@use-pico/server',
     '@use-pico/source',
     '@use-pico/store',
     '@use-pico/table',

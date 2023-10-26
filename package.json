@@ -1,0 +1,25 @@
+{
+	"name": "derivean",
+	"private": true,
+	"scripts": {
+		"dev": "turbo run dev --parallel --no-daemon | roarr",
+		"build": "turbo run build --no-daemon",
+		"build:force": "turbo run build --force --no-cache --no-daemon",
+		"lint": "turbo run lint --no-daemon",
+		"cleanup": "turbo run cleanup --parallel --no-daemon",
+		"cleanup-npm": "del-cli node_modules apps/derivean/.next",
+		"npkill": "npx npkill"
+	},
+	"dependencies": {
+		"turbo": "^1.10.16"
+	},
+	"devDependencies": {
+		"@roarr/cli": "^5.12.3",
+		"del-cli": "^5.1.0",
+		"typescript": "^5.2.2"
+	},
+	"workspaces": [
+		"apps/*",
+		"packages/**/*"
+	]
+}
