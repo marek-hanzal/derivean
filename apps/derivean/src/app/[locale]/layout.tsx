@@ -1,6 +1,5 @@
-import {CheckAuthenticatedSession} from "@use-pico/auth";
-import {LayoutShell}               from "@use-pico/ui-extra";
-import {type PropsWithChildren}    from "react";
+import {LayoutShell}            from "@use-pico/ui-extra";
+import {type PropsWithChildren} from "react";
 
 // export async function generateStaticParams() {
 //     return locales.map(locale => ({locale}));
@@ -32,9 +31,6 @@ export default async function Layout(
         locale={locale}
         translations={translations}
     >
-        <CheckAuthenticatedSession
-            redirect={"/game"}
-        />
         {children}
     </LayoutShell>;
 }

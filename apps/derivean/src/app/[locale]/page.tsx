@@ -1,9 +1,13 @@
-"use client";
-
-import {LoadingOverlay} from "@use-pico/ui";
+import {CheckAuthenticatedSession} from "@use-pico/auth";
+import {LoadingOverlay}            from "@use-pico/ui";
 
 export default function Index() {
-    return <LoadingOverlay
-        visible
-    />;
+    return <>
+        <CheckAuthenticatedSession
+            redirect={"/game"}
+        />
+        <LoadingOverlay
+            visible
+        />
+    </>;
 }
