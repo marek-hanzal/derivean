@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="660" height="57" viewBox="0 0 660 57" xml:space="preserve">
+<g transform="matrix(1 0 0 1 330.03 28.53)">
+<g style="">
+		<g transform="matrix(1.11 0 0 1.11 -301.61 -0.08)" id="path72919">
+<polygon style="stroke: rgb(34,139,230); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 2; fill: rgb(34,139,230); fill-rule: nonzero; opacity: 1;"
+         points="25.6,-25.2 4.21,20.09 -3.13,20.09 -15.66,-10.3 -15.66,25.2 -25.6,25.2 -25.6,-25.2 -13,-25.2 0.54,6.19 16.17,-25.2 "/>
+</g>
+    <g transform="matrix(1.11 0 0 1.11 -277.59 8.11)" id="path72919">
+<path style="stroke: rgb(2,80,183); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 2; fill: rgb(2,80,183); fill-rule: nonzero; opacity: 1;"
+      transform=" translate(-121.13, -107.38)" d="M 116.16504 103.52832 c 0.14453 -0.28809 3.60059 -10.00879 9.9375 -13.96924 v 35.64307 h -9.79297 l -0.07227 -21.60205 L 116.16504 103.52832 z" stroke-linecap="round"/>
+</g>
+    <g transform="matrix(1.11 0 0 1.11 -211.49 0)" id="path72921">
+<path style="stroke: rgb(34,139,230); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 2; fill: rgb(34,139,230); fill-rule: nonzero; opacity: 1;"
+      transform=" translate(-100, -100)"
+      d="M 127.29053 99.85571 c 0 14.76172 -11.7373 25.85059 -27.29102 25.85059 c -15.55273 0 -27.29004 -11.08887 -27.29004 -25.85059 c 0 -14.54492 11.7373 -25.56201 27.29004 -25.56201 C 115.55322 74.2937 127.29053 85.31079 127.29053 99.85571 z M 100.21631 115.84204 c 8.28027 0 15.84082 -6.98535 15.84082 -15.91406 c 0 -8.85693 -7.56055 -15.76953 -15.84082 -15.76953 c -8.4248 0 -16.12988 6.9126 -16.12988 15.76953 c 0 8.78516 7.77734 15.91406 16.05762 15.91406 H 100.21631 z"
+      stroke-linecap="round"/>
+</g>
+    <g transform="matrix(1.11 0 0 1.11 -126.04 -0.08)" id="path72923">
+<polygon style="stroke: rgb(34,139,230); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 2; fill: rgb(34,139,230); fill-rule: nonzero; opacity: 1;"
+         points="-11.77,-25.2 21.85,25.2 10.26,25.2 -11.34,-7.63 -11.34,25.2 -21.85,25.2 -21.85,-25.2 "/>
+</g>
+    <g transform="matrix(1.11 0 0 1.11 -107.57 -6.43)" id="path72923">
+<path style="stroke: rgb(2,80,183); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 2; fill: rgb(2,80,183); fill-rule: nonzero; opacity: 1;"
+      transform=" translate(-116.63, -94.28)" d="M 121.854 74.79785 v 38.95508 c -7.05664 -4.32031 -9.86426 -12.60107 -10.44043 -14.61719 V 74.79785 H 121.854 z" stroke-linecap="round"/>
+</g>
+    <g transform="matrix(1.11 0 0 1.11 -48.24 -0.08)" id="path72925">
+<path style="stroke: rgb(34,139,230); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 2; fill: rgb(34,139,230); fill-rule: nonzero; opacity: 1;"
+      transform=" translate(-100, -100)"
+      d="M 88.11914 74.79785 l 17.6416 34.20313 v 16.20117 H 94.52832 v -15.84082 L 76.95801 74.79785 H 88.11914 z M 123.04199 74.79785 l -13.17676 26.06641 c 0 0 -6.26465 -0.93652 -6.19238 -9.93701 l 8.20898 -16.12939 H 123.04199 z"
+      stroke-linecap="round"/>
+</g>
+    <g transform="matrix(1.11 0 0 1.11 26.46 0.08)" id="path72927">
+<path style="stroke: rgb(34,139,230); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 2; fill: rgb(34,139,230); fill-rule: nonzero; opacity: 1;"
+      transform=" translate(-100, -100)" d="M 118.82959 115.9856 v 9.2168 H 81.17041 V 74.79761 h 36.86719 v 9.2168 H 92.40381 v 31.89893 L 118.82959 115.9856 z M 99.46045 104.60864 l 1.2959 -9.21729 h 14.83301 v 9.21729 H 99.46045 z"
+      stroke-linecap="round"/>
+</g>
+    <g transform="matrix(1.11 0 0 1.11 81.56 21.74)" id="path72929">
+<path style="stroke: rgb(18,110,207); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 2; fill: rgb(18,110,207); fill-rule: nonzero; opacity: 1;"
+      transform=" translate(-566.35, 5.54)" d="m 566.31613 -11.16 c -3.096 0 -5.18401 2.232 -5.18401 5.544 c 0 3.384 2.08801 5.688 5.18401 5.688 c 3.09599 0 5.256 -2.304 5.256 -5.616 c 0 -3.312 -2.16001 -5.616 -5.256 -5.616 z"
+      stroke-linecap="round"/>
+</g>
+    <g transform="matrix(1.11 0 0 1.11 145.36 0)" id="path72931">
+<path style="stroke: rgb(34,139,230); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 2; fill: rgb(34,139,230); fill-rule: nonzero; opacity: 1;"
+      transform=" translate(-100, -100)"
+      d="M 127.29053 99.85571 c 0 14.76172 -11.7373 25.85059 -27.29102 25.85059 c -15.55273 0 -27.29004 -11.08887 -27.29004 -25.85059 c 0 -14.54492 11.7373 -25.56201 27.29004 -25.56201 C 115.55322 74.2937 127.29053 85.31079 127.29053 99.85571 z M 100.21631 115.84204 c 8.28027 0 15.84082 -6.98535 15.84082 -15.91406 c 0 -8.85693 -7.56055 -15.76953 -15.84082 -15.76953 c -8.4248 0 -16.12988 6.9126 -16.12988 15.76953 c 0 8.78516 7.77734 15.91406 16.05762 15.91406 H 100.21631 z"
+      stroke-linecap="round"/>
+</g>
+    <g transform="matrix(1.11 0 0 1.11 230.81 -0.08)" id="path72933">
+<polygon style="stroke: rgb(34,139,230); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 2; fill: rgb(34,139,230); fill-rule: nonzero; opacity: 1;"
+         points="-11.77,-25.2 21.85,25.2 10.26,25.2 -11.34,-7.63 -11.34,25.2 -21.85,25.2 -21.85,-25.2 "/>
+</g>
+    <g transform="matrix(1.11 0 0 1.11 249.28 -6.43)" id="path72933">
+<path style="stroke: rgb(2,80,183); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 2; fill: rgb(2,80,183); fill-rule: nonzero; opacity: 1;"
+      transform=" translate(-116.63, -94.28)" d="M 121.854 74.79785 v 38.95508 c -7.05664 -4.32031 -9.86426 -12.60107 -10.44043 -14.61719 V 74.79785 H 121.854 z" stroke-linecap="round"/>
+</g>
+    <g transform="matrix(1.11 0 0 1.11 309.13 0.08)" id="path72935">
+<path style="stroke: rgb(34,139,230); stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 2; fill: rgb(34,139,230); fill-rule: nonzero; opacity: 1;"
+      transform=" translate(-100, -100)" d="M 118.82959 115.9856 v 9.2168 H 81.17041 V 74.79761 h 36.86719 v 9.2168 H 92.40381 v 31.89893 L 118.82959 115.9856 z M 99.46045 104.60864 l 1.2959 -9.21729 h 14.83301 v 9.21729 H 99.46045 z"
+      stroke-linecap="round"/>
+</g>
+</g>
+</g>
+</svg>
