@@ -1,3 +1,3 @@
-import {withContainer} from "@use-pico/server";
+import {withServerContainer} from "@use-pico/server";
 
-export const container = withContainer();
+export const container = withServerContainer();

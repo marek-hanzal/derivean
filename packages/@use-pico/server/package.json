@@ -19,7 +19,7 @@
 		"src"
 	],
 	"scripts": {
-		"build": "concurrently npm:build:*",
+		"no:build": "concurrently npm:build:*",
 		"build:esbuild": "node esbuild.mjs",
 		"build:types": "tsc --outDir lib",
 		"lint": "eslint src",
@@ -28,7 +28,9 @@
 		"cleanup:lib": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
 	"dependencies": {
-		"@use-pico/container": "^1.0.0"
+		"@use-pico/auth": "^1.0.0",
+		"@use-pico/container": "^1.0.0",
+		"@use-pico/orm": "^1.0.0"
 	},
 	"devDependencies": {
 		"@use-pico/esbuild": "^1.0.5",

@@ -16,7 +16,7 @@
 		"src"
 	],
 	"scripts": {
-		"build": "concurrently npm:build:*",
+		"no:build": "concurrently npm:build:*",
 		"build:esbuild": "node esbuild.mjs",
 		"build:types": "tsc --outDir lib",
 		"lint": "eslint src",

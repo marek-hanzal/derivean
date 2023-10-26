@@ -1,1 +1,1 @@
-export {withContainer} from "../api/withContainer";
+export {withContainer} from "../container/withContainer";

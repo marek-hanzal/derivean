@@ -2,6 +2,9 @@ import withBundleAnalyzer from '@next/bundle-analyzer';
 import withPlugins from 'next-compose-plugins';
 
 const transpile = [
+    '@derivean/orm',
+    '@derivean/public',
+    '@derivean/root',
     '@use-pico/auth',
     '@use-pico/bulk',
     '@use-pico/calendar',
@@ -12,14 +15,15 @@ const transpile = [
     '@use-pico/hook',
     '@use-pico/i18n',
     '@use-pico/job',
+    '@use-pico/logger',
     '@use-pico/navigation',
+    '@use-pico/orm',
     '@use-pico/pagination',
     '@use-pico/query',
     '@use-pico/rpc',
     '@use-pico/schema',
     '@use-pico/sdk',
     '@use-pico/selection',
-    '@use-pico/logger',
     '@use-pico/server',
     '@use-pico/source',
     '@use-pico/store',

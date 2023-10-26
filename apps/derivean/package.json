@@ -22,6 +22,7 @@
 		"@use-pico/i18n": "^1.0.0",
 		"@use-pico/logger": "^1.0.0",
 		"@use-pico/navigation": "^1.0.0",
+		"@use-pico/orm": "^1.0.0",
 		"@use-pico/server": "^1.0.0",
 		"@use-pico/ui": "^1.0.0",
 		"@use-pico/ui-extra": "^1.0.0",

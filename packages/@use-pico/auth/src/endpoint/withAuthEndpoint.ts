@@ -1,12 +1,14 @@
-import {type IContainer}        from "@use-pico/container";
-import {withLogger}             from "@use-pico/logger";
+import {DrizzleAdapter}          from "@auth/drizzle-adapter";
+import {type IContainer}         from "@use-pico/container";
+import {withLogger}              from "@use-pico/logger";
+import {withOrm}                 from "@use-pico/orm";
 import NextAuthShit, {
     type AuthOptions,
     type Session
-}                               from "next-auth";
-import {type Provider}          from "next-auth/providers";
-import {useRegistrationService} from "../use/useRegistrationService";
-import {useUserTokenService}    from "../use/useUserTokenService";
+}                                from "next-auth";
+import {type Provider}           from "next-auth/providers";
+import {withRegistrationService} from "../container/withRegistrationService";
+import {withUserTokenService}    from "../container/withUserTokenService";
 
 export namespace withAuthEndpoint {
     export interface Props {
@@ -23,8 +25,8 @@ export const withAuthEndpoint = (
         container,
     }: withAuthEndpoint.Props
 ) => {
-    const registrationService = useRegistrationService(container);
-    const userTokenService = useUserTokenService(container);
+    const registrationService = withRegistrationService.resolve(container);
+    const userTokenService = withUserTokenService.resolve(container);
     const logger = withLogger("auth");
     /**
      * For whatever reason, types are not what you really get, so the hack must be used.
@@ -48,6 +50,7 @@ export const withAuthEndpoint = (
         session:   {
             strategy: "jwt",
         },
+        adapter: DrizzleAdapter(withOrm.resolve(container).orm()),
         providers: providers.filter(Boolean),
         callbacks: {
             jwt:     async token => {
