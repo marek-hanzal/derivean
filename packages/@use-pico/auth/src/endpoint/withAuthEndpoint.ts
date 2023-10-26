@@ -2,7 +2,7 @@ import {DrizzleAdapter}          from "@auth/drizzle-adapter";
 import {type IContainer}         from "@use-pico/container";
 import {withLogger}              from "@use-pico/logger";
 import {withOrm}                 from "@use-pico/orm";
-import NextAuthShit, {
+import NextAuth, {
     type AuthOptions,
     type Session
 }                                from "next-auth";
@@ -28,10 +28,6 @@ export const withAuthEndpoint = (
     const registrationService = withRegistrationService.resolve(container);
     const userTokenService = withUserTokenService.resolve(container);
     const logger = withLogger("auth");
-    /**
-     * For whatever reason, types are not what you really get, so the hack must be used.
-     */
-    const NextAuth = (NextAuthShit as any).default as typeof NextAuthShit;
 
     return NextAuth({
         theme:     {

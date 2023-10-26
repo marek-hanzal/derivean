@@ -42,6 +42,7 @@ export const withEnv = <
         if (!result.success) {
             console.error(
                 "❌ Invalid environment variables:",
+                processEnv,
                 result.issues,
             );
             throw new Error("Invalid environment variables");

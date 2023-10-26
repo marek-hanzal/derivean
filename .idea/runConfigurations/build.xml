@@ -6,7 +6,11 @@
       <script value="build" />
     </scripts>
     <node-interpreter value="project" />
-    <envs />
+    <envs>
+      <env name="DATABASE_URL" value="postgresql://derivean:1234@localhost:10632/derivean?schema=public" />
+      <env name="NEXTAUTH_URL" value="http://localhost:3000" />
+      <env name="NEXTAUTH_SECRET" value="foobar" />
+    </envs>
     <method v="2" />
   </configuration>
 </component>
