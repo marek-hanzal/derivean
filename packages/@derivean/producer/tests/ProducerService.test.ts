@@ -31,15 +31,14 @@ const SawdustResource: ResourceSchema.Type = {
 };
 
 const producer: ProducerSchema.Type = {
+    time:   10,
     input:  [
         {
             resource: TreeResource,
-            time:   5,
             amount: 2,
         },
         {
             resource: LeafsResource,
-            time:     5,
             amount:   2,
         },
     ],
@@ -121,10 +120,6 @@ describe("ProducerService", () => {
     const producerService = withProducerService.resolve(container);
     const inventoryService = withInventoryService.resolve(container);
 
-    test("Input/output times works", () => {
-        expect(producerService.timeOf(goodProducerProcess)).toBe(10);
-    });
-
     test("Number of cycles", () => {
         expect(Math.floor(producerService.cycles(goodProducerProcess))).toBe(3);
     });
@@ -132,6 +127,7 @@ describe("ProducerService", () => {
     test("Production works", () => {
         const snapshot = producerService.process(goodProducerProcess);
         expect(snapshot.isLimit).toBeFalsy();
+        expect(snapshot.isReady).toBeTruthy();
 
         const treeResource = inventoryService.resourceOf(snapshot.inventory, TreeResource.name);
         const logResource = inventoryService.resourceOf(snapshot.inventory, LogResource.name);
@@ -144,6 +140,17 @@ describe("ProducerService", () => {
         expect(treeResource[0].amount).toBe(-6);
         expect(logResource[0].amount).toBe(18);
         expect(sawdustResource[0].amount).toBe(300);
+    });
+
+    test("Production not ready", () => {
+        const snapshot = producerService.process({
+            ...goodProducerProcess,
+            producer: {
+                ...goodProducerProcess.producer,
+                time: 6000,
+            }
+        });
+        expect(snapshot.isReady).toBeFalsy();
     });
 
     test("Production missing resources", () => {
@@ -164,11 +171,13 @@ describe("ProducerService", () => {
     test("Production missing resources - is limit", () => {
         const snapshot = producerService.process(missingResourceProducerProcess);
         expect(snapshot.isLimit).toBeTruthy();
+        expect(snapshot.isReady).toBeFalsy();
     });
 
     test("Production not enough resources", () => {
         const snapshot = producerService.process(notEnoughResourceProducerProcess);
         expect(snapshot.isLimit).toBeTruthy();
+        expect(snapshot.isReady).toBeFalsy();
 
         const treeResource = inventoryService.resourceOf(snapshot.inventory, TreeResource.name);
         const logResource = inventoryService.resourceOf(snapshot.inventory, LogResource.name);

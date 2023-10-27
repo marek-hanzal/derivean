@@ -62,6 +62,8 @@ model Resource {
 model Producer {
 	id             String           @id @default(cuid())
 	name           String           @unique
+	// Time a producer must run to create given resource output
+	time           Int
 	ProducerOutput ProducerOutput[]
 	ProducerInput  ProducerInput[]
 }
@@ -74,8 +76,6 @@ model ProducerInput {
 	resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
 	// Amount of resource being consumed
 	amount     Float
-	// Time in seconds it takes to consume given resource; zero for instant
-	time       Int
 }
 
 model ProducerOutput {

@@ -16,6 +16,10 @@ export const ProducerSnapshotSchema = schema(z => z.object({
      * Tells if given a production result is on its limits
      */
     isLimit: z.bool,
+    /**
+     * Is there anything produced? (ready to pick up)
+     */
+    isReady: z.bool,
 }));
 export type ProducerSnapshotSchema = typeof ProducerSnapshotSchema;
 export namespace ProducerSnapshotSchema {

@@ -17,15 +17,14 @@ export class ProducerService implements IProducerService {
     ) {
     }
 
-    public timeOf({producer: {input}}: ProducerProcessSchema.Type): number {
-        return input.reduce((current, prev) => {
-            return current + prev.time;
-        }, 0);
-    }
-
     public cycles(process: ProducerProcessSchema.Type): number {
-        const cycleTime = Math.max(1, this.timeOf(process));
-        return DateTime.fromISO(process.date.to).diff(DateTime.fromISO(process.date.from), "second").get("second") / cycleTime;
+        /**
+         * Zero/minus values are considered as an instant pickup, thus generating one cycle
+         */
+        if (process.producer.time <= 0) {
+            return 1;
+        }
+        return DateTime.fromISO(process.date.to).diff(DateTime.fromISO(process.date.from), "second").get("second") / process.producer.time;
     }
 
     public inputAmountOf(process: ProducerProcessSchema.Type, name: string): number {
@@ -59,10 +58,12 @@ export class ProducerService implements IProducerService {
 
             maximums.push(available / input);
         }
-        const maximum = Math.floor(Math.min(cycles, ...maximums));
+        const resourceMaximum = Math.floor(Math.min(...maximums));
+        const maximum = Math.floor(Math.min(cycles, resourceMaximum));
 
         return {
             isLimit:   cycles >= Math.min(...maximums),
+            isReady: cycles > 0 && resourceMaximum > 0,
             inventory: this.inventoryService.normalizeOf({
                 resources: [
                     ...process
