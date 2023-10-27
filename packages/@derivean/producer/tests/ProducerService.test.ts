@@ -20,6 +20,9 @@ import {ProducerProcessSchema} from "../src/schema/ProducerProcessSchema";
 const TreeResource: ResourceSchema.Type = {
     name: "tree",
 };
+const LeafsResource: ResourceSchema.Type = {
+    name: "leafs",
+};
 const LogResource: ResourceSchema.Type = {
     name: "log",
 };
@@ -31,8 +34,13 @@ const producer: ProducerSchema.Type = {
     input:  [
         {
             resource: TreeResource,
-            time:     10,
-            amount:   1,
+            time:   5,
+            amount: 2,
+        },
+        {
+            resource: LeafsResource,
+            time:     5,
+            amount:   2,
         },
     ],
     output: [
@@ -65,6 +73,10 @@ const goodProducerProcess: ProducerProcessSchema.Type = {
                 amount:   10,
             },
             {
+                resource: LeafsResource,
+                amount:   10,
+            },
+            {
                 resource: LogResource,
                 amount:   2,
             },
@@ -78,7 +90,11 @@ const notEnoughResourceProducerProcess: ProducerProcessSchema.Type = {
         resources: [
             {
                 resource: TreeResource,
-                amount:   0,
+                amount: 2,
+            },
+            {
+                resource: LeafsResource,
+                amount:   1,
             },
             {
                 resource: LogResource,
@@ -118,61 +134,33 @@ describe("ProducerService", () => {
 
     test("Production works", () => {
         const snapshot = producerService.process(goodProducerProcess);
-
         expect(snapshot.isLimit).toBeFalsy();
 
-        const treeResourceRelative = inventoryService.resourceOf(snapshot.relative, TreeResource.name);
         const treeResource = inventoryService.resourceOf(snapshot.inventory, TreeResource.name);
-
-        const logResourceRelative = inventoryService.resourceOf(snapshot.relative, LogResource.name);
         const logResource = inventoryService.resourceOf(snapshot.inventory, LogResource.name);
-
-        const sawdustResourceRelative = inventoryService.resourceOf(snapshot.relative, SawdustResource.name);
         const sawdustResource = inventoryService.resourceOf(snapshot.inventory, SawdustResource.name);
 
-        expect(treeResourceRelative.length).toBe(1);
         expect(treeResource.length).toBe(1);
-
-        expect(logResourceRelative.length).toBe(1);
         expect(logResource.length).toBe(1);
-
-        expect(sawdustResourceRelative.length).toBe(1);
         expect(sawdustResource.length).toBe(1);
 
-        expect(treeResourceRelative[0].amount).toBe(-2);
-        expect(logResourceRelative[0].amount).toBe(12);
-        expect(sawdustResourceRelative[0].amount).toBe(200);
-
-        expect(treeResource[0].amount).toBe(8);
-        expect(logResource[0].amount).toBe(14);
+        expect(treeResource[0].amount).toBe(-4);
+        expect(logResource[0].amount).toBe(12);
         expect(sawdustResource[0].amount).toBe(200);
     });
 
     test("Production missing resources", () => {
         const snapshot = producerService.process(missingResourceProducerProcess);
 
-        const treeResourceRelative = inventoryService.resourceOf(snapshot.relative, TreeResource.name);
         const treeResource = inventoryService.resourceOf(snapshot.inventory, TreeResource.name);
-
-        const logResourceRelative = inventoryService.resourceOf(snapshot.relative, LogResource.name);
         const logResource = inventoryService.resourceOf(snapshot.inventory, LogResource.name);
-
-        const sawdustResourceRelative = inventoryService.resourceOf(snapshot.relative, SawdustResource.name);
         const sawdustResource = inventoryService.resourceOf(snapshot.inventory, SawdustResource.name);
 
-        expect(treeResourceRelative.length).toBe(0);
         expect(treeResource.length).toBe(0);
-
-        expect(logResourceRelative.length).toBe(1);
         expect(logResource.length).toBe(1);
-
-        expect(sawdustResourceRelative.length).toBe(1);
         expect(sawdustResource.length).toBe(1);
 
-        expect(logResourceRelative[0].amount).toBe(0);
-        expect(sawdustResourceRelative[0].amount).toBe(0);
-
-        expect(logResource[0].amount).toBe(2);
+        expect(logResource[0].amount).toBe(0);
         expect(sawdustResource[0].amount).toBe(0);
     });
 
@@ -183,34 +171,17 @@ describe("ProducerService", () => {
 
     test("Production not enough resources", () => {
         const snapshot = producerService.process(notEnoughResourceProducerProcess);
+        expect(snapshot.isLimit).toBeTruthy();
 
-        const treeResourceRelative = inventoryService.resourceOf(snapshot.relative, TreeResource.name);
         const treeResource = inventoryService.resourceOf(snapshot.inventory, TreeResource.name);
-
-        const logResourceRelative = inventoryService.resourceOf(snapshot.relative, LogResource.name);
         const logResource = inventoryService.resourceOf(snapshot.inventory, LogResource.name);
-
-        const sawdustResourceRelative = inventoryService.resourceOf(snapshot.relative, SawdustResource.name);
         const sawdustResource = inventoryService.resourceOf(snapshot.inventory, SawdustResource.name);
 
-        expect(treeResourceRelative.length).toBe(1);
         expect(treeResource.length).toBe(1);
-
-        expect(logResourceRelative.length).toBe(1);
         expect(logResource.length).toBe(1);
-
-        expect(sawdustResourceRelative.length).toBe(1);
         expect(sawdustResource.length).toBe(1);
 
-        expect(logResourceRelative[0].amount).toBe(0);
-        expect(sawdustResourceRelative[0].amount).toBe(0);
-
-        expect(logResource[0].amount).toBe(2);
+        expect(logResource[0].amount).toBe(0);
         expect(sawdustResource[0].amount).toBe(0);
-    });
-
-    test("Production not enough resources - is limit", () => {
-        const snapshot = producerService.process(notEnoughResourceProducerProcess);
-        expect(snapshot.isLimit).toBeTruthy();
     });
 });

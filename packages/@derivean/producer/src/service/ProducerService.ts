@@ -69,61 +69,30 @@ export class ProducerService implements IProducerService {
     public process(process: ProducerProcessSchema.Type): ProducerSnapshotSchema.Type {
         const cycles = Math.floor(this.cycles(process));
 
-        const maximum = new Map<string, number>;
-        let isLimit = false;
+        const maximums = [];
         for (let resource of process.producer.input) {
             const input = Math.max(1, this.inputAmountOf(process, resource.resource.name));
             const available = this.inventoryService.amountOf(process.inventory, resource.resource.name);
-            const lasts = available / input;
 
-            maximum.set(
-                resource.resource.name,
-                Math.min(cycles, lasts)
-            );
-            !isLimit && (isLimit = lasts <= cycles);
+            maximums.push(available / input);
         }
+        const maximum = Math.floor(Math.min(cycles, ...maximums));
 
         return {
-            isLimit,
+            isLimit:   cycles >= Math.min(...maximums),
             inventory: this.inventoryService.normalizeOf({
                 resources: this.inputResourcesOf(process)
                                .map(resource => {
-                                   const $cycles = maximum.get(resource.resource.name) || 0;
-
                                    return {
                                        ...resource,
-                                       amount: resource.amount - (this.inputAmountOf(process, resource.resource.name) * Math.min($cycles, cycles)),
+                                       amount: this.inputAmountOf(process, resource.resource.name) * maximum * -1,
                                    };
                                }).concat(
                         process.producer.output
                             .map(resource => {
-                                const $cycles = maximum.get(resource.resource.name) || 0;
-
                                 return {
                                     ...resource,
-                                    amount: this.inventoryService.amountOf(process.inventory, resource.resource.name) + (this.outputAmountOf(process, resource.resource.name) * Math.min($cycles, cycles)),
-                                };
-                            })
-                    )
-                ,
-            }),
-            relative:  this.inventoryService.normalizeOf({
-                resources: this.inputResourcesOf(process)
-                               .map(resource => {
-                                   const $cycles = maximum.get(resource.resource.name) || 0;
-
-                                   return {
-                                       ...resource,
-                                       amount: this.inputAmountOf(process, resource.resource.name) * Math.min($cycles, cycles) * -1,
-                                   };
-                               }).concat(
-                        process.producer.output
-                            .map(resource => {
-                                const $cycles = maximum.get(resource.resource.name) || 0;
-
-                                return {
-                                    ...resource,
-                                    amount: this.outputAmountOf(process, resource.resource.name) * Math.min($cycles, cycles),
+                                    amount: this.outputAmountOf(process, resource.resource.name) * maximum,
                                 };
                             })
                     )

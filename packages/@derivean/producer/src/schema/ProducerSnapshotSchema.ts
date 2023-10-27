@@ -9,13 +9,9 @@ import {
  */
 export const ProducerSnapshotSchema = schema(z => z.object({
     /**
-     * Output inventory with processed changes (produced/consumed resources)
+     * Generated inventory changes (relative); it could be merged later on
      */
     inventory: InventorySchema,
-    /**
-     * Relative values (plus/minus of processed resources)
-     */
-    relative: InventorySchema,
     /**
      * Tells if given a production result is on its limits
      */
