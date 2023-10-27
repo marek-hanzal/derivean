@@ -27,11 +27,14 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/orm/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/query/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/query/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/repository/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/rpc/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/schema/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/schema/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/selection/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/source/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/source/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/types/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/ui-extra/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/ui/src" isTestSource="false" />
@@ -71,6 +74,8 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/selection/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/server/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/server/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/source/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/source/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/types/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/types/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/ui-extra/.turbo" />
