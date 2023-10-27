@@ -15,6 +15,7 @@ export namespace ManagerLayout {
 export const ManagerLayout: FC<ManagerLayout.Props> = props => {
     return <>
         <AppLayout
+            homeUrl={"/manager"}
             right={<SignOutButton/>}
             center={<ManagerMenu/>}
             {...props}

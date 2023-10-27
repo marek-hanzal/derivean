@@ -3,32 +3,32 @@ import {type IContainer}   from "../api/IContainer";
 
 export namespace withService {
     export interface Service<TService> {
-        key: symbol;
+        inject: symbol;
 
-        resolve(container: IContainer.Type): TService;
+        use(container: IContainer.Type): TService;
 
         bind<T extends new (...args: any) => TService>(container: IContainer.Type, value: T, options?: IContainer.Options.Class<T>): void;
 
         factory<T extends FactoryValue>(container: IContainer.Type, factory: T, options?: IContainer.Options.Factory<T>): void;
 
-        use(container: IContainer.Type, value: TService): void;
+        value(container: IContainer.Type, value: TService): void;
     }
 }
 
 export const withService = <TService>(key: string): withService.Service<TService> => {
     return {
-        key: Symbol.for(key),
-        resolve(container) {
-            return container.resolve<TService>(this.key);
+        inject: Symbol.for(key),
+        use(container) {
+            return container.resolve<TService>(this.inject);
         },
         bind(container, value, options) {
-            container.useClass(this.key, value, options);
+            container.useClass(this.inject, value, options);
         },
         factory(container, factory, options) {
-            container.useFactory(this.key, factory, options);
+            container.useFactory(this.inject, factory, options);
         },
-        use(container, value) {
-            container.useValue(this.key, value);
+        value(container, value) {
+            container.useValue(this.inject, value);
         },
     };
 };

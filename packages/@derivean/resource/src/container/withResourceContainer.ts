@@ -6,7 +6,7 @@ import {withResourceRepository} from "./withResourceRepository";
 
 export const withResourceContainer: IContainer.Register = container => {
     withResourceRepository.bind(container, ResourceRepository);
-    withRpcIndexService.resolve(container)
+    withRpcIndexService.use(container)
         .using([
             ResourceMutationRpc,
         ]);

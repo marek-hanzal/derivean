@@ -9,7 +9,7 @@ import {type ProducerSnapshotSchema} from "../schema/ProducerSnapshotSchema";
 
 export class ProducerService implements IProducerService {
     static inject = [
-        withInventoryService.key,
+        withInventoryService.inject,
     ];
 
     constructor(

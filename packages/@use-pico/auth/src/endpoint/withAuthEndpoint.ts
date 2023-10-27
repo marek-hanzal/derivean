@@ -25,8 +25,8 @@ export const withAuthEndpoint = (
         container,
     }: withAuthEndpoint.Props
 ) => {
-    const registrationService = withRegistrationService.resolve(container);
-    const userTokenService = withUserTokenService.resolve(container);
+    const registrationService = withRegistrationService.use(container);
+    const userTokenService = withUserTokenService.use(container);
     const logger = withLogger("auth");
 
     return NextAuth({
@@ -46,7 +46,7 @@ export const withAuthEndpoint = (
         session:   {
             strategy: "jwt",
         },
-        adapter: PrismaAdapter(withClient.resolve(container)),
+        adapter: PrismaAdapter(withClient.use(container)),
         providers: providers.filter(Boolean),
         callbacks: {
             jwt:     async token => {

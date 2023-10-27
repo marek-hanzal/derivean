@@ -117,8 +117,8 @@ describe("ProducerService", () => {
     const container = new Container();
     withProducerContainer(container);
     withInventoryContainer(container);
-    const producerService = withProducerService.resolve(container);
-    const inventoryService = withInventoryService.resolve(container);
+    const producerService = withProducerService.use(container);
+    const inventoryService = withInventoryService.use(container);
 
     test("Number of cycles", () => {
         expect(Math.floor(producerService.cycles(goodProducerProcess))).toBe(3);

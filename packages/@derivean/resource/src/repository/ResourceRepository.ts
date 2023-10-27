@@ -7,7 +7,7 @@ import {ResourceSourceSchema} from "../schema/ResourceSourceSchema";
 
 export class ResourceRepository extends AbstractRepository<ResourceSourceSchema> {
     static inject = [
-        withClient.key,
+        withClient.inject,
     ];
 
     constructor(

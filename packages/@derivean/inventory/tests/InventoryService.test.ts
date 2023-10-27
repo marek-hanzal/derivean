@@ -54,7 +54,7 @@ const normalizedInventory: InventorySchema.Type = {
 describe("InventoryService", () => {
     const container = new Container();
     withInventoryContainer(container);
-    const inventoryService = withInventoryService.resolve(container);
+    const inventoryService = withInventoryService.use(container);
 
     test("Normalized inventory", () => {
         expect(inventoryService.normalize(inventory)).toEqual(new Map<string, InventoryResourceSchema.Type>([

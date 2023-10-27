@@ -8,7 +8,7 @@ import {withRpcContainer}  from "@use-pico/rpc";
 
 export const withServerContainer = (instance?: IContainer.Instance) => {
     const container = new Container(instance);
-    withContainer.use(container, container);
+    withContainer.value(container, container);
 
     const register = [
         withAuthContainer,

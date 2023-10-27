@@ -7,7 +7,7 @@ import {type IRpcIndexService} from "../api/IRpcIndexService";
 
 export class RpcIndexService implements IRpcIndexService {
     static inject = [
-        withContainer.key,
+        withContainer.inject,
     ];
 
     constructor(
@@ -16,7 +16,7 @@ export class RpcIndexService implements IRpcIndexService {
     }
 
     public register<T extends {
-                                  new(...args: any): IRpcHandler
+                                  new(...args: any): IRpcHandler<any, any>
                               } & {
                                   key: IContainer.Key
                               }>(handler: T): void {
@@ -24,7 +24,7 @@ export class RpcIndexService implements IRpcIndexService {
     }
 
     public using<T extends {
-                               new(...args: any): IRpcHandler
+                               new(...args: any): IRpcHandler<any, any>
                            } & {
                                key: IContainer.Key
                            }>(handlers: T[]): void {

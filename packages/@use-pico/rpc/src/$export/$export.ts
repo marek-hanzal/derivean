@@ -16,6 +16,7 @@ export * from "./withFindByQuery";
 export * from "./withMutation";
 export * from "./withQuery";
 export * from "./withRpcContainer";
+export * from "./withRpcEndpoint";
 export * from "./withRpcIndexService";
 export * from "./withRpcRequestSchema";
 export * from "./withRpcResponseSchema";
