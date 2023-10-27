@@ -11,6 +11,8 @@ export class ResourceMutationRpc extends MutationRpcHandler<IResourceRepository>
     ];
 
     static key = "@derivean/resource/ResourceMutationRpc";
+    static requestSchema = ResourceSourceSchema.shape.mutation;
+    static responseSchema = ResourceSourceSchema.shape.entity;
 
     constructor(
         repository: IResourceRepository,
@@ -28,10 +30,10 @@ export class ResourceMutationRpc extends MutationRpcHandler<IResourceRepository>
 
     static useMutation(props?: WithMutation.Options<ResourceSourceSchema["shape"]["mutation"], ResourceSourceSchema["shape"]["entity"]>) {
         return (this.withMutation ?? (this.withMutation = withMutation({
-            service: "@derivean/resource/ResourceMutationRpc",
+            service: this.key,
             schema:  {
-                request:  ResourceSourceSchema.shape.mutation,
-                response: ResourceSourceSchema.shape.entity,
+                request:  this.requestSchema,
+                response: this.responseSchema,
             },
         }))).useMutation(props);
     }

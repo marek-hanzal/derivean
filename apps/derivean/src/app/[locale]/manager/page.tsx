@@ -1,5 +1,3 @@
-"use client";
-
 import {ResourceMutationRpc} from "@derivean/resource";
 import {IconSubtask}         from "@tabler/icons-react";
 import {
