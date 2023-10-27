@@ -3,6 +3,7 @@ import withPlugins from 'next-compose-plugins';
 
 const transpile = [
     '@derivean/orm',
+    '@derivean/ui',
     '@derivean/public',
     '@derivean/root',
     '@use-pico/auth',

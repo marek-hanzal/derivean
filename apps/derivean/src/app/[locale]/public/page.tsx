@@ -1,8 +1,10 @@
-"use client";
-
-import {Container} from "@use-pico/ui";
+import {GameIcon} from "@derivean/ui";
+import {Page}     from "@use-pico/ui";
 
 export default function Index() {
-    return <Container>
-    </Container>;
+    return <Page
+        icon={<GameIcon/>}
+        title={"public.index"}
+    >
+    </Page>;
 }

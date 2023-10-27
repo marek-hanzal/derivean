@@ -100,6 +100,7 @@ export * from "./SearchIcon";
 export * from "./SectionHeader";
 export * from "./SegmentedControl";
 export * from "./Select";
+export * from "./SignInButton";
 export * from "./SimpleGrid";
 export * from "./Skeleton";
 export * from "./SkeletonBlock";

@@ -1,6 +1,6 @@
-import logo                     from "@/derivean/assets/logo/logo.svg";
 import {RootLayout}             from "@derivean/root";
 import {type PropsWithChildren} from "react";
+import logo                     from "../../../../public/assets/logo/logo.svg";
 
 export namespace Layout {
     export type Props = PropsWithChildren;

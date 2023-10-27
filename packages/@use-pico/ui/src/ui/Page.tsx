@@ -13,6 +13,7 @@ import {Container}  from "./Container";
 import {Divider}    from "./Divider";
 import {Flex}       from "./Flex";
 import {Grid}       from "./Grid";
+import {GridCol}    from "./GridCol";
 import {Group}      from "./Group";
 import {BackButton} from "./Page/BackButton";
 import {Title}      from "./Title";
@@ -74,7 +75,7 @@ export const Page: FC<Page.Props> = (
             align={"center"}
             py={"xs"}
         >
-            <Grid.Col span={"content"}>
+            <GridCol span={"content"}>
                 <Group>
                     {onBack && <>
                         <BackButton onBack={onBack}/>
@@ -82,8 +83,8 @@ export const Page: FC<Page.Props> = (
                     </>}
                     {postfix}
                 </Group>
-            </Grid.Col>
-            <Grid.Col span={"content"}>
+            </GridCol>
+            <GridCol span={"content"}>
                 <Flex gap={"sm"} justify={"center"} align={"center"}>
                     {(onBack || postfix) && <Divider orientation={"vertical"} mr={"sm"}/>}
                     {title && <Group justify={"center"} gap={"sm"}>
@@ -97,8 +98,8 @@ export const Page: FC<Page.Props> = (
                         </Title>
                     </Group>}
                 </Flex>
-            </Grid.Col>
-            <Grid.Col
+            </GridCol>
+            <GridCol
                 span={"auto"}
             >
                 <Flex
@@ -106,12 +107,12 @@ export const Page: FC<Page.Props> = (
                 >
                     {extra}
                 </Flex>
-            </Grid.Col>
+            </GridCol>
         </Grid>}
         <Grid>
-            <Grid.Col span={"auto"}>
+            <GridCol span={"auto"}>
                 {append}
-            </Grid.Col>
+            </GridCol>
         </Grid>
         {children}
     </Container>;

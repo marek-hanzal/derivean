@@ -7,6 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/public/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/root/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/orm/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/ui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/@misc/env/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/auth/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/calendar/src" isTestSource="false" />
