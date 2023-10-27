@@ -2,10 +2,11 @@ import withBundleAnalyzer from '@next/bundle-analyzer';
 import withPlugins from 'next-compose-plugins';
 
 const transpile = [
+    '@derivean/game',
     '@derivean/orm',
-    '@derivean/ui',
     '@derivean/public',
     '@derivean/root',
+    '@derivean/ui',
     '@use-pico/auth',
     '@use-pico/bulk',
     '@use-pico/calendar',

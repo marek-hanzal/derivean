@@ -7,6 +7,11 @@
 			"button": "Přihlášení"
 		}
 	},
+	"game": {
+		"index": {
+			"title": "Přehled"
+		}
+	},
 	"error": {
 		"404": {
 			"title": "Stránka nenalezena",

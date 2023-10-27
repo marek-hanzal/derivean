@@ -1,7 +1,7 @@
 {
 	"version": "0.5.0",
-	"name": "@derivean/public",
-	"description": "Common public stuff.",
+	"name": "@derivean/game",
+	"description": "Common game site stuff.",
 	"sideEffects": false,
 	"type": "module",
 	"main": "src/index.ts",
@@ -14,7 +14,8 @@
 		"cleanup": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
 	"dependencies": {
-		"react": "^18.2.0"
+		"@tabler/icons-react": "^2.39.0",
+		"next-auth": "^4.24.3"
 	},
 	"devDependencies": {
 		"@use-pico/esbuild": "^1.0.2",

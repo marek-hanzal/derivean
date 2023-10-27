@@ -27,7 +27,7 @@ export const withAuthMiddleware = (
                              }) => {
                     if (!token) {
                         for (const route of routes) {
-                            if (req.nextUrl.pathname.startsWith(route.path)) {
+                            if (req.nextUrl.pathname.includes(route.path)) {
                                 return false;
                             }
                         }
