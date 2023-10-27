@@ -12,6 +12,26 @@
 				"src/**"
 			]
 		},
+		"setup": {
+			"cache": false
+		},
+		"generate": {
+			"cache": false
+		},
+		"init": {
+			"outputMode": "new-only",
+			"dependsOn": [
+				"setup",
+				"^init"
+			],
+			"outputs": [
+				"lib/**"
+			],
+			"inputs": [
+				"prisma/schema.prisma",
+				"src/**"
+			]
+		},
 		"build": {
 			"outputMode": "new-only",
 			"dependsOn": [

@@ -6,6 +6,7 @@
 		"build": "dotenv -- next build",
 		"dev": "next dev",
 		"lint": "dotenv -c development -- next lint",
+		"prisma:migrate-dev": "npx dotenv -c development -- npx prisma migrate dev --schema=../../packages/@derivean/orm/prisma/schema.prisma",
 		"cleanup": "del-cli .turbo .next tsconfig.tsbuildinfo"
 	},
 	"dependencies": {

@@ -1,7 +1,7 @@
-import {DrizzleAdapter}          from "@auth/drizzle-adapter";
+import {PrismaAdapter}           from "@next-auth/prisma-adapter";
 import {type IContainer}         from "@use-pico/container";
 import {withLogger}              from "@use-pico/logger";
-import {withOrm}                 from "@use-pico/orm";
+import {withClient}              from "@use-pico/orm";
 import NextAuth, {
     type AuthOptions,
     type Session
@@ -46,7 +46,7 @@ export const withAuthEndpoint = (
         session:   {
             strategy: "jwt",
         },
-        adapter: DrizzleAdapter(withOrm.resolve(container).orm()),
+        adapter: PrismaAdapter(withClient.resolve(container)),
         providers: providers.filter(Boolean),
         callbacks: {
             jwt:     async token => {

@@ -15,7 +15,7 @@ export default function Custom404() {
         fallback:  defaultLocale,
     });
     useLocaleRedirect({
-        href: `/${localeOf}/public/not-found`,
+        href: `./${localeOf}/public/not-found`,
     });
     return null;
 };

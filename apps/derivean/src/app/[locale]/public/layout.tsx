@@ -1,21 +1,26 @@
 import {PublicLayout}           from "@derivean/public";
-import {SignInButton}           from "@use-pico/ui";
 import {type PropsWithChildren} from "react";
 import logo                     from "../../../../public/assets/logo/logo.svg";
 
 export namespace Layout {
-    export type Props = PropsWithChildren;
+    export type Props = PropsWithChildren<{
+        params: {
+            locale: string;
+        };
+    }>;
 }
 
 export default function Layout(
     {
         children,
+        params
     }: Layout.Props
 ) {
     return <PublicLayout
         logo={logo}
-        withoutLogin={true}
-        right={<SignInButton/>}
+        signInOptions={{
+            callbackUrl: `/${params.locale}/game`,
+        }}
     >
         {children}
     </PublicLayout>;

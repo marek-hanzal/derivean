@@ -11,20 +11,23 @@
 		"src"
 	],
 	"scripts": {
+		"generate": "concurrently npm:generate:*",
+		"generate:prisma": "npx prisma generate",
 		"cleanup": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
 	"dependencies": {
-		"drizzle-orm": "^0.28.6"
+		"@prisma/client": "^5.5.2"
 	},
 	"devDependencies": {
+		"@types/node": "^20.4.2",
+		"@types/react": "^18.2.15",
 		"@use-pico/esbuild": "^1.0.0",
 		"@use-pico/eslint-config-eslint": "^1.0.0",
 		"@use-pico/tsconfig": "^1.0.0",
-		"@types/node": "^20.4.2",
-		"@types/react": "^18.2.15",
 		"concurrently": "^8.2.2",
 		"del-cli": "^5.0.0",
 		"eslint": "^8.45.0",
+		"prisma": "^5.5.2",
 		"typescript": "^5.2.2"
 	}
 }

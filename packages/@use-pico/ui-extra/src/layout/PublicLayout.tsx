@@ -1,4 +1,4 @@
-import {LocaleLink}  from "@use-pico/i18n";
+import {LocaleLink}   from "@use-pico/i18n";
 import {
     AppShell,
     AppShellMain,
@@ -8,15 +8,15 @@ import {
     GridCol,
     Group,
     Unblock
-}                    from "@use-pico/ui";
-import Image         from "next/image";
+}                     from "@use-pico/ui";
+import Image          from "next/image";
 import {
     type ComponentProps,
     type FC,
     type PropsWithChildren,
     type ReactNode
-}                    from "react";
-import {LoginButton} from "./PublicLayout/LoginButton";
+}                     from "react";
+import {SignInButton} from "./PublicLayout/SignInButton";
 
 export namespace PublicLayout {
     export interface Props extends PropsWithChildren {
@@ -26,6 +26,7 @@ export namespace PublicLayout {
          * If provided, user will be redirected here; defaults to next-auth signIn()
          */
         loginUrl?: string;
+        signInOptions?: SignInButton.Props["signInOptions"];
         /**
          * Hides login button from header
          */
@@ -43,6 +44,7 @@ export const PublicLayout: FC<PublicLayout.Props> = (
         logo,
         homeUrl = "/public",
         loginUrl,
+        signInOptions,
         withoutLogin = false,
         center,
         right,
@@ -79,8 +81,9 @@ export const PublicLayout: FC<PublicLayout.Props> = (
                     <Group gap={"xs"}>
                         {right}
                         {!withoutLogin && <Group>
-                            <LoginButton
+                            <SignInButton
                                 loginUrl={loginUrl}
+                                signInOptions={signInOptions}
                             />
                         </Group>}
                     </Group>

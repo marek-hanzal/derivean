@@ -3,34 +3,41 @@
 import {IconLogin} from "@tabler/icons-react";
 import {
     Translation,
+    useLocaleLinkTo,
     useLocaleRouter
 }                  from "@use-pico/i18n";
 import {Button}    from "@use-pico/ui";
-import {signIn}    from "next-auth/react";
+import {
+    signIn,
+    type SignInOptions
+}                  from "next-auth/react";
 import {type FC}   from "react";
 
-export namespace LoginButton {
+export namespace SignInButton {
     export interface Props {
         loginUrl?: string;
+        signInOptions?: SignInOptions;
     }
 }
 
-export const LoginButton: FC<LoginButton.Props> = (
+export const SignInButton: FC<SignInButton.Props> = (
     {
         loginUrl,
+        signInOptions,
     }
 ) => {
+    const linkTo = useLocaleLinkTo();
     const router = useLocaleRouter();
 
     return <Button
         leftSection={<IconLogin/>}
         onClick={() => loginUrl ? router.push({
             href: loginUrl,
-        }) : signIn()}
+        }) : signIn(undefined, signInOptions)}
     >
         <Translation
             namespace={"public"}
-            withLabel={"button.sign-in"}
+            withLabel={"sign-in.button"}
         />
     </Button>;
 };

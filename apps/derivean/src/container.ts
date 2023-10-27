@@ -1,8 +1,17 @@
 import {env}                 from "@/derivean/env";
-import {withConfig}          from "@use-pico/orm";
+import {PrismaClient}        from "@prisma/client";
+import {withClient}          from "@use-pico/orm";
 import {withServerContainer} from "@use-pico/server";
 
 export const container = withServerContainer();
-withConfig.use(container, {
-    dsn: env.DATABASE_URL,
+withClient.factory(container, () => {
+    return new PrismaClient({
+        errorFormat: "pretty",
+        log:         env.NODE_ENV === "development"
+                         ? [
+                // "query",
+                "error",
+                "warn"
+            ] : ["error"],
+    });
 });

@@ -1,7 +1,6 @@
 import {
-    type AvailableScopes,
-    type ClassOptions,
     type ClassValue,
+    type FactoryValue,
     PumpIt
 }                        from "pumpit";
 import {type IContainer} from "../api/IContainer";
@@ -16,8 +15,13 @@ export class Container {
         return this.container.resolve<T>(key);
     }
 
-    public useClass<TClass extends ClassValue>(key: IContainer.Key, use: TClass, options?: Omit<Partial<ClassOptions<TClass, AvailableScopes>>, "type">) {
+    public useClass<TClass extends ClassValue>(key: IContainer.Key, use: TClass, options?: IContainer.Options.Class<TClass>) {
         this.container.bindClass(key, use, options);
+        return this;
+    }
+
+    public useFactory<TFactory extends FactoryValue>(key: IContainer.Key, factory: TFactory, options?: IContainer.Options.Factory<TFactory>) {
+        this.container.bindFactory(key, factory, options);
         return this;
     }
 
