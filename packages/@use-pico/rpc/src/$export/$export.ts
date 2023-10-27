@@ -14,6 +14,7 @@ export * from "./RpcResponseSchema";
 export * from "./isData";
 export * from "./resultOf";
 export * from "./useRpcMutation";
+export * from "./useRpcQuery";
 export * from "./withFindByQuery";
 export * from "./withMutation";
 export * from "./withQuery";

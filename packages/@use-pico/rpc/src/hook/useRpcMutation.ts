@@ -16,15 +16,10 @@ export const useRpcMutation = <
     THandler extends IRpcHandler<TRequestSchema, TResponseSchema>,
 >(
     handler: IRpcHandlerClass<TRequestSchema, TResponseSchema, THandler>,
-    props?: WithMutation.Options<
-        TRequestSchema,
-        TResponseSchema
-    >
-): WithMutation.Result<
+): WithMutation<
     TRequestSchema,
     TResponseSchema
-> => {
+>["useMutation"] => {
     const {useMutation} = useMemo(() => withRpcMutation(handler), [handler.$key]);
-
-    return useMutation(props);
+    return useMutation;
 };

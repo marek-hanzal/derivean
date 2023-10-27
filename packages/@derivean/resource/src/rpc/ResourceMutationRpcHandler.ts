@@ -8,7 +8,7 @@ export class ResourceMutationRpcHandler extends MutationRpcHandler<IResourceRepo
         withResourceRepository.inject,
     ];
 
-    static $key = "@derivean/resource/ResourceMutationRpc";
+    static $key = "@derivean/resource/ResourceMutationRpcHandler";
     static $requestSchema = ResourceSourceSchema.shape.mutation;
     static $responseSchema = ResourceSourceSchema.shape.entity;
 
