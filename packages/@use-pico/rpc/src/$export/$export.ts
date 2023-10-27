@@ -1,5 +1,6 @@
 export * from "./AbstractRpcHandler";
 export * from "./IBulkRef";
+export * from "./IRepositoryRpcHandlerClass";
 export * from "./IRpcHandler";
 export * from "./IRpcHandlerClass";
 export * from "./IWithFindByQuery";
@@ -22,7 +23,9 @@ export * from "./withRpcContainer";
 export * from "./withRpcEndpoint";
 export * from "./withRpcIndexService";
 export * from "./withRpcMutation";
+export * from "./withRpcQuery";
 export * from "./withRpcRequestSchema";
 export * from "./withRpcResponseSchema";
 export * from "./withRpcService";
+export * from "./withRpcSourceQuery";
 export * from "./withSourceQuery";

@@ -17,7 +17,8 @@
 		"@use-pico/orm": "^1.0.0",
 		"@use-pico/repository": "^1.0.0",
 		"@use-pico/rpc": "^1.0.0",
-		"@use-pico/schema": "^1.0.0"
+		"@use-pico/schema": "^1.0.0",
+		"@use-pico/table": "^1.0.0"
 	},
 	"devDependencies": {
 		"@use-pico/esbuild": "^1.0.0",
