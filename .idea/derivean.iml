@@ -7,7 +7,12 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/public/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/root/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/game/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/inventory/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/inventory/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/orm/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/producer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/producer/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/resource/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/ui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/@misc/env/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/auth/src" isTestSource="false" />
@@ -19,6 +24,8 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/logger/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/navigation/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/orm/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/query/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/query/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/schema/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/schema/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/selection/src" isTestSource="false" />
@@ -52,6 +59,8 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/navigation/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/orm/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/orm/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/query/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/query/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/schema/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/schema/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/selection/.turbo" />

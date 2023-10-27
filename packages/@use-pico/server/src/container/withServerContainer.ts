@@ -11,7 +11,7 @@ export const withServerContainer = (instance?: IContainer.Instance) => {
         withAuthContainer,
     ] as const;
 
-    register.map(register => register(container));
+    register.forEach(register => register(container));
 
     return container;
 };

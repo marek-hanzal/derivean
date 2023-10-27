@@ -11,6 +11,8 @@ import {
 import {type Container} from "../container/Container";
 
 export namespace IContainer {
+    export type Register = (container: Type) => void
+
     export type Type = InstanceType<typeof Container>;
     export type Instance = PumpIt;
 

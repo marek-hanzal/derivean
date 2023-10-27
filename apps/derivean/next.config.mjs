@@ -3,8 +3,11 @@ import withPlugins from 'next-compose-plugins';
 
 const transpile = [
     '@derivean/game',
+    '@derivean/inventory',
     '@derivean/orm',
+    '@derivean/producer',
     '@derivean/public',
+    '@derivean/resource',
     '@derivean/root',
     '@derivean/ui',
     '@use-pico/auth',
