@@ -1,16 +1,7 @@
-import {type IContainer}  from "@use-pico/container";
-import {type IRpcHandler} from "./IRpcHandler";
+import {type IRpcHandlerClass} from "./IRpcHandlerClass";
 
 export interface IRpcIndexService {
-    register<T extends {
-                           new(...args: any): IRpcHandler<any, any>
-                       } & {
-        $key: IContainer.Key
-                       }>(handler: T): void;
+    register<T extends IRpcHandlerClass<any, any, any>>(handler: T): void;
 
-    using<T extends {
-                        new(...args: any): IRpcHandler<any, any>
-                    } & {
-        $key: IContainer.Key
-                    }>(handlers: T[]): void;
+    using<T extends IRpcHandlerClass<any, any, any>>(handlers: T[]): void;
 }

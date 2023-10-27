@@ -5,26 +5,25 @@ import {
     type RequestSchema,
     type ResponseSchema
 }                              from "@use-pico/schema";
-import {useMemo}               from "react";
 import {type IRpcHandler}      from "../api/IRpcHandler";
 import {type IRpcHandlerClass} from "../api/IRpcHandlerClass";
-import {withRpcMutation}       from "./withRpcMutation";
+import {withMutation}          from "./withMutation";
 
-export const useRpcMutation = <
+export const withRpcMutation = <
     TRequestSchema extends RequestSchema,
     TResponseSchema extends ResponseSchema,
     THandler extends IRpcHandler<TRequestSchema, TResponseSchema>,
 >(
     handler: IRpcHandlerClass<TRequestSchema, TResponseSchema, THandler>,
-    props?: WithMutation.Options<
-        TRequestSchema,
-        TResponseSchema
-    >
-): WithMutation.Result<
+): WithMutation<
     TRequestSchema,
     TResponseSchema
 > => {
-    const {useMutation} = useMemo(() => withRpcMutation(handler), [handler.$key]);
-
-    return useMutation(props);
+    return withMutation({
+        service: handler.$key,
+        schema:  {
+            request:  handler.$requestSchema,
+            response: handler.$responseSchema,
+        },
+    });
 };

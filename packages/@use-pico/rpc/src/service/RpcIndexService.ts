@@ -2,7 +2,7 @@ import {
     type IContainer,
     withContainer
 }                              from "@use-pico/container";
-import {type IRpcHandler}      from "../api/IRpcHandler";
+import {type IRpcHandlerClass} from "../api/IRpcHandlerClass";
 import {type IRpcIndexService} from "../api/IRpcIndexService";
 
 export class RpcIndexService implements IRpcIndexService {
@@ -15,19 +15,11 @@ export class RpcIndexService implements IRpcIndexService {
     ) {
     }
 
-    public register<T extends {
-                                  new(...args: any): IRpcHandler<any, any>
-                              } & {
-        $key: IContainer.Key
-                              }>(handler: T): void {
+    public register<T extends IRpcHandlerClass<any, any, any>>(handler: T): void {
         this.container.useClass(handler.$key, handler);
     }
 
-    public using<T extends {
-                               new(...args: any): IRpcHandler<any, any>
-                           } & {
-        $key: IContainer.Key
-                           }>(handlers: T[]): void {
+    public using<T extends IRpcHandlerClass<any, any, any>>(handlers: T[]): void {
         handlers.forEach(handler => this.register(handler));
     }
 }
