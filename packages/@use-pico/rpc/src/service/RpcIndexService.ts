@@ -18,15 +18,15 @@ export class RpcIndexService implements IRpcIndexService {
     public register<T extends {
                                   new(...args: any): IRpcHandler<any, any>
                               } & {
-                                  key: IContainer.Key
+        $key: IContainer.Key
                               }>(handler: T): void {
-        this.container.useClass(handler.key, handler);
+        this.container.useClass(handler.$key, handler);
     }
 
     public using<T extends {
                                new(...args: any): IRpcHandler<any, any>
                            } & {
-                               key: IContainer.Key
+        $key: IContainer.Key
                            }>(handlers: T[]): void {
         handlers.forEach(handler => this.register(handler));
     }

@@ -5,12 +5,12 @@ export interface IRpcIndexService {
     register<T extends {
                            new(...args: any): IRpcHandler<any, any>
                        } & {
-                           key: IContainer.Key
+        $key: IContainer.Key
                        }>(handler: T): void;
 
     using<T extends {
                         new(...args: any): IRpcHandler<any, any>
                     } & {
-                        key: IContainer.Key
+        $key: IContainer.Key
                     }>(handlers: T[]): void;
 }

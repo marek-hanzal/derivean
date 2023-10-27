@@ -1,12 +1,15 @@
-import {ResourceMutationRpc} from "@derivean/resource";
-import {IconSubtask}         from "@tabler/icons-react";
+"use client";
+
+import {ResourceMutationRpcHandler} from "@derivean/resource";
+import {IconSubtask}                from "@tabler/icons-react";
+import {useRpcMutation}             from "@use-pico/rpc";
 import {
     Button,
     Page
-}                            from "@use-pico/ui";
+}                                   from "@use-pico/ui";
 
 export default function Index() {
-    const mut = ResourceMutationRpc.useMutation();
+    const mut = useRpcMutation(ResourceMutationRpcHandler);
 
     return <Page
         icon={<IconSubtask/>}
@@ -16,8 +19,12 @@ export default function Index() {
             onClick={() => {
                 mut.mutate({
                     create: {
-                        name: "foo",
+                        name2: "foo",
                     },
+                }, {
+                    onSuccess: data => {
+                        data.fdf;
+                    }
                 });
             }}
         >
