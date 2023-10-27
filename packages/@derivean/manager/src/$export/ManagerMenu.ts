@@ -1,1 +1,1 @@
-export {ManagerMenu} from "../";
+export {ManagerMenu} from "../menu/ManagerMenu";
