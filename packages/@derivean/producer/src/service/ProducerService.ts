@@ -1,6 +1,5 @@
 import {
     type IInventoryService,
-    InventoryResourceSchema,
     withInventoryService
 }                                    from "@derivean/inventory";
 import {DateTime}                    from "@use-pico/i18n";
@@ -18,32 +17,15 @@ export class ProducerService implements IProducerService {
     ) {
     }
 
-    public inputTime({producer: {input}}: ProducerProcessSchema.Type): number {
+    public timeOf({producer: {input}}: ProducerProcessSchema.Type): number {
         return input.reduce((current, prev) => {
             return current + prev.time;
         }, 0);
     }
 
-    public outputTime({producer: {output}}: ProducerProcessSchema.Type): number {
-        return Math.max(...output.map(output => {
-            return output.time;
-        }, 0));
-    }
-
-    public cycleTime(process: ProducerProcessSchema.Type): number {
-        return this.inputTime(process) + this.outputTime(process);
-    }
-
     public cycles(process: ProducerProcessSchema.Type): number {
-        const cycleTime = Math.max(1, this.cycleTime(process));
+        const cycleTime = Math.max(1, this.timeOf(process));
         return DateTime.fromISO(process.date.to).diff(DateTime.fromISO(process.date.from), "second").get("second") / cycleTime;
-    }
-
-    public inputResourcesOf({producer, inventory}: ProducerProcessSchema.Type): InventoryResourceSchema.Type[] {
-        const resources = producer.input.map(({resource}) => resource.name);
-        return inventory
-            .resources
-            .filter(({resource}) => resources.includes(resource.name));
     }
 
     public inputAmountOf(process: ProducerProcessSchema.Type, name: string): number {
@@ -68,6 +50,7 @@ export class ProducerService implements IProducerService {
 
     public process(process: ProducerProcessSchema.Type): ProducerSnapshotSchema.Type {
         const cycles = Math.floor(this.cycles(process));
+        const resources = process.producer.input.map(({resource}) => resource.name);
 
         const maximums = [];
         for (let resource of process.producer.input) {
@@ -81,22 +64,25 @@ export class ProducerService implements IProducerService {
         return {
             isLimit:   cycles >= Math.min(...maximums),
             inventory: this.inventoryService.normalizeOf({
-                resources: this.inputResourcesOf(process)
-                               .map(resource => {
-                                   return {
-                                       ...resource,
-                                       amount: this.inputAmountOf(process, resource.resource.name) * maximum * -1,
-                                   };
-                               }).concat(
-                        process.producer.output
-                            .map(resource => {
-                                return {
-                                    ...resource,
-                                    amount: this.outputAmountOf(process, resource.resource.name) * maximum,
-                                };
-                            })
-                    )
-                ,
+                resources: [
+                    ...process
+                        .inventory
+                        .resources
+                        .filter(({resource}) => resources.includes(resource.name))
+                        .map(resource => {
+                            return {
+                                ...resource,
+                                amount: this.inputAmountOf(process, resource.resource.name) * maximum * -1,
+                            };
+                        }),
+                    ...process.producer.output
+                        .map(resource => {
+                            return {
+                                ...resource,
+                                amount: this.outputAmountOf(process, resource.resource.name) * maximum,
+                            };
+                        })
+                ],
             }),
         };
     }

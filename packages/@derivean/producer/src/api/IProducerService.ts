@@ -5,17 +5,7 @@ export interface IProducerService {
     /**
      * Compute input time of the given producer process
      */
-    inputTime(process: ProducerProcessSchema.Type): number;
-
-    /**
-     * Compute output time of the given producer process
-     */
-    outputTime(process: ProducerProcessSchema.Type): number;
-
-    /**
-     * Compute time for one cycle of whole production
-     */
-    cycleTime(process: ProducerProcessSchema.Type): number;
+    timeOf(process: ProducerProcessSchema.Type): number;
 
     /**
      * Number of cycles passed by the given process

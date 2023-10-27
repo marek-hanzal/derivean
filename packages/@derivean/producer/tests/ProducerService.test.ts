@@ -47,18 +47,16 @@ const producer: ProducerSchema.Type = {
         {
             resource: LogResource,
             amount:   6,
-            time:     15,
         },
         {
             resource: SawdustResource,
             amount:   100,
-            time:     7,
         },
     ],
 };
 const date = {
     from: DateTime.now().minus({
-        second: 65,
+        second: 35,
     }).toISO(),
     to:   DateTime.now().toISO(),
 };
@@ -124,12 +122,11 @@ describe("ProducerService", () => {
     const inventoryService = withInventoryService.resolve(container);
 
     test("Input/output times works", () => {
-        expect(producerService.inputTime(goodProducerProcess)).toBe(10);
-        expect(producerService.outputTime(goodProducerProcess)).toBe(15);
+        expect(producerService.timeOf(goodProducerProcess)).toBe(10);
     });
 
     test("Number of cycles", () => {
-        expect(Math.floor(producerService.cycles(goodProducerProcess))).toBe(2);
+        expect(Math.floor(producerService.cycles(goodProducerProcess))).toBe(3);
     });
 
     test("Production works", () => {
@@ -144,9 +141,9 @@ describe("ProducerService", () => {
         expect(logResource.length).toBe(1);
         expect(sawdustResource.length).toBe(1);
 
-        expect(treeResource[0].amount).toBe(-4);
-        expect(logResource[0].amount).toBe(12);
-        expect(sawdustResource[0].amount).toBe(200);
+        expect(treeResource[0].amount).toBe(-6);
+        expect(logResource[0].amount).toBe(18);
+        expect(sawdustResource[0].amount).toBe(300);
     });
 
     test("Production missing resources", () => {

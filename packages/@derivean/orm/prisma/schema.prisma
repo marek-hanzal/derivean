@@ -86,6 +86,4 @@ model ProducerOutput {
 	resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
 	// Amount of resource being produced
 	amount     Float
-	// Time in seconds it takes to produce given resource; zero for instant product
-	time       Int
 }
