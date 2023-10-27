@@ -9,6 +9,8 @@ export class ResourceCountRpcHandler extends CountRpcHandler<IResourceRepository
     ];
 
     static $key = "@derivean/resource/ResourceCountRpcHandler";
+    static $querySchema = ResourceSourceSchema.shape.query;
+    static $mutationSchema = ResourceSourceSchema.shape.mutation;
     static $requestSchema = ResourceSourceSchema.shape.query;
 
     constructor(

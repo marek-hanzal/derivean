@@ -10,6 +10,16 @@
 			"title": "Přehled"
 		}
 	},
+	"resource": {
+		"fulltext": {
+			"placeholder": "Vyhledat zdroj"
+		},
+		"table": {
+			"column": {
+				"name": "Název zdroje"
+			}
+		}
+	},
 	"manager": {
 		"resource": {
 			"list": {
