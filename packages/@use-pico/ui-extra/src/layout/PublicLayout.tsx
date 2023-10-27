@@ -1,29 +1,22 @@
-"use client";
-
+import {LocaleLink}  from "@use-pico/i18n";
 import {
     AppShell,
+    AppShellMain,
+    BlockLoadingOverlay,
     Box,
-    Button,
+    Grid,
+    GridCol,
     Group,
-    LoadingOverlay
-}                   from "@mantine/core";
-import {IconLogin}  from "@tabler/icons-react";
-import {
-    LocaleLink,
-    useLocaleRouter,
-    useTranslation
-}                   from "@use-pico/i18n";
-import {BlockStore} from "@use-pico/ui";
-import {signIn}     from "next-auth/react";
-import Image        from "next/image";
+    Unblock
+}                    from "@use-pico/ui";
+import Image         from "next/image";
 import {
     type ComponentProps,
     type FC,
     type PropsWithChildren,
-    type ReactNode,
-    useEffect
-}                   from "react";
-import classes      from "./PublicLayout.module.css";
+    type ReactNode
+}                    from "react";
+import {LoginButton} from "./PublicLayout/LoginButton";
 
 export namespace PublicLayout {
     export interface Props extends PropsWithChildren {
@@ -41,6 +34,7 @@ export namespace PublicLayout {
          * Center part of the layout (header)
          */
         center?: ReactNode;
+        right?: ReactNode;
     }
 }
 
@@ -51,49 +45,50 @@ export const PublicLayout: FC<PublicLayout.Props> = (
         loginUrl,
         withoutLogin = false,
         center,
+        right,
         children
     }) => {
-    const block = BlockStore.use$();
-    const t = useTranslation("public");
-    const router = useLocaleRouter();
-    useEffect(() => {
-        block?.unblock();
-    }, []);
     return <AppShell>
         <Box>
-            <LoadingOverlay
-                visible={block?.isBlock || false}
-            />
-            <Group
-                className={classes.HeaderGroup}
-                justify={"apart"}
+            <Unblock/>
+            <BlockLoadingOverlay/>
+            <Grid
+                align={"center"}
+                px={"md"}
+                pt={"xs"}
             >
-                <Group>
-                    <LocaleLink href={homeUrl}>
+                <GridCol span={"content"}>
+                    <LocaleLink
+                        href={homeUrl}
+                        style={{
+                            display: "block",
+                        }}
+                    >
                         <Image
                             priority={true}
-                            width={200}
-                            height={64}
+                            height={32}
                             alt={"logo"}
                             src={logo}
                         />
                     </LocaleLink>
+                </GridCol>
+                <GridCol span={"auto"} m={0}>
                     {center}
-                </Group>
-                {!withoutLogin && <Group>
-                    <Button
-                        leftSection={<IconLogin/>}
-                        onClick={() => loginUrl ? router.push({
-                            href: loginUrl,
-                        }) : signIn()}
-                    >
-                        {t("button.sign-in")}
-                    </Button>
-                </Group>}
-            </Group>
+                </GridCol>
+                <GridCol span={"content"}>
+                    <Group gap={"xs"}>
+                        {right}
+                        {!withoutLogin && <Group>
+                            <LoginButton
+                                loginUrl={loginUrl}
+                            />
+                        </Group>}
+                    </Group>
+                </GridCol>
+            </Grid>
         </Box>
-        <AppShell.Main>
+        <AppShellMain>
             {children}
-        </AppShell.Main>
+        </AppShellMain>
     </AppShell>;
 };

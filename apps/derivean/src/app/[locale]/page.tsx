@@ -1,13 +1,13 @@
-import {CheckAuthenticatedSession} from "@use-pico/auth";
-import {LoadingOverlay}            from "@use-pico/ui";
+import {redirect} from "next/navigation";
 
-export default function Index() {
-    return <>
-        <CheckAuthenticatedSession
-            redirect={"/game"}
-        />
-        <LoadingOverlay
-            visible
-        />
-    </>;
+export namespace Index {
+    export interface Props {
+        params: {
+            locale: string;
+        };
+    }
+}
+
+export default function Index({params: {locale}}: Index.Props) {
+    redirect(`/${locale}/public`);
 }

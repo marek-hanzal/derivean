@@ -18,7 +18,6 @@ import {
     RouterTransition
 }                               from "@use-pico/ui";
 import axios                    from "axios";
-import {SessionProvider}        from "next-auth/react";
 import {NextIntlClientProvider} from "next-intl";
 import {
     type FC,
@@ -55,50 +54,45 @@ export const Providers: FC<Providers.Props> = (
     useEffect(() => {
         axios.defaults.baseURL = baseUrl;
     }, [baseUrl]);
-    return <SessionProvider
-        refetchInterval={30}
-        refetchOnWindowFocus
-    >
-        <QueryClientProvider>
-            <RpcProvider
-                url={rpcUrl}
+    return <QueryClientProvider>
+        <RpcProvider
+            url={rpcUrl}
+        >
+            <NextIntlClientProvider
+                locale={locale}
+                messages={translations}
+                onError={() => {
+                }}
+                getMessageFallback={process.env.NODE_ENV === "development" ? undefined : ({key}) => {
+                    return key;
+                }}
             >
-                <NextIntlClientProvider
-                    locale={locale}
-                    messages={translations}
-                    onError={() => {
-                    }}
-                    getMessageFallback={process.env.NODE_ENV === "development" ? undefined : ({key}) => {
-                        return key;
-                    }}
+                <MantineProvider
+                    theme={createTheme({
+                        primaryColor: "blue",
+                        primaryShade: 5,
+                        ...theme
+                    })}
                 >
-                    <MantineProvider
-                        theme={createTheme({
-                            primaryColor: "blue",
-                            primaryShade: 5,
-                            ...theme
-                        })}
-                    >
-                        <RouterTransition/>
-                        <Notifications position={"top-right"}/>
-                        <ModalsProvider>
-                            <DateTimeProvider
-                                locale={locale}
-                            >
-                                <ActiveProvider>
-                                    <BlockProvider>
-                                        <DrawerStoreProvider>
-                                            <ModalStoreProvider>
-                                                {children}
-                                            </ModalStoreProvider>
-                                        </DrawerStoreProvider>
-                                    </BlockProvider>
-                                </ActiveProvider>
-                            </DateTimeProvider>
-                        </ModalsProvider>
-                    </MantineProvider>
-                </NextIntlClientProvider>
-            </RpcProvider>
-        </QueryClientProvider>
-    </SessionProvider>;
+                    <RouterTransition/>
+                    <Notifications position={"top-right"}/>
+                    <ModalsProvider>
+                        <DateTimeProvider
+                            locale={locale}
+                        >
+                            <ActiveProvider>
+                                <BlockProvider>
+                                    <DrawerStoreProvider>
+                                        <ModalStoreProvider>
+                                            {children}
+                                        </ModalStoreProvider>
+                                    </DrawerStoreProvider>
+                                </BlockProvider>
+                            </ActiveProvider>
+                        </DateTimeProvider>
+                    </ModalsProvider>
+                </MantineProvider>
+            </NextIntlClientProvider>
+        </RpcProvider>
+    </QueryClientProvider>;
 };
