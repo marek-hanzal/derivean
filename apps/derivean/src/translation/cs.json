@@ -1,10 +1,8 @@
 {
-	"public": {
-		"index": {
-			"title": "The Legacy of DeRivean"
-		},
-		"sign-in": {
-			"button": "Přihlášení"
+	"error": {
+		"404": {
+			"title": "Stránka nenalezena",
+			"message": "Kde nic, tu nic"
 		}
 	},
 	"game": {
@@ -12,10 +10,27 @@
 			"title": "Přehled"
 		}
 	},
-	"error": {
-		"404": {
-			"title": "Stránka nenalezena",
-			"message": "Kde nic, tu nic"
+	"manager": {
+		"resource": {
+			"list": {
+				"title": "Seznam zdrojů"
+			}
+		},
+		"link": {
+			"resource": {
+				"list": "Seznam zdrojů"
+			}
+		},
+		"index": {
+			"title": "Správce hry"
+		}
+	},
+	"public": {
+		"index": {
+			"title": "The Legacy of DeRivean"
+		},
+		"sign-in": {
+			"button": "Přihlášení"
 		}
 	}
 }

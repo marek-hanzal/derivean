@@ -4,6 +4,7 @@ import withPlugins from 'next-compose-plugins';
 const transpile = [
     '@derivean/game',
     '@derivean/inventory',
+    '@derivean/manager',
     '@derivean/orm',
     '@derivean/producer',
     '@derivean/public',

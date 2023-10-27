@@ -12,6 +12,7 @@
 	"dependencies": {
 		"@derivean/game": "^0.5.0",
 		"@derivean/inventory": "^0.5.0",
+		"@derivean/manager": "^0.5.0",
 		"@derivean/producer": "^0.5.0",
 		"@derivean/public": "^0.5.0",
 		"@derivean/resource": "^0.5.0",

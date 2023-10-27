@@ -1,11 +1,13 @@
 import {env}                   from "@/derivean/env";
 import {withProducerContainer} from "@derivean/producer";
+import {withResourceContainer} from "@derivean/resource";
 import {PrismaClient}          from "@prisma/client";
 import {withClient}            from "@use-pico/orm";
 import {withServerContainer}   from "@use-pico/server";
 
 const register = [
     withProducerContainer,
+    withResourceContainer,
 ] as const;
 
 export const container = withServerContainer();
@@ -22,3 +24,4 @@ withClient.factory(container, () => {
 });
 
 register.forEach(register => register(container));
+
