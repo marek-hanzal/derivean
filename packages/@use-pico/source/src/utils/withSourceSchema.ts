@@ -48,7 +48,12 @@ export const withSourceSchema = <
     ObjectSchema<FilterSchema["shape"] & TFilterSchema["shape"]>,
     TOrderBySchema
 > => {
-    const {shape, entity, orderBy, ...rest} = factory(schema);
+    const {
+        shape,
+        entity,
+        orderBy,
+        ...rest
+    } = factory(schema);
     const filter = merge([
         FilterSchema,
         rest.filter,

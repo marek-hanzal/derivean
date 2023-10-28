@@ -199,7 +199,7 @@ const Schema: schema.Schema = {
     get number$() {
         return withNullish(withNumber());
     },
-    _number:  withNumber,
+    _number: withNumber,
     object:   withObject,
     optional: withOptional,
     partial:  withPartial,

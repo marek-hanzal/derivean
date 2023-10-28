@@ -54,6 +54,7 @@ export const Page: FC<Page.Props> = (
         title,
         icon,
         withTranslation,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         withActive = [],
         postfix,
         append,

@@ -61,7 +61,7 @@ export const withForm: IGenerator<IWithFormParams> = async (
                     "@use-pico/form-client": [
                         "createFormContext",
                     ],
-                    [packages.schema]:       [
+                    [packages.schema]: [
                         `type I${name}FormSchemaType`,
                     ],
                 },
@@ -88,7 +88,7 @@ createFormContext<I${name}FormSchemaType>({
                     "@use-pico/form-client": [
                         "createMantineFormContext",
                     ],
-                    [packages.schema]:       [
+                    [packages.schema]: [
                         `type I${name}FormSchemaType`,
                     ],
                 },
@@ -108,7 +108,7 @@ createFormContext<I${name}FormSchemaType>({
         withSourceFile()
             .withImports({
                 imports: {
-                    "@use-pico/form-client":                [
+                    "@use-pico/form-client": [
                         "type IWithInputProps",
                         "WithInput",
                     ],
@@ -146,7 +146,7 @@ props => {
         withSourceFile()
             .withImports({
                 imports: {
-                    "@use-pico/form-client":                  type === "common" ? [
+                    "@use-pico/form-client": type === "common" ? [
                         "BaseForm",
                         "type IBaseFormProps",
                     ] : [
@@ -216,10 +216,10 @@ props => {
             withSourceFile()
                 .withImports({
                     imports: {
-                        "@use-pico/form":                             [
+                        "@use-pico/form":         [
                             "type ITrpcFormProps",
                         ],
-                        "@use-pico/utils-client":                     [
+                        "@use-pico/utils-client": [
                             "BlockStore",
                         ],
                         [packages.schema]:                            [

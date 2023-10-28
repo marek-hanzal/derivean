@@ -42,7 +42,7 @@ export const withQueryProvider: IGenerator<IWithQueryProviderParams> = async (
         withSourceFile()
             .withImports({
                 imports: {
-                    "@use-pico/source-client":   [
+                    "@use-pico/source-client": [
                         "type IQueryProviderProps",
                         "QueryProvider",
                     ],

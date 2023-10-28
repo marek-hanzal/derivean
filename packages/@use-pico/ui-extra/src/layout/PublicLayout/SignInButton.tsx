@@ -3,7 +3,6 @@
 import {IconLogin} from "@tabler/icons-react";
 import {
     Translation,
-    useLocaleLinkTo,
     useLocaleRouter
 }                  from "@use-pico/i18n";
 import {Button}    from "@use-pico/ui";
@@ -26,7 +25,6 @@ export const SignInButton: FC<SignInButton.Props> = (
         signInOptions,
     }
 ) => {
-    const linkTo = useLocaleLinkTo();
     const router = useLocaleRouter();
 
     return <Button

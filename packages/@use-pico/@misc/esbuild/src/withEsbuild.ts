@@ -14,7 +14,7 @@ export const withEsbuild = (config?: BuildOptions): BuildOptions => {
         sourcemap:   false,
         outdir:      "lib",
         packages:    "external",
-        plugins:     [
+        plugins: [
             CssModulesPlugin({
                 force:               true,
                 emitDeclarationFile: ".css.d.ts",

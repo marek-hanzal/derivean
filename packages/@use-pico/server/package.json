@@ -1,7 +1,7 @@
 {
 	"version": "1.0.0",
 	"name": "@use-pico/server",
-	"description": "Server side stuff.",
+	"description": "Server side stuff, DI container and so on. This is quite heavy dependency (core of server-side pico).",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -19,7 +19,7 @@
 		"src"
 	],
 	"scripts": {
-		"no:build": "concurrently npm:build:*",
+		"build": "concurrently npm:build:*",
 		"build:esbuild": "node esbuild.mjs",
 		"build:types": "tsc --outDir lib",
 		"lint": "eslint src",

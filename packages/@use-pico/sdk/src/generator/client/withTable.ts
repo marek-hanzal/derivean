@@ -42,7 +42,7 @@ export const withTable: IGenerator<IWithTableParams> = async (
         withSourceFile()
             .withImports({
                 imports: {
-                    "@use-pico/table-client":    [
+                    "@use-pico/table-client": [
                         "SourceTable",
                         "type ISourceTableInternalProps",
                     ],

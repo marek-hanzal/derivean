@@ -1,7 +1,5 @@
 export * from "./IUserSession";
-export * from "./OnSession";
 export * from "./SessionSchema";
-export * from "./useOnSession";
 export * from "./withAuthContainer";
 export * from "./withAuthEndpoint";
 export * from "./withAuthMiddleware";

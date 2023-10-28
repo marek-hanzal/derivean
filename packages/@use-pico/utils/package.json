@@ -19,7 +19,7 @@
 		"src"
 	],
 	"scripts": {
-		"no:build": "concurrently npm:build:*",
+		"build": "concurrently npm:build:*",
 		"build:esbuild": "node esbuild.mjs",
 		"build:types": "tsc --outDir lib",
 		"lint": "eslint src",
@@ -29,7 +29,6 @@
 	},
 	"dependencies": {
 		"@paralleldrive/cuid2": "^2.2.1",
-		"@types/classnames": "^2.3.1",
 		"@types/humanize-duration": "^3.27.1",
 		"@types/is-callable": "^1.1.0",
 		"@types/is-empty": "^1.2.1",

@@ -38,10 +38,10 @@ export const withSelect: IGenerator<IWithSelectParams> = async (
         withSourceFile()
             .withImports({
                 imports: {
-                    "@use-pico/form":                  [
+                    "@use-pico/form":        [
                         "type IFormSchemaType",
                     ],
-                    "@use-pico/form-client":           [
+                    "@use-pico/form-client": [
                         "type ISourceSelectProps",
                         "SourceSelect",
                     ],
@@ -95,10 +95,10 @@ export const withSelect: IGenerator<IWithSelectParams> = async (
         withSourceFile()
             .withImports({
                 imports: {
-                    "@use-pico/form":                       [
+                    "@use-pico/form":        [
                         "type IFormSchemaType",
                     ],
-                    "@use-pico/form-client":                [
+                    "@use-pico/form-client": [
                         "type ISourceMultiSelectProps",
                         "SourceMultiSelect",
                     ],

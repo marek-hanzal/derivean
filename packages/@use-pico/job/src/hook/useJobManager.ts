@@ -129,7 +129,7 @@ export const useJobManager = <
         useJob:     () => {
             return job;
         },
-        mutation:   {
+        mutation: {
             asyncMutation,
             jobMutation,
             interruptMutation,
