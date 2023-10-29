@@ -21,9 +21,9 @@
 	"devDependencies": {
 		"@types/node": "^20.4.2",
 		"@types/react": "^18.2.15",
-		"@use-pico/esbuild": "^1.0.0",
-		"@use-pico/eslint-config-eslint": "^1.0.0",
-		"@use-pico/tsconfig": "^1.0.0",
+		"@use-pico2/esbuild": "^1.0.0",
+		"@use-pico2/eslint-config-eslint": "^1.0.0",
+		"@use-pico2/tsconfig": "^1.0.0",
 		"concurrently": "^8.2.2",
 		"del-cli": "^5.0.0",
 		"eslint": "^8.45.0",

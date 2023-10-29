@@ -2,8 +2,8 @@ import {env}                   from "@/derivean/env";
 import {withProducerContainer} from "@derivean/producer";
 import {withResourceContainer} from "@derivean/resource";
 import {PrismaClient}          from "@prisma/client";
-import {withClient}            from "@use-pico/orm";
-import {withServerContainer}   from "@use-pico/server";
+import {withClient}            from "@use-pico2/orm";
+import {withServerContainer}   from "@use-pico2/server";
 
 const register = [
     withProducerContainer,

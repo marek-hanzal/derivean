@@ -1,6 +1,6 @@
 import {container}        from "@/derivean/container";
 import {env}              from "@/derivean/env";
-import {withAuthEndpoint} from "@use-pico/auth";
+import {withAuthEndpoint} from "@use-pico2/auth";
 import GitHub             from "next-auth/providers/github";
 
 const endpoint = withAuthEndpoint({

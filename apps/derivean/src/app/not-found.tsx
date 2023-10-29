@@ -7,7 +7,7 @@ import {
 import {
     useLocaleOf,
     useLocaleRedirect
-} from "@use-pico/i18n";
+} from "@use-pico2/i18n";
 
 export default function Custom404() {
     const localeOf = useLocaleOf({

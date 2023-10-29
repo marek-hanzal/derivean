@@ -1,9 +1,8 @@
-import {LayoutShell}            from "@use-pico/ui-extra";
-import {type PropsWithChildren} from "react";
+"use client";
 
-// export async function generateStaticParams() {
-//     return locales.map(locale => ({locale}));
-// }
+import {withQuery}              from "@use-pico2/i18n";
+import {LayoutShell}            from "@use-pico2/ui-extra";
+import {type PropsWithChildren} from "react";
 
 export namespace Layout {
     export type Props = PropsWithChildren<{
@@ -13,13 +12,12 @@ export namespace Layout {
     }>;
 }
 
-export default async function Layout(
+export default function Layout(
     {
         children,
         params: {locale}
     }: Layout.Props
 ) {
-    const translations = (await import(`../../translation/${locale}.json`)).default;
     return <LayoutShell
         theme={{
             /**
@@ -29,7 +27,13 @@ export default async function Layout(
             primaryShade: 5,
         }}
         locale={locale}
-        translations={translations}
+        withTranslationQuery={withQuery({
+            async callback() {
+                return {
+                    translations: (await import(`../../translation/${locale}.json`)).default,
+                };
+            }
+        })}
     >
         {children}
     </LayoutShell>;

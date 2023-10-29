@@ -2,8 +2,8 @@ import {
     defaultLocale,
     locales
 }                       from "@/derivean/locales";
-import {LocaleRedirect} from "@use-pico/ui";
-import {Providers}      from "@use-pico/ui-extra";
+import {LocaleRedirect} from "@use-pico2/ui";
+import {Providers}      from "@use-pico2/ui-extra";
 
 export default function Index() {
     /**
@@ -11,7 +11,6 @@ export default function Index() {
      */
     return <Providers
         locale={"en"}
-        translations={{}}
     >
         <LocaleRedirect
             locale={{

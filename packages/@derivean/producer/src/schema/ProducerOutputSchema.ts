@@ -2,7 +2,7 @@ import {ResourceSchema} from "@derivean/resource";
 import {
     type PicoSchema,
     schema
-}                       from "@use-pico/schema";
+}                       from "@use-pico2/schema";
 
 export const ProducerOutputSchema = schema(z => z.object({
     resource: ResourceSchema,

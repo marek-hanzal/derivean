@@ -18,9 +18,9 @@
 		"next-auth": "^4.24.3"
 	},
 	"devDependencies": {
-		"@use-pico/esbuild": "^1.0.2",
-		"@use-pico/eslint-config-eslint": "^1.0.2",
-		"@use-pico/tsconfig": "^1.0.2",
+		"@use-pico2/esbuild": "^1.0.2",
+		"@use-pico2/eslint-config-eslint": "^1.0.2",
+		"@use-pico2/tsconfig": "^1.0.2",
 		"@types/node": "^20.8.6",
 		"@types/react": "^18.2.28",
 		"concurrently": "^8.2.1",

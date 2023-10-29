@@ -3,8 +3,8 @@ import {
     withInventoryService
 }                              from "@derivean/inventory";
 import {ResourceSchema}        from "@derivean/resource";
-import {Container}             from "@use-pico/container";
-import {DateTime}              from "@use-pico/i18n";
+import {Container}             from "@use-pico2/container";
+import {DateTime}              from "@use-pico2/i18n";
 import {
     describe,
     expect,

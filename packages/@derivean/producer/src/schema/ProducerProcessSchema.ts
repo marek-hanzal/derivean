@@ -2,7 +2,7 @@ import {InventorySchema} from "@derivean/inventory";
 import {
     type PicoSchema,
     schema
-}                        from "@use-pico/schema";
+}                        from "@use-pico2/schema";
 import {ProducerSchema}  from "./ProducerSchema";
 
 export const ProducerProcessSchema = schema(z => z.object({

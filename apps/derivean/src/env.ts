@@ -1,5 +1,5 @@
-import {withEnv} from "@use-pico/env";
-import {schema}  from "@use-pico/schema";
+import {withEnv} from "@use-pico2/env";
+import {schema}  from "@use-pico2/schema";
 
 export const {env} = withEnv({
     client:     schema(z => z.object({})),

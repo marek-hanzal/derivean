@@ -1,5 +1,5 @@
 import {ResourceIcon} from "@derivean/ui";
-import {MainMenu}     from "@use-pico/ui";
+import {MainMenu}     from "@use-pico2/ui";
 import {type FC}      from "react";
 
 export namespace ManagerMenu {

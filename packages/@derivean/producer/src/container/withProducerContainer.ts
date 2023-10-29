@@ -1,4 +1,4 @@
-import {type IContainer}     from "@use-pico/container";
+import {type IContainer}     from "@use-pico2/container";
 import {ProducerService}     from "../service/ProducerService";
 import {withProducerService} from "./withProducerService";
 

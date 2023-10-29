@@ -38,6 +38,39 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/types/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/ui-extra/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/ui/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/file/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/form/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/generator/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/hook/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/repository-server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/rpc-server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/store/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/table/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/ui/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/utils/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/@misc/env/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/@misc/esbuild/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/auth/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/calendar/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/container/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/file/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/form/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/hook/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/i18n/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/query/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/repository/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/schema/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/schema/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/source/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/source/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/store/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/table/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/types/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/ui-extra/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/ui/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/ui/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/utils/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@derivean/public/.turbo" />
@@ -82,6 +115,70 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/ui-extra/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/ui/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/ui/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/auth-server/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/auth-server/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/file/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/file/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/form/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/form/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/generator/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/generator/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/hook/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/hook/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/logger/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/logger/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/repository-server/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/repository-server/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/repository/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/repository/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/rpc-server/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/rpc-server/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/store/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/store/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/table/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/table/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/utils/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/utils/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/@misc/env/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/@misc/env/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/@misc/esbuild/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/@misc/esbuild/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/auth/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/auth/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/calendar/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/calendar/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/container/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/container/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/file/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/file/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/form/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/form/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/hook/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/hook/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/i18n/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/i18n/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/query/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/query/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/repository/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/repository/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/schema/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/schema/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/server/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/server/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/source/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/source/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/store/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/store/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/table/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/table/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/types/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/types/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/ui-extra/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/ui-extra/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/ui/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/ui/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/utils/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/utils/lib" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

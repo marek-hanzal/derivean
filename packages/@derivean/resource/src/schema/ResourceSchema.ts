@@ -1,12 +1,11 @@
 import {
-    type PicoSchema,
-    schema
-} from "@use-pico/schema";
+    identityOf,
+    type PicoSchema
+} from "@use-pico2/schema";
 
-export const ResourceSchema = schema(z => z.object({
+export const ResourceSchema = identityOf(z => z.object({
     name: z.string,
 }));
-
 export type ResourceSchema = typeof ResourceSchema;
 export namespace ResourceSchema {
     export type Type = PicoSchema.Output<ResourceSchema>;

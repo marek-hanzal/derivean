@@ -1,6 +1,6 @@
 "use client";
 
-import {Page} from "@use-pico/ui";
+import {Page} from "@use-pico2/ui";
 
 export default function Index() {
     return <Page
