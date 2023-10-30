@@ -34,22 +34,18 @@ export class ResourceRepository extends AbstractRepository<
 
     public async count(query: ResourceQuerySchema.Type): Promise<CountSchema.Type> {
         return {
-            total: 0,
-            where: 0,
-            count: 0,
+            total: await this.prisma.resource.count(),
+            where: await this.prisma.resource.count(),
+            count: await this.prisma.resource.count(),
         };
     }
 
     public async query(query: PicoSchema.Output<ResourceQuerySchema>): Promise<PicoSchema.Output<ResourceSchema>[]> {
-        return [
-            {
-                id:   "1234",
-                name: "foo",
-            },
-            {
-                id:   "1235",
-                name: "bar",
-            },
-        ];
+        return this.prisma.resource.findMany({
+            select: {
+                id:   true,
+                name: true,
+            }
+        });
     }
 }

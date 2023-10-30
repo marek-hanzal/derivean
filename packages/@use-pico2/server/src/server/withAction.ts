@@ -1,10 +1,13 @@
-import {type IContainer} from "@use-pico2/container";
+import {
+    type IContainer,
+    instance
+} from "@use-pico2/container";
 import {
     parse,
     type PicoSchema,
     type RequestSchema,
     type ResponseSchema
-}                        from "@use-pico2/schema";
+} from "@use-pico2/schema";
 
 export namespace withAction {
     export interface Props<
@@ -34,18 +37,18 @@ export const withAction = <
     TResponseSchema extends ResponseSchema,
 >(
     factory: withAction.Props<TRequestSchema, TResponseSchema>,
-): (container: IContainer.Type) => withAction.Action<TRequestSchema, TResponseSchema> => {
-    return container => {
-        const {
-            request,
-            response,
-            action
-        } = factory(container);
-        return async $request => parse(
-            response,
-            await action(
-                parse(request, $request),
-            )
-        );
-    };
+): withAction.Action<TRequestSchema, TResponseSchema> => {
+    const $container = instance.container().child();
+    // here container could be modified (provide user stuff and so on)
+    const {
+        request,
+        response,
+        action
+    } = factory($container);
+    return async $request => parse(
+        response,
+        await action(
+            parse(request, $request),
+        )
+    );
 };

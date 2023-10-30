@@ -23,4 +23,3 @@ withClient.factory(container, () => {
 });
 
 register.forEach(register => register(container));
-

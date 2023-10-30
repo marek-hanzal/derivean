@@ -1,4 +1,3 @@
-import {container}               from "@derivean/server";
 import {withSourceQuery}         from "@use-pico2/source";
 import {withResourceQueryAction} from "../action/withResourceQueryAction";
 import {ResourceQuerySchema}     from "../schema/ResourceQuerySchema";
@@ -12,5 +11,5 @@ export const withResourceQuery = withSourceQuery({
         response: ResourceSchema,
     },
     withCountQuery: withResourceCountQuery,
-    callback: withResourceQueryAction(container),
+    callback: withResourceQueryAction,
 });

@@ -29,4 +29,8 @@ export class Container {
         this.container.bindValue(key, value);
         return this;
     }
+
+    public child() {
+        return new Container(this.container.child());
+    }
 }

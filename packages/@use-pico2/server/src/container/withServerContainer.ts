@@ -2,6 +2,7 @@ import {withAuthContainer} from "@use-pico2/auth";
 import {
     Container,
     type IContainer,
+    instance as coolInstance,
     withContainer
 }                          from "@use-pico2/container";
 
@@ -15,5 +16,5 @@ export const withServerContainer = (instance?: IContainer.Instance) => {
 
     register.forEach(register => register(container));
 
-    return container;
+    return coolInstance.withInstance(container);
 };
