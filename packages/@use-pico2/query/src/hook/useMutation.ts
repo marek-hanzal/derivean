@@ -41,11 +41,11 @@ export const useMutation = <
     const queryClient = useQueryClient();
     return useCoolMutation({
         mutationKey: key.concat($mutationKey || []),
-        mutationFn:  request => {
+        mutationFn: async request => {
             try {
                 return parse(
                     schema.response,
-                    mutator(
+                    await mutator(
                         parse(schema.request, request)
                     )
                 );

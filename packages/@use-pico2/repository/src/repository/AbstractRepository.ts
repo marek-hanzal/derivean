@@ -17,6 +17,7 @@ import {
     type MutationSchema,
     type ShapeSchema
 }                         from "@use-pico2/source";
+import {generateId}       from "@use-pico2/utils";
 
 export abstract class AbstractRepository<
     TEntitySchema extends WithIdentitySchema,
@@ -70,11 +71,20 @@ export abstract class AbstractRepository<
     }
 
     public async query(query: PicoSchema.Output<TQuerySchema>): Promise<PicoSchema.Output<TEntitySchema>[]> {
-        return this.client.selectFrom(this.table).selectAll().execute() as unknown as Promise<PicoSchema.Output<TEntitySchema>[]>;
+        return await this.client.selectFrom(this.table).selectAll().execute() as unknown as Promise<PicoSchema.Output<TEntitySchema>[]>;
     }
 
-    public mutate(mutation: PicoSchema.Output<TMutationSchema>): Promise<PicoSchema.Output<TEntitySchema>> {
-        console.log("mutation", mutation);
-        return Promise.resolve(undefined as any);
+    public async mutate(mutation: PicoSchema.Output<TMutationSchema>): Promise<PicoSchema.Output<TEntitySchema>> {
+        if (mutation.create) {
+            return this.create(mutation.create);
+        }
+        throw new Error("Nothing to do");
+    }
+
+    public async create(create: PicoSchema.Output<TMutationSchema["shape"]["create"]>): Promise<PicoSchema.Output<TEntitySchema>> {
+        return await this.client.insertInto(this.table).values({
+            ...create,
+            id: generateId(),
+        }).returningAll().executeTakeFirstOrThrow() as unknown as Promise<PicoSchema.Output<TEntitySchema>>;
     }
 }

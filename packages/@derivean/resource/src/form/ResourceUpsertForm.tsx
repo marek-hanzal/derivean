@@ -15,7 +15,7 @@ export namespace ResourceUpsertForm {
     >;
 }
 
-export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = () => {
+export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = props => {
     return <Form
         withMutation={withResourceMutation}
         schema={ResourceShapeSchema}
@@ -31,5 +31,6 @@ export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = () => {
         Render={({Input}) => <>
             <Input name={"name"}/>
         </>}
+        {...props}
     />;
 };

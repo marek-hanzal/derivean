@@ -13,18 +13,21 @@ export namespace ResourceTableAction {
 }
 
 export const ResourceTableAction: FC<ResourceTableAction.Props> = () => {
+    const createId = "resource.create";
     return <>
         <Modal
             icon={<CreateIcon/>}
-            modalId={"create"}
+            modalId={createId}
             title={"create.title"}
         >
-            <ResourceUpsertForm/>
+            <ResourceUpsertForm
+                withAutoClose={[createId]}
+            />
         </Modal>
 
         <TableActionMenu>
             <ModalMenuItem
-                modalId={"create"}
+                modalId={createId}
                 withLabel={"create.label"}
             />
         </TableActionMenu>
