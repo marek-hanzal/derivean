@@ -1,4 +1,3 @@
-import {env}                   from "@/derivean/env";
 import {withProducerContainer} from "@derivean/producer";
 import {withResourceContainer} from "@derivean/resource";
 import {PrismaClient}          from "@prisma/client";
@@ -14,7 +13,7 @@ export const container = withServerContainer();
 withClient.factory(container, () => {
     return new PrismaClient({
         errorFormat: "pretty",
-        log:         env.NODE_ENV === "development"
+        log:         process.env.NODE_ENV === "development"
                          ? [
                 // "query",
                 "error",

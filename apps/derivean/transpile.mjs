@@ -7,6 +7,7 @@ export const transpile = [
     '@derivean/public',
     '@derivean/resource',
     '@derivean/root',
+    '@derivean/server',
     '@derivean/ui',
     '@use-pico2/auth',
     '@use-pico2/calendar',

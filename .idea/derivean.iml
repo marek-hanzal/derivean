@@ -38,6 +38,7 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/types/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/ui-extra/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/ui/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/server/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/file/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/form/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/generator/src" isTestSource="false" />

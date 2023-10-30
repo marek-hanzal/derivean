@@ -36,4 +36,6 @@ export abstract class AbstractRepository<
     }
 
     abstract count(query: PicoSchema.Output<TQuerySchema>): Promise<CountSchema.Type>;
+
+    abstract query(query: PicoSchema.Output<TQuerySchema>): Promise<PicoSchema.Output<TEntitySchema>[]>;
 }

@@ -1,12 +1,20 @@
+import {type IContainer} from "@use-pico2/container";
 import {
     parse,
     type PicoSchema,
     type RequestSchema,
     type ResponseSchema
-} from "@use-pico2/schema";
+}                        from "@use-pico2/schema";
 
 export namespace withAction {
     export interface Props<
+        TRequestSchema extends RequestSchema,
+        TResponseSchema extends ResponseSchema,
+    > {
+        (container: IContainer.Type): ActionProps<TRequestSchema, TResponseSchema>;
+    }
+
+    export interface ActionProps<
         TRequestSchema extends RequestSchema,
         TResponseSchema extends ResponseSchema,
     > {
@@ -18,23 +26,22 @@ export namespace withAction {
     export type Action<
         TRequestSchema extends RequestSchema,
         TResponseSchema extends ResponseSchema,
-    > = (request: PicoSchema.Output<TRequestSchema>) => Promise<PicoSchema.Output<TResponseSchema>>;
+    > = (request: PicoSchema.Output<TRequestSchema>, container: IContainer.Type) => Promise<PicoSchema.Output<TResponseSchema>>;
 }
 
 export const withAction = <
     TRequestSchema extends RequestSchema,
     TResponseSchema extends ResponseSchema,
 >(
-    {
-        request,
-        response,
-        action,
-    }: withAction.Props<TRequestSchema, TResponseSchema>,
-): withAction.Action<TRequestSchema, TResponseSchema> => {
-    return async $request => parse(
+    factory: withAction.Props<TRequestSchema, TResponseSchema>,
+): (container: IContainer.Type) => withAction.Action<TRequestSchema, TResponseSchema> => {
+    return container => async ($request, container) => parse(
         response,
         await action(
-            parse(request, $request)
+            parse(request, $request),
+            container
         )
-    );
+    )
+)
+
 };

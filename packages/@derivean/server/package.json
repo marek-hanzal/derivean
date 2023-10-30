@@ -1,7 +1,7 @@
 {
 	"version": "0.5.0",
-	"name": "@derivean/resource",
-	"description": "Package for managing in-game resources.",
+	"name": "@derivean/server",
+	"description": "Server-side common stuff.",
 	"sideEffects": false,
 	"type": "module",
 	"main": "src/index.ts",
@@ -14,12 +14,11 @@
 		"cleanup": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
 	"dependencies": {
-		"@derivean/server": "^0.5.0",
+		"@derivean/producer": "^0.5.0",
+		"@derivean/resource": "^0.5.0",
+		"@prisma/client": "^5.5.2",
 		"@use-pico2/orm": "^1.0.0",
-		"@use-pico2/query": "^1.0.0",
-		"@use-pico2/repository": "^1.0.0",
-		"@use-pico2/schema": "^1.0.0",
-		"@use-pico2/table": "^1.0.0"
+		"@use-pico2/server": "^1.0.0"
 	},
 	"devDependencies": {
 		"@use-pico2/esbuild": "^1.0.0",
