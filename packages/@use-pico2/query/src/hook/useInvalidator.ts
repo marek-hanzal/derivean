@@ -1,4 +1,7 @@
-import {useQueryClient}    from "@tanstack/react-query";
+import {
+    type QueryKey,
+    useQueryClient
+}                          from "@tanstack/react-query";
 import {type IInvalidator} from "../api/IInvalidator";
 
 export namespace useInvalidator {
@@ -17,9 +20,21 @@ export const useInvalidator = (
 ) => {
     const queryClient = useQueryClient();
     return invalidator ? (async () => {
-        return invalidator({
+        const keys = await invalidator({
             queryClient,
         });
+        if (Array.isArray(keys)) {
+            /**
+             * Optimistic Promise.all, but in this cas it looks quite "stable"
+             */
+            await Promise.all(
+                (keys as QueryKey[]).map(key => {
+                    return queryClient.invalidateQueries({
+                        queryKey: key,
+                    });
+                })
+            );
+        }
     }) : (async () => {
         return queryClient.invalidateQueries({
             queryKey: key,

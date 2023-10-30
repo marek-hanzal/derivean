@@ -1,5 +1,6 @@
 import {withMutation}               from "@use-pico2/query";
 import {withResourceMutationAction} from "../action/withResourceMutationAction";
+import {withResourceCountQuery}     from "../query/withResourceCountQuery";
 import {withResourceQuery}          from "../query/withResourceQuery";
 import {ResourceMutationSchema}     from "../schema/ResourceMutationSchema";
 import {ResourceSchema}             from "../schema/ResourceSchema";
@@ -11,10 +12,9 @@ export const withResourceMutation = withMutation({
         response: ResourceSchema,
     },
     mutator:     withResourceMutationAction,
-    invalidator: async ({queryClient}) => {
-        await queryClient.invalidateQueries({
-            queryKey: withResourceQuery.key,
-        });
-    }
+    invalidator: async () => [
+        withResourceQuery.key,
+        withResourceCountQuery.key
+    ],
 });
 export type withResourceMutation = typeof withResourceMutation;

@@ -1,13 +1,11 @@
-import {
-    useMutation as useCoolMutation,
-    useQueryClient
-}                           from "@tanstack/react-query";
+import {useMutation as useCoolMutation} from "@tanstack/react-query";
 import {
     parse,
     type RequestSchema,
     type ResponseSchema
-}                           from "@use-pico2/schema";
-import {type IWithMutation} from "../api/IWithMutation";
+}                                       from "@use-pico2/schema";
+import {type IWithMutation}             from "../api/IWithMutation";
+import {useInvalidator}                 from "./useInvalidator";
 
 export namespace useMutation {
     export interface Props<
@@ -38,7 +36,12 @@ export const useMutation = <
         ...options
     }: useMutation.Props<TRequestSchema, TResponseSchema>
 ) => {
-    const queryClient = useQueryClient();
+    const $invalidator = invalidator ? useInvalidator({
+        invalidator: {
+            invalidator,
+            key
+        }
+    }) : (() => null);
     return useCoolMutation({
         mutationKey: key.concat($mutationKey || []),
         mutationFn: async request => {
@@ -58,9 +61,7 @@ export const useMutation = <
         ...options,
         onSuccess: async (data, variables, context) => {
             setTimeout(() => {
-                invalidator?.({
-                    queryClient,
-                });
+                $invalidator();
             }, 0);
             onDefaultSuccess?.(data, variables, context);
             onSuccess?.(data, variables, context);
