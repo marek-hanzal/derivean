@@ -1,5 +1,6 @@
 import {
     type CountSchema,
+    type IQueryStore,
     type IWithQuery,
     type QuerySchema,
     useQueryEx
@@ -12,6 +13,7 @@ export namespace useCount {
         TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > extends IWithQuery.QueryOptions<CountSchema> {
+        store: IQueryStore<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
     }
 }
@@ -21,8 +23,8 @@ export const useCount = <
     TSchema extends WithIdentitySchema,
 >(
     {
+        store,
         withSourceQuery: {
-                             store,
                              withCountQuery
                          },
         ...              options

@@ -1,6 +1,9 @@
 import {IconSearch}              from "@tabler/icons-react";
 import {WithTranslationStore}    from "@use-pico2/i18n";
-import {type QuerySchema}        from "@use-pico2/query";
+import {
+    IQueryStore,
+    type QuerySchema
+}                                from "@use-pico2/query";
 import {type WithIdentitySchema} from "@use-pico2/schema";
 import {
     type IWithSourceQuery,
@@ -22,6 +25,7 @@ export namespace TableCountResult {
         TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > {
+        withQueryStore: IQueryStore<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
         Empty?: FC;
     }
@@ -32,12 +36,14 @@ export const TableCountResult = <
     TSchema extends WithIdentitySchema,
 >(
     {
+        withQueryStore,
         withSourceQuery,
         Empty,
     }: TableCountResult.Props<TQuerySchema, TSchema>
 ) => {
     const {namespace} = WithTranslationStore.use(({namespace}) => ({namespace}));
     const countResult = useCount({
+        store: withQueryStore,
         withSourceQuery,
     });
 

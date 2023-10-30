@@ -1,16 +1,12 @@
-import {type QuerySchema}      from "@use-pico2/query";
-import {
-    type PicoSchema,
-    type WithIdentitySchema
-}                              from "@use-pico2/schema";
-import {type IWithSourceQuery} from "../api/IWithSourceQuery";
+import {type PicoSchema}  from "@use-pico2/schema";
+import {type IQueryStore} from "../api/IQueryStore";
+import {type QuerySchema} from "../schema/QuerySchema";
 
 export namespace useShallowOrderBy {
     export interface Props<
         TQuerySchema extends QuerySchema<any, any>,
-        TSchema extends WithIdentitySchema,
     > {
-        withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
+        store: IQueryStore<TQuerySchema>;
     }
 
     export type Result<
@@ -20,11 +16,10 @@ export namespace useShallowOrderBy {
 
 export const useShallowOrderBy = <
     TQuerySchema extends QuerySchema<any, any>,
-    TSchema extends WithIdentitySchema,
 >(
     {
-        withSourceQuery: {store},
-    }: useShallowOrderBy.Props<TQuerySchema, TSchema>
+        store,
+    }: useShallowOrderBy.Props<TQuerySchema>
 ): useShallowOrderBy.Result<TQuerySchema> => {
     const shallowOrderBy = store.use(({shallowOrderBy}) => shallowOrderBy);
     return orderBy => shallowOrderBy(orderBy);

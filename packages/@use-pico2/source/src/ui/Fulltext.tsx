@@ -3,29 +3,29 @@
 import {
     IconSearch,
     IconX
-}                                from "@tabler/icons-react";
-import {useDebouncedState}       from "@use-pico2/hook";
-import {useTranslation}          from "@use-pico2/i18n";
-import {type QuerySchema}        from "@use-pico2/query";
-import {type WithIdentitySchema} from "@use-pico2/schema";
+}                          from "@tabler/icons-react";
+import {useDebouncedState} from "@use-pico2/hook";
+import {useTranslation}    from "@use-pico2/i18n";
+import {
+    type IQueryStore,
+    type QuerySchema
+}                          from "@use-pico2/query";
 import {
     ActionIcon,
     Loader,
     TextInput,
     WithIcon
-}                                from "@use-pico2/ui";
+}                          from "@use-pico2/ui";
 import {
     useEffect,
     useState
-}                                from "react";
-import {type IWithSourceQuery}   from "../api/IWithSourceQuery";
+}                          from "react";
 
 export namespace Fulltext {
     export interface Props<
         TQuerySchema extends QuerySchema<any, any>,
-        TSchema extends WithIdentitySchema,
     > extends TextInput.Props {
-        withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
+        withQueryStore: IQueryStore<TQuerySchema>;
         loading?: boolean;
         debounce?: number;
 
@@ -35,22 +35,21 @@ export namespace Fulltext {
 
 export const Fulltext = <
     TQuerySchema extends QuerySchema<any, any>,
-    TSchema extends WithIdentitySchema,
 >(
     {
-        withSourceQuery,
+        withQueryStore,
         loading,
         debounce = 250,
         onSearch,
         ...props
-    }: Fulltext.Props<TQuerySchema, TSchema>
+    }: Fulltext.Props<TQuerySchema>
 ) => {
     const t = useTranslation();
     const {
         filter,
         setCursor,
         shallowFilter,
-    } = withSourceQuery.store.use((
+    } = withQueryStore.use((
         {
             filter,
             setCursor,

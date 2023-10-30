@@ -1,5 +1,9 @@
 import {Translation} from "@use-pico2/i18n";
 import {
+    type IQueryStore,
+    type QuerySchema
+}                    from "@use-pico2/query";
+import {
     type IWithSourceQuery,
     useCount
 }                    from "@use-pico2/source";
@@ -14,28 +18,34 @@ import {
     Select,
     Text
 }                    from "@use-pico2/ui";
-import {type FC}     from "react";
 
 export namespace Pagination {
-    export interface Props extends Partial<CoolPagination.Props> {
-        withSourceQuery: IWithSourceQuery<any, any>;
+    export interface Props<
+        TQuerySchema extends QuerySchema<any, any>,
+    > extends Partial<CoolPagination.Props> {
+        withQueryStore: IQueryStore<TQuerySchema>;
+        withSourceQuery: IWithSourceQuery<TQuerySchema, any>;
         hideOnSingle?: boolean;
         refresh?: number;
     }
 }
 
-export const Pagination: FC<Pagination.Props> = (
+export const Pagination = <
+    TQuerySchema extends QuerySchema<any, any>,
+>(
     {
+        withQueryStore,
         withSourceQuery,
         hideOnSingle = true,
         refresh,
         ...props
-    }) => {
+    }: Pagination.Props<TQuerySchema>
+) => {
     const {
         cursor,
         setCursor,
         setSize
-    } = withSourceQuery.store.use((
+    } = withQueryStore.use((
         {
             cursor,
             setCursor,
@@ -47,6 +57,7 @@ export const Pagination: FC<Pagination.Props> = (
     }));
     const {isBlock} = BlockStore.use(({isBlock}) => ({isBlock}));
     const result = useCount({
+        store: withQueryStore,
         withSourceQuery: withSourceQuery,
         refetchInterval: refresh,
     });

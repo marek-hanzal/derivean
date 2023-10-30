@@ -1,9 +1,12 @@
 import {IconRefresh}             from "@tabler/icons-react";
-import {type QuerySchema}        from "@use-pico2/query";
+import {
+    type IQueryStore,
+    type QuerySchema
+}                                from "@use-pico2/query";
 import {type WithIdentitySchema} from "@use-pico2/schema";
 import {
     Fulltext,
-    IWithSourceQuery,
+    type IWithSourceQuery,
     useInvalidator
 }                                from "@use-pico2/source";
 import {
@@ -18,6 +21,7 @@ export namespace TableHeaderControls {
         TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > {
+        withQueryStore: IQueryStore<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
         Filter?: FC<FilterProps<TQuerySchema, TSchema>>;
         Postfix?: FC;
@@ -27,6 +31,7 @@ export namespace TableHeaderControls {
         TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > {
+        withQueryStore: IQueryStore<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
     }
 }
@@ -36,6 +41,7 @@ export const TableHeaderControls = <
     TSchema extends WithIdentitySchema,
 >(
     {
+        withQueryStore,
         withSourceQuery,
         Filter,
         Postfix,
@@ -51,7 +57,7 @@ export const TableHeaderControls = <
     >
         <GridCol span={"auto"}>
             <Fulltext
-                withSourceQuery={withSourceQuery}
+                withQueryStore={withQueryStore}
             />
         </GridCol>
         <GridCol span={"content"}>
@@ -65,7 +71,10 @@ export const TableHeaderControls = <
             </ActionIcon>
         </GridCol>
         {Filter && <GridCol span={"content"}>
-            <Filter withSourceQuery={withSourceQuery}/>
+            <Filter
+                withQueryStore={withQueryStore}
+                withSourceQuery={withSourceQuery}
+            />
         </GridCol>}
         {Postfix && <GridCol span={"content"}>
             <Postfix/>

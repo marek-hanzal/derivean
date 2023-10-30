@@ -1,5 +1,6 @@
 import {useQuery as useCoolQuery} from "@tanstack/react-query";
 import {
+    IQueryStore,
     type IWithQuery,
     type QuerySchema,
     usePromise
@@ -15,6 +16,7 @@ export namespace useQuery {
         TQuerySchema extends QuerySchema<any, any>,
         TResponseSchema extends WithIdentitySchema,
     > extends IWithQuery.QueryOptions<ArraySchema<TResponseSchema>> {
+        store: IQueryStore<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TResponseSchema>;
     }
 }
@@ -24,6 +26,7 @@ export const useQuery = <
     TResponseSchema extends WithIdentitySchema,
 >(
     {
+        store,
         withSourceQuery,
         queryKey,
         ...options

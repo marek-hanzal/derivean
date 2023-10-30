@@ -12,8 +12,8 @@ import {
 }                        from "react";
 
 export interface ITableColumn<
-    TSchema extends PicoSchema,
     TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
+    TSchema extends PicoSchema,
 > {
     /**
      * Explicitly override column title (by default column name is taken from Record<> in Table)

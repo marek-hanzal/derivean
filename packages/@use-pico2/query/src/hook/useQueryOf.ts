@@ -1,13 +1,11 @@
-import {type QuerySchema}        from "@use-pico2/query";
-import {type WithIdentitySchema} from "@use-pico2/schema";
-import {type IWithSourceQuery}   from "../api/IWithSourceQuery";
+import {type IQueryStore} from "../api/IQueryStore";
+import {type QuerySchema} from "../schema/QuerySchema";
 
 export namespace useQueryStore {
     export interface Props<
         TQuerySchema extends QuerySchema<any, any>,
-        TSchema extends WithIdentitySchema,
     > {
-        withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
+        store: IQueryStore<TQuerySchema>;
     }
 }
 /**
@@ -15,13 +13,12 @@ export namespace useQueryStore {
  */
 export const useQueryOf = <
     TQuerySchema extends QuerySchema<any, any>,
-    TSchema extends WithIdentitySchema,
 >(
     {
-        withSourceQuery,
-    }: useQueryStore.Props<TQuerySchema, TSchema>
+        store
+    }: useQueryStore.Props<TQuerySchema>
 ) => {
-    return withSourceQuery.store.use((
+    return store.use((
         {
             filter,
             where,

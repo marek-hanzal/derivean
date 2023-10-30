@@ -1,7 +1,8 @@
 import {Pagination} from "@use-pico2/pagination";
 import {
+    type IQueryStore,
     type IWithQuery,
-    useQuery
+    type QuerySchema,
 }                   from "@use-pico2/query";
 import {
     type ArraySchema,
@@ -10,7 +11,8 @@ import {
 }                   from "@use-pico2/schema";
 import {
     type IWithSourceQuery,
-    useCount
+    useCount,
+    useQuery
 }                   from "@use-pico2/source";
 import {
     BlockStore,
@@ -25,9 +27,11 @@ import classes      from "./List.module.css";
 
 export namespace List {
     export interface Props<
+        TQuerySchema extends QuerySchema<any, any>,
         TResponseSchema extends WithIdentitySchema,
     > {
-        withSourceQuery: IWithSourceQuery<any, TResponseSchema>;
+        withQueryStore: IQueryStore<TQuerySchema>;
+        withSourceQuery: IWithSourceQuery<TQuerySchema, TResponseSchema>;
         options?: IWithQuery.QueryOptions<
             ArraySchema<TResponseSchema>
         >;
@@ -51,9 +55,11 @@ export namespace List {
 }
 
 export const List = <
+    TQuerySchema extends QuerySchema<any, any>,
     TResponseSchema extends WithIdentitySchema,
 >(
     {
+        withQueryStore,
         withSourceQuery,
         options,
         scrollWidth,
@@ -67,19 +73,24 @@ export const List = <
             message={"empty.message"}
         />,
         isLoading = false,
-    }: List.Props<TResponseSchema>
+    }: List.Props<TQuerySchema, TResponseSchema>
 ) => {
     const {isBlock} = BlockStore.use(({isBlock}) => ({isBlock}));
-
     const result = useQuery({
-        withQuery: withSourceQuery,
+        store:           withQueryStore,
+        withSourceQuery: withSourceQuery,
         ...options,
     });
-    const countResult = useCount({withSourceQuery});
+    const countResult = useCount({
+        store: withQueryStore,
+        withSourceQuery
+    });
     const $isLoading = (result.isFetching && !result.isRefetching) || countResult.isLoading;
+
     return <>
         <Prefix/>
         <Pagination
+            withQueryStore={withQueryStore}
             withSourceQuery={withSourceQuery}
         />
         <ScrollArea
@@ -116,6 +127,7 @@ export const List = <
         </ScrollArea>
         <Suffix/>
         <Pagination
+            withQueryStore={withQueryStore}
             withSourceQuery={withSourceQuery}
         />
     </>;

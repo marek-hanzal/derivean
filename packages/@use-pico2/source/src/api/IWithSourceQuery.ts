@@ -1,7 +1,6 @@
 import {type UseQueryResult} from "@tanstack/react-query";
 import {
     type CountSchema,
-    type IQueryStore,
     type IWithQuery,
     type QuerySchema
 }                            from "@use-pico2/query";
@@ -18,7 +17,6 @@ export interface IWithSourceQuery<
     TQuerySchema,
     ArraySchema<TSchema>
 > {
-    store: IQueryStore<TQuerySchema>;
     withCountQuery: IWithQuery<TQuerySchema, CountSchema>;
 }
 

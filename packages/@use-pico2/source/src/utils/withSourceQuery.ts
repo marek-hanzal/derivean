@@ -1,6 +1,5 @@
 import {
     type CountSchema,
-    createQueryStore,
     type IWithQuery,
     type QuerySchema,
     withQuery
@@ -55,10 +54,6 @@ export const withSourceQuery = <
             response: $response,
         },
     });
-    const store = createQueryStore({
-        name:   "QueryStore",
-        schema: query,
-    });
 
     return {
         ...$withQuery,
@@ -66,7 +61,6 @@ export const withSourceQuery = <
             request:  query,
             response: $response,
         },
-        store,
         withCountQuery,
     };
 };

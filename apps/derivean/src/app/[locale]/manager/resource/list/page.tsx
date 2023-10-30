@@ -1,10 +1,10 @@
-import {withResourceQuery} from "@derivean/resource";
-import {ResourceIcon}      from "@derivean/ui";
+import {ResourceQueryStore} from "@derivean/resource";
+import {ResourceIcon}       from "@derivean/ui";
 import {
     Breadcrumbs,
     HomeIcon,
     Page
-}                          from "@use-pico2/ui";
+}                           from "@use-pico2/ui";
 
 export default function Index() {
     return <Page
@@ -20,8 +20,8 @@ export default function Index() {
             }}
         />}
     >
-        <withResourceQuery.store.Provider>
+        <ResourceQueryStore.Provider>
 
-        </withResourceQuery.store.Provider>
+        </ResourceQueryStore.Provider>
     </Page>;
 }

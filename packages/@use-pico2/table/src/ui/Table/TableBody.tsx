@@ -1,4 +1,7 @@
-import {type QuerySchema}       from "@use-pico2/query";
+import {
+    IQueryStore,
+    type QuerySchema
+}                               from "@use-pico2/query";
 import {
     type PicoSchema,
     type WithIdentitySchema
@@ -26,9 +29,10 @@ import classes                  from "../Table.module.css";
 
 export namespace TableBody {
     export interface Props<
-        TSchema extends WithIdentitySchema,
         TQuerySchema extends QuerySchema<any, any>,
+        TSchema extends WithIdentitySchema,
     > {
+        withQueryStore: IQueryStore<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
         SelectionStore?: ISelectionStore<PicoSchema.Output<TSchema>>;
         MultiSelectionStore?: IMultiSelectionStore<PicoSchema.Output<TSchema>>;
@@ -38,7 +42,7 @@ export namespace TableBody {
          */
         WithRowAction?: FC<WithRowActionProps<TSchema>>;
         withTableAction: boolean;
-        columns: ITableColumnTuple<TSchema, TQuerySchema>[];
+        columns: ITableColumnTuple<TQuerySchema, TSchema>[];
         disableActions: boolean;
         highlight?: string[];
 
@@ -56,10 +60,11 @@ export namespace TableBody {
 }
 
 export const TableBody = <
-    TSchema extends WithIdentitySchema,
     TQuerySchema extends QuerySchema<any, any>,
+    TSchema extends WithIdentitySchema,
 >(
     {
+        withQueryStore,
         withSourceQuery,
         SelectionStore,
         MultiSelectionStore,
@@ -70,7 +75,7 @@ export const TableBody = <
         columns,
         onClick,
         highlight,
-    }: TableBody.Props<TSchema, TQuerySchema>
+    }: TableBody.Props<TQuerySchema, TSchema>
 ) => {
     const selection = SelectionStore?.use$((
         {
@@ -95,6 +100,7 @@ export const TableBody = <
         select,
     }));
     const result = useQuery({
+        store: withQueryStore,
         withSourceQuery: withSourceQuery,
     });
 
