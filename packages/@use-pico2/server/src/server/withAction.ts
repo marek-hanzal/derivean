@@ -5,6 +5,15 @@ import {
 } from "@use-pico2/schema";
 
 export namespace withAction {
+    export interface Props<
+        TRequestSchema extends RequestSchema,
+        TResponseSchema extends ResponseSchema,
+    > {
+        request: TResponseSchema;
+        response: TResponseSchema;
+        action: Action<TRequestSchema, TResponseSchema>;
+    }
+
     export type Action<
         TRequestSchema extends RequestSchema,
         TResponseSchema extends ResponseSchema,
@@ -15,7 +24,11 @@ export const withAction = <
     TRequestSchema extends RequestSchema,
     TResponseSchema extends ResponseSchema,
 >(
-    handler: withAction.Action<TRequestSchema, TResponseSchema>,
+    {
+        request,
+        response,
+        action,
+    }: withAction.Props<TRequestSchema, TResponseSchema>,
 ): withAction.Action<TRequestSchema, TResponseSchema> => {
-    return async request => handler(request);
+    return async request => action(request);
 };
