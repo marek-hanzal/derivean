@@ -28,7 +28,6 @@
 				"lib/**"
 			],
 			"inputs": [
-				"prisma/schema.prisma",
 				"src/**"
 			]
 		},

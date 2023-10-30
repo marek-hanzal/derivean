@@ -1,41 +1,75 @@
-import {type PrismaClient} from "@use-pico2/orm";
+import {
+    type Client,
+    type Database
+}                         from "@use-pico2/orm";
 import {
     type CountSchema,
     type FilterSchema,
     type OrderBySchema,
     type QuerySchema
-}                          from "@use-pico2/query";
-import {type IRepository}  from "@use-pico2/repository";
+}                         from "@use-pico2/query";
+import {type IRepository} from "@use-pico2/repository";
 import {
     type PicoSchema,
     type WithIdentitySchema
-}                          from "@use-pico2/schema";
+}                         from "@use-pico2/schema";
 import {
     type MutationSchema,
     type ShapeSchema
-}                          from "@use-pico2/source";
+}                         from "@use-pico2/source";
 
 export abstract class AbstractRepository<
     TEntitySchema extends WithIdentitySchema,
     TShapeSchema extends ShapeSchema,
     TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
     TMutationSchema extends MutationSchema<TShapeSchema, TQuerySchema>,
+    TDatabase extends Database,
 > implements IRepository<
     TEntitySchema,
     TShapeSchema,
     TQuerySchema,
-    TMutationSchema
+    TMutationSchema,
+    TDatabase
 > {
     protected constructor(
         readonly entitySchema: TEntitySchema,
         readonly shapeSchema: TShapeSchema,
         readonly querySchema: TQuerySchema,
         readonly mutationSchema: TMutationSchema,
-        readonly prisma: PrismaClient,
+        readonly client: Client<any>,
+        readonly table: keyof TDatabase & string,
     ) {
     }
 
-    abstract count(query: PicoSchema.Output<TQuerySchema>): Promise<CountSchema.Type>;
+    public async count(query: PicoSchema.Output<TQuerySchema>): Promise<CountSchema.Type> {
+        return {
+            total: parseInt(
+                (
+                    await this.client.selectFrom(this.table).select(({fn}) => [
+                        fn.count<number>("id").as("total")
+                    ]).executeTakeFirstOrThrow()
+                ).total as unknown as string
+            ),
 
-    abstract query(query: PicoSchema.Output<TQuerySchema>): Promise<PicoSchema.Output<TEntitySchema>[]>;
+            where: parseInt(
+                (
+                    await this.client.selectFrom(this.table).select(({fn}) => [
+                        fn.count<number>("id").as("total")
+                    ]).executeTakeFirstOrThrow()
+                ).total as unknown as string
+            ),
+
+            count: parseInt(
+                (
+                    await this.client.selectFrom(this.table).select(({fn}) => [
+                        fn.count<number>("id").as("total")
+                    ]).executeTakeFirstOrThrow()
+                ).total as unknown as string
+            ),
+        };
+    }
+
+    public async query(query: PicoSchema.Output<TQuerySchema>): Promise<PicoSchema.Output<TEntitySchema>[]> {
+        return this.client.selectFrom(this.table).selectAll().execute() as unknown as Promise<PicoSchema.Output<TEntitySchema>[]>;
+    }
 }

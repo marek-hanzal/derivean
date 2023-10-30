@@ -1,7 +1,10 @@
-import {PrismaAdapter}           from "@next-auth/prisma-adapter";
+import {KyselyAdapter}           from "@auth/kysely-adapter";
 import {type IContainer}         from "@use-pico2/container";
 import {withLogger}              from "@use-pico2/logger";
-import {withClient}              from "@use-pico2/orm";
+import {
+    type Client,
+    withClient
+}                                from "@use-pico2/orm";
 import NextAuth, {
     type AuthOptions,
     type Session
@@ -46,7 +49,7 @@ export const withAuthEndpoint = (
         session:   {
             strategy: "jwt",
         },
-        adapter:   PrismaAdapter(withClient.use(container)),
+        adapter: KyselyAdapter(withClient.use(container) as Client<any>),
         providers: providers.filter(Boolean),
         callbacks: {
             jwt:     async token => {

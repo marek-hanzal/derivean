@@ -1,4 +1,8 @@
 import {
+    type Client,
+    type Database
+} from "@use-pico2/orm";
+import {
     type CountSchema,
     type FilterSchema,
     type OrderBySchema,
@@ -18,11 +22,13 @@ export interface IRepository<
     TShapeSchema extends ShapeSchema,
     TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
     TMutationSchema extends MutationSchema<TShapeSchema, TQuerySchema>,
+    TDatabase extends Database,
 > {
     readonly entitySchema: TEntitySchema;
     readonly shapeSchema: TShapeSchema;
     readonly querySchema: TQuerySchema;
     readonly mutationSchema: TMutationSchema;
+    readonly client: Client<TDatabase>;
 
     count(query: PicoSchema.Output<TQuerySchema>): Promise<CountSchema.Type>;
 

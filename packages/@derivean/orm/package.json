@@ -11,12 +11,10 @@
 		"src"
 	],
 	"scripts": {
-		"generate": "concurrently npm:generate:*",
-		"generate:prisma": "npx prisma generate",
 		"cleanup": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
 	"dependencies": {
-		"@prisma/client": "^5.5.2"
+		"kysely": "^0.26.3"
 	},
 	"devDependencies": {
 		"@types/node": "^20.4.2",
@@ -27,7 +25,6 @@
 		"concurrently": "^8.2.2",
 		"del-cli": "^5.0.0",
 		"eslint": "^8.45.0",
-		"prisma": "^5.5.2",
 		"typescript": "^5.2.2"
 	}
 }

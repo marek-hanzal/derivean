@@ -1,8 +1,12 @@
 import {withProducerContainer} from "@derivean/producer";
 import {withResourceContainer} from "@derivean/resource";
-import {PrismaClient}          from "@prisma/client";
 import {withClient}            from "@use-pico2/orm";
 import {withServerContainer}   from "@use-pico2/server";
+import {
+    Kysely,
+    PostgresDialect
+}                              from "kysely";
+import {Pool}                  from "pg";
 
 const register = [
     withProducerContainer,
@@ -11,14 +15,12 @@ const register = [
 
 export const container = withServerContainer();
 withClient.factory(container, () => {
-    return new PrismaClient({
-        errorFormat: "pretty",
-        log:         process.env.NODE_ENV === "development"
-                         ? [
-                // "query",
-                "error",
-                "warn"
-            ] : ["error"],
+    return new Kysely({
+        dialect: new PostgresDialect({
+            pool: new Pool({
+                connectionString: process.env.DATABASE_URL,
+            }),
+        }),
     });
 });
 

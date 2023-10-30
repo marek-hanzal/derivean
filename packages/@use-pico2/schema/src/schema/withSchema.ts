@@ -1,5 +1,5 @@
+import {proxyOf}         from "@use-pico2/utils";
 import {type PicoSchema} from "../api/PicoSchema";
-import {proxyOf}         from "../utils/proxyOf";
 
 type Input<TInput extends PicoSchema> = Omit<TInput, "types" | "_parseAsync">;
 type Output<TInput extends PicoSchema> =
