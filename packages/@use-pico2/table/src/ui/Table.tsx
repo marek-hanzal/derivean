@@ -3,13 +3,12 @@ import {
     WithTranslationProvider
 }                                from "@use-pico2/i18n";
 import {Pagination}              from "@use-pico2/pagination";
-import {
-    type FilterSchema,
-    type IWithSourceQuery,
-    type OrderBySchema,
-    type QuerySchema
-}                                from "@use-pico2/query";
+import {type QuerySchema}        from "@use-pico2/query";
 import {type WithIdentitySchema} from "@use-pico2/schema";
+import {
+    IWithSourceQuery,
+    useQuery
+}                                from "@use-pico2/source";
 import {
     Box,
     LinkLockProvider,
@@ -35,16 +34,14 @@ export namespace Table {
     export interface Props<
         TColumns extends string,
         TSchema extends WithIdentitySchema,
-        TFilterSchema extends FilterSchema,
-        TOrderBySchema extends OrderBySchema,
-        TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+        TQuerySchema extends QuerySchema<any, any>,
     > extends Partial<Omit<CoolTable.Props, "hidden" | "onClick">>,
-        TableHeaderControls.Props<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>,
+        TableHeaderControls.Props<TQuerySchema, TSchema>,
         Omit<TablePrefix.Props<TSchema, TQuerySchema>, "columns" | "items">,
         Omit<TableHead.Props<TSchema, TQuerySchema>, "columns" | "withRowAction" | "disableActions" | "items">,
-        Omit<TableBody.Props<TSchema, TFilterSchema, TOrderBySchema, TQuerySchema>, "columns" | "WithRow" | "withTableAction" | "disableActions">,
+        Omit<TableBody.Props<TSchema, TQuerySchema>, "columns" | "WithRow" | "withTableAction" | "disableActions">,
         Omit<TableFoot.Props<TSchema, TQuerySchema>, "columns" | "withTableAction" | "withRowAction" | "disableActions" | "items">,
-        TableCountResult.Props<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema> {
+        TableCountResult.Props<TQuerySchema, TSchema> {
         withTranslation?: IWithTranslation;
         /**
          * Define table columns; they will be rendered by default in the specified order
@@ -66,10 +63,10 @@ export namespace Table {
          * Specify an order of columns
          */
         order?: TColumns[];
-        withSourceQuery: IWithSourceQuery<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>;
+        withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
 
         WithRow?: FC<TableBody.RowProps<TSchema>>;
-        WithPostfix?: TableHeaderControls.Props<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>["Postfix"];
+        WithPostfix?: TableHeaderControls.Props<TQuerySchema, TSchema>["Postfix"];
 
         disableActions?: boolean;
 
@@ -94,9 +91,7 @@ export namespace Table {
 export const Table = <
     TColumns extends string,
     TSchema extends WithIdentitySchema,
-    TFilterSchema extends FilterSchema,
-    TOrderBySchema extends OrderBySchema,
-    TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+    TQuerySchema extends QuerySchema<any, any>,
 >(
     {
         withTranslation,
@@ -124,7 +119,7 @@ export const Table = <
         refresh,
         minWidth = "auto",
         ...props
-    }: Table.Props<TColumns, TSchema, TFilterSchema, TOrderBySchema, TQuerySchema>) => {
+    }: Table.Props<TColumns, TSchema, TQuerySchema>) => {
     const $order = order || Object.keys(columns) as TColumns[];
     const $pagination = pagination || {
         position: ["top", "bottom"],
@@ -141,7 +136,8 @@ export const Table = <
         overrideColumns?.[column] || columns[column],
     ]);
 
-    const result = withSourceQuery.useQuery({
+    const result = useQuery({
+        withSourceQuery,
         refetchInterval: refresh,
     });
 

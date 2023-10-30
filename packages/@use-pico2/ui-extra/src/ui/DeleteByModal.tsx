@@ -5,9 +5,13 @@ import {Translation}            from "@use-pico2/i18n";
 import {
     type FilterSchema,
     type IWithMutation,
-    type QuerySchema
+    type QuerySchema,
+    useMutation
 }                               from "@use-pico2/query";
-import {type MutationSchema}    from "@use-pico2/source";
+import {
+    type IWithSourceQuery,
+    type MutationSchema
+}                               from "@use-pico2/source";
 import {
     Button,
     CloseIcon,
@@ -26,7 +30,7 @@ export namespace DeleteByModal {
             MutationSchema<any, QuerySchema<TFilterSchema, any>>,
             any
         >;
-        // withSourceQuery: WithSourceQuery<any, QuerySchema<TFilterSchema, any>>;
+        withSourceQuery: IWithSourceQuery<QuerySchema<TFilterSchema, any>, any>;
     }
 }
 
@@ -35,24 +39,24 @@ export const DeleteByModal = <
 >(
     {
         withMutation,
-        // withSourceQuery,
+        withSourceQuery,
         ...props
     }: DeleteByModal.Props<TFilterSchema>
 ) => {
     const {close} = ModalStore.use(({close}) => ({close}));
     const successNotification = useSuccessNotification();
-    // const {
-    //     where,
-    //     filter,
-    // } = withSourceQuery.store.use((
-    //     {
-    //         where,
-    //         filter
-    //     }) => ({
-    //     where,
-    //     filter
-    // }));
-    const deleteMutation = withMutation.useMutation();
+    const {
+        where,
+        filter,
+    } = withSourceQuery.store.use((
+        {
+            where,
+            filter
+        }) => ({
+        where,
+        filter
+    }));
+    const deleteMutation = useMutation({withMutation});
 
     return <Modal
         modalProps={{
@@ -83,22 +87,22 @@ export const DeleteByModal = <
                 leftSection={<TrashIcon/>}
                 loading={deleteMutation.isPending}
                 onClick={() => {
-                    // deleteMutation.mutate({
-                    //     delete: {
-                    //         filter,
-                    //         where,
-                    //     },
-                    // }, {
-                    //     onSuccess: response => {
-                    //         successNotification({
-                    //             withTranslation: {
-                    //                 label:  "delete",
-                    //                 values: response,
-                    //             },
-                    //         });
-                    //     },
-                    //     onSettled: () => close(props.modalId),
-                    // });
+                    deleteMutation.mutate({
+                        delete: {
+                            filter,
+                            where,
+                        },
+                    }, {
+                        onSuccess: response => {
+                            successNotification({
+                                withTranslation: {
+                                    label:  "delete",
+                                    values: response,
+                                },
+                            });
+                        },
+                        onSettled: () => close(props.modalId),
+                    });
                 }}
             >
                 <Translation withLabel={"delete-by.confirm.button"}/>

@@ -1,5 +1,3 @@
-"use client";
-
 import {withQuery}              from "@use-pico2/i18n";
 import {LayoutShell}            from "@use-pico2/ui-extra";
 import {type PropsWithChildren} from "react";

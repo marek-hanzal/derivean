@@ -1,3 +1,4 @@
+import {isString}              from "@use-pico2/utils";
 import {WithTranslationStore}  from "../store/WithTranslationStore";
 import {isTranslation}         from "../utils/isTranslation";
 import {type IWithTranslation} from "../utils/IWithTranslation";
@@ -8,10 +9,10 @@ export const useTranslation = (input?: string | IWithTranslation): IUseTranslati
     const withTranslation = WithTranslationStore.use$()?.withTranslation(isTranslation(input) ? input : undefined) || input;
 
     return (label) => {
-        const value = [
-            withTranslation.namespace,
-            withTranslation.label,
-            withTranslation.withLabel,
+        const value = isString(withTranslation) ? [withTranslation] : [
+            withTranslation?.namespace,
+            withTranslation?.label,
+            withTranslation?.withLabel,
             label,
         ];
         return value.filter(Boolean).join(".");

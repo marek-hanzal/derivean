@@ -8,6 +8,7 @@ import {
 import {type IHrefProps}        from "@use-pico2/navigation";
 import {
     type IWithMutation,
+    useMutation,
     withMutation as coolWithMutation
 }                               from "@use-pico2/query";
 import {
@@ -274,7 +275,7 @@ export namespace Form {
         >(props: {
             form: UseForm<TValuesSchema>
         }): {
-                response: ResponseSchema;
+                                                      response: TResponseSchema;
             } & Omit<
             coolWithMutation.Props<
                 TRequestSchema,
@@ -450,16 +451,18 @@ export const Form = <
         resolver:      picoResolver(schema),
     });
     const overrideOptions = withMutationOverride?.({form});
-    const mutation = (overrideOptions ? coolWithMutation({
-        key:            withMutation.key.concat(["override"]),
-        schema:         {
-            request:  withMutation.schema.request,
-            response: overrideOptions.response,
-        },
-        mutator:        overrideOptions.mutator,
-        defaultOptions: overrideOptions.defaultOptions,
-        invalidator:    overrideOptions.invalidator,
-    }) : withMutation).useMutation();
+    const mutation = useMutation({
+        withMutation: overrideOptions ? coolWithMutation({
+            key:            withMutation.key.concat(["override"]),
+            schema:         {
+                request:  withMutation.schema.request,
+                response: overrideOptions.response as TResponseSchema,
+            },
+            mutator:        overrideOptions.mutator,
+            defaultOptions: overrideOptions.defaultOptions,
+            invalidator:    overrideOptions.invalidator,
+        }) : withMutation,
+    });
     const factoryProps: Form.Input.FactoryProps<TValuesSchema> = {
         form,
     };

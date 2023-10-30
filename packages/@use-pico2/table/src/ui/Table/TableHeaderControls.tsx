@@ -1,12 +1,11 @@
 import {IconRefresh}             from "@tabler/icons-react";
-import {
-    type FilterSchema,
-    type IWithSourceQuery,
-    type OrderBySchema,
-    type QuerySchema
-}                                from "@use-pico2/query";
+import {type QuerySchema}        from "@use-pico2/query";
 import {type WithIdentitySchema} from "@use-pico2/schema";
-import {Fulltext}                from "@use-pico2/source";
+import {
+    Fulltext,
+    IWithSourceQuery,
+    useInvalidator
+}                                from "@use-pico2/source";
 import {
     ActionIcon,
     Grid,
@@ -16,39 +15,35 @@ import {type FC}                 from "react";
 
 export namespace TableHeaderControls {
     export interface Props<
-        TFilterSchema extends FilterSchema,
-        TOrderBySchema extends OrderBySchema,
-        TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+        TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > {
-        withSourceQuery: IWithSourceQuery<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>;
-        Filter?: FC<FilterProps<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>>;
+        withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
+        Filter?: FC<FilterProps<TQuerySchema, TSchema>>;
         Postfix?: FC;
     }
 
     export interface FilterProps<
-        TFilterSchema extends FilterSchema,
-        TOrderBySchema extends OrderBySchema,
-        TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+        TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > {
-        withSourceQuery: IWithSourceQuery<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>;
+        withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
     }
 }
 
 export const TableHeaderControls = <
-    TFilterSchema extends FilterSchema,
-    TOrderBySchema extends OrderBySchema,
-    TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+    TQuerySchema extends QuerySchema<any, any>,
     TSchema extends WithIdentitySchema,
 >(
     {
         withSourceQuery,
         Filter,
         Postfix,
-    }: TableHeaderControls.Props<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>
+    }: TableHeaderControls.Props<TQuerySchema, TSchema>
 ) => {
-    const invalidator = withSourceQuery.useInvalidator();
+    const invalidator = useInvalidator({
+        withSourceQuery,
+    });
     return <Grid
         align={"center"}
         mb={"xs"}

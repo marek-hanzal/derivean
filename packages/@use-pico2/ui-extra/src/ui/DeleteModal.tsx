@@ -2,7 +2,10 @@
 
 import {useSuccessNotification} from "@use-pico2/hook";
 import {Translation}            from "@use-pico2/i18n";
-import {type IWithMutation}     from "@use-pico2/query";
+import {
+    type IWithMutation,
+    useMutation
+}                               from "@use-pico2/query";
 import {type ResponseSchema}    from "@use-pico2/schema";
 import {type MutationSchema}    from "@use-pico2/source";
 import {type WithEntity}        from "@use-pico2/types";
@@ -40,7 +43,7 @@ export const DeleteModal = <
 ) => {
     const {close} = ModalStore.use(({close}) => ({close}));
     const successNotification = useSuccessNotification();
-    const deleteMutation = withMutation.useMutation();
+    const deleteMutation = useMutation({withMutation});
 
     return <Modal
         modalProps={{

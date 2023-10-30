@@ -1,12 +1,11 @@
 import {IconSearch}              from "@tabler/icons-react";
 import {WithTranslationStore}    from "@use-pico2/i18n";
-import {
-    type FilterSchema,
-    type IWithSourceQuery,
-    type OrderBySchema,
-    type QuerySchema
-}                                from "@use-pico2/query";
+import {type QuerySchema}        from "@use-pico2/query";
 import {type WithIdentitySchema} from "@use-pico2/schema";
+import {
+    type IWithSourceQuery,
+    useCount
+}                                from "@use-pico2/source";
 import {
     Container,
     Result,
@@ -20,29 +19,27 @@ import {
 
 export namespace TableCountResult {
     export interface Props<
-        TFilterSchema extends FilterSchema,
-        TOrderBySchema extends OrderBySchema,
-        TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+        TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > {
-        withSourceQuery: IWithSourceQuery<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>;
+        withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
         Empty?: FC;
     }
 }
 
 export const TableCountResult = <
-    TFilterSchema extends FilterSchema,
-    TOrderBySchema extends OrderBySchema,
-    TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+    TQuerySchema extends QuerySchema<any, any>,
     TSchema extends WithIdentitySchema,
 >(
     {
         withSourceQuery,
         Empty,
-    }: TableCountResult.Props<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>
+    }: TableCountResult.Props<TQuerySchema, TSchema>
 ) => {
     const {namespace} = WithTranslationStore.use(({namespace}) => ({namespace}));
-    const countResult = withSourceQuery.useCount();
+    const countResult = useCount({
+        withSourceQuery,
+    });
 
     const Empty$ = useCallback(() => <Status
         title={"empty.title"}

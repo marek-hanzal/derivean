@@ -1,4 +1,4 @@
-import {withSourceQuery}         from "@use-pico2/query";
+import {withSourceQuery}         from "@use-pico2/source";
 import {withResourceQueryAction} from "../action/withResourceQueryAction";
 import {ResourceQuerySchema}     from "../schema/ResourceQuerySchema";
 import {ResourceSchema}          from "../schema/ResourceSchema";

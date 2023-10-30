@@ -1,5 +1,8 @@
-import {Translation}           from "@use-pico2/i18n";
-import {type IWithSourceQuery} from "@use-pico2/query";
+import {Translation} from "@use-pico2/i18n";
+import {
+    type IWithSourceQuery,
+    useCount
+}                    from "@use-pico2/source";
 import {
     BlockStore,
     Divider,
@@ -10,12 +13,12 @@ import {
     Pagination as CoolPagination,
     Select,
     Text
-}                              from "@use-pico2/ui";
-import {type FC}               from "react";
+}                    from "@use-pico2/ui";
+import {type FC}     from "react";
 
 export namespace Pagination {
     export interface Props extends Partial<CoolPagination.Props> {
-        withSourceQuery: IWithSourceQuery<any, any, any, any>;
+        withSourceQuery: IWithSourceQuery<any, any>;
         hideOnSingle?: boolean;
         refresh?: number;
     }
@@ -43,7 +46,8 @@ export const Pagination: FC<Pagination.Props> = (
         setSize
     }));
     const {isBlock} = BlockStore.use(({isBlock}) => ({isBlock}));
-    const result = withSourceQuery.useCount({
+    const result = useCount({
+        withSourceQuery: withSourceQuery,
         refetchInterval: refresh,
     });
     const pages = Math.ceil((result.data?.count || 0) / cursor.size);

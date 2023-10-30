@@ -6,12 +6,7 @@ import {
 }                                from "@tabler/icons-react";
 import {useDebouncedState}       from "@use-pico2/hook";
 import {useTranslation}          from "@use-pico2/i18n";
-import {
-    type FilterSchema,
-    type IWithSourceQuery,
-    type OrderBySchema,
-    type QuerySchema
-}                                from "@use-pico2/query";
+import {type QuerySchema}        from "@use-pico2/query";
 import {type WithIdentitySchema} from "@use-pico2/schema";
 import {
     ActionIcon,
@@ -23,15 +18,14 @@ import {
     useEffect,
     useState
 }                                from "react";
+import {type IWithSourceQuery}   from "../api/IWithSourceQuery";
 
 export namespace Fulltext {
     export interface Props<
-        TFilterSchema extends FilterSchema,
-        TOrderBySchema extends OrderBySchema,
-        TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+        TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > extends TextInput.Props {
-        withSourceQuery: IWithSourceQuery<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>;
+        withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
         loading?: boolean;
         debounce?: number;
 
@@ -40,9 +34,7 @@ export namespace Fulltext {
 }
 
 export const Fulltext = <
-    TFilterSchema extends FilterSchema,
-    TOrderBySchema extends OrderBySchema,
-    TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+    TQuerySchema extends QuerySchema<any, any>,
     TSchema extends WithIdentitySchema,
 >(
     {
@@ -51,7 +43,7 @@ export const Fulltext = <
         debounce = 250,
         onSearch,
         ...props
-    }: Fulltext.Props<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>
+    }: Fulltext.Props<TQuerySchema, TSchema>
 ) => {
     const t = useTranslation();
     const {

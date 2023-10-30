@@ -1,14 +1,17 @@
 import {Pagination} from "@use-pico2/pagination";
 import {
     type IWithQuery,
-    type IWithSourceQuery
+    useQuery
 }                   from "@use-pico2/query";
 import {
     type ArraySchema,
     type PicoSchema,
-    type RequestSchema,
     type WithIdentitySchema
 }                   from "@use-pico2/schema";
+import {
+    type IWithSourceQuery,
+    useCount
+}                   from "@use-pico2/source";
 import {
     BlockStore,
     Box,
@@ -22,12 +25,10 @@ import classes      from "./List.module.css";
 
 export namespace List {
     export interface Props<
-        TRequestSchema extends RequestSchema,
         TResponseSchema extends WithIdentitySchema,
     > {
-        withSourceQuery: IWithSourceQuery<any, any, any, TResponseSchema>;
+        withSourceQuery: IWithSourceQuery<any, TResponseSchema>;
         options?: IWithQuery.QueryOptions<
-            TRequestSchema,
             ArraySchema<TResponseSchema>
         >;
         scrollWidth?: number;
@@ -50,7 +51,6 @@ export namespace List {
 }
 
 export const List = <
-    TRequestSchema extends RequestSchema,
     TResponseSchema extends WithIdentitySchema,
 >(
     {
@@ -67,12 +67,15 @@ export const List = <
             message={"empty.message"}
         />,
         isLoading = false,
-    }: List.Props<TRequestSchema, TResponseSchema>
+    }: List.Props<TResponseSchema>
 ) => {
     const {isBlock} = BlockStore.use(({isBlock}) => ({isBlock}));
 
-    const result = withSourceQuery.useQuery(options);
-    const countResult = withSourceQuery.useCount();
+    const result = useQuery({
+        withQuery: withSourceQuery,
+        ...options,
+    });
+    const countResult = useCount({withSourceQuery});
     const $isLoading = (result.isFetching && !result.isRefetching) || countResult.isLoading;
     return <>
         <Prefix/>

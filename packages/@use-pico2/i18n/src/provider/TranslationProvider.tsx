@@ -25,11 +25,12 @@ export const TranslationProvider: FC<TranslationProvider.Props> = (
         children,
     }
 ) => {
-    const result = withTranslationQuery.useQueryEx({
-        request: {
-            locale,
-        }
-    });
+    // const result = useQueryEx({
+    //     withQuery: withTranslationQuery.
+    //     request: {
+    //         locale,
+    //     }
+    // });
     // const $intlProps: ComponentProps<typeof NextIntlClientProvider> = {
     //     locale,
     //     onError() {

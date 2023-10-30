@@ -4,7 +4,8 @@ import {useParam}        from "@use-pico2/navigation";
 import {
     type IWithQuery,
     QueryResult,
-    type QuerySchema
+    type QuerySchema,
+    useQueryEx
 }                        from "@use-pico2/query";
 import {
     type PicoSchema,
@@ -47,7 +48,7 @@ export namespace Fetch {
          */
         WithSuccess: FC<WithSuccessProps<TResponseSchema>>;
         enabled?: boolean;
-        options?: IWithQuery.QueryOptions<TQuerySchema, TResponseSchema>;
+        options?: IWithQuery.QueryOptions<TResponseSchema>;
     }
 
     export interface WithErrorProps {
@@ -78,7 +79,8 @@ export const Fetch = <
 ) => {
     const id = useParam(param, query ? "-" : override);
 
-    const result = withQuery.useQueryEx({
+    const result = useQueryEx({
+        withQuery,
         request: query || {
             where: {
                 id,

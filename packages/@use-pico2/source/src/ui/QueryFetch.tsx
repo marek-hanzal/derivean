@@ -1,37 +1,34 @@
 "use client";
 
 import {
-    type FilterSchema,
     type IWithQuery,
-    type IWithSourceQuery,
-    type OrderBySchema,
     QueryResult,
     type QuerySchema
-}               from "@use-pico2/query";
+}                              from "@use-pico2/query";
 import {
     type ArraySchema,
     type PicoSchema,
     type ResponseSchema,
-    WithIdentitySchema
-}               from "@use-pico2/schema";
-import {Loader} from "@use-pico2/ui";
+    type WithIdentitySchema
+}                              from "@use-pico2/schema";
+import {Loader}                from "@use-pico2/ui";
 import {
     type FC,
     type ReactNode
-}               from "react";
+}                              from "react";
+import {type IWithSourceQuery} from "../api/IWithSourceQuery";
+import {useQueryEx}            from "../hook/useQueryEx";
 
 export namespace QueryFetch {
     export interface Props<
-        TFilterSchema extends FilterSchema,
-        TOrderBySchema extends OrderBySchema,
-        TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+        TQuerySchema extends QuerySchema<any, any>,
         TResponseSchema extends WithIdentitySchema,
     > {
         loader?: ReactNode;
         /**
          * Query to fetch entity
          */
-        withSourceQuery: IWithSourceQuery<TFilterSchema, TOrderBySchema, TQuerySchema, TResponseSchema>;
+        withSourceQuery: IWithSourceQuery<TQuerySchema, TResponseSchema>;
         query: PicoSchema.Output<TQuerySchema>;
 
         /**
@@ -44,7 +41,7 @@ export namespace QueryFetch {
          */
         WithSuccess: FC<WithSuccessProps<TResponseSchema>>;
         enabled?: boolean;
-        options?: IWithQuery.QueryOptions<TQuerySchema, ArraySchema<TResponseSchema>>;
+        options?: IWithQuery.QueryOptions<ArraySchema<TResponseSchema>>;
     }
 
     export interface WithErrorProps {
@@ -57,9 +54,7 @@ export namespace QueryFetch {
 }
 
 export const QueryFetch = <
-    TFilterSchema extends FilterSchema,
-    TOrderBySchema extends OrderBySchema,
-    TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+    TQuerySchema extends QuerySchema<any, any>,
     TResponseSchema extends WithIdentitySchema,
 >(
     {
@@ -71,13 +66,12 @@ export const QueryFetch = <
         enabled = true,
         options,
     }: QueryFetch.Props<
-        TFilterSchema,
-        TOrderBySchema,
         TQuerySchema,
         TResponseSchema
     >
 ) => {
-    const result = withSourceQuery.useQueryEx({
+    const result = useQueryEx({
+        withSourceQuery,
         request: query,
         options: {
             ...options,

@@ -26,6 +26,7 @@
 	},
 	"dependencies": {
 		"@use-pico2/i18n": "^1.0.11",
+		"@use-pico2/source": "^1.0.0",
 		"@use-pico2/ui": "^1.0.14",
 		"react": "^18.2.0"
 	},

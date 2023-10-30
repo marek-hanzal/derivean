@@ -1,9 +1,4 @@
-import {
-    type FilterSchema,
-    type IWithSourceQuery,
-    type OrderBySchema,
-    type QuerySchema
-}                               from "@use-pico2/query";
+import {type QuerySchema}       from "@use-pico2/query";
 import {
     type PicoSchema,
     type WithIdentitySchema
@@ -12,6 +7,10 @@ import {
     type IMultiSelectionStore,
     type ISelectionStore
 }                               from "@use-pico2/selection";
+import {
+    type IWithSourceQuery,
+    useQuery
+}                               from "@use-pico2/source";
 import {Table}                  from "@use-pico2/ui";
 import {
     classNames,
@@ -28,11 +27,9 @@ import classes                  from "../Table.module.css";
 export namespace TableBody {
     export interface Props<
         TSchema extends WithIdentitySchema,
-        TFilterSchema extends FilterSchema,
-        TOrderBySchema extends OrderBySchema,
-        TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+        TQuerySchema extends QuerySchema<any, any>,
     > {
-        withSourceQuery: IWithSourceQuery<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>;
+        withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
         SelectionStore?: ISelectionStore<PicoSchema.Output<TSchema>>;
         MultiSelectionStore?: IMultiSelectionStore<PicoSchema.Output<TSchema>>;
         WithRow: FC<RowProps<TSchema>>;
@@ -60,9 +57,7 @@ export namespace TableBody {
 
 export const TableBody = <
     TSchema extends WithIdentitySchema,
-    TFilterSchema extends FilterSchema,
-    TOrderBySchema extends OrderBySchema,
-    TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+    TQuerySchema extends QuerySchema<any, any>,
 >(
     {
         withSourceQuery,
@@ -75,7 +70,7 @@ export const TableBody = <
         columns,
         onClick,
         highlight,
-    }: TableBody.Props<TSchema, TFilterSchema, TOrderBySchema, TQuerySchema>
+    }: TableBody.Props<TSchema, TQuerySchema>
 ) => {
     const selection = SelectionStore?.use$((
         {
@@ -99,7 +94,9 @@ export const TableBody = <
         toggle,
         select,
     }));
-    const result = withSourceQuery.useQuery();
+    const result = useQuery({
+        withSourceQuery: withSourceQuery,
+    });
 
     return <Table.Tbody>
         {(result.data || [])

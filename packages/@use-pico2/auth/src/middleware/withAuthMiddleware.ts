@@ -7,6 +7,7 @@ export namespace withAuthMiddleware {
 
     export interface Route {
         path: string;
+        site: string;
         tokens?: string[];
     }
 }
@@ -21,10 +22,10 @@ export const withAuthMiddleware = (
         },
         {
             callbacks: {
-                authorized: ({
-                                 req,
-                                 token
-                             }) => {
+                authorized({
+                               req,
+                               token
+                           }) {
                     if (!token) {
                         for (const route of routes) {
                             if (req.nextUrl.pathname.includes(route.path)) {

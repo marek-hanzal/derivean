@@ -13,7 +13,7 @@ import {type IInvalidator} from "./IInvalidator";
 export interface IWithMutation<
     TRequestSchema extends RequestSchema,
     TResponseSchema extends ResponseSchema,
-> {
+> extends IInvalidator {
     /**
      * Mutation key used in React Query
      */
@@ -22,11 +22,9 @@ export interface IWithMutation<
         request: TRequestSchema,
         response: TResponseSchema,
     };
-    useInvalidator: IInvalidator.Use;
-    useMutation: (props?: IWithMutation.Options<TRequestSchema, TResponseSchema>) => IWithMutation.Result<
-        TRequestSchema,
-        TResponseSchema
-    >;
+    defaultOptions?: IWithMutation.Options<TRequestSchema, TResponseSchema>;
+
+    mutator(request: PicoSchema.Output<TRequestSchema>): Promise<PicoSchema.Output<TResponseSchema>>;
 }
 
 export namespace IWithMutation {

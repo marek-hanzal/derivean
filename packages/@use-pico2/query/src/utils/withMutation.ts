@@ -1,15 +1,9 @@
+import {type MutationKey}   from "@tanstack/react-query";
 import {
-    type MutationKey,
-    useMutation,
-    useQueryClient
-}                           from "@tanstack/react-query";
-import {
-    parse,
     type PicoSchema,
     type RequestSchema,
     type ResponseSchema
 }                           from "@use-pico2/schema";
-import {type IInvalidator}  from "../api/IInvalidator";
 import {type IWithMutation} from "../api/IWithMutation";
 
 export namespace withMutation {
@@ -22,9 +16,10 @@ export namespace withMutation {
             request: TRequestSchema;
             response: TResponseSchema;
         };
-        invalidator?: IInvalidator.Invalidator;
 
         mutator(request: PicoSchema.Output<TRequestSchema>): Promise<PicoSchema.Output<TResponseSchema>>;
+
+        invalidator: IWithMutation<TRequestSchema, TResponseSchema>["invalidator"];
 
         defaultOptions?: IWithMutation.Options<TRequestSchema, TResponseSchema>;
     }
@@ -37,12 +32,9 @@ export const withMutation = <
     {
         key,
         schema,
-        invalidator,
         mutator,
-        defaultOptions: {
-                            onSuccess: onDefaultSuccess,
-                            ...        defaultOptions
-                        } = {},
+        invalidator,
+        defaultOptions,
     }: withMutation.Props<
         TRequestSchema,
         TResponseSchema
@@ -51,48 +43,8 @@ export const withMutation = <
     return {
         key,
         schema,
-        useInvalidator() {
-            const queryClient = useQueryClient();
-            return invalidator ? (async () => {
-                return invalidator({
-                    queryClient,
-                });
-            }) : (async () => {
-                return queryClient.invalidateQueries({
-                    queryKey: key,
-                });
-            });
-        },
-        useMutation: (
-                         {
-                             mutationKey: $mutationKey,
-                             onSuccess,
-                             ...options
-                         }: IWithMutation.Options<TRequestSchema, TResponseSchema> = {}
-                     ) => {
-            const queryClient = useQueryClient();
-            return useMutation({
-                mutationKey: key.concat($mutationKey || []),
-                mutationFn:  request => {
-                    try {
-                        return mutator(parse(schema.request, request));
-                    } catch (e) {
-                        console.error(e);
-                        throw e;
-                    }
-                },
-                ...defaultOptions,
-                ...options,
-                onSuccess: async (data, variables, context) => {
-                    setTimeout(() => {
-                        invalidator?.({
-                            queryClient,
-                        });
-                    }, 0);
-                    onDefaultSuccess?.(data, variables, context);
-                    onSuccess?.(data, variables, context);
-                },
-            });
-        },
+        mutator,
+        invalidator,
+        defaultOptions,
     };
 };

@@ -1,14 +1,12 @@
-import {DateTimeInline}    from "@use-pico2/i18n";
-import {Table}             from "@use-pico2/table";
-import {toHumanBytes}      from "@use-pico2/utils";
+import {DateTimeInline}  from "@use-pico2/i18n";
+import {Table}           from "@use-pico2/table";
+import {toHumanBytes}    from "@use-pico2/utils";
 import {
     type FC,
     type PropsWithChildren
-}                          from "react";
-import {FileFilterSchema}  from "../schema/FileFilterSchema";
-import {FileOrderBySchema} from "../schema/FileOrderBySchema";
-import {FileQuerySchema}   from "../schema/FileQuerySchema";
-import {FileSchema}        from "../schema/FileSchema";
+}                        from "react";
+import {FileQuerySchema} from "../schema/FileQuerySchema";
+import {FileSchema}      from "../schema/FileSchema";
 
 export namespace FileTable {
     export type Columns =
@@ -24,8 +22,6 @@ export namespace FileTable {
         Table.Props<
             Columns,
             FileSchema,
-            FileFilterSchema,
-            FileOrderBySchema,
             FileQuerySchema
         >,
         "columns"> {

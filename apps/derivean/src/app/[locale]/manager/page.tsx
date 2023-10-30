@@ -1,5 +1,3 @@
-"use client";
-
 import {IconSubtask} from "@tabler/icons-react";
 import {Page}        from "@use-pico2/ui";
 
