@@ -1,6 +1,7 @@
 "use client";
 
 import {WithTranslationStore} from "@use-pico2/i18n";
+import {useStore$}            from "@use-pico2/store";
 import {
     AlertIcon,
     withNotification
@@ -12,7 +13,7 @@ export namespace useErrorNotification {
 }
 
 export const useErrorNotification = () => {
-    const translation = WithTranslationStore.use$();
+    const translation = useStore$(WithTranslationStore);
     return (
         {
             withTranslation,

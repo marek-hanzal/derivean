@@ -17,6 +17,7 @@ import {
     type RequestSchema,
     type ResponseSchema
 }                               from "@use-pico2/schema";
+import {useStore$}              from "@use-pico2/store";
 import {
     BlockStore,
     Box,
@@ -408,7 +409,7 @@ export const Form = <
         TResponseSchema
     >
 ) => {
-    const blockStore = BlockStore.use$((
+    const blockStore = useStore$(BlockStore, (
         {
             block,
             isBlock
@@ -416,8 +417,8 @@ export const Form = <
         block,
         isBlock
     }));
-    const drawerStore = DrawerStore.use$(({close}) => ({close}));
-    const modalStore = ModalStore.use$(({close}) => ({close}));
+    const drawerStore = useStore$(DrawerStore, ({close}) => ({close}));
+    const modalStore = useStore$(ModalStore, ({close}) => ({close}));
     const redirect = useWithLocaleRedirect();
     const successNotification = useSuccessNotification();
     const t = useTranslation(withTranslation);

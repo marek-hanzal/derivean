@@ -1,7 +1,21 @@
-import {type WithIdentitySchema}        from "@use-pico2/schema";
-import {type IStoreSchema}              from "@use-pico2/store";
-import {type IMultiSelectionStoreProps} from "./IMultiSelectionStoreProps";
+import {type WithIdentitySchema} from "@use-pico2/schema";
+import {type IStore}             from "@use-pico2/store";
+import {type IBaseSelection}     from "./IBaseSelection";
 
 export type IMultiSelectionStore<
     TItem extends WithIdentitySchema.Type,
-> = IStoreSchema<IMultiSelectionStoreProps<TItem>>["Store"];
+> = IStore.Store<IMultiSelectionStore.Store<TItem>>;
+
+export namespace IMultiSelectionStore {
+    export type Store<
+        TItem extends WithIdentitySchema.Type,
+    > = IStore<
+        {
+            items: Map<string, TItem>;
+            selection: Map<string, TItem>;
+            deselect(item: TItem): void;
+            toggle(item: TItem): void;
+            isSelection(): boolean;
+        } & IBaseSelection<TItem>
+    >;
+}

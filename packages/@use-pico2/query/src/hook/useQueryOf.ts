@@ -1,3 +1,4 @@
+import {useStore}         from "@use-pico2/store";
 import {type IQueryStore} from "../api/IQueryStore";
 import {type QuerySchema} from "../schema/QuerySchema";
 
@@ -5,7 +6,7 @@ export namespace useQueryStore {
     export interface Props<
         TQuerySchema extends QuerySchema<any, any>,
     > {
-        store: IQueryStore<TQuerySchema>;
+        store: IQueryStore.Store<TQuerySchema>;
     }
 }
 /**
@@ -18,7 +19,7 @@ export const useQueryOf = <
         store
     }: useQueryStore.Props<TQuerySchema>
 ) => {
-    return store.use((
+    return useStore(store, (
         {
             filter,
             where,

@@ -14,6 +14,7 @@ import {
     type IWithSourceQuery,
     useQuery
 }                               from "@use-pico2/source";
+import {useStore$}              from "@use-pico2/store";
 import {Table}                  from "@use-pico2/ui";
 import {
     classNames,
@@ -32,7 +33,7 @@ export namespace TableBody {
         TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > {
-        withQueryStore: IQueryStore<TQuerySchema>;
+        withQueryStore: IQueryStore.Store<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
         SelectionStore?: ISelectionStore<PicoSchema.Output<TSchema>>;
         MultiSelectionStore?: IMultiSelectionStore<PicoSchema.Output<TSchema>>;
@@ -77,7 +78,7 @@ export const TableBody = <
         highlight,
     }: TableBody.Props<TQuerySchema, TSchema>
 ) => {
-    const selection = SelectionStore?.use$((
+    const selection = useStore$(SelectionStore, (
         {
             isSelected,
             isCurrent,
@@ -87,7 +88,7 @@ export const TableBody = <
         isCurrent,
         select,
     }));
-    const multiSelection = MultiSelectionStore?.use$((
+    const multiSelection = useStore$(MultiSelectionStore, (
         {
             isSelected,
             isCurrent,

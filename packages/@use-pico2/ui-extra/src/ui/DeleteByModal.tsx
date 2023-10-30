@@ -10,6 +10,7 @@ import {
     useMutation
 }                               from "@use-pico2/query";
 import {type MutationSchema}    from "@use-pico2/source";
+import {useStore}               from "@use-pico2/store";
 import {
     Button,
     CloseIcon,
@@ -28,7 +29,7 @@ export namespace DeleteByModal {
             MutationSchema<any, QuerySchema<TFilterSchema, any>>,
             any
         >;
-        withQueryStore: IQueryStore<QuerySchema<TFilterSchema, any>>;
+        withQueryStore: IQueryStore.Store<QuerySchema<TFilterSchema, any>>;
     }
 }
 
@@ -41,12 +42,12 @@ export const DeleteByModal = <
         ...props
     }: DeleteByModal.Props<TFilterSchema>
 ) => {
-    const {close} = ModalStore.use(({close}) => ({close}));
+    const {close} = useStore(ModalStore, ({close}) => ({close}));
     const successNotification = useSuccessNotification();
     const {
         where,
         filter,
-    } = withQueryStore.use((
+    } = useStore(withQueryStore, (
         {
             where,
             filter

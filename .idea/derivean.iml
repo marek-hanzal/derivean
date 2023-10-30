@@ -63,6 +63,7 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/repository/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/schema/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/schema/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/selection/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/server/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/source/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/source/tests" isTestSource="true" />
@@ -167,6 +168,8 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/repository/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/schema/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/schema/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/selection/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/selection/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/server/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/server/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/source/.turbo" />

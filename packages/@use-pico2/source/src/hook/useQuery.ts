@@ -16,7 +16,7 @@ export namespace useQuery {
         TQuerySchema extends QuerySchema<any, any>,
         TResponseSchema extends WithIdentitySchema,
     > extends IWithQuery.QueryOptions<ArraySchema<TResponseSchema>> {
-        store: IQueryStore<TQuerySchema>;
+        store: IQueryStore.Store<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TResponseSchema>;
     }
 }

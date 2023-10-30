@@ -10,6 +10,7 @@ import {
     type IQueryStore,
     type QuerySchema
 }                          from "@use-pico2/query";
+import {useStore}          from "@use-pico2/store";
 import {
     ActionIcon,
     Loader,
@@ -25,7 +26,7 @@ export namespace Fulltext {
     export interface Props<
         TQuerySchema extends QuerySchema<any, any>,
     > extends TextInput.Props {
-        withQueryStore: IQueryStore<TQuerySchema>;
+        withQueryStore: IQueryStore.Store<TQuerySchema>;
         loading?: boolean;
         debounce?: number;
 
@@ -49,7 +50,7 @@ export const Fulltext = <
         filter,
         setCursor,
         shallowFilter,
-    } = withQueryStore.use((
+    } = useStore(withQueryStore, (
         {
             filter,
             setCursor,

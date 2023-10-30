@@ -3,7 +3,6 @@ export * from "./CursorSchema";
 export * from "./FilterSchema";
 export * from "./IInvalidator";
 export * from "./IQueryStore";
-export * from "./IQueryStoreProps";
 export * from "./IWithMutation";
 export * from "./IWithQuery";
 export * from "./OrderBySchema";

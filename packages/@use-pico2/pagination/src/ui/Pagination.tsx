@@ -7,6 +7,7 @@ import {
     type IWithSourceQuery,
     useCount
 }                    from "@use-pico2/source";
+import {useStore}    from "@use-pico2/store";
 import {
     BlockStore,
     Divider,
@@ -23,7 +24,7 @@ export namespace Pagination {
     export interface Props<
         TQuerySchema extends QuerySchema<any, any>,
     > extends Partial<CoolPagination.Props> {
-        withQueryStore: IQueryStore<TQuerySchema>;
+        withQueryStore: IQueryStore.Store<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, any>;
         hideOnSingle?: boolean;
         refresh?: number;
@@ -45,7 +46,7 @@ export const Pagination = <
         cursor,
         setCursor,
         setSize
-    } = withQueryStore.use((
+    } = useStore(withQueryStore, (
         {
             cursor,
             setCursor,
@@ -55,7 +56,7 @@ export const Pagination = <
         setCursor,
         setSize
     }));
-    const {isBlock} = BlockStore.use(({isBlock}) => ({isBlock}));
+    const {isBlock} = useStore(BlockStore, ({isBlock}) => ({isBlock}));
     const result = useCount({
         store: withQueryStore,
         withSourceQuery: withSourceQuery,

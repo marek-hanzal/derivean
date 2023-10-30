@@ -6,6 +6,7 @@ import {
     useQueryEx
 }                                from "@use-pico2/query";
 import {type WithIdentitySchema} from "@use-pico2/schema";
+import {useStore}                from "@use-pico2/store";
 import {type IWithSourceQuery}   from "../api/IWithSourceQuery";
 
 export namespace useCount {
@@ -13,7 +14,7 @@ export namespace useCount {
         TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > extends IWithQuery.QueryOptions<CountSchema> {
-        store: IQueryStore<TQuerySchema>;
+        store: IQueryStore.Store<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
     }
 }
@@ -32,7 +33,7 @@ export const useCount = <
 ) => {
     return useQueryEx({
         withQuery: withCountQuery,
-        request:   store.use((
+        request: useStore(store, (
             {
                 where,
                 filter,

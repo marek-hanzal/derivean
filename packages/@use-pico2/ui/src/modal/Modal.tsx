@@ -5,6 +5,7 @@ import {
     Modal as CoolModal
 }                      from "@mantine/core";
 import {Translation}   from "@use-pico2/i18n";
+import {useStore}      from "@use-pico2/store";
 import {
     type ComponentProps,
     type FC,
@@ -36,7 +37,7 @@ export const Modal: FC<Modal.Props> = (
     const {
         isOpen,
         close
-    } = ModalStore.use((
+    } = useStore(ModalStore, (
         {
             isOpen,
             close

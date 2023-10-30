@@ -5,6 +5,7 @@ import {
     type WithIdentitySchema
 }                             from "@use-pico2/schema";
 import {type ISelectionStore} from "@use-pico2/selection";
+import {useStore}             from "@use-pico2/store";
 import {
     Button,
     ModalStore
@@ -46,8 +47,8 @@ export const CommitButton = <
                    onChange,
                },
     } = useController(withControl);
-    const modalStore = ModalStore.use(({close}) => ({close}));
-    const selectionStore = SelectionStore.use((
+    const modalStore = useStore(ModalStore, ({close}) => ({close}));
+    const selectionStore = useStore(SelectionStore, (
         {
             selection,
             commit
@@ -55,6 +56,7 @@ export const CommitButton = <
         selection,
         commit
     }));
+
     return <Button
         leftSection={<IconClick/>}
         size={"lg"}

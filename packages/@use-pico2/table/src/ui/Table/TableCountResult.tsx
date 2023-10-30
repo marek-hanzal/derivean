@@ -9,6 +9,7 @@ import {
     type IWithSourceQuery,
     useCount
 }                                from "@use-pico2/source";
+import {useStore}                from "@use-pico2/store";
 import {
     Container,
     Result,
@@ -25,7 +26,7 @@ export namespace TableCountResult {
         TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > {
-        withQueryStore: IQueryStore<TQuerySchema>;
+        withQueryStore: IQueryStore.Store<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
         Empty?: FC;
     }
@@ -41,7 +42,7 @@ export const TableCountResult = <
         Empty,
     }: TableCountResult.Props<TQuerySchema, TSchema>
 ) => {
-    const {namespace} = WithTranslationStore.use(({namespace}) => ({namespace}));
+    const {namespace} = useStore(WithTranslationStore, ({namespace}) => ({namespace}));
     const countResult = useCount({
         store: withQueryStore,
         withSourceQuery,

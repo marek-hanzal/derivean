@@ -10,6 +10,7 @@ import {
     useLocaleRouter
 }                      from "@use-pico2/i18n";
 import {useClearCache} from "@use-pico2/query";
+import {useStore$}     from "@use-pico2/store";
 import {
     BlockStore,
     Grid,
@@ -52,7 +53,13 @@ export const AppLayout: FC<AppLayout.Props> = (
     }) => {
     const clearCache = useClearCache();
     const router = useLocaleRouter();
-    const block = BlockStore.use$();
+    const block = useStore$(BlockStore, ({
+                                             unblock,
+                                             isBlock
+                                         }) => ({
+        unblock,
+        isBlock
+    }));
     useEffect(() => {
         block?.unblock();
     }, []);

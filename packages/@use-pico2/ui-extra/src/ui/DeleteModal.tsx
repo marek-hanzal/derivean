@@ -8,6 +8,7 @@ import {
 }                               from "@use-pico2/query";
 import {type ResponseSchema}    from "@use-pico2/schema";
 import {type MutationSchema}    from "@use-pico2/source";
+import {useStore}               from "@use-pico2/store";
 import {type WithEntity}        from "@use-pico2/types";
 import {
     Button,
@@ -41,7 +42,7 @@ export const DeleteModal = <
         ...props
     }: DeleteModal.Props<TMutationSchema, TResponseSchema>
 ) => {
-    const {close} = ModalStore.use(({close}) => ({close}));
+    const {close} = useStore(ModalStore, ({close}) => ({close}));
     const successNotification = useSuccessNotification();
     const deleteMutation = useMutation({withMutation});
 

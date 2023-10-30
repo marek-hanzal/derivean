@@ -2,6 +2,7 @@
 
 import {IconCheck}            from "@tabler/icons-react";
 import {WithTranslationStore} from "@use-pico2/i18n";
+import {useStore$}            from "@use-pico2/store";
 import {withNotification}     from "@use-pico2/ui";
 
 export namespace useSuccessNotification {
@@ -10,7 +11,7 @@ export namespace useSuccessNotification {
 }
 
 export const useSuccessNotification = () => {
-    const translation = WithTranslationStore.use$();
+    const translation = useStore$(WithTranslationStore);
     return (
         {
             withTranslation,

@@ -21,7 +21,7 @@ export namespace TableHeaderControls {
         TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > {
-        withQueryStore: IQueryStore<TQuerySchema>;
+        withQueryStore: IQueryStore.Store<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
         Filter?: FC<FilterProps<TQuerySchema, TSchema>>;
         Postfix?: FC;
@@ -31,7 +31,7 @@ export namespace TableHeaderControls {
         TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > {
-        withQueryStore: IQueryStore<TQuerySchema>;
+        withQueryStore: IQueryStore.Store<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
     }
 }

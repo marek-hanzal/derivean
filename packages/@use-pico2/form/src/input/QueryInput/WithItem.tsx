@@ -3,6 +3,7 @@ import {
     type WithIdentitySchema
 }                             from "@use-pico2/schema";
 import {type ISelectionStore} from "@use-pico2/selection";
+import {useStore}             from "@use-pico2/store";
 import {
     Group,
     ModalStore
@@ -38,11 +39,11 @@ export const WithItem = <
         ...props
     }: WithItem.Props<TValuesSchema, TResponseSchema>
 ) => {
-    const {open} = ModalStore.use(({open}) => ({open}));
+    const {open} = useStore(ModalStore, ({open}) => ({open}));
     const {
         clear,
         item
-    } = SelectionStore.use((
+    } = useStore(SelectionStore, (
         {
             clear,
             item

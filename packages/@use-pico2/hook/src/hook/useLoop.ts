@@ -1,13 +1,14 @@
 "use client";
 
+import {useStore} from "@use-pico2/store";
 import {
     LoopsStore,
     LoopStore
-} from "@use-pico2/ui";
+}                 from "@use-pico2/ui";
 import {
     useEffect,
     useRef
-} from "react";
+}                 from "react";
 
 export namespace useLoop {
     export interface Props {
@@ -55,8 +56,8 @@ export const useLoop = (
     }: useLoop.Props
 ) => {
     const isMountedRef = useRef(false);
-    const loop = LoopStore.use();
-    const loops = LoopsStore.use$();
+    const loop = useStore(LoopStore);
+    const loops = useStore(LoopsStore);
 
     useEffect(() => {
         if (isMountedRef.current || loop.isRunning) {

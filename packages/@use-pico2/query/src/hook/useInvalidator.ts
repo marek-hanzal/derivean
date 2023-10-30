@@ -1,4 +1,4 @@
-import {useQueryClient}    from "@tanstack/react-query/build/modern";
+import {useQueryClient}    from "@tanstack/react-query";
 import {type IInvalidator} from "../api/IInvalidator";
 
 export namespace useInvalidator {

@@ -1,4 +1,5 @@
 import {type PicoSchema}  from "@use-pico2/schema";
+import {useStore}         from "@use-pico2/store";
 import {type IQueryStore} from "../api/IQueryStore";
 import {type QuerySchema} from "../schema/QuerySchema";
 
@@ -6,7 +7,7 @@ export namespace useFilter {
     export interface Props<
         TQuerySchema extends QuerySchema<any, any>,
     > {
-        store: IQueryStore<TQuerySchema>;
+        store: IQueryStore.Store<TQuerySchema>;
     }
 
     export type Result<
@@ -21,6 +22,6 @@ export const useFilter = <
         store,
     }: useFilter.Props<TQuerySchema>
 ): useFilter.Result<TQuerySchema> => {
-    const setFilter = store.use(({setFilter}) => setFilter);
+    const setFilter = useStore(store, ({setFilter}) => setFilter);
     return filter => setFilter(filter);
 };

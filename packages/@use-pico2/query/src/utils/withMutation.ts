@@ -19,7 +19,7 @@ export namespace withMutation {
 
         mutator(request: PicoSchema.Output<TRequestSchema>): Promise<PicoSchema.Output<TResponseSchema>>;
 
-        invalidator: IWithMutation<TRequestSchema, TResponseSchema>["invalidator"];
+        invalidator?: IWithMutation<TRequestSchema, TResponseSchema>["invalidator"];
 
         defaultOptions?: IWithMutation.Options<TRequestSchema, TResponseSchema>;
     }

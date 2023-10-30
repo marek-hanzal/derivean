@@ -3,6 +3,7 @@
 import {Group}                 from "@mantine/core";
 import {type IWithTranslation} from "@use-pico2/i18n";
 import {isLink}                from "@use-pico2/navigation";
+import {useStore}              from "@use-pico2/store";
 import {cx}                    from "@use-pico2/utils";
 import {usePathname}           from "next/navigation";
 import {type FC}               from "react";
@@ -27,7 +28,7 @@ export const MainMenu: FC<MainMenu.Props> = (
         links,
         withTranslation,
     }) => {
-    const {active: withActive} = ActiveStore.use(({active}) => ({active}));
+    const {active: withActive} = useStore(ActiveStore, ({active}) => ({active}));
     const pathname = usePathname();
     return <Group
         className={classes.MenuGroup}

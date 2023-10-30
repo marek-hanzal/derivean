@@ -14,6 +14,7 @@ import {
     useCount,
     useQuery
 }                   from "@use-pico2/source";
+import {useStore}   from "@use-pico2/store";
 import {
     BlockStore,
     Box,
@@ -30,7 +31,7 @@ export namespace List {
         TQuerySchema extends QuerySchema<any, any>,
         TResponseSchema extends WithIdentitySchema,
     > {
-        withQueryStore: IQueryStore<TQuerySchema>;
+        withQueryStore: IQueryStore.Store<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TResponseSchema>;
         options?: IWithQuery.QueryOptions<
             ArraySchema<TResponseSchema>
@@ -75,7 +76,7 @@ export const List = <
         isLoading = false,
     }: List.Props<TQuerySchema, TResponseSchema>
 ) => {
-    const {isBlock} = BlockStore.use(({isBlock}) => ({isBlock}));
+    const {isBlock} = useStore(BlockStore, ({isBlock}) => ({isBlock}));
     const result = useQuery({
         store:           withQueryStore,
         withSourceQuery: withSourceQuery,

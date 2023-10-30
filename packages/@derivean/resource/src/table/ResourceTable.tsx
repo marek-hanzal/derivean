@@ -1,6 +1,7 @@
 import {WithTranslationProvider}  from "@use-pico2/i18n";
 import {Table}                    from "@use-pico2/table";
 import {type FC}                  from "react";
+import {ResourceQueryStore}       from "../query/ResourceQueryStore";
 import {withResourceQuery}        from "../query/withResourceQuery";
 import {type ResourceQuerySchema} from "../schema/ResourceQuerySchema";
 import {type ResourceSchema}      from "../schema/ResourceSchema";
@@ -15,7 +16,7 @@ export namespace ResourceTable {
             ResourceSchema,
             ResourceQuerySchema
         >,
-        "columns" | "withSourceQuery"
+        "columns" | "withSourceQuery" | "withQueryStore"
     >
 }
 
@@ -31,6 +32,7 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
                     render: ({item}) => item.name,
                 },
             }}
+            withQueryStore={ResourceQueryStore}
             withSourceQuery={withResourceQuery}
             {...props}
         />

@@ -66,7 +66,7 @@ export namespace Table {
          * Specify an order of columns
          */
         order?: TColumns[];
-        withQueryStore: IQueryStore<TQuerySchema>;
+        withQueryStore: IQueryStore.Store<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
 
         WithRow?: FC<TableBody.RowProps<TSchema>>;
