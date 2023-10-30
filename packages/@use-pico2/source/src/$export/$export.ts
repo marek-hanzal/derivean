@@ -11,6 +11,7 @@ export * from "./useFilter";
 export * from "./useInvalidator";
 export * from "./useOrderBy";
 export * from "./useQuery";
+export * from "./useQueryOf";
 export * from "./useShallowFilter";
 export * from "./useShallowOrderBy";
 export * from "./withCollectionMutationSchema";
