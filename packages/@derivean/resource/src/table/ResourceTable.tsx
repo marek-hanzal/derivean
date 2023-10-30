@@ -1,3 +1,5 @@
+"use client";
+
 import {WithTranslationProvider}  from "@use-pico2/i18n";
 import {Table}                    from "@use-pico2/table";
 import {type FC}                  from "react";

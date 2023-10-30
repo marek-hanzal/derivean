@@ -3,7 +3,8 @@ import {
     IQueryStore,
     type IWithQuery,
     type QuerySchema,
-    usePromise
+    usePromise,
+    useQueryOf
 }                                 from "@use-pico2/query";
 import {
     type ArraySchema,
@@ -33,9 +34,10 @@ export const useQuery = <
     }: useQuery.Props<TQuerySchema, TResponseSchema>
 ): IWithSourceQuery.Result<TResponseSchema> => {
     const promise = usePromise({withQuery: withSourceQuery});
+    const query = useQueryOf({store});
     return useCoolQuery({
         queryKey: withSourceQuery.key.concat(queryKey || []),
-        queryFn:  async () => promise({}),
+        queryFn: async () => promise(query),
         ...options,
     });
 };

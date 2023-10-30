@@ -1,3 +1,5 @@
+"use client";
+
 import {parse}              from "@use-pico2/schema";
 import {createStore}        from "@use-pico2/store";
 import {
