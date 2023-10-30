@@ -1,4 +1,5 @@
 import {
+    parse,
     type PicoSchema,
     type RequestSchema,
     type ResponseSchema
@@ -9,7 +10,7 @@ export namespace withAction {
         TRequestSchema extends RequestSchema,
         TResponseSchema extends ResponseSchema,
     > {
-        request: TResponseSchema;
+        request: TRequestSchema;
         response: TResponseSchema;
         action: Action<TRequestSchema, TResponseSchema>;
     }
@@ -30,5 +31,10 @@ export const withAction = <
         action,
     }: withAction.Props<TRequestSchema, TResponseSchema>,
 ): withAction.Action<TRequestSchema, TResponseSchema> => {
-    return async request => action(request);
+    return async $request => parse(
+        response,
+        await action(
+            parse(request, $request)
+        )
+    );
 };
