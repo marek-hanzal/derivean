@@ -58,6 +58,7 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/hook/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/i18n/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/query/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/query/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/repository/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/schema/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/schema/tests" isTestSource="true" />

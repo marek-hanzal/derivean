@@ -12,7 +12,7 @@ import {
     type ResponseSchema
 }                          from "@use-pico2/schema";
 import {type IInvalidator} from "../api/IInvalidator";
-import {type WithQuery}    from "../api/WithQuery";
+import {type IWithQuery}   from "../api/IWithQuery";
 
 export namespace withQuery {
     export interface Props<
@@ -46,7 +46,7 @@ export const withQuery = <
         invalidator,
         callback,
     }: withQuery.Props<TRequestSchema, TResponseSchema>
-): WithQuery<TRequestSchema, TResponseSchema> => {
+): IWithQuery<TRequestSchema, TResponseSchema> => {
     const queryKey: QueryKey = key;
 
     const usePromise = () => {
@@ -89,7 +89,7 @@ export const withQuery = <
                            {
                                options,
                                request,
-                           }: WithQuery.Options<TRequestSchema, TResponseSchema>
+                           }: IWithQuery.Options<TRequestSchema, TResponseSchema>
                        ) => {
             const promise = usePromise();
             return useQuery({

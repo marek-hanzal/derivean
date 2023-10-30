@@ -4,8 +4,8 @@ import {useSuccessNotification} from "@use-pico2/hook";
 import {Translation}            from "@use-pico2/i18n";
 import {
     type FilterSchema,
-    type QuerySchema,
-    type WithMutation
+    type IWithMutation,
+    type QuerySchema
 }                               from "@use-pico2/query";
 import {type MutationSchema}    from "@use-pico2/source";
 import {
@@ -22,7 +22,7 @@ export namespace DeleteByModal {
     export interface Props<
         TFilterSchema extends FilterSchema,
     > extends Modal.Props {
-        withMutation: WithMutation<
+        withMutation: IWithMutation<
             MutationSchema<any, QuerySchema<TFilterSchema, any>>,
             any
         >;

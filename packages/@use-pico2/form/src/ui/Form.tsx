@@ -7,9 +7,7 @@ import {
 }                               from "@use-pico2/i18n";
 import {type IHrefProps}        from "@use-pico2/navigation";
 import {
-    ErrorResponseSchema,
-    isError,
-    type WithMutation,
+    type IWithMutation,
     withMutation as coolWithMutation
 }                               from "@use-pico2/query";
 import {
@@ -34,7 +32,6 @@ import {
 import {
     cleanOf,
     isCallable,
-    isString,
     mapEmptyToNull
 }                               from "@use-pico2/utils";
 import {
@@ -224,7 +221,7 @@ export namespace Form {
             TValuesSchema extends ValuesSchema,
         > {
             form: UseForm<TValuesSchema>;
-            error: ErrorResponseSchema.Type;
+            error: any;
             values: PicoSchema.Output<TValuesSchema>;
 
             setErrors(errors: Partial<Record<Keys<TValuesSchema>, string>>): void;
@@ -246,7 +243,7 @@ export namespace Form {
      * Props of the main Form component (in user-land).
      */
     export interface Props<
-        TWithMutation extends WithMutation<any, any>,
+        TWithMutation extends IWithMutation<any, any>,
         TValuesSchema extends ValuesSchema = TWithMutation["schema"]["request"],
         TRequestSchema extends RequestSchema = TWithMutation["schema"]["request"],
         TResponseSchema extends ResponseSchema = TWithMutation["schema"]["response"],
@@ -267,7 +264,7 @@ export namespace Form {
         /**
          * Specify form mutation
          */
-        withMutation: WithMutation<
+        withMutation: IWithMutation<
             TRequestSchema,
             TResponseSchema
         >;
@@ -340,7 +337,7 @@ export namespace Form {
     }
 
     export type PropsEx<
-        TWithMutation extends WithMutation<any, any>,
+        TWithMutation extends IWithMutation<any, any>,
         TValuesSchema extends ValuesSchema = TWithMutation["schema"]["request"],
         TRequestSchema extends RequestSchema = TWithMutation["schema"]["request"],
         TResponseSchema extends ResponseSchema = TWithMutation["schema"]["response"],
@@ -368,7 +365,7 @@ export namespace Form {
 }
 
 export const Form = <
-    TWithMutation extends WithMutation<RequestSchema, ResponseSchema>,
+    TWithMutation extends IWithMutation<RequestSchema, ResponseSchema>,
     TValuesSchema extends ValuesSchema,
     TRequestSchema extends RequestSchema = TWithMutation["schema"]["request"],
     TResponseSchema extends ResponseSchema = TWithMutation["schema"]["response"],
@@ -570,25 +567,25 @@ export const Form = <
                                             });
                                         },
                                         onError:   async error => {
-                                            if (isError(error)) {
-                                                Object
-                                                    .entries(error?.error?.paths || {})
-                                                    .map(([name, message]) => {
-                                                        isString(message) && form.setError(name as Form.Keys<TValuesSchema>, {
-                                                            message: t(`${name}.error.${message}`),
-                                                        });
-                                                    });
-                                                await onError?.({
-                                                    error,
-                                                    form,
-                                                    values,
-                                                    setErrors: errors => {
-                                                        Object.entries(errors).map(([k, v]) => form.setError(k as Form.Keys<TValuesSchema>, {
-                                                            message: t(`${k}.error.${v}`),
-                                                        }));
-                                                    },
-                                                });
-                                            }
+                                            // if (isError(error)) {
+                                            //     Object
+                                            //         .entries(error?.error?.paths || {})
+                                            //         .map(([name, message]) => {
+                                            //             isString(message) && form.setError(name as Form.Keys<TValuesSchema>, {
+                                            //                 message: t(`${name}.error.${message}`),
+                                            //             });
+                                            //         });
+                                            //     await onError?.({
+                                            //         error,
+                                            //         form,
+                                            //         values,
+                                            //         setErrors: errors => {
+                                            //             Object.entries(errors).map(([k, v]) => form.setError(k as Form.Keys<TValuesSchema>, {
+                                            //                 message: t(`${k}.error.${v}`),
+                                            //             }));
+                                            //         },
+                                            //     });
+                                            // }
                                         },
                                         onSettled: async response => {
                                             window.scrollTo({

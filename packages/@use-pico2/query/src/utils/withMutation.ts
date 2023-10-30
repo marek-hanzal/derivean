@@ -2,15 +2,15 @@ import {
     type MutationKey,
     useMutation,
     useQueryClient
-}                          from "@tanstack/react-query";
+}                           from "@tanstack/react-query";
 import {
     parse,
     type PicoSchema,
     type RequestSchema,
     type ResponseSchema
-}                          from "@use-pico2/schema";
-import {type IInvalidator} from "../api/IInvalidator";
-import {type WithMutation} from "../api/WithMutation";
+}                           from "@use-pico2/schema";
+import {type IInvalidator}  from "../api/IInvalidator";
+import {type IWithMutation} from "../api/IWithMutation";
 
 export namespace withMutation {
     export interface Props<
@@ -26,7 +26,7 @@ export namespace withMutation {
 
         mutator(request: PicoSchema.Output<TRequestSchema>): Promise<PicoSchema.Output<TResponseSchema>>;
 
-        defaultOptions?: WithMutation.Options<TRequestSchema, TResponseSchema>;
+        defaultOptions?: IWithMutation.Options<TRequestSchema, TResponseSchema>;
     }
 }
 
@@ -47,7 +47,7 @@ export const withMutation = <
         TRequestSchema,
         TResponseSchema
     >
-): WithMutation<TRequestSchema, TResponseSchema> => {
+): IWithMutation<TRequestSchema, TResponseSchema> => {
     return {
         key,
         schema,
@@ -68,7 +68,7 @@ export const withMutation = <
                              mutationKey: $mutationKey,
                              onSuccess,
                              ...options
-                         }: WithMutation.Options<TRequestSchema, TResponseSchema> = {}
+                         }: IWithMutation.Options<TRequestSchema, TResponseSchema> = {}
                      ) => {
             const queryClient = useQueryClient();
             return useMutation({

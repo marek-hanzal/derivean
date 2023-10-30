@@ -1,24 +1,32 @@
-import {type WithQuery} from "@use-pico2/query";
+import {Pagination} from "@use-pico2/pagination";
+import {
+    type IWithQuery,
+    type IWithSourceQuery
+}                   from "@use-pico2/query";
 import {
     type ArraySchema,
     type PicoSchema,
     type RequestSchema,
     type WithIdentitySchema
-}                       from "@use-pico2/schema";
+}                   from "@use-pico2/schema";
 import {
     BlockStore,
+    Box,
+    LoadingOverlay,
+    ScrollArea,
     Status
-}                       from "@use-pico2/ui";
-import {type FC}        from "react";
-import classes          from "./List.module.css";
+}                   from "@use-pico2/ui";
+import {classNames} from "@use-pico2/utils";
+import {type FC}    from "react";
+import classes      from "./List.module.css";
 
 export namespace List {
     export interface Props<
         TRequestSchema extends RequestSchema,
         TResponseSchema extends WithIdentitySchema,
     > {
-        // withSourceQuery: WithSourceQuery<TResponseSchema, any>;
-        options?: WithQuery.QueryOptions<
+        withSourceQuery: IWithSourceQuery<any, any, any, TResponseSchema>;
+        options?: IWithQuery.QueryOptions<
             TRequestSchema,
             ArraySchema<TResponseSchema>
         >;
@@ -46,7 +54,7 @@ export const List = <
     TResponseSchema extends WithIdentitySchema,
 >(
     {
-        // withSourceQuery,
+        withSourceQuery,
         options,
         scrollWidth,
         Item,
@@ -63,51 +71,49 @@ export const List = <
 ) => {
     const {isBlock} = BlockStore.use(({isBlock}) => ({isBlock}));
 
-    return "List";
-
-    // const result = withSourceQuery.useQuery(options);
-    // const countResult = withSourceQuery.useCount();
-    // const $isLoading = (result.isFetching && !result.isRefetching) || countResult.isLoading;
-    // return <>
-    //     <Prefix/>
-    //     <Pagination
-    //         withSourceQuery={withSourceQuery}
-    //     />
-    //     <ScrollArea
-    //         w={"100%"}
-    //     >
-    //         <Box
-    //             pos={"relative"}
-    //             w={countResult.isSuccess && countResult.data.count > 0 ? scrollWidth : undefined}
-    //         >
-    //             <LoadingOverlay
-    //                 transitionProps={{
-    //                     duration: 500,
-    //                 }}
-    //                 visible={isBlock || $isLoading || isLoading}
-    //             />
-    //             <Header/>
-    //             <Box
-    //                 my={"md"}
-    //                 className={classNames(
-    //                     (countResult.data?.count || 0) > 0 ? classes.ListBorder : undefined
-    //                 )}
-    //             >
-    //                 {result.data?.map(item => <Box
-    //                     key={item.id}
-    //                     className={classes.Item}
-    //                     py={"xs"}
-    //                 >
-    //                     <Item item={item}/>
-    //                 </Box>)}
-    //             </Box>
-    //             {countResult.data && !countResult.data.where && <Empty/>}
-    //             <Footer/>
-    //         </Box>
-    //     </ScrollArea>
-    //     <Suffix/>
-    //     <Pagination
-    //         withSourceQuery={withSourceQuery}
-    //     />
-    // </>;
+    const result = withSourceQuery.useQuery(options);
+    const countResult = withSourceQuery.useCount();
+    const $isLoading = (result.isFetching && !result.isRefetching) || countResult.isLoading;
+    return <>
+        <Prefix/>
+        <Pagination
+            withSourceQuery={withSourceQuery}
+        />
+        <ScrollArea
+            w={"100%"}
+        >
+            <Box
+                pos={"relative"}
+                w={countResult.isSuccess && countResult.data.count > 0 ? scrollWidth : undefined}
+            >
+                <LoadingOverlay
+                    transitionProps={{
+                        duration: 500,
+                    }}
+                    visible={isBlock || $isLoading || isLoading}
+                />
+                <Header/>
+                <Box
+                    my={"md"}
+                    className={classNames(
+                        (countResult.data?.count || 0) > 0 ? classes.ListBorder : undefined
+                    )}
+                >
+                    {result.data?.map(item => <Box
+                        key={item.id}
+                        className={classes.Item}
+                        py={"xs"}
+                    >
+                        <Item item={item}/>
+                    </Box>)}
+                </Box>
+                {countResult.data && !countResult.data.where && <Empty/>}
+                <Footer/>
+            </Box>
+        </ScrollArea>
+        <Suffix/>
+        <Pagination
+            withSourceQuery={withSourceQuery}
+        />
+    </>;
 };

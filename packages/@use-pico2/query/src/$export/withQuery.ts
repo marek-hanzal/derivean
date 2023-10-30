@@ -1,1 +1,1 @@
-export {withQuery} from "../hook/withQuery";
+export {withQuery} from "../utils/withQuery";

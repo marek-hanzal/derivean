@@ -1,3 +1,9 @@
+"use client";
+
+import {
+    ResourceTable,
+    withResourceQuery
+}                     from "@derivean/resource";
 import {ResourceIcon} from "@derivean/ui";
 import {
     Breadcrumbs,
@@ -19,5 +25,8 @@ export default function Index() {
             }}
         />}
     >
+        <withResourceQuery.store.Provider>
+            <ResourceTable/>
+        </withResourceQuery.store.Provider>
     </Page>;
 }

@@ -1,67 +1,79 @@
+import {IconRefresh}             from "@tabler/icons-react";
 import {
     type FilterSchema,
+    type IWithSourceQuery,
     type OrderBySchema,
-    QuerySchema
-}                        from "@use-pico2/query";
-import {type PicoSchema} from "@use-pico2/schema";
-import {type FC}         from "react";
+    type QuerySchema
+}                                from "@use-pico2/query";
+import {type WithIdentitySchema} from "@use-pico2/schema";
+import {Fulltext}                from "@use-pico2/source";
+import {
+    ActionIcon,
+    Grid,
+    GridCol
+}                                from "@use-pico2/ui";
+import {type FC}                 from "react";
 
 export namespace TableHeaderControls {
     export interface Props<
-        TSchema extends PicoSchema,
-        TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
+        TFilterSchema extends FilterSchema,
+        TOrderBySchema extends OrderBySchema,
+        TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+        TSchema extends WithIdentitySchema,
     > {
-        // withSourceQuery: WithSourceQuery<TSchema, TQuerySchema>;
-        Filter?: FC<FilterProps<TSchema, TQuerySchema>>;
+        withSourceQuery: IWithSourceQuery<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>;
+        Filter?: FC<FilterProps<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>>;
         Postfix?: FC;
     }
 
     export interface FilterProps<
-        TSchema extends PicoSchema,
-        TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
+        TFilterSchema extends FilterSchema,
+        TOrderBySchema extends OrderBySchema,
+        TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+        TSchema extends WithIdentitySchema,
     > {
-        // withSourceQuery: WithSourceQuery<TSchema, TQuerySchema>;
+        withSourceQuery: IWithSourceQuery<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>;
     }
 }
 
 export const TableHeaderControls = <
-    TSchema extends PicoSchema,
-    TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
+    TFilterSchema extends FilterSchema,
+    TOrderBySchema extends OrderBySchema,
+    TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
+    TSchema extends WithIdentitySchema,
 >(
     {
-        // withSourceQuery,
+        withSourceQuery,
         Filter,
         Postfix,
-    }: TableHeaderControls.Props<TSchema, TQuerySchema>
+    }: TableHeaderControls.Props<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>
 ) => {
-    return "TableHeaderControls";
-
-    // const invalidator = withSourceQuery.useInvalidator();
-    // return <Grid
-    //     align={"center"}
-    //     mb={"xs"}
-    //     gutter={"xs"}
-    // >
-    //     <Grid.Col span={"auto"}>
-    //         <Fulltext
-    //             withSourceQuery={withSourceQuery}
-    //         />
-    //     </Grid.Col>
-    //     <Grid.Col span={"content"}>
-    //         <ActionIcon
-    //             size={"xl"}
-    //             variant={"subtle"}
-    //             color={"blue.5"}
-    //             onClick={() => invalidator()}
-    //         >
-    //             <IconRefresh/>
-    //         </ActionIcon>
-    //     </Grid.Col>
-    //     {Filter && <Grid.Col span={"content"}>
-    //         <Filter withSourceQuery={withSourceQuery}/>
-    //     </Grid.Col>}
-    //     {Postfix && <Grid.Col span={"content"}>
-    //         <Postfix/>
-    //     </Grid.Col>}
-    // </Grid>;
+    const invalidator = withSourceQuery.useInvalidator();
+    return <Grid
+        align={"center"}
+        mb={"xs"}
+        gutter={"xs"}
+    >
+        <GridCol span={"auto"}>
+            <Fulltext
+                withSourceQuery={withSourceQuery}
+            />
+        </GridCol>
+        <GridCol span={"content"}>
+            <ActionIcon
+                size={"xl"}
+                variant={"subtle"}
+                color={"blue.5"}
+                onClick={() => invalidator()}
+            >
+                <IconRefresh/>
+            </ActionIcon>
+        </GridCol>
+        {Filter && <GridCol span={"content"}>
+            <Filter withSourceQuery={withSourceQuery}/>
+        </GridCol>}
+        {Postfix && <GridCol span={"content"}>
+            <Postfix/>
+        </GridCol>}
+    </Grid>;
 };

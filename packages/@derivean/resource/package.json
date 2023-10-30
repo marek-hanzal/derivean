@@ -15,6 +15,7 @@
 	},
 	"dependencies": {
 		"@use-pico2/orm": "^1.0.0",
+		"@use-pico2/query": "^1.0.0",
 		"@use-pico2/repository": "^1.0.0",
 		"@use-pico2/schema": "^1.0.0",
 		"@use-pico2/table": "^1.0.0"

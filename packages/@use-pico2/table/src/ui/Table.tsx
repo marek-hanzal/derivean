@@ -1,38 +1,50 @@
-import {type IWithTranslation}  from "@use-pico2/i18n";
-import {Pagination}             from "@use-pico2/pagination";
+import {
+    type IWithTranslation,
+    WithTranslationProvider
+}                                from "@use-pico2/i18n";
+import {Pagination}              from "@use-pico2/pagination";
 import {
     type FilterSchema,
+    type IWithSourceQuery,
     type OrderBySchema,
     type QuerySchema
-}                               from "@use-pico2/query";
-import {type PicoSchema}        from "@use-pico2/schema";
-import {Table as CoolTable}     from "@use-pico2/ui";
+}                                from "@use-pico2/query";
+import {type WithIdentitySchema} from "@use-pico2/schema";
+import {
+    Box,
+    LinkLockProvider,
+    LoadingOverlay,
+    ScrollArea,
+    Table as CoolTable
+}                                from "@use-pico2/ui";
 import {
     type CSSProperties,
     type FC
-}                               from "react";
-import {type ITableColumns}     from "../api/ITableColumns";
-import {type ITableColumnTuple} from "../api/ITableColumnTuple";
-import classes                  from "./Table.module.css";
-import {TableBody}              from "./Table/TableBody";
-import {TableCountResult}       from "./Table/TableCountResult";
-import {TableFoot}              from "./Table/TableFoot";
-import {TableHead}              from "./Table/TableHead";
-import {TableHeaderControls}    from "./Table/TableHeaderControls";
-import {TablePrefix}            from "./Table/TablePrefix";
+}                                from "react";
+import {type ITableColumns}      from "../api/ITableColumns";
+import {type ITableColumnTuple}  from "../api/ITableColumnTuple";
+import classes                   from "./Table.module.css";
+import {TableBody}               from "./Table/TableBody";
+import {TableCountResult}        from "./Table/TableCountResult";
+import {TableFoot}               from "./Table/TableFoot";
+import {TableHead}               from "./Table/TableHead";
+import {TableHeaderControls}     from "./Table/TableHeaderControls";
+import {TablePrefix}             from "./Table/TablePrefix";
 
 export namespace Table {
     export interface Props<
         TColumns extends string,
-        TSchema extends PicoSchema,
-        TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
+        TSchema extends WithIdentitySchema,
+        TFilterSchema extends FilterSchema,
+        TOrderBySchema extends OrderBySchema,
+        TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
     > extends Partial<Omit<CoolTable.Props, "hidden" | "onClick">>,
-        TableHeaderControls.Props<TSchema, TQuerySchema>,
+        TableHeaderControls.Props<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>,
         Omit<TablePrefix.Props<TSchema, TQuerySchema>, "columns" | "items">,
         Omit<TableHead.Props<TSchema, TQuerySchema>, "columns" | "withRowAction" | "disableActions" | "items">,
-        Omit<TableBody.Props<TSchema, TQuerySchema>, "columns" | "WithRow" | "withTableAction" | "disableActions">,
+        Omit<TableBody.Props<TSchema, TFilterSchema, TOrderBySchema, TQuerySchema>, "columns" | "WithRow" | "withTableAction" | "disableActions">,
         Omit<TableFoot.Props<TSchema, TQuerySchema>, "columns" | "withTableAction" | "withRowAction" | "disableActions" | "items">,
-        TableCountResult.Props<TSchema, TQuerySchema> {
+        TableCountResult.Props<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema> {
         withTranslation?: IWithTranslation;
         /**
          * Define table columns; they will be rendered by default in the specified order
@@ -54,10 +66,10 @@ export namespace Table {
          * Specify an order of columns
          */
         order?: TColumns[];
-        // withSourceQuery: WithSourceQuery<TSchema, TQuerySchema>;
+        withSourceQuery: IWithSourceQuery<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>;
 
         WithRow?: FC<TableBody.RowProps<TSchema>>;
-        WithPostfix?: TableHeaderControls.Props<TSchema, TQuerySchema>["Postfix"];
+        WithPostfix?: TableHeaderControls.Props<TFilterSchema, TOrderBySchema, TQuerySchema, TSchema>["Postfix"];
 
         disableActions?: boolean;
 
@@ -81,8 +93,10 @@ export namespace Table {
 
 export const Table = <
     TColumns extends string,
-    TSchema extends PicoSchema,
-    TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
+    TSchema extends WithIdentitySchema,
+    TFilterSchema extends FilterSchema,
+    TOrderBySchema extends OrderBySchema,
+    TQuerySchema extends QuerySchema<TFilterSchema, TOrderBySchema>,
 >(
     {
         withTranslation,
@@ -91,7 +105,7 @@ export const Table = <
         scrollWidth,
         hidden,
         order,
-        // withSourceQuery,
+        withSourceQuery,
         WithTableAction,
         WithRowAction,
         WithRow,
@@ -110,7 +124,7 @@ export const Table = <
         refresh,
         minWidth = "auto",
         ...props
-    }: Table.Props<TColumns, TSchema, TQuerySchema>) => {
+    }: Table.Props<TColumns, TSchema, TFilterSchema, TOrderBySchema, TQuerySchema>) => {
     const $order = order || Object.keys(columns) as TColumns[];
     const $pagination = pagination || {
         position: ["top", "bottom"],
@@ -127,104 +141,102 @@ export const Table = <
         overrideColumns?.[column] || columns[column],
     ]);
 
-    // const result = withSourceQuery.useQuery({
-    //     refetchInterval: refresh,
-    // });
+    const result = withSourceQuery.useQuery({
+        refetchInterval: refresh,
+    });
 
-    return "Table";
-
-    // return <WithTranslationProvider
-    //     withTranslation={withTranslation}
-    // >
-    //     <LinkLockProvider
-    //         isLock={withLinkLock}
-    //     >
-    //         <TableHeaderControls
-    //             withSourceQuery={withSourceQuery}
-    //             Filter={Filter}
-    //             Postfix={WithPostfix}
-    //         />
-    //         {$pagination?.position?.includes("top") && <>
-    //             <Pagination
-    //                 // withSourceQuery={withSourceQuery}
-    //                 refresh={refresh}
-    //                 {...$pagination?.props}
-    //             />
-    //         </>}
-    //         <ScrollArea
-    //             w={"100%"}
-    //         >
-    //             <Box w={scrollWidth || undefined}>
-    //                 <LoadingOverlay
-    //                     visible={result.isFetching || result.isLoading}
-    //                     transitionProps={{
-    //                         duration: 500,
-    //                     }}
-    //                     overlayProps={{
-    //                         blur: 2,
-    //                     }}
-    //                 />
-    //                 <>
-    //                     <TablePrefix
-    //                         WithPrefix={WithPrefix}
-    //                         items={result.data}
-    //                         columns={$columns}
-    //                     />
-    //                     <CoolTable.ScrollContainer
-    //                         minWidth={minWidth}
-    //                     >
-    //                         <CoolTable
-    //                             striped
-    //                             highlightOnHover
-    //                             withTableBorder
-    //                             withRowBorders
-    //                             withColumnBorders
-    //                             className={classes.table}
-    //                             {...props}
-    //                         >
-    //                             <TableHead
-    //                                 WithTableAction={WithTableAction}
-    //                                 columns={$columns}
-    //                                 withRowAction={!!WithRowAction}
-    //                                 disableActions={disableActions}
-    //                                 items={result.data}
-    //                             />
-    //                             <TableBody
-    //                                 withSourceQuery={withSourceQuery}
-    //                                 columns={$columns}
-    //                                 withTableAction={!!WithTableAction}
-    //                                 WithRowAction={WithRowAction}
-    //                                 WithRow={WithRow || (props => <CoolTable.Tr{...props}/>)}
-    //                                 MultiSelectionStore={MultiSelectionStore}
-    //                                 SelectionStore={SelectionStore}
-    //                                 disableActions={disableActions}
-    //                                 highlight={highlight}
-    //                                 onClick={onClick}
-    //                             />
-    //                             <TableFoot
-    //                                 withTableAction={!!WithTableAction}
-    //                                 withRowAction={!!WithRowAction}
-    //                                 disableActions={disableActions}
-    //                                 columns={$columns}
-    //                                 items={result.data}
-    //                                 WithFooter={WithFooter}
-    //                             />
-    //                         </CoolTable>
-    //                     </CoolTable.ScrollContainer>
-    //                 </>
-    //             </Box>
-    //         </ScrollArea>
-    //         <TableCountResult
-    //             withSourceQuery={withSourceQuery}
-    //             Empty={Empty}
-    //         />
-    //         {$pagination?.position?.includes("bottom") && <>
-    //             <Pagination
-    //                 // withSourceQuery={withSourceQuery}
-    //                 refresh={refresh}
-    //                 {...$pagination?.props}
-    //             />
-    //         </>}
-    //     </LinkLockProvider>
-    // </WithTranslationProvider>;
+    return <WithTranslationProvider
+        withTranslation={withTranslation}
+    >
+        <LinkLockProvider
+            isLock={withLinkLock}
+        >
+            <TableHeaderControls
+                withSourceQuery={withSourceQuery}
+                Filter={Filter}
+                Postfix={WithPostfix}
+            />
+            {$pagination?.position?.includes("top") && <>
+                <Pagination
+                    withSourceQuery={withSourceQuery}
+                    refresh={refresh}
+                    {...$pagination?.props}
+                />
+            </>}
+            <ScrollArea
+                w={"100%"}
+            >
+                <Box w={scrollWidth || undefined}>
+                    <LoadingOverlay
+                        visible={result.isFetching || result.isLoading}
+                        transitionProps={{
+                            duration: 500,
+                        }}
+                        overlayProps={{
+                            blur: 2,
+                        }}
+                    />
+                    <>
+                        <TablePrefix
+                            WithPrefix={WithPrefix}
+                            items={result.data}
+                            columns={$columns}
+                        />
+                        <CoolTable.ScrollContainer
+                            minWidth={minWidth}
+                        >
+                            <CoolTable
+                                striped
+                                highlightOnHover
+                                withTableBorder
+                                withRowBorders
+                                withColumnBorders
+                                className={classes.table}
+                                {...props}
+                            >
+                                <TableHead
+                                    WithTableAction={WithTableAction}
+                                    columns={$columns}
+                                    withRowAction={!!WithRowAction}
+                                    disableActions={disableActions}
+                                    items={result.data}
+                                />
+                                <TableBody
+                                    withSourceQuery={withSourceQuery}
+                                    columns={$columns}
+                                    withTableAction={!!WithTableAction}
+                                    WithRowAction={WithRowAction}
+                                    WithRow={WithRow || (props => <CoolTable.Tr{...props}/>)}
+                                    MultiSelectionStore={MultiSelectionStore}
+                                    SelectionStore={SelectionStore}
+                                    disableActions={disableActions}
+                                    highlight={highlight}
+                                    onClick={onClick}
+                                />
+                                <TableFoot
+                                    withTableAction={!!WithTableAction}
+                                    withRowAction={!!WithRowAction}
+                                    disableActions={disableActions}
+                                    columns={$columns}
+                                    items={result.data}
+                                    WithFooter={WithFooter}
+                                />
+                            </CoolTable>
+                        </CoolTable.ScrollContainer>
+                    </>
+                </Box>
+            </ScrollArea>
+            <TableCountResult
+                withSourceQuery={withSourceQuery}
+                Empty={Empty}
+            />
+            {$pagination?.position?.includes("bottom") && <>
+                <Pagination
+                    withSourceQuery={withSourceQuery}
+                    refresh={refresh}
+                    {...$pagination?.props}
+                />
+            </>}
+        </LinkLockProvider>
+    </WithTranslationProvider>;
 };

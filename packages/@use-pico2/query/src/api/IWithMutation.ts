@@ -2,16 +2,15 @@ import {
     type MutationKey,
     type UseMutationOptions,
     type UseMutationResult
-}                                 from "@tanstack/react-query";
+}                          from "@tanstack/react-query";
 import {
     type PicoSchema,
     type RequestSchema,
     type ResponseSchema
-}                                 from "@use-pico2/schema";
-import {type ErrorResponseSchema} from "../schema/ErrorResponseSchema";
-import {type IInvalidator}        from "./IInvalidator";
+}                          from "@use-pico2/schema";
+import {type IInvalidator} from "./IInvalidator";
 
-export interface WithMutation<
+export interface IWithMutation<
     TRequestSchema extends RequestSchema,
     TResponseSchema extends ResponseSchema,
 > {
@@ -24,20 +23,20 @@ export interface WithMutation<
         response: TResponseSchema,
     };
     useInvalidator: IInvalidator.Use;
-    useMutation: (props?: WithMutation.Options<TRequestSchema, TResponseSchema>) => WithMutation.Result<
+    useMutation: (props?: IWithMutation.Options<TRequestSchema, TResponseSchema>) => IWithMutation.Result<
         TRequestSchema,
         TResponseSchema
     >;
 }
 
-export namespace WithMutation {
+export namespace IWithMutation {
     export type Options<
         TRequestSchema extends RequestSchema,
         TResponseSchema extends ResponseSchema,
     > = Omit<
         UseMutationOptions<
             PicoSchema.Output<TResponseSchema>,
-            ErrorResponseSchema.Type,
+            any,
             PicoSchema.Output<TRequestSchema>
         >,
         "mutationFn"
@@ -48,7 +47,7 @@ export namespace WithMutation {
         TResponseSchema extends ResponseSchema,
     > = UseMutationResult<
         PicoSchema.Output<TResponseSchema>,
-        ErrorResponseSchema.Type,
+        any,
         PicoSchema.Output<TRequestSchema>
     >;
 }

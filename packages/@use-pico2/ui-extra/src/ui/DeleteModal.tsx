@@ -2,7 +2,7 @@
 
 import {useSuccessNotification} from "@use-pico2/hook";
 import {Translation}            from "@use-pico2/i18n";
-import {type WithMutation}      from "@use-pico2/query";
+import {type IWithMutation}     from "@use-pico2/query";
 import {type ResponseSchema}    from "@use-pico2/schema";
 import {type MutationSchema}    from "@use-pico2/source";
 import {type WithEntity}        from "@use-pico2/types";
@@ -21,7 +21,7 @@ export namespace DeleteModal {
         TMutationSchema extends MutationSchema<any, any>,
         TResponseSchema extends ResponseSchema,
     > extends Modal.Props, WithEntity.Schema<TResponseSchema> {
-        withMutation: WithMutation<
+        withMutation: IWithMutation<
             TMutationSchema,
             TResponseSchema
         >;

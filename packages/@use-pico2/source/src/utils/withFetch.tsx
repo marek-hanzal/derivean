@@ -1,7 +1,9 @@
-import {type QuerySchema}        from "@use-pico2/query";
+import {
+    type IWithQuery,
+    type QuerySchema
+}                                from "@use-pico2/query";
 import {type WithIdentitySchema} from "@use-pico2/schema";
 import {type FC}                 from "react";
-import {type IWithFetchQuery}    from "../api/IWithFetchQuery";
 import {Fetch}                   from "../ui/Fetch";
 
 export namespace withFetch {
@@ -9,7 +11,7 @@ export namespace withFetch {
         TQuerySchema extends QuerySchema<any, any>,
         TResponseSchema extends WithIdentitySchema,
     > {
-        withQuery: IWithFetchQuery<TQuerySchema, TResponseSchema>;
+        withQuery: IWithQuery<TQuerySchema, TResponseSchema>;
     }
 
     export type Fetch<

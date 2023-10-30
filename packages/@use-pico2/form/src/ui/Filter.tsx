@@ -1,6 +1,6 @@
 import {
     type FilterSchema,
-    type WithMutation
+    type IWithMutation
 }                    from "@use-pico2/query";
 import {DrawerStore} from "@use-pico2/ui";
 import {Form}        from "./Form";
@@ -10,7 +10,7 @@ export namespace Filter {
         TFilterSchema extends FilterSchema
     > extends Omit<
         Form.Props<
-            WithMutation<TFilterSchema, TFilterSchema>
+            IWithMutation<TFilterSchema, TFilterSchema>
         >,
         "schema" | "onSuccess" | "withMutation"
     > {

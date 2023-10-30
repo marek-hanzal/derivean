@@ -1,21 +1,21 @@
 "use client";
 
-import {useParam}             from "@use-pico2/navigation";
+import {useParam}        from "@use-pico2/navigation";
 import {
-    ErrorResponseSchema,
-    type QuerySchema,
-    type WithQuery
-}                             from "@use-pico2/query";
+    type IWithQuery,
+    QueryResult,
+    type QuerySchema
+}                        from "@use-pico2/query";
 import {
     type PicoSchema,
     type WithIdentitySchema
-}                             from "@use-pico2/schema";
-import {type WithEntity}      from "@use-pico2/types";
+}                        from "@use-pico2/schema";
+import {type WithEntity} from "@use-pico2/types";
+import {Loader}          from "@use-pico2/ui";
 import {
     type FC,
     type ReactNode
-}                             from "react";
-import {type IWithFetchQuery} from "../api/IWithFetchQuery";
+}                        from "react";
 
 export namespace Fetch {
     export interface Props<
@@ -35,7 +35,7 @@ export namespace Fetch {
         /**
          * Query to fetch entity
          */
-        withQuery: IWithFetchQuery<TQuerySchema, TResponseSchema>;
+        withQuery: IWithQuery<TQuerySchema, TResponseSchema>;
 
         /**
          * Error renderer
@@ -47,14 +47,16 @@ export namespace Fetch {
          */
         WithSuccess: FC<WithSuccessProps<TResponseSchema>>;
         enabled?: boolean;
-        options?: WithQuery.QueryOptions<TQuerySchema, TResponseSchema>;
+        options?: IWithQuery.QueryOptions<TQuerySchema, TResponseSchema>;
     }
 
     export interface WithErrorProps {
-        error: ErrorResponseSchema.Type;
+        error: any;
     }
 
-    export interface WithSuccessProps<TResponseSchema extends WithIdentitySchema> extends WithEntity.Schema<TResponseSchema> {
+    export interface WithSuccessProps<
+        TResponseSchema extends WithIdentitySchema,
+    > extends WithEntity.Schema<TResponseSchema> {
     }
 }
 
@@ -76,21 +78,22 @@ export const Fetch = <
 ) => {
     const id = useParam(param, query ? "-" : override);
 
-    return "Fetch";
+    const result = withQuery.useQueryEx({
+        request: query || {
+            where: {
+                id,
+            }
+        },
+        options: {
+            ...options,
+            enabled,
+        },
+    });
 
-    // const result = withQuery.useQueryEx({
-    //     request: query || {
-    //         id,
-    //     },
-    //     options: {
-    //         ...options,
-    //         enabled,
-    //     },
-    // });
-    // return <QueryResult
-    //     result={result}
-    //     WithLoading={() => loader === undefined ? <Loader type={"dots"} size={"xs"}/> : loader}
-    //     WithError={WithError}
-    //     WithSuccess={({data}) => <WithSuccess entity={data}/>}
-    // />;
+    return <QueryResult
+        result={result}
+        WithLoading={() => loader === undefined ? <Loader type={"dots"} size={"xs"}/> : loader}
+        WithError={WithError}
+        WithSuccess={({data}) => <WithSuccess entity={data}/>}
+    />;
 };

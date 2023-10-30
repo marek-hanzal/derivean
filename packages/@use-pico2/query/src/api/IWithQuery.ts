@@ -2,19 +2,18 @@ import {
     type QueryKey,
     type UseQueryOptions,
     type UseQueryResult
-}                            from "@tanstack/react-query";
+}                          from "@tanstack/react-query";
 import {
     type PicoSchema,
     type RequestSchema,
     type ResponseSchema
-}                            from "@use-pico2/schema";
-import {ErrorResponseSchema} from "../schema/ErrorResponseSchema";
-import {type IInvalidator}   from "./IInvalidator";
+}                          from "@use-pico2/schema";
+import {type IInvalidator} from "./IInvalidator";
 
 /**
  * This is a base object containing everything you need to use an RPC query.
  */
-export interface WithQuery<
+export interface IWithQuery<
     TRequestSchema extends RequestSchema,
     TResponseSchema extends ResponseSchema,
 > {
@@ -34,27 +33,27 @@ export interface WithQuery<
      */
     useInvalidator: IInvalidator.Use;
 
-    usePromise(): WithQuery.UsePromise<TRequestSchema, TResponseSchema>;
+    usePromise(): IWithQuery.UsePromise<TRequestSchema, TResponseSchema>;
 
     /**
      * Simple useQuery, basically the same as useQuery in React Query; goal is to
      * provide already setup hook, which could be used to get data, eventually driven
      * by other hooks (cursor, filter, ...).
      */
-    useQuery(options?: WithQuery.Options<TRequestSchema, TResponseSchema>["options"]): WithQuery.Result<TResponseSchema>;
+    useQuery(options?: IWithQuery.Options<TRequestSchema, TResponseSchema>["options"]): IWithQuery.Result<TResponseSchema>;
 
     /**
      * Extended (low-level) useQuery without any other dependencies.
      */
-    useQueryEx(props: WithQuery.Options<TRequestSchema, TResponseSchema>): WithQuery.Result<TResponseSchema>;
+    useQueryEx(props: IWithQuery.Options<TRequestSchema, TResponseSchema>): IWithQuery.Result<TResponseSchema>;
 
     /**
      * Directly update query cache with the provided data
      */
-    useUpdateWith: () => (request?: PicoSchema.Output<TResponseSchema>) => void;
+    useUpdateWith(): (request?: PicoSchema.Output<TResponseSchema>) => void;
 }
 
-export namespace WithQuery {
+export namespace IWithQuery {
     export type UsePromise<
         TRequestSchema extends RequestSchema,
         TResponseSchema extends ResponseSchema,
@@ -68,14 +67,14 @@ export namespace WithQuery {
         options?: Omit<
             UseQueryOptions<
                 any,
-                ErrorResponseSchema.Type,
+                any,
                 PicoSchema.Output<TResponseSchema>
             >, "queryFn" | "queryKey"
         > & Partial<
             Pick<
                 UseQueryOptions<
                     any,
-                    ErrorResponseSchema.Type,
+                    any,
                     PicoSchema.Output<TResponseSchema>
                 >,
                 "queryKey"
@@ -92,6 +91,6 @@ export namespace WithQuery {
         TResponseSchema extends ResponseSchema,
     > = UseQueryResult<
         PicoSchema.Output<TResponseSchema>,
-        ErrorResponseSchema.Type
+        any
     >;
 }

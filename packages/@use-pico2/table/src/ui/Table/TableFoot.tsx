@@ -1,7 +1,7 @@
 import {
     type FilterSchema,
-    OrderBySchema,
-    QuerySchema
+    type OrderBySchema,
+    type QuerySchema
 }                               from "@use-pico2/query";
 import {type PicoSchema}        from "@use-pico2/schema";
 import {Table}                  from "@use-pico2/ui";

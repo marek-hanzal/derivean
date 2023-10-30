@@ -5,3 +5,5 @@ export * from "./ResourceSchema";
 export * from "./ResourceShapeSchema";
 export * from "./ResourceTable";
 export * from "./withResourceContainer";
+export * from "./withResourceCountQuery";
+export * from "./withResourceQuery";
