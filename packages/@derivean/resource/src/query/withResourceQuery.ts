@@ -1,7 +1,8 @@
-import {withSourceQuery}        from "@use-pico2/query";
-import {ResourceQuerySchema}    from "../schema/ResourceQuerySchema";
-import {ResourceSchema}         from "../schema/ResourceSchema";
-import {withResourceCountQuery} from "./withResourceCountQuery";
+import {withSourceQuery}         from "@use-pico2/query";
+import {withResourceQueryAction} from "../action/withResourceQueryAction";
+import {ResourceQuerySchema}     from "../schema/ResourceQuerySchema";
+import {ResourceSchema}          from "../schema/ResourceSchema";
+import {withResourceCountQuery}  from "./withResourceCountQuery";
 
 export const withResourceQuery = withSourceQuery({
     key:            ["derivean", "resource", "query"],
@@ -10,7 +11,5 @@ export const withResourceQuery = withSourceQuery({
         response: ResourceSchema,
     },
     withCountQuery: withResourceCountQuery,
-    async callback() {
-        return [];
-    },
+    callback: withResourceQueryAction,
 });
