@@ -26,7 +26,7 @@ export namespace withAction {
     export type Action<
         TRequestSchema extends RequestSchema,
         TResponseSchema extends ResponseSchema,
-    > = (request: PicoSchema.Output<TRequestSchema>, container: IContainer.Type) => Promise<PicoSchema.Output<TResponseSchema>>;
+    > = (request: PicoSchema.Output<TRequestSchema>) => Promise<PicoSchema.Output<TResponseSchema>>;
 }
 
 export const withAction = <
@@ -35,13 +35,17 @@ export const withAction = <
 >(
     factory: withAction.Props<TRequestSchema, TResponseSchema>,
 ): (container: IContainer.Type) => withAction.Action<TRequestSchema, TResponseSchema> => {
-    return container => async ($request, container) => parse(
-        response,
-        await action(
-            parse(request, $request),
-            container
-        )
-    )
-)
-
+    return container => {
+        const {
+            request,
+            response,
+            action
+        } = factory(container);
+        return async $request => parse(
+            response,
+            await action(
+                parse(request, $request),
+            )
+        );
+    };
 };
