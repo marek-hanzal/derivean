@@ -81,6 +81,15 @@ export abstract class AbstractRepository<
         throw new Error("Nothing to do");
     }
 
+    /**
+     * Create small standalone functions handling individual actions which could be created by a factory:
+     *
+     * something like withCreate, withMutate, blablabla
+     */
+
+
+
+
     public async create(create: PicoSchema.Output<TMutationSchema["shape"]["create"]>): Promise<PicoSchema.Output<TEntitySchema>> {
         return await this.client.insertInto(this.table).values({
             ...create,
