@@ -26,7 +26,7 @@ export const createStore = <
     const Context = createContext<TStoreSchema["StoreContext"]>();
     return {
         name,
-        Provider:  withStoreProvider<TStoreSchema>({
+        Provider: withStoreProvider<TStoreSchema>({
             name,
             Context,
             createStore: ({
@@ -40,10 +40,14 @@ export const createStore = <
                 ...$defaults,
             })),
         }),
-        Consumer:  Context.Consumer,
-        use:       withUseState(Context, name, hint),
-        use$:      withUseState$(Context),
-        useStore:  () => useContext(Context, name, hint).store,
-        useStore$: () => useContext$(Context)?.store || null,
+        Consumer: Context.Consumer,
+        use:      withUseState(Context, name, hint),
+        use$:     withUseState$(Context),
+        useStore() {
+            return useContext(Context, name, hint).store;
+        },
+        useStore$() {
+            return useContext$(Context)?.store || null;
+        },
     };
 };
