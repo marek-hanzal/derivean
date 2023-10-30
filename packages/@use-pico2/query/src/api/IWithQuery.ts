@@ -1,11 +1,9 @@
 import {
-    type QueryKey,
-    type UseQueryOptions
-}                          from "@tanstack/react-query";
-import {
     QueryClient,
+    type QueryKey,
+    type UseQueryOptions,
     type UseQueryResult
-}                          from "@tanstack/react-query/build/modern";
+}                          from "@tanstack/react-query";
 import {
     type PicoSchema,
     type RequestSchema,

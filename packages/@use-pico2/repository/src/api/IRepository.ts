@@ -33,4 +33,6 @@ export interface IRepository<
     count(query: PicoSchema.Output<TQuerySchema>): Promise<CountSchema.Type>;
 
     query(query: PicoSchema.Output<TQuerySchema>): Promise<PicoSchema.Output<TEntitySchema>[]>;
+
+    mutate(mutation: PicoSchema.Output<TMutationSchema>): Promise<PicoSchema.Output<TEntitySchema>>;
 }

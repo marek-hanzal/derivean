@@ -1,11 +1,13 @@
-import {useMutation as useCoolMutation} from "@tanstack/react-query";
-import {useQueryClient}                 from "@tanstack/react-query/build/modern";
+import {
+    useMutation as useCoolMutation,
+    useQueryClient
+}                           from "@tanstack/react-query";
 import {
     parse,
     type RequestSchema,
     type ResponseSchema
-}                                       from "@use-pico2/schema";
-import {type IWithMutation}             from "../api/IWithMutation";
+}                           from "@use-pico2/schema";
+import {type IWithMutation} from "../api/IWithMutation";
 
 export namespace useMutation {
     export interface Props<

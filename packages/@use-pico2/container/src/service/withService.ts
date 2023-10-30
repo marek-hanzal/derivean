@@ -1,5 +1,6 @@
 import {proxyOf}           from "@use-pico2/utils";
 import {type FactoryValue} from "pumpit";
+import "server-only";
 import {type IContainer}   from "../api/IContainer";
 
 export namespace withService {

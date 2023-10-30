@@ -1,4 +1,4 @@
-import {type QueryKey}   from "@tanstack/react-query/build/modern";
+import {type QueryKey}   from "@tanstack/react-query";
 import {type IWithQuery} from "./IWithQuery";
 
 export interface IInvalidator {

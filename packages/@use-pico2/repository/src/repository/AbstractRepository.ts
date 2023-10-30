@@ -72,4 +72,9 @@ export abstract class AbstractRepository<
     public async query(query: PicoSchema.Output<TQuerySchema>): Promise<PicoSchema.Output<TEntitySchema>[]> {
         return this.client.selectFrom(this.table).selectAll().execute() as unknown as Promise<PicoSchema.Output<TEntitySchema>[]>;
     }
+
+    public mutate(mutation: PicoSchema.Output<TMutationSchema>): Promise<PicoSchema.Output<TEntitySchema>> {
+        console.log("mutation", mutation);
+        return Promise.resolve(undefined as any);
+    }
 }

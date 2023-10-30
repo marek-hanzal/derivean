@@ -28,7 +28,8 @@
 		"cleanup:lib": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
 	"dependencies": {
-		"pumpit": "^4.1.1"
+		"pumpit": "^4.1.1",
+		"server-only": "^0.0.1"
 	},
 	"devDependencies": {
 		"@use-pico2/esbuild": "^1.0.8",

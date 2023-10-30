@@ -1,12 +1,14 @@
-import {useQuery as useCoolQuery} from "@tanstack/react-query";
-import {type UseQueryResult}      from "@tanstack/react-query/build/modern";
+import {
+    useQuery as useCoolQuery,
+    type UseQueryResult
+}                        from "@tanstack/react-query";
 import {
     type PicoSchema,
     type RequestSchema,
     type ResponseSchema
-}                                 from "@use-pico2/schema";
-import {type IWithQuery}          from "../api/IWithQuery";
-import {usePromise}               from "./usePromise";
+}                        from "@use-pico2/schema";
+import {type IWithQuery} from "../api/IWithQuery";
+import {usePromise}      from "./usePromise";
 
 export namespace useQuery {
     export interface Props<
