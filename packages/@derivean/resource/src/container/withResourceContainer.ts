@@ -12,7 +12,6 @@ export const withResourceContainer: IContainer.Register = container => {
         table:   "Resource",
         handler: withResourceQuery,
     });
-
     withCountHandler({
         container,
         table:   "Resource",
