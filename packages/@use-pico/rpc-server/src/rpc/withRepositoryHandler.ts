@@ -64,12 +64,7 @@ export const withRepositoryHandler = <
         >
     >(query.key.join("."), {
         schema: query.schema,
-        async handle({
-                         request,
-                         container
-                     }) {
-            return withRepository.use(container).withQuery.query(request);
-        },
+        handle: async ({request, container}) => withRepository.use(container).withQuery.query(request),
     });
 
     container.useValue<
@@ -79,12 +74,7 @@ export const withRepositoryHandler = <
         >
     >(count.key.join("."), {
         schema: count.schema,
-        async handle({
-                         request,
-                         container
-                     }) {
-            return withRepository.use(container).withQuery.count(request);
-        },
+        handle: async ({request, container}) => withRepository.use(container).withQuery.count(request),
     });
 
     container.useValue<
@@ -94,11 +84,6 @@ export const withRepositoryHandler = <
         >
     >(mutation.key.join("."), {
         schema: mutation.schema,
-        async handle({
-                         request,
-                         container
-                     }) {
-            return withRepository.use(container).withMutation.mutation(request);
-        },
+        handle: async ({request, container}) => withRepository.use(container).withMutation.mutation(request),
     });
 };
