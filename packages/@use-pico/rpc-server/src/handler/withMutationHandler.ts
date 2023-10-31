@@ -1,8 +1,8 @@
 import {type IContainer}     from "@use-pico/container";
 import {withMutation}        from "@use-pico/repository";
-import {withHandler}         from "@use-pico/rpc-server";
 import {type ResponseSchema} from "@use-pico/schema";
-import {MutationSchema}      from "@use-pico/source";
+import {type MutationSchema} from "@use-pico/source";
+import {withHandler}         from "../rpc/withHandler";
 
 export namespace withMutationHandler {
     export interface Props<
@@ -30,14 +30,12 @@ export const withMutationHandler = <
         container,
         handler,
     }: withMutationHandler.Props<TRequestSchema, TResponseSchema>
-) => {
-    withHandler({
-        container,
-        key:    handler.key,
-        schema: handler.schema,
-        handle: async props => withMutation({
-            table,
-            ...props,
-        })
-    });
-};
+) => withHandler({
+    container,
+    key:    handler.key,
+    schema: handler.schema,
+    handle: async props => withMutation({
+        table,
+        ...props,
+    })
+});

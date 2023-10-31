@@ -1,8 +1,11 @@
 import {type IContainer}    from "@use-pico/container";
 import {CountSchema}        from "@use-pico/query";
-import {withCount}          from "@use-pico/repository";
-import {withHandler}        from "@use-pico/rpc-server";
+import {
+    type IWithWhere,
+    withCount
+}                           from "@use-pico/repository";
 import {type RequestSchema} from "@use-pico/schema";
+import {withHandler}        from "../rpc/withHandler";
 
 export namespace withCountHandler {
     export interface Props<
@@ -17,6 +20,8 @@ export namespace withCountHandler {
                 response: CountSchema;
             };
         };
+        withFilter?: IWithWhere<any, any>;
+        withWhere?: IWithWhere<any, any>;
     }
 }
 
@@ -27,15 +32,17 @@ export const withCountHandler = <
         table,
         container,
         handler,
+        withWhere,
+        withFilter,
     }: withCountHandler.Props<TRequestSchema>
-) => {
-    withHandler({
-        container,
-        key:    handler.key,
-        schema: handler.schema,
-        handle: async props => withCount({
-            table,
-            ...props,
-        })
-    });
-};
+) => withHandler({
+    container,
+    key:    handler.key,
+    schema: handler.schema,
+    handle: async props => withCount({
+        table,
+        withWhere,
+        withFilter,
+        ...props,
+    })
+});

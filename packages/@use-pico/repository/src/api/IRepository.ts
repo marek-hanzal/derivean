@@ -1,4 +1,3 @@
-import {type Database}           from "@use-pico/orm";
 import {
     type FilterSchema,
     type OrderBySchema,
@@ -15,7 +14,6 @@ export interface IRepository<
     TShapeSchema extends ShapeSchema,
     TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
     TMutationSchema extends MutationSchema<TShapeSchema, TQuerySchema>,
-    TDatabase extends Database,
 > {
     readonly schema: {
         readonly entity: TEntitySchema;

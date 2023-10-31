@@ -1,4 +1,3 @@
-import {type Database}      from "@use-pico/orm";
 import {
     type FilterSchema,
     type OrderBySchema,
@@ -17,13 +16,11 @@ export namespace withRepository {
         TShapeSchema extends ShapeSchema,
         TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
         TMutationSchema extends MutationSchema<TShapeSchema, TQuerySchema>,
-        TDatabase extends Database,
     > extends IRepository<
         TEntitySchema,
         TShapeSchema,
         TQuerySchema,
-        TMutationSchema,
-        TDatabase
+        TMutationSchema
     > {
     }
 }
@@ -32,16 +29,12 @@ export const withRepository = <
     TEntitySchema extends WithIdentitySchema,
     TShapeSchema extends ShapeSchema,
     TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
-    TMutationSchema extends MutationSchema<TShapeSchema, TQuerySchema>,
-    TDatabase extends Database,
+    TMutationSchema extends MutationSchema<TShapeSchema, TQuerySchema>
 >(
     props: withRepository.Props<
         TEntitySchema,
         TShapeSchema,
         TQuerySchema,
-        TMutationSchema,
-        TDatabase
+        TMutationSchema
     >
-) => {
-    return props;
-};
+) => props;

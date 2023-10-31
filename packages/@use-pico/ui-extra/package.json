@@ -33,6 +33,7 @@
 		"@use-pico/i18n": "^2.0.0",
 		"@use-pico/navigation": "^2.0.0",
 		"@use-pico/query": "^2.0.0",
+		"@use-pico/rpc": "^2.0.0",
 		"@use-pico/schema": "^2.0.0",
 		"@use-pico/store": "^2.0.0",
 		"@use-pico/ui": "^2.0.0",

@@ -11,5 +11,8 @@ export const withResourceRepository: IContainer.Register = container => {
         query:    withResourceQuery,
         count:    withResourceCountQuery,
         mutation: withResourceMutation,
+        withFilter({select}) {
+            return select;
+        }
     });
 };
