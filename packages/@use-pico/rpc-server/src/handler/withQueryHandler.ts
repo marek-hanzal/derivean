@@ -1,14 +1,12 @@
-import {type IContainer} from "@use-pico/container";
-import {withQuery}       from "@use-pico/repository";
-import {withHandler}     from "@use-pico/rpc-server";
-import {
-    type RequestSchema,
-    type ResponseSchema
-}                        from "@use-pico/schema";
+import {type IContainer}     from "@use-pico/container";
+import {QuerySchema}         from "@use-pico/query";
+import {withQuery}           from "@use-pico/repository";
+import {withHandler}         from "@use-pico/rpc-server";
+import {type ResponseSchema} from "@use-pico/schema";
 
 export namespace withQueryHandler {
     export interface Props<
-        TRequestSchema extends RequestSchema,
+        TRequestSchema extends QuerySchema<any, any>,
         TResponseSchema extends ResponseSchema,
     > {
         table: string;
@@ -24,7 +22,7 @@ export namespace withQueryHandler {
 }
 
 export const withQueryHandler = <
-    TRequestSchema extends RequestSchema,
+    TRequestSchema extends QuerySchema<any, any>,
     TResponseSchema extends ResponseSchema,
 >(
     {

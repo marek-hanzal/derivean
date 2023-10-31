@@ -7,6 +7,7 @@ import {ResourceQueryStore}       from "../query/ResourceQueryStore";
 import {withResourceQuery}        from "../query/withResourceQuery";
 import {type ResourceQuerySchema} from "../schema/ResourceQuerySchema";
 import {type ResourceSchema}      from "../schema/ResourceSchema";
+import {ResourceTableAction}      from "./ResourceTable/ResourceTableAction";
 
 export namespace ResourceTable {
     export type Columns =
@@ -29,7 +30,7 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
         }}
     >
         <Table
-            // WithTableAction={ResourceTableAction}
+            WithTableAction={ResourceTableAction}
             columns={{
                 name: {
                     render: ({item}) => item.name,

@@ -17,6 +17,10 @@ export namespace ResourceUpsertForm {
 
 export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = props => {
     return <Form
+        withTranslation={{
+            namespace: "resource",
+            label:     "upsert",
+        }}
         withMutation={withResourceMutation}
         schema={ResourceShapeSchema}
         inputs={{

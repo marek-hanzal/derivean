@@ -11,6 +11,23 @@
 		}
 	},
 	"resource": {
+		"create": {
+			"label": "Nový zdroj",
+			"title": "Nový zdroj",
+			"success": {
+				"title": "Úspěch",
+				"message": "Nový zdroj byl úspěšně vytvořen"
+			}
+		},
+		"upsert": {
+			"name": {
+				"label": "Název zdroje",
+				"placeholder": "Vyplňte název zdroje"
+			},
+			"submit": {
+				"button": "Uložit zdroj"
+			}
+		},
 		"empty": {
 			"title": "Zatím neexistují žádné zdroje",
 			"message": "Zdroje jsou základním kamenem herních pravidel, nějaké si naklikajte."

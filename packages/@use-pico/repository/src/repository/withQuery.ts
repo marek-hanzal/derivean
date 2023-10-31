@@ -9,7 +9,6 @@ import {
 export namespace withQuery {
     export interface Props<
         TQuerySchema extends QuerySchema<any, any>,
-        TEntity extends WithIdentitySchema,
     > {
         container: IContainer.Type;
         request: PicoSchema.Output<TQuerySchema>;
@@ -25,9 +24,11 @@ export const withQuery = async <
         request,
         container,
         table,
-    }: withQuery.Props<TQuerySchema, TEntity>
+    }: withQuery.Props<TQuerySchema>
 ): Promise<PicoSchema.Output<TEntity>[]> => {
-    const client = withClient.use(container);
-
-    return await client.selectFrom(table as any).selectAll().execute() as any;
+    return await withClient
+        .use(container)
+        .selectFrom(table as any)
+        .selectAll()
+        .execute() as any;
 };
