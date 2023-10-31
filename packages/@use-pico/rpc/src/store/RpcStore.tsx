@@ -1,3 +1,5 @@
+"use client";
+
 import {
     createStore,
     type IStore
@@ -7,7 +9,7 @@ import {type IBulkRef}         from "../api/IBulkRef";
 
 export namespace RpcStore {
     export type Store = IStore<
-        IStore.Props,
+        IStore.Type,
         {
             bulkTimerRef: MutableRefObject<NodeJS.Timeout | undefined>;
             timeoutRef: MutableRefObject<NodeJS.Timeout | undefined>;

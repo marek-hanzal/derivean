@@ -11,6 +11,10 @@
 		}
 	},
 	"resource": {
+		"empty": {
+			"title": "Zatím neexistují žádné zdroje",
+			"message": "Zdroje jsou základním kamenem herních pravidel, nějaké si naklikajte."
+		},
 		"total": {
 			"label": "Celkový počet zdrojů"
 		},

@@ -1,5 +1,4 @@
-export * from "./AbstractRpcHandler";
+export * from "./withHandler";
 export * from "./withRpcContainer";
 export * from "./withRpcEndpoint";
-export * from "./withRpcIndexService";
 export * from "./withRpcService";

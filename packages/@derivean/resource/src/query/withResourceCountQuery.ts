@@ -1,15 +1,11 @@
-import {
-    CountSchema,
-    withQuery
-}                                from "@use-pico/query";
-import {withResourceCountAction} from "../action/withResourceCountAction";
-import {ResourceQuerySchema}     from "../schema/ResourceQuerySchema";
+import {CountSchema}         from "@use-pico/query";
+import {withRpcQuery}        from "@use-pico/rpc";
+import {ResourceQuerySchema} from "../schema/ResourceQuerySchema";
 
-export const withResourceCountQuery = withQuery({
-    key:      ["derivean", "resource", "count"],
-    schema:   {
+export const withResourceCountQuery = withRpcQuery({
+    key:    ["derivean", "resource", "count"],
+    schema: {
         request:  ResourceQuerySchema,
         response: CountSchema,
     },
-    callback: withResourceCountAction,
 });

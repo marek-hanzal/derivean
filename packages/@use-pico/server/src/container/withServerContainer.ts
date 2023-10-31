@@ -5,6 +5,7 @@ import {
     instance as coolInstance,
     withContainer
 }                          from "@use-pico/container";
+import {withRpcContainer}  from "@use-pico/rpc-server";
 
 export const withServerContainer = (instance?: IContainer.Instance) => {
     const container = new Container(instance);
@@ -12,6 +13,7 @@ export const withServerContainer = (instance?: IContainer.Instance) => {
 
     const register = [
         withAuthContainer,
+        withRpcContainer,
     ] as const;
 
     register.forEach(register => register(container));

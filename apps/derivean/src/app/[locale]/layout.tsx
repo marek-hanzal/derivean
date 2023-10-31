@@ -28,10 +28,10 @@ export default function Layout(
         }}
         locale={locale}
         withTranslationQuery={withQuery({
-            async callback() {
-                return {
+            useCallback() {
+                return async () => ({
                     translations: (await import(`../../translation/${locale}.json`)).default,
-                };
+                });
             }
         })}
     >
