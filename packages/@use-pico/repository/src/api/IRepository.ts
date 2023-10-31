@@ -15,7 +15,12 @@ import {type IWithQuery}         from "./IWithQuery";
 
 export interface IRepository<
     TDatabase extends Database,
-    TSchema extends IRepository.Schema<any, any, QuerySchema<any, any>, MutationSchema<any, any>>,
+    TSchema extends IRepository.Schema<
+        any,
+        any,
+        QuerySchema<FilterSchema, OrderBySchema>,
+        MutationSchema<ShapeSchema, QuerySchema<FilterSchema, OrderBySchema>>
+    >,
     TTable extends keyof TDatabase & string,
 > extends IWithApply<
     TDatabase,

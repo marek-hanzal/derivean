@@ -1,23 +1,30 @@
 import {
     type Client,
     type Database
-}                            from "@use-pico/orm";
-import {type QuerySchema}    from "@use-pico/query";
-import {type MutationSchema} from "@use-pico/source";
-import {type IRepository}    from "../api/IRepository";
-import {type IWithMutation}  from "../api/IWithMutation";
-import {type IWithQuery}     from "../api/IWithQuery";
-import {AbstractWithApply}   from "./AbstractWithApply";
-import {WithMutation}        from "./WithMutation";
-import {WithQuery}           from "./WithQuery";
+}                           from "@use-pico/orm";
+import {
+    type FilterSchema,
+    type OrderBySchema,
+    type QuerySchema
+}                           from "@use-pico/query";
+import {
+    type MutationSchema,
+    type ShapeSchema
+}                           from "@use-pico/source";
+import {type IRepository}   from "../api/IRepository";
+import {type IWithMutation} from "../api/IWithMutation";
+import {type IWithQuery}    from "../api/IWithQuery";
+import {AbstractWithApply}  from "./AbstractWithApply";
+import {WithMutation}       from "./WithMutation";
+import {WithQuery}          from "./WithQuery";
 
 export class AbstractRepository<
     TDatabase extends Database,
     TSchema extends IRepository.Schema<
         any,
         any,
-        QuerySchema<any, any>,
-        MutationSchema<any, any>
+        QuerySchema<FilterSchema, OrderBySchema>,
+        MutationSchema<ShapeSchema, QuerySchema<FilterSchema, OrderBySchema>>
     >,
     TTable extends keyof TDatabase & string,
 > extends AbstractWithApply<

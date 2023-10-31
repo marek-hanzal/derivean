@@ -9,6 +9,7 @@ import {
     type QuerySchema
 }                            from "@use-pico/query";
 import {type IRepository}    from "@use-pico/repository";
+import {type IHandler}       from "@use-pico/rpc";
 import {type ArraySchema}    from "@use-pico/schema";
 import {type MutationSchema} from "@use-pico/source";
 
@@ -44,6 +45,7 @@ export const withRepositoryHandler = <
         container,
         withRepository,
         repository,
+        handler: {query, count, mutation},
     }: withRepositoryHandler.Props<
         TSchema,
         TWithRepository,
@@ -55,5 +57,48 @@ export const withRepositoryHandler = <
 ) => {
     withRepository.bind(container, repository);
 
+    container.useValue<
+        IHandler<
+            typeof query.schema["request"],
+            typeof query.schema["response"]
+        >
+    >(query.key.join("."), {
+        schema: query.schema,
+        async handle({
+                         request,
+                         container
+                     }) {
+            return withRepository.use(container).withQuery.query(request);
+        },
+    });
 
+    container.useValue<
+        IHandler<
+            typeof count.schema["request"],
+            typeof count.schema["response"]
+        >
+    >(count.key.join("."), {
+        schema: count.schema,
+        async handle({
+                         request,
+                         container
+                     }) {
+            return withRepository.use(container).withQuery.count(request);
+        },
+    });
+
+    container.useValue<
+        IHandler<
+            typeof mutation.schema["request"],
+            typeof mutation.schema["response"]
+        >
+    >(mutation.key.join("."), {
+        schema: mutation.schema,
+        async handle({
+                         request,
+                         container
+                     }) {
+            return withRepository.use(container).withMutation.mutation(request);
+        },
+    });
 };
