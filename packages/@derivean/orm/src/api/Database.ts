@@ -1,9 +1,11 @@
 import {type Database as CoolDatabase} from "@use-pico/orm";
-import {type GeneratedAlways}          from "kysely/dist/esm";
+import {type GeneratedAlways}          from "kysely";
 
-export interface Database extends CoolDatabase {
-    Resource: {
-        id: GeneratedAlways<string>;
-        name: string;
-    };
-}
+export type Database =
+    CoolDatabase
+    & {
+        Resource: {
+            id: GeneratedAlways<string>;
+            name: string;
+        };
+    }

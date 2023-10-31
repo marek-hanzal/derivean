@@ -1,6 +1,7 @@
 import {type IContainer}        from "@use-pico/container";
-import {withResourceRepository} from "../repository/withResourceRepository";
+import {ResourceRepository}     from "../repository/ResourceRepository";
+import {withResourceRepository} from "./withResourceRepository";
 
 export const withResourceContainer: IContainer.Register = container => {
-    withResourceRepository(container);
+    withResourceRepository.bind(container, ResourceRepository);
 };
