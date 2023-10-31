@@ -1,8 +1,8 @@
 "use client";
 
 import {IconLogout}      from "@tabler/icons-react";
-import {useLocaleLinkTo} from "@use-pico2/i18n";
-import {ActionIcon}      from "@use-pico2/ui";
+import {useLocaleLinkTo} from "@use-pico/i18n";
+import {ActionIcon}      from "@use-pico/ui";
 import {signOut}         from "next-auth/react";
 import {type FC}         from "react";
 

@@ -1,7 +1,7 @@
 import {
     Page,
     Status
-} from "@use-pico2/ui";
+} from "@use-pico/ui";
 
 export default function Custom404() {
     return <Page>

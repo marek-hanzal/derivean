@@ -1,7 +1,7 @@
 import {
     type PicoSchema,
     schema
-}                                from "@use-pico2/schema";
+}                                from "@use-pico/schema";
 import {InventoryResourceSchema} from "./InventoryResourceSchema";
 
 export const InventorySchema = schema(z => z.object({

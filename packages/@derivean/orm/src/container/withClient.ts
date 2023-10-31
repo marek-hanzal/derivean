@@ -1,6 +1,6 @@
-import {withService}   from "@use-pico2/container";
-import {type Client}   from "@use-pico2/orm";
+import {withService}   from "@use-pico/container";
+import {type Client}   from "@use-pico/orm";
 import {type Database} from "../api/Database";
 
-export const withClient = withService<Client<Database>>("@use-pico2/orm/Client");
+export const withClient = withService<Client<Database>>("@use-pico/orm/Client");
 export type withClient = typeof withClient;

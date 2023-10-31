@@ -1,7 +1,7 @@
 import {
     CountSchema,
     withQuery
-}                                from "@use-pico2/query";
+}                                from "@use-pico/query";
 import {withResourceCountAction} from "../action/withResourceCountAction";
 import {ResourceQuerySchema}     from "../schema/ResourceQuerySchema";
 

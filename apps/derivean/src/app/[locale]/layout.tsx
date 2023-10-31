@@ -1,7 +1,7 @@
 "use client";
 
-import {withQuery}              from "@use-pico2/i18n";
-import {LayoutShell}            from "@use-pico2/ui-extra";
+import {withQuery}              from "@use-pico/i18n";
+import {LayoutShell}            from "@use-pico/ui-extra";
 import {type PropsWithChildren} from "react";
 
 export namespace Layout {

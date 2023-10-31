@@ -1,3 +1,3 @@
-import { build } from '@use-pico2/esbuild';
+import { build } from '@use-pico/esbuild';
 
 await build();

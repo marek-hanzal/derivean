@@ -1,7 +1,7 @@
 import {
     type PicoSchema,
     schema
-}                             from "@use-pico2/schema";
+}                             from "@use-pico/schema";
 import {ProducerInputSchema}  from "./ProducerInputSchema";
 import {ProducerOutputSchema} from "./ProducerOutputSchema";
 

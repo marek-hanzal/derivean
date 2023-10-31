@@ -2,7 +2,7 @@ import {InventorySchema} from "@derivean/inventory";
 import {
     type PicoSchema,
     schema
-}                        from "@use-pico2/schema";
+}                        from "@use-pico/schema";
 
 /**
  * Snapshot is a point-in-time calculation of produced/consumed resources.

@@ -3,12 +3,12 @@ import {
     ResourceTable
 }                      from "@derivean/resource";
 import {ResourceIcon}  from "@derivean/ui";
-import {StoreProvider} from "@use-pico2/store";
+import {StoreProvider} from "@use-pico/store";
 import {
     Breadcrumbs,
     HomeIcon,
     Page
-}                      from "@use-pico2/ui";
+}                      from "@use-pico/ui";
 
 export default function Index() {
     return <Page

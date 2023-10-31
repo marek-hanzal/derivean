@@ -1,4 +1,4 @@
-import {PublicLayout as CoolPublicLayout} from "@use-pico2/ui-extra";
+import {PublicLayout as CoolPublicLayout} from "@use-pico/ui-extra";
 import {type FC}                          from "react";
 
 export namespace PublicLayout {

@@ -1,5 +1,5 @@
-import {Divider}   from "@use-pico2/ui";
-import {AppLayout} from "@use-pico2/ui-extra";
+import {Divider}   from "@use-pico/ui";
+import {AppLayout} from "@use-pico/ui-extra";
 import {type FC}   from "react";
 import {Footer}    from "../ui/Footer";
 

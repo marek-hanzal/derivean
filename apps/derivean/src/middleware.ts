@@ -1,4 +1,4 @@
-import {withAuthMiddleware} from "@use-pico2/auth";
+import {withAuthMiddleware} from "@use-pico/auth";
 
 export default withAuthMiddleware({
     routes: [

@@ -1,7 +1,7 @@
 "use client";
 
-import {WithTranslationProvider}  from "@use-pico2/i18n";
-import {Table}                    from "@use-pico2/table";
+import {WithTranslationProvider}  from "@use-pico/i18n";
+import {Table}                    from "@use-pico/table";
 import {type FC}                  from "react";
 import {ResourceQueryStore}       from "../query/ResourceQueryStore";
 import {withResourceQuery}        from "../query/withResourceQuery";

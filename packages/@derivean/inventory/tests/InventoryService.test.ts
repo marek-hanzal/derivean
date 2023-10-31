@@ -1,4 +1,4 @@
-import {Container} from "@use-pico2/container";
+import {Container} from "@use-pico/container";
 import {
     describe,
     expect,

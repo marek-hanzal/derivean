@@ -1,4 +1,4 @@
-import {Page} from "@use-pico2/ui";
+import {Page} from "@use-pico/ui";
 
 export default function Index() {
     return <Page

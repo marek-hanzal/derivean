@@ -1,8 +1,8 @@
-import {Divider}       from "@use-pico2/ui";
+import {Divider}       from "@use-pico/ui";
 import {
     AppLayout,
     PublicLayout as CoolPublicLayout
-}                      from "@use-pico2/ui-extra";
+}                      from "@use-pico/ui-extra";
 import {type FC}       from "react";
 import {ManagerMenu}   from "../menu/ManagerMenu";
 import {Footer}        from "../ui/Footer";

@@ -1,5 +1,5 @@
-import {type PicoSchema}     from "@use-pico2/schema";
-import {withMutationSchema}  from "@use-pico2/source";
+import {type PicoSchema}     from "@use-pico/schema";
+import {withMutationSchema}  from "@use-pico/source";
 import {ResourceQuerySchema} from "./ResourceQuerySchema";
 import {ResourceShapeSchema} from "./ResourceShapeSchema";
 

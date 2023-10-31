@@ -1,7 +1,7 @@
 import {withProducerContainer} from "@derivean/producer";
 import {withResourceContainer} from "@derivean/resource";
-import {withClient}            from "@use-pico2/orm";
-import {withServerContainer}   from "@use-pico2/server";
+import {withClient}            from "@use-pico/orm";
+import {withServerContainer}   from "@use-pico/server";
 import {
     Kysely,
     PostgresDialect

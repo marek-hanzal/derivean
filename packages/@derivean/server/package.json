@@ -16,8 +16,8 @@
 	"dependencies": {
 		"@derivean/producer": "^0.5.0",
 		"@derivean/resource": "^0.5.0",
-		"@use-pico2/orm": "^1.0.0",
-		"@use-pico2/server": "^1.0.0",
+		"@use-pico/orm": "^2.0.0",
+		"@use-pico/server": "^2.0.0",
 		"kysely": "^0.26.3",
 		"pg": "^8.11.3"
 	},
@@ -25,9 +25,9 @@
 		"@types/node": "^20.4.2",
 		"@types/pg": "^8.10.7",
 		"@types/react": "^18.2.15",
-		"@use-pico2/esbuild": "^1.0.0",
-		"@use-pico2/eslint-config-eslint": "^1.0.0",
-		"@use-pico2/tsconfig": "^1.0.0",
+		"@use-pico/esbuild": "^2.0.0",
+		"@use-pico/eslint-config-eslint": "^2.0.0",
+		"@use-pico/tsconfig": "^2.0.0",
 		"concurrently": "^8.2.2",
 		"del-cli": "^5.0.0",
 		"eslint": "^8.45.0",

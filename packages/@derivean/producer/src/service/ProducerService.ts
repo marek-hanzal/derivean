@@ -2,7 +2,7 @@ import {
     type IInventoryService,
     withInventoryService
 }                                    from "@derivean/inventory";
-import {DateTime}                    from "@use-pico2/i18n";
+import {DateTime}                    from "@use-pico/i18n";
 import {type IProducerService}       from "../api/IProducerService";
 import {type ProducerProcessSchema}  from "../schema/ProducerProcessSchema";
 import {type ProducerSnapshotSchema} from "../schema/ProducerSnapshotSchema";

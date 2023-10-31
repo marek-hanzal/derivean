@@ -1,5 +1,5 @@
-import {filterOf}        from "@use-pico2/query";
-import {type PicoSchema} from "@use-pico2/schema";
+import {filterOf}        from "@use-pico/query";
+import {type PicoSchema} from "@use-pico/schema";
 
 export const ResourceFilterSchema = filterOf(z => z.object({
     name: z.string$,

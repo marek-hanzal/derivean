@@ -1,4 +1,4 @@
-import {withMutation}               from "@use-pico2/query";
+import {withMutation}               from "@use-pico/query";
 import {withResourceMutationAction} from "../action/withResourceMutationAction";
 import {withResourceCountQuery}     from "../query/withResourceCountQuery";
 import {withResourceQuery}          from "../query/withResourceQuery";

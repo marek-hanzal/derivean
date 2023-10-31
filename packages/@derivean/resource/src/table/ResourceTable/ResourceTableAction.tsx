@@ -1,9 +1,9 @@
-import {TableActionMenu}    from "@use-pico2/table";
+import {TableActionMenu}    from "@use-pico/table";
 import {
     CreateIcon,
     Modal,
     ModalMenuItem
-}                           from "@use-pico2/ui";
+}                           from "@use-pico/ui";
 import {type FC}            from "react";
 import {ResourceUpsertForm} from "../../form/ResourceUpsertForm";
 

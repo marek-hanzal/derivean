@@ -1,7 +1,7 @@
 import {
     identityOf,
     type PicoSchema
-} from "@use-pico2/schema";
+} from "@use-pico/schema";
 
 export const ResourceSchema = identityOf(z => z.object({
     name: z.string,

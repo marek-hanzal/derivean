@@ -1,7 +1,7 @@
 import {
     Center,
     VersionStamp
-} from "@use-pico2/ui";
+} from "@use-pico/ui";
 
 export const Footer = () => {
     return <Center><VersionStamp/></Center>;

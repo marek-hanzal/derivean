@@ -1,7 +1,7 @@
 "use server";
 
-import {schema}                 from "@use-pico2/schema";
-import {withAction}             from "@use-pico2/server";
+import {schema}                 from "@use-pico/schema";
+import {withAction}             from "@use-pico/server";
 import {withResourceRepository} from "../container/withResourceRepository";
 import {ResourceQuerySchema}    from "../schema/ResourceQuerySchema";
 import {ResourceSchema}         from "../schema/ResourceSchema";

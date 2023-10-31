@@ -1,11 +1,11 @@
-import {withEnv} from "@use-pico2/env";
-import {schema}  from "@use-pico2/schema";
+import {withEnv} from "@use-pico/env";
+import {schema}  from "@use-pico/schema";
 
 export const {env} = withEnv({
     client:     schema(z => z.object({})),
     server:     schema((z, p) => z.object({
         DATABASE_URL:                  z.nonEmptyString,
-        NODE_ENV:                      z.enum([
+        NODE_ENV: z.list([
             "development",
             "test",
             "production",

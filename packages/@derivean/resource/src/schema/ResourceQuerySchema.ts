@@ -1,5 +1,5 @@
-import {withQuerySchema}       from "@use-pico2/query";
-import {type PicoSchema}       from "@use-pico2/schema";
+import {withQuerySchema}       from "@use-pico/query";
+import {type PicoSchema}       from "@use-pico/schema";
 import {ResourceFilterSchema}  from "./ResourceFilterSchema";
 import {ResourceOrderBySchema} from "./ResourceOrderBySchema";
 

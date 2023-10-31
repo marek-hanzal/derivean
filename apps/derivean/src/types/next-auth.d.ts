@@ -1,5 +1,5 @@
 import "@total-typescript/ts-reset";
-import {type IUserSession} from "@use-pico2/auth";
+import {type IUserSession} from "@use-pico/auth";
 
 declare module "next-auth" {
     /**

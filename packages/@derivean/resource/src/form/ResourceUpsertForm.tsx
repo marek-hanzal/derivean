@@ -1,7 +1,7 @@
 import {
     Form,
     TextInput
-}                             from "@use-pico2/form";
+}                             from "@use-pico/form";
 import {type FC}              from "react";
 import {withResourceMutation} from "../mutation/withResourceMutation";
 import {ResourceShapeSchema}  from "../schema/ResourceShapeSchema";
