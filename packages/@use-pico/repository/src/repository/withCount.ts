@@ -1,11 +1,10 @@
-import {withClient}       from "@derivean/orm";
-import {type IContainer}  from "@use-pico/container";
+import {withClient}      from "@derivean/orm";
+import {type IContainer} from "@use-pico/container";
 import {
     type CountSchema,
     type QuerySchema
-}                         from "@use-pico/query";
-import {type PicoSchema}  from "@use-pico/schema";
-import {type IRepository} from "../api/IRepository";
+}                        from "@use-pico/query";
+import {type PicoSchema} from "@use-pico/schema";
 
 export namespace withCount {
     export interface Props<
@@ -13,7 +12,7 @@ export namespace withCount {
     > {
         container: IContainer.Type;
         request: PicoSchema.Output<TQuerySchema>;
-        repository: IRepository<any, any, TQuerySchema, any, any>;
+        table: string;
     }
 }
 
@@ -23,7 +22,7 @@ export const withCount = async <
     {
         request,
         container,
-        repository: {table},
+        table,
     }: withCount.Props<TQuerySchema>
 ): Promise<CountSchema.Type> => {
     const client = withClient.use(container);

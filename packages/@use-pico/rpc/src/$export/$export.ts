@@ -8,5 +8,7 @@ export * from "./RpcRequestSchema";
 export * from "./RpcResponseSchema";
 export * from "./isData";
 export * from "./resultOf";
+export * from "./withCountHandler";
+export * from "./withQueryHandler";
 export * from "./withRpcQuery";
 export * from "./withRpcSourceQuery";

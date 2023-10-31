@@ -5,7 +5,6 @@ import {
     type PicoSchema,
     type WithIdentitySchema
 }                         from "@use-pico/schema";
-import {type IRepository} from "../api/IRepository";
 
 export namespace withQuery {
     export interface Props<
@@ -14,7 +13,7 @@ export namespace withQuery {
     > {
         container: IContainer.Type;
         request: PicoSchema.Output<TQuerySchema>;
-        repository: IRepository<TEntity, any, TQuerySchema, any, any>;
+        table: string;
     }
 }
 
@@ -25,7 +24,7 @@ export const withQuery = async <
     {
         request,
         container,
-        repository: {table},
+        table,
     }: withQuery.Props<TQuerySchema, TEntity>
 ): Promise<PicoSchema.Output<TEntity>[]> => {
     const client = withClient.use(container);
