@@ -31,6 +31,7 @@
 		"@use-pico/logger": "^2.0.0",
 		"@use-pico/navigation": "^2.0.0",
 		"@use-pico/orm": "^2.0.0",
+		"@use-pico/rpc-server": "^2.0.0",
 		"@use-pico/server": "^2.0.0",
 		"@use-pico/ui": "^2.0.0",
 		"@use-pico/ui-extra": "^2.0.0",

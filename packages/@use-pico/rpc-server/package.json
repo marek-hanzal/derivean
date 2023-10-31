@@ -1,11 +1,11 @@
 {
 	"version": "2.0.0",
-	"name": "@use-pico/i18n",
-	"description": "I18n support.",
+	"name": "@use-pico/rpc-server",
+	"description": "Server-side RPC stuff.",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/use-pico2/pico"
+		"url": "git://github.com/use-pico/pico"
 	},
 	"sideEffects": false,
 	"type": "module",
@@ -25,18 +25,11 @@
 		"cleanup:lib": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
 	"dependencies": {
-		"@types/luxon": "^3.3.1",
-		"@use-pico/navigation": "^2.0.0",
+		"@use-pico/container": "^2.0.0",
 		"@use-pico/query": "^2.0.0",
+		"@use-pico/rpc": "^2.0.0",
 		"@use-pico/schema": "^2.0.0",
-		"@use-pico/store": "^2.0.0",
-		"@use-pico/utils": "^2.0.0",
-		"flat": "^6.0.1",
-		"luxon": "^3.4.1",
-		"next": "^14.0.0",
-		"preferred-locale": "^2.0.1",
-		"react": "^18.2.0",
-		"react-intl": "^6.5.1"
+		"next": "^14.0.0"
 	},
 	"devDependencies": {
 		"@use-pico/esbuild": "^2.0.0",
@@ -50,7 +43,7 @@
 		"typescript": "^5.2.2"
 	},
 	"bugs": {
-		"url": "https://github.com/use-pico2/pico/issues"
+		"url": "https://github.com/use-pico/pico/issues"
 	},
-	"homepage": "https://github.com/use-pico2/pico#readme"
+	"homepage": "https://github.com/use-pico/pico#readme"
 }

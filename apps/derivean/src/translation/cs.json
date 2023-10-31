@@ -11,6 +11,9 @@
 		}
 	},
 	"resource": {
+		"total": {
+			"label": "Celkový počet zdrojů"
+		},
 		"fulltext": {
 			"placeholder": "Vyhledat zdroj"
 		},

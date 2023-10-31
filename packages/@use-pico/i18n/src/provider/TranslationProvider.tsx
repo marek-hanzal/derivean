@@ -4,10 +4,12 @@ import {
     QueryResult,
     useQueryEx
 }                                   from "@use-pico/query";
+import {flatten}                    from "flat";
 import {
     type FC,
     type PropsWithChildren
 }                                   from "react";
+import {IntlProvider}               from "react-intl";
 import {type IWithTranslationQuery} from "../api/IWithTranslationQuery";
 import {type TranslationSchema}     from "../schema/TranslationSchema";
 
@@ -23,7 +25,7 @@ export const TranslationProvider: FC<TranslationProvider.Props> = (
     {
         locale,
         withTranslationQuery,
-        children,
+        ...props
     }
 ) => {
     const result = useQueryEx({
@@ -35,7 +37,17 @@ export const TranslationProvider: FC<TranslationProvider.Props> = (
 
     return <QueryResult
         result={result}
-        WithSuccess={({data}) => children}
-        WithError={() => children}
+        WithSuccess={({data}) => <IntlProvider
+            messages={flatten(data.translations)}
+            locale={locale}
+            defaultLocale={"en"}
+            {...props}
+        />}
+        WithError={() => <IntlProvider
+            messages={{}}
+            locale={locale}
+            defaultLocale={"en"}
+            {...props}
+        />}
     />;
 };

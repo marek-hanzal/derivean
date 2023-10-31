@@ -5,12 +5,16 @@ import {withResourceRepository} from "../container/withResourceRepository";
 import {ResourceMutationSchema} from "../schema/ResourceMutationSchema";
 import {ResourceSchema}         from "../schema/ResourceSchema";
 
-// export const withMutationAction = (container => ({
-//     request:  ResourceMutationSchema,
-//     response: ResourceSchema,
-//     table:    "",
-//
-// }));
+export const withMutationAction = (container => ({
+    table:  "",
+    action: withAction({
+        request:  ResourceMutationSchema,
+        response: ResourceSchema,
+        action:   async () => {
+            return "yep";
+        }
+    })
+}));
 
 export const withResourceMutationAction = withAction(container => ({
     request:  ResourceMutationSchema,
