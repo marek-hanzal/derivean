@@ -1,4 +1,9 @@
 {
+	"common": {
+		"cancel": {
+			"button": "Zrušit"
+		}
+	},
 	"error": {
 		"404": {
 			"title": "Stránka nenalezena",
@@ -8,40 +13,6 @@
 	"game": {
 		"index": {
 			"title": "Přehled"
-		}
-	},
-	"resource": {
-		"create": {
-			"label": "Nový zdroj",
-			"title": "Nový zdroj",
-			"success": {
-				"title": "Úspěch",
-				"message": "Nový zdroj byl úspěšně vytvořen"
-			}
-		},
-		"upsert": {
-			"name": {
-				"label": "Název zdroje",
-				"placeholder": "Vyplňte název zdroje"
-			},
-			"submit": {
-				"button": "Uložit zdroj"
-			}
-		},
-		"empty": {
-			"title": "Zatím neexistují žádné zdroje",
-			"message": "Zdroje jsou základním kamenem herních pravidel, nějaké si naklikajte."
-		},
-		"total": {
-			"label": "Celkový počet zdrojů"
-		},
-		"fulltext": {
-			"placeholder": "Vyhledat zdroj"
-		},
-		"table": {
-			"column": {
-				"name": "Název zdroje"
-			}
 		}
 	},
 	"manager": {
@@ -65,6 +36,48 @@
 		},
 		"sign-in": {
 			"button": "Přihlášení"
+		}
+	},
+	"resource": {
+		"create": {
+			"label": "Nový zdroj",
+			"title": "Nový zdroj",
+			"success": {
+				"title": "Úspěch",
+				"message": "Nový zdroj byl úspěšně vytvořen"
+			}
+		},
+		"delete": {
+			"title": "Odstranit zdroj",
+			"label": "Odstranit zdroj",
+			"content": "Opravdu si přejete odstranit vybraný zdroj? Pokud je někde použitý, nebude to možné.",
+			"confirm": {
+				"button": "Odstranit zdroj"
+			}
+		},
+		"empty": {
+			"title": "Zatím neexistují žádné zdroje",
+			"message": "Zdroje jsou základním kamenem herních pravidel, nějaké si naklikajte."
+		},
+		"fulltext": {
+			"placeholder": "Vyhledat zdroj"
+		},
+		"table": {
+			"column": {
+				"name": "Název zdroje"
+			}
+		},
+		"total": {
+			"label": "Celkový počet zdrojů"
+		},
+		"upsert": {
+			"name": {
+				"label": "Název zdroje",
+				"placeholder": "Vyplňte název zdroje"
+			},
+			"submit": {
+				"button": "Uložit zdroj"
+			}
 		}
 	}
 }

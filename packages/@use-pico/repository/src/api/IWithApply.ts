@@ -26,4 +26,12 @@ export interface IWithApply<
         query: PicoSchema.Output<TSchema["query"]>,
         select: SelectQueryBuilder<TDatabase, TTable, T>
     ): SelectQueryBuilder<TDatabase, TTable, T>;
+
+    /**
+     * Apply all available "stuff" on the given query: where, filter, order by, limits, ...
+     */
+    applyTo<T>(
+        query: PicoSchema.Output<TSchema["query"]>,
+        select: SelectQueryBuilder<TDatabase, TTable, T>
+    ): SelectQueryBuilder<TDatabase, TTable, T>;
 }

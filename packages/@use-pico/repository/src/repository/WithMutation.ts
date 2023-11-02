@@ -7,7 +7,6 @@ import {type PicoSchema}     from "@use-pico/schema";
 import {type MutationSchema} from "@use-pico/source";
 import {generateId}          from "@use-pico/utils";
 import {type IRepository}    from "../api/IRepository";
-import {type IWithApply}     from "../api/IWithApply";
 import {type IWithMutation}  from "../api/IWithMutation";
 
 export class WithMutation<
@@ -19,8 +18,17 @@ export class WithMutation<
         public client: Client<TDatabase>,
         public schema: TSchema,
         public table: TTable,
-        public query: IWithApply<TDatabase, TSchema, any>,
+        public repository: IRepository<TDatabase, TSchema, any>,
     ) {
+    }
+
+    public async mutation(mutate: PicoSchema.Output<TSchema["mutation"]>): Promise<TSchema["entity"]> {
+        if (mutate.create) {
+            return this.create(mutate.create);
+        } else if (mutate.delete) {
+            return this.delete(mutate.delete);
+        }
+        throw new Error("Nothing to mutate.");
     }
 
     public async create(create: PicoSchema.Output<TSchema["mutation"]["shape"]["create"]>): Promise<TSchema["entity"]> {
@@ -34,10 +42,8 @@ export class WithMutation<
             .executeTakeFirstOrThrow();
     }
 
-    public async mutation(mutate: PicoSchema.Output<TSchema["mutation"]>): Promise<TSchema["entity"]> {
-        if (mutate.create) {
-            return this.create(mutate.create);
-        }
-        throw new Error("Nothing to mutate.");
+    public async delete(query: PicoSchema.Output<TSchema["mutation"]["shape"]["delete"]>): Promise<TSchema["entity"]> {
+        const entity = await this.repository.withQuery.fetchOrThrow(query);
+        return Promise.resolve(undefined);
     }
 }
