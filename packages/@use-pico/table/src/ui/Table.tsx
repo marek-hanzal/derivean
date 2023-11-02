@@ -16,6 +16,7 @@ import {
     Box,
     LinkLockProvider,
     LoadingOverlay,
+    Progress,
     ScrollArea,
     Table as CoolTable
 }                                from "@use-pico/ui";
@@ -168,6 +169,7 @@ export const Table = <
                     {...$pagination?.props}
                 />
             </>}
+            {(result.isFetching || result.isLoading) && <Progress radius={0} size={"xs"} value={100} animated/>}
             <ScrollArea
                 w={"100%"}
             >
