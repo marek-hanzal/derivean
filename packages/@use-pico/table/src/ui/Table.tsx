@@ -15,7 +15,6 @@ import {
 import {
     Box,
     LinkLockProvider,
-    LoadingOverlay,
     Progress,
     ScrollArea,
     Table as CoolTable
@@ -174,64 +173,53 @@ export const Table = <
                 w={"100%"}
             >
                 <Box w={scrollWidth || undefined}>
-                    <LoadingOverlay
-                        visible={result.isLoading}
-                        transitionProps={{
-                            duration: 100,
-                        }}
-                        overlayProps={{
-                            blur: 0.5,
-                        }}
+                    <TablePrefix
+                        WithPrefix={WithPrefix}
+                        items={result.data}
+                        columns={$columns}
                     />
-                    <>
-                        <TablePrefix
-                            WithPrefix={WithPrefix}
-                            items={result.data}
-                            columns={$columns}
-                        />
-                        <CoolTable.ScrollContainer
-                            minWidth={minWidth}
+                    <CoolTable.ScrollContainer
+                        minWidth={minWidth}
+                    >
+                        <CoolTable
+                            striped
+                            highlightOnHover
+                            withTableBorder
+                            withRowBorders
+                            withColumnBorders
+                            className={classes.table}
+                            {...props}
                         >
-                            <CoolTable
-                                striped
-                                highlightOnHover
-                                withTableBorder
-                                withRowBorders
-                                withColumnBorders
-                                className={classes.table}
-                                {...props}
-                            >
-                                <TableHead
-                                    WithTableAction={WithTableAction}
-                                    columns={$columns}
-                                    withRowAction={!!WithRowAction}
-                                    disableActions={disableActions}
-                                    items={result.data}
-                                />
-                                <TableBody
-                                    withQueryStore={withQueryStore}
-                                    withSourceQuery={withSourceQuery}
-                                    columns={$columns}
-                                    withTableAction={!!WithTableAction}
-                                    WithRowAction={WithRowAction}
-                                    WithRow={WithRow || (props => <CoolTable.Tr{...props}/>)}
-                                    MultiSelectionStore={MultiSelectionStore}
-                                    SelectionStore={SelectionStore}
-                                    disableActions={disableActions}
-                                    highlight={highlight}
-                                    onClick={onClick}
-                                />
-                                <TableFoot
-                                    withTableAction={!!WithTableAction}
-                                    withRowAction={!!WithRowAction}
-                                    disableActions={disableActions}
-                                    columns={$columns}
-                                    items={result.data}
-                                    WithFooter={WithFooter}
-                                />
-                            </CoolTable>
-                        </CoolTable.ScrollContainer>
-                    </>
+                            <TableHead
+                                WithTableAction={WithTableAction}
+                                columns={$columns}
+                                withRowAction={!!WithRowAction}
+                                disableActions={disableActions}
+                                items={result.data}
+                            />
+                            <TableBody
+                                withQueryStore={withQueryStore}
+                                withSourceQuery={withSourceQuery}
+                                columns={$columns}
+                                withTableAction={!!WithTableAction}
+                                WithRowAction={WithRowAction}
+                                WithRow={WithRow || (props => <CoolTable.Tr{...props}/>)}
+                                MultiSelectionStore={MultiSelectionStore}
+                                SelectionStore={SelectionStore}
+                                disableActions={disableActions}
+                                highlight={highlight}
+                                onClick={onClick}
+                            />
+                            <TableFoot
+                                withTableAction={!!WithTableAction}
+                                withRowAction={!!WithRowAction}
+                                disableActions={disableActions}
+                                columns={$columns}
+                                items={result.data}
+                                WithFooter={WithFooter}
+                            />
+                        </CoolTable>
+                    </CoolTable.ScrollContainer>
                 </Box>
             </ScrollArea>
             <TableCountResult

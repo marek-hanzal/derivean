@@ -12,6 +12,7 @@ import {
 import {useStore}                from "@use-pico/store";
 import {
     Container,
+    Loader,
     Result,
     Status,
     WithIcon
@@ -68,5 +69,17 @@ export const TableCountResult = <
             />
         </Container>}
         {countResult.data && !countResult.data.where && <WithEmpty/>}
+        {countResult.isLoading && <Container size={"md"}>
+            <Result
+                icon={<WithIcon
+                    size={"xl"}
+                    icon={<Loader/>}
+                />}
+                withTranslation={{
+                    namespace,
+                    label: "loading",
+                }}
+            />
+        </Container>}
     </>;
 };
