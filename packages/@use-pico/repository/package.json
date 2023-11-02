@@ -24,14 +24,12 @@
 		"cleanup:sdk": "del-cli src/sdk/**",
 		"cleanup:lib": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
-	"dependencies": {
-		"kysely": "^0.26.3"
-	},
 	"peerDependencies": {
 		"@use-pico/orm": "^2.0.3",
 		"@use-pico/schema": "^2.0.3",
 		"@use-pico/source": "^2.0.4",
-		"@use-pico/utils": "^2.0.4"
+		"@use-pico/utils": "^2.0.4",
+		"kysely": "^0.26.3"
 	},
 	"devDependencies": {
 		"@use-pico/esbuild": "^2.0.3",

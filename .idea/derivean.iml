@@ -76,6 +76,9 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/ui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/ui/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico2/utils/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/migrator/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/@misc/esbuild/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/migrator/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@derivean/public/.turbo" />
@@ -191,6 +194,11 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/utils/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico2/utils/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/@misc/esbuild/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@derivean/migrator/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@derivean/migrator/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/@misc/esbuild/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/migrator/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/migrator/lib" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

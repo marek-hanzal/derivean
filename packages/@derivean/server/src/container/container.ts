@@ -1,12 +1,10 @@
 import {withProducerContainer} from "@derivean/producer";
 import {withResourceContainer} from "@derivean/resource";
-import {withClient}            from "@use-pico/orm";
-import {withServerContainer}   from "@use-pico/server";
 import {
-    Kysely,
-    PostgresDialect
-}                              from "kysely";
-import {Pool}                  from "pg";
+    withClient,
+    withKysely
+}                              from "@use-pico/orm";
+import {withServerContainer}   from "@use-pico/server";
 
 const register = [
     withProducerContainer,
@@ -14,14 +12,6 @@ const register = [
 ] as const;
 
 export const container = withServerContainer();
-withClient.factory(container, () => {
-    return new Kysely({
-        dialect: new PostgresDialect({
-            pool: new Pool({
-                connectionString: process.env.DATABASE_URL,
-            }),
-        }),
-    });
-});
+withClient.factory(container, () => withKysely({}));
 
 register.forEach(register => register(container));

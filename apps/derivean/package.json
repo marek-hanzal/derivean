@@ -5,6 +5,7 @@
 	"scripts": {
 		"build": "dotenv -- next build",
 		"start": "dotenv -- next start",
+		"migrate": "dotenv -- tsx migrate.ts",
 		"dev": "next dev",
 		"lint": "dotenv -c development -- next lint",
 		"cleanup": "del-cli .turbo .next tsconfig.tsbuildinfo"
@@ -29,6 +30,7 @@
 		"@use-pico/container": "^2.0.0",
 		"@use-pico/i18n": "^2.0.0",
 		"@use-pico/logger": "^2.0.0",
+		"@use-pico/migrator": "^2.0.0",
 		"@use-pico/navigation": "^2.0.0",
 		"@use-pico/orm": "^2.0.0",
 		"@use-pico/rpc-server": "^2.0.0",
@@ -40,7 +42,8 @@
 		"next-auth": "^4.24.4",
 		"next-compose-plugins": "^2.2.1",
 		"react": "^18.2.0",
-		"react-dom": "^18.2.0"
+		"react-dom": "^18.2.0",
+		"tsx": "^3.14.0"
 	},
 	"devDependencies": {
 		"@types/node": "^20.8.3",

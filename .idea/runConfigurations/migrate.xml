@@ -1,0 +1,17 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="migrate" type="js.build_tools.npm" nameIsGenerated="true">
+    <package-json value="$PROJECT_DIR$/apps/derivean/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="migrate" />
+    </scripts>
+    <node-interpreter value="project" />
+    <envs>
+      <env name="DATABASE_URL" value="postgresql://derivean:1234@localhost:10632/derivean?schema=public" />
+      <env name="NEXT_PUBLIC_BUILD" value="dev" />
+      <env name="NEXTAUTH_SECRET" value="1234" />
+      <env name="NEXTAUTH_URL" value="http://localhost:3000" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>
