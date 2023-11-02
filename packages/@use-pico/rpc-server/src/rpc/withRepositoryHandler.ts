@@ -9,9 +9,9 @@ import {
     type QuerySchema
 }                            from "@use-pico/query";
 import {type IRepository}    from "@use-pico/repository";
-import {type IHandler}       from "@use-pico/rpc";
 import {type ArraySchema}    from "@use-pico/schema";
 import {type MutationSchema} from "@use-pico/source";
+import {type IHandler}       from "../api/IHandler";
 
 export namespace withRepositoryHandler {
     export interface Props<
@@ -45,7 +45,11 @@ export const withRepositoryHandler = <
         container,
         withRepository,
         repository,
-        handler: {query, count, mutation},
+        handler: {
+                     query,
+                     count,
+                     mutation
+                 },
     }: withRepositoryHandler.Props<
         TSchema,
         TWithRepository,
@@ -64,7 +68,10 @@ export const withRepositoryHandler = <
         >
     >(query.key.join("."), {
         schema: query.schema,
-        handle: async ({request, container}) => withRepository.use(container).withQuery.query(request),
+        handle: async ({
+                           request,
+                           container
+                       }) => withRepository.use(container).withQuery.query(request),
     });
 
     container.useValue<
@@ -74,7 +81,10 @@ export const withRepositoryHandler = <
         >
     >(count.key.join("."), {
         schema: count.schema,
-        handle: async ({request, container}) => withRepository.use(container).withQuery.count(request),
+        handle: async ({
+                           request,
+                           container
+                       }) => withRepository.use(container).withQuery.count(request),
     });
 
     container.useValue<
@@ -84,6 +94,9 @@ export const withRepositoryHandler = <
         >
     >(mutation.key.join("."), {
         schema: mutation.schema,
-        handle: async ({request, container}) => withRepository.use(container).withMutation.mutation(request),
+        handle: async ({
+                           request,
+                           container
+                       }) => withRepository.use(container).withMutation.mutation(request),
     });
 };

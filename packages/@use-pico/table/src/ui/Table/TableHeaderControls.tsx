@@ -1,14 +1,12 @@
 import {IconRefresh}             from "@tabler/icons-react";
 import {
     type IQueryStore,
-    type QuerySchema
+    type QuerySchema,
+    useInvalidator
 }                                from "@use-pico/query";
 import {type WithIdentitySchema} from "@use-pico/schema";
-import {
-    Fulltext,
-    type IWithSourceQuery,
-    useInvalidator
-}                                from "@use-pico/source";
+import {type IWithSourceQuery}   from "@use-pico/source";
+import {Fulltext}                from "@use-pico/source-ui";
 import {
     ActionIcon,
     Grid,
@@ -48,7 +46,7 @@ export const TableHeaderControls = <
     }: TableHeaderControls.Props<TQuerySchema, TSchema>
 ) => {
     const invalidator = useInvalidator({
-        withSourceQuery,
+        invalidator: withSourceQuery,
     });
     return <Grid
         align={"center"}

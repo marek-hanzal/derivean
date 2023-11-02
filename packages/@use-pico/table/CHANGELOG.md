@@ -1,5 +1,90 @@
 # @use-pico/table
 
+## 2.0.7
+
+### Patch Changes
+
+- Version bump
+- Updated dependencies
+    - @use-pico/pagination@2.0.5
+    - @use-pico/source-ui@2.0.2
+    - @use-pico/ui-extra@2.0.5
+    - @use-pico/source@2.0.6
+    - @use-pico/query@2.0.7
+    - @use-pico/utils@2.0.5
+    - @use-pico/i18n@2.0.4
+
+## 2.0.6
+
+### Patch Changes
+
+- Simplified query invalidation
+- Updated dependencies
+    - @use-pico/source@2.0.5
+
+## 2.0.5
+
+### Patch Changes
+
+- Added missing export
+
+## 2.0.4
+
+### Patch Changes
+
+- Version bump, moved pico to peer-deps, so version should be consistent now
+- Updated dependencies
+    - @use-pico/pagination@2.0.3
+    - @use-pico/selection@2.0.3
+    - @use-pico/source-ui@2.0.1
+    - @use-pico/ui-extra@2.0.4
+    - @use-pico/source@2.0.4
+    - @use-pico/query@2.0.4
+    - @use-pico/store@2.0.3
+    - @use-pico/utils@2.0.4
+    - @use-pico/i18n@2.0.3
+    - @use-pico/ui@2.0.4
+
+## 2.0.3
+
+### Patch Changes
+
+- Version bump (improved peer dependencies)
+- Updated dependencies
+    - @use-pico/pagination@2.0.2
+    - @use-pico/source@2.0.3
+    - @use-pico/query@2.0.3
+    - @use-pico/store@2.0.2
+    - @use-pico/ui@2.0.3
+    - @use-pico/i18n@2.0.2
+    - @use-pico/selection@2.0.2
+    - @use-pico/utils@2.0.3
+
+## 2.0.2
+
+### Patch Changes
+
+- Moving dependencies to peers
+- Updated dependencies
+    - @use-pico/source@2.0.2
+    - @use-pico/ui@2.0.2
+
+## 2.0.1
+
+### Patch Changes
+
+- Force version bump
+- Updated dependencies
+    - @use-pico/i18n@2.0.1
+    - @use-pico/ui@2.0.1
+    - @use-pico/pagination@2.0.1
+    - @use-pico/query@2.0.1
+    - @use-pico/schema@2.0.1
+    - @use-pico/selection@2.0.1
+    - @use-pico/source@2.0.1
+    - @use-pico/store@2.0.1
+    - @use-pico/utils@2.0.1
+
 ## 2.0.0
 
 ### Major Changes

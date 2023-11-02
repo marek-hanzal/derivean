@@ -52,7 +52,7 @@ export const withSourceQueryInput = <
             >,
             "withSourceQuery" | "SelectionStore" | "withFindByQuery"
         > & {
-               queryDefaults?: PicoSchema.Output<TQuerySchema>;
+            queryDefaults?: PicoSchema.Output<TQuerySchema>;
            }
     ) {
         return <StoreProvider

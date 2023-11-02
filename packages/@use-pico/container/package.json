@@ -1,11 +1,11 @@
 {
-	"version": "2.0.0",
+	"version": "2.0.4",
 	"name": "@use-pico/container",
 	"description": "DI container support.",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/use-pico2/pico"
+		"url": "git://github.com/use-pico/pico"
 	},
 	"engines": {
 		"node": ">=16.0.0"
@@ -28,23 +28,25 @@
 		"cleanup:lib": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
 	"dependencies": {
-		"@use-pico/utils": "^2.0.0",
 		"pumpit": "^4.1.1",
 		"server-only": "^0.0.1"
 	},
+	"peerDependencies": {
+		"@use-pico/utils": "^2.0.4"
+	},
 	"devDependencies": {
-		"@use-pico/esbuild": "^2.0.0",
-		"@use-pico/eslint-config-eslint": "^2.0.0",
-		"@use-pico/tsconfig": "^2.0.0",
-		"@types/node": "^20.5.7",
-		"@types/react": "^18.2.21",
+		"@use-pico/esbuild": "^2.0.3",
+		"@use-pico/eslint-config-eslint": "^2.0.3",
+		"@use-pico/tsconfig": "^2.0.3",
+		"@types/node": "^20.8.10",
+		"@types/react": "^18.2.33",
 		"concurrently": "^8.2.1",
 		"del-cli": "^5.0.0",
 		"eslint": "^8.51.0",
 		"typescript": "^5.2.2"
 	},
 	"bugs": {
-		"url": "https://github.com/use-pico2/pico/issues"
+		"url": "https://github.com/use-pico/pico/issues"
 	},
-	"homepage": "https://github.com/use-pico2/pico#readme"
+	"homepage": "https://github.com/use-pico/pico#readme"
 }

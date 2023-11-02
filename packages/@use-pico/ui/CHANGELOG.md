@@ -1,5 +1,46 @@
 # @use-pico/ui
 
+## 2.0.4
+
+### Patch Changes
+
+- Version bump, moved pico to peer-deps, so version should be consistent now
+- Updated dependencies
+    - @use-pico/navigation@2.0.3
+    - @use-pico/store@2.0.3
+    - @use-pico/utils@2.0.4
+    - @use-pico/i18n@2.0.3
+
+## 2.0.3
+
+### Patch Changes
+
+- Version bump (improved peer dependencies)
+- Updated dependencies
+    - @use-pico/store@2.0.2
+    - @use-pico/i18n@2.0.2
+    - @use-pico/navigation@2.0.2
+    - @use-pico/utils@2.0.3
+
+## 2.0.2
+
+### Patch Changes
+
+- Moving dependencies to peers
+
+## 2.0.1
+
+### Patch Changes
+
+- Force version bump
+- Updated dependencies
+    - @use-pico/navigation@2.0.1
+    - @use-pico/i18n@2.0.1
+    - @use-pico/query@2.0.1
+    - @use-pico/schema@2.0.1
+    - @use-pico/store@2.0.1
+    - @use-pico/utils@2.0.1
+
 ## 2.0.0
 
 ### Major Changes

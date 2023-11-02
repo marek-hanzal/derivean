@@ -1,5 +1,41 @@
 # @use-pico/rpc-server
 
+## 2.0.3
+
+### Patch Changes
+
+- Version bump, moved pico to peer-deps, so version should be consistent now
+- Updated dependencies
+    - @use-pico/repository@2.0.3
+    - @use-pico/container@2.0.3
+    - @use-pico/schema@2.0.3
+    - @use-pico/query@2.0.4
+    - @use-pico/rpc@2.0.3
+
+## 2.0.2
+
+### Patch Changes
+
+- Version bump (improved peer dependencies)
+- Updated dependencies
+    - @use-pico/schema@2.0.2
+    - @use-pico/query@2.0.3
+    - @use-pico/rpc@2.0.2
+    - @use-pico/container@2.0.2
+    - @use-pico/repository@2.0.2
+
+## 2.0.1
+
+### Patch Changes
+
+- Force version bump
+- Updated dependencies
+    - @use-pico/rpc@2.0.1
+    - @use-pico/container@2.0.1
+    - @use-pico/query@2.0.1
+    - @use-pico/repository@2.0.1
+    - @use-pico/schema@2.0.1
+
 ## 2.0.0
 
 ### Major Changes

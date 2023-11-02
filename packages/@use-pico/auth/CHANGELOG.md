@@ -1,5 +1,46 @@
 # @use-pico/auth
 
+## 2.0.4
+
+### Patch Changes
+
+- Updated auth-server
+- Updated dependencies
+    - @use-pico/container@2.0.4
+
+## 2.0.3
+
+### Patch Changes
+
+- Version bump, moved pico to peer-deps, so version should be consistent now
+- Updated dependencies
+    - @use-pico/container@2.0.3
+    - @use-pico/logger@2.0.3
+    - @use-pico/schema@2.0.3
+    - @use-pico/orm@2.0.3
+
+## 2.0.2
+
+### Patch Changes
+
+- Version bump (improved peer dependencies)
+- Updated dependencies
+    - @use-pico/schema@2.0.2
+    - @use-pico/container@2.0.2
+    - @use-pico/logger@2.0.2
+    - @use-pico/orm@2.0.2
+
+## 2.0.1
+
+### Patch Changes
+
+- Force version bump
+- Updated dependencies
+    - @use-pico/container@2.0.1
+    - @use-pico/logger@2.0.1
+    - @use-pico/orm@2.0.1
+    - @use-pico/schema@2.0.1
+
 ## 2.0.0
 
 ### Major Changes

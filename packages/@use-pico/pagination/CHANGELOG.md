@@ -1,5 +1,53 @@
 # @use-pico/pagination
 
+## 2.0.5
+
+### Patch Changes
+
+- Version bump
+- Updated dependencies
+    - @use-pico/source@2.0.6
+    - @use-pico/i18n@2.0.4
+
+## 2.0.4
+
+### Patch Changes
+
+- Fixed QueryStore usage
+
+## 2.0.3
+
+### Patch Changes
+
+- Version bump, moved pico to peer-deps, so version should be consistent now
+- Updated dependencies
+    - @use-pico/source@2.0.4
+    - @use-pico/store@2.0.3
+    - @use-pico/i18n@2.0.3
+    - @use-pico/ui@2.0.4
+
+## 2.0.2
+
+### Patch Changes
+
+- Version bump (improved peer dependencies)
+- Updated dependencies
+    - @use-pico/source@2.0.3
+    - @use-pico/store@2.0.2
+    - @use-pico/ui@2.0.3
+    - @use-pico/i18n@2.0.2
+
+## 2.0.1
+
+### Patch Changes
+
+- Force version bump
+- Updated dependencies
+    - @use-pico/i18n@2.0.1
+    - @use-pico/ui@2.0.1
+    - @use-pico/source@2.0.1
+    - @use-pico/store@2.0.1
+
 ## 2.0.0
 
 ### Major Changes
