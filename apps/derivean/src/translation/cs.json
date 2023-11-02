@@ -39,6 +39,10 @@
 		}
 	},
 	"resource": {
+		"loading": {
+			"title": "Načítání",
+			"subtitle": "Okamžik prosím, připravujeme seznam zdrojů..."
+		},
 		"create": {
 			"label": "Nový zdroj",
 			"title": "Nový zdroj",

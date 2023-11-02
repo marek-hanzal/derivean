@@ -14,6 +14,7 @@ import {
     Grid,
     GridCol,
     Group,
+    Loader,
     NativeBreadcrumbs,
     Pagination as CoolPagination,
     Select,
@@ -68,7 +69,7 @@ export const Pagination = <
         align={"center"}
         py={"sm"}
     >
-        {hideOnSingle && pages === 1 ? null : <GridCol span={"content"}>
+        {hideOnSingle && pages === 1 ? null : result.isSuccess ? <GridCol span={"content"}>
             <CoolPagination
                 disabled={isBlock}
                 withEdges
@@ -81,6 +82,18 @@ export const Pagination = <
                 onChange={page => setCursor(page - 1)}
                 {...props}
             />
+        </GridCol> : null}
+        {result.isLoading && <GridCol span={"auto"}>
+            <Group gap={"xs"}>
+                <Text c={"dimmed"}>
+                    <Translation withLabel={"total.label"}/>
+                </Text>
+                <NativeBreadcrumbs>
+                    <Text size={"lg"} fw={"500"}>
+                        <Loader size={"sm"} type={"dots"}/>
+                    </Text>
+                </NativeBreadcrumbs>
+            </Group>
         </GridCol>}
         {result.data && result.data.where > 0 && <GridCol span={"auto"}>
             {hideOnSingle ? (pages > 1) : (pages > 0) && <Divider orientation={"vertical"}/>}
@@ -98,7 +111,7 @@ export const Pagination = <
                 </NativeBreadcrumbs>
             </Group>
         </GridCol>}
-        {pages > 0 && <GridCol span={"content"}>
+        {pages > 1 && <GridCol span={"content"}>
             <Select
                 defaultValue={`${(cursor?.size || 30)}`}
                 onChange={value => value && setSize(parseInt(value))}

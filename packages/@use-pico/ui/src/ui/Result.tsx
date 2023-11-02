@@ -45,7 +45,7 @@ export const Result: FC<IResultProps> = (
     return <WithTranslationProvider
         withTranslation={withTranslation}
     >
-        <Stack align={"center"}>
+        <Stack align={"center"} gap={4}>
             {icon}
             <Title order={2}>
                 <Translation withLabel={"title"}/>
