@@ -39,7 +39,7 @@ export namespace Table {
         TSchema extends WithIdentitySchema,
         TQuerySchema extends QuerySchema<any, any>,
     > extends Partial<Omit<CoolTable.Props, "hidden" | "onClick">>,
-        TableHeaderControls.Props<TQuerySchema, TSchema>,
+        Omit<TableHeaderControls.Props<TQuerySchema, TSchema>, "isFetching">,
         Omit<TablePrefix.Props<TQuerySchema, TSchema>, "columns" | "items">,
         Omit<TableHead.Props<TQuerySchema, TSchema>, "columns" | "withRowAction" | "disableActions" | "items">,
         Omit<TableBody.Props<TQuerySchema, TSchema>, "columns" | "WithRow" | "withTableAction" | "disableActions">,
@@ -154,6 +154,7 @@ export const Table = <
             isLock={withLinkLock}
         >
             <TableHeaderControls
+                isFetching={result.isFetching}
                 withQueryStore={withQueryStore}
                 withSourceQuery={withSourceQuery}
                 Filter={Filter}
@@ -172,12 +173,12 @@ export const Table = <
             >
                 <Box w={scrollWidth || undefined}>
                     <LoadingOverlay
-                        visible={result.isFetching || result.isLoading}
+                        visible={result.isLoading}
                         transitionProps={{
-                            duration: 500,
+                            duration: 100,
                         }}
                         overlayProps={{
-                            blur: 2,
+                            blur: 0.5,
                         }}
                     />
                     <>
