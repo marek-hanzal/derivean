@@ -18,10 +18,13 @@ export class ResourceRepository extends AbstractRepository<Database, ResourceRep
             client,
             ResourceRepositorySchema,
             "Resource",
-            {
-                name: "asc",
-            },
         );
+        this.defaultOrderBy = {
+            name: "asc",
+        };
+        this.matchOf = {
+            name: "name",
+        };
     }
 }
 

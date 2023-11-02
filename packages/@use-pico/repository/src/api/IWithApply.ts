@@ -1,5 +1,8 @@
 import {type Database}           from "@use-pico/orm";
-import {type QuerySchema}        from "@use-pico/query";
+import {
+    FilterSchema,
+    type QuerySchema
+}                                from "@use-pico/query";
 import {type PicoSchema}         from "@use-pico/schema";
 import {type SelectQueryBuilder} from "kysely";
 import {type IRepository}        from "./IRepository";
@@ -11,7 +14,17 @@ export interface IWithApply<
 > {
     readonly schema: TSchema;
     readonly table: TTable;
-    readonly defaultOrderBy: PicoSchema.Output<TSchema["query"]["shape"]["orderBy"]>;
+    readonly defaultOrderBy?: PicoSchema.Output<TSchema["query"]["shape"]["orderBy"]>;
+    /**
+     * Tuple of "where" field name mapping to database field
+     */
+    readonly matchOf?: Record<
+        keyof Omit<
+            NonNullable<PicoSchema.Output<TSchema["query"]["shape"]["where"]>>,
+            keyof FilterSchema.Type
+        >,
+        string
+    >;
 
     /**
      * Apply mandatory filter which cannot be modified (like userId or so)

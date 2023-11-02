@@ -54,7 +54,7 @@ export class WithMutation<
         if (!update) {
             return entity;
         }
-        return this.client
+        return await this.client
             .updateTable(this.table)
             .set(update)
             /**

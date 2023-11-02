@@ -7,7 +7,6 @@ import {
     type OrderBySchema,
     type QuerySchema
 }                           from "@use-pico/query";
-import {PicoSchema}         from "@use-pico/schema";
 import {
     type MutationSchema,
     type ShapeSchema
@@ -41,12 +40,10 @@ export class AbstractRepository<
         public client: Client<TDatabase>,
         schema: TSchema,
         table: TTable,
-        defaultOrderBy: PicoSchema.Output<TSchema["query"]["shape"]["orderBy"]>,
     ) {
         super(
             schema,
             table,
-            defaultOrderBy,
         );
     }
 
