@@ -48,6 +48,10 @@
 			}
 		},
 		"delete": {
+			"success": {
+				"title": "Úspěch",
+				"message": "Zdroj byl úspěšně odstraněn."
+			},
 			"title": "Odstranit zdroj",
 			"label": "Odstranit zdroj",
 			"content": "Opravdu si přejete odstranit vybraný zdroj? Pokud je někde použitý, nebude to možné.",
@@ -69,6 +73,14 @@
 		},
 		"total": {
 			"label": "Celkový počet zdrojů"
+		},
+		"update": {
+			"label": "Upravit",
+			"title": "Upravit zdroj",
+			"success": {
+				"title": "Úspěch",
+				"message": "Zdroj byl úspěšně aktualizován."
+			}
 		},
 		"upsert": {
 			"name": {

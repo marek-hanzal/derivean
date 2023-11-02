@@ -73,10 +73,16 @@ export class WithQuery<
     }
 
     public async fetch(query: PicoSchema.Output<TSchema["query"]>): Promise<PicoSchema.Output<TSchema["entity"]> | undefined> {
-        return Promise.resolve(undefined);
+        return this.repository.applyTo(
+            query,
+            this.client.selectFrom(this.table).selectAll()
+        ).executeTakeFirst();
     }
 
     public async fetchOrThrow(query: PicoSchema.Output<TSchema["query"]>): Promise<PicoSchema.Output<TSchema["entity"]>> {
-        return Promise.resolve(undefined);
+        return this.repository.applyTo(
+            query,
+            this.client.selectFrom(this.table).selectAll()
+        ).executeTakeFirstOrThrow();
     }
 }

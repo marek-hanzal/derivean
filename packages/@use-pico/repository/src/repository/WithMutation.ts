@@ -11,7 +11,7 @@ import {type IWithMutation}  from "../api/IWithMutation";
 
 export class WithMutation<
     TDatabase extends Database,
-    TSchema extends IRepository.Schema<any, any, QuerySchema<any, any>, MutationSchema<any, any>>,
+    TSchema extends IRepository.Schema<any, any, QuerySchema<any, any>, MutationSchema<any, QuerySchema<any, any>>>,
     TTable extends keyof TDatabase & string,
 > implements IWithMutation<TDatabase, TSchema, TTable> {
     constructor(
@@ -25,13 +25,15 @@ export class WithMutation<
     public async mutation(mutate: PicoSchema.Output<TSchema["mutation"]>): Promise<TSchema["entity"]> {
         if (mutate.create) {
             return this.create(mutate.create);
+        } else if (mutate.update) {
+            return this.update(mutate.update);
         } else if (mutate.delete) {
             return this.delete(mutate.delete);
         }
         throw new Error("Nothing to mutate.");
     }
 
-    public async create(create: PicoSchema.Output<TSchema["mutation"]["shape"]["create"]>): Promise<TSchema["entity"]> {
+    public async create(create: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["create"]>>): Promise<TSchema["entity"]> {
         return await this.client
             .insertInto(this.table)
             .values({
@@ -42,8 +44,30 @@ export class WithMutation<
             .executeTakeFirstOrThrow();
     }
 
-    public async delete(query: PicoSchema.Output<TSchema["mutation"]["shape"]["delete"]>): Promise<TSchema["entity"]> {
+    public async update(
+        {
+            update,
+            query,
+        }: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["update"]>>
+    ): Promise<TSchema["entity"]> {
         const entity = await this.repository.withQuery.fetchOrThrow(query);
-        return Promise.resolve(undefined);
+        if (!update) {
+            return entity;
+        }
+        return this.client
+            .updateTable(this.table)
+            .set(update)
+            /**
+             * Resolve an entity with a query to get an ID being updated
+             */
+            .where("id", "=", entity.id)
+            .returningAll()
+            .executeTakeFirst();
+    }
+
+    public async delete(query: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["delete"]>>): Promise<TSchema["entity"]> {
+        const entity = await this.repository.withQuery.fetchOrThrow(query);
+        await this.client.deleteFrom(this.table).where("id", "=", entity.id).execute();
+        return entity;
     }
 }

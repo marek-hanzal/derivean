@@ -2,20 +2,29 @@ import {
     Form,
     TextInput
 }                             from "@use-pico/form";
+import {type WithEntity}      from "@use-pico/types";
 import {type FC}              from "react";
 import {withResourceMutation} from "../mutation/withResourceMutation";
+import {ResourceSchema}       from "../schema/ResourceSchema";
 import {ResourceShapeSchema}  from "../schema/ResourceShapeSchema";
 
 export namespace ResourceUpsertForm {
-    export type Props = Form.PropsEx<
-        withResourceMutation,
-        ResourceShapeSchema,
-        withResourceMutation["schema"]["request"],
-        withResourceMutation["schema"]["response"]
-    >;
+    export type Props =
+        Form.PropsEx<
+            withResourceMutation,
+            ResourceShapeSchema,
+            withResourceMutation["schema"]["request"],
+            withResourceMutation["schema"]["response"]
+        >
+        & WithEntity.Schema.$<ResourceSchema>;
 }
 
-export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = props => {
+export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = (
+    {
+        entity,
+        ...props
+    }
+) => {
     return <Form
         withTranslation={{
             namespace: "resource",
@@ -26,7 +35,17 @@ export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = props => {
         inputs={{
             name: TextInput,
         }}
-        toRequest={values => ({
+        values={entity}
+        toRequest={values => (entity ? {
+            update: {
+                update: values,
+                query:  {
+                    where: {
+                        id: entity.id,
+                    },
+                },
+            },
+        } : {
             create: values,
         })}
         defaultValues={{

@@ -3,10 +3,13 @@ import {DeleteModal}          from "@use-pico/source-ui";
 import {TableRowActionMenu}   from "@use-pico/table";
 import {type WithItem}        from "@use-pico/types";
 import {
+    EditIcon,
+    Modal,
     ModalMenuItem,
     TrashIcon
 }                             from "@use-pico/ui";
 import {type FC}              from "react";
+import {ResourceUpsertForm}   from "../../form/ResourceUpsertForm";
 import {withResourceMutation} from "../../mutation/withResourceMutation";
 import {type ResourceSchema}  from "../../schema/ResourceSchema";
 
@@ -21,6 +24,7 @@ export const ResourceTableRowAction: FC<ResourceTableRowAction.Props> = (
     }
 ) => {
     const deleteModalId = `resource.delete.${item.id}`;
+    const updateModalId = `resource.update.${item.id}`;
 
     return <>
         <DeleteModal
@@ -30,7 +34,22 @@ export const ResourceTableRowAction: FC<ResourceTableRowAction.Props> = (
             title={"delete.title"}
             withMutation={withResourceMutation}
         />
+        <Modal
+            modalId={updateModalId}
+            icon={<ResourceIcon/>}
+            title={"update.title"}
+        >
+            <ResourceUpsertForm
+                withAutoClose={[updateModalId]}
+                entity={item}
+            />
+        </Modal>
         <TableRowActionMenu>
+            <ModalMenuItem
+                leftSection={<EditIcon/>}
+                modalId={updateModalId}
+                withLabel={"update.label"}
+            />
             <ModalMenuItem
                 leftSection={<TrashIcon/>}
                 modalId={deleteModalId}
