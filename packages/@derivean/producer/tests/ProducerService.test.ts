@@ -18,15 +18,19 @@ import {
 import {ProducerProcessSchema} from "../src/schema/ProducerProcessSchema";
 
 const TreeResource: ResourceSchema.Type = {
+    id: "124",
     name: "tree",
 };
 const LeafsResource: ResourceSchema.Type = {
+    id: "124",
     name: "leafs",
 };
 const LogResource: ResourceSchema.Type = {
+    id: "124",
     name: "log",
 };
 const SawdustResource: ResourceSchema.Type = {
+    id: "124",
     name: "sawdust",
 };
 

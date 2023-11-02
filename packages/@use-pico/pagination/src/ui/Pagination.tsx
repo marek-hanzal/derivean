@@ -102,16 +102,24 @@ export const Pagination = <
                     <Translation withLabel={"total.label"}/>
                 </Text>
                 <NativeBreadcrumbs>
-                    <Text size={"lg"} fw={"500"}>
+                    <Text
+                        size={"lg"}
+                        fw={"500"}
+                        c={result.isFetching ? "dimmed" : undefined}
+                    >
                         {result.data.count}
                     </Text>
-                    {result.data.count !== result.data.where && <Text size={"lg"} fw={"500"}>
+                    {result.data.count !== result.data.where && <Text
+                        size={"lg"}
+                        fw={"500"}
+                        c={result.isFetching ? "dimmed" : undefined}
+                    >
                         {result.data.where}
                     </Text>}
                 </NativeBreadcrumbs>
             </Group>
         </GridCol>}
-        {pages > 1 && <GridCol span={"content"}>
+        <GridCol span={"content"}>
             <Select
                 defaultValue={`${(cursor?.size || 30)}`}
                 onChange={value => value && setSize(parseInt(value))}
@@ -120,6 +128,6 @@ export const Pagination = <
                     label: `${size}`,
                 }))}
             />
-        </GridCol>}
+        </GridCol>
     </Grid>;
 };
