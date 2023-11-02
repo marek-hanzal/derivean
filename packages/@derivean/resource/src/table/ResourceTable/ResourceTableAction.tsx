@@ -1,3 +1,4 @@
+import {ResourceIcon}       from "@derivean/ui";
 import {TableActionMenu}    from "@use-pico/table";
 import {
     CreateIcon,
@@ -29,6 +30,7 @@ export const ResourceTableAction: FC<ResourceTableAction.Props> = () => {
             <ModalMenuItem
                 modalId={createId}
                 withLabel={"create.label"}
+                leftSection={<ResourceIcon/>}
             />
         </TableActionMenu>
     </>;

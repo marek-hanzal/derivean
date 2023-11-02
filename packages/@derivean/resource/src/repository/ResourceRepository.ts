@@ -17,7 +17,10 @@ export class ResourceRepository extends AbstractRepository<Database, ResourceRep
         super(
             client,
             ResourceRepositorySchema,
-            "Resource"
+            "Resource",
+            {
+                name: "asc",
+            },
         );
     }
 }

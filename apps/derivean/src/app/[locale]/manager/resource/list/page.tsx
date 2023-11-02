@@ -27,7 +27,7 @@ export default function Index() {
         <StoreProvider
             store={ResourceQueryStore}
             values={{
-                filter: {}
+                filter: {},
             }}
         >
             <ResourceTable/>
