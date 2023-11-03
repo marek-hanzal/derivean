@@ -1,14 +1,14 @@
 "use client";
 
-import {WithTranslationProvider}  from "@use-pico/i18n";
-import {Table}                    from "@use-pico/table";
+import {ResourceIcon}             from "@derivean/ui";
+import {Table}                    from "@use-pico/ui-extra";
 import {type FC}                  from "react";
+import {ResourceUpsertForm}       from "../form/ResourceUpsertForm";
+import {withResourceMutation}     from "../mutation/withResourceMutation";
 import {ResourceQueryStore}       from "../query/ResourceQueryStore";
 import {withResourceQuery}        from "../query/withResourceQuery";
 import {type ResourceQuerySchema} from "../schema/ResourceQuerySchema";
 import {ResourceSchema}           from "../schema/ResourceSchema";
-import {ResourceTableAction}      from "./ResourceTable/ResourceTableAction";
-import {ResourceTableRowAction}   from "./ResourceTable/ResourceTableRowAction";
 
 export namespace ResourceTable {
     export type Columns =
@@ -20,27 +20,36 @@ export namespace ResourceTable {
             ResourceSchema,
             ResourceQuerySchema
         >,
-        "columns" | "withSourceQuery" | "withQueryStore"
+        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon"
     >
 }
 
 export const ResourceTable: FC<ResourceTable.Props> = props => {
-    return <WithTranslationProvider
-        withTranslation={{
-            namespace: "resource",
+    return <Table
+        name={"resource"}
+        icon={<ResourceIcon/>}
+        tableActionProps={{
+            upsertForm: ({modalId}) => <ResourceUpsertForm
+                withAutoClose={[modalId]}
+            />,
         }}
-    >
-        <Table
-            WithTableAction={ResourceTableAction}
-            WithRowAction={ResourceTableRowAction}
-            columns={{
-                name: {
-                    render: ({item}) => item.name,
-                },
-            }}
-            withQueryStore={ResourceQueryStore}
-            withSourceQuery={withResourceQuery}
-            {...props}
-        />
-    </WithTranslationProvider>;
+        rowActionProps={{
+            withMutation: withResourceMutation,
+            upsertForm:   ({
+                               item,
+                               modalId
+                           }) => <ResourceUpsertForm
+                withAutoClose={[modalId]}
+                entity={item}
+            />,
+        }}
+        columns={{
+            name: {
+                render: ({item}) => item.name,
+            },
+        }}
+        withQueryStore={ResourceQueryStore}
+        withSourceQuery={withResourceQuery}
+        {...props}
+    />;
 };

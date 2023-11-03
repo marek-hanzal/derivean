@@ -4,7 +4,7 @@ import {
     withClient
 }                                 from "@use-pico/orm";
 import {AbstractRepository}       from "@use-pico/repository";
-import {ResourceRepositorySchema} from "./ResourceRepositorySchema";
+import {ResourceRepositorySchema} from "../schema/ResourceRepositorySchema";
 
 export class ResourceRepository extends AbstractRepository<Database, ResourceRepositorySchema, "Resource"> {
     static inject = [

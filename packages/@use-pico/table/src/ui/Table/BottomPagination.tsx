@@ -38,7 +38,7 @@ export const BottomPagination: FC<BottomPagination.Props> = (
     }));
     const pages = Math.ceil((result.data?.count || 0) / (cursor?.size || 30));
 
-    return result.isSuccess && pages > 0 && <Pagination
+    return result.isSuccess && pages > 1 && <Pagination
         withQueryStore={withQueryStore}
         withSourceQuery={withSourceQuery}
         refresh={refresh}

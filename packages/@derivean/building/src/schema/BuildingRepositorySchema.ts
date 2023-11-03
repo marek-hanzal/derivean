@@ -1,8 +1,8 @@
 import {withRepositorySchema}   from "@use-pico/repository";
-import {BuildingMutationSchema} from "../schema/BuildingMutationSchema";
-import {BuildingQuerySchema}    from "../schema/BuildingQuerySchema";
-import {BuildingSchema}         from "../schema/BuildingSchema";
-import {BuildingShapeSchema}    from "../schema/BuildingShapeSchema";
+import {BuildingMutationSchema} from "./BuildingMutationSchema";
+import {BuildingQuerySchema}    from "./BuildingQuerySchema";
+import {BuildingSchema}         from "./BuildingSchema";
+import {BuildingShapeSchema}    from "./BuildingShapeSchema";
 
 export const BuildingRepositorySchema = withRepositorySchema({
     entity:   BuildingSchema,

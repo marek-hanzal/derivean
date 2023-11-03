@@ -1,8 +1,8 @@
 import {withRepositorySchema}   from "@use-pico/repository";
-import {ResourceMutationSchema} from "../schema/ResourceMutationSchema";
-import {ResourceQuerySchema}    from "../schema/ResourceQuerySchema";
-import {ResourceSchema}         from "../schema/ResourceSchema";
-import {ResourceShapeSchema}    from "../schema/ResourceShapeSchema";
+import {ResourceMutationSchema} from "./ResourceMutationSchema";
+import {ResourceQuerySchema}    from "./ResourceQuerySchema";
+import {ResourceSchema}         from "./ResourceSchema";
+import {ResourceShapeSchema}    from "./ResourceShapeSchema";
 
 export const ResourceRepositorySchema = withRepositorySchema({
     entity: ResourceSchema,

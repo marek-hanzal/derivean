@@ -42,6 +42,7 @@
 		"@use-pico/rpc": "^2.0.3",
 		"@use-pico/schema": "^2.0.4",
 		"@use-pico/store": "^2.0.3",
+		"@use-pico/table": "^2.0.0",
 		"@use-pico/ui": "^2.0.4",
 		"next": "^14.0.0",
 		"react": "^18.2.0"

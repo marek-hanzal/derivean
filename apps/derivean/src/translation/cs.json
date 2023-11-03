@@ -65,6 +65,15 @@
 			}
 		},
 		"delete": {
+			"title": "Odstranit budovu",
+			"content": "Opravdu si přejete odstranit vybranou budovu? Tato akce může mít hluboké následky na herní mechaniku a nelze ji vzít zpět.",
+			"confirm": {
+				"button": "Odstranit budovu"
+			},
+			"success": {
+				"title": "Úspěch",
+				"message": "Budova byla úspěšně odstraněna"
+			},
 			"label": "Odstranit budovu"
 		},
 		"upsert": {

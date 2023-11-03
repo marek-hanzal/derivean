@@ -1,14 +1,14 @@
 "use client";
 
-import {WithTranslationProvider}  from "@use-pico/i18n";
-import {Table}                    from "@use-pico/table";
+import {BuildingIcon}             from "@derivean/ui";
+import {Table}                    from "@use-pico/ui-extra";
 import {type FC}                  from "react";
+import {BuildingUpsertForm}       from "../form/BuildingUpsertForm";
+import {withBuildingMutation}     from "../mutation/withBuildingMutation";
 import {BuildingQueryStore}       from "../query/BuildingQueryStore";
 import {withBuildingQuery}        from "../query/withBuildingQuery";
 import {type BuildingQuerySchema} from "../schema/BuildingQuerySchema";
 import {type BuildingSchema}      from "../schema/BuildingSchema";
-import {BuildingTableAction}      from "./BuildingTable/BuildingTableAction";
-import {BuildingTableRowAction}   from "./BuildingTable/BuildingTableRowAction";
 
 export namespace BuildingTable {
     export type Columns =
@@ -20,27 +20,36 @@ export namespace BuildingTable {
             BuildingSchema,
             BuildingQuerySchema
         >,
-        "columns" | "withSourceQuery" | "withQueryStore"
+        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon"
     >
 }
 
 export const BuildingTable: FC<BuildingTable.Props> = props => {
-    return <WithTranslationProvider
-        withTranslation={{
-            namespace: "building",
+    return <Table
+        name={"building"}
+        icon={<BuildingIcon/>}
+        tableActionProps={{
+            upsertForm: ({modalId}) => <BuildingUpsertForm
+                withAutoClose={[modalId]}
+            />,
         }}
-    >
-        <Table
-            WithTableAction={BuildingTableAction}
-            WithRowAction={BuildingTableRowAction}
-            columns={{
-                name: {
-                    render: ({item}) => item.name,
-                },
-            }}
-            withQueryStore={BuildingQueryStore}
-            withSourceQuery={withBuildingQuery}
-            {...props}
-        />
-    </WithTranslationProvider>;
+        rowActionProps={{
+            withMutation: withBuildingMutation,
+            upsertForm:   ({
+                               item,
+                               modalId
+                           }) => <BuildingUpsertForm
+                withAutoClose={[modalId]}
+                entity={item}
+            />,
+        }}
+        columns={{
+            name: {
+                render: ({item}) => item.name,
+            },
+        }}
+        withQueryStore={BuildingQueryStore}
+        withSourceQuery={withBuildingQuery}
+        {...props}
+    />;
 };
