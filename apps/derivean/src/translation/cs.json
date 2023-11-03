@@ -16,18 +16,75 @@
 		}
 	},
 	"manager": {
-		"resource": {
+		"building": {
 			"list": {
-				"title": "Seznam zdrojů"
-			}
-		},
-		"link": {
-			"resource": {
-				"list": "Seznam zdrojů"
+				"title": "Seznam budov"
 			}
 		},
 		"index": {
 			"title": "Správce hry"
+		},
+		"link": {
+			"building": {
+				"list": "Seznam budov"
+			},
+			"resource": {
+				"list": "Seznam zdrojů"
+			}
+		},
+		"resource": {
+			"list": {
+				"title": "Seznam zdrojů"
+			}
+		}
+	},
+	"building": {
+		"create": {
+			"label": "Vytvořit budovu",
+			"title": "Nová budova",
+			"success": {
+				"title": "Úspěch",
+				"message": "Budova byla úspěšně uložena"
+			}
+		},
+		"update": {
+			"label": "Upravit budovu",
+			"title": "Upravit budovu",
+			"success": {
+				"title": "Úspěch",
+				"message": "Budova byla úspěšně aktualizována"
+			}
+		},
+		"delete": {
+			"label": "Odstranit budovu"
+		},
+		"upsert": {
+			"name": {
+				"label": "Název budovy",
+				"placeholder": "Zadejte prosím název budovy"
+			},
+			"submit": {
+				"button": "Uložit"
+			}
+		},
+		"empty": {
+			"title": "Zatím zde nejsou žádné budovy",
+			"message": "Budova je základní definice pro každého hráče, co produkuje, jaké jsou požadavky stavby a další."
+		},
+		"fulltext": {
+			"placeholder": "Najít budovu"
+		},
+		"table": {
+			"column": {
+				"name": "Název budovy"
+			}
+		},
+		"loading": {
+			"title": "Načítání",
+			"subtitle": "Připravujeme pro vás seznam dostupných budov"
+		},
+		"total": {
+			"label": "Celkový počet budov"
 		}
 	},
 	"public": {

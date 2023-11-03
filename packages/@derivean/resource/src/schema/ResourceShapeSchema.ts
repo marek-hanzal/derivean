@@ -4,7 +4,8 @@ import {
 } from "@use-pico/schema";
 
 export const ResourceShapeSchema = schema(z => z.object({
-    name: z.string,
+    name:   z.string,
+    typeId: z.string,
 }));
 export type ResourceShapeSchema = typeof ResourceShapeSchema;
 export namespace ResourceShapeSchema {

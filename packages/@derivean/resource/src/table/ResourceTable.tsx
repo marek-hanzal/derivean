@@ -1,14 +1,14 @@
 "use client";
 
-import {WithTranslationProvider}       from "@use-pico/i18n";
-import {Table}                         from "@use-pico/table";
-import {type FC}                       from "react";
-import {ResourceQueryStore}            from "../query/ResourceQueryStore";
-import {withResourceQuery}             from "../query/withResourceQuery";
-import {type ResourceQuerySchema}      from "../schema/ResourceQuerySchema";
-import {type ResourceRepositorySchema} from "../schema/ResourceRepositorySchema";
-import {ResourceTableAction}           from "./ResourceTable/ResourceTableAction";
-import {ResourceTableRowAction}        from "./ResourceTable/ResourceTableRowAction";
+import {WithTranslationProvider}  from "@use-pico/i18n";
+import {Table}                    from "@use-pico/table";
+import {type FC}                  from "react";
+import {ResourceQueryStore}       from "../query/ResourceQueryStore";
+import {withResourceQuery}        from "../query/withResourceQuery";
+import {type ResourceQuerySchema} from "../schema/ResourceQuerySchema";
+import {ResourceSchema}           from "../schema/ResourceSchema";
+import {ResourceTableAction}      from "./ResourceTable/ResourceTableAction";
+import {ResourceTableRowAction}   from "./ResourceTable/ResourceTableRowAction";
 
 export namespace ResourceTable {
     export type Columns =
@@ -17,7 +17,7 @@ export namespace ResourceTable {
     export type Props = Omit<
         Table.Props<
             Columns,
-            ResourceRepositorySchema,
+            ResourceSchema,
             ResourceQuerySchema
         >,
         "columns" | "withSourceQuery" | "withQueryStore"

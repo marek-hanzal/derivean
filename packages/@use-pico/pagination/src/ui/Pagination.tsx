@@ -69,7 +69,7 @@ export const Pagination = <
         align={"center"}
         py={"sm"}
     >
-        {hideOnSingle && pages === 1 ? null : result.isSuccess ? <GridCol span={"content"}>
+        {hideOnSingle && pages === 1 ? null : result.isSuccess && result.data.count > 0 ? <GridCol span={"content"}>
             <CoolPagination
                 disabled={isBlock}
                 withEdges
@@ -95,7 +95,7 @@ export const Pagination = <
                 </NativeBreadcrumbs>
             </Group>
         </GridCol>}
-        {result.data && result.data.where > 0 && <GridCol span={"auto"}>
+        {result.data && <GridCol span={"auto"}>
             {hideOnSingle ? (pages > 1) : (pages > 0) && <Divider orientation={"vertical"}/>}
             <Group gap={"xs"}>
                 <Text c={"dimmed"}>
@@ -121,6 +121,7 @@ export const Pagination = <
         </GridCol>}
         <GridCol span={"content"}>
             <Select
+                disabled={result.isLoading || result.isSuccess && result.data.count <= 0}
                 defaultValue={`${(cursor?.size || 30)}`}
                 onChange={value => value && setSize(parseInt(value))}
                 data={[5, 10, 30, 50, 100, 250, 500, 1000].map(size => ({

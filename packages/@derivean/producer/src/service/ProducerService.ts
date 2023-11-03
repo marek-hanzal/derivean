@@ -1,11 +1,11 @@
 import {
     type IInventoryService,
     withInventoryService
-}                                    from "@derivean/inventory";
-import {DateTime}                    from "@use-pico/i18n";
-import {type IProducerService}       from "../api/IProducerService";
-import {type ProducerProcessSchema}  from "../schema/ProducerProcessSchema";
-import {type ProducerSnapshotSchema} from "../schema/ProducerSnapshotSchema";
+}                               from "@derivean/inventory";
+import {DateTime}               from "@use-pico/i18n";
+import {type IProducerProcess}  from "../api/IProducerProcess";
+import {type IProducerService}  from "../api/IProducerService";
+import {type IProducerSnapshot} from "../api/IProducerSnapshot";
 
 export class ProducerService implements IProducerService {
     static inject = [
@@ -17,7 +17,7 @@ export class ProducerService implements IProducerService {
     ) {
     }
 
-    public cycles(process: ProducerProcessSchema.Type): number {
+    public cycles(process: IProducerProcess): number {
         /**
          * Zero/minus values are considered as an instant pickup, thus generating one cycle
          */
@@ -27,7 +27,7 @@ export class ProducerService implements IProducerService {
         return DateTime.fromISO(process.date.to).diff(DateTime.fromISO(process.date.from), "second").get("second") / process.producer.time;
     }
 
-    public inputAmountOf(process: ProducerProcessSchema.Type, name: string): number {
+    public inputAmountOf(process: IProducerProcess, name: string): number {
         return process
             .producer
             .input
@@ -37,7 +37,7 @@ export class ProducerService implements IProducerService {
             }, 0);
     }
 
-    public outputAmountOf(process: ProducerProcessSchema.Type, name: string): number {
+    public outputAmountOf(process: IProducerProcess, name: string): number {
         return process
             .producer
             .output
@@ -47,7 +47,7 @@ export class ProducerService implements IProducerService {
             }, 0);
     }
 
-    public process(process: ProducerProcessSchema.Type): ProducerSnapshotSchema.Type {
+    public process(process: IProducerProcess): IProducerSnapshot {
         const cycles = Math.floor(this.cycles(process));
         const resources = process.producer.input.map(({resource}) => resource.name);
 

@@ -1,12 +1,13 @@
+import {ResourceIcon}         from "@derivean/ui";
 import {
     Form,
     TextInput
-}                                 from "@use-pico/form";
-import {type WithEntity}          from "@use-pico/types";
-import {type FC}                  from "react";
-import {withResourceMutation}     from "../mutation/withResourceMutation";
-import {ResourceRepositorySchema} from "../schema/ResourceRepositorySchema";
-import {ResourceShapeSchema}      from "../schema/ResourceShapeSchema";
+}                             from "@use-pico/form";
+import {type WithEntity}      from "@use-pico/types";
+import {type FC}              from "react";
+import {withResourceMutation} from "../mutation/withResourceMutation";
+import {type ResourceSchema}  from "../schema/ResourceSchema";
+import {ResourceShapeSchema}  from "../schema/ResourceShapeSchema";
 
 export namespace ResourceUpsertForm {
     export type Props =
@@ -16,7 +17,7 @@ export namespace ResourceUpsertForm {
             withResourceMutation["schema"]["request"],
             withResourceMutation["schema"]["response"]
         >
-        & WithEntity.Schema.$<ResourceRepositorySchema>;
+        & WithEntity.Schema.$<ResourceSchema>;
 }
 
 export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = (
@@ -35,6 +36,7 @@ export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = (
         inputs={{
             name: TextInput,
         }}
+        icon={<ResourceIcon/>}
         values={entity}
         toRequest={values => (entity ? {
             update: {
@@ -49,7 +51,8 @@ export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = (
             create: values,
         })}
         defaultValues={{
-            name: "",
+            name:   "",
+            typeId: "",
         }}
         Render={({Input}) => <>
             <Input name={"name"}/>

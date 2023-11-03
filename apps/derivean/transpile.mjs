@@ -1,4 +1,5 @@
 export const transpile = [
+    '@derivean/building',
     '@derivean/game',
     '@derivean/inventory',
     '@derivean/manager',

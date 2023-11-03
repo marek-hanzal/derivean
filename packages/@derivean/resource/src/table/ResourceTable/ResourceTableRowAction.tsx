@@ -1,20 +1,20 @@
-import {ResourceIcon}                  from "@derivean/ui";
-import {DeleteModal}                   from "@use-pico/source-ui";
-import {TableRowActionMenu}            from "@use-pico/table";
-import {type WithItem}                 from "@use-pico/types";
+import {ResourceIcon}         from "@derivean/ui";
+import {DeleteModal}          from "@use-pico/source-ui";
+import {TableRowActionMenu}   from "@use-pico/table";
+import {type WithItem}        from "@use-pico/types";
 import {
     EditIcon,
     Modal,
     ModalMenuItem,
     TrashIcon
-}                                      from "@use-pico/ui";
-import {type FC}                       from "react";
-import {ResourceUpsertForm}            from "../../form/ResourceUpsertForm";
-import {withResourceMutation}          from "../../mutation/withResourceMutation";
-import {type ResourceRepositorySchema} from "../../schema/ResourceRepositorySchema";
+}                             from "@use-pico/ui";
+import {type FC}              from "react";
+import {ResourceUpsertForm}   from "../../form/ResourceUpsertForm";
+import {withResourceMutation} from "../../mutation/withResourceMutation";
+import {type ResourceSchema}  from "../../schema/ResourceSchema";
 
 export namespace ResourceTableRowAction {
-    export interface Props extends WithItem.Schema<ResourceRepositorySchema> {
+    export interface Props extends WithItem.Schema<ResourceSchema> {
     }
 }
 
