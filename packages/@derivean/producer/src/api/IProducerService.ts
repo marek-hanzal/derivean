@@ -1,11 +1,11 @@
-import {type ProducerProcessSchema}  from "../schema/ProducerProcessSchema";
-import {type ProducerSnapshotSchema} from "../schema/ProducerSnapshotSchema";
+import {type IProducerProcess}  from "./IProducerProcess";
+import {type IProducerSnapshot} from "./IProducerSnapshot";
 
 export interface IProducerService {
     /**
      * Number of cycles passed by the given process
      */
-    cycles(process: ProducerProcessSchema.Type): number;
+    cycles(process: IProducerProcess): number;
 
-    process(process: ProducerProcessSchema.Type): ProducerSnapshotSchema.Type;
+    process(process: IProducerProcess): IProducerSnapshot;
 }

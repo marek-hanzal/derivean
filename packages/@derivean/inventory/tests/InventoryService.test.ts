@@ -5,13 +5,13 @@ import {
     test
 }                  from "vitest";
 import {
-    InventoryResourceSchema,
-    InventorySchema,
+    type IInventory,
+    type IInventoryResource,
     withInventoryContainer,
     withInventoryService
 }                  from "../src";
 
-const inventory: InventorySchema.Type = {
+const inventory: IInventory = {
     resources: [
         {
             resource: {
@@ -34,7 +34,7 @@ const inventory: InventorySchema.Type = {
     ],
 };
 
-const normalizedInventory: InventorySchema.Type = {
+const normalizedInventory: IInventory = {
     resources: [
         {
             resource: {
@@ -57,9 +57,15 @@ describe("InventoryService", () => {
     const inventoryService = withInventoryService.use(container);
 
     test("Normalized inventory", () => {
-        expect(inventoryService.normalize(inventory)).toEqual(new Map<string, InventoryResourceSchema.Type>([
-            ["tree", {resource: {name: "tree"}, amount: 12}],
-            ["log", {resource: {name: "log"}, amount: 1}],
+        expect(inventoryService.normalize(inventory)).toEqual(new Map<string, IInventoryResource>([
+            ["tree", {
+                resource: {name: "tree"},
+                amount:   12
+            }],
+            ["log", {
+                resource: {name: "log"},
+                amount:   1
+            }],
         ]));
     });
 

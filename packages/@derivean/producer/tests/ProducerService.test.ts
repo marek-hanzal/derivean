@@ -1,40 +1,36 @@
 import {
     withInventoryContainer,
     withInventoryService
-}                              from "@derivean/inventory";
-import {ResourceSchema}        from "@derivean/resource";
-import {Container}             from "@use-pico/container";
-import {DateTime}              from "@use-pico/i18n";
+}                       from "@derivean/inventory";
+import {type IResource} from "@derivean/resource";
+import {Container}      from "@use-pico/container";
+import {DateTime}       from "@use-pico/i18n";
 import {
     describe,
     expect,
     test
-}                              from "vitest";
+}                       from "vitest";
 import {
-    ProducerSchema,
+    type IProducer,
+    type IProducerProcess,
     withProducerContainer,
     withProducerService
-}                              from "../src";
-import {ProducerProcessSchema} from "../src/schema/ProducerProcessSchema";
+}                       from "../src";
 
-const TreeResource: ResourceSchema.Type = {
-    id: "124",
+const TreeResource: IResource = {
     name: "tree",
 };
-const LeafsResource: ResourceSchema.Type = {
-    id: "124",
+const LeafsResource: IResource = {
     name: "leafs",
 };
-const LogResource: ResourceSchema.Type = {
-    id: "124",
+const LogResource: IResource = {
     name: "log",
 };
-const SawdustResource: ResourceSchema.Type = {
-    id: "124",
+const SawdustResource: IResource = {
     name: "sawdust",
 };
 
-const producer: ProducerSchema.Type = {
+const producer: IProducer = {
     time:   10,
     input:  [
         {
@@ -64,7 +60,7 @@ const date = {
     to:   DateTime.now().toISO(),
 };
 
-const goodProducerProcess: ProducerProcessSchema.Type = {
+const goodProducerProcess: IProducerProcess = {
     date,
     producer,
     inventory: {
@@ -84,7 +80,7 @@ const goodProducerProcess: ProducerProcessSchema.Type = {
         ],
     },
 };
-const notEnoughResourceProducerProcess: ProducerProcessSchema.Type = {
+const notEnoughResourceProducerProcess: IProducerProcess = {
     date,
     producer,
     inventory: {
@@ -104,7 +100,7 @@ const notEnoughResourceProducerProcess: ProducerProcessSchema.Type = {
         ],
     },
 };
-const missingResourceProducerProcess: ProducerProcessSchema.Type = {
+const missingResourceProducerProcess: IProducerProcess = {
     date,
     producer,
     inventory: {

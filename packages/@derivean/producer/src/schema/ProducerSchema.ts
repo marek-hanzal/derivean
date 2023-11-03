@@ -1,13 +1,10 @@
 import {
-    type PicoSchema,
-    schema
-}                             from "@use-pico/schema";
-import {ProducerInputSchema}  from "./ProducerInputSchema";
-import {ProducerOutputSchema} from "./ProducerOutputSchema";
+    identityOf,
+    type PicoSchema
+} from "@use-pico/schema";
 
-export const ProducerSchema = schema(z => z.object({
-    input:  z.array(ProducerInputSchema),
-    output: z.array(ProducerOutputSchema),
+export const ProducerSchema = identityOf(z => z.object({
+    name: z.string,
     /**
      * Runtime of a producer before resources can be picked up
      */

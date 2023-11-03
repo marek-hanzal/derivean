@@ -1,3 +1,4 @@
+export * from "./IResource";
 export * from "./ResourceFilterSchema";
 export * from "./ResourceMutationSchema";
 export * from "./ResourceOrderBySchema";

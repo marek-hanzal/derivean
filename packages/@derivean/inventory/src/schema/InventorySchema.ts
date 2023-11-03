@@ -1,12 +1,9 @@
 import {
-    type PicoSchema,
-    schema
-}                                from "@use-pico/schema";
-import {InventoryResourceSchema} from "./InventoryResourceSchema";
+    identityOf,
+    type PicoSchema
+} from "@use-pico/schema";
 
-export const InventorySchema = schema(z => z.object({
-    resources: z.array(InventoryResourceSchema),
-}));
+export const InventorySchema = identityOf(z => z.object({}));
 export type InventorySchema = typeof InventorySchema;
 export namespace InventorySchema {
     export type Type = PicoSchema.Output<InventorySchema>;

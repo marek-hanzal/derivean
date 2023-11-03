@@ -1,14 +1,13 @@
-import {ResourceSchema} from "@derivean/resource";
 import {
-    type PicoSchema,
-    schema
-}                       from "@use-pico/schema";
+    identityOf,
+    type PicoSchema
+} from "@use-pico/schema";
 
-export const ProducerInputSchema = schema(z => z.object({
+export const ProducerInputSchema = identityOf(z => z.object({
     /**
      * Resource on input
      */
-    resource: ResourceSchema,
+    resourceId: z.string,
     /**
      * Amount of processed resource (subtracted by time from an inventory)
      */

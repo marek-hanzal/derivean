@@ -1,3 +1,7 @@
+export * from "./IProducer";
+export * from "./IProducerInput";
+export * from "./IProducerOutput";
+export * from "./IProducerProcess";
 export * from "./ProducerInputSchema";
 export * from "./ProducerOutputSchema";
 export * from "./ProducerSchema";

@@ -1,12 +1,11 @@
-import {ResourceSchema} from "@derivean/resource";
 import {
-    type PicoSchema,
-    schema
-}                       from "@use-pico/schema";
+    identityOf,
+    type PicoSchema
+} from "@use-pico/schema";
 
-export const InventoryResourceSchema = schema(z => z.object({
-    resource: ResourceSchema,
-    amount:   z.number,
+export const InventoryResourceSchema = identityOf(z => z.object({
+    resourceId: z.string,
+    amount:     z.number,
 }));
 export type InventoryResourceSchema = typeof InventoryResourceSchema;
 export namespace InventoryResourceSchema {

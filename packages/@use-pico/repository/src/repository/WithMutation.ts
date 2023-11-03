@@ -5,7 +5,6 @@ import {
 import {type QuerySchema}    from "@use-pico/query";
 import {type PicoSchema}     from "@use-pico/schema";
 import {type MutationSchema} from "@use-pico/source";
-import {generateId}          from "@use-pico/utils";
 import {type IRepository}    from "../api/IRepository";
 import {type IWithMutation}  from "../api/IWithMutation";
 
@@ -36,10 +35,7 @@ export class WithMutation<
     public async create(create: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["create"]>>): Promise<TSchema["entity"]> {
         return await this.client
             .insertInto(this.table)
-            .values({
-                ...create,
-                id: generateId(),
-            })
+            .values(create)
             .returningAll()
             .executeTakeFirstOrThrow();
     }

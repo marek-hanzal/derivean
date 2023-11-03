@@ -1,12 +1,12 @@
 import {
     Form,
     TextInput
-}                             from "@use-pico/form";
-import {type WithEntity}      from "@use-pico/types";
-import {type FC}              from "react";
-import {withResourceMutation} from "../mutation/withResourceMutation";
-import {ResourceSchema}       from "../schema/ResourceSchema";
-import {ResourceShapeSchema}  from "../schema/ResourceShapeSchema";
+}                                 from "@use-pico/form";
+import {type WithEntity}          from "@use-pico/types";
+import {type FC}                  from "react";
+import {withResourceMutation}     from "../mutation/withResourceMutation";
+import {ResourceRepositorySchema} from "../schema/ResourceRepositorySchema";
+import {ResourceShapeSchema}      from "../schema/ResourceShapeSchema";
 
 export namespace ResourceUpsertForm {
     export type Props =
@@ -16,7 +16,7 @@ export namespace ResourceUpsertForm {
             withResourceMutation["schema"]["request"],
             withResourceMutation["schema"]["response"]
         >
-        & WithEntity.Schema.$<ResourceSchema>;
+        & WithEntity.Schema.$<ResourceRepositorySchema>;
 }
 
 export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = (
