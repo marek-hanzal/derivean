@@ -5,7 +5,7 @@
 	"scripts": {
 		"build": "dotenv -- next build",
 		"start": "dotenv -- next start",
-		"migrate": "dotenv -- tsx migrate.ts",
+		"migration": "dotenv -- tsx migration.ts",
 		"dev": "next dev",
 		"lint": "dotenv -c development -- next lint",
 		"cleanup": "del-cli .turbo .next tsconfig.tsbuildinfo"
