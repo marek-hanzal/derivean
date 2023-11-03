@@ -1,6 +1,6 @@
-import {withBuildingRepository} from "@derivean/building";
+import {withProducerRepository} from "@derivean/producer";
 import {container}              from "@derivean/server";
-import {BuildingIcon}           from "@derivean/ui";
+import {ProducerIcon}           from "@derivean/ui";
 import {
     Breadcrumbs,
     HomeIcon,
@@ -17,17 +17,17 @@ export namespace Index {
 }
 
 export default async function Index({params: {id}}: Index.Props) {
-    const building = await withBuildingRepository.use(container).withQuery.fetchOrThrow({
+    const producer = await withProducerRepository.use(container).withQuery.fetchOrThrow({
         where: {
             id,
         }
     });
 
     return <Page
-        icon={<BuildingIcon/>}
-        title={"manager.building.detail"}
+        icon={<ProducerIcon/>}
+        title={"manager.producer.detail"}
         withTranslation={{
-            values: building,
+            values: producer,
         }}
         postfix={<Breadcrumbs
             items={{
@@ -36,15 +36,15 @@ export default async function Index({params: {id}}: Index.Props) {
                     href: "/manager",
                     icon: <HomeIcon/>,
                 },
-                "/manager/building/list": {
+                "/manager/producer/list": {
                     type:  "link",
-                    href:  "/manager/building/list",
-                    label: "manager.building.list.title",
+                    href:  "/manager/producer/list",
+                    label: "manager.producer.list.title",
                     icon:  <ListIcon/>,
                 },
             }}
         />}
     >
-        {building.name}
+        {producer.name}
     </Page>;
 }

@@ -1,77 +1,4 @@
 {
-	"common": {
-		"filter": {
-			"action-filter": {
-				"on": "Filtrovat",
-				"off": "Zrušit filtr"
-			}
-		},
-		"cancel": {
-			"button": "Zrušit"
-		},
-		"selection": {
-			"upsert": {
-				"selected-item": {
-					"label": "Vybraný typ zdroje"
-				}
-			},
-			"submit": {
-				"button": "Potvrdit výběr"
-			},
-			"cancel": {
-				"button": "Zavřít"
-			},
-			"clear": {
-				"button": "Zrušit výběr"
-			}
-		}
-	},
-	"error": {
-		"404": {
-			"title": "Stránka nenalezena",
-			"message": "Kde nic, tu nic"
-		}
-	},
-	"game": {
-		"index": {
-			"title": "Přehled"
-		}
-	},
-	"manager": {
-		"building": {
-			"detail": {
-				"title": "Detail budovy"
-			},
-			"list": {
-				"title": "Seznam budov"
-			}
-		},
-		"index": {
-			"title": "Správce hry"
-		},
-		"link": {
-			"building": {
-				"list": "Seznam budov"
-			},
-			"resource": {
-				"label": "Správa zdrojů",
-				"list": "Seznam zdrojů",
-				"type": {
-					"list": "Seznam typů zdrojů"
-				}
-			}
-		},
-		"resource": {
-			"list": {
-				"title": "Seznam zdrojů"
-			},
-			"type": {
-				"list": {
-					"title": "Seznam typů zdrojů"
-				}
-			}
-		}
-	},
 	"building": {
 		"create": {
 			"label": "Vytvořit budovu",
@@ -128,6 +55,152 @@
 		},
 		"total": {
 			"label": "Celkový počet budov"
+		}
+	},
+	"common": {
+		"filter": {
+			"action-filter": {
+				"on": "Filtrovat",
+				"off": "Zrušit filtr"
+			}
+		},
+		"cancel": {
+			"button": "Zrušit"
+		},
+		"selection": {
+			"upsert": {
+				"selected-item": {
+					"label": "Vybraný typ zdroje"
+				}
+			},
+			"submit": {
+				"button": "Potvrdit výběr"
+			},
+			"cancel": {
+				"button": "Zavřít"
+			},
+			"clear": {
+				"button": "Zrušit výběr"
+			}
+		}
+	},
+	"error": {
+		"404": {
+			"title": "Stránka nenalezena",
+			"message": "Kde nic, tu nic"
+		}
+	},
+	"game": {
+		"index": {
+			"title": "Přehled"
+		}
+	},
+	"manager": {
+		"producer": {
+			"detail": {
+				"title": "Detail výrobny [{name}]"
+			},
+			"list": {
+				"title": "Seznam výroben"
+			}
+		},
+		"building": {
+			"detail": {
+				"title": "Detail budovy [{name}]"
+			},
+			"list": {
+				"title": "Seznam budov"
+			}
+		},
+		"index": {
+			"title": "Správce hry"
+		},
+		"link": {
+			"building": {
+				"list": "Seznam budov"
+			},
+			"producer": {
+				"list": "Seznam výroben"
+			},
+			"resource": {
+				"label": "Správa zdrojů",
+				"list": "Seznam zdrojů",
+				"type": {
+					"list": "Seznam typů zdrojů"
+				}
+			}
+		},
+		"resource": {
+			"list": {
+				"title": "Seznam zdrojů"
+			},
+			"type": {
+				"list": {
+					"title": "Seznam typů zdrojů"
+				}
+			}
+		}
+	},
+	"producer": {
+		"create": {
+			"label": "Nová výrobna",
+			"title": "Nová výrobna",
+			"success": {
+				"title": "Úspěch",
+				"message": "Výrobna byla úspěšně uložena"
+			}
+		},
+		"delete": {
+			"title": "Odstranit výrobnu",
+			"label": "Odstranit výrobnu",
+			"content": "Opravdu si přejete odstranit vybranou výrobnu? Tato akce může mít hluboký vliv na data a hratelnost.",
+			"confirm": {
+				"button": "Odstranit výrobnu"
+			},
+			"success": {
+				"title": "Úspěch",
+				"message": "Výrobna byla úspěšně odstraněna"
+			}
+		},
+		"empty": {
+			"title": "Zatím nemáte nastavené žádné výrobny",
+			"message": "Výrobna je obecné pravidlo, které bere zdroje na vstupu a generuje zdroje na výstupu za daný čas."
+		},
+		"fulltext": {
+			"placeholder": "Najít výrobnu"
+		},
+		"loading": {
+			"title": "Načítání seznamu výroben",
+			"subtitle": "Připravujeme seznam výroben..."
+		},
+		"table": {
+			"column": {
+				"name": "Název výrobny",
+				"time": "Čas produkce"
+			}
+		},
+		"total": {
+			"label": "Celkový počet výroben"
+		},
+		"update": {
+			"title": "Upravit výrobnu",
+			"label": "Upravit výrobnu",
+			"success": {
+				"title": "Úspěch",
+				"message": "Výrobna byla úspěšně aktualizována"
+			}
+		},
+		"upsert": {
+			"name": {
+				"label": "Název výrobny",
+				"placeholder": "Zadejte prosím název výrobny"
+			},
+			"time": {
+				"label": "Základní čas produkce"
+			},
+			"submit": {
+				"button": "Uložit výrobnu"
+			}
 		}
 	},
 	"public": {

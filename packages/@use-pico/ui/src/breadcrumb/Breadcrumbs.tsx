@@ -1,5 +1,3 @@
-"use client";
-
 import {Breadcrumbs as CoolBreadcrumbs} from "@mantine/core";
 import {
     type IWithTranslation,

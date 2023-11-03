@@ -1,5 +1,6 @@
 import {
     BuildingIcon,
+    ProducerIcon,
     ResourceIcon
 }                from "@derivean/ui";
 import {
@@ -38,12 +39,18 @@ export const ManagerMenu: FC<ManagerMenu.Props> = () => {
                     },
                 }
             },
+            "/manager/producer": {
+                type:  "link",
+                href:  "/manager/producer/list",
+                label: "link.producer.list",
+                icon:  <ProducerIcon/>,
+            },
             "/manager/building": {
                 type:  "link",
                 href:  "/manager/building/list",
                 label: "link.building.list",
                 icon:  <BuildingIcon/>,
-            }
+            },
         }}
     />;
 };
