@@ -39,6 +39,9 @@
 	},
 	"manager": {
 		"building": {
+			"detail": {
+				"title": "Detail budovy"
+			},
 			"list": {
 				"title": "Seznam budov"
 			}

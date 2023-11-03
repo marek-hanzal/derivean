@@ -1,6 +1,7 @@
 "use client";
 
 import {BuildingIcon}             from "@derivean/ui";
+import {ButtonLink}               from "@use-pico/ui";
 import {Table}                    from "@use-pico/ui-extra";
 import {type FC}                  from "react";
 import {BuildingUpsertForm}       from "../form/BuildingUpsertForm";
@@ -45,7 +46,16 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
         }}
         columns={{
             name: {
-                render: ({item}) => item.name,
+                render: ({item}) => <ButtonLink
+                    icon={<BuildingIcon/>}
+                    href={{
+                        href:  "/manager/building/[id]",
+                        query: {
+                            id: item.id,
+                        },
+                    }}
+                    label={item.name}
+                />,
             },
         }}
         withQueryStore={BuildingQueryStore}

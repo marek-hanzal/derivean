@@ -8,3 +8,4 @@ export * from "./BuildingTable";
 export * from "./withBuildingContainer";
 export * from "./withBuildingCountQuery";
 export * from "./withBuildingQuery";
+export * from "./withBuildingRepository";
