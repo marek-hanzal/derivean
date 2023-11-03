@@ -80,6 +80,7 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/@misc/esbuild/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/migrator/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/building/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/auth-server/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@derivean/public/.turbo" />

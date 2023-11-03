@@ -45,11 +45,11 @@ export class RpcService implements IRpcService {
 
         for (const [id, bulk] of Object.entries(bulks.data.bulk)) {
             try {
-                await new Promise((resolve) => {
-                    setTimeout(() => {
-                        resolve("");
-                    }, Math.random() * 10 * 100);
-                });
+                // await new Promise((resolve) => {
+                //     setTimeout(() => {
+                //         resolve("");
+                //     }, Math.random() * 10 * 100);
+                // });
 
                 const {
                     handle,

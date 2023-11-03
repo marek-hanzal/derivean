@@ -18,9 +18,6 @@ export default function Layout(
 ) {
     return <PublicLayout
         logo={logo}
-        signInOptions={{
-            callbackUrl: `/${params.locale}/game`,
-        }}
     >
         {children}
     </PublicLayout>;
