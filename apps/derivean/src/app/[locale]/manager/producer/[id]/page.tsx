@@ -3,6 +3,8 @@ import {container}              from "@derivean/server";
 import {ProducerIcon}           from "@derivean/ui";
 import {
     Breadcrumbs,
+    Grid,
+    GridCol,
     HomeIcon,
     ListIcon,
     Page
@@ -45,6 +47,13 @@ export default async function Index({params: {id}}: Index.Props) {
             }}
         />}
     >
-        {producer.name}
+        <Grid columns={2}>
+            <GridCol span={1}>
+                input
+            </GridCol>
+            <GridCol span={1}>
+                output
+            </GridCol>
+        </Grid>
     </Page>;
 }
