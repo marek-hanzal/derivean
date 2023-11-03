@@ -27,6 +27,14 @@ export default withAuthMiddleware({
             ]
         },
         {
+            path:   "/manager",
+            target: "/-/public",
+            auth:   true,
+            tokens: [
+                "manager",
+            ]
+        },
+        {
             path:   "/root",
             target: "/-/public",
             auth:   true,

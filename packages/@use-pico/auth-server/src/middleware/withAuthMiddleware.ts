@@ -1,6 +1,6 @@
-import {getToken}     from "next-auth/jwt";
 import {withAuth}     from "next-auth/middleware";
 import {NextResponse} from "next/server";
+import {getToken}     from "../utils/getToken";
 
 export namespace withAuthMiddleware {
     export interface Props {
@@ -22,18 +22,17 @@ export const withAuthMiddleware = (
 ) => {
     return withAuth(
         async request => {
-            console.log("Headers", request.headers.get("cookie"));
-
-            console.log("Token", await getToken({req: request}), "from auth", request.nextauth.token);
-
-            const token = request.nextauth.token;
+            const token = await getToken({
+                request,
+            });
+            console.log("Middleware token = ", token);
             for (const {
                 path,
                 target,
                 auth
             } of routes) {
                 if (request.nextUrl.pathname.includes(path)) {
-                    console.log(`Redirect check for [${request.nextUrl.pathname}] on [${path}]`, "token = ", token);
+                    console.log(`Redirect check for [${request.nextUrl.pathname}] on [${path}]`, "token =", token);
                     if ((token && !auth) || (!token && auth)) {
                         return NextResponse.redirect(
                             new URL(
@@ -48,16 +47,15 @@ export const withAuthMiddleware = (
         },
         {
             callbacks: {
-                authorized({
-                               req,
-                               token
-                           }) {
+                async authorized({req}) {
+                    const token = await getToken({request: req});
+                    console.log("Callback token", token);
                     for (const {
                         path,
                         auth
                     } of routes) {
                         if (req.nextUrl.pathname.includes(path)) {
-                            console.log(`Auth check for [${req.nextUrl.pathname}] on [${path}]`, token);
+                            console.log(`Auth check for [${req.nextUrl.pathname}] on [${path}], token =`, token);
                             if (!token && auth) {
                                 return false;
                             }
