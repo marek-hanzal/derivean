@@ -34,10 +34,10 @@ export abstract class AbstractWithApply<
     ) {
     }
 
-    public applyWhere<T>(
-        query: PicoSchema.Output<TSchema["query"]>,
+    protected applyMatchOf<T>(
+        matchOf: FilterSchema.Type | null | undefined,
         select: SelectQueryBuilder<TDatabase, TTable, T>
-    ): SelectQueryBuilder<TDatabase, TTable, T> {
+    ) {
         let $select = select;
 
         const $matchOf = {
@@ -55,7 +55,7 @@ export abstract class AbstractWithApply<
          *
          * Also, this enables search only for known fields, not arbitrary ones.
          */
-        for (const [match, value] of Object.entries(query.where || {})) {
+        for (const [match, value] of Object.entries(matchOf || {})) {
             if (value === undefined) {
                 continue;
             }
@@ -70,11 +70,18 @@ export abstract class AbstractWithApply<
         return $select;
     }
 
+    public applyWhere<T>(
+        query: PicoSchema.Output<TSchema["query"]>,
+        select: SelectQueryBuilder<TDatabase, TTable, T>
+    ): SelectQueryBuilder<TDatabase, TTable, T> {
+        return this.applyMatchOf(query.where, select);
+    }
+
     public applyFilter<T>(
         query: PicoSchema.Output<TSchema["query"]>,
         select: SelectQueryBuilder<TDatabase, TTable, T>
     ): SelectQueryBuilder<TDatabase, TTable, T> {
-        return select;
+        return this.applyMatchOf(query.filter, select);
     }
 
     public applyOrderBy<T>(

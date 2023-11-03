@@ -1,5 +1,11 @@
 {
 	"common": {
+		"filter": {
+			"action-filter": {
+				"on": "Filtrovat",
+				"off": "Zrušit filtr"
+			}
+		},
 		"cancel": {
 			"button": "Zrušit"
 		},
