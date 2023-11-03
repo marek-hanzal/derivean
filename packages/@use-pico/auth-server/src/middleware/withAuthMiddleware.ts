@@ -1,3 +1,4 @@
+import {getToken}     from "next-auth/jwt";
 import {withAuth}     from "next-auth/middleware";
 import {NextResponse} from "next/server";
 
@@ -20,8 +21,10 @@ export const withAuthMiddleware = (
     }: withAuthMiddleware.Props
 ) => {
     return withAuth(
-        request => {
-            console.log("middleware", process.env.NEXTAUTH_SECRET);
+        async request => {
+            console.log("Headers", request.headers.get("cookie"));
+
+            console.log("Token", await getToken({req: request}), "from auth", request.nextauth.token);
 
             const token = request.nextauth.token;
             for (const {
