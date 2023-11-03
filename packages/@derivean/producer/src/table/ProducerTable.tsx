@@ -1,18 +1,19 @@
 "use client";
 
-import {ProducerIcon}         from "@derivean/ui";
-import {ButtonLink}           from "@use-pico/ui";
+import {ProducerIcon}           from "@derivean/ui";
+import {ButtonLink}             from "@use-pico/ui";
 import {
     HumanSeconds,
     Table
-}                             from "@use-pico/ui-extra";
-import {type FC}              from "react";
-import {ProducerUpsertForm}   from "../form/ProducerUpsertForm";
-import {withProducerMutation} from "../mutation/withProducerMutation";
-import {ProducerQueryStore}   from "../query/ProducerQueryStore";
-import {withProducerQuery}    from "../query/withProducerQuery";
-import {ProducerQuerySchema}  from "../schema/ProducerQuerySchema";
-import {type ProducerSchema}  from "../schema/ProducerSchema";
+}                               from "@use-pico/ui-extra";
+import {type FC}                from "react";
+import {ProducerUpsertForm}     from "../form/ProducerUpsertForm";
+import {withProducerMutation}   from "../mutation/withProducerMutation";
+import {ProducerQueryStore}     from "../query/ProducerQueryStore";
+import {withProducerQuery}      from "../query/withProducerQuery";
+import {ProducerQuerySchema}    from "../schema/ProducerQuerySchema";
+import {type ProducerSchema}    from "../schema/ProducerSchema";
+import {ProducerSelectionStore} from "../store/ProducerSelectionStore";
 
 export namespace ProducerTable {
     export type Columns =
@@ -33,6 +34,7 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
     return <Table
         name={"producer"}
         icon={<ProducerIcon/>}
+        SelectionStore={ProducerSelectionStore}
         tableActionProps={{
             upsertForm: ({modalId}) => <ProducerUpsertForm
                 withAutoClose={[modalId]}

@@ -4,6 +4,7 @@ import {
 } from "@use-pico/schema";
 
 export const ProducerInputSchema = identityOf(z => z.object({
+    producerId: z.string,
     /**
      * Resource on input
      */

@@ -1,14 +1,20 @@
-import {withProducerRepository} from "@derivean/producer";
-import {container}              from "@derivean/server";
-import {ProducerIcon}           from "@derivean/ui";
+import {
+    ProducerInputQueryStore,
+    ProducerInputTable,
+    withProducerRepository
+}                      from "@derivean/producer";
+import {container}     from "@derivean/server";
+import {ProducerIcon}  from "@derivean/ui";
+import {IconArrowDown} from "@tabler/icons-react";
+import {StoreProvider} from "@use-pico/store";
 import {
     Breadcrumbs,
-    Grid,
-    GridCol,
+    Center,
     HomeIcon,
     ListIcon,
-    Page
-}                               from "@use-pico/ui";
+    Page,
+    WithIcon
+}                      from "@use-pico/ui";
 
 export namespace Index {
     export interface Props {
@@ -47,13 +53,39 @@ export default async function Index({params: {id}}: Index.Props) {
             }}
         />}
     >
-        <Grid columns={2}>
-            <GridCol span={1}>
-                input
-            </GridCol>
-            <GridCol span={1}>
-                output
-            </GridCol>
-        </Grid>
+        <StoreProvider
+            store={ProducerInputQueryStore}
+            values={{
+                where: {
+                    producerId: producer.id,
+                },
+            }}
+        >
+            <ProducerInputTable
+                hidden={["producerId"]}
+                producerId={producer.id}
+            />
+        </StoreProvider>
+
+        <Center my={"xl"}>
+            <WithIcon
+                color={"gray.5"}
+                size={64}
+                icon={<IconArrowDown size={64}/>}
+            />
+        </Center>
+
+        {/*<StoreProvider*/}
+        {/*    store={ProducerInputQueryStore}*/}
+        {/*    values={{*/}
+        {/*        where: {*/}
+        {/*            producerId: producer.id,*/}
+        {/*        },*/}
+        {/*    }}*/}
+        {/*>*/}
+        {/*    <ProducerInputTable*/}
+
+        {/*    />*/}
+        {/*</StoreProvider>*/}
     </Page>;
 }

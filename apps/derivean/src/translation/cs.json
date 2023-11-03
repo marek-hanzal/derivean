@@ -142,6 +142,81 @@
 		}
 	},
 	"producer": {
+		"input": {
+			"create": {
+				"title": "Nový vstupní zdroj",
+				"label": "Nový vstupní zdroj",
+				"success": {
+					"title": "Úspěch",
+					"message": "Vstupní zdroj výrobny byl úspěšně uložen"
+				}
+			},
+			"delete": {
+				"label": "Odstranit vstupní zdroj",
+				"title": "Odstranit vstupní zdroj",
+				"content": "Opravdu si přejete odstranit vstupní zdroj? Touto akcí ovlivníte chování vybrané výrobny pro všechny hráče.",
+				"confirm": {
+					"button": "Odstranit vstupní zdroj"
+				},
+				"success": {
+					"title": "Úspěch",
+					"message": "Vstupní zdroj výrobny byl úspěšně odstraněn"
+				}
+			},
+			"empty": {
+				"title": "Žádné vstupní zdroje",
+				"message": "Tato výrobna nepotřebuje zatím ke své činnosti žádné zdroje"
+			},
+			"fulltext": {
+				"placeholder": "Vyhledat vstupní zdroj"
+			},
+			"loading": {
+				"title": "Načítání vstupních zdrojů",
+				"subtitle": "Připravujeme seznam vstupních zdrojů..."
+			},
+			"table": {
+				"column": {
+					"producerId": "Název výrobny",
+					"resourceId": "Název zdroje",
+					"amount": "Spotřebovávané množství"
+				}
+			},
+			"total": {
+				"label": "Celkový počet vstupních zdrojů"
+			},
+			"update": {
+				"label": "Upravit vstupní zdroj",
+				"title": "Upravit vstupní zdroj",
+				"success": {
+					"title": "Úspěch",
+					"message": "Vstupní zdroj výrobny byl úspěšně aktualizován"
+				}
+			},
+			"upsert": {
+				"producerId": {
+					"label": "Vyberte prosím výrobnu",
+					"description": "Vyberte, ke které výrobně se tento vstupní zdroj naváže",
+					"placeholder": "Výrobna",
+					"selection": {
+						"label": "Vyberte prosím výrobnu"
+					}
+				},
+				"resourceId": {
+					"label": "Vyberte prosím zdroj",
+					"description": "Vyberte, požadovaný vstupní zdroj",
+					"placeholder": "Zdroj",
+					"selection": {
+						"label": "Vyberte prosím zdroj"
+					}
+				},
+				"amount": {
+					"label": "Spotřebovávané množství"
+				},
+				"submit": {
+					"button": "Uložit"
+				}
+			}
+		},
 		"create": {
 			"label": "Nová výrobna",
 			"title": "Nová výrobna",
