@@ -29,12 +29,21 @@
 				"list": "Seznam budov"
 			},
 			"resource": {
-				"list": "Seznam zdrojů"
+				"label": "Správa zdrojů",
+				"list": "Seznam zdrojů",
+				"type": {
+					"list": "Seznam typů zdrojů"
+				}
 			}
 		},
 		"resource": {
 			"list": {
 				"title": "Seznam zdrojů"
+			},
+			"type": {
+				"list": {
+					"title": "Seznam typů zdrojů"
+				}
 			}
 		}
 	},

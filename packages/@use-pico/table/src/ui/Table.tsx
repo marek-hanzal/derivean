@@ -26,6 +26,7 @@ import {
 import {type ITableColumns}      from "../api/ITableColumns";
 import {type ITableColumnTuple}  from "../api/ITableColumnTuple";
 import classes                   from "./Table.module.css";
+import {BottomPagination}        from "./Table/BottomPagination";
 import {TableBody}               from "./Table/TableBody";
 import {TableCountResult}        from "./Table/TableCountResult";
 import {TableFoot}               from "./Table/TableFoot";
@@ -81,7 +82,7 @@ export namespace Table {
              */
             position?: ("top" | "bottom")[];
 
-            props?: Omit<Pagination.Props<TQuerySchema>, "withSourceQuery">;
+            props?: Omit<Pagination.Props<TQuerySchema>, "withSourceQuery" | "withQueryStore">;
         };
 
         withLinkLock?: boolean;
@@ -187,7 +188,6 @@ export const Table = <
                             withTableBorder
                             withRowBorders
                             withColumnBorders
-                            className={classes.table}
                             {...props}
                         >
                             <TableHead
@@ -228,11 +228,11 @@ export const Table = <
                 Empty={Empty}
             />
             {$pagination?.position?.includes("bottom") && <>
-                <Pagination
+                <BottomPagination
+                    refresh={refresh}
                     withQueryStore={withQueryStore}
                     withSourceQuery={withSourceQuery}
-                    refresh={refresh}
-                    {...$pagination?.props}
+                    props={$pagination?.props}
                 />
             </>}
         </LinkLockProvider>
