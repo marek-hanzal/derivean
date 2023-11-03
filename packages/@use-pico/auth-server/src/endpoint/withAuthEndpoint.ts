@@ -54,6 +54,8 @@ export const withAuthEndpoint = (
         callbacks: {
             jwt:     async token => {
                 try {
+                    console.log("api secret", process.env.NEXTAUTH_SECRET);
+
                     await registrationService.handle(token);
                     return await userTokenService.token(token.token);
                 } catch (e) {
