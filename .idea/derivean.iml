@@ -81,6 +81,7 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/migrator/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/building/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/auth-server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/source-ui/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@derivean/public/.turbo" />
@@ -201,6 +202,8 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/@misc/esbuild/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/migrator/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/migrator/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/source-ui/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/source-ui/lib" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

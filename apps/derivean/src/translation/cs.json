@@ -2,6 +2,22 @@
 	"common": {
 		"cancel": {
 			"button": "Zrušit"
+		},
+		"selection": {
+			"upsert": {
+				"selected-item": {
+					"label": "Vybraný typ zdroje"
+				}
+			},
+			"submit": {
+				"button": "Potvrdit výběr"
+			},
+			"cancel": {
+				"button": "Zavřít"
+			},
+			"clear": {
+				"button": "Zrušit výběr"
+			}
 		}
 	},
 	"error": {
@@ -114,6 +130,64 @@
 		}
 	},
 	"resource": {
+		"type": {
+			"create": {
+				"label": "Nový typ zdroje",
+				"title": "Nový typ zdroje",
+				"success": {
+					"title": "Úspěch",
+					"message": "Nový typ zdroje byl úspěšně vytvořen."
+				}
+			},
+			"delete": {
+				"label": "Odstranit typ zdroje",
+				"title": "Odstranit typ zdroje",
+				"content": "Opravdu si přejete odstranit vybraný typ zdroje? Tato akce může mít hluboký vliv na nastavení hry, velké množství dat může být takto smazáno a nebude cesty zpět.",
+				"confirm": {
+					"button": "Odstranit typ zdroje"
+				},
+				"success": {
+					"title": "Úspěch",
+					"message": "Typ zdroje byl úspěšně odstraněn."
+				}
+			},
+			"empty": {
+				"title": "Zatím nejsou dostupné žádné typy zdrojů",
+				"message": "Typ zdroje kategorizuje samotné zdroje pro jejich použití v herní logice (např. zdroj, budova a pod.)."
+			},
+			"fulltext": {
+				"placeholder": "Vyhledat typ zdroje"
+			},
+			"loading": {
+				"title": "Načítání typů zdrojů",
+				"subtitle": "Připravujeme seznam typů zdrojů..."
+			},
+			"table": {
+				"column": {
+					"name": "Název typu zdroje"
+				}
+			},
+			"total": {
+				"label": "Celkový počet typů zdrojů"
+			},
+			"update": {
+				"title": "Upravit typ zdroje",
+				"label": "Upravit typ zdroje",
+				"success": {
+					"title": "Úspěch",
+					"message": "Typ zdroje byl úspěšně aktualizován"
+				}
+			},
+			"upsert": {
+				"name": {
+					"label": "Zadejte název typu zdroje",
+					"placeholder": " "
+				},
+				"submit": {
+					"button": "Uložit"
+				}
+			}
+		},
 		"loading": {
 			"title": "Načítání",
 			"subtitle": "Okamžik prosím, připravujeme seznam zdrojů..."
@@ -140,14 +214,15 @@
 		},
 		"empty": {
 			"title": "Zatím neexistují žádné zdroje",
-			"message": "Zdroje jsou základním kamenem herních pravidel, nějaké si naklikajte."
+			"message": "Zdroje jsou základním kamenem herních pravidel, nějaké si naklikejte."
 		},
 		"fulltext": {
 			"placeholder": "Vyhledat zdroj"
 		},
 		"table": {
 			"column": {
-				"name": "Název zdroje"
+				"name": "Název zdroje",
+				"typeId": "Název typu zdroje"
 			}
 		},
 		"total": {
@@ -165,6 +240,14 @@
 			"name": {
 				"label": "Název zdroje",
 				"placeholder": "Vyplňte název zdroje"
+			},
+			"typeId": {
+				"label": "Vyberte typ zdroje",
+				"description": "Typ zdroje udává do jaké kategorie tento zdroj spadá",
+				"placeholder": "Vyberte typ zdroje",
+				"selection": {
+					"label": "Vyberte typ zdroje"
+				}
 			},
 			"submit": {
 				"button": "Uložit zdroj"

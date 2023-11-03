@@ -4,7 +4,8 @@ import {
 } from "@use-pico/schema";
 
 export const ResourceSchema = identityOf(z => z.object({
-    name: z.string,
+    name:   z.string,
+    typeId: z.string,
 }));
 export type ResourceSchema = typeof ResourceSchema;
 export namespace ResourceSchema {

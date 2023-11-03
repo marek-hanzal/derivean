@@ -23,7 +23,8 @@ export class ResourceRepository extends AbstractRepository<Database, ResourceRep
             name: "asc",
         };
         this.matchOf = {
-            name: "name",
+            name:   "name",
+            typeId: "typeId",
         };
     }
 }

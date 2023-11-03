@@ -5,6 +5,7 @@ import {
 }                             from "@use-pico/form";
 import {type WithEntity}      from "@use-pico/types";
 import {type FC}              from "react";
+import {ResourceTypeSelect}   from "../input/ResourceTypeSelect";
 import {withResourceMutation} from "../mutation/withResourceMutation";
 import {type ResourceSchema}  from "../schema/ResourceSchema";
 import {ResourceShapeSchema}  from "../schema/ResourceShapeSchema";
@@ -34,7 +35,8 @@ export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = (
         withMutation={withResourceMutation}
         schema={ResourceShapeSchema}
         inputs={{
-            name: TextInput,
+            name:   TextInput,
+            typeId: ResourceTypeSelect,
         }}
         icon={<ResourceIcon/>}
         values={entity}
@@ -56,6 +58,7 @@ export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = (
         }}
         Render={({Input}) => <>
             <Input name={"name"}/>
+            <Input name={"typeId"}/>
         </>}
         {...props}
     />;

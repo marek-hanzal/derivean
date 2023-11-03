@@ -1,9 +1,14 @@
 import {
+    ResourceTypeQueryStore,
+    ResourceTypeTable
+}                      from "@derivean/resource";
+import {StoreProvider} from "@use-pico/store";
+import {
     Breadcrumbs,
     HomeIcon,
     ListIcon,
     Page
-} from "@use-pico/ui";
+}                      from "@use-pico/ui";
 
 export default function Index() {
     return <Page
@@ -19,15 +24,13 @@ export default function Index() {
             }}
         />}
     >
-        ResourceTypeTable
-
-        {/*<StoreProvider*/}
-        {/*    store={ResourceQueryStore}*/}
-        {/*    values={{*/}
-        {/*        filter: {},*/}
-        {/*    }}*/}
-        {/*>*/}
-        {/*    <ResourceTable/>*/}
-        {/*</StoreProvider>*/}
+        <StoreProvider
+            store={ResourceTypeQueryStore}
+            values={{
+                filter: {},
+            }}
+        >
+            <ResourceTypeTable/>
+        </StoreProvider>
     </Page>;
 }

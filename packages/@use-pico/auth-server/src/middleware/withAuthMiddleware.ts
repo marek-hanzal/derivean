@@ -28,6 +28,7 @@ export const withAuthMiddleware = (
                 auth
             } of routes) {
                 if (request.nextUrl.pathname.includes(path)) {
+                    console.log(`Redirect check for [${request.nextUrl.pathname}] on [${path}]`, token);
                     if ((token && !auth) || (!token && auth)) {
                         return NextResponse.redirect(
                             new URL(
@@ -51,6 +52,7 @@ export const withAuthMiddleware = (
                         auth
                     } of routes) {
                         if (req.nextUrl.pathname.includes(path)) {
+                            console.log(`Auth check for [${req.nextUrl.pathname}] on [${path}]`, token);
                             if (!token && auth) {
                                 return false;
                             }

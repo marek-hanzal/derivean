@@ -55,7 +55,7 @@ export namespace QueryInput {
         /**
          * Optional method used to generate filter to fetch an entity (if more complex filter is needed); defaults to an ID.
          */
-        toFilter?: (value: string) => PicoSchema.Output<TQuerySchema["shape"]["filter"]>;
+        toWhere?: (value: string) => PicoSchema.Output<TQuerySchema["shape"]["filter"]>;
         toOrderBy?: () => PicoSchema.Output<TQuerySchema["shape"]["orderBy"]> | undefined;
         onCommit?: CommitButton.Props<TValuesSchema, TResponseSchema>["onCommit"];
     }
@@ -80,7 +80,7 @@ export const QueryInput = <
         schema,
         withSourceQuery,
         SelectionStore,
-        toFilter = id => ({id}),
+        toWhere = id => ({id}),
         toOrderBy = () => undefined,
         Selector,
         Item,
@@ -97,7 +97,7 @@ export const QueryInput = <
     const result = useQueryEx({
         withQuery: withSourceQuery,
         request:   {
-            filter:  value ? toFilter(value) : {id: null},
+            where: value ? toWhere(value) : {id: null},
             orderBy: toOrderBy(),
         },
     });

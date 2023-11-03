@@ -8,6 +8,17 @@ export async function up(db: Kysely<any>): Promise<void> {
         )
         .execute();
 
+    await db.insertInto("ResourceType")
+        .values([
+            {
+                name: "resource",
+            },
+            {
+                name: "building",
+            }
+        ])
+        .execute();
+
     await withUuidTable("Resource", db)
         .addColumn("name", "varchar(64)", col =>
             col.notNull()

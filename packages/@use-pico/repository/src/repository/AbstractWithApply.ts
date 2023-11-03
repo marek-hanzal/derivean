@@ -56,7 +56,15 @@ export abstract class AbstractWithApply<
          * Also, this enables search only for known fields, not arbitrary ones.
          */
         for (const [match, value] of Object.entries(query.where || {})) {
-            $matchOf[match as keyof typeof this.matchOf] && ($select = $select.where($matchOf[match as keyof typeof this.matchOf] as any, "=", value));
+            if (value === undefined) {
+                continue;
+            }
+            $matchOf[match as keyof typeof this.matchOf] && ($select = $select.where(
+                    $matchOf[match as keyof typeof this.matchOf] as any,
+                    value === null ? "is" : "=",
+                    value
+                )
+            );
         }
 
         return $select;
