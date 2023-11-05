@@ -14,5 +14,10 @@ withTx({
         // "./packages/@derivean/root",
         // "./packages/@derivean/server",
         // "./packages/@derivean/ui",
-    ]
+    ],
+    output:   "./apps/derivean/src/translation",
+    locales:  [
+        "cs",
+        "en",
+    ],
 });

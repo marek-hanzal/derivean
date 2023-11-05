@@ -17,6 +17,7 @@ export * from "./IWithTranslator";
 export * from "./Info";
 export * from "./Interval";
 export * from "./LocaleLink";
+export * from "./keyOf";
 export * from "./RangeOfList";
 export * from "./StringUnitLength";
 export * from "./Translation";
