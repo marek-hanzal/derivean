@@ -10,6 +10,7 @@ export * from "./IDateRange";
 export * from "./IRangeOfList";
 export * from "./IUseTranslation";
 export * from "./IWithTranslation";
+export * from "./tx";
 export * from "./withTx";
 export * from "./IWithTranslationQuery";
 export * from "./IWithTranslator";

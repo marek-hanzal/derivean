@@ -1,5 +1,6 @@
 import {
     type IWithTranslation,
+    tx,
     useTranslation,
     useWithLocaleRedirect,
     WithTranslationProvider
@@ -411,6 +412,8 @@ export const Form = <
         TResponseSchema
     >
 ) => {
+    const foo = tx`Internal form translations`;
+
     const blockStore = useStore$(BlockStore, (
         {
             block,

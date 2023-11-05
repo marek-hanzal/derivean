@@ -1,27 +1,34 @@
 import {
-    ast,
     includes,
     match,
     print,
+    project,
     query
 } from "@phenomnomnominal/tsquery";
 
 export namespace withTx {
     export interface Props {
+        packages: string[];
     }
 }
 
-export const withTx = () => {
+export const withTx = (
+    {
+        packages,
+    }: withTx.Props,
+) => {
     console.log("Yep, i'm here");
 
-    const parsed = ast("const a = true; tx({foo: 'bar'})`Some translation`  anotherTagger`blablabla`");
-    const nodes = query(parsed, "TaggedTemplateExpression");
-
-    nodes.forEach(node => {
-        if (includes(node, "Identifier[name=tx]")) {
-            match(node, "NoSubstitutionTemplateLiteral").forEach(node => {
-                console.log("Translation", print(node));
-            });
-        }
+    packages.forEach(path => {
+        console.log(`Searching in [${path}/tsconfig.json]`);
+        project(`${path}/tsconfig.json`).forEach(source => {
+            query(source, "TaggedTemplateExpression")
+                .filter(node => includes(node, "Identifier[name=tx]"))
+                .forEach(node => {
+                    match(node, "NoSubstitutionTemplateLiteral").forEach(node => {
+                        console.log("Found", print(node));
+                    });
+                });
+        });
     });
 };

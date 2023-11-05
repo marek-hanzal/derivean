@@ -1,14 +1,17 @@
 import {
     type FileQuerySchema,
     type FileSchema
-}                       from "@use-pico/file";
-import {DateTimeInline} from "@use-pico/i18n";
-import {Table}          from "@use-pico/table";
-import {toHumanBytes}   from "@use-pico/utils";
+}                     from "@use-pico/file";
+import {
+    DateTimeInline,
+    tx
+}                     from "@use-pico/i18n";
+import {Table}        from "@use-pico/table";
+import {toHumanBytes} from "@use-pico/utils";
 import {
     type FC,
     type PropsWithChildren
-}                       from "react";
+}                     from "react";
 
 export namespace FileTable {
     export type Columns =
@@ -38,6 +41,8 @@ export const FileTable: FC<FileTable.Props> = (
         DownloadButton,
         ...props
     }) => {
+    const foo = tx`Internal file translations`;
+
     return <Table
         scrollWidth={2400}
         columns={{

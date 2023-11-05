@@ -3,6 +3,7 @@ import {
     Form,
     TextInput
 }                             from "@use-pico/form";
+import {tx}                   from "@use-pico/i18n";
 import {type WithEntity}      from "@use-pico/types";
 import {type FC}              from "react";
 import {withBuildingMutation} from "../mutation/withBuildingMutation";
@@ -26,6 +27,8 @@ export const BuildingUpsertForm: FC<BuildingUpsertForm.Props> = (
         ...props
     }
 ) => {
+    const foo = tx`Some translation.`;
+
     return <Form
         withTranslation={{
             namespace: "building",
