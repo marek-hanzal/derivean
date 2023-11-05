@@ -15,9 +15,6 @@
 		"setup": {
 			"cache": false
 		},
-		"generate": {
-			"cache": false
-		},
 		"init": {
 			"outputMode": "new-only",
 			"dependsOn": [
