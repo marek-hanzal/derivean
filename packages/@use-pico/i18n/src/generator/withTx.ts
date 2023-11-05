@@ -26,8 +26,8 @@ export const withTx = (
         output,
         locales,
         mapper = text => ({
-            key:         text,
-            translation: text,
+            key:   text,
+            value: text,
         }),
         hash = keyOf,
     }: withTx.Props,

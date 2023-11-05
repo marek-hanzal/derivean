@@ -1,5 +1,11 @@
-export const tx = (values?: Record<string, any>) => {
+export const tx = (translations: Record<string, {
+    id: string,
+    value: string
+}>, values?: Record<string, any>) => {
     return (input: TemplateStringsArray) => {
-        return "some ttranslation";
+        /**
+         * Here will be the interesting part of translation implementation
+         */
+        return translations[input.join("")]?.["value"] ?? input;
     };
 };
