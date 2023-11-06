@@ -7,7 +7,11 @@ import {
 }                            from "@mantine/core";
 import {ModalsProvider}      from "@mantine/modals";
 import {Notifications}       from "@mantine/notifications";
-import {DateTimeProvider}    from "@use-pico/i18n";
+import {
+    DateTimeProvider,
+    type ITranslations,
+    withInstance
+}                            from "@use-pico/i18n";
 import {QueryClientProvider} from "@use-pico/query";
 import {RpcProvider}         from "@use-pico/rpc";
 import {
@@ -30,19 +34,27 @@ export namespace Providers {
          * Set current locale
          */
         locale: string;
+        translations?: ITranslations;
         baseUrl?: string;
     }>;
 }
 
 export const Providers: FC<Providers.Props> = (
     {
+
         theme,
         locale,
+        translations = {},
         baseUrl,
         children,
     }
 ) => {
     axios.defaults.baseURL = baseUrl;
+    withInstance({
+        locale,
+        translations,
+    });
+
     return <QueryClientProvider>
         <RpcProvider>
             <MantineProvider

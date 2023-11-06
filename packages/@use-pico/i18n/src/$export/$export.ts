@@ -1,5 +1,6 @@
 export * from "./DateInline";
 export * from "./DateTime";
+export * from "./ITranslations";
 export * from "./DateTimeFormatOptions";
 export * from "./DateTimeInline";
 export * from "./DateTimeProvider";

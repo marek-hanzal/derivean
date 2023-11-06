@@ -16,7 +16,7 @@ export default async function Layout(
         params: {locale}
     }: Layout.Props
 ) {
-    withInstance({
+    const {translations} = withInstance({
         locale,
         translations: (await import(`../../translation/${locale}.json`)).default,
     });
@@ -30,6 +30,7 @@ export default async function Layout(
             primaryShade: 5,
         }}
         locale={locale}
+        translations={translations}
     >
         {children}
     </LayoutShell>;
