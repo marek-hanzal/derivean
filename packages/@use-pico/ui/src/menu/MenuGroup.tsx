@@ -2,25 +2,21 @@ import {
     Group,
     Menu
 }                        from "@mantine/core";
-import {
-    type IWithTranslation,
-    Translation
-}                        from "@use-pico/i18n";
 import {type FC}         from "react";
 import {type IMenuGroup} from "../api/IMenuGroup";
 import {WithIcon}        from "../ui/WithIcon";
 import {MenuLink}        from "./MenuLink";
 
-export interface IMenuGroupProps extends IMenuGroup {
-    id: string;
-    withTranslation?: IWithTranslation;
-    className?: string;
+export namespace MenuGroup {
+    export interface Props extends IMenuGroup {
+        id: string;
+        className?: string;
+    }
 }
 
-export const MenuGroup: FC<IMenuGroupProps> = (
+export const MenuGroup: FC<MenuGroup.Props> = (
     {
         id,
-        withTranslation,
         className,
         label,
         icon,
@@ -43,10 +39,7 @@ export const MenuGroup: FC<IMenuGroupProps> = (
                     <WithIcon
                         icon={icon}
                     />
-                    <Translation
-                        {...withTranslation}
-                        withLabel={label || id}
-                    />
+                    {label}
                 </Group>
             </a>
         </Menu.Target>
@@ -54,7 +47,6 @@ export const MenuGroup: FC<IMenuGroupProps> = (
             {Object.entries(items).map(([id, item]) => <MenuLink
                 key={id}
                 id={id}
-                withTranslation={withTranslation}
                 className={className}
                 {...item}
             />)}

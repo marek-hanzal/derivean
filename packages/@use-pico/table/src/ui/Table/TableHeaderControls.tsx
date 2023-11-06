@@ -20,6 +20,7 @@ export namespace TableHeaderControls {
         TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > {
+        label?: Fulltext.Props<TQuerySchema>["label"];
         isFetching: boolean;
         withQueryStore: IQueryStore.Store<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
@@ -41,6 +42,7 @@ export const TableHeaderControls = <
     TSchema extends WithIdentitySchema,
 >(
     {
+        label,
         isFetching,
         withQueryStore,
         withSourceQuery,
@@ -58,6 +60,7 @@ export const TableHeaderControls = <
     >
         <GridCol span={"auto"}>
             <Fulltext
+                label={label}
                 withQueryStore={withQueryStore}
             />
         </GridCol>

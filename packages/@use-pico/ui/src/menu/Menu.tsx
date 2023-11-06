@@ -1,9 +1,5 @@
 "use client";
 
-import {
-    type IWithTranslation,
-    WithTranslationProvider
-}                        from "@use-pico/i18n";
 import {isHrefProps}     from "@use-pico/navigation";
 import {useStore}        from "@use-pico/store";
 import {cx}              from "@use-pico/utils";
@@ -16,7 +12,6 @@ import {MenuLink}        from "./MenuLink";
 
 export namespace Menu {
     export interface Props {
-        withTranslation?: IWithTranslation;
         items: IMenuItems;
     }
 
@@ -25,36 +20,30 @@ export namespace Menu {
 
 export const Menu: FC<Menu.Props> = (
     {
-        withTranslation,
         items,
     }) => {
     const {active: withActive} = useStore(ActiveStore, ({active}) => ({active}));
 
-    return <WithTranslationProvider
-        withTranslation={withTranslation}
+    return <Group
+        h={"100%"}
+        mb={"sm"}
+        gap={0}
     >
-        <Group
-            h={"100%"}
-            mb={"sm"}
-            gap={0}
-        >
-            {Object.entries(items).map(([id, item]) => {
-                if (isHrefProps(item)) {
-                    return <MenuLink
-                        key={id}
-                        id={id}
-                        withTranslation={withTranslation}
-                        className={cx(
-                            classes.Link,
-                            classes.LinkActive ? {
-                                [classes.LinkActive]: withActive.includes(item.href) || withActive.includes(id),
-                            } : undefined
-                        )}
-                        {...item}
-                    />;
-                }
-                return null;
-            })}
-        </Group>
-    </WithTranslationProvider>;
+        {Object.entries(items).map(([id, item]) => {
+            if (isHrefProps(item)) {
+                return <MenuLink
+                    key={id}
+                    id={id}
+                    className={cx(
+                        classes.Link,
+                        classes.LinkActive ? {
+                            [classes.LinkActive]: withActive.includes(item.href) || withActive.includes(id),
+                        } : undefined
+                    )}
+                    {...item}
+                />;
+            }
+            return null;
+        })}
+    </Group>;
 };

@@ -1,23 +1,19 @@
 import {Group}          from "@mantine/core";
-import {
-    type IWithTranslation,
-    LocaleLink,
-    Translation
-}                       from "@use-pico/i18n";
+import {LocaleLink}     from "@use-pico/i18n";
 import {type FC}        from "react";
 import {type IMenuLink} from "../api/IMenuLink";
 import {WithIcon}       from "../ui/WithIcon";
 
-export interface IMenuLinkProps extends IMenuLink {
-    id: string;
-    withTranslation?: IWithTranslation;
-    className?: string;
+export namespace MenuLink {
+    export interface Props extends IMenuLink {
+        id: string;
+        className?: string;
+    }
 }
 
-export const MenuLink: FC<IMenuLinkProps> = (
+export const MenuLink: FC<MenuLink.Props> = (
     {
         id,
-        withTranslation,
         href,
         query,
         className,
@@ -40,10 +36,7 @@ export const MenuLink: FC<IMenuLinkProps> = (
             <WithIcon
                 icon={icon}
             />
-            <Translation
-                {...withTranslation}
-                withLabel={label || id}
-            />
+            {label}
         </Group>
     </LocaleLink>;
 };

@@ -1,8 +1,3 @@
-import {
-    type IWithTranslation,
-    Translation
-}                   from "@use-pico/i18n";
-import {isString}   from "@use-pico/utils";
 import Head         from "next/head";
 import {
     type FC,
@@ -22,15 +17,11 @@ import {WithIcon}   from "./WithIcon";
 
 export namespace Page {
     export type Props = PropsWithChildren<{
-        /**
-         * Set page title
-         */
-        title?: ReactNode;
+        label?: {
+            title?: string;
+            header?: ReactNode;
+        };
         icon?: ReactNode;
-        /**
-         * Base translations for this page
-         */
-        withTranslation?: IWithTranslation;
         /**
          * Set active links (for menu selection or whatever).
          */
@@ -51,9 +42,8 @@ export namespace Page {
 
 export const Page: FC<Page.Props> = (
     {
-        title,
+        label,
         icon,
-        withTranslation,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         withActive = [],
         postfix,
@@ -64,15 +54,12 @@ export const Page: FC<Page.Props> = (
     }) => {
     return <Container fluid>
         <Unblock/>
-        <Head>
-            {isString(title) && <title>
-                <Translation
-                    label={`${title}.title`}
-                    values={withTranslation?.values}
-                />
-            </title>}
-        </Head>
-        {(onBack || postfix || extra || title) && <Grid
+        {label?.header && <Head>
+            <title>
+                {label?.header}
+            </title>
+        </Head>}
+        {(onBack || postfix || extra || label?.title) && <Grid
             align={"center"}
             py={"xs"}
         >
@@ -88,14 +75,10 @@ export const Page: FC<Page.Props> = (
             <GridCol span={"content"}>
                 <Flex gap={"sm"} justify={"center"} align={"center"}>
                     {(onBack || postfix) && <Divider orientation={"vertical"} mr={"sm"}/>}
-                    {title && <Group justify={"center"} gap={"sm"}>
+                    {label?.title && <Group justify={"center"} gap={"sm"}>
                         {icon ? <WithIcon color={"gray"} icon={icon}/> : null}
                         <Title order={4}>
-                            {isString(title) ? <Translation
-                                {...withTranslation}
-                                label={title}
-                                withLabel={"title"}
-                            /> : title}
+                            {label?.title}
                         </Title>
                     </Group>}
                 </Flex>

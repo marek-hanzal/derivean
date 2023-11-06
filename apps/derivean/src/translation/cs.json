@@ -1,426 +1,78 @@
 {
-	"be9dddb27e8b1bf7e89e9e05cc4d9ab437e929d60519d0c12ea9539e": {
-		"key": "Vlalkdfjk",
-		"value": "Vlalkdfjk"
+	"b4e8a29838ae1162bde0b03ce16b75d4739d6bfeeac544c56a20ac10": {
+		"key": "Cancel",
+		"value": "Cancel"
 	},
-	"72df3207e1b60e388f1e1d5acb51299e05a0a651aa6764fabfd559c7": {
-		"key": "Internal form translations",
-		"value": "Internal form translations"
+	"7056d01d885e2e1c2bc274b88194ee72234432a7dc8090652f1577f9": {
+		"key": "Value not set",
+		"value": "Value not set"
 	},
-	"f52f4082d131c5fbab3b7d1e97fc3711aa18bcc5cafad026cb65bcd4": {
-		"key": "Some translation.",
-		"value": "This is already translated"
+	"2848b629790c621cbe5ab25e79e831dfe7a52eb8052ecbcb7406a527": {
+		"key": "Show more items",
+		"value": "Show more items"
 	},
-	"building": {
-		"create": {
-			"label": "Vytvořit budovu",
-			"title": "Nová budova",
-			"success": {
-				"title": "Úspěch",
-				"message": "Budova byla úspěšně uložena"
-			}
-		},
-		"update": {
-			"label": "Upravit budovu",
-			"title": "Upravit budovu",
-			"success": {
-				"title": "Úspěch",
-				"message": "Budova byla úspěšně aktualizována"
-			}
-		},
-		"delete": {
-			"title": "Odstranit budovu",
-			"content": "Opravdu si přejete odstranit vybranou budovu? Tato akce může mít hluboké následky na herní mechaniku a nelze ji vzít zpět.",
-			"confirm": {
-				"button": "Odstranit budovu"
-			},
-			"success": {
-				"title": "Úspěch",
-				"message": "Budova byla úspěšně odstraněna"
-			},
-			"label": "Odstranit budovu"
-		},
-		"upsert": {
-			"name": {
-				"label": "Název budovy",
-				"placeholder": "Zadejte prosím název budovy"
-			},
-			"submit": {
-				"button": "Uložit"
-			}
-		},
-		"empty": {
-			"title": "Zatím zde nejsou žádné budovy",
-			"message": "Budova je základní definice pro každého hráče, co produkuje, jaké jsou požadavky stavby a další."
-		},
-		"fulltext": {
-			"placeholder": "Najít budovu"
-		},
-		"table": {
-			"column": {
-				"name": "Název budovy"
-			}
-		},
-		"loading": {
-			"title": "Načítání",
-			"subtitle": "Připravujeme pro vás seznam dostupných budov"
-		},
-		"total": {
-			"label": "Celkový počet budov"
-		}
+	"b23991ae4c7c5d41384356888bea36d9ad9180e35b63f2ca2ca27e74": {
+		"key": "More",
+		"value": "More"
 	},
-	"common": {
-		"filter": {
-			"action-filter": {
-				"on": "Filtrovat",
-				"off": "Zrušit filtr"
-			}
-		},
-		"cancel": {
-			"button": "Zrušit"
-		},
-		"selection": {
-			"upsert": {
-				"selected-item": {
-					"label": "Vybraný typ zdroje"
-				}
-			},
-			"submit": {
-				"button": "Potvrdit výběr"
-			},
-			"cancel": {
-				"button": "Zavřít"
-			},
-			"clear": {
-				"button": "Zrušit výběr"
-			}
-		}
+	"605e1ba528eedac2c245b6f6a1257a048261dc5508e4c5440a30c50f": {
+		"key": "Delete",
+		"value": "Delete"
 	},
-	"error": {
-		"404": {
-			"title": "Stránka nenalezena",
-			"message": "Kde nic, tu nic"
-		}
+	"c2e7d8c0ada03fcb5c1394b62f8b5576af8897c5bbf56725543da717": {
+		"key": "Filter by",
+		"value": "Filter by"
 	},
-	"game": {
-		"index": {
-			"title": "Přehled"
-		}
+	"53b5905ca1233d7615736035e9b1f30b7722d347074305df132ca255": {
+		"key": "Remove filter",
+		"value": "Remove filter"
 	},
-	"manager": {
-		"producer": {
-			"detail": {
-				"title": "Detail výrobny [{name}]"
-			},
-			"list": {
-				"title": "Seznam výroben"
-			}
-		},
-		"building": {
-			"detail": {
-				"title": "Detail budovy [{name}]"
-			},
-			"list": {
-				"title": "Seznam budov"
-			}
-		},
-		"index": {
-			"title": "Správce hry"
-		},
-		"link": {
-			"building": {
-				"list": "Seznam budov"
-			},
-			"producer": {
-				"list": "Seznam výroben"
-			},
-			"resource": {
-				"label": "Správa zdrojů",
-				"list": "Seznam zdrojů",
-				"type": {
-					"list": "Seznam typů zdrojů"
-				}
-			}
-		},
-		"resource": {
-			"list": {
-				"title": "Seznam zdrojů"
-			},
-			"type": {
-				"list": {
-					"title": "Seznam typů zdrojů"
-				}
-			}
-		}
+	"4fccd0115ce525399d4373acc187e76e675622bb5da7288d1b754825": {
+		"key": "Fulltext search",
+		"value": "Fulltext search"
 	},
-	"producer": {
-		"input": {
-			"create": {
-				"title": "Nový vstupní zdroj",
-				"label": "Nový vstupní zdroj",
-				"success": {
-					"title": "Úspěch",
-					"message": "Vstupní zdroj výrobny byl úspěšně uložen"
-				}
-			},
-			"delete": {
-				"label": "Odstranit vstupní zdroj",
-				"title": "Odstranit vstupní zdroj",
-				"content": "Opravdu si přejete odstranit vstupní zdroj? Touto akcí ovlivníte chování vybrané výrobny pro všechny hráče.",
-				"confirm": {
-					"button": "Odstranit vstupní zdroj"
-				},
-				"success": {
-					"title": "Úspěch",
-					"message": "Vstupní zdroj výrobny byl úspěšně odstraněn"
-				}
-			},
-			"empty": {
-				"title": "Žádné vstupní zdroje",
-				"message": "Tato výrobna nepotřebuje zatím ke své činnosti žádné zdroje"
-			},
-			"fulltext": {
-				"placeholder": "Vyhledat vstupní zdroj"
-			},
-			"loading": {
-				"title": "Načítání vstupních zdrojů",
-				"subtitle": "Připravujeme seznam vstupních zdrojů..."
-			},
-			"table": {
-				"column": {
-					"producerId": "Název výrobny",
-					"resourceId": "Název zdroje",
-					"amount": "Spotřebovávané množství"
-				}
-			},
-			"total": {
-				"label": "Celkový počet vstupních zdrojů"
-			},
-			"update": {
-				"label": "Upravit vstupní zdroj",
-				"title": "Upravit vstupní zdroj",
-				"success": {
-					"title": "Úspěch",
-					"message": "Vstupní zdroj výrobny byl úspěšně aktualizován"
-				}
-			},
-			"upsert": {
-				"producerId": {
-					"label": "Vyberte prosím výrobnu",
-					"description": "Vyberte, ke které výrobně se tento vstupní zdroj naváže",
-					"placeholder": "Výrobna",
-					"selection": {
-						"label": "Vyberte prosím výrobnu"
-					}
-				},
-				"resourceId": {
-					"label": "Vyberte prosím zdroj",
-					"description": "Vyberte, požadovaný vstupní zdroj",
-					"placeholder": "Zdroj",
-					"selection": {
-						"label": "Vyberte prosím zdroj"
-					}
-				},
-				"amount": {
-					"label": "Spotřebovávané množství"
-				},
-				"submit": {
-					"button": "Uložit"
-				}
-			}
-		},
-		"create": {
-			"label": "Nová výrobna",
-			"title": "Nová výrobna",
-			"success": {
-				"title": "Úspěch",
-				"message": "Výrobna byla úspěšně uložena"
-			}
-		},
-		"delete": {
-			"title": "Odstranit výrobnu",
-			"label": "Odstranit výrobnu",
-			"content": "Opravdu si přejete odstranit vybranou výrobnu? Tato akce může mít hluboký vliv na data a hratelnost.",
-			"confirm": {
-				"button": "Odstranit výrobnu"
-			},
-			"success": {
-				"title": "Úspěch",
-				"message": "Výrobna byla úspěšně odstraněna"
-			}
-		},
-		"empty": {
-			"title": "Zatím nemáte nastavené žádné výrobny",
-			"message": "Výrobna je obecné pravidlo, které bere zdroje na vstupu a generuje zdroje na výstupu za daný čas."
-		},
-		"fulltext": {
-			"placeholder": "Najít výrobnu"
-		},
-		"loading": {
-			"title": "Načítání seznamu výroben",
-			"subtitle": "Připravujeme seznam výroben..."
-		},
-		"table": {
-			"column": {
-				"name": "Název výrobny",
-				"time": "Čas produkce"
-			}
-		},
-		"total": {
-			"label": "Celkový počet výroben"
-		},
-		"update": {
-			"title": "Upravit výrobnu",
-			"label": "Upravit výrobnu",
-			"success": {
-				"title": "Úspěch",
-				"message": "Výrobna byla úspěšně aktualizována"
-			}
-		},
-		"upsert": {
-			"name": {
-				"label": "Název výrobny",
-				"placeholder": "Zadejte prosím název výrobny"
-			},
-			"time": {
-				"label": "Základní čas produkce"
-			},
-			"submit": {
-				"button": "Uložit výrobnu"
-			}
-		}
+	"9787305b076729a8818974ec91c90b96e1bbeee3a189994587c92ff5": {
+		"key": "Nothing here",
+		"value": "Nothing here"
 	},
-	"public": {
-		"index": {
-			"title": "The Legacy of DeRivean"
-		},
-		"sign-in": {
-			"button": "Přihlášení"
-		}
+	"91094cb11765887037d37cffbae80d80fd3e882763ff565e0b214213": {
+		"key": "This listing is empty",
+		"value": "This listing is empty"
 	},
-	"resource": {
-		"type": {
-			"create": {
-				"label": "Nový typ zdroje",
-				"title": "Nový typ zdroje",
-				"success": {
-					"title": "Úspěch",
-					"message": "Nový typ zdroje byl úspěšně vytvořen."
-				}
-			},
-			"delete": {
-				"label": "Odstranit typ zdroje",
-				"title": "Odstranit typ zdroje",
-				"content": "Opravdu si přejete odstranit vybraný typ zdroje? Tato akce může mít hluboký vliv na nastavení hry, velké množství dat může být takto smazáno a nebude cesty zpět.",
-				"confirm": {
-					"button": "Odstranit typ zdroje"
-				},
-				"success": {
-					"title": "Úspěch",
-					"message": "Typ zdroje byl úspěšně odstraněn."
-				}
-			},
-			"empty": {
-				"title": "Zatím nejsou dostupné žádné typy zdrojů",
-				"message": "Typ zdroje kategorizuje samotné zdroje pro jejich použití v herní logice (např. zdroj, budova a pod.)."
-			},
-			"fulltext": {
-				"placeholder": "Vyhledat typ zdroje"
-			},
-			"loading": {
-				"title": "Načítání typů zdrojů",
-				"subtitle": "Připravujeme seznam typů zdrojů..."
-			},
-			"table": {
-				"column": {
-					"name": "Název typu zdroje"
-				}
-			},
-			"total": {
-				"label": "Celkový počet typů zdrojů"
-			},
-			"update": {
-				"title": "Upravit typ zdroje",
-				"label": "Upravit typ zdroje",
-				"success": {
-					"title": "Úspěch",
-					"message": "Typ zdroje byl úspěšně aktualizován"
-				}
-			},
-			"upsert": {
-				"name": {
-					"label": "Zadejte název typu zdroje",
-					"placeholder": " "
-				},
-				"submit": {
-					"button": "Uložit"
-				}
-			}
-		},
-		"loading": {
-			"title": "Načítání",
-			"subtitle": "Okamžik prosím, připravujeme seznam zdrojů..."
-		},
-		"create": {
-			"label": "Nový zdroj",
-			"title": "Nový zdroj",
-			"success": {
-				"title": "Úspěch",
-				"message": "Nový zdroj byl úspěšně vytvořen"
-			}
-		},
-		"delete": {
-			"success": {
-				"title": "Úspěch",
-				"message": "Zdroj byl úspěšně odstraněn."
-			},
-			"title": "Odstranit zdroj",
-			"label": "Odstranit zdroj",
-			"content": "Opravdu si přejete odstranit vybraný zdroj? Pokud je někde použitý, nebude to možné.",
-			"confirm": {
-				"button": "Odstranit zdroj"
-			}
-		},
-		"empty": {
-			"title": "Zatím neexistují žádné zdroje",
-			"message": "Zdroje jsou základním kamenem herních pravidel, nějaké si naklikejte."
-		},
-		"fulltext": {
-			"placeholder": "Vyhledat zdroj"
-		},
-		"table": {
-			"column": {
-				"name": "Název zdroje",
-				"typeId": "Název typu zdroje"
-			}
-		},
-		"total": {
-			"label": "Celkový počet zdrojů"
-		},
-		"update": {
-			"label": "Upravit",
-			"title": "Upravit zdroj",
-			"success": {
-				"title": "Úspěch",
-				"message": "Zdroj byl úspěšně aktualizován."
-			}
-		},
-		"upsert": {
-			"name": {
-				"label": "Název zdroje",
-				"placeholder": "Vyplňte název zdroje"
-			},
-			"typeId": {
-				"label": "Vyberte typ zdroje",
-				"description": "Typ zdroje udává do jaké kategorie tento zdroj spadá",
-				"placeholder": "Vyberte typ zdroje",
-				"selection": {
-					"label": "Vyberte typ zdroje"
-				}
-			},
-			"submit": {
-				"button": "Uložit zdroj"
-			}
-		}
+	"3c1469acd0f963d3ac3943e49b6a34b00183353765f5d3f004464093": {
+		"key": "Table is empty",
+		"value": "Table is empty"
+	},
+	"7a5c74ec4b4bdf2c097c62910ecb7fa4cc8fa591fc9c61e4543fee71": {
+		"key": "There is currently nothing to see",
+		"value": "There is currently nothing to see"
+	},
+	"fccca51f27d14b47f2c3f1865c215ddb180d6c65d942ab4e93aa9d65": {
+		"key": "Nothing found by current filter",
+		"value": "Nothing found by current filter"
+	},
+	"2867b125fbf240bd77e6eb70efb8f36eb5249a28a3786f4d3e2a796d": {
+		"key": "Currently set filter is too strict, so there is nothing to show",
+		"value": "Currently set filter is too strict, so there is nothing to show"
+	},
+	"bc3ca672207f85699202724ea21d719bbedb22cc44b71fba16c85cf8": {
+		"key": "Loading data",
+		"value": "Loading data"
+	},
+	"af3c230745c96f9395268ef3f7c7faec402a59ff2596290617b33e1e": {
+		"key": "We're preparing all the data for you (if any)...",
+		"value": "We're preparing all the data for you (if any)..."
+	},
+	"f654b712f05e612855d1000fbf3c3ba098dd606e9927ae6b0c9aca24": {
+		"key": "If you want to omit given value from the result, switch this button off.",
+		"value": "If you want to omit given value from the result, switch this button off."
+	},
+	"2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614": {
+		"key": "Currently selected items",
+		"value": "Currently selected items"
+	},
+	"2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6": {
+		"key": "Game overview",
+		"value": "Game overview"
 	}
 }

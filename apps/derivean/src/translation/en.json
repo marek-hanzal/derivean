@@ -1,14 +1,78 @@
 {
-	"be9dddb27e8b1bf7e89e9e05cc4d9ab437e929d60519d0c12ea9539e": {
-		"key": "Vlalkdfjk",
-		"value": "Vlalkdfjk"
+	"b4e8a29838ae1162bde0b03ce16b75d4739d6bfeeac544c56a20ac10": {
+		"key": "Cancel",
+		"value": "Cancel"
 	},
-	"72df3207e1b60e388f1e1d5acb51299e05a0a651aa6764fabfd559c7": {
-		"key": "Internal form translations",
-		"value": "Internal form translations"
+	"7056d01d885e2e1c2bc274b88194ee72234432a7dc8090652f1577f9": {
+		"key": "Value not set",
+		"value": "Value not set"
 	},
-	"f52f4082d131c5fbab3b7d1e97fc3711aa18bcc5cafad026cb65bcd4": {
-		"key": "Some translation.",
-		"value": "Some translation."
+	"2848b629790c621cbe5ab25e79e831dfe7a52eb8052ecbcb7406a527": {
+		"key": "Show more items",
+		"value": "Show more items"
+	},
+	"b23991ae4c7c5d41384356888bea36d9ad9180e35b63f2ca2ca27e74": {
+		"key": "More",
+		"value": "More"
+	},
+	"605e1ba528eedac2c245b6f6a1257a048261dc5508e4c5440a30c50f": {
+		"key": "Delete",
+		"value": "Delete"
+	},
+	"c2e7d8c0ada03fcb5c1394b62f8b5576af8897c5bbf56725543da717": {
+		"key": "Filter by",
+		"value": "Filter by"
+	},
+	"53b5905ca1233d7615736035e9b1f30b7722d347074305df132ca255": {
+		"key": "Remove filter",
+		"value": "Remove filter"
+	},
+	"4fccd0115ce525399d4373acc187e76e675622bb5da7288d1b754825": {
+		"key": "Fulltext search",
+		"value": "Fulltext search"
+	},
+	"9787305b076729a8818974ec91c90b96e1bbeee3a189994587c92ff5": {
+		"key": "Nothing here",
+		"value": "Nothing here"
+	},
+	"91094cb11765887037d37cffbae80d80fd3e882763ff565e0b214213": {
+		"key": "This listing is empty",
+		"value": "This listing is empty"
+	},
+	"3c1469acd0f963d3ac3943e49b6a34b00183353765f5d3f004464093": {
+		"key": "Table is empty",
+		"value": "Table is empty"
+	},
+	"7a5c74ec4b4bdf2c097c62910ecb7fa4cc8fa591fc9c61e4543fee71": {
+		"key": "There is currently nothing to see",
+		"value": "There is currently nothing to see"
+	},
+	"fccca51f27d14b47f2c3f1865c215ddb180d6c65d942ab4e93aa9d65": {
+		"key": "Nothing found by current filter",
+		"value": "Nothing found by current filter"
+	},
+	"2867b125fbf240bd77e6eb70efb8f36eb5249a28a3786f4d3e2a796d": {
+		"key": "Currently set filter is too strict, so there is nothing to show",
+		"value": "Currently set filter is too strict, so there is nothing to show"
+	},
+	"bc3ca672207f85699202724ea21d719bbedb22cc44b71fba16c85cf8": {
+		"key": "Loading data",
+		"value": "Loading data"
+	},
+	"af3c230745c96f9395268ef3f7c7faec402a59ff2596290617b33e1e": {
+		"key": "We're preparing all the data for you (if any)...",
+		"value": "We're preparing all the data for you (if any)..."
+	},
+	"f654b712f05e612855d1000fbf3c3ba098dd606e9927ae6b0c9aca24": {
+		"key": "If you want to omit given value from the result, switch this button off.",
+		"value": "If you want to omit given value from the result, switch this button off."
+	},
+	"2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614": {
+		"key": "Currently selected items",
+		"value": "Currently selected items"
+	},
+	"2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6": {
+		"key": "Game overview",
+		"value": "Game overview"
 	}
 }

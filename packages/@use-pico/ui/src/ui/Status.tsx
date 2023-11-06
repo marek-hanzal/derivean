@@ -1,38 +1,38 @@
-import {Translation} from "@use-pico/i18n";
 import {
     type FC,
-    type PropsWithChildren
-}                    from "react";
-import {Container}   from "./Container";
-import {Group}       from "./Group";
-import classes       from "./Status.module.css";
-import {Text}        from "./Text";
-import {Title}       from "./Title";
+    type PropsWithChildren,
+    type ReactNode
+}                  from "react";
+import {Container} from "./Container";
+import {Group}     from "./Group";
+import classes     from "./Status.module.css";
+import {Text}      from "./Text";
+import {Title}     from "./Title";
 
 export namespace Status {
     export type Props = PropsWithChildren<{
-        header?: string;
-        title?: string;
-        message?: string;
+        label?: {
+            header?: ReactNode;
+            title?: ReactNode;
+            message?: ReactNode;
+        }
     }>;
 }
 
 export const Status: FC<Status.Props> = (
     {
-        header,
-        title,
-        message,
+        label,
         children
     }) => {
     return <Container className={classes.root}>
-        {header && <div className={classes.label}>
-            <Translation withLabel={header}/>
+        {label?.header && <div className={classes.label}>
+            {label?.header}
         </div>}
-        {title && <Title className={classes.title}>
-            <Translation withLabel={title}/>
+        {label?.title && <Title className={classes.title}>
+            {label?.title}
         </Title>}
-        {message && <Text size={"lg"} className={classes.description}>
-            <Translation withLabel={message}/>
+        {label?.message && <Text size={"lg"} className={classes.description}>
+            {label?.message}
         </Text>}
         <Group justify={"center"}>
             {children}

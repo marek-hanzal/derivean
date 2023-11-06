@@ -5,6 +5,7 @@ import {
     ResourceInline
 }                                  from "@derivean/resource";
 import {ProducerIcon,}             from "@derivean/ui";
+import {tx}                        from "@use-pico/i18n";
 import {ButtonLink}                from "@use-pico/ui";
 import {Table}                     from "@use-pico/ui-extra";
 import {type FC}                   from "react";
@@ -29,7 +30,7 @@ export namespace ProducerInputTable {
                 ProducerInputSchema,
                 ProducerInputQuerySchema
             >,
-            "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon"
+            "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "label"
         >
         & {
             producerId?: string;
@@ -43,6 +44,9 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
     }
 ) => {
     return <Table
+        label={{
+            total: tx()`Total count of producer inputs`,
+        }}
         name={"producer.input"}
         icon={<ProducerIcon/>}
         tableActionProps={{
@@ -52,6 +56,15 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
             />,
         }}
         rowActionProps={{
+            label: {
+                deleteModal: {
+                    content: tx()`Do you really want to delete selected producer input?`,
+                    success: {
+                        title:   tx()`Success`,
+                        message: tx()`Producer input has been successfully deleted.`,
+                    },
+                },
+            },
             withMutation: withProducerInputMutation,
             upsertForm:   ({
                                item,

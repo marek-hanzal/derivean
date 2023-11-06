@@ -2,7 +2,6 @@ import {
     IconClick,
     IconX
 }                          from "@tabler/icons-react";
-import {Translation}       from "@use-pico/i18n";
 import {isPartial}         from "@use-pico/schema";
 import {
     ActionIcon,
@@ -16,7 +15,7 @@ import {
 import {classNames}        from "@use-pico/utils";
 import {
     type ComponentProps,
-    PropsWithChildren,
+    type PropsWithChildren,
     type ReactNode
 }                          from "react";
 import {useController}     from "react-hook-form";
@@ -31,6 +30,9 @@ export namespace InputEx {
     export type Props<
         TValuesSchema extends ValuesSchema,
     > = PropsWithChildren<Form.Input.Props<TValuesSchema> & {
+        label?: {
+            placeholder: ReactNode;
+        };
         disabled?: boolean;
         icon?: ReactNode;
         isLoading?: boolean;
@@ -46,6 +48,7 @@ export const InputEx = <
     TValuesSchema extends ValuesSchema,
 >(
     {
+        label,
         withControl,
         schema,
         disabled,
@@ -94,11 +97,11 @@ export const InputEx = <
                         size={"sm"}
                         fw={"400"}
                     >
-                        {isLoading ? <Loader size={"sm"} type={"dots"}/> : (children || <Text
+                        {isLoading ? <Loader size={"sm"} type={"dots"}/> : (children || (label?.placeholder ? <Text
                             c={fieldState.error ? "red" : (disabled ? "orange" : "dimmed")}
                         >
-                            <Translation withLabel={`${withControl.name}.placeholder`}/>
-                        </Text>)}
+                            {label?.placeholder}
+                        </Text> : null))}
                     </Text>
                     <Error error={fieldState.error?.message}/>
                 </Box>

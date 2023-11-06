@@ -46,7 +46,8 @@
 		"is-empty": "^1.2.0",
 		"is-object": "^1.0.2",
 		"is-string": "^1.0.7",
-		"path-to-regexp": "^6.2.1"
+		"path-to-regexp": "^6.2.1",
+		"timer-node": "^5.0.7"
 	},
 	"peerDependencies": {
 		"@use-pico/schema": "^2.0.4",

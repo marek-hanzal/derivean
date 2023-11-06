@@ -1,11 +1,13 @@
-import {Text}        from "@mantine/core";
-import {Translation} from "@use-pico/i18n";
-import {type FC}     from "react";
+import {Text} from "@mantine/core";
+import {
+    type FC,
+    ReactNode
+}             from "react";
 
 export namespace Label {
     export interface Props {
         withAsterisk?: boolean;
-        label?: string;
+        label?: ReactNode;
     }
 }
 
@@ -20,7 +22,7 @@ export const Label: FC<Label.Props> = (
             fw={"500"}
             span
         >
-            <Translation withLabel={label}/>
+            {label}
         </Text>
         {withAsterisk && <Text
             ml={4}

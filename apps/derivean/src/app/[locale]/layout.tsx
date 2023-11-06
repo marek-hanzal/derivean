@@ -1,6 +1,4 @@
-"use client";
-
-import {withQuery}              from "@use-pico/i18n";
+import {withInstance}           from "@use-pico/i18n";
 import {LayoutShell}            from "@use-pico/ui-extra";
 import {type PropsWithChildren} from "react";
 
@@ -12,12 +10,17 @@ export namespace Layout {
     }>;
 }
 
-export default function Layout(
+export default async function Layout(
     {
         children,
         params: {locale}
     }: Layout.Props
 ) {
+    withInstance({
+        locale,
+        translations: (await import(`../../translation/${locale}.json`)).default,
+    });
+
     return <LayoutShell
         theme={{
             /**
@@ -27,13 +30,6 @@ export default function Layout(
             primaryShade: 5,
         }}
         locale={locale}
-        withTranslationQuery={withQuery({
-            useCallback() {
-                return async () => ({
-                    translations: (await import(`../../translation/${locale}.json`)).default,
-                });
-            }
-        })}
     >
         {children}
     </LayoutShell>;

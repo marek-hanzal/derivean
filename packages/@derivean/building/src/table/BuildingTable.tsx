@@ -1,6 +1,7 @@
 "use client";
 
 import {BuildingIcon}             from "@derivean/ui";
+import {tx}                       from "@use-pico/i18n";
 import {ButtonLink}               from "@use-pico/ui";
 import {Table}                    from "@use-pico/ui-extra";
 import {type FC}                  from "react";
@@ -21,12 +22,15 @@ export namespace BuildingTable {
             BuildingSchema,
             BuildingQuerySchema
         >,
-        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon"
+        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "label"
     >
 }
 
 export const BuildingTable: FC<BuildingTable.Props> = props => {
     return <Table
+        label={{
+            total: tx()`Total count of buildings`,
+        }}
         name={"building"}
         icon={<BuildingIcon/>}
         tableActionProps={{
@@ -35,6 +39,15 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
             />,
         }}
         rowActionProps={{
+            label: {
+                deleteModal: {
+                    content: tx()`Do you really want to delete selected building?`,
+                    success: {
+                        title:   tx()`Success`,
+                        message: tx()`Building has been successfully removed`,
+                    },
+                },
+            },
             withMutation: withBuildingMutation,
             upsertForm:   ({
                                item,

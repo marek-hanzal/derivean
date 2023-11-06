@@ -1,6 +1,7 @@
 import {withBuildingRepository} from "@derivean/building";
 import {container}              from "@derivean/server";
 import {BuildingIcon}           from "@derivean/ui";
+import {tx}                     from "@use-pico/i18n";
 import {
     Breadcrumbs,
     HomeIcon,
@@ -25,9 +26,9 @@ export default async function Index({params: {id}}: Index.Props) {
 
     return <Page
         icon={<BuildingIcon/>}
-        title={"manager.building.detail"}
-        withTranslation={{
-            values: building,
+        label={{
+            title:  tx({values: building})`Building detail`,
+            header: tx({values: building})`Building detail`,
         }}
         postfix={<Breadcrumbs
             items={{

@@ -1,13 +1,12 @@
-import {Translation} from "@use-pico/i18n";
 import {
     type IQueryStore,
     type QuerySchema
-}                    from "@use-pico/query";
+}                  from "@use-pico/query";
 import {
     type IWithSourceQuery,
     useCount
-}                    from "@use-pico/source";
-import {useStore}    from "@use-pico/store";
+}                  from "@use-pico/source";
+import {useStore}  from "@use-pico/store";
 import {
     BlockStore,
     Divider,
@@ -19,7 +18,8 @@ import {
     Pagination as CoolPagination,
     Select,
     Text
-}                    from "@use-pico/ui";
+}                  from "@use-pico/ui";
+import {ReactNode} from "react";
 
 export namespace Pagination {
     export interface Props<
@@ -29,6 +29,9 @@ export namespace Pagination {
         withSourceQuery: IWithSourceQuery<TQuerySchema, any>;
         hideOnSingle?: boolean;
         refresh?: number;
+        label: {
+            total: ReactNode;
+        };
     }
 }
 
@@ -40,6 +43,7 @@ export const Pagination = <
         withSourceQuery,
         hideOnSingle = true,
         refresh,
+        label,
         ...props
     }: Pagination.Props<TQuerySchema>
 ) => {
@@ -86,7 +90,7 @@ export const Pagination = <
         {result.isLoading && <GridCol span={"auto"}>
             <Group gap={"xs"}>
                 <Text c={"dimmed"}>
-                    <Translation withLabel={"total.label"}/>
+                    {label.total}
                 </Text>
                 <NativeBreadcrumbs>
                     <Text size={"lg"} fw={"500"}>
@@ -99,7 +103,7 @@ export const Pagination = <
             {hideOnSingle ? (pages > 1) : (pages > 0) && <Divider orientation={"vertical"}/>}
             <Group gap={"xs"}>
                 <Text c={"dimmed"}>
-                    <Translation withLabel={"total.label"}/>
+                    {label.total}
                 </Text>
                 <NativeBreadcrumbs>
                     <Text
