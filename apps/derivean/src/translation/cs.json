@@ -15,6 +15,10 @@
 		"key": "More",
 		"value": "More"
 	},
+	"c028e668a86cc8c4bf3ba442001649e1036228031a9b79654cb53eb0": {
+		"key": "Sign-in",
+		"value": "Sign-in"
+	},
 	"605e1ba528eedac2c245b6f6a1257a048261dc5508e4c5440a30c50f": {
 		"key": "Delete",
 		"value": "Delete"
@@ -63,16 +67,88 @@
 		"key": "We're preparing all the data for you (if any)...",
 		"value": "We're preparing all the data for you (if any)..."
 	},
+	"2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6": {
+		"key": "Game overview",
+		"value": "Game overview"
+	},
+	"8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b": {
+		"key": "Game management",
+		"value": "Game management"
+	},
+	"c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19": {
+		"key": "Submit",
+		"value": "Submit"
+	},
 	"f654b712f05e612855d1000fbf3c3ba098dd606e9927ae6b0c9aca24": {
 		"key": "If you want to omit given value from the result, switch this button off.",
 		"value": "If you want to omit given value from the result, switch this button off."
+	},
+	"5f4c0265ae687bb9acf17235514c89e027d524b3382dc6f68c59f6f9": {
+		"key": "Close",
+		"value": "Close"
+	},
+	"3d6199acf6308d3eae9112d43fe64a3b942ee97a303909418c58bcd9": {
+		"key": "Clear filter",
+		"value": "Clear filter"
+	},
+	"a7c528329f9a28e5785d20397bd38b513fc077dd5327bcde34b8fa79": {
+		"key": "Clear selection",
+		"value": "Clear selection"
+	},
+	"1ca37bf0a71fed53ead98154c92cd4f339c37c7cd37e3bbf53348e9c": {
+		"key": "Submit selection",
+		"value": "Submit selection"
+	},
+	"0eff7c020a109eb63582cefb44e136d867e6b48da0b94ae47bc8c078": {
+		"key": "Currently selected item",
+		"value": "Currently selected item"
+	},
+	"b0cf8a5dd758db7480606838271ff93da6792fdd8d3cb94816d6a40e": {
+		"key": "Confirm selection",
+		"value": "Confirm selection"
 	},
 	"2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614": {
 		"key": "Currently selected items",
 		"value": "Currently selected items"
 	},
-	"2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6": {
-		"key": "Game overview",
-		"value": "Game overview"
+	"19f7b1b2cc2b0d861124553e7ebdb4500b898392948caef37d9125e2": {
+		"key": "Total count of buildings",
+		"value": "Total count of buildings"
+	},
+	"fe57342d0588cea22f8259f5877597054ad8d9d71047cf3a34156829": {
+		"key": "Do you really want to delete selected building?",
+		"value": "Do you really want to delete selected building?"
+	},
+	"8a31506c52d0aed078087a8d14646cafc5d069dde8994b845edd28e5": {
+		"key": "Success",
+		"value": "Success"
+	},
+	"82119185c01850436786aecbce7018c09a8045f38261534d28ae1ec2": {
+		"key": "Building has been successfully removed",
+		"value": "Building has been successfully removed"
+	},
+	"9c1fb2018f5ea283b6e3d41272981688033be51677bbc1496d819a38": {
+		"key": "Total count of producer inputs",
+		"value": "Total count of producer inputs"
+	},
+	"15b426e49d0bb114012810210bc1752f9fb6359c8d842bb5e1dcda30": {
+		"key": "Do you really want to delete selected producer input?",
+		"value": "Do you really want to delete selected producer input?"
+	},
+	"2965000f3643d4b4a3e35619ad868140a2de9a2d934c8d8f2f1c17b7": {
+		"key": "Producer input has been successfully deleted.",
+		"value": "Producer input has been successfully deleted."
+	},
+	"553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7": {
+		"key": "Building detail",
+		"value": "Building detail"
+	},
+	"9c98cff9e25fc568108143bf2d0b4476ac459a2fd8113c747badfc47": {
+		"key": "Building list",
+		"value": "Building list"
+	},
+	"56db5cba41164e61cb42c625b8ccd3bb79e6aab4d8ffa4c194083f69": {
+		"key": "Producer detail",
+		"value": "Producer detail"
 	}
 }
