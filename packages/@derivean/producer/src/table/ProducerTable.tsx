@@ -1,6 +1,7 @@
 "use client";
 
 import {ProducerIcon}           from "@derivean/ui";
+import {tx}                     from "@use-pico/i18n";
 import {ButtonLink}             from "@use-pico/ui";
 import {
     HumanSeconds,
@@ -26,12 +27,15 @@ export namespace ProducerTable {
             ProducerSchema,
             ProducerQuerySchema
         >,
-        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon"
+        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
     >
 }
 
 export const ProducerTable: FC<ProducerTable.Props> = props => {
     return <Table
+        label={{
+            total: tx()`Producer count`,
+        }}
         name={"producer"}
         icon={<ProducerIcon/>}
         SelectionStore={ProducerSelectionStore}
@@ -41,6 +45,15 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
             />,
         }}
         rowActionProps={{
+            label: {
+                deleteModal: {
+                    content: tx()`Do you really want to delete selected producer?`,
+                    success: {
+                        title:   tx()`Success`,
+                        message: tx()`Producer has been successfully deleted.`,
+                    },
+                },
+            },
             withMutation: withProducerMutation,
             upsertForm:   ({
                                item,

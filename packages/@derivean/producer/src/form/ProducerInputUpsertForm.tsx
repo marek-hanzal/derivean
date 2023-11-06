@@ -33,10 +33,6 @@ export const ProducerInputUpsertForm: FC<ProducerInputUpsertForm.Props> = (
     }
 ) => {
     return <Form
-        withTranslation={{
-            namespace: "producer.input",
-            label:     "upsert",
-        }}
         icon={<ProducerIcon/>}
         withMutation={withProducerInputMutation}
         schema={ProducerInputShapeSchema}

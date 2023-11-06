@@ -26,7 +26,7 @@ export default async function Index({params: {id}}: Index.Props) {
 
     return <Page
         icon={<BuildingIcon/>}
-        label={{
+        text={{
             title:  tx({values: building})`Building detail`,
             header: tx({values: building})`Building detail`,
         }}

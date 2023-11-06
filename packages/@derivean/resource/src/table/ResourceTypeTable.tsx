@@ -1,6 +1,7 @@
 "use client";
 
 import {ResourceIcon}               from "@derivean/ui";
+import {tx}                         from "@use-pico/i18n";
 import {Table}                      from "@use-pico/ui-extra";
 import {type FC}                    from "react";
 import {ResourceTypeUpsertForm}     from "../form/ResourceTypeUpsertForm";
@@ -21,12 +22,15 @@ export namespace ResourceTypeTable {
             ResourceTypeSchema,
             ResourceTypeQuerySchema
         >,
-        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon"
+        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
     >
 }
 
 export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
     return <Table
+        text={{
+            total: tx()`Resource type count`,
+        }}
         name={"resource.type"}
         icon={<ResourceIcon/>}
         SelectionStore={ResourceTypeSelectionStore}
@@ -36,6 +40,15 @@ export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
             />,
         }}
         rowActionProps={{
+            text: {
+                deleteModal: {
+                    content: tx()`Do you really want to delete selected resource type?`,
+                    success: {
+                        title:   tx()`Success`,
+                        message: tx()`Selected resource type has been successfully deleted.`,
+                    },
+                }
+            },
             withMutation: withResourceTypeMutation,
             upsertForm:   ({
                                item,

@@ -5,7 +5,7 @@ import {Page}     from "@use-pico/ui";
 export default function Index() {
     return <Page
         icon={<GameIcon/>}
-        label={{
+        text={{
             title:  tx()`Game overview`,
             header: tx()`Game overview`,
         }}

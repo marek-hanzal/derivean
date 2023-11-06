@@ -17,7 +17,7 @@ import {WithIcon}   from "./WithIcon";
 
 export namespace Page {
     export type Props = PropsWithChildren<{
-        label?: {
+        text?: {
             title?: string;
             header?: ReactNode;
         };
@@ -42,7 +42,7 @@ export namespace Page {
 
 export const Page: FC<Page.Props> = (
     {
-        label,
+        text,
         icon,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         withActive = [],
@@ -54,12 +54,12 @@ export const Page: FC<Page.Props> = (
     }) => {
     return <Container fluid>
         <Unblock/>
-        {label?.header && <Head>
+        {text?.header && <Head>
             <title>
-                {label?.header}
+                {text?.header}
             </title>
         </Head>}
-        {(onBack || postfix || extra || label?.title) && <Grid
+        {(onBack || postfix || extra || text?.title) && <Grid
             align={"center"}
             py={"xs"}
         >
@@ -75,10 +75,10 @@ export const Page: FC<Page.Props> = (
             <GridCol span={"content"}>
                 <Flex gap={"sm"} justify={"center"} align={"center"}>
                     {(onBack || postfix) && <Divider orientation={"vertical"} mr={"sm"}/>}
-                    {label?.title && <Group justify={"center"} gap={"sm"}>
+                    {text?.title && <Group justify={"center"} gap={"sm"}>
                         {icon ? <WithIcon color={"gray"} icon={icon}/> : null}
                         <Title order={4}>
-                            {label?.title}
+                            {text?.title}
                         </Title>
                     </Group>}
                 </Flex>

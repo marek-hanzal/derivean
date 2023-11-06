@@ -39,10 +39,10 @@ export namespace QueryInput {
         TResponseSchema extends WithIdentitySchema,
         TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
     > extends InputEx.Props<TValuesSchema> {
-        label: {
-            placeholder: ReactNode;
-            selector: {
-                title: ReactNode;
+        text?: {
+            placeholder?: ReactNode;
+            selector?: {
+                title?: ReactNode;
             };
         };
         /**
@@ -85,7 +85,7 @@ export const QueryInput = <
     TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
 >(
     {
-        label,
+        text,
         withControl,
         schema,
         withSourceQuery,
@@ -116,7 +116,7 @@ export const QueryInput = <
         withControl={withControl}
         schema={schema}
         isLoading
-        label={label}
+        text={text}
         {...props}
     /> : <StoreProvider
         store={SelectionStore}
@@ -136,7 +136,7 @@ export const QueryInput = <
                         fw={"500"}
                         span
                     >
-                        {label.selector.title}
+                        {text?.selector?.title ?? tx()`Select an item`}
                     </Text>
                     {!isPartial(schema, withControl.name) && <Text
                         ml={4}
@@ -179,7 +179,7 @@ export const QueryInput = <
                 schema={schema}
                 Item={Item}
                 SelectionStore={SelectionStore}
-                label={label}
+                text={text}
                 {...props}
             />
         </ModalStoreProvider>

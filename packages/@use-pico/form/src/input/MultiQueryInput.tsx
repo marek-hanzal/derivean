@@ -41,10 +41,10 @@ export namespace MultiQueryInput {
         TResponseSchema extends WithIdentitySchema,
         TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
     > extends Omit<InputEx.Props<TValuesSchema>, "label"> {
-        label: {
-            placeholder: ReactNode;
-            selector: {
-                title: ReactNode;
+        text?: {
+            placeholder?: ReactNode;
+            selector?: {
+                title?: ReactNode;
             };
         };
         /**
@@ -88,7 +88,7 @@ export const MultiQueryInput = <
     TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
 >(
     {
-        label,
+        text,
         withControl,
         schema,
         withSourceQuery,
@@ -119,7 +119,7 @@ export const MultiQueryInput = <
         withControl={withControl}
         schema={schema}
         isLoading
-        label={label}
+        text={text}
         {...props}
     /> : <StoreProvider
         store={MultiSelectionStore}
@@ -142,7 +142,7 @@ export const MultiQueryInput = <
                         fw={"500"}
                         span
                     >
-                        {label.selector.title}
+                        {text?.selector?.title ?? tx()`Select items`}
                     </Text>
                     {!isPartial(schema, withControl.name) && <Text
                         ml={4}

@@ -26,8 +26,8 @@ import {
 export namespace Fulltext {
     export interface Props<
         TQuerySchema extends QuerySchema<any, any>,
-    > extends Omit<TextInput.Props, "label"> {
-        label?: {
+    > extends Omit<TextInput.Props, "text"> {
+        text?: {
             label?: ReactNode;
             placeholder?: string;
         };
@@ -43,7 +43,7 @@ export const Fulltext = <
     TQuerySchema extends QuerySchema<any, any>,
 >(
     {
-        label,
+        text,
         withQueryStore,
         loading,
         debounce = 250,
@@ -83,7 +83,7 @@ export const Fulltext = <
             setDebounced(event.currentTarget.value);
             setValue(event.currentTarget.value);
         }}
-        placeholder={label?.placeholder ?? tx()`Fulltext search`}
+        placeholder={text?.placeholder ?? tx()`Fulltext search`}
         leftSection={loading ? <Loader size="xs"/> : <WithIcon icon={<IconSearch/>}/>}
         rightSection={filter?.fulltext ? <ActionIcon
             variant={"subtle"}
@@ -95,7 +95,7 @@ export const Fulltext = <
         >
             <WithIcon icon={<IconX/>}/>
         </ActionIcon> : undefined}
-        label={label?.label}
+        label={text?.label}
         {...props}
     />;
 };

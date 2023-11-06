@@ -11,7 +11,7 @@ import {Title}     from "./Title";
 
 export namespace Status {
     export type Props = PropsWithChildren<{
-        label?: {
+        text?: {
             header?: ReactNode;
             title?: ReactNode;
             message?: ReactNode;
@@ -21,18 +21,18 @@ export namespace Status {
 
 export const Status: FC<Status.Props> = (
     {
-        label,
+        text,
         children
     }) => {
     return <Container className={classes.root}>
-        {label?.header && <div className={classes.label}>
-            {label?.header}
+        {text?.header && <div className={classes.label}>
+            {text?.header}
         </div>}
-        {label?.title && <Title className={classes.title}>
-            {label?.title}
+        {text?.title && <Title className={classes.title}>
+            {text?.title}
         </Title>}
-        {label?.message && <Text size={"lg"} className={classes.description}>
-            {label?.message}
+        {text?.message && <Text size={"lg"} className={classes.description}>
+            {text?.message}
         </Text>}
         <Group justify={"center"}>
             {children}

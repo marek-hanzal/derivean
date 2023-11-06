@@ -30,8 +30,10 @@ export namespace InputEx {
     export type Props<
         TValuesSchema extends ValuesSchema,
     > = PropsWithChildren<Form.Input.Props<TValuesSchema> & {
-        label?: {
-            placeholder: ReactNode;
+        text?: {
+            label?: ReactNode;
+            description?: ReactNode;
+            placeholder?: ReactNode;
         };
         disabled?: boolean;
         icon?: ReactNode;
@@ -48,7 +50,7 @@ export const InputEx = <
     TValuesSchema extends ValuesSchema,
 >(
     {
-        label,
+        text,
         withControl,
         schema,
         disabled,
@@ -68,10 +70,10 @@ export const InputEx = <
 
     return <>
         <Label
-            label={`${withControl.name}.label`}
+            label={text?.label}
             withAsterisk={!isPartial(schema, withControl.name)}
         />
-        <Description description={`${withControl.name}.description`}/>
+        <Description description={text?.description}/>
         <Flex
             onClick={disabled ? undefined : onClick}
             className={classNames([
@@ -97,10 +99,10 @@ export const InputEx = <
                         size={"sm"}
                         fw={"400"}
                     >
-                        {isLoading ? <Loader size={"sm"} type={"dots"}/> : (children || (label?.placeholder ? <Text
+                        {isLoading ? <Loader size={"sm"} type={"dots"}/> : (children || (text?.placeholder ? <Text
                             c={fieldState.error ? "red" : (disabled ? "orange" : "dimmed")}
                         >
-                            {label?.placeholder}
+                            {text?.placeholder}
                         </Text> : null))}
                     </Text>
                     <Error error={fieldState.error?.message}/>

@@ -1,6 +1,7 @@
 "use client";
 
 import {ResourceIcon}             from "@derivean/ui";
+import {tx}                       from "@use-pico/i18n";
 import {Table}                    from "@use-pico/ui-extra";
 import {type FC}                  from "react";
 import {ResourceTypeFetch}        from "../fetch/ResourceTypeFetch";
@@ -24,12 +25,15 @@ export namespace ResourceTable {
             ResourceSchema,
             ResourceQuerySchema
         >,
-        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon"
+        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
     >
 }
 
 export const ResourceTable: FC<ResourceTable.Props> = props => {
     return <Table
+        label={{
+            total: tx()`Resource count`,
+        }}
         name={"resource"}
         icon={<ResourceIcon/>}
         tableActionProps={{
@@ -39,6 +43,15 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
         }}
         SelectionStore={ResourceSelectionStore}
         rowActionProps={{
+            label: {
+                deleteModal: {
+                    content: tx()`Do you really want to delete selected resource?`,
+                    success: {
+                        title:   tx()`Success`,
+                        message: tx()`Resource has been successfully deleted.`,
+                    },
+                },
+            },
             withMutation: withResourceMutation,
             upsertForm:   ({
                                item,

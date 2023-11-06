@@ -27,10 +27,6 @@ export const BuildingUpsertForm: FC<BuildingUpsertForm.Props> = (
     }
 ) => {
     return <Form
-        withTranslation={{
-            namespace: "building",
-            label:     "upsert",
-        }}
         icon={<BuildingIcon/>}
         withMutation={withBuildingMutation}
         schema={BuildingShapeSchema}

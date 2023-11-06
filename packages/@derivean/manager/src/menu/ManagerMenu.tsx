@@ -3,6 +3,7 @@ import {
     ProducerIcon,
     ResourceIcon
 }                from "@derivean/ui";
+import {tx}      from "@use-pico/i18n";
 import {
     ListIcon,
     MainMenu
@@ -16,25 +17,22 @@ export namespace ManagerMenu {
 
 export const ManagerMenu: FC<ManagerMenu.Props> = () => {
     return <MainMenu
-        withTranslation={{
-            namespace: "manager",
-        }}
         links={{
             "/manager/resource": {
                 type:  "group",
-                label: "link.resource.label",
+                label: tx()`Resource management`,
                 icon:  <ResourceIcon/>,
                 items: {
                     "/manager/resource/list":      {
                         type:  "link",
                         href:  "/manager/resource/list",
-                        label: "link.resource.list",
+                        label: tx()`Resource list`,
                         icon:  <ResourceIcon/>,
                     },
                     "/manager/resource/type/list": {
                         type:  "link",
                         href:  "/manager/resource/type/list",
-                        label: "link.resource.type.list",
+                        label: tx()`Resource type list`,
                         icon:  <ListIcon/>,
                     },
                 }
@@ -42,13 +40,13 @@ export const ManagerMenu: FC<ManagerMenu.Props> = () => {
             "/manager/producer": {
                 type:  "link",
                 href:  "/manager/producer/list",
-                label: "link.producer.list",
+                label: tx()`Producer list`,
                 icon:  <ProducerIcon/>,
             },
             "/manager/building": {
                 type:  "link",
                 href:  "/manager/building/list",
-                label: "link.building.list",
+                label: tx()`Building list`,
                 icon:  <BuildingIcon/>,
             },
         }}

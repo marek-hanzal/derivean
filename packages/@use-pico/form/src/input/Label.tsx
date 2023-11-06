@@ -6,15 +6,15 @@ import {
 
 export namespace Label {
     export interface Props {
-        withAsterisk?: boolean;
         label?: ReactNode;
+        withAsterisk?: boolean;
     }
 }
 
 export const Label: FC<Label.Props> = (
     {
+        label,
         withAsterisk,
-        label
     }) => {
     return label ? <div>
         <Text

@@ -29,7 +29,7 @@ export namespace Pagination {
         withSourceQuery: IWithSourceQuery<TQuerySchema, any>;
         hideOnSingle?: boolean;
         refresh?: number;
-        label: {
+        text: {
             total: ReactNode;
         };
     }
@@ -43,7 +43,7 @@ export const Pagination = <
         withSourceQuery,
         hideOnSingle = true,
         refresh,
-        label,
+        text,
         ...props
     }: Pagination.Props<TQuerySchema>
 ) => {
@@ -90,7 +90,7 @@ export const Pagination = <
         {result.isLoading && <GridCol span={"auto"}>
             <Group gap={"xs"}>
                 <Text c={"dimmed"}>
-                    {label.total}
+                    {text.total}
                 </Text>
                 <NativeBreadcrumbs>
                     <Text size={"lg"} fw={"500"}>
@@ -103,7 +103,7 @@ export const Pagination = <
             {hideOnSingle ? (pages > 1) : (pages > 0) && <Divider orientation={"vertical"}/>}
             <Group gap={"xs"}>
                 <Text c={"dimmed"}>
-                    {label.total}
+                    {text.total}
                 </Text>
                 <NativeBreadcrumbs>
                     <Text

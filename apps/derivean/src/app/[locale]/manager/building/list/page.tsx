@@ -14,7 +14,7 @@ import {
 export default function Index() {
     return <Page
         icon={<BuildingIcon/>}
-        label={{
+        text={{
             title:  tx()`Building list`,
             header: tx()`Building list`,
         }}

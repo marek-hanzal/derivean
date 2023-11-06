@@ -26,7 +26,7 @@ export namespace TableCountResult {
         TQuerySchema extends QuerySchema<any, any>,
         TSchema extends WithIdentitySchema,
     > {
-        label?: {
+        text?: {
             filtered?: Result.Props["label"];
             loading?: Result.Props["label"];
         };
@@ -41,7 +41,7 @@ export const TableCountResult = <
     TSchema extends WithIdentitySchema,
 >(
     {
-        label,
+        text,
         withQueryStore,
         withSourceQuery,
         Empty,
@@ -67,7 +67,7 @@ export const TableCountResult = <
                     size={"xl"}
                     icon={<IconSearch size={256}/>}
                 />}
-                label={label?.filtered ?? {
+                label={text?.filtered ?? {
                     title:    tx()`Nothing found by current filter`,
                     subtitle: tx()`Currently set filter is too strict, so there is nothing to show`,
                 }}
@@ -80,7 +80,7 @@ export const TableCountResult = <
                     size={"xl"}
                     icon={<Loader/>}
                 />}
-                label={label?.loading ?? {
+                label={text?.loading ?? {
                     title:    tx()`Loading data`,
                     subtitle: tx()`We're preparing all the data for you (if any)...`,
                 }}

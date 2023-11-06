@@ -19,14 +19,14 @@ import {
     TrashIcon,
     useSuccessNotification
 }                            from "@use-pico/ui";
-import {ReactNode}           from "react";
+import {type ReactNode}      from "react";
 
 export namespace DeleteModal {
     export interface Props<
         TMutationSchema extends MutationSchema<any, any>,
         TResponseSchema extends ResponseSchema,
     > extends Modal.Props, WithEntity.Schema<TResponseSchema> {
-        label: {
+        text: {
             content: ReactNode;
             success: {
                 title: ReactNode;
@@ -46,7 +46,7 @@ export const DeleteModal = <
     TResponseSchema extends ResponseSchema,
 >(
     {
-        label,
+        text,
         withMutation,
         entity,
         ...props
@@ -63,7 +63,7 @@ export const DeleteModal = <
         title={"delete.title"}
         {...props}
     >
-        {label.content}
+        {text.content}
         <Divider mt={"sm"} mb={"sm"}/>
         <Flex
             justify={"space-between"}
@@ -94,14 +94,14 @@ export const DeleteModal = <
                     }, {
                         onSuccess: () => {
                             successNotification({
-                                ...label.success,
+                                ...text.success,
                             });
                         },
                         onSettled: () => close(props.modalId),
                     });
                 }}
             >
-                {label.confirm ?? tx()`Delete`}
+                {text.confirm ?? tx()`Delete`}
             </Button>
         </Flex>
     </Modal>;

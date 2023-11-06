@@ -22,13 +22,13 @@ export namespace BuildingTable {
             BuildingSchema,
             BuildingQuerySchema
         >,
-        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "label"
+        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
     >
 }
 
 export const BuildingTable: FC<BuildingTable.Props> = props => {
     return <Table
-        label={{
+        text={{
             total: tx()`Total count of buildings`,
         }}
         name={"building"}
@@ -39,7 +39,7 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
             />,
         }}
         rowActionProps={{
-            label: {
+            text: {
                 deleteModal: {
                     content: tx()`Do you really want to delete selected building?`,
                     success: {

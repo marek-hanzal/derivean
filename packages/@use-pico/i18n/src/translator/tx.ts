@@ -11,7 +11,7 @@ export namespace tx {
 export const tx = (
     props?: tx.Props
 ) => {
-    return (input: TemplateStringsArray): string | undefined => {
+    return (input: TemplateStringsArray): string => {
         const key = input.join("");
         return TranslationInstance.instance.translations[keyOf(key)]?.["value"] ?? props?.fallback ?? key;
     };

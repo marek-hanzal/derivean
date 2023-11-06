@@ -9,17 +9,17 @@ import {type FC}          from "react";
 
 export namespace BottomPagination {
     export interface Props {
-        label: Pagination.Props<any>["label"];
+        text: Pagination.Props<any>["text"];
         withQueryStore: IQueryStore.Store<any>;
         withSourceQuery: IWithSourceQuery<any, any>;
         refresh?: number;
-        props?: Omit<Pagination.Props<any>, "withSourceQuery" | "withQueryStore" | "label">;
+        props?: Omit<Pagination.Props<any>, "withSourceQuery" | "withQueryStore" | "text">;
     }
 }
 
 export const BottomPagination: FC<BottomPagination.Props> = (
     {
-        label,
+        text,
         withQueryStore,
         withSourceQuery,
         refresh,
@@ -44,7 +44,7 @@ export const BottomPagination: FC<BottomPagination.Props> = (
         withQueryStore={withQueryStore}
         withSourceQuery={withSourceQuery}
         refresh={refresh}
-        label={label}
+        text={text}
         {...props}
     />;
 };

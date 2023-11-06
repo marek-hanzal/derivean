@@ -35,7 +35,7 @@ export namespace List {
         TQuerySchema extends QuerySchema<any, any>,
         TResponseSchema extends WithIdentitySchema,
     > {
-        label: {
+        text: {
             total: ReactNode;
         };
         withQueryStore: IQueryStore.Store<TQuerySchema>;
@@ -67,7 +67,7 @@ export const List = <
     TResponseSchema extends WithIdentitySchema,
 >(
     {
-        label,
+        text,
         withQueryStore,
         withSourceQuery,
         options,
@@ -101,7 +101,7 @@ export const List = <
     return <>
         <Prefix/>
         <Pagination
-            label={label}
+            text={text}
             withQueryStore={withQueryStore}
             withSourceQuery={withSourceQuery}
         />
@@ -139,7 +139,7 @@ export const List = <
         </ScrollArea>
         <Suffix/>
         <Pagination
-            label={label}
+            text={text}
             withQueryStore={withQueryStore}
             withSourceQuery={withSourceQuery}
         />

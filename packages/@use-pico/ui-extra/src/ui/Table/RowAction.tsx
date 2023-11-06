@@ -18,8 +18,8 @@ export namespace RowAction {
     export interface Props<
         TItemSchema extends WithIdentitySchema,
     > extends WithItem.Schema<TItemSchema> {
-        label: {
-            deleteModal: DeleteModal.Props<any, any>["label"];
+        text: {
+            deleteModal: DeleteModal.Props<any, any>["text"];
         };
         name: string;
         icon: ReactNode;
@@ -45,7 +45,7 @@ export const RowAction = <
     TItemSchema extends WithIdentitySchema,
 >(
     {
-        label,
+        text,
         name,
         icon,
         withMutation,
@@ -58,7 +58,7 @@ export const RowAction = <
 
     return <>
         <DeleteModal
-            label={label.deleteModal}
+            text={text.deleteModal}
             modalId={deleteModalId}
             entity={item}
             icon={icon}

@@ -3,7 +3,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "turbo run dev --parallel --no-daemon | roarr",
-		"build": "turbo run build --force --no-daemon",
+		"build": "turbo run build --no-daemon",
 		"build:force": "turbo run build --force --no-cache --no-daemon",
 		"start": "turbo run start --parallel --no-daemon",
 		"lint": "turbo run lint --no-daemon",

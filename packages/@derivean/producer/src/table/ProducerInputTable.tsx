@@ -30,7 +30,7 @@ export namespace ProducerInputTable {
                 ProducerInputSchema,
                 ProducerInputQuerySchema
             >,
-            "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "label"
+            "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
         >
         & {
             producerId?: string;

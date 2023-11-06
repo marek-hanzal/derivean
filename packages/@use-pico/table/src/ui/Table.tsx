@@ -39,16 +39,16 @@ export namespace Table {
         TSchema extends WithIdentitySchema,
         TQuerySchema extends QuerySchema<any, any>,
     > extends Partial<Omit<CoolTable.Props, "hidden" | "onClick">>,
-        Omit<TableHeaderControls.Props<TQuerySchema, TSchema>, "isFetching" | "label">,
+        Omit<TableHeaderControls.Props<TQuerySchema, TSchema>, "isFetching" | "text">,
         Omit<TablePrefix.Props<TQuerySchema, TSchema>, "columns" | "items">,
         Omit<TableHead.Props<TQuerySchema, TSchema>, "columns" | "withRowAction" | "disableActions" | "items">,
         Omit<TableBody.Props<TQuerySchema, TSchema>, "columns" | "WithRow" | "withTableAction" | "disableActions">,
         Omit<TableFoot.Props<TQuerySchema, TSchema>, "columns" | "withTableAction" | "withRowAction" | "disableActions" | "items">,
-        Omit<TableCountResult.Props<TQuerySchema, TSchema>, "label"> {
-        label: {
+        Omit<TableCountResult.Props<TQuerySchema, TSchema>, "text"> {
+        text: {
             total: ReactNode;
-            header?: TableHeaderControls.Props<TQuerySchema, TSchema>["label"];
-            count?: TableCountResult.Props<TQuerySchema, TSchema>["label"];
+            header?: TableHeaderControls.Props<TQuerySchema, TSchema>["text"];
+            count?: TableCountResult.Props<TQuerySchema, TSchema>["text"];
         };
         /**
          * Define table columns; they will be rendered by default in the specified order
@@ -102,7 +102,7 @@ export const Table = <
     TQuerySchema extends QuerySchema<any, any>,
 >(
     {
-        label,
+        text,
         columns,
         overrideColumns,
         scrollWidth,
@@ -160,11 +160,11 @@ export const Table = <
             withSourceQuery={withSourceQuery}
             Filter={Filter}
             Postfix={WithPostfix}
-            label={label.header}
+            text={text.header}
         />
         {$pagination?.position?.includes("top") && <>
             <Pagination
-                label={label}
+                text={text}
                 withQueryStore={withQueryStore}
                 withSourceQuery={withSourceQuery}
                 refresh={refresh}
@@ -228,11 +228,11 @@ export const Table = <
             withQueryStore={withQueryStore}
             withSourceQuery={withSourceQuery}
             Empty={Empty}
-            label={label.count}
+            text={text.count}
         />
         {$pagination?.position?.includes("bottom") && <>
             <BottomPagination
-                label={label}
+                text={text}
                 refresh={refresh}
                 withQueryStore={withQueryStore}
                 withSourceQuery={withSourceQuery}

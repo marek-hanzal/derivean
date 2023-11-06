@@ -1,14 +1,17 @@
+import {tx} from "@use-pico/i18n";
 import {
     Page,
     Status
-} from "@use-pico/ui";
+}           from "@use-pico/ui";
 
 export default function Custom404() {
     return <Page>
         <Status
-            header={"4o4"}
-            title={"error.404.title"}
-            message={"error.404.message"}
+            text={{
+                header:  tx()`4o4`,
+                title:   tx()`You found a place where nothing is hidden.`,
+                message: tx()`Here or there, you see nothing interesting. Try another page.`,
+            }}
         />
     </Page>;
 };

@@ -5,7 +5,7 @@ import {Page}        from "@use-pico/ui";
 export default function Index() {
     return <Page
         icon={<IconSubtask/>}
-        label={{
+        text={{
             title:  tx()`Game management`,
             header: tx()`Game management`,
         }}
