@@ -31,7 +31,7 @@ export namespace ResourceTable {
 
 export const ResourceTable: FC<ResourceTable.Props> = props => {
     return <Table
-        label={{
+        text={{
             total: tx()`Resource count`,
         }}
         name={"resource"}
@@ -43,7 +43,7 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
         }}
         SelectionStore={ResourceSelectionStore}
         rowActionProps={{
-            label: {
+            text: {
                 deleteModal: {
                     content: tx()`Do you really want to delete selected resource?`,
                     success: {
