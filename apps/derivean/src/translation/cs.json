@@ -1,4 +1,16 @@
 {
+	"be9dddb27e8b1bf7e89e9e05cc4d9ab437e929d60519d0c12ea9539e": {
+		"key": "Vlalkdfjk",
+		"value": "Vlalkdfjk"
+	},
+	"72df3207e1b60e388f1e1d5acb51299e05a0a651aa6764fabfd559c7": {
+		"key": "Internal form translations",
+		"value": "Internal form translations"
+	},
+	"f52f4082d131c5fbab3b7d1e97fc3711aa18bcc5cafad026cb65bcd4": {
+		"key": "Some translation.",
+		"value": "This is already translated"
+	},
 	"building": {
 		"create": {
 			"label": "Vytvořit budovu",

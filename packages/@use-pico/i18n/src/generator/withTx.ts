@@ -13,10 +13,6 @@ export namespace withTx {
         packages: string[];
         output: string;
         locales: string[];
-
-        mapper?(text: string): any;
-
-        hash?(key: string): string;
     }
 }
 
@@ -25,15 +21,8 @@ export const withTx = (
         packages,
         output,
         locales,
-        mapper = text => ({
-            key:   text,
-            value: text,
-        }),
-        hash = keyOf,
     }: withTx.Props,
 ) => {
-    console.log("Yep, i'm here");
-
     const translations: Record<string, any> = {};
 
     packages.forEach(path => {
@@ -45,7 +34,10 @@ export const withTx = (
                     match(node, "NoSubstitutionTemplateLiteral").forEach(node => {
                         const source = print(node);
                         const text = source.substring(1, source.length - 1);
-                        translations[hash(text)] = mapper(text);
+                        translations[keyOf(text)] = {
+                            key:   text,
+                            value: text,
+                        };
                     });
                 });
         });
@@ -54,11 +46,20 @@ export const withTx = (
     fs.mkdirSync(output, {recursive: true});
 
     locales.forEach(locale => {
-        const target = `${output}/${locale}-t.json`;
+        const target = `${output}/${locale}.json`;
 
         console.log(`Writing locale [${locale}] to [${target}]`);
 
-        fs.writeFileSync(target, JSON.stringify(translations), {
+        let current = {};
+        try {
+            current = JSON.parse(fs.readFileSync(target, {encoding: "utf-8"})) as Record<string, any>;
+        } catch (e) {
+        }
+
+        fs.writeFileSync(target, JSON.stringify({
+            ...translations,
+            ...current
+        }), {
             encoding: "utf-8",
         });
     });
