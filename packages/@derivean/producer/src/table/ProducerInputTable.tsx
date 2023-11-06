@@ -44,7 +44,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
     }
 ) => {
     return <Table
-        label={{
+        text={{
             total: tx()`Total count of producer inputs`,
         }}
         name={"producer.input"}
@@ -56,7 +56,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
             />,
         }}
         rowActionProps={{
-            label: {
+            text: {
                 deleteModal: {
                     content: tx()`Do you really want to delete selected producer input?`,
                     success: {

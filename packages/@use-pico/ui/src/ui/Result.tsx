@@ -10,7 +10,7 @@ import {Title}   from "./Title";
 
 export namespace Result {
     export type Props = PropsWithChildren<{
-        label: {
+        text: {
             title: ReactNode;
             subtitle: ReactNode;
         }
@@ -33,7 +33,7 @@ export namespace Result {
  */
 export const Result: FC<Result.Props> = (
     {
-        label,
+        text,
         icon,
         postfix,
         children,
@@ -42,10 +42,10 @@ export const Result: FC<Result.Props> = (
     return <Stack align={"center"} gap={4}>
         {icon}
         <Title order={2}>
-            {label.title}
+            {text.title}
         </Title>
         <Text c={"dimmed"}>
-            {label.subtitle}
+            {text.subtitle}
         </Text>
         {postfix ? <>
             <Divider/>

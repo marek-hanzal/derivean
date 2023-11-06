@@ -33,7 +33,7 @@ export namespace ProducerTable {
 
 export const ProducerTable: FC<ProducerTable.Props> = props => {
     return <Table
-        label={{
+        text={{
             total: tx()`Producer count`,
         }}
         name={"producer"}
@@ -45,7 +45,7 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
             />,
         }}
         rowActionProps={{
-            label: {
+            text: {
                 deleteModal: {
                     content: tx()`Do you really want to delete selected producer?`,
                     success: {

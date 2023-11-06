@@ -78,7 +78,7 @@ export const List = <
         Footer = () => null,
         Suffix = () => null,
         Empty = () => <Status
-            label={{
+            text={{
                 title:   tx()`Nothing here`,
                 message: tx()`This listing is empty`,
             }}

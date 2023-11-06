@@ -27,8 +27,8 @@ export namespace TableCountResult {
         TSchema extends WithIdentitySchema,
     > {
         text?: {
-            filtered?: Result.Props["label"];
-            loading?: Result.Props["label"];
+            filtered?: Result.Props["text"];
+            loading?: Result.Props["text"];
         };
         withQueryStore: IQueryStore.Store<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, TSchema>;
@@ -53,7 +53,7 @@ export const TableCountResult = <
     });
 
     const Empty$ = useCallback(() => <Status
-        label={{
+        text={{
             title:   tx()`Table is empty`,
             message: tx()`There is currently nothing to see`,
         }}
@@ -67,7 +67,7 @@ export const TableCountResult = <
                     size={"xl"}
                     icon={<IconSearch size={256}/>}
                 />}
-                label={text?.filtered ?? {
+                text={text?.filtered ?? {
                     title:    tx()`Nothing found by current filter`,
                     subtitle: tx()`Currently set filter is too strict, so there is nothing to show`,
                 }}
@@ -80,7 +80,7 @@ export const TableCountResult = <
                     size={"xl"}
                     icon={<Loader/>}
                 />}
-                label={text?.loading ?? {
+                text={text?.loading ?? {
                     title:    tx()`Loading data`,
                     subtitle: tx()`We're preparing all the data for you (if any)...`,
                 }}
