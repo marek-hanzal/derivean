@@ -19,7 +19,15 @@ export namespace RowAction {
         TItemSchema extends WithIdentitySchema,
     > extends WithItem.Schema<TItemSchema> {
         text: {
-            deleteModal: DeleteModal.Props<any, any>["text"];
+            delete: {
+                title: ReactNode;
+                label: ReactNode;
+                modal: DeleteModal.Props<any, any>["text"];
+            };
+            update: {
+                title: ReactNode;
+                label: ReactNode;
+            };
         };
         name: string;
         icon: ReactNode;
@@ -58,17 +66,17 @@ export const RowAction = <
 
     return <>
         <DeleteModal
-            text={text.deleteModal}
+            text={text.delete.modal}
             modalId={deleteModalId}
             entity={item}
             icon={icon}
-            title={"delete.title"}
+            title={text.delete.title}
             withMutation={withMutation}
         />
         <Modal
             modalId={updateModalId}
             icon={icon}
-            title={"update.title"}
+            title={text.update.title}
             modalProps={{
                 closeOnClickOutside: false,
             }}
@@ -82,12 +90,12 @@ export const RowAction = <
             <ModalMenuItem
                 leftSection={<EditIcon/>}
                 modalId={updateModalId}
-                withLabel={"update.label"}
+                withLabel={text.update.label}
             />
             <ModalMenuItem
                 leftSection={<TrashIcon/>}
                 modalId={deleteModalId}
-                withLabel={"delete.label"}
+                withLabel={text.delete.label}
                 color={"red.5"}
             />
         </TableRowActionMenu>

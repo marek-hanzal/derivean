@@ -1,12 +1,11 @@
 "use client";
 
-import {LoadingOverlay} from "@mantine/core";
 import {
     DetectLocale,
     localeOf
-}                       from "@use-pico/i18n";
-import {redirect}       from "next/navigation";
-import {type FC}        from "react";
+}                 from "@use-pico/i18n";
+import {redirect} from "next/navigation";
+import {type FC}  from "react";
 
 export namespace LocaleRedirect {
     export interface Props {
@@ -22,12 +21,9 @@ export const LocaleRedirect: FC<LocaleRedirect.Props> = (
         locale,
         detectLocaleProps,
     }) => {
-    return <>
-        <DetectLocale
-            locale={locale}
-            callback={({locale}) => redirect(target ? `/${locale}/${target}` : `/${locale}`)}
-            {...detectLocaleProps}
-        />
-        <LoadingOverlay visible={true}/>
-    </>;
+    return <DetectLocale
+        locale={locale}
+        callback={({locale}) => redirect(target ? `/${locale}/${target}` : `/${locale}`)}
+        {...detectLocaleProps}
+    />;
 };

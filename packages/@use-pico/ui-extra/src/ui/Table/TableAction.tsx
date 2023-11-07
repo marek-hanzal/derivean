@@ -11,6 +11,12 @@ import {
 
 export namespace TableAction {
     export interface Props {
+        text: {
+            create: {
+                title: ReactNode;
+                label: ReactNode;
+            };
+        };
         name: string;
         icon: ReactNode;
         upsertForm: UpsertFormFactory;
@@ -26,17 +32,19 @@ export namespace TableAction {
 
 export const TableAction = (
     {
+        text,
         name,
         icon,
         upsertForm,
     }: TableAction.Props
 ) => {
     const createId = `${name}.create`;
+
     return <>
         <Modal
             icon={<CreateIcon/>}
             modalId={createId}
-            title={"create.title"}
+            title={text.create.title}
             modalProps={{
                 closeOnClickOutside: false,
             }}
@@ -49,7 +57,7 @@ export const TableAction = (
         <TableActionMenu>
             <ModalMenuItem
                 modalId={createId}
-                withLabel={"create.label"}
+                withLabel={text.create.label}
                 leftSection={icon}
             />
         </TableActionMenu>

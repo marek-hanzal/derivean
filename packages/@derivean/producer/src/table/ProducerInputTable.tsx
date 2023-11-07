@@ -50,6 +50,12 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
         name={"producer.input"}
         icon={<ProducerIcon/>}
         tableActionProps={{
+            text: {
+                create: {
+                    title: tx()`Create new producer input`,
+                    label: tx()`Create producer input`,
+                },
+            },
             upsertForm: ({modalId}) => <ProducerInputUpsertForm
                 producerId={producerId}
                 withAutoClose={[modalId]}
@@ -57,12 +63,20 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
         }}
         rowActionProps={{
             text: {
-                deleteModal: {
-                    content: tx()`Do you really want to delete selected producer input?`,
-                    success: {
-                        title:   tx()`Success`,
-                        message: tx()`Producer input has been successfully deleted.`,
-                    },
+                update: {
+                    title: tx()`Update producer input`,
+                    label: tx()`Update producer input`,
+                },
+                delete: {
+                    title: tx()`Delete producer input?`,
+                    label: tx()`Delete producer input`,
+                    modal: {
+                        content: tx()`Do you really want to delete selected producer input?`,
+                        success: {
+                            title:   tx()`Success`,
+                            message: tx()`Producer input has been successfully deleted.`,
+                        },
+                    }
                 },
             },
             withMutation: withProducerInputMutation,

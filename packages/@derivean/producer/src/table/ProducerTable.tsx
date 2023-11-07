@@ -40,18 +40,32 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
         icon={<ProducerIcon/>}
         SelectionStore={ProducerSelectionStore}
         tableActionProps={{
+            text: {
+                create: {
+                    title: tx()`Create new producer`,
+                    label: tx()`Create producer`,
+                }
+            },
             upsertForm: ({modalId}) => <ProducerUpsertForm
                 withAutoClose={[modalId]}
             />,
         }}
         rowActionProps={{
             text: {
-                deleteModal: {
-                    content: tx()`Do you really want to delete selected producer?`,
-                    success: {
-                        title:   tx()`Success`,
-                        message: tx()`Producer has been successfully deleted.`,
-                    },
+                delete: {
+                    title: tx()`Delete producer?`,
+                    label: tx()`Delete producer`,
+                    modal: {
+                        content: tx()`Do you really want to delete selected producer?`,
+                        success: {
+                            title:   tx()`Success`,
+                            message: tx()`Producer has been successfully deleted.`,
+                        },
+                    }
+                },
+                update: {
+                    title: tx()`Update producer`,
+                    label: tx()`Update producer`,
                 },
             },
             withMutation: withProducerMutation,

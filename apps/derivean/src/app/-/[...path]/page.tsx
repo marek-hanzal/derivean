@@ -1,9 +1,12 @@
 import {
     defaultLocale,
     locales
-}                       from "@/derivean/locales";
-import {LocaleRedirect} from "@use-pico/ui";
-import {Providers}      from "@use-pico/ui-extra";
+}                  from "@/derivean/locales";
+import {
+    LoadingOverlay,
+    LocaleRedirect
+}                  from "@use-pico/ui";
+import {Providers} from "@use-pico/ui-extra";
 
 export namespace Index {
     export interface Props {
@@ -24,5 +27,6 @@ export default function Index({params: {path}}: Index.Props) {
                 fallback:  defaultLocale,
             }}
         />
+        <LoadingOverlay visible/>
     </Providers>;
 }

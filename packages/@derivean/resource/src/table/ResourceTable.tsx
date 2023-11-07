@@ -33,10 +33,22 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
     return <Table
         text={{
             total: tx()`Resource count`,
+            count: {
+                loading: {
+                    title:    tx()`Loading resources`,
+                    subtitle: tx()`We're preparing resource list for you...`,
+                },
+            },
         }}
         name={"resource"}
         icon={<ResourceIcon/>}
         tableActionProps={{
+            text: {
+                create: {
+                    title: tx()`Create new resource`,
+                    label: tx()`Create resource`,
+                },
+            },
             upsertForm: ({modalId}) => <ResourceUpsertForm
                 withAutoClose={[modalId]}
             />,
@@ -44,12 +56,20 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
         SelectionStore={ResourceSelectionStore}
         rowActionProps={{
             text: {
-                deleteModal: {
-                    content: tx()`Do you really want to delete selected resource?`,
-                    success: {
-                        title:   tx()`Success`,
-                        message: tx()`Resource has been successfully deleted.`,
-                    },
+                delete: {
+                    title: tx()`Delete resource?`,
+                    label: tx()`Delete resource`,
+                    modal: {
+                        content: tx()`Do you really want to delete selected resource?`,
+                        success: {
+                            title:   tx()`Success`,
+                            message: tx()`Resource has been successfully deleted.`,
+                        },
+                    }
+                },
+                update: {
+                    title: tx()`Update resource`,
+                    label: tx()`Update resource`,
                 },
             },
             withMutation: withResourceMutation,
@@ -63,9 +83,11 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
         }}
         columns={{
             name:   {
+                title: tx()`Resource name`,
                 render: ({item}) => item.name,
             },
             typeId: {
+                title: tx()`Resource type`,
                 withFilter: {
                     isFilter: filter => filter?.typeId !== undefined,
                     onFilter: ({

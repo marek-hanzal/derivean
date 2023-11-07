@@ -8,8 +8,8 @@
     <node-interpreter value="project" />
     <envs>
       <env name="DATABASE_URL" value="postgresql://derivean:1234@localhost:10632/derivean?schema=public" />
-      <env name="NEXTAUTH_GITHUB_CLIENT_ID" value="1234" />
-      <env name="NEXTAUTH_GITHUB_CLIENT_SECRET" value="1234" />
+      <env name="NEXTAUTH_GITHUB_CLIENT_ID" value="abbc01fc85709ab26921" />
+      <env name="NEXTAUTH_GITHUB_CLIENT_SECRET" value="ab06a4165184b231882f9467cfccd44ce7a64d30" />
       <env name="NEXTAUTH_SECRET" value="foobar" />
       <env name="NEXTAUTH_URL" value="http://localhost:3000" />
     </envs>
