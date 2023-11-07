@@ -79,6 +79,7 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
         }}
         columns={{
             name: {
+                title: tx()`Producer name`,
                 render: ({item}) => <ButtonLink
                     icon={<ProducerIcon/>}
                     href={{
@@ -91,6 +92,7 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
                 />,
             },
             time: {
+                title: tx()`Production time`,
                 render: ({item}) => <HumanSeconds seconds={item.time}/>,
                 width:  14,
             },
