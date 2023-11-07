@@ -1,5 +1,6 @@
 export * from "./DateInline";
 export * from "./DateTime";
+export * from "./IPipeline";
 export * from "./DateTimeFormatOptions";
 export * from "./DateTimeInline";
 export * from "./DateTimeProvider";
@@ -15,8 +16,8 @@ export * from "./LocaleLink";
 export * from "./RangeOfList";
 export * from "./StringUnitLength";
 export * from "./fromUtc";
-export * from "./interpolate";
 export * from "./isDateTime";
+export * from "./withDefaultPipeline";
 export * from "./keyOf";
 export * from "./localeOf";
 export * from "./rangeOf";

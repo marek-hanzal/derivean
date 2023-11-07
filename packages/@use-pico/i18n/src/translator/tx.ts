@@ -1,5 +1,4 @@
 import {TranslationInstance} from "../instance/TranslationInstance";
-import {interpolate}         from "../utils/interpolate";
 import {keyOf}               from "../utils/keyOf";
 
 export namespace tx {
@@ -9,14 +8,19 @@ export namespace tx {
     }
 }
 
-export const tx = (
+export function tx(
     props?: tx.Props
-) => {
+) {
     return (input: TemplateStringsArray): string => {
         const key = input.join("");
-        return interpolate(
-            TranslationInstance.instance.translations[keyOf(key)]?.["value"] ?? props?.fallback ?? key,
-            props?.values
+        return TranslationInstance.instance.pipeline.reduce(
+            (text, current) => {
+                return current({
+                    values: props?.values,
+                    text,
+                });
+            },
+            TranslationInstance.instance.translations[keyOf(key)]?.["value"] ?? props?.fallback ?? key
         );
     };
-};
+}

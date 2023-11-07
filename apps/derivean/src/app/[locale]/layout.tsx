@@ -1,4 +1,7 @@
-import {withInstance}           from "@use-pico/i18n";
+import {
+    withDefaultPipeline,
+    withInstance
+}                               from "@use-pico/i18n";
 import {LayoutShell}            from "@use-pico/ui-extra";
 import {type PropsWithChildren} from "react";
 
@@ -19,6 +22,7 @@ export default async function Layout(
     const {translations} = withInstance({
         locale,
         translations: (await import(`../../translation/${locale}.json`)).default,
+        pipeline: withDefaultPipeline(),
     });
 
     return <LayoutShell

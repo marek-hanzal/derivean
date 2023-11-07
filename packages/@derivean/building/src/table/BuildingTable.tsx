@@ -34,17 +34,31 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
         name={"building"}
         icon={<BuildingIcon/>}
         tableActionProps={{
+            text: {
+                create: {
+                    title: tx()`Create new building`,
+                    label: tx()`Create building`,
+                },
+            },
             upsertForm: ({modalId}) => <BuildingUpsertForm
                 withAutoClose={[modalId]}
             />,
         }}
         rowActionProps={{
             text: {
-                deleteModal: {
-                    content: tx()`Do you really want to delete selected building?`,
-                    success: {
-                        title:   tx()`Success`,
-                        message: tx()`Building has been successfully removed`,
+                update: {
+                    title: tx()`Update building`,
+                    label: tx()`Update building`,
+                },
+                delete: {
+                    title: tx()`Delete building?`,
+                    label: tx()`Delete building`,
+                    modal: {
+                        content: tx()`Do you really want to delete selected building?`,
+                        success: {
+                            title:   tx()`Success`,
+                            message: tx()`Building has been successfully removed`,
+                        },
                     },
                 },
             },

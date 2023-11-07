@@ -35,18 +35,32 @@ export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
         icon={<ResourceIcon/>}
         SelectionStore={ResourceTypeSelectionStore}
         tableActionProps={{
+            text: {
+                create: {
+                    title: tx()`Create new resource type`,
+                    label: tx()`Create resource type`,
+                }
+            },
             upsertForm: ({modalId}) => <ResourceTypeUpsertForm
                 withAutoClose={[modalId]}
             />,
         }}
         rowActionProps={{
             text: {
-                deleteModal: {
-                    content: tx()`Do you really want to delete selected resource type?`,
-                    success: {
-                        title:   tx()`Success`,
-                        message: tx()`Selected resource type has been successfully deleted.`,
-                    },
+                update: {
+                    title: tx()`Update resource type`,
+                    label: tx()`Update resource type`,
+                },
+                delete: {
+                    title: tx()`Delete resource type?`,
+                    label: tx()`Delete resource type`,
+                    modal: {
+                        content: tx()`Do you really want to delete selected resource type?`,
+                        success: {
+                            title:   tx()`Success`,
+                            message: tx()`Selected resource type has been successfully deleted.`,
+                        },
+                    }
                 }
             },
             withMutation: withResourceTypeMutation,

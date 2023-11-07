@@ -10,6 +10,7 @@ import {Notifications}       from "@mantine/notifications";
 import {
     DateTimeProvider,
     type ITranslations,
+    withDefaultPipeline,
     withInstance
 }                            from "@use-pico/i18n";
 import {QueryClientProvider} from "@use-pico/query";
@@ -53,6 +54,7 @@ export const Providers: FC<Providers.Props> = (
     withInstance({
         locale,
         translations,
+        pipeline: withDefaultPipeline(),
     });
 
     return <QueryClientProvider>

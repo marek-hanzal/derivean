@@ -1,4 +1,5 @@
 import {type ITranslationInstance} from "../api/ITranslationInstance";
+import {withDefaultPipeline}       from "../pipeline/withDefaultPipeline";
 
 export const TranslationInstance: {
     instance: ITranslationInstance,
@@ -6,5 +7,6 @@ export const TranslationInstance: {
     instance: {
         locale:       "pseudo",
         translations: {},
+        pipeline: withDefaultPipeline(),
     },
 };
