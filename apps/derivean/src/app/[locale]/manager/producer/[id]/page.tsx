@@ -6,7 +6,10 @@ import {
 import {container}     from "@derivean/server";
 import {ProducerIcon}  from "@derivean/ui";
 import {IconArrowDown} from "@tabler/icons-react";
-import {tx}            from "@use-pico/i18n";
+import {
+    tx,
+    txr
+}                      from "@use-pico/i18n";
 import {StoreProvider} from "@use-pico/store";
 import {
     Breadcrumbs,
@@ -36,7 +39,7 @@ export default async function Index({params: {id}}: Index.Props) {
         icon={<ProducerIcon/>}
         text={{
             title:  tx({values: producer})`Producer detail`,
-            header: tx({values: producer})`Producer detail`,
+            header: txr({values: producer})`Producer detail`,
         }}
         postfix={<Breadcrumbs
             items={{

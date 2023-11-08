@@ -1,7 +1,8 @@
 import {
     withDefaultPipeline,
-    withInstance
-}                               from "@use-pico/i18n";
+    withRichComponents
+}                               from "@derivean/ui";
+import {withInstance}           from "@use-pico/i18n";
 import {LayoutShell}            from "@use-pico/ui-extra";
 import {type PropsWithChildren} from "react";
 
@@ -34,7 +35,10 @@ export default async function Layout(
             primaryShade: 5,
         }}
         locale={locale}
-        translations={translations}
+        translations={{
+            translations,
+            components: withRichComponents(),
+        }}
     >
         {children}
     </LayoutShell>;

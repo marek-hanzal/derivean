@@ -4,5 +4,8 @@ import {type ITranslations} from "./ITranslations";
 export interface ITranslationInstance {
     locale: string;
     translations: ITranslations;
-    pipeline: IPipeline[];
+    pipeline: {
+        text: IPipeline.Text[];
+        rich: IPipeline.Rich[];
+    };
 }

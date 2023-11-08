@@ -1,19 +1,20 @@
+import {type ReactNode}      from "react";
 import {TranslationInstance} from "../instance/TranslationInstance";
 import {keyOf}               from "../utils/keyOf";
 
-export namespace tx {
+export namespace txr {
     export interface Props {
         values?: Record<string, any>;
-        fallback?: string;
+        fallback?: ReactNode;
     }
 }
 
-export function tx(
-    props?: tx.Props
+export function txr(
+    props?: txr.Props
 ) {
-    return (input: TemplateStringsArray): string => {
+    return (input: TemplateStringsArray): ReactNode => {
         const key = input.join("");
-        return TranslationInstance.instance.pipeline.text.reduce(
+        return TranslationInstance.instance.pipeline.rich.reduce<ReactNode>(
             (text, current) => {
                 return current({
                     text,

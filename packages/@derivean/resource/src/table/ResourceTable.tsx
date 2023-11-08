@@ -1,7 +1,10 @@
 "use client";
 
 import {ResourceIcon}             from "@derivean/ui";
-import {tx}                       from "@use-pico/i18n";
+import {
+    tx,
+    txr
+}                                 from "@use-pico/i18n";
 import {Table}                    from "@use-pico/ui-extra";
 import {type FC}                  from "react";
 import {ResourceTypeFetch}        from "../fetch/ResourceTypeFetch";
@@ -60,7 +63,7 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
                     title: tx()`Delete resource?`,
                     label: tx()`Delete resource`,
                     modal: {
-                        content: tx()`Do you really want to delete selected resource?`,
+                        content: txr()`Do you really want to delete selected resource?`,
                         success: {
                             title:   tx()`Success`,
                             message: tx()`Resource has been successfully deleted.`,

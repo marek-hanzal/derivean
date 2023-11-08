@@ -33,7 +33,7 @@ export const withTx = (
                 .filter(source => !source.fileName.endsWith(".d.ts"))
                 .forEach(source => {
                     query(source, "TaggedTemplateExpression")
-                        .filter(node => includes(node, "Identifier[name=tx]"))
+                        .filter(node => includes(node, "Identifier[name=tx]") || includes(node, "Identifier[name=txr]"))
                         .forEach(node => {
                             match(node, "NoSubstitutionTemplateLiteral").forEach(node => {
                                 const source = print(node);

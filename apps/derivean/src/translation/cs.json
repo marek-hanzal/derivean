@@ -1,7 +1,7 @@
 {
 	"b4e8a29838ae1162bde0b03ce16b75d4739d6bfeeac544c56a20ac10": {
 		"key": "Cancel",
-		"value": "Cancel"
+		"value": "Zrušit"
 	},
 	"7056d01d885e2e1c2bc274b88194ee72234432a7dc8090652f1577f9": {
 		"key": "Value not set",
@@ -197,11 +197,11 @@
 	},
 	"805f1a4ae80d48a2d91aa9c6b759a111ac7b7822d371c67a8b0f408c": {
 		"key": "Create resource",
-		"value": "Create resource"
+		"value": "Nový zdroj"
 	},
 	"473177bebed2885fdf3e87cafa036ca76a184b1ceda623329b7bc602": {
 		"key": "Delete resource?",
-		"value": "Delete resource?"
+		"value": "Odstranit vybraný zdroj"
 	},
 	"0a9f1ea1e6f187f9e8ebd0708ec11529ce6a3d3e955fe70653757f14": {
 		"key": "Delete resource",
@@ -209,7 +209,7 @@
 	},
 	"906fceae0531693e23f12eda71028dfef5cd1c133cc1c968477333a9": {
 		"key": "Do you really want to delete selected resource?",
-		"value": "Opravdu si přejete odstranit vybraný zdroj? Tato akce může mít velký vliv na data a celkovou hratelnost. <b>Není cesty zpět.</b>"
+		"value": "<p>Opravdu si přejete odstranit vybraný zdroj?</p><p><b>Tato akce může mít velký vliv na data a celkovou hratelnost. <i>Není cesty zpět.</i></b></p>"
 	},
 	"afb394104b3717272616722fc3a114bdcffca4f6d4046aab261cc46f": {
 		"key": "Resource has been successfully deleted.",

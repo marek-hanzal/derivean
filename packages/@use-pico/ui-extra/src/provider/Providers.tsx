@@ -25,7 +25,8 @@ import {
 import axios                 from "axios";
 import {
     type FC,
-    type PropsWithChildren
+    type PropsWithChildren,
+    type ReactNode
 }                            from "react";
 
 export namespace Providers {
@@ -35,7 +36,10 @@ export namespace Providers {
          * Set current locale
          */
         locale: string;
-        translations?: ITranslations;
+        translations?: {
+            translations: ITranslations;
+            components: Record<string, ReactNode>;
+        };
         baseUrl?: string;
     }>;
 }
@@ -53,8 +57,14 @@ export const Providers: FC<Providers.Props> = (
     axios.defaults.baseURL = baseUrl;
     withInstance({
         locale,
-        translations,
-        pipeline: withDefaultPipeline(),
+        translations: translations?.translations || {},
+        pipeline:     withDefaultPipeline({
+            rich: {
+                component: {
+                    components: translations?.components || {},
+                }
+            }
+        }),
     });
 
     return <QueryClientProvider>
