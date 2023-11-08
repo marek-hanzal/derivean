@@ -5,7 +5,10 @@ import {
     project,
     query
 }              from "@phenomnomnominal/tsquery";
-import {Timer} from "@use-pico/utils";
+import {
+    diffOf,
+    Timer
+}              from "@use-pico/utils";
 import fs      from "node:fs";
 import {keyOf} from "../utils/keyOf";
 
@@ -57,10 +60,17 @@ export const withTx = (
 
             console.log(`Writing locale [${locale}] to [${target}]`);
 
-            let current = {};
+            let current: Record<string, any> = {};
             try {
                 current = JSON.parse(fs.readFileSync(target, {encoding: "utf-8"})) as Record<string, any>;
             } catch (e) {
+            }
+
+            /**
+             * Delete dead keys
+             */
+            for (const key of diffOf(Object.keys(current), Object.keys(translations))) {
+                delete current[key];
             }
 
             fs.writeFileSync(target, JSON.stringify({

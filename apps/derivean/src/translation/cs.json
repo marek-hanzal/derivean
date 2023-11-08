@@ -67,6 +67,26 @@
 		"key": "We're preparing all the data for you (if any)...",
 		"value": "We're preparing all the data for you (if any)..."
 	},
+	"e9b3ba72c318eb3fede0269608646b2fb2b6367380aec8e17d7a9eeb": {
+		"key": "Resource management",
+		"value": "Správa zdrojů"
+	},
+	"cddaf1cd47d244eb61ac83dd53bcc19ab979249d1cfd7dd647253f11": {
+		"key": "Resource list",
+		"value": "Seznam zdrojů"
+	},
+	"e886a6010df144ec211a2041dc77c8adc46a0921ba57458fada4c681": {
+		"key": "Resource type list",
+		"value": "Seznam typů zdrojů"
+	},
+	"ffad743cbce08917e436ff30d0834c538a72e5fde2a801c510f94afc": {
+		"key": "Producer list",
+		"value": "Seznam výroben"
+	},
+	"9c98cff9e25fc568108143bf2d0b4476ac459a2fd8113c747badfc47": {
+		"key": "Building list",
+		"value": "Seznam budov"
+	},
 	"c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19": {
 		"key": "Submit",
 		"value": "Submit"
@@ -259,6 +279,14 @@
 		"key": "Update producer",
 		"value": "Update producer"
 	},
+	"c98c3cdb4feffcf8417b57deaf83d916fff4fb9ba927d15c59317d57": {
+		"key": "Producer name",
+		"value": "Producer name"
+	},
+	"b76ae170eeb8f481b1d4a48407bc697fd658716129191710969e5455": {
+		"key": "Production time",
+		"value": "Production time"
+	},
 	"9c1fb2018f5ea283b6e3d41272981688033be51677bbc1496d819a38": {
 		"key": "Total count of producer inputs",
 		"value": "Total count of producer inputs"
@@ -295,26 +323,6 @@
 		"key": "Game overview",
 		"value": "Game overview"
 	},
-	"e9b3ba72c318eb3fede0269608646b2fb2b6367380aec8e17d7a9eeb": {
-		"key": "Resource management",
-		"value": "Správa zdrojů"
-	},
-	"cddaf1cd47d244eb61ac83dd53bcc19ab979249d1cfd7dd647253f11": {
-		"key": "Resource list",
-		"value": "Seznam zdrojů"
-	},
-	"e886a6010df144ec211a2041dc77c8adc46a0921ba57458fada4c681": {
-		"key": "Resource type list",
-		"value": "Seznam typů zdrojů"
-	},
-	"ffad743cbce08917e436ff30d0834c538a72e5fde2a801c510f94afc": {
-		"key": "Producer list",
-		"value": "Seznam výroben"
-	},
-	"9c98cff9e25fc568108143bf2d0b4476ac459a2fd8113c747badfc47": {
-		"key": "Building list",
-		"value": "Seznam budov"
-	},
 	"8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b": {
 		"key": "Game management",
 		"value": "Správa hry"
@@ -346,9 +354,5 @@
 	"6d005622708a0d4dc2a7c837714470b2443d2fde38fbe0a0ebcfe91b": {
 		"key": "Low-level system administration",
 		"value": "Low-level system administration"
-	},
-	"d4a3c5b2855bc90e5b82eeb641baab65dc174ffe06ba15c752685ac8": {
-		"key": "New resource",
-		"value": "New resource"
 	}
 }
