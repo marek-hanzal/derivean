@@ -1,0 +1,9 @@
+# @use-pico/migrator
+
+## 2.0.1
+
+### Patch Changes
+
+- Version bump, added custom translations and blablabla
+- Updated dependencies
+    - @use-pico/orm@2.0.4

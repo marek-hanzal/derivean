@@ -27,7 +27,10 @@ export const withTx = (
         locales,
     }: withTx.Props,
 ) => {
-    const translations: Record<string, { key: string, value: string }> = {};
+    const translations: Record<string, {
+        key: string,
+        value: string
+    }> = {};
 
     packages.forEach(path => {
         const benchmark = Timer.benchmark(() => {
@@ -64,6 +67,7 @@ export const withTx = (
             try {
                 current = JSON.parse(fs.readFileSync(target, {encoding: "utf-8"})) as Record<string, any>;
             } catch (e) {
+                // noop
             }
 
             /**

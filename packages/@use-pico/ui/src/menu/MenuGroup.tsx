@@ -1,3 +1,5 @@
+"use client";
+
 import {
     Group,
     Menu
@@ -9,19 +11,18 @@ import {MenuLink}        from "./MenuLink";
 
 export namespace MenuGroup {
     export interface Props extends IMenuGroup {
-        id: string;
         className?: string;
     }
 }
 
 export const MenuGroup: FC<MenuGroup.Props> = (
     {
-        id,
         className,
         label,
         icon,
         items,
-    }) => {
+    }
+) => {
     return <Menu
         trigger={"hover"}
         transitionProps={{exitDuration: 0}}
@@ -46,7 +47,6 @@ export const MenuGroup: FC<MenuGroup.Props> = (
         <Menu.Dropdown>
             {Object.entries(items).map(([id, item]) => <MenuLink
                 key={id}
-                id={id}
                 className={className}
                 {...item}
             />)}

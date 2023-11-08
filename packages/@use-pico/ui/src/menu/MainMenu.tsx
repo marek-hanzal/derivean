@@ -36,7 +36,6 @@ export const MainMenu: FC<MainMenu.Props> = (
             if (isLink(item)) {
                 return <MenuLink
                     key={id}
-                    id={id}
                     className={cx(
                         classes.Link,
                         classes.LinkActive ? {
@@ -48,7 +47,6 @@ export const MainMenu: FC<MainMenu.Props> = (
             } else if (isMenuGroup(item)) {
                 return <MenuGroup
                     key={id}
-                    id={id}
                     className={classes.Link}
                     {...item}
                 />;

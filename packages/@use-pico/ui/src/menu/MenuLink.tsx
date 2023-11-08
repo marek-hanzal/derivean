@@ -6,21 +6,20 @@ import {WithIcon}       from "../ui/WithIcon";
 
 export namespace MenuLink {
     export interface Props extends IMenuLink {
-        id: string;
         className?: string;
     }
 }
 
 export const MenuLink: FC<MenuLink.Props> = (
     {
-        id,
         href,
         query,
         className,
         icon,
         label,
         withLocale,
-    }) => {
+    }
+) => {
     return <LocaleLink
         href={{
             href,

@@ -7,7 +7,7 @@ import {Overlay}           from "./Overlay";
 import {Stack}             from "./Stack";
 
 export namespace ErrorOverlay {
-    export type Props = PropsWithChildren<{}>
+    export type Props = PropsWithChildren;
 }
 
 export const ErrorOverlay: FC<ErrorOverlay.Props> = ({children}) => {
