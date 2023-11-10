@@ -1,13 +1,12 @@
 import {withRpcSourceQuery}         from "@use-pico/rpc";
-import {ResourceTypeQuerySchema}    from "../../schema/type/ResourceTypeQuerySchema";
-import {ResourceTypeSchema}         from "../../schema/type/ResourceTypeSchema";
+import {ResourceTypeSchema}         from "../../schema/ResourceTypeSchema";
 import {withResourceTypeCountQuery} from "./withResourceTypeCountQuery";
 
 export const withResourceTypeQuery = withRpcSourceQuery({
     key:            ["derivean", "resource", "type", "query"],
     schema:         {
-        query:    ResourceTypeQuerySchema,
-        response: ResourceTypeSchema,
+        query:    ResourceTypeSchema.query,
+        response: ResourceTypeSchema.entity,
     },
     withCountQuery: withResourceTypeCountQuery,
 });

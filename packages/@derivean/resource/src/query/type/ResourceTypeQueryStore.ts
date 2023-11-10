@@ -1,8 +1,8 @@
 "use client";
 
-import {createQueryStore}        from "@use-pico/query";
-import {ResourceTypeQuerySchema} from "../../schema/type/ResourceTypeQuerySchema";
+import {createQueryStore}   from "@use-pico/query";
+import {ResourceTypeSchema} from "../../schema/ResourceTypeSchema";
 
 export const ResourceTypeQueryStore = createQueryStore({
-    schema: ResourceTypeQuerySchema,
+    schema: ResourceTypeSchema.query,
 });

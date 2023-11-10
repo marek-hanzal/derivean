@@ -207,6 +207,10 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/migrator/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/source-ui/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/source-ui/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/dull-stuff-server/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/dull-stuff-server/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/dull-stuff/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/dull-stuff/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/i18n-server/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/i18n-server/lib" />
     </content>

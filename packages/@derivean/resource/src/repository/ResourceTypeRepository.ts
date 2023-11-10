@@ -1,12 +1,17 @@
-import {type Database}                from "@derivean/orm";
+import {type Database}      from "@derivean/orm";
+import {dullSchema}         from "@use-pico/dull-stuff";
 import {
     type Client,
     withClient
-}                                     from "@use-pico/orm";
-import {AbstractRepository}           from "@use-pico/repository";
-import {ResourceTypeRepositorySchema} from "../schema/type/ResourceTypeRepositorySchema";
+}                           from "@use-pico/orm";
+import {AbstractRepository} from "@use-pico/repository";
+import {ResourceTypeSchema} from "../schema/ResourceTypeSchema";
 
-export class ResourceTypeRepository extends AbstractRepository<Database, ResourceTypeRepositorySchema, "ResourceType"> {
+export class ResourceTypeRepository extends AbstractRepository<
+    Database,
+    dullSchema.Infer.Repository<ResourceTypeSchema>,
+    "ResourceType"
+> {
     static inject = [
         withClient.inject,
     ];
@@ -16,7 +21,7 @@ export class ResourceTypeRepository extends AbstractRepository<Database, Resourc
     ) {
         super(
             client,
-            ResourceTypeRepositorySchema,
+            ResourceTypeSchema.repository,
             "ResourceType",
         );
         this.defaultOrderBy = {

@@ -1,6 +1,7 @@
 "use client";
 
 import {ResourceIcon}               from "@derivean/ui";
+import {dullSchema}                 from "@use-pico/dull-stuff";
 import {t}                          from "@use-pico/i18n";
 import {Table}                      from "@use-pico/ui-extra";
 import {type FC}                    from "react";
@@ -8,8 +9,7 @@ import {ResourceTypeUpsertForm}     from "../form/ResourceTypeUpsertForm";
 import {withResourceTypeMutation}   from "../mutation/withResourceTypeMutation";
 import {ResourceTypeQueryStore}     from "../query/type/ResourceTypeQueryStore";
 import {withResourceTypeQuery}      from "../query/type/withResourceTypeQuery";
-import {ResourceTypeQuerySchema}    from "../schema/type/ResourceTypeQuerySchema";
-import {ResourceTypeSchema}         from "../schema/type/ResourceTypeSchema";
+import {ResourceTypeSchema}         from "../schema/ResourceTypeSchema";
 import {ResourceTypeSelectionStore} from "../store/ResourceTypeSelectionStore";
 
 export namespace ResourceTypeTable {
@@ -19,8 +19,8 @@ export namespace ResourceTypeTable {
     export type Props = Omit<
         Table.Props<
             Columns,
-            ResourceTypeSchema,
-            ResourceTypeQuerySchema
+            dullSchema.Infer.EntitySchema<ResourceTypeSchema>,
+            dullSchema.Infer.QuerySchema<ResourceTypeSchema>
         >,
         "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
     >
