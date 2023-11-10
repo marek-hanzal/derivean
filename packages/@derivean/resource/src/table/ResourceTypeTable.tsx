@@ -1,7 +1,7 @@
 "use client";
 
 import {ResourceIcon}               from "@derivean/ui";
-import {dullSchema}                 from "@use-pico/dull-stuff";
+import {withDullSchema}             from "@use-pico/dull-stuff";
 import {t}                          from "@use-pico/i18n";
 import {Table}                      from "@use-pico/ui-extra";
 import {type FC}                    from "react";
@@ -19,8 +19,8 @@ export namespace ResourceTypeTable {
     export type Props = Omit<
         Table.Props<
             Columns,
-            dullSchema.Infer.EntitySchema<ResourceTypeSchema>,
-            dullSchema.Infer.QuerySchema<ResourceTypeSchema>
+            withDullSchema.Infer.EntitySchema<ResourceTypeSchema>,
+            withDullSchema.Infer.QuerySchema<ResourceTypeSchema>
         >,
         "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
     >
@@ -33,7 +33,7 @@ export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
         }}
         name={"resource.type"}
         icon={<ResourceIcon/>}
-        SelectionStore={ResourceTypeSelectionStore}
+        SelectionStore={ResourceTypeSelectionStore.single}
         tableActionProps={{
             text: {
                 create: {

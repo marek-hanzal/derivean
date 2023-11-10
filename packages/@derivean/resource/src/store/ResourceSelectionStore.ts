@@ -1,4 +1,5 @@
-import {createSelectionStore} from "@use-pico/selection";
-import {type ResourceSchema}  from "../schema/ResourceSchema";
+import {withDullSchema}      from "@use-pico/dull-stuff";
+import {withSelectionStore}  from "@use-pico/selection";
+import {type ResourceSchema} from "../schema/ResourceSchema";
 
-export const ResourceSelectionStore = createSelectionStore<ResourceSchema.Type>();
+export const ResourceSelectionStore = withSelectionStore<withDullSchema.Infer.Entity<ResourceSchema>>();

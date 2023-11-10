@@ -1,4 +1,5 @@
 import {BuildingIcon}         from "@derivean/ui";
+import {withDullSchema}       from "@use-pico/dull-stuff";
 import {
     Form,
     TextInput
@@ -11,17 +12,16 @@ import {type WithEntity}      from "@use-pico/types";
 import {type FC}              from "react";
 import {withBuildingMutation} from "../mutation/withBuildingMutation";
 import {BuildingSchema}       from "../schema/BuildingSchema";
-import {BuildingShapeSchema}  from "../schema/BuildingShapeSchema";
 
 export namespace BuildingUpsertForm {
     export type Props =
         Form.PropsEx<
             withBuildingMutation,
-            BuildingShapeSchema,
+            withDullSchema.Infer.ShapeSchema<BuildingSchema>,
             withBuildingMutation["schema"]["request"],
             withBuildingMutation["schema"]["response"]
         >
-        & WithEntity.Schema.$<BuildingSchema>;
+        & WithEntity.$<withDullSchema.Infer.Entity<BuildingSchema>>;
 }
 
 export const BuildingUpsertForm: FC<BuildingUpsertForm.Props> = (
@@ -40,7 +40,7 @@ export const BuildingUpsertForm: FC<BuildingUpsertForm.Props> = (
         }}
         icon={<BuildingIcon/>}
         withMutation={withBuildingMutation}
-        schema={BuildingShapeSchema}
+        schema={BuildingSchema.shape}
         inputs={{
             name: props => <TextInput
                 label={t()`Building name`}

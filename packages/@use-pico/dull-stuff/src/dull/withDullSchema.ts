@@ -9,7 +9,6 @@ import {
     withRepositorySchema
 } from "@use-pico/repository";
 import {
-    merge,
     type ObjectSchema,
     type PicoSchema,
     type WithIdentitySchema
@@ -19,11 +18,11 @@ import {
     withMutationSchema
 } from "@use-pico/source";
 
-export namespace dullSchema {
+export namespace withDullSchema {
     export interface Props<
         TEntity extends WithIdentitySchema,
         TShapeSchema extends ObjectSchema<any>,
-        TFilterSchema extends ObjectSchema<any>,
+        TFilterSchema extends FilterSchema,
         TOrderBySchema extends OrderBySchema,
     > {
         entity: TEntity;
@@ -35,13 +34,10 @@ export namespace dullSchema {
     export interface Schema<
         TEntity extends WithIdentitySchema,
         TShapeSchema extends ObjectSchema<any>,
-        TFilterSchema extends ObjectSchema<any>,
+        TFilterSchema extends FilterSchema,
         TOrderBySchema extends OrderBySchema,
-        TFilterOutput extends FilterSchema = ObjectSchema<
-            FilterSchema["shape"] & TFilterSchema["shape"]
-        >,
-        TQueryOutput extends QuerySchema<TFilterOutput, TOrderBySchema> = QuerySchema<
-            TFilterOutput,
+        TQueryOutput extends QuerySchema<TFilterSchema, TOrderBySchema> = QuerySchema<
+            TFilterSchema,
             TOrderBySchema
         >,
         TMutationOutput extends MutationSchema<TShapeSchema, TQueryOutput> = MutationSchema<
@@ -51,7 +47,7 @@ export namespace dullSchema {
     > {
         entity: TEntity;
         shape: TShapeSchema;
-        filter: TFilterOutput;
+        filter: TFilterSchema;
         orderBy: TOrderBySchema;
         query: TQueryOutput;
         mutation: TMutationOutput;
@@ -118,10 +114,10 @@ export namespace dullSchema {
     }
 }
 
-export const dullSchema = <
+export const withDullSchema = <
     TEntity extends WithIdentitySchema,
     TShapeSchema extends ObjectSchema<any>,
-    TFilterSchema extends ObjectSchema<any>,
+    TFilterSchema extends FilterSchema,
     TOrderBySchema extends OrderBySchema,
 >(
     {
@@ -129,43 +125,39 @@ export const dullSchema = <
         shape,
         filter,
         orderBy,
-    }: dullSchema.Props<
+    }: withDullSchema.Props<
         TEntity,
         TShapeSchema,
         TFilterSchema,
         TOrderBySchema
     >
-): dullSchema.Schema<
+): withDullSchema.Schema<
     TEntity,
     TShapeSchema,
     TFilterSchema,
     TOrderBySchema
 > => {
-    const $filter = merge([
-        FilterSchema,
+    const query = withQuerySchema({
         filter,
-    ]);
-    const $query = withQuerySchema({
-        filter: $filter,
         orderBy,
     });
-    const $mutation = withMutationSchema({
-        query: $query,
+    const mutation = withMutationSchema({
+        query,
         shape,
     });
 
     return {
         entity,
         shape,
-        filter:     $filter,
+        filter,
         orderBy,
-        query:      $query,
-        mutation:   $mutation,
+        query,
+        mutation,
         repository: withRepositorySchema({
             entity,
             shape,
-            query:    $query,
-            mutation: $mutation,
+            query,
+            mutation,
         }),
     };
 };

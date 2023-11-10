@@ -1,8 +1,8 @@
 "use client";
 
-import {createQueryStore}    from "@use-pico/query";
-import {BuildingQuerySchema} from "../schema/BuildingQuerySchema";
+import {createQueryStore} from "@use-pico/query";
+import {BuildingSchema}   from "../schema/BuildingSchema";
 
 export const BuildingQueryStore = createQueryStore({
-    schema: BuildingQuerySchema,
+    schema: BuildingSchema.query,
 });

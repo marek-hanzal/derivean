@@ -1,1 +1,1 @@
-export * from "./dullSchema";
+export * from "./withDullSchema";

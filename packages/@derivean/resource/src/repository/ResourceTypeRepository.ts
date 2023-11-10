@@ -1,5 +1,5 @@
 import {type Database}      from "@derivean/orm";
-import {dullSchema}         from "@use-pico/dull-stuff";
+import {withDullSchema}     from "@use-pico/dull-stuff";
 import {
     type Client,
     withClient
@@ -9,7 +9,7 @@ import {ResourceTypeSchema} from "../schema/ResourceTypeSchema";
 
 export class ResourceTypeRepository extends AbstractRepository<
     Database,
-    dullSchema.Infer.RepositorySchema<ResourceTypeSchema>,
+    withDullSchema.Infer.RepositorySchema<ResourceTypeSchema>,
     "ResourceType"
 > {
     static inject = [

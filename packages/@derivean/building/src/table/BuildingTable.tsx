@@ -1,16 +1,16 @@
 "use client";
 
-import {BuildingIcon}             from "@derivean/ui";
-import {t}                        from "@use-pico/i18n";
-import {ButtonLink}               from "@use-pico/ui";
-import {Table}                    from "@use-pico/ui-extra";
-import {type FC}                  from "react";
-import {BuildingUpsertForm}       from "../form/BuildingUpsertForm";
-import {withBuildingMutation}     from "../mutation/withBuildingMutation";
-import {BuildingQueryStore}       from "../query/BuildingQueryStore";
-import {withBuildingQuery}        from "../query/withBuildingQuery";
-import {type BuildingQuerySchema} from "../schema/BuildingQuerySchema";
-import {type BuildingSchema}      from "../schema/BuildingSchema";
+import {BuildingIcon}         from "@derivean/ui";
+import {withDullSchema}       from "@use-pico/dull-stuff";
+import {t}                    from "@use-pico/i18n";
+import {ButtonLink}           from "@use-pico/ui";
+import {Table}                from "@use-pico/ui-extra";
+import {type FC}              from "react";
+import {BuildingUpsertForm}   from "../form/BuildingUpsertForm";
+import {withBuildingMutation} from "../mutation/withBuildingMutation";
+import {BuildingQueryStore}   from "../query/BuildingQueryStore";
+import {withBuildingQuery}    from "../query/withBuildingQuery";
+import {type BuildingSchema}  from "../schema/BuildingSchema";
 
 export namespace BuildingTable {
     export type Columns =
@@ -19,8 +19,8 @@ export namespace BuildingTable {
     export type Props = Omit<
         Table.Props<
             Columns,
-            BuildingSchema,
-            BuildingQuerySchema
+            withDullSchema.Infer.EntitySchema<BuildingSchema>,
+            withDullSchema.Infer.QuerySchema<BuildingSchema>
         >,
         "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
     >

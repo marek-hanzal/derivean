@@ -1,5 +1,5 @@
 import {ResourceIcon}             from "@derivean/ui";
-import {dullSchema}               from "@use-pico/dull-stuff";
+import {withDullSchema}           from "@use-pico/dull-stuff";
 import {
     Form,
     TextInput
@@ -17,11 +17,11 @@ export namespace ResourceTypeUpsertForm {
     export type Props =
         Form.PropsEx<
             withResourceTypeMutation,
-            dullSchema.Infer.ShapeSchema<ResourceTypeSchema>,
+            withDullSchema.Infer.ShapeSchema<ResourceTypeSchema>,
             withResourceTypeMutation["schema"]["request"],
             withResourceTypeMutation["schema"]["response"]
         >
-        & WithEntity.Schema.$<dullSchema.Infer.EntitySchema<ResourceTypeSchema>>;
+        & WithEntity.$<withDullSchema.Infer.Entity<ResourceTypeSchema>>;
 }
 
 export const ResourceTypeUpsertForm: FC<ResourceTypeUpsertForm.Props> = (

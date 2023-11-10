@@ -1,18 +1,18 @@
 "use client";
 
-import {ResourceIcon}             from "@derivean/ui";
-import {t,}                       from "@use-pico/i18n";
-import {Table}                    from "@use-pico/ui-extra";
-import {type FC}                  from "react";
-import {ResourceTypeFetch}        from "../fetch/ResourceTypeFetch";
-import {ResourceUpsertForm}       from "../form/ResourceUpsertForm";
-import {ResourceTypeInline}       from "../inline/ResourceTypeInline";
-import {withResourceMutation}     from "../mutation/withResourceMutation";
-import {ResourceQueryStore}       from "../query/ResourceQueryStore";
-import {withResourceQuery}        from "../query/withResourceQuery";
-import {type ResourceQuerySchema} from "../schema/ResourceQuerySchema";
-import {ResourceSchema}           from "../schema/ResourceSchema";
-import {ResourceSelectionStore}   from "../store/ResourceSelectionStore";
+import {ResourceIcon}           from "@derivean/ui";
+import {withDullSchema}         from "@use-pico/dull-stuff";
+import {t}                      from "@use-pico/i18n";
+import {Table}                  from "@use-pico/ui-extra";
+import {type FC}                from "react";
+import {ResourceTypeFetch}      from "../fetch/ResourceTypeFetch";
+import {ResourceUpsertForm}     from "../form/ResourceUpsertForm";
+import {ResourceTypeInline}     from "../inline/ResourceTypeInline";
+import {withResourceMutation}   from "../mutation/withResourceMutation";
+import {ResourceQueryStore}     from "../query/ResourceQueryStore";
+import {withResourceQuery}      from "../query/withResourceQuery";
+import {ResourceSchema}         from "../schema/ResourceSchema";
+import {ResourceSelectionStore} from "../store/ResourceSelectionStore";
 
 export namespace ResourceTable {
     export type Columns =
@@ -22,8 +22,8 @@ export namespace ResourceTable {
     export type Props = Omit<
         Table.Props<
             Columns,
-            ResourceSchema,
-            ResourceQuerySchema
+            withDullSchema.Infer.EntitySchema<ResourceSchema>,
+            withDullSchema.Infer.QuerySchema<ResourceSchema>
         >,
         "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
     >
@@ -53,7 +53,7 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
                 withAutoClose={[modalId]}
             />,
         }}
-        SelectionStore={ResourceSelectionStore}
+        SelectionStore={ResourceSelectionStore.single}
         rowActionProps={{
             text: {
                 delete: {

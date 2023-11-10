@@ -1,10 +1,10 @@
-import {dullSchema}         from "@use-pico/dull-stuff";
+import {withDullSchema}     from "@use-pico/dull-stuff";
 import {type WithEntity}    from "@use-pico/types";
 import {type FC}            from "react";
 import {ResourceTypeSchema} from "../schema/ResourceTypeSchema";
 
 export namespace ResourceTypeInline {
-    export interface Props extends WithEntity<dullSchema.Infer.Entity<ResourceTypeSchema>> {
+    export interface Props extends WithEntity<withDullSchema.Infer.Entity<ResourceTypeSchema>> {
     }
 }
 

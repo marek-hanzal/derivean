@@ -4,7 +4,7 @@ import {
     ResourceFetch,
     ResourceInline
 }                                  from "@derivean/resource";
-import {ProducerIcon,}             from "@derivean/ui";
+import {ProducerIcon}              from "@derivean/ui";
 import {t}                         from "@use-pico/i18n";
 import {ButtonLink}                from "@use-pico/ui";
 import {Table}                     from "@use-pico/ui-extra";
@@ -107,10 +107,10 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
                 />,
             },
             resourceId: {
-                title: t()`Resource name`,
+                title:  t()`Resource name`,
                 render: ({item}) => <ResourceFetch
                     override={item.resourceId}
-                    WithSuccess={ResourceInline}
+                    WithSuccess={({entity}) => <ResourceInline entity={entity}/>}
                 />,
             },
             amount:     {

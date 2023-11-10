@@ -1,4 +1,5 @@
 import {ResourceIcon}         from "@derivean/ui";
+import {withDullSchema}       from "@use-pico/dull-stuff";
 import {
     Form,
     TextInput
@@ -11,18 +12,17 @@ import {type WithEntity}      from "@use-pico/types";
 import {type FC}              from "react";
 import {ResourceTypeSelect}   from "../input/ResourceTypeSelect";
 import {withResourceMutation} from "../mutation/withResourceMutation";
-import {type ResourceSchema}  from "../schema/ResourceSchema";
-import {ResourceShapeSchema}  from "../schema/ResourceShapeSchema";
+import {ResourceSchema}       from "../schema/ResourceSchema";
 
 export namespace ResourceUpsertForm {
     export type Props =
         Form.PropsEx<
             withResourceMutation,
-            ResourceShapeSchema,
+            withDullSchema.Infer.ShapeSchema<ResourceSchema>,
             withResourceMutation["schema"]["request"],
             withResourceMutation["schema"]["response"]
         >
-        & WithEntity.Schema.$<ResourceSchema>;
+        & WithEntity.$<withDullSchema.Infer.Entity<ResourceSchema>>;
 }
 
 export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = (
@@ -40,7 +40,7 @@ export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = (
             }
         }}
         withMutation={withResourceMutation}
-        schema={ResourceShapeSchema}
+        schema={ResourceSchema.shape}
         inputs={{
             name:   props => <TextInput
                 label={t()`Resource name`}
