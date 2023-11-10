@@ -4,6 +4,7 @@ import {
     Form,
     NumberInput
 }                                  from "@use-pico/form";
+import {t}                         from "@use-pico/i18n";
 import {type WithEntity}           from "@use-pico/types";
 import {type FC}                   from "react";
 import {ProducerSelect}            from "../input/ProducerSelect";
@@ -33,14 +34,39 @@ export const ProducerInputUpsertForm: FC<ProducerInputUpsertForm.Props> = (
     }
 ) => {
     return <Form
+        text={{
+            submit:  entity ? t()`Update producer input` : t()`Create producer input`,
+            success: entity ? {
+                title:   t()`Success`,
+                message: t()`Producer input has been updated successfully.`,
+            } : {
+                title:   t()`Success`,
+                message: t()`Producer input has been created successfully.`,
+            }
+        }}
         icon={<ProducerIcon/>}
         withMutation={withProducerInputMutation}
         schema={ProducerInputShapeSchema}
         hidden={producerId ? ["producerId"] : undefined}
         inputs={{
-            producerId: ProducerSelect,
-            resourceId: ResourceSelect,
-            amount:     NumberInput,
+            producerId: props => <ProducerSelect
+                text={{
+                    label:       t()`Producer name`,
+                    placeholder: t()`Producer (placeholder)`,
+                }}
+                {...props}
+            />,
+            resourceId: props => <ResourceSelect
+                text={{
+                    label:       t()`Resource name`,
+                    placeholder: t()`Resource (placeholder)`,
+                }}
+                {...props}
+            />,
+            amount:     props => <NumberInput
+                label={t()`Consumed amount`}
+                {...props}
+            />,
         }}
         values={{
             ...entity,

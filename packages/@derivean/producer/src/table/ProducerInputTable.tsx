@@ -52,7 +52,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
         tableActionProps={{
             text: {
                 create: {
-                    title: t()`Create new producer input`,
+                    title: t()`Create producer input (modal)`,
                     label: t()`Create producer input`,
                 },
             },
@@ -114,7 +114,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
                 />,
             },
             amount:     {
-                title: t()`Produced amount`,
+                title: t()`Consumed amount`,
                 render: ({item}) => `${item.amount} - toHuman()`,
                 width:  14,
             },

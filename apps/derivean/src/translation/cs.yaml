@@ -36,10 +36,10 @@ c2e7d8c0ada03fcb5c1394b62f8b5576af8897c5bbf56725543da717:
   value: This listing is empty
 3c1469acd0f963d3ac3943e49b6a34b00183353765f5d3f004464093:
   ref: Table is empty
-  value: Table is empty
+  value: Nejsou dostupná žádná data
 7a5c74ec4b4bdf2c097c62910ecb7fa4cc8fa591fc9c61e4543fee71:
   ref: There is currently nothing to see
-  value: There is currently nothing to see
+  value: Prozatím zde není nic k vidění
 fccca51f27d14b47f2c3f1865c215ddb180d6c65d942ab4e93aa9d65:
   ref: Nothing found by current filter
   value: Nothing found by current filter
@@ -67,9 +67,6 @@ ffad743cbce08917e436ff30d0834c538a72e5fde2a801c510f94afc:
 9c98cff9e25fc568108143bf2d0b4476ac459a2fd8113c747badfc47:
   ref: Building list
   value: Seznam budov
-8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
-  ref: Game management
-  value: Správa hry
 c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19:
   ref: Submit
   value: Odeslat
@@ -103,63 +100,15 @@ b0cf8a5dd758db7480606838271ff93da6792fdd8d3cb94816d6a40e:
 2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614:
   ref: Currently selected items
   value: Vybrané položky
-1887011beb8375f0ccd6994d7482fff080c516a4bde5dc3fe2adb1a3:
-  ref: Update building (label)
-  value: Upravit budovu
-07f65eb2aea622a5567ed43ba120f316c3b68635156ee79a18a3d9d2:
-  ref: Create building (label)
-  value: Vytvořit budovu
-8a31506c52d0aed078087a8d14646cafc5d069dde8994b845edd28e5:
-  ref: Success
-  value: Úspěch
-241fa6ff11d73c9b829d4509341aaf22dcfcc2ab2d6f2197974c7431:
-  ref: Building updated
-  value: Budova byla úspěšně aktualizována
-0d1c0c3626fa33464f79d4d9527d7938e3e7dc02235ee27577f20bf5:
-  ref: Building created
-  value: Budova byla úspěšně vytvořena
-98bde802ea4ef18b74ed180278091dd1f828cb1bcda7053e87e71cf7:
-  ref: Building name
-  value: Název budovy
-0ac57336f29d47e8b922418746b4bd75a1ab1072e092ba716fb8664d:
-  ref: Building name (placeholder)
-  value: Zadejte prosím název budovy
-19f7b1b2cc2b0d861124553e7ebdb4500b898392948caef37d9125e2:
-  ref: Total count of buildings
-  value: Počet budov
-46cf5567dd18f8aee0e03b1b3d3f23dae19dc06ad0a685aee966417f:
-  ref: Create new building
-  value: Nová budova
-792ef23aed24b487a87c2187ff58652d826e05c9a6ea90065bdf057f:
-  ref: Create building
-  value: Vytvořit budovu
-3314f1cb30f831a893d9253b07297aba57e78e3a4c457e7d8a457f39:
-  ref: Update building
-  value: Upravit budovu
-bf97e945c5f98eb63930fe86aaf5efb08a5226a6b99178f2a348accd:
-  ref: Delete building
-  value: Odstranit budovu
-f8ef90d7e5500d03f5498dd8d737430c83518775d890916f5a93269f:
-  ref: Delete building (modal)
-  value: Odstranit budovu
-fe57342d0588cea22f8259f5877597054ad8d9d71047cf3a34156829:
-  ref: Do you really want to delete selected building?
-  value: |
-    <p>
-      Opravdu chcete odstranit vybranou budovu?
-    </p>
-    <p><i>
-      Tato akce může mít velký vliv na hratelnost a <b>není cesty zpět</b>.
-    </i></p>
-82119185c01850436786aecbce7018c09a8045f38261534d28ae1ec2:
-  ref: Building has been successfully removed
-  value: Budova byla úspěšně odstraněna
 99b23be4aaf0714665a8ea5010d2c2dfea9d946d41e3fe497ecf2e3f:
   ref: Update resource type (label)
   value: Upravit typ zdroje
 d87174f7edc1d34ca8602d791b0e9c6a0cae4c9f884e5e94b2bb24b0:
   ref: Create resource type (label)
   value: Nový typ zdroje
+8a31506c52d0aed078087a8d14646cafc5d069dde8994b845edd28e5:
+  ref: Success
+  value: Úspěch
 682cea3687a45430ef471de76485d7b3b7cd40eda4c1b9be1450c21f:
   ref: Resource type updated
   value: Resource type updated
@@ -252,12 +201,12 @@ cee4fc817f1e264108e50a361370de0f5586b187ca44c1d9f86d4670:
 805f1a4ae80d48a2d91aa9c6b759a111ac7b7822d371c67a8b0f408c:
   ref: Create resource
   value: Nový zdroj
-473177bebed2885fdf3e87cafa036ca76a184b1ceda623329b7bc602:
-  ref: Delete resource?
-  value: Delete resource?
 0a9f1ea1e6f187f9e8ebd0708ec11529ce6a3d3e955fe70653757f14:
   ref: Delete resource
   value: Odstranit zdroj
+7442cafd166830778e28bb5d4065e04018aaa7fadf5da9547c83c850:
+  ref: Delete resource (modal)
+  value: Delete resource (modal)
 906fceae0531693e23f12eda71028dfef5cd1c133cc1c968477333a9:
   ref: Do you really want to delete selected resource?
   value: Do you really want to delete selected resource?
@@ -318,42 +267,119 @@ d6fc3ccb7f30fdbb7e2c46e67ae87ad65329678fc9c70660da36dfe5:
 79660947db99cbac28fe7b3da0092bebc0f22b98062b7758fe07b02a:
   ref: Update producer
   value: Upravit výrobnu
-9c1fb2018f5ea283b6e3d41272981688033be51677bbc1496d819a38:
-  ref: Total count of producer inputs
-  value: Total count of producer inputs
-b30e71ba4fab097aa3b12ae7e811e56ead738e82cda9610a34581fe1:
-  ref: Create new producer input
-  value: Create new producer input
-eead001e68fb681bd841bd06c561c89a26f7ccf9f5b5a497a3198f0d:
-  ref: Create producer input
-  value: Create producer input
 16470b3a1e2f009857bcde70ee9e695da7059291775dc71f792f667f:
   ref: Update producer input
-  value: Update producer input
-13ae8f47b66f55be3644fd57c2e47ba5f2dfe6dd67d50bdabfe29028:
-  ref: Delete producer input?
-  value: Delete producer input?
+  value: Upravit vstupní zdroj
+eead001e68fb681bd841bd06c561c89a26f7ccf9f5b5a497a3198f0d:
+  ref: Create producer input
+  value: Nový vstupní zdroj
+f073a9f96b3c2e747900f5790d9504f1edcab87addf5a80db2d70a62:
+  ref: Producer input has been updated successfully.
+  value: Vstupní zdroj byl úspěšně aktualizován
+3a77e51c2d02b441bd064679a3e8df8bf4f6fc755f0259adb17cc03e:
+  ref: Producer input has been created successfully.
+  value: Vstupní zdroj byl úspěšně vytvořen
+3de6322cfac99d852190afff1bd801113aa29c32aec4c77785acc1d4:
+  ref: Producer (placeholder)
+  value: Vyberte prosím výrobnu
+28c596ee3e718fc367e59685ec4b514c7a5efefb1f3b8e1914f253b0:
+  ref: Resource (placeholder)
+  value: Vyberte prosím zdroj
+9cb6b24d87914f0c0ee944bc0c9e0e160102f2ba32dd5f9317c19f2f:
+  ref: Consumed amount
+  value: Spotřebované množství
+9c1fb2018f5ea283b6e3d41272981688033be51677bbc1496d819a38:
+  ref: Total count of producer inputs
+  value: Počet vstupních zdrojů výroben
+c6987ca9737bb51302e981700917bf4f4866753b5f283c1ed6de1b2b:
+  ref: Create producer input (modal)
+  value: Nový vstupní zdroj
 928c8ddfc67c61971095d1410db2fc0fd743ab1bbce227fbf8ac3046:
   ref: Delete producer input
-  value: Delete producer input
+  value: Odstranit vstupní zdroj
+44344a93fb44e5f2867a4f9aaea267fc3872e3182eb05c1ce793dee2:
+  ref: Delete producer input (modal)
+  value: Odstranit vstupní zdroj
 15b426e49d0bb114012810210bc1752f9fb6359c8d842bb5e1dcda30:
   ref: Do you really want to delete selected producer input?
-  value: Do you really want to delete selected producer input?
+  value: |
+    <p>
+      Opravdu chcete odstranit vybraný vstupní zdroj výrobny?
+    </p>
+    <p>
+        <i>
+            Tato akce bude může mít okrajový vliv na hratelnost. 
+        </i>
+    </p>
 2965000f3643d4b4a3e35619ad868140a2de9a2d934c8d8f2f1c17b7:
   ref: Producer input has been successfully deleted.
-  value: Producer input has been successfully deleted.
-77dca7c9b2e910050d0b2b1dcce64de0735c7561b5ffc7f2bfd66cb9:
-  ref: Building detail (title)
-  value: Building detail (title)
-553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
-  ref: Building detail
-  value: Detail budovy [{name}]
+  value: Vstupní zdroj výrobny byl úspěšně odstraněn
+1887011beb8375f0ccd6994d7482fff080c516a4bde5dc3fe2adb1a3:
+  ref: Update building (label)
+  value: Upravit budovu
+07f65eb2aea622a5567ed43ba120f316c3b68635156ee79a18a3d9d2:
+  ref: Create building (label)
+  value: Vytvořit budovu
+241fa6ff11d73c9b829d4509341aaf22dcfcc2ab2d6f2197974c7431:
+  ref: Building updated
+  value: Budova byla úspěšně aktualizována
+0d1c0c3626fa33464f79d4d9527d7938e3e7dc02235ee27577f20bf5:
+  ref: Building created
+  value: Budova byla úspěšně vytvořena
+98bde802ea4ef18b74ed180278091dd1f828cb1bcda7053e87e71cf7:
+  ref: Building name
+  value: Název budovy
+0ac57336f29d47e8b922418746b4bd75a1ab1072e092ba716fb8664d:
+  ref: Building name (placeholder)
+  value: Zadejte prosím název budovy
+19f7b1b2cc2b0d861124553e7ebdb4500b898392948caef37d9125e2:
+  ref: Total count of buildings
+  value: Počet budov
+46cf5567dd18f8aee0e03b1b3d3f23dae19dc06ad0a685aee966417f:
+  ref: Create new building
+  value: Nová budova
+792ef23aed24b487a87c2187ff58652d826e05c9a6ea90065bdf057f:
+  ref: Create building
+  value: Vytvořit budovu
+3314f1cb30f831a893d9253b07297aba57e78e3a4c457e7d8a457f39:
+  ref: Update building
+  value: Upravit budovu
+bf97e945c5f98eb63930fe86aaf5efb08a5226a6b99178f2a348accd:
+  ref: Delete building
+  value: Odstranit budovu
+f8ef90d7e5500d03f5498dd8d737430c83518775d890916f5a93269f:
+  ref: Delete building (modal)
+  value: Odstranit budovu
+fe57342d0588cea22f8259f5877597054ad8d9d71047cf3a34156829:
+  ref: Do you really want to delete selected building?
+  value: |
+    <p>
+      Opravdu chcete odstranit vybranou budovu?
+    </p>
+    <p><i>
+      Tato akce může mít velký vliv na hratelnost a <b>není cesty zpět</b>.
+    </i></p>
+82119185c01850436786aecbce7018c09a8045f38261534d28ae1ec2:
+  ref: Building has been successfully removed
+  value: Budova byla úspěšně odstraněna
+7efc8fada719e1a8f6162913dec8e4568da77c864373b1bb831a1168:
+  ref: Producer detail (title)
+  value: Detail výrobny [{name}]
+56db5cba41164e61cb42c625b8ccd3bb79e6aab4d8ffa4c194083f69:
+  ref: Producer detail
+  value: Detail výrobny [{name}]
 2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
   ref: Game overview
   value: Přehled hry
-56db5cba41164e61cb42c625b8ccd3bb79e6aab4d8ffa4c194083f69:
-  ref: Producer detail
-  value: Producer detail
+8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
+  ref: Game management
+  value: Správa hry
+77dca7c9b2e910050d0b2b1dcce64de0735c7561b5ffc7f2bfd66cb9:
+  ref: Building detail (title)
+  value: Detail budovy [{name}]
+553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
+  ref: Building detail
+  value: Detail budovy [{name}]
 0d75b92cf8490826cff49057a3173b5d7ae6797abf298f54a6ce6550:
   ref: DeRivean - The Invisible Game (title)
   value: DeRivean - The Invisible Game (title)
