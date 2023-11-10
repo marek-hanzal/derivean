@@ -1,5 +1,8 @@
 import {IconSubtask} from "@tabler/icons-react";
-import {tx}          from "@use-pico/i18n";
+import {
+    t,
+    tx
+}                    from "@use-pico/i18n";
 import {Page}        from "@use-pico/ui";
 
 export default function Index() {
@@ -7,7 +10,7 @@ export default function Index() {
         icon={<IconSubtask/>}
         text={{
             title:  tx()`Game management`,
-            header: tx()`Game management`,
+            header: t()`Game management`,
         }}
     >
     </Page>;

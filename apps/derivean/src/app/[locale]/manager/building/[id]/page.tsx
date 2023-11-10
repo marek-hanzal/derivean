@@ -1,7 +1,10 @@
 import {withBuildingRepository} from "@derivean/building";
 import {container}              from "@derivean/server";
 import {BuildingIcon}           from "@derivean/ui";
-import {tx}                     from "@use-pico/i18n";
+import {
+    t,
+    tx
+}                               from "@use-pico/i18n";
 import {
     Breadcrumbs,
     HomeIcon,
@@ -28,22 +31,22 @@ export default async function Index({params: {id}}: Index.Props) {
         icon={<BuildingIcon/>}
         text={{
             title:  tx({values: building})`Building detail`,
-            header: tx({values: building})`Building detail`,
+            header: t({values: building})`Building detail`,
         }}
         postfix={<Breadcrumbs
-            items={{
-                "/manager":               {
+            items={[
+                {
                     type: "link",
                     href: "/manager",
                     icon: <HomeIcon/>,
                 },
-                "/manager/building/list": {
+                {
                     type:  "link",
                     href:  "/manager/building/list",
                     label: "manager.building.list.title",
                     icon:  <ListIcon/>,
                 },
-            }}
+            ]}
         />}
     >
         {building.name}

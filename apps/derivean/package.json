@@ -32,6 +32,7 @@
 		"@use-pico/container": "^2.0.0",
 		"@use-pico/env": "^2.0.0",
 		"@use-pico/i18n": "^2.0.0",
+		"@use-pico/i18n-server": "^2.0.0",
 		"@use-pico/logger": "^2.0.0",
 		"@use-pico/migrator": "^2.0.0",
 		"@use-pico/navigation": "^2.0.0",

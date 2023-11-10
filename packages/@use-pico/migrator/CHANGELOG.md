@@ -1,5 +1,11 @@
 # @use-pico/migrator
 
+## 2.0.2
+
+### Patch Changes
+
+- Exported and simplified access to internal texts of components
+
 ## 2.0.1
 
 ### Patch Changes

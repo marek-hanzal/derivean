@@ -1,6 +1,6 @@
 "use client";
 
-import {tx}                  from "@use-pico/i18n";
+import {t}                   from "@use-pico/i18n";
 import {
     type FilterSchema,
     type IQueryStore,
@@ -25,8 +25,9 @@ import {type ReactNode}      from "react";
 export namespace DeleteByModal {
     export interface Props<
         TFilterSchema extends FilterSchema,
-    > extends Modal.Props {
-        label: {
+    > extends Omit<Modal.Props, "title"> {
+        text: {
+            title: ReactNode;
             content: ReactNode;
             confirm?: ReactNode;
             success: {
@@ -46,7 +47,7 @@ export const DeleteByModal = <
     TFilterSchema extends FilterSchema,
 >(
     {
-        label,
+        text,
         withMutation,
         withQueryStore,
         ...props
@@ -71,10 +72,10 @@ export const DeleteByModal = <
         modalProps={{
             closeOnClickOutside: !deleteMutation.isPending,
         }}
-        title={"delete-by.title"}
+        title={text.title}
         {...props}
     >
-        {label.content}
+        {text.content}
         <Divider mt={"sm"} mb={"sm"}/>
         <Flex
             justify={"space-between"}
@@ -88,7 +89,7 @@ export const DeleteByModal = <
                 disabled={deleteMutation.isPending}
                 onClick={() => close(props.modalId)}
             >
-                {tx()`Cancel`}
+                {t()`Cancel`}
             </Button>
             <Button
                 size={"lg"}
@@ -104,14 +105,14 @@ export const DeleteByModal = <
                     }, {
                         onSuccess: () => {
                             successNotification({
-                                ...label.success
+                                ...text.success
                             });
                         },
                         onSettled: () => close(props.modalId),
                     });
                 }}
             >
-                {label.confirm ?? tx()`Delete`}
+                {text.confirm ?? t()`Delete`}
             </Button>
         </Flex>
     </Modal>;

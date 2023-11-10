@@ -3,7 +3,10 @@ import {
     ResourceTable
 }                      from "@derivean/resource";
 import {ResourceIcon}  from "@derivean/ui";
-import {tx}            from "@use-pico/i18n";
+import {
+    t,
+    tx
+}                      from "@use-pico/i18n";
 import {StoreProvider} from "@use-pico/store";
 import {
     Breadcrumbs,
@@ -16,16 +19,16 @@ export default function Index() {
         icon={<ResourceIcon/>}
         text={{
             title:  tx()`Resource list`,
-            header: tx()`Resource list`,
+            header: t()`Resource list`,
         }}
         postfix={<Breadcrumbs
-            items={{
-                "/manager": {
+            items={[
+                {
                     type: "link",
                     href: "/manager",
                     icon: <HomeIcon/>,
                 },
-            }}
+            ]}
         />}
     >
         <StoreProvider

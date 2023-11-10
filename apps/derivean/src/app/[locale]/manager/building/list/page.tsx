@@ -19,13 +19,13 @@ export default function Index() {
             header: tx()`Building list`,
         }}
         postfix={<Breadcrumbs
-            items={{
-                "/manager": {
+            items={[
+                {
                     type: "link",
                     href: "/manager",
                     icon: <HomeIcon/>,
                 },
-            }}
+            ]}
         />}
     >
         <StoreProvider

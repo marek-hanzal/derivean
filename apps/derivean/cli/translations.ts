@@ -1,4 +1,4 @@
-import {withTx} from "@use-pico/i18n";
+import {withTx} from "@use-pico/i18n-server";
 
 withTx({
     packages: [

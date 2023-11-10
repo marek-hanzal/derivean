@@ -1,12 +1,13 @@
+import {tx}             from "@use-pico/i18n";
 import {
     type IQueryStore,
     type QuerySchema
-}                  from "@use-pico/query";
+}                       from "@use-pico/query";
 import {
     type IWithSourceQuery,
     useCount
-}                  from "@use-pico/source";
-import {useStore}  from "@use-pico/store";
+}                       from "@use-pico/source";
+import {useStore}       from "@use-pico/store";
 import {
     BlockStore,
     Divider,
@@ -18,20 +19,20 @@ import {
     Pagination as CoolPagination,
     Select,
     Text
-}                  from "@use-pico/ui";
-import {ReactNode} from "react";
+}                       from "@use-pico/ui";
+import {type ReactNode} from "react";
 
 export namespace Pagination {
     export interface Props<
         TQuerySchema extends QuerySchema<any, any>,
     > extends Partial<CoolPagination.Props> {
+        text?: {
+            total?: ReactNode;
+        };
         withQueryStore: IQueryStore.Store<TQuerySchema>;
         withSourceQuery: IWithSourceQuery<TQuerySchema, any>;
         hideOnSingle?: boolean;
         refresh?: number;
-        text: {
-            total: ReactNode;
-        };
     }
 }
 
@@ -39,11 +40,11 @@ export const Pagination = <
     TQuerySchema extends QuerySchema<any, any>,
 >(
     {
+        text,
         withQueryStore,
         withSourceQuery,
         hideOnSingle = true,
         refresh,
-        text,
         ...props
     }: Pagination.Props<TQuerySchema>
 ) => {
@@ -76,7 +77,8 @@ export const Pagination = <
         {hideOnSingle && pages === 1 ? null : result.isSuccess && result.data.count > 0 ? <GridCol span={"content"}>
             <CoolPagination
                 disabled={isBlock}
-                withEdges
+                withControls={pages > 10}
+                withEdges={pages > 10}
                 size={"md"}
                 radius={"sm"}
                 total={pages}
@@ -90,7 +92,7 @@ export const Pagination = <
         {result.isLoading && <GridCol span={"auto"}>
             <Group gap={"xs"}>
                 <Text c={"dimmed"}>
-                    {text.total}
+                    {text?.total || tx()`Total number of items`}
                 </Text>
                 <NativeBreadcrumbs>
                     <Text size={"lg"} fw={"500"}>
@@ -103,7 +105,7 @@ export const Pagination = <
             {hideOnSingle ? (pages > 1) : (pages > 0) && <Divider orientation={"vertical"}/>}
             <Group gap={"xs"}>
                 <Text c={"dimmed"}>
-                    {text.total}
+                    {text?.total || tx()`Total number of items`}
                 </Text>
                 <NativeBreadcrumbs>
                     <Text

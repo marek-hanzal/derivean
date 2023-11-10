@@ -2,7 +2,10 @@ import {
     ResourceTypeQueryStore,
     ResourceTypeTable
 }                      from "@derivean/resource";
-import {tx}            from "@use-pico/i18n";
+import {
+    t,
+    tx
+}                      from "@use-pico/i18n";
 import {StoreProvider} from "@use-pico/store";
 import {
     Breadcrumbs,
@@ -16,16 +19,16 @@ export default function Index() {
         icon={<ListIcon/>}
         text={{
             title:  tx()`Resource type list`,
-            header: tx()`Resource type list`,
+            header: t()`Resource type list`,
         }}
         postfix={<Breadcrumbs
-            items={{
-                "/manager": {
+            items={[
+                {
                     type: "link",
                     href: "/manager",
                     icon: <HomeIcon/>,
                 },
-            }}
+            ]}
         />}
     >
         <StoreProvider

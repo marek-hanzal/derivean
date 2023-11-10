@@ -1,4 +1,4 @@
-import {tx}       from "@use-pico/i18n";
+import {t}        from "@use-pico/i18n";
 import {isString} from "@use-pico/utils";
 import {
     type FC,
@@ -14,7 +14,7 @@ export namespace ValueInline {
         /**
          * Label of a value (goes through translations).
          */
-        withLabel: ReactNode;
+        label: ReactNode;
         /**
          * Whatever value
          */
@@ -28,7 +28,7 @@ export namespace ValueInline {
  */
 export const ValueInline: FC<ValueInline.Props> = (
     {
-        withLabel,
+        label,
         value,
         withAction,
         children,
@@ -45,7 +45,7 @@ export const ValueInline: FC<ValueInline.Props> = (
                 justify={"apart"}
             >
                 <Text fw={500} c={"dimmed"}>
-                    {withLabel}
+                    {label}
                 </Text>
                 {withAction}
             </Group>
@@ -54,7 +54,7 @@ export const ValueInline: FC<ValueInline.Props> = (
             inheritPadding
             py={"xs"}
         >
-            {isString(value) ? <Text fw={500}>{value}</Text> : (value || tx()`Value not set`)}
+            {isString(value) ? <Text fw={500}>{value}</Text> : (value || t()`Value not set`)}
         </Card.Section>
         {children && <Card.Section
             inheritPadding

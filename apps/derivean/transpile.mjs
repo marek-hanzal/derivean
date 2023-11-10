@@ -19,6 +19,7 @@ export const transpile = [
     '@use-pico/form',
     '@use-pico/hook',
     '@use-pico/i18n',
+    '@use-pico/i18n-server',
     '@use-pico/job',
     '@use-pico/logger',
     '@use-pico/navigation',

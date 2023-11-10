@@ -1,7 +1,7 @@
 "use client";
 
 import {ProducerIcon}           from "@derivean/ui";
-import {tx}                     from "@use-pico/i18n";
+import {t}                      from "@use-pico/i18n";
 import {ButtonLink}             from "@use-pico/ui";
 import {
     HumanSeconds,
@@ -34,7 +34,7 @@ export namespace ProducerTable {
 export const ProducerTable: FC<ProducerTable.Props> = props => {
     return <Table
         text={{
-            total: tx()`Producer count`,
+            total: t()`Producer count`,
         }}
         name={"producer"}
         icon={<ProducerIcon/>}
@@ -42,8 +42,8 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
         tableActionProps={{
             text: {
                 create: {
-                    title: tx()`Create new producer`,
-                    label: tx()`Create producer`,
+                    title: t()`Create new producer`,
+                    label: t()`Create producer`,
                 }
             },
             upsertForm: ({modalId}) => <ProducerUpsertForm
@@ -53,19 +53,19 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
         rowActionProps={{
             text: {
                 delete: {
-                    title: tx()`Delete producer?`,
-                    label: tx()`Delete producer`,
+                    title: t()`Delete producer?`,
+                    label: t()`Delete producer`,
                     modal: {
-                        content: tx()`Do you really want to delete selected producer?`,
+                        content: t()`Do you really want to delete selected producer?`,
                         success: {
-                            title:   tx()`Success`,
-                            message: tx()`Producer has been successfully deleted.`,
+                            title: t()`Success`,
+                            message: t()`Producer has been successfully deleted.`,
                         },
                     }
                 },
                 update: {
-                    title: tx()`Update producer`,
-                    label: tx()`Update producer`,
+                    title: t()`Update producer`,
+                    label: t()`Update producer`,
                 },
             },
             withMutation: withProducerMutation,
@@ -79,7 +79,7 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
         }}
         columns={{
             name: {
-                title: tx()`Producer name`,
+                title: t()`Producer name`,
                 render: ({item}) => <ButtonLink
                     icon={<ProducerIcon/>}
                     href={{
@@ -92,7 +92,7 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
                 />,
             },
             time: {
-                title: tx()`Production time`,
+                title: t()`Production time`,
                 render: ({item}) => <HumanSeconds seconds={item.time}/>,
                 width:  14,
             },

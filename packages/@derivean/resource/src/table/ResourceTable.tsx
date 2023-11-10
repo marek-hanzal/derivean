@@ -1,10 +1,7 @@
 "use client";
 
 import {ResourceIcon}             from "@derivean/ui";
-import {
-    tx,
-    txr
-}                                 from "@use-pico/i18n";
+import {t,}                       from "@use-pico/i18n";
 import {Table}                    from "@use-pico/ui-extra";
 import {type FC}                  from "react";
 import {ResourceTypeFetch}        from "../fetch/ResourceTypeFetch";
@@ -35,11 +32,11 @@ export namespace ResourceTable {
 export const ResourceTable: FC<ResourceTable.Props> = props => {
     return <Table
         text={{
-            total: tx()`Resource count`,
+            total: t()`Resource count`,
             count: {
                 loading: {
-                    title:    tx()`Loading resources`,
-                    subtitle: tx()`We're preparing resource list for you...`,
+                    title:    t()`Loading resources`,
+                    subtitle: t()`We're preparing resource list for you...`,
                 },
             },
         }}
@@ -48,8 +45,8 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
         tableActionProps={{
             text: {
                 create: {
-                    title: tx()`Create new resource`,
-                    label: tx()`Create resource`,
+                    title: t()`Create new resource`,
+                    label: t()`Create resource`,
                 },
             },
             upsertForm: ({modalId}) => <ResourceUpsertForm
@@ -60,19 +57,19 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
         rowActionProps={{
             text: {
                 delete: {
-                    title: tx()`Delete resource?`,
-                    label: tx()`Delete resource`,
+                    title: t()`Delete resource?`,
+                    label: t()`Delete resource`,
                     modal: {
-                        content: txr()`Do you really want to delete selected resource?`,
+                        content: t()`Do you really want to delete selected resource?`,
                         success: {
-                            title:   tx()`Success`,
-                            message: tx()`Resource has been successfully deleted.`,
+                            title:   t()`Success`,
+                            message: t()`Resource has been successfully deleted.`,
                         },
                     }
                 },
                 update: {
-                    title: tx()`Update resource`,
-                    label: tx()`Update resource`,
+                    title: t()`Update resource`,
+                    label: t()`Update resource`,
                 },
             },
             withMutation: withResourceMutation,
@@ -86,11 +83,11 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
         }}
         columns={{
             name:   {
-                title: tx()`Resource name`,
+                title: t()`Resource name`,
                 render: ({item}) => item.name,
             },
             typeId: {
-                title: tx()`Resource type`,
+                title: t()`Resource type`,
                 withFilter: {
                     isFilter: filter => filter?.typeId !== undefined,
                     onFilter: ({

@@ -2,20 +2,21 @@
 
 import {Group}           from "@mantine/core";
 import {isLink}          from "@use-pico/navigation";
-import {useStore}        from "@use-pico/store";
 import {cx}              from "@use-pico/utils";
 import {usePathname}     from "next/navigation";
 import {type FC}         from "react";
 import {type IMenuItems} from "../api/IMenuItems";
-import {ActiveStore}     from "../store/ActiveStore";
 import {isMenuGroup}     from "./isMenuGroup";
+import {isMenuLabel}     from "./isMenuLabel";
 import classes           from "./MainMenu.module.css";
 import {MenuGroup}       from "./MenuGroup";
+import {MenuLabel}       from "./MenuLabel";
 import {MenuLink}        from "./MenuLink";
 
 export namespace MainMenu {
     export interface Props {
         links: IMenuItems;
+        active?: string[];
     }
 
     export type Classes = typeof classes;
@@ -24,30 +25,35 @@ export namespace MainMenu {
 export const MainMenu: FC<MainMenu.Props> = (
     {
         links,
+        active,
     }) => {
-    const {active: withActive} = useStore(ActiveStore, ({active}) => ({active}));
     const pathname = usePathname();
 
     return <Group
         className={classes.MenuGroup}
         gap={0}
     >
-        {Object.entries(links).map(([id, item]) => {
+        {links.map((item, index) => {
             if (isLink(item)) {
                 return <MenuLink
-                    key={id}
+                    key={`main-menu-${index}-${item.href}`}
                     className={cx(
                         classes.Link,
                         classes.LinkActive ? {
-                            [classes.LinkActive]: pathname?.includes(item.href) || withActive.includes(item.href) || withActive.includes(id),
+                            [classes.LinkActive]: pathname?.includes(item.href) || active?.includes(item.href),
                         } : undefined
                     )}
                     {...item}
                 />;
             } else if (isMenuGroup(item)) {
                 return <MenuGroup
-                    key={id}
+                    key={`main-menu-group-${index}`}
                     className={classes.Link}
+                    {...item}
+                />;
+            } else if (isMenuLabel(item)) {
+                return <MenuLabel
+                    key={`main-menu-label-${index}`}
                     {...item}
                 />;
             }

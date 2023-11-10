@@ -1,5 +1,5 @@
 import {TranslationInstance} from "../instance/TranslationInstance";
-import {keyOf}               from "../utils/keyOf";
+import {translation}         from "./translation";
 
 export namespace tx {
     export interface Props {
@@ -8,11 +8,13 @@ export namespace tx {
     }
 }
 
+/**
+ * Simple text translation; supports (usually) only text interpolation, but cannot expand any components (like bold and so on).
+ */
 export function tx(
     props?: tx.Props
 ) {
     return (input: TemplateStringsArray): string => {
-        const key = input.join("");
         return TranslationInstance.instance.pipeline.text.reduce(
             (text, current) => {
                 return current({
@@ -20,7 +22,7 @@ export function tx(
                     values: props?.values,
                 });
             },
-            TranslationInstance.instance.translations[keyOf(key)]?.["value"] ?? props?.fallback ?? key
+            translation(input.join(""), props?.fallback) as string
         );
     };
 }

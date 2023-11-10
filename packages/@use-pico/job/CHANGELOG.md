@@ -1,5 +1,39 @@
 # @use-pico/job
 
+## 2.0.7
+
+### Patch Changes
+
+- e599dc7: Version bump
+- Updated dependencies
+- Updated dependencies [e599dc7]
+    - @use-pico/i18n@2.0.7
+    - @use-pico/ui@2.0.7
+    - @use-pico/query@2.0.9
+    - @use-pico/store@2.0.5
+
+## 2.0.6
+
+### Patch Changes
+
+- Optional JobAsync text
+- Updated dependencies [2c9ecb3]
+    - @use-pico/i18n@2.0.6
+
+## 2.0.5
+
+### Patch Changes
+
+- Updated access to internal texts
+- Updated dependencies
+    - @use-pico/ui@2.0.6
+
+## 2.0.4
+
+### Patch Changes
+
+- Exported and simplified access to internal texts of components
+
 ## 2.0.3
 
 ### Patch Changes

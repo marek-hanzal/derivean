@@ -1,6 +1,6 @@
 import {Table}                   from "@mantine/core";
 import {IconFileDots}            from "@tabler/icons-react";
-import {tx}                      from "@use-pico/i18n";
+import {t}                       from "@use-pico/i18n";
 import {type WithIdentitySchema} from "@use-pico/schema";
 import {
     type FC,
@@ -15,7 +15,7 @@ export namespace ItemsInline {
     export interface Props<
         TItem extends WithIdentitySchema.Type,
     > extends Group.Props {
-        label?: {
+        text?: {
             empty: ReactNode;
         };
         items: TItem[];
@@ -34,7 +34,7 @@ export const ItemsInline = <
     TItem extends WithIdentitySchema.Type,
 >(
     {
-        label,
+        text,
         Item,
         items,
         limit,
@@ -46,7 +46,7 @@ export const ItemsInline = <
                 onClick: e => e.stopPropagation(),
             }}
             icon={<IconFileDots/>}
-            title={tx()`More`}
+            title={t()`More`}
             modalId={"detail"}
         >
             <Table
@@ -68,7 +68,7 @@ export const ItemsInline = <
             </Table>
         </Modal>
         <InlineLimit
-            label={label}
+            label={text}
             limit={limit}
             items={limit ? items.slice(0, limit) : items}
             Item={Item}

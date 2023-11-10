@@ -1,7 +1,7 @@
 "use client";
 
 import {ResourceIcon}               from "@derivean/ui";
-import {tx}                         from "@use-pico/i18n";
+import {t}                          from "@use-pico/i18n";
 import {Table}                      from "@use-pico/ui-extra";
 import {type FC}                    from "react";
 import {ResourceTypeUpsertForm}     from "../form/ResourceTypeUpsertForm";
@@ -29,7 +29,7 @@ export namespace ResourceTypeTable {
 export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
     return <Table
         text={{
-            total: tx()`Resource type count`,
+            total: t()`Resource type count`,
         }}
         name={"resource.type"}
         icon={<ResourceIcon/>}
@@ -37,8 +37,8 @@ export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
         tableActionProps={{
             text: {
                 create: {
-                    title: tx()`Create new resource type`,
-                    label: tx()`Create resource type`,
+                    title: t()`Create new resource type`,
+                    label: t()`Create resource type`,
                 }
             },
             upsertForm: ({modalId}) => <ResourceTypeUpsertForm
@@ -48,17 +48,17 @@ export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
         rowActionProps={{
             text: {
                 update: {
-                    title: tx()`Update resource type`,
-                    label: tx()`Update resource type`,
+                    title: t()`Update resource type`,
+                    label: t()`Update resource type`,
                 },
                 delete: {
-                    title: tx()`Delete resource type?`,
-                    label: tx()`Delete resource type`,
+                    title: t()`Delete resource type?`,
+                    label: t()`Delete resource type`,
                     modal: {
-                        content: tx()`Do you really want to delete selected resource type?`,
+                        content: t()`Do you really want to delete selected resource type?`,
                         success: {
-                            title:   tx()`Success`,
-                            message: tx()`Selected resource type has been successfully deleted.`,
+                            title: t()`Success`,
+                            message: t()`Selected resource type has been successfully deleted.`,
                         },
                     }
                 }

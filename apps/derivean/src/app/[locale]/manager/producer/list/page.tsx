@@ -3,7 +3,10 @@ import {
     ProducerTable
 }                      from "@derivean/producer";
 import {ProducerIcon}  from "@derivean/ui";
-import {tx}            from "@use-pico/i18n";
+import {
+    t,
+    tx
+}                      from "@use-pico/i18n";
 import {StoreProvider} from "@use-pico/store";
 import {
     Breadcrumbs,
@@ -16,16 +19,16 @@ export default function Index() {
         icon={<ProducerIcon/>}
         text={{
             title:  tx()`Producer list`,
-            header: tx()`Producer list`,
+            header: t()`Producer list`,
         }}
         postfix={<Breadcrumbs
-            items={{
-                "/manager": {
+            items={[
+                {
                     type: "link",
                     href: "/manager",
                     icon: <HomeIcon/>,
                 },
-            }}
+            ]}
         />}
     >
         <StoreProvider

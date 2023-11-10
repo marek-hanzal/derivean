@@ -5,7 +5,7 @@ import {
     ResourceInline
 }                                  from "@derivean/resource";
 import {ProducerIcon,}             from "@derivean/ui";
-import {tx}                        from "@use-pico/i18n";
+import {t}                         from "@use-pico/i18n";
 import {ButtonLink}                from "@use-pico/ui";
 import {Table}                     from "@use-pico/ui-extra";
 import {type FC}                   from "react";
@@ -45,15 +45,15 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
 ) => {
     return <Table
         text={{
-            total: tx()`Total count of producer inputs`,
+            total: t()`Total count of producer inputs`,
         }}
         name={"producer.input"}
         icon={<ProducerIcon/>}
         tableActionProps={{
             text: {
                 create: {
-                    title: tx()`Create new producer input`,
-                    label: tx()`Create producer input`,
+                    title: t()`Create new producer input`,
+                    label: t()`Create producer input`,
                 },
             },
             upsertForm: ({modalId}) => <ProducerInputUpsertForm
@@ -64,17 +64,17 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
         rowActionProps={{
             text: {
                 update: {
-                    title: tx()`Update producer input`,
-                    label: tx()`Update producer input`,
+                    title: t()`Update producer input`,
+                    label: t()`Update producer input`,
                 },
                 delete: {
-                    title: tx()`Delete producer input?`,
-                    label: tx()`Delete producer input`,
+                    title: t()`Delete producer input?`,
+                    label: t()`Delete producer input`,
                     modal: {
-                        content: tx()`Do you really want to delete selected producer input?`,
+                        content: t()`Do you really want to delete selected producer input?`,
                         success: {
-                            title:   tx()`Success`,
-                            message: tx()`Producer input has been successfully deleted.`,
+                            title: t()`Success`,
+                            message: t()`Producer input has been successfully deleted.`,
                         },
                     }
                 },

@@ -1,9 +1,10 @@
-import {type ReactNode} from "react";
-import {type IMenuLink} from "./IMenuLink";
+import {type ReactNode}  from "react";
+import {type IMenuLabel} from "./IMenuLabel";
+import {type IMenuLink}  from "./IMenuLink";
 
 export interface IMenuGroup {
     type: "group";
-    label: string;
+    label?: ReactNode;
     icon?: ReactNode;
-    items: Record<string, IMenuLink>;
+    items: (IMenuLabel | IMenuLink)[];
 }

@@ -1,5 +1,59 @@
 # @use-pico/ui
 
+## 2.0.13
+
+### Patch Changes
+
+- Menu label "label" is required
+
+## 2.0.12
+
+### Patch Changes
+
+- Added menu label to MenuGroup
+
+## 2.0.11
+
+### Patch Changes
+
+- Added MenuLabel to menu items
+
+## 2.0.10
+
+### Patch Changes
+
+- Renamed withLabel in MenuHref
+
+## 2.0.9
+
+### Patch Changes
+
+- Renamed withLabel in MenuLabel
+
+## 2.0.8
+
+### Patch Changes
+
+- Renamed withLabel on MenuItem
+
+## 2.0.7
+
+### Patch Changes
+
+- Version bump
+- e599dc7: Version bump
+- Updated dependencies
+- Updated dependencies [e599dc7]
+    - @use-pico/navigation@2.0.5
+    - @use-pico/i18n@2.0.7
+    - @use-pico/store@2.0.5
+
+## 2.0.6
+
+### Patch Changes
+
+- Updated access to internal texts
+
 ## 2.0.5
 
 ### Patch Changes
