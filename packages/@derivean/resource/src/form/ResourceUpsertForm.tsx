@@ -3,6 +3,10 @@ import {
     Form,
     TextInput
 }                             from "@use-pico/form";
+import {
+    t,
+    tx
+}                             from "@use-pico/i18n";
 import {type WithEntity}      from "@use-pico/types";
 import {type FC}              from "react";
 import {ResourceTypeSelect}   from "../input/ResourceTypeSelect";
@@ -28,11 +32,31 @@ export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = (
     }
 ) => {
     return <Form
+        text={{
+            submit:  entity ? t()`Update resource (label)` : t()`Create resource (label)`,
+            success: {
+                title:   t()`Success`,
+                message: entity ? t()`Resource updated` : t()`Resource created`,
+            }
+        }}
         withMutation={withResourceMutation}
         schema={ResourceShapeSchema}
         inputs={{
-            name:   TextInput,
-            typeId: ResourceTypeSelect,
+            name:   props => <TextInput
+                label={t()`Resource name`}
+                placeholder={tx()`Resource name (placeholder)`}
+                {...props}
+            />,
+            typeId: props => <ResourceTypeSelect
+                text={{
+                    label:       t()`Resource type`,
+                    placeholder: tx()`Resource type (placeholder)`,
+                    selector:    {
+                        title: t()`Resource type selector`,
+                    }
+                }}
+                {...props}
+            />,
         }}
         icon={<ResourceIcon/>}
         values={entity}

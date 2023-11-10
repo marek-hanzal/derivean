@@ -28,7 +28,6 @@
 		"@phenomnomnominal/tsquery": "^6.1.3"
 	},
 	"peerDependencies": {
-		"@use-pico/i18n": "^2.0.7",
 		"@use-pico/utils": "^2.0.0",
 		"yaml": "^2.3.4"
 	},

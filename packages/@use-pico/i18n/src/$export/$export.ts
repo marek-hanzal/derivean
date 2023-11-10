@@ -22,7 +22,6 @@ export * from "./TranslationsSchema";
 export * from "./WithLocaleSchema";
 export * from "./fromUtc";
 export * from "./isDateTime";
-export * from "./keyOf";
 export * from "./localeOf";
 export * from "./rangeOf";
 export * from "./t";

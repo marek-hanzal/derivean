@@ -37,7 +37,7 @@ export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
         tableActionProps={{
             text: {
                 create: {
-                    title: t()`Create new resource type`,
+                    title: t()`Create resource type (modal)`,
                     label: t()`Create resource type`,
                 }
             },
@@ -52,9 +52,9 @@ export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
                     label: t()`Update resource type`,
                 },
                 delete: {
-                    title: t()`Delete resource type?`,
                     label: t()`Delete resource type`,
                     modal: {
+                        title:   t()`Delete resource type (modal)`,
                         content: t()`Do you really want to delete selected resource type?`,
                         success: {
                             title: t()`Success`,
@@ -74,6 +74,7 @@ export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
         }}
         columns={{
             name: {
+                title: t()`Resource type name`,
                 render: ({item}) => item.name,
             },
         }}

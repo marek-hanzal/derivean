@@ -1,7 +1,7 @@
 "use client";
 
 import {BuildingIcon}             from "@derivean/ui";
-import {tx}                       from "@use-pico/i18n";
+import {t}                        from "@use-pico/i18n";
 import {ButtonLink}               from "@use-pico/ui";
 import {Table}                    from "@use-pico/ui-extra";
 import {type FC}                  from "react";
@@ -29,15 +29,15 @@ export namespace BuildingTable {
 export const BuildingTable: FC<BuildingTable.Props> = props => {
     return <Table
         text={{
-            total: tx()`Total count of buildings`,
+            total: t()`Total count of buildings`,
         }}
         name={"building"}
         icon={<BuildingIcon/>}
         tableActionProps={{
             text: {
                 create: {
-                    title: tx()`Create new building`,
-                    label: tx()`Create building`,
+                    title: t()`Create new building`,
+                    label: t()`Create building`,
                 },
             },
             upsertForm: ({modalId}) => <BuildingUpsertForm
@@ -47,17 +47,17 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
         rowActionProps={{
             text: {
                 update: {
-                    title: tx()`Update building`,
-                    label: tx()`Update building`,
+                    title: t()`Update building`,
+                    label: t()`Update building`,
                 },
                 delete: {
-                    title: tx()`Delete building?`,
-                    label: tx()`Delete building`,
+                    label: t()`Delete building`,
                     modal: {
-                        content: tx()`Do you really want to delete selected building?`,
+                        title:   t()`Delete building (modal)`,
+                        content: t()`Do you really want to delete selected building?`,
                         success: {
-                            title:   tx()`Success`,
-                            message: tx()`Building has been successfully removed`,
+                            title:   t()`Success`,
+                            message: t()`Building has been successfully removed`,
                         },
                     },
                 },
@@ -73,6 +73,7 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
         }}
         columns={{
             name: {
+                title: t()`Building name`,
                 render: ({item}) => <ButtonLink
                     icon={<BuildingIcon/>}
                     href={{

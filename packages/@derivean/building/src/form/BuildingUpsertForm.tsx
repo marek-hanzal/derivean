@@ -3,6 +3,10 @@ import {
     Form,
     TextInput
 }                             from "@use-pico/form";
+import {
+    t,
+    tx
+}                             from "@use-pico/i18n";
 import {type WithEntity}      from "@use-pico/types";
 import {type FC}              from "react";
 import {withBuildingMutation} from "../mutation/withBuildingMutation";
@@ -27,11 +31,22 @@ export const BuildingUpsertForm: FC<BuildingUpsertForm.Props> = (
     }
 ) => {
     return <Form
+        text={{
+            submit:  entity ? t()`Update building (label)` : t()`Create building (label)`,
+            success: {
+                title:   t()`Success`,
+                message: entity ? t()`Building updated` : t()`Building created`,
+            }
+        }}
         icon={<BuildingIcon/>}
         withMutation={withBuildingMutation}
         schema={BuildingShapeSchema}
         inputs={{
-            name: TextInput,
+            name: props => <TextInput
+                label={t()`Building name`}
+                placeholder={tx()`Building name (placeholder)`}
+                {...props}
+            />,
         }}
         values={entity}
         toRequest={values => (entity ? {

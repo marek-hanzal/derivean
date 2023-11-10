@@ -68,9 +68,9 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
                     label: t()`Update producer input`,
                 },
                 delete: {
-                    title: t()`Delete producer input?`,
                     label: t()`Delete producer input`,
                     modal: {
+                        title:   t()`Delete producer input (modal)`,
                         content: t()`Do you really want to delete selected producer input?`,
                         success: {
                             title: t()`Success`,
@@ -91,6 +91,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
         }}
         columns={{
             producerId: {
+                title: t()`Producer name`,
                 render: ({item}) => <ProducerFetch
                     override={item.producerId}
                     WithSuccess={({entity}) => <ButtonLink
@@ -106,12 +107,14 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
                 />,
             },
             resourceId: {
+                title: t()`Resource name`,
                 render: ({item}) => <ResourceFetch
                     override={item.resourceId}
                     WithSuccess={ResourceInline}
                 />,
             },
             amount:     {
+                title: t()`Produced amount`,
                 render: ({item}) => `${item.amount} - toHuman()`,
                 width:  14,
             },

@@ -53,9 +53,9 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
         rowActionProps={{
             text: {
                 delete: {
-                    title: t()`Delete producer?`,
                     label: t()`Delete producer`,
                     modal: {
+                        title:   t()`Delete producer (modal)`,
                         content: t()`Do you really want to delete selected producer?`,
                         success: {
                             title: t()`Success`,

@@ -47,7 +47,8 @@
 		"next-compose-plugins": "^2.2.1",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
-		"tsx": "^3.14.0"
+		"tsx": "^3.14.0",
+		"yaml": "^2.3.4"
 	},
 	"devDependencies": {
 		"@types/node": "^20.8.3",

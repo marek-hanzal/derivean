@@ -38,7 +38,7 @@ export default async function Index({params: {id}}: Index.Props) {
     return <Page
         icon={<ProducerIcon/>}
         text={{
-            title:  tx({values: producer})`Producer detail`,
+            title: tx({values: producer})`Producer detail (title)`,
             header: t({values: producer})`Producer detail`,
         }}
         postfix={<Breadcrumbs
@@ -51,7 +51,7 @@ export default async function Index({params: {id}}: Index.Props) {
                 {
                     type:  "link",
                     href:  "/manager/producer/list",
-                    label: "manager.producer.list.title",
+                    label: t()`Producer list`,
                     icon:  <ListIcon/>,
                 },
             ]}

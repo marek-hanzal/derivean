@@ -26,7 +26,6 @@
 	"dependencies": {
 		"@jouwweb/interpolate-components": "^1.4.1",
 		"@types/luxon": "^3.3.1",
-		"js-sha256": "^0.10.1",
 		"luxon": "^3.4.1",
 		"preferred-locale": "^2.0.1",
 		"pupa": "^3.1.0"

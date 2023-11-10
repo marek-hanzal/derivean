@@ -57,9 +57,9 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
         rowActionProps={{
             text: {
                 delete: {
-                    title: t()`Delete resource?`,
                     label: t()`Delete resource`,
                     modal: {
+                        title: t()`Delete resource (modal)`,
                         content: t()`Do you really want to delete selected resource?`,
                         success: {
                             title:   t()`Success`,

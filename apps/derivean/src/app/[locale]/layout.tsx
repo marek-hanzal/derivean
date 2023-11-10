@@ -4,7 +4,9 @@ import {
 }                               from "@derivean/ui";
 import {withInstance}           from "@use-pico/i18n";
 import {LayoutShell}            from "@use-pico/ui-extra";
+import fs                       from "node:fs";
 import {type PropsWithChildren} from "react";
+import {parse}                  from "yaml";
 
 export namespace Layout {
     export type Props = PropsWithChildren<{
@@ -22,8 +24,8 @@ export default async function Layout(
 ) {
     const {translations} = withInstance({
         locale,
-        translations: (await import(`../../translation/${locale}.json`)).default,
-        pipeline: withDefaultPipeline(),
+        translations: parse(fs.readFileSync(`./src/translation/${locale}.yaml`, {encoding: "utf-8"})),
+        pipeline:     withDefaultPipeline(),
     });
 
     return <LayoutShell

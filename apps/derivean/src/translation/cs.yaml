@@ -1,0 +1,374 @@
+b4e8a29838ae1162bde0b03ce16b75d4739d6bfeeac544c56a20ac10:
+  ref: Cancel
+  value: Zavřít
+7056d01d885e2e1c2bc274b88194ee72234432a7dc8090652f1577f9:
+  ref: Value not set
+  value: Nenastaveno
+2848b629790c621cbe5ab25e79e831dfe7a52eb8052ecbcb7406a527:
+  ref: Show more items
+  value: Show more items
+b23991ae4c7c5d41384356888bea36d9ad9180e35b63f2ca2ca27e74:
+  ref: More
+  value: Více
+c028e668a86cc8c4bf3ba442001649e1036228031a9b79654cb53eb0:
+  ref: Sign-in
+  value: Přihlásit se
+605e1ba528eedac2c245b6f6a1257a048261dc5508e4c5440a30c50f:
+  ref: Delete
+  value: Odstranit
+c2e7d8c0ada03fcb5c1394b62f8b5576af8897c5bbf56725543da717:
+  ref: Filter by
+  value: Filtrovat
+53b5905ca1233d7615736035e9b1f30b7722d347074305df132ca255:
+  ref: Remove filter
+  value: Odstranit filtr
+4fccd0115ce525399d4373acc187e76e675622bb5da7288d1b754825:
+  ref: Fulltext search
+  value: Vyhledat
+7e19894e0affa85c85b0bdd3bd8b0a7d237060d20a7aa47e044d8adc:
+  ref: Total number of items
+  value: Total number of items
+9787305b076729a8818974ec91c90b96e1bbeee3a189994587c92ff5:
+  ref: Nothing here
+  value: Nothing here
+91094cb11765887037d37cffbae80d80fd3e882763ff565e0b214213:
+  ref: This listing is empty
+  value: This listing is empty
+3c1469acd0f963d3ac3943e49b6a34b00183353765f5d3f004464093:
+  ref: Table is empty
+  value: Table is empty
+7a5c74ec4b4bdf2c097c62910ecb7fa4cc8fa591fc9c61e4543fee71:
+  ref: There is currently nothing to see
+  value: There is currently nothing to see
+fccca51f27d14b47f2c3f1865c215ddb180d6c65d942ab4e93aa9d65:
+  ref: Nothing found by current filter
+  value: Nothing found by current filter
+2867b125fbf240bd77e6eb70efb8f36eb5249a28a3786f4d3e2a796d:
+  ref: Currently set filter is too strict, so there is nothing to show
+  value: Currently set filter is too strict, so there is nothing to show
+bc3ca672207f85699202724ea21d719bbedb22cc44b71fba16c85cf8:
+  ref: Loading data
+  value: Načítání
+af3c230745c96f9395268ef3f7c7faec402a59ff2596290617b33e1e:
+  ref: We're preparing all the data for you (if any)...
+  value: Probíhá příprava dat, vyčkejte prosím...
+e9b3ba72c318eb3fede0269608646b2fb2b6367380aec8e17d7a9eeb:
+  ref: Resource management
+  value: Správa zdrojů
+cddaf1cd47d244eb61ac83dd53bcc19ab979249d1cfd7dd647253f11:
+  ref: Resource list
+  value: Seznam zdrojů
+e886a6010df144ec211a2041dc77c8adc46a0921ba57458fada4c681:
+  ref: Resource type list
+  value: Seznam typů zdrojů
+ffad743cbce08917e436ff30d0834c538a72e5fde2a801c510f94afc:
+  ref: Producer list
+  value: Seznam výroben
+9c98cff9e25fc568108143bf2d0b4476ac459a2fd8113c747badfc47:
+  ref: Building list
+  value: Seznam budov
+8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
+  ref: Game management
+  value: Správa hry
+c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19:
+  ref: Submit
+  value: Odeslat
+f654b712f05e612855d1000fbf3c3ba098dd606e9927ae6b0c9aca24:
+  ref: If you want to omit given value from the result, switch this button off.
+  value: If you want to omit given value from the result, switch this button off.
+5f4c0265ae687bb9acf17235514c89e027d524b3382dc6f68c59f6f9:
+  ref: Close
+  value: Zavřít
+3d6199acf6308d3eae9112d43fe64a3b942ee97a303909418c58bcd9:
+  ref: Clear filter
+  value: Clear filter
+a7c528329f9a28e5785d20397bd38b513fc077dd5327bcde34b8fa79:
+  ref: Clear selection
+  value: Zrušit výběr
+1ca37bf0a71fed53ead98154c92cd4f339c37c7cd37e3bbf53348e9c:
+  ref: Submit selection
+  value: Potvrdit výběr
+f2f4bd5edcfc70f89becee2b8f807ca587843f8f416f5107a1fcda53:
+  ref: Select an item
+  value: Select an item
+0eff7c020a109eb63582cefb44e136d867e6b48da0b94ae47bc8c078:
+  ref: Currently selected item
+  value: Vybraná položka
+b0cf8a5dd758db7480606838271ff93da6792fdd8d3cb94816d6a40e:
+  ref: Confirm selection
+  value: Potvrdit výběr
+3b18d029c1268960f252ed750fff581bd958cb283921ab3aec47ea8e:
+  ref: Select items
+  value: Vybrané položky
+2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614:
+  ref: Currently selected items
+  value: Vybrané položky
+1887011beb8375f0ccd6994d7482fff080c516a4bde5dc3fe2adb1a3:
+  ref: Update building (label)
+  value: Upravit budovu
+07f65eb2aea622a5567ed43ba120f316c3b68635156ee79a18a3d9d2:
+  ref: Create building (label)
+  value: Vytvořit budovu
+8a31506c52d0aed078087a8d14646cafc5d069dde8994b845edd28e5:
+  ref: Success
+  value: Úspěch
+241fa6ff11d73c9b829d4509341aaf22dcfcc2ab2d6f2197974c7431:
+  ref: Building updated
+  value: Budova byla úspěšně aktualizována
+0d1c0c3626fa33464f79d4d9527d7938e3e7dc02235ee27577f20bf5:
+  ref: Building created
+  value: Budova byla úspěšně vytvořena
+98bde802ea4ef18b74ed180278091dd1f828cb1bcda7053e87e71cf7:
+  ref: Building name
+  value: Název budovy
+0ac57336f29d47e8b922418746b4bd75a1ab1072e092ba716fb8664d:
+  ref: Building name (placeholder)
+  value: Zadejte prosím název budovy
+19f7b1b2cc2b0d861124553e7ebdb4500b898392948caef37d9125e2:
+  ref: Total count of buildings
+  value: Počet budov
+46cf5567dd18f8aee0e03b1b3d3f23dae19dc06ad0a685aee966417f:
+  ref: Create new building
+  value: Nová budova
+792ef23aed24b487a87c2187ff58652d826e05c9a6ea90065bdf057f:
+  ref: Create building
+  value: Vytvořit budovu
+3314f1cb30f831a893d9253b07297aba57e78e3a4c457e7d8a457f39:
+  ref: Update building
+  value: Upravit budovu
+bf97e945c5f98eb63930fe86aaf5efb08a5226a6b99178f2a348accd:
+  ref: Delete building
+  value: Odstranit budovu
+f8ef90d7e5500d03f5498dd8d737430c83518775d890916f5a93269f:
+  ref: Delete building (modal)
+  value: Odstranit budovu
+fe57342d0588cea22f8259f5877597054ad8d9d71047cf3a34156829:
+  ref: Do you really want to delete selected building?
+  value: |
+    <p>
+      Opravdu chcete odstranit vybranou budovu?
+    </p>
+    <p><i>
+      Tato akce může mít velký vliv na hratelnost a <b>není cesty zpět</b>.
+    </i></p>
+82119185c01850436786aecbce7018c09a8045f38261534d28ae1ec2:
+  ref: Building has been successfully removed
+  value: Budova byla úspěšně odstraněna
+99b23be4aaf0714665a8ea5010d2c2dfea9d946d41e3fe497ecf2e3f:
+  ref: Update resource type (label)
+  value: Upravit typ zdroje
+d87174f7edc1d34ca8602d791b0e9c6a0cae4c9f884e5e94b2bb24b0:
+  ref: Create resource type (label)
+  value: Nový typ zdroje
+682cea3687a45430ef471de76485d7b3b7cd40eda4c1b9be1450c21f:
+  ref: Resource type updated
+  value: Resource type updated
+7c41a3bf351568fc7697d078380a757b2b5ddfb6a953f3623f9463a7:
+  ref: Resource type created
+  value: Resource type created
+fb26dada6f03186752a573449e9e64f8a530c8b5f7fbc2108dc49b26:
+  ref: Resource type name
+  value: Název typu zdroje
+49ed84f5c75e816d5c1bdbb09391358640e92b012fa4810bec174d4b:
+  ref: Resource type name (placeholder)
+  value: Zadejte prosím název typu zdroje
+31cb18805e1112bc4950e59172e890264675b1a8de9b24124aab57e5:
+  ref: Resource type count
+  value: Počet typů zdrojů
+12f4bb66c88a9a99cc6b3d00da539c2bddba78902dc7c61c7b6ae74a:
+  ref: Create resource type (modal)
+  value: Nový typ zdroje
+98605f1508150420c091378394b1e92bc2678552bf8436f575b6720e:
+  ref: Create resource type
+  value: Nový typ zdroje
+50487db3230f70174dcbc4f3d2d03cef06aace9d598460dbd17ba77e:
+  ref: Update resource type
+  value: Upravit typ zdroje
+e4ceef3751d0e3bc0c9c63935bc29c46329b4546f4aa351663dcbb10:
+  ref: Delete resource type
+  value: Odstranit typ zdroje
+a313c816bab6edcded14f369c0d1a01cb3133f5f1862227d6bbcfa12:
+  ref: Delete resource type (modal)
+  value: Odstranit typ zdroje
+2d3312daa930652bfd7a1093759d056016061f15b572e9346470e47a:
+  ref: Do you really want to delete selected resource type?
+  value: |
+    <p>
+      <mark>
+        Opravdu chcete odstranit vybraný typ zdroje?
+      </mark>
+    </p>
+    <p>
+      <i>
+        Tato akce může mít velký vliv na nejen na hratelnost, ale může
+        <b>odstranit velké množství dat</b>.
+      </i>
+    </p>
+    <p>
+        <b>Není cesty zpět</b>.
+    </p>
+63e8938c98fc512ceeb07ac69ca760dc0f73b4d9aa1bcfd05e8beab2:
+  ref: Selected resource type has been successfully deleted.
+  value: Selected resource type has been successfully deleted.
+00ed4801c15172430aec3f69891ab0cab74ca0879b5e9e990904f099:
+  ref: Update resource (label)
+  value: Upravit zdroj
+b09a82178db203ea799c3ecbab6ea2647fe79dc6b5bdb7d090493b17:
+  ref: Create resource (label)
+  value: Nový zdroj
+6ce0be8289f1d40610ae3d53a06d4eb8eeba1aa0cb5fa7d684bd29e5:
+  ref: Resource updated
+  value: Zdroj byl úspěšně aktualizován
+52b3a7a8f4bdaee42a2d9f351b80f19befc02d302d457b590b891c46:
+  ref: Resource created
+  value: Zdroj byl úspěšně vytvořen
+27fe8b608bae3e7f414436c3c5818b9a22ac4b0ed7c8eac0544a557b:
+  ref: Resource name
+  value: Název zdroje
+e8b83d92de05dafce0fcb1b40f146992b5f4581d850cff8eb28116ca:
+  ref: Resource name (placeholder)
+  value: Zadejte prosím název zdroje
+7d93cfe1e82802c403235124f797a4faaa1097d3204b36591d2eaad4:
+  ref: Resource type
+  value: Typ zdroje
+649a61d0bccddbd560a0c3237dfe96b3496ed9cf7ddbad300b714e22:
+  ref: Resource type (placeholder)
+  value: Vyberte prosím typ zdroje
+2bb5777304690d922a4bf39d9c821b200b582b3ef8c45a8893becb90:
+  ref: Resource type selector
+  value: Výběr typu zdroje
+cee4fc817f1e264108e50a361370de0f5586b187ca44c1d9f86d4670:
+  ref: Resource count
+  value: Počet zdrojů
+1133455706eaa70e6bbfc6a15f3637ad315b9dcbea4196463bf24161:
+  ref: Loading resources
+  value: Načítání zdrojů
+65c21691ca24e44203f0cd3fad945888881d55562db14088d007cd92:
+  ref: We're preparing resource list for you...
+  value: Připravujeme seznam zdrojů, vyčkejte prosím...
+985d056662fa02d79108169b09b76997312808d9c35e6a5feb687a0a:
+  ref: Create new resource
+  value: Nový zdroj
+805f1a4ae80d48a2d91aa9c6b759a111ac7b7822d371c67a8b0f408c:
+  ref: Create resource
+  value: Nový zdroj
+473177bebed2885fdf3e87cafa036ca76a184b1ceda623329b7bc602:
+  ref: Delete resource?
+  value: Delete resource?
+0a9f1ea1e6f187f9e8ebd0708ec11529ce6a3d3e955fe70653757f14:
+  ref: Delete resource
+  value: Odstranit zdroj
+906fceae0531693e23f12eda71028dfef5cd1c133cc1c968477333a9:
+  ref: Do you really want to delete selected resource?
+  value: Do you really want to delete selected resource?
+afb394104b3717272616722fc3a114bdcffca4f6d4046aab261cc46f:
+  ref: Resource has been successfully deleted.
+  value: Resource has been successfully deleted.
+08242f310ba873219a72a8dee3678d07ad3236545f375d836f317d49:
+  ref: Update resource
+  value: Upravit zdroj
+02e1e25bace675d1ba7643838359f283680afd8df12a90eedd71fac6:
+  ref: Update producer (label)
+  value: Aktualizovat výrobnu
+6a5043371c443322801ed3e6ec35a2a358289facec616a98cf3c9a99:
+  ref: Create producer (label)
+  value: Vytvořit výrobnu
+2f0c2288f01d58c09c3b9b1a0612a83a5adbdc8e8346e90efd766bae:
+  ref: Producer updated
+  value: Výrobna byla úspěšně aktualizována
+05b570c46d356850dd0b09121fd7388f19f53dd41c61924e460202ef:
+  ref: Producer created
+  value: Výrobna byla úspěšně vytvořena
+c98c3cdb4feffcf8417b57deaf83d916fff4fb9ba927d15c59317d57:
+  ref: Producer name
+  value: Název výrobny
+df2b441ea0cabc59bcbac3a387a5cab0cad155557725a351373d79f5:
+  ref: Producer name (placeholder)
+  value: Zadejte prosím název výrobny
+b76ae170eeb8f481b1d4a48407bc697fd658716129191710969e5455:
+  ref: Production time
+  value: Čas produkce
+a90de394aef50e994214d248aedd1553b27c8996515d1b3ceec3922c:
+  ref: Producer count
+  value: Počet výroben
+83d13c443b5706741157886ad76b69d3f3fd4fd9caa6bcca6ed2007b:
+  ref: Create new producer
+  value: Nová výrobna
+d8526a6c14bbc40b529084d835412550e8691a581ae2f3c970ea794f:
+  ref: Create producer
+  value: Nová výrobna
+cd0fe70b5a527ead30dab7855decb2c340f1f6f5fe13863d0ff4f117:
+  ref: Delete producer
+  value: Odstranit výrobnu
+65872fb552e808f8a0198cae67af1cb75055947b7be77f19e9a78341:
+  ref: Delete producer (modal)
+  value: Odstranit výrobnu
+c00055133b249e85dd69ee9a220e4b1a6bed04edacbb9499586405c2:
+  ref: Do you really want to delete selected producer?
+  value: |
+    <p>
+      Opravdu chcete odstranit vybranou výrobnu?
+    </p>
+    <p><i>
+      Tato akce může mít velký vliv na hratelnost a <b>není cesty zpět</b>.
+    </i></p>
+d6fc3ccb7f30fdbb7e2c46e67ae87ad65329678fc9c70660da36dfe5:
+  ref: Producer has been successfully deleted.
+  value: Výrobna byla úspěšně odstraněna
+79660947db99cbac28fe7b3da0092bebc0f22b98062b7758fe07b02a:
+  ref: Update producer
+  value: Upravit výrobnu
+9c1fb2018f5ea283b6e3d41272981688033be51677bbc1496d819a38:
+  ref: Total count of producer inputs
+  value: Total count of producer inputs
+b30e71ba4fab097aa3b12ae7e811e56ead738e82cda9610a34581fe1:
+  ref: Create new producer input
+  value: Create new producer input
+eead001e68fb681bd841bd06c561c89a26f7ccf9f5b5a497a3198f0d:
+  ref: Create producer input
+  value: Create producer input
+16470b3a1e2f009857bcde70ee9e695da7059291775dc71f792f667f:
+  ref: Update producer input
+  value: Update producer input
+13ae8f47b66f55be3644fd57c2e47ba5f2dfe6dd67d50bdabfe29028:
+  ref: Delete producer input?
+  value: Delete producer input?
+928c8ddfc67c61971095d1410db2fc0fd743ab1bbce227fbf8ac3046:
+  ref: Delete producer input
+  value: Delete producer input
+15b426e49d0bb114012810210bc1752f9fb6359c8d842bb5e1dcda30:
+  ref: Do you really want to delete selected producer input?
+  value: Do you really want to delete selected producer input?
+2965000f3643d4b4a3e35619ad868140a2de9a2d934c8d8f2f1c17b7:
+  ref: Producer input has been successfully deleted.
+  value: Producer input has been successfully deleted.
+77dca7c9b2e910050d0b2b1dcce64de0735c7561b5ffc7f2bfd66cb9:
+  ref: Building detail (title)
+  value: Building detail (title)
+553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
+  ref: Building detail
+  value: Detail budovy [{name}]
+2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
+  ref: Game overview
+  value: Přehled hry
+56db5cba41164e61cb42c625b8ccd3bb79e6aab4d8ffa4c194083f69:
+  ref: Producer detail
+  value: Producer detail
+0d75b92cf8490826cff49057a3173b5d7ae6797abf298f54a6ce6550:
+  ref: DeRivean - The Invisible Game (title)
+  value: DeRivean - The Invisible Game (title)
+e263ec6a176204dd2a48c458d632d6a02b4173d37fe6c291b3619693:
+  ref: DeRivean - The Invisible Game
+  value: DeRivean - The Invisible Game
+366c4ebefbd1bd2dedbd6ef50c16353460122b80dcd950beb3eef525:
+  ref: 4o4
+  value: 4o4
+700793a55f415a8f2822f5f38736661af6b2e62650cfc6f7d4c23ca0:
+  ref: You found a place where nothing is hidden.
+  value: You found a place where nothing is hidden.
+6bb1fb8895c7ff06682e188e0d450060a59dd74635f4e17f6aa84217:
+  ref: Here or there, you see nothing interesting. Try another page.
+  value: Here or there, you see nothing interesting. Try another page.
+6d005622708a0d4dc2a7c837714470b2443d2fde38fbe0a0ebcfe91b:
+  ref: Low-level system administration
+  value: Low-level system administration

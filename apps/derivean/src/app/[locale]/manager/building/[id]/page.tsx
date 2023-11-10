@@ -30,7 +30,7 @@ export default async function Index({params: {id}}: Index.Props) {
     return <Page
         icon={<BuildingIcon/>}
         text={{
-            title:  tx({values: building})`Building detail`,
+            title: tx({values: building})`Building detail (title)`,
             header: t({values: building})`Building detail`,
         }}
         postfix={<Breadcrumbs
@@ -43,7 +43,7 @@ export default async function Index({params: {id}}: Index.Props) {
                 {
                     type:  "link",
                     href:  "/manager/building/list",
-                    label: "manager.building.list.title",
+                    label: t()`Building list`,
                     icon:  <ListIcon/>,
                 },
             ]}
