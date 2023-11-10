@@ -1,4 +1,5 @@
 import {dullSchema} from "@use-pico/dull-stuff";
+import {orderByOf}  from "@use-pico/query";
 import {
     identityOf,
     schema
@@ -14,6 +15,6 @@ export const ResourceTypeSchema = dullSchema({
     filter:  schema(z => z.object({
         name: z.string$,
     })),
-    orderBy: ["name"],
+    orderBy: orderByOf(["name"]),
 });
 export type ResourceTypeSchema = typeof ResourceTypeSchema;

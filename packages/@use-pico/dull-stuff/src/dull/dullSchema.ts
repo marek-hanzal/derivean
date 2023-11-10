@@ -1,8 +1,6 @@
 import {
     FilterSchema,
-    orderByOf,
     type OrderBySchema,
-    type OrderSchema,
     type QuerySchema,
     withQuerySchema
 } from "@use-pico/query";
@@ -11,11 +9,9 @@ import {
     withRepositorySchema
 } from "@use-pico/repository";
 import {
-    type ListSchema,
     merge,
     type ObjectSchema,
     type PicoSchema,
-    type RecordSchema,
     type WithIdentitySchema
 } from "@use-pico/schema";
 import {
@@ -28,26 +24,25 @@ export namespace dullSchema {
         TEntity extends WithIdentitySchema,
         TShapeSchema extends ObjectSchema<any>,
         TFilterSchema extends ObjectSchema<any>,
-        TOrderBy extends ListSchema.Values,
+        TOrderBySchema extends OrderBySchema,
     > {
         entity: TEntity;
         shape: TShapeSchema;
         filter: TFilterSchema;
-        orderBy: TOrderBy;
+        orderBy: TOrderBySchema;
     }
 
     export interface Schema<
         TEntity extends WithIdentitySchema,
         TShapeSchema extends ObjectSchema<any>,
         TFilterSchema extends ObjectSchema<any>,
-        TOrderBy extends ListSchema.Values,
+        TOrderBySchema extends OrderBySchema,
         TFilterOutput extends FilterSchema = ObjectSchema<
             FilterSchema["shape"] & TFilterSchema["shape"]
         >,
-        TOrderByOutput extends OrderBySchema = RecordSchema<ListSchema<TOrderBy>, OrderSchema>,
-        TQueryOutput extends QuerySchema<TFilterOutput, TOrderByOutput> = QuerySchema<
+        TQueryOutput extends QuerySchema<TFilterOutput, TOrderBySchema> = QuerySchema<
             TFilterOutput,
-            TOrderByOutput
+            TOrderBySchema
         >,
         TMutationOutput extends MutationSchema<TShapeSchema, TQueryOutput> = MutationSchema<
             TShapeSchema,
@@ -57,7 +52,7 @@ export namespace dullSchema {
         entity: TEntity;
         shape: TShapeSchema;
         filter: TFilterOutput;
-        orderBy: TOrderByOutput;
+        orderBy: TOrderBySchema;
         query: TQueryOutput;
         mutation: TMutationOutput;
         repository: IRepository.Schema<
@@ -127,7 +122,7 @@ export const dullSchema = <
     TEntity extends WithIdentitySchema,
     TShapeSchema extends ObjectSchema<any>,
     TFilterSchema extends ObjectSchema<any>,
-    TOrderBy extends ListSchema.Values,
+    TOrderBySchema extends OrderBySchema,
 >(
     {
         entity,
@@ -138,22 +133,21 @@ export const dullSchema = <
         TEntity,
         TShapeSchema,
         TFilterSchema,
-        TOrderBy
+        TOrderBySchema
     >
 ): dullSchema.Schema<
     TEntity,
     TShapeSchema,
     TFilterSchema,
-    TOrderBy
+    TOrderBySchema
 > => {
     const $filter = merge([
         FilterSchema,
         filter,
     ]);
-    const $orderBy = orderByOf(orderBy);
     const $query = withQuerySchema({
-        filter:  $filter,
-        orderBy: $orderBy,
+        filter: $filter,
+        orderBy,
     });
     const $mutation = withMutationSchema({
         query: $query,
@@ -164,7 +158,7 @@ export const dullSchema = <
         entity,
         shape,
         filter:     $filter,
-        orderBy:    $orderBy,
+        orderBy,
         query:      $query,
         mutation:   $mutation,
         repository: withRepositorySchema({
