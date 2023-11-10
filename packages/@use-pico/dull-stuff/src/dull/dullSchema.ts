@@ -1,6 +1,7 @@
 import {
     FilterSchema,
     orderByOf,
+    type OrderBySchema,
     type OrderSchema,
     type QuerySchema,
     withQuerySchema
@@ -43,7 +44,7 @@ export namespace dullSchema {
         TFilterOutput extends FilterSchema = ObjectSchema<
             FilterSchema["shape"] & TFilterSchema["shape"]
         >,
-        TOrderByOutput extends RecordSchema<ListSchema<TOrderBy>, OrderSchema> = RecordSchema<ListSchema<TOrderBy>, OrderSchema>,
+        TOrderByOutput extends OrderBySchema = RecordSchema<ListSchema<TOrderBy>, OrderSchema>,
         TQueryOutput extends QuerySchema<TFilterOutput, TOrderByOutput> = QuerySchema<
             TFilterOutput,
             TOrderByOutput
