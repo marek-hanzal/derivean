@@ -9,7 +9,7 @@ import {ResourceTypeSchema} from "../schema/ResourceTypeSchema";
 
 export class ResourceTypeRepository extends AbstractRepository<
     Database,
-    dullSchema.Infer.Repository<ResourceTypeSchema>,
+    dullSchema.Infer.RepositorySchema<ResourceTypeSchema>,
     "ResourceType"
 > {
     static inject = [

@@ -117,7 +117,7 @@ export namespace dullSchema {
             TSchema extends Schema<any, any, any, any>
         > = TSchema["mutation"];
 
-        export type Repository<
+        export type RepositorySchema<
             TSchema extends Schema<any, any, any, any>
         > = TSchema["repository"];
     }
