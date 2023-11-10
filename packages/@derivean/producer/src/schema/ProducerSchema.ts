@@ -1,16 +1,28 @@
+import {withDullSchema} from "@use-pico/dull-stuff";
+import {
+    filterOf,
+    orderByOf
+}                       from "@use-pico/query";
 import {
     identityOf,
-    type PicoSchema
-} from "@use-pico/schema";
+    schema
+}                       from "@use-pico/schema";
 
-export const ProducerSchema = identityOf(z => z.object({
-    name: z.string,
-    /**
-     * Runtime of a producer before resources can be picked up
-     */
-    time: z.number,
-}));
+export const ProducerSchema = withDullSchema({
+    entity:  identityOf(z => z.object({
+        name: z.string,
+        /**
+         * Runtime of a producer before resources can be picked up
+         */
+        time: z.number,
+    })),
+    shape:   schema(z => z.object({
+        name: z.string,
+        time: z.number,
+    })),
+    filter:  filterOf(z => z.object({
+        name: z.string$,
+    })),
+    orderBy: orderByOf(["name"]),
+});
 export type ProducerSchema = typeof ProducerSchema;
-export namespace ProducerSchema {
-    export type Type = PicoSchema.Output<ProducerSchema>;
-}

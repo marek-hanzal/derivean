@@ -1,1 +1,1 @@
-export {ProducerOutputSchema} from "../schema/output/ProducerOutputSchema";
+export {ProducerOutputSchema} from "../schema/ProducerOutputSchema";

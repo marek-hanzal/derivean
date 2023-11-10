@@ -1,6 +1,7 @@
 "use client";
 
 import {ProducerIcon}           from "@derivean/ui";
+import {withDullSchema}         from "@use-pico/dull-stuff";
 import {t}                      from "@use-pico/i18n";
 import {ButtonLink}             from "@use-pico/ui";
 import {
@@ -12,7 +13,6 @@ import {ProducerUpsertForm}     from "../form/ProducerUpsertForm";
 import {withProducerMutation}   from "../mutation/withProducerMutation";
 import {ProducerQueryStore}     from "../query/ProducerQueryStore";
 import {withProducerQuery}      from "../query/withProducerQuery";
-import {ProducerQuerySchema}    from "../schema/ProducerQuerySchema";
 import {type ProducerSchema}    from "../schema/ProducerSchema";
 import {ProducerSelectionStore} from "../store/ProducerSelectionStore";
 
@@ -24,8 +24,8 @@ export namespace ProducerTable {
     export type Props = Omit<
         Table.Props<
             Columns,
-            ProducerSchema,
-            ProducerQuerySchema
+            withDullSchema.Infer.EntitySchema<ProducerSchema>,
+            withDullSchema.Infer.QuerySchema<ProducerSchema>
         >,
         "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
     >
@@ -38,7 +38,7 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
         }}
         name={"producer"}
         icon={<ProducerIcon/>}
-        SelectionStore={ProducerSelectionStore}
+        SelectionStore={ProducerSelectionStore.single}
         tableActionProps={{
             text: {
                 create: {

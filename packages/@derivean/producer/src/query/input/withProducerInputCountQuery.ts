@@ -1,11 +1,11 @@
-import {CountSchema}              from "@use-pico/query";
-import {withRpcQuery}             from "@use-pico/rpc";
-import {ProducerInputQuerySchema} from "../../schema/input/ProducerInputQuerySchema";
+import {CountSchema}         from "@use-pico/query";
+import {withRpcQuery}        from "@use-pico/rpc";
+import {ProducerInputSchema} from "../../schema/ProducerInputSchema";
 
 export const withProducerInputCountQuery = withRpcQuery({
     key:    ["derivean", "producer", "input", "count"],
     schema: {
-        request:  ProducerInputQuerySchema,
+        request: ProducerInputSchema.query,
         response: CountSchema,
     },
 });

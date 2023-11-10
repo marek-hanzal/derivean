@@ -11,6 +11,7 @@ export * from "./ProducerOutputSchema";
 export * from "./ProducerQueryStore";
 export * from "./ProducerSchema";
 export * from "./ProducerSelect";
+export * from "./ProducerSelectionStore";
 export * from "./ProducerTable";
 export * from "./withProducerContainer";
 export * from "./withProducerRepository";

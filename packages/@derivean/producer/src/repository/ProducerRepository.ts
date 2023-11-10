@@ -1,12 +1,17 @@
-import {type Database}            from "@derivean/orm";
+import {type Database}      from "@derivean/orm";
+import {withDullSchema}     from "@use-pico/dull-stuff";
 import {
     type Client,
     withClient
-}                                 from "@use-pico/orm";
-import {AbstractRepository}       from "@use-pico/repository";
-import {ProducerRepositorySchema} from "../schema/ProducerRepositorySchema";
+}                           from "@use-pico/orm";
+import {AbstractRepository} from "@use-pico/repository";
+import {ProducerSchema}     from "../schema/ProducerSchema";
 
-export class ProducerRepository extends AbstractRepository<Database, ProducerRepositorySchema, "Producer"> {
+export class ProducerRepository extends AbstractRepository<
+    Database,
+    withDullSchema.Infer.RepositorySchema<ProducerSchema>,
+    "Producer"
+> {
     static inject = [
         withClient.inject,
     ];
@@ -16,7 +21,7 @@ export class ProducerRepository extends AbstractRepository<Database, ProducerRep
     ) {
         super(
             client,
-            ProducerRepositorySchema,
+            ProducerSchema.repository,
             "Producer",
         );
         this.defaultOrderBy = {

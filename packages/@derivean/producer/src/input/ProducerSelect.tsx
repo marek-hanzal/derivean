@@ -15,7 +15,7 @@ import {ProducerTable}          from "../table/ProducerTable";
 const ProducerQueryInput = withSourceQueryInput({
     withQueryStore:  ProducerQueryStore,
     withSourceQuery: withProducerQuery,
-    SelectionStore:  ProducerSelectionStore,
+    SelectionStore: ProducerSelectionStore.single,
 });
 type ProducerQueryInput<
     TValuesSchema extends ValuesSchema,

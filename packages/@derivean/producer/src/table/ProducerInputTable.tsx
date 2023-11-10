@@ -5,6 +5,7 @@ import {
     ResourceInline
 }                                  from "@derivean/resource";
 import {ProducerIcon}              from "@derivean/ui";
+import {withDullSchema}            from "@use-pico/dull-stuff";
 import {t}                         from "@use-pico/i18n";
 import {ButtonLink}                from "@use-pico/ui";
 import {Table}                     from "@use-pico/ui-extra";
@@ -14,8 +15,7 @@ import {ProducerInputUpsertForm}   from "../form/ProducerInputUpsertForm";
 import {withProducerInputMutation} from "../mutation/withProducerInputMutation";
 import {ProducerInputQueryStore}   from "../query/input/ProducerInputQueryStore";
 import {withProducerInputQuery}    from "../query/input/withProducerInputQuery";
-import {ProducerInputQuerySchema}  from "../schema/input/ProducerInputQuerySchema";
-import {ProducerInputSchema}       from "../schema/input/ProducerInputSchema";
+import {ProducerInputSchema}       from "../schema/ProducerInputSchema";
 
 export namespace ProducerInputTable {
     export type Columns =
@@ -27,8 +27,8 @@ export namespace ProducerInputTable {
         Omit<
             Table.Props<
                 Columns,
-                ProducerInputSchema,
-                ProducerInputQuerySchema
+                withDullSchema.Infer.EntitySchema<ProducerInputSchema>,
+                withDullSchema.Infer.QuerySchema<ProducerInputSchema>
             >,
             "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
         >

@@ -1,17 +1,31 @@
-import {type ValuesSchema}      from "@use-pico/form";
+import {
+    type ValuesSchema,
+    withSourceQueryInput
+}                               from "@use-pico/form";
 import {
     type ComponentProps,
     useCallback
 }                               from "react";
 import {ResourceInline}         from "../inline/ResourceInline";
+import {ResourceQueryStore}     from "../query/ResourceQueryStore";
+import {withResourceQuery}      from "../query/withResourceQuery";
+import {ResourceSelectionStore} from "../store/ResourceSelectionStore";
 import {ResourceTable}          from "../table/ResourceTable";
-import {ResourceSelectionInput} from "./ResourceSelectionInput";
+
+const ResourceQueryInput = withSourceQueryInput({
+    withQueryStore:  ResourceQueryStore,
+    withSourceQuery: withResourceQuery,
+    SelectionStore:  ResourceSelectionStore.single,
+});
+type ResourceQueryInput<
+    TValuesSchema extends ValuesSchema,
+> = typeof ResourceQueryInput<TValuesSchema>;
 
 export namespace ResourceSelect {
     export interface Props<
         TValuesSchema extends ValuesSchema,
     > extends Omit<
-        ComponentProps<ResourceSelectionInput<TValuesSchema>["single"]>,
+        ComponentProps<ResourceQueryInput<TValuesSchema>>,
         "Selector" | "Item"
     > {
         tableProps?: Partial<ComponentProps<typeof ResourceTable>>;
@@ -26,7 +40,7 @@ export const ResourceSelect = <
         ...props
     }: ResourceSelect.Props<TValuesSchema>
 ) => {
-    return <ResourceSelectionInput.single
+    return <ResourceQueryInput
         Selector={useCallback(() => <ResourceTable withLinkLock {...tableProps}/>, [])}
         Item={ResourceInline}
         {...props}

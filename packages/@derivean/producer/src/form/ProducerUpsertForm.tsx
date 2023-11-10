@@ -1,4 +1,5 @@
 import {ProducerIcon}         from "@derivean/ui";
+import {withDullSchema}       from "@use-pico/dull-stuff";
 import {
     Form,
     NumberInput,
@@ -12,17 +13,16 @@ import {type WithEntity}      from "@use-pico/types";
 import {type FC}              from "react";
 import {withProducerMutation} from "../mutation/withProducerMutation";
 import {ProducerSchema}       from "../schema/ProducerSchema";
-import {ProducerShapeSchema}  from "../schema/ProducerShapeSchema";
 
 export namespace ProducerUpsertForm {
     export type Props =
         Form.PropsEx<
             withProducerMutation,
-            ProducerShapeSchema,
+            withDullSchema.Infer.ShapeSchema<ProducerSchema>,
             withProducerMutation["schema"]["request"],
             withProducerMutation["schema"]["response"]
         >
-        & WithEntity.Schema.$<ProducerSchema>;
+        & WithEntity.$<withDullSchema.Infer.Entity<ProducerSchema>>;
 }
 
 export const ProducerUpsertForm: FC<ProducerUpsertForm.Props> = (
@@ -41,7 +41,7 @@ export const ProducerUpsertForm: FC<ProducerUpsertForm.Props> = (
         }}
         icon={<ProducerIcon/>}
         withMutation={withProducerMutation}
-        schema={ProducerShapeSchema}
+        schema={ProducerSchema.shape}
         inputs={{
             name: props => <TextInput
                 label={t()`Producer name`}

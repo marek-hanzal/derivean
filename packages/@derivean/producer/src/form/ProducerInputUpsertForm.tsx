@@ -1,5 +1,6 @@
 import {ResourceSelect}            from "@derivean/resource";
 import {ProducerIcon}              from "@derivean/ui";
+import {withDullSchema}            from "@use-pico/dull-stuff";
 import {
     Form,
     NumberInput
@@ -9,18 +10,17 @@ import {type WithEntity}           from "@use-pico/types";
 import {type FC}                   from "react";
 import {ProducerSelect}            from "../input/ProducerSelect";
 import {withProducerInputMutation} from "../mutation/withProducerInputMutation";
-import {ProducerInputSchema}       from "../schema/input/ProducerInputSchema";
-import {ProducerInputShapeSchema}  from "../schema/input/ProducerInputShapeSchema";
+import {ProducerInputSchema}       from "../schema/ProducerInputSchema";
 
 export namespace ProducerInputUpsertForm {
     export type Props =
         Form.PropsEx<
             withProducerInputMutation,
-            ProducerInputShapeSchema,
+            withDullSchema.Infer.ShapeSchema<ProducerInputSchema>,
             withProducerInputMutation["schema"]["request"],
             withProducerInputMutation["schema"]["response"]
         >
-        & WithEntity.Schema.$<ProducerInputSchema>
+        & WithEntity.$<withDullSchema.Infer.Entity<ProducerInputSchema>>
         & {
             producerId?: string
         }
@@ -46,7 +46,7 @@ export const ProducerInputUpsertForm: FC<ProducerInputUpsertForm.Props> = (
         }}
         icon={<ProducerIcon/>}
         withMutation={withProducerInputMutation}
-        schema={ProducerInputShapeSchema}
+        schema={ProducerInputSchema.shape}
         hidden={producerId ? ["producerId"] : undefined}
         inputs={{
             producerId: props => <ProducerSelect
