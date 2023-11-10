@@ -15,6 +15,8 @@ export const transpile = [
     '@use-pico/calendar',
     '@use-pico/container',
     '@use-pico/context',
+    '@use-pico/dull-stuff',
+    '@use-pico/dull-stuff-server',
     '@use-pico/file',
     '@use-pico/form',
     '@use-pico/hook',
