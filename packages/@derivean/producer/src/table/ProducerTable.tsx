@@ -85,8 +85,12 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
                 />,
             },
             time: {
-                title: t()`Production time`,
-                render: ({item}) => <HumanSeconds seconds={item.time}/>,
+                title:  t()`Production time`,
+                render: ({item}) => <>
+                    <HumanSeconds seconds={item.time}/>
+                    <h2>Show minimum pipeline time (create extra service to resolve pipeline time?)</h2>
+                    <h3>Also this can handle recursive producers</h3>
+                </>,
                 width:  14,
             },
         }}
