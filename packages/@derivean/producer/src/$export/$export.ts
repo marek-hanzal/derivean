@@ -16,6 +16,7 @@ export * from "./ProducerOutputQueryStore";
 export * from "./ProducerOutputSchema";
 export * from "./ProducerOutputTable";
 export * from "./ProducerOutputUI";
+export * from "./ProducerPreview";
 export * from "./ProducerQueryStore";
 export * from "./ProducerRpc";
 export * from "./ProducerSchema";

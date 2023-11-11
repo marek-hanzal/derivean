@@ -1,3 +1,5 @@
+"use client";
+
 import {ResourceUI}      from "@derivean/resource";
 import {t}               from "@use-pico/i18n";
 import {

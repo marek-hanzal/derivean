@@ -11,11 +11,15 @@ import {
 import {ProducerUpsertForm}     from "../form/ProducerUpsertForm";
 import {ProducerRpc}            from "../rpc/ProducerRpc";
 import {ProducerSelectionStore} from "../store/ProducerSelectionStore";
+import {Dependencies}           from "../ui/Dependencies";
 import {ProducerUI}             from "../ui/ProducerUI";
+import {ProductionTime}         from "../ui/ProductionTime";
 
 export namespace ProducerTable {
     export type Columns =
         | "name"
+        | "dependencies"
+        | "pipelineTime"
         | "time";
 
     export type Props = Omit<
@@ -29,6 +33,7 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
         text={{
             total: t()`Producer count`,
         }}
+        scrollWidth={2400}
         name={"producer"}
         icon={<ProducerIcon/>}
         SelectionStore={ProducerSelectionStore.single}
@@ -71,7 +76,7 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
             />,
         }}
         columns={{
-            name: {
+            name:         {
                 title: t()`Producer name`,
                 render: ({item}) => <ButtonLink
                     icon={<ProducerIcon/>}
@@ -83,15 +88,23 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
                     }}
                     label={item.name}
                 />,
+                width: 14,
             },
-            time: {
+            time:         {
                 title:  t()`Production time`,
-                render: ({item}) => <>
-                    <HumanSeconds seconds={item.time}/>
-                    <h2>Show minimum pipeline time (create extra service to resolve pipeline time?)</h2>
-                    <h3>Also this can handle recursive producers</h3>
-                </>,
+                render: ({item}) => <HumanSeconds seconds={item.time}/>,
                 width:  14,
+            },
+            pipelineTime: {
+                title:  t()`Producer pipeline time`,
+                render: ({item}) => <ProductionTime producerId={item.id}/>,
+                width:  14,
+            },
+            dependencies: {
+                title:  t()`Producer dependencies`,
+                render: ({item}) => <Dependencies
+                    producerId={item.id}
+                />,
             },
         }}
         {...props}

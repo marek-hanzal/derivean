@@ -4,7 +4,7 @@ import {
 } from "@use-pico/schema";
 
 export const ProductionTimeSchema = schema(z => z.object({
-    time: z.number,
+    time: z.number$,
 }));
 export type ProductionTimeSchema = typeof ProductionTimeSchema;
 export namespace ProductionTimeSchema {

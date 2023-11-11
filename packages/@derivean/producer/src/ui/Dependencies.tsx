@@ -15,7 +15,6 @@ import {
     Alert,
     ButtonLink,
     Group,
-    NativeBreadcrumbs,
     SkeletonBlock,
     WithIcon
 }                                  from "@use-pico/ui";
@@ -53,7 +52,7 @@ export const Dependencies: FC<Dependencies.Props> = (
                     color={"green"}
                     title={t()`Producer has no cyclic dependencies`}
                 >
-                    {entity.producers.length > 0 && <NativeBreadcrumbs>
+                    {entity.producers.length > 0 && <Group>
                         {entity.producers.map((producer) => <Group
                                 key={producer.id}
                                 gap={2}
@@ -77,7 +76,7 @@ export const Dependencies: FC<Dependencies.Props> = (
                                 <ProducerOutput producerId={producer.id}/>
                             </Group>
                         )}
-                    </NativeBreadcrumbs>}
+                    </Group>}
                 </Alert>;
             } else if (isSchema(entity, DependencyCycleSchema)) {
                 return <Alert
@@ -85,7 +84,7 @@ export const Dependencies: FC<Dependencies.Props> = (
                     color={"red.5"}
                     title={t()`Producer has cyclic dependencies`}
                 >
-                    {entity.cycle.length > 0 && <NativeBreadcrumbs>
+                    {entity.cycle.length > 0 && <Group>
                         {entity.cycle.map((producer) => <Group
                                 key={producer.id}
                                 gap={2}
@@ -109,7 +108,7 @@ export const Dependencies: FC<Dependencies.Props> = (
                                 <ProducerOutput producerId={producer.id}/>
                             </Group>
                         )}
-                    </NativeBreadcrumbs>}
+                    </Group>}
                 </Alert>;
             }
             return null;

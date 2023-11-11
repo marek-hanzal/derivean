@@ -1,6 +1,7 @@
 import {ProducerMenu} from "@derivean/manager";
 import {
     Dependencies,
+    ProducerPreview,
     withProducerRepository
 }                     from "@derivean/producer";
 import {container}    from "@derivean/server";
@@ -63,6 +64,10 @@ export default async function Index({params: {id}}: Index.Props) {
                 producerId={producer.id}
             />
         </Box>
+
+        <ProducerPreview
+            producer={producer}
+        />
 
         <h1>Show required buildings (resources) to run this producer + graph + production time</h1>
     </Page>;

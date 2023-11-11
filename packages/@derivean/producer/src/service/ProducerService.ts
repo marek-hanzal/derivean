@@ -4,6 +4,7 @@ import {
 }                                     from "@derivean/inventory";
 import {withDullSchema}               from "@use-pico/dull-stuff";
 import {DateTime}                     from "@use-pico/i18n";
+import {uniqueOf}                     from "@use-pico/utils";
 import {type IProducerProcess}        from "../api/IProducerProcess";
 import {type IProducerService}        from "../api/IProducerService";
 import {type IProducerSnapshot}       from "../api/IProducerSnapshot";
@@ -145,7 +146,7 @@ export class ProducerService implements IProducerService {
             );
         }
 
-        return dependencies;
+        return uniqueOf(dependencies, "id");
     }
 
     public async timeOf(producerId: string): Promise<ProductionTimeSchema.Type> {

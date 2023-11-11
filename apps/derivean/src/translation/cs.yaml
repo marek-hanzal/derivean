@@ -285,6 +285,12 @@ d6fc3ccb7f30fdbb7e2c46e67ae87ad65329678fc9c70660da36dfe5:
 79660947db99cbac28fe7b3da0092bebc0f22b98062b7758fe07b02a:
   ref: Update producer
   value: Upravit výrobnu
+dae6a53ebc0a130e75fbc11e552f0ae80d05bebfdfae556044d2281b:
+  ref: Producer dependencies
+  value: Závislosti
+6e8d83f4754ff1c30e217796224c23d9ec11f290b2998f04ebcf112c:
+  ref: Producer pipeline time
+  value: Celkový čas produkce
 16470b3a1e2f009857bcde70ee9e695da7059291775dc71f792f667f:
   ref: Update producer input
   value: Upravit vstupní zdroj
@@ -376,6 +382,12 @@ fad16a416ed45e4916eeb5c11c45c74a285d530628afbfd430d346d0:
 316c345e67c38ac73c960ee9f1df7945d2355e0e7f64fb2e0e9f1f8c:
   ref: Resource consumers
   value: Vstup pro
+75f94ebd2d3ed92dc38dbd514637e9c21928a22dab76431246c2a985:
+  ref: Producer input
+  value: Požadavky
+5daa89ffc985bced5fd67fa69e137e139d6b5b43f73481605ca6351c:
+  ref: Producer output
+  value: Výstup
 1887011beb8375f0ccd6994d7482fff080c516a4bde5dc3fe2adb1a3:
   ref: Update building (label)
   value: Upravit budovu

@@ -42,13 +42,19 @@ export const withProducerContainer = (container: IContainer.Type) => {
 
     withHandler({
         container,
-        key: withProductionTimeQuery.key,
+        key:    withProductionTimeQuery.key,
         schema: withProductionTimeQuery.schema,
         handle: async ({
                            container,
                            request
                        }) => {
-            return withProducerService.use(container).timeOf(request.id);
+            try {
+                return await withProducerService.use(container).timeOf(request.id);
+            } catch (e) {
+                return {
+                    time: undefined,
+                };
+            }
         },
     });
     withHandler({
