@@ -17,7 +17,7 @@ services:
     volumes:
       - "postgres:/var/lib/postgresql/data"
     ports:
-      - "127.0.0.1:10632:5432"
+      - "10632:5432"
     networks:
       - postgres
 
@@ -25,7 +25,7 @@ services:
     image: redis
     restart: always
     ports:
-      - "127.0.0.1:10379:6379"
+      - "10379:6379"
     networks:
       - redis
 

@@ -1,7 +1,7 @@
 {
-	"version": "2.0.4",
-	"name": "@use-pico/rpc-server",
-	"description": "Server-side RPC stuff.",
+	"version": "2.0.0",
+	"name": "@use-pico/redis",
+	"description": "Redis support.",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -24,24 +24,18 @@
 		"cleanup:sdk": "del-cli src/sdk/**",
 		"cleanup:lib": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
-	"peerDependencies": {
-		"@use-pico/container": "^2.0.5",
-		"@use-pico/query": "^2.0.8",
-		"@use-pico/redis": "^2.0.0",
-		"@use-pico/repository": "^2.0.4",
-		"@use-pico/rpc": "^2.0.4",
-		"@use-pico/schema": "^2.0.5",
-		"next": "^14.0.0"
+	"dependencies": {
+		"ioredis": "^5.3.2"
 	},
 	"devDependencies": {
+		"@types/node": "^20.4.2",
+		"@types/react": "^18.2.15",
 		"@use-pico/esbuild": "^2.0.4",
 		"@use-pico/eslint-config-eslint": "^2.0.4",
 		"@use-pico/tsconfig": "^2.0.4",
-		"@types/node": "^20.4.2",
-		"@types/react": "^18.2.15",
 		"concurrently": "^8.2.0",
 		"del-cli": "^5.0.0",
-		"eslint": "^8.47.0",
+		"eslint": "^8.45.0",
 		"typescript": "^5.2.2"
 	},
 	"bugs": {

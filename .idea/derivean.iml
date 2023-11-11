@@ -85,6 +85,7 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/dull-stuff-server/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/dull-stuff/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/i18n-server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/redis/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@derivean/public/.turbo" />
@@ -213,6 +214,8 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/dull-stuff/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/i18n-server/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/i18n-server/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/redis/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/redis/lib" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

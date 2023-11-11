@@ -12,6 +12,7 @@
       <env name="NEXTAUTH_GITHUB_CLIENT_SECRET" value="ab06a4165184b231882f9467cfccd44ce7a64d30" />
       <env name="NEXTAUTH_SECRET" value="foobar" />
       <env name="NEXTAUTH_URL" value="http://localhost:3000" />
+      <env name="REDIS_URL" value="redis://localhost:10379" />
     </envs>
     <method v="2" />
   </configuration>

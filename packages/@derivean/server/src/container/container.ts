@@ -6,6 +6,10 @@ import {
     withClient,
     withKysely
 }                               from "@use-pico/orm";
+import {
+    withRedis,
+    withRedisService
+}                               from "@use-pico/redis";
 import {withServerContainer}    from "@use-pico/server";
 
 const register = [
@@ -17,5 +21,6 @@ const register = [
 
 export const container = withServerContainer();
 withClient.factory(container, () => withKysely({}));
+withRedisService.factory(container, () => withRedis({}));
 
 register.forEach(register => register(container));

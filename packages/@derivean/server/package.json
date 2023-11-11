@@ -18,6 +18,7 @@
 		"@derivean/producer": "^0.5.0",
 		"@derivean/resource": "^0.5.0",
 		"@use-pico/orm": "^2.0.0",
+		"@use-pico/redis": "^2.0.0",
 		"@use-pico/server": "^2.0.0",
 		"pg": "^8.11.3"
 	},

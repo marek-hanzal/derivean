@@ -3,6 +3,10 @@ import {
     withContainer
 }                         from "@use-pico/container";
 import {
+    type Redis,
+    withRedisService
+}                         from "@use-pico/redis";
+import {
     RpcBulkRequestSchema,
     RpcBulkResponseSchema,
     RpcResponseSchema
@@ -19,10 +23,12 @@ import {type IRpcService} from "../api/IRpcService";
 export class RpcService implements IRpcService {
     static inject = [
         withContainer.inject,
+        withRedisService.inject,
     ];
 
     constructor(
         protected container: IContainer.Type,
+        protected redis: Redis,
     ) {
     }
 
@@ -51,6 +57,13 @@ export class RpcService implements IRpcService {
                 //     }, Math.random() * 10 * 100);
                 // });
 
+                const key = JSON.stringify([bulk.service, bulk.data]);
+                const cached = await this.redis.get(key);
+                if (cached) {
+                    response.set(id, JSON.parse(cached) as any);
+                    continue;
+                }
+
                 const {
                     handle,
                     schema
@@ -65,6 +78,8 @@ export class RpcService implements IRpcService {
                         })
                     ),
                 });
+
+                this.redis.setex(key, 60 * 60 * 24, JSON.stringify(response.get(id)));
             } catch (e) {
                 console.error(e);
                 if (e instanceof Error) {
