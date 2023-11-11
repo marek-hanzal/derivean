@@ -1,7 +1,7 @@
 {
 	"name": "derivean",
 	"private": true,
-	"version": "0.5.0",
+	"version": "0.5.0.beta0",
 	"scripts": {
 		"build": "dotenv -- next build",
 		"start": "dotenv -- next start",
