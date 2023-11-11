@@ -1,5 +1,9 @@
 import {type IContainer}              from "@use-pico/container";
-import {withRepositoryHandler}        from "@use-pico/rpc-server";
+import {
+    IHandler,
+    withRepositoryHandler
+}                                     from "@use-pico/rpc-server";
+import {withProductionTimeQuery}      from "../query/withProductionTimeQuery";
 import {ProducerInputRepository}      from "../repository/ProducerInputRepository";
 import {ProducerOutputRepository}     from "../repository/ProducerOutputRepository";
 import {ProducerRepository}           from "../repository/ProducerRepository";
@@ -32,5 +36,15 @@ export const withProducerContainer = (container: IContainer.Type) => {
         repository:     ProducerOutputRepository,
         withRepository: withProducerOutputRepository,
         handler:        ProducerOutputRpc,
+    });
+
+    container.useValue<IHandler<any, any>>(withProductionTimeQuery.key.join("."), {
+        schema: withProductionTimeQuery.schema,
+        handle: async ({
+                           container,
+                           request
+                       }) => {
+            return withProducerService.use(container).timeOf(request.id);
+        },
     });
 };

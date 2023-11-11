@@ -3,6 +3,7 @@ import {
     ProducerInputTable,
     ProducerOutputQueryStore,
     ProducerOutputTable,
+    ProductionTime,
     withProducerRepository
 }                      from "@derivean/producer";
 import {container}     from "@derivean/server";
@@ -59,6 +60,8 @@ export default async function Index({params: {id}}: Index.Props) {
             ]}
         />}
     >
+        <ProductionTime producerId={producer.id}/>
+
         <StoreProvider
             store={ProducerInputQueryStore}
             values={{

@@ -19,6 +19,8 @@ export * from "./ProducerSelect";
 export * from "./ProducerSelectionStore";
 export * from "./ProducerTable";
 export * from "./ProducerUI";
+export * from "./ProductionTime";
 export * from "./withProducerContainer";
 export * from "./withProducerRepository";
 export * from "./withProducerService";
+export * from "./withProductionTimeQuery";

@@ -6,6 +6,7 @@ import {DateTime}               from "@use-pico/i18n";
 import {type IProducerProcess}  from "../api/IProducerProcess";
 import {type IProducerService}  from "../api/IProducerService";
 import {type IProducerSnapshot} from "../api/IProducerSnapshot";
+import {ProductionTimeSchema}   from "../schema/ProductionTimeSchema";
 
 export class ProducerService implements IProducerService {
     static inject = [
@@ -85,6 +86,12 @@ export class ProducerService implements IProducerService {
                         })
                 ],
             }),
+        };
+    }
+
+    public async timeOf(producerId: string): Promise<ProductionTimeSchema.Type> {
+        return {
+            time: -1,
         };
     }
 }
