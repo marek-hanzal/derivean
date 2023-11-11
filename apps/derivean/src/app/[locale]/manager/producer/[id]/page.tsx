@@ -1,6 +1,8 @@
 import {
     ProducerInputQueryStore,
     ProducerInputTable,
+    ProducerOutputQueryStore,
+    ProducerOutputTable,
     withProducerRepository
 }                      from "@derivean/producer";
 import {container}     from "@derivean/server";
@@ -79,17 +81,18 @@ export default async function Index({params: {id}}: Index.Props) {
             />
         </Center>
 
-        {/*<StoreProvider*/}
-        {/*    store={ProducerInputQueryStore}*/}
-        {/*    values={{*/}
-        {/*        where: {*/}
-        {/*            producerId: producer.id,*/}
-        {/*        },*/}
-        {/*    }}*/}
-        {/*>*/}
-        {/*    <ProducerInputTable*/}
-
-        {/*    />*/}
-        {/*</StoreProvider>*/}
+        <StoreProvider
+            store={ProducerOutputQueryStore}
+            values={{
+                where: {
+                    producerId: producer.id,
+                },
+            }}
+        >
+            <ProducerOutputTable
+                hidden={["producerId"]}
+                producerId={producer.id}
+            />
+        </StoreProvider>
     </Page>;
 }

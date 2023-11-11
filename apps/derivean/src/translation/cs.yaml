@@ -314,6 +314,41 @@ c6987ca9737bb51302e981700917bf4f4866753b5f283c1ed6de1b2b:
 2965000f3643d4b4a3e35619ad868140a2de9a2d934c8d8f2f1c17b7:
   ref: Producer input has been successfully deleted.
   value: Vstupní zdroj výrobny byl úspěšně odstraněn
+019af0c7c9b1f79db0e6927f842a508f81d999ef15bca4cf960b2e14:
+  ref: Total count of producer outputs
+  value: Počet produkovaných zdrojů
+10fc83476287394d1c3e3f293701148f7d074983cec32c607e63536c:
+  ref: Create producer output (modal)
+  value: Nový výstupní zdroj
+f621f910d21fe26cbaf6c3f59a404b2f450d94c43b6306e3cf4faa08:
+  ref: Create producer output
+  value: Nový výstupní zdroj
+8590ec7405e86a2a353ba858320b2bdf7968559d58c14514badd010a:
+  ref: Update producer output
+  value: Upravit výstupní zdroj
+b22a31a051d41ee10777e78ae5f5b9cae3bc7b7f244db23c15246467:
+  ref: Delete producer output
+  value: Odstranit výstupní zdroj
+5b3a2deb0f3e13df25733f797e52d882de1169393cb36d8a77db79f0:
+  ref: Delete producer output (modal)
+  value: Odstranit výstupní zdroj
+fad16a416ed45e4916eeb5c11c45c74a285d530628afbfd430d346d0:
+  ref: Do you really want to delete selected producer output?
+  value: |
+    <p>
+      Opravdu chcete odstranit vybraný výstupní zdroj výrobny?
+    </p>
+    <p>
+        <i>
+            Tato akce bude může mít okrajový vliv na hratelnost. 
+        </i>
+    </p>
+11888d85ae0ad4335fc6c54457c06e519b0041970b1d74b663cc787d:
+  ref: Producer output has been successfully deleted.
+  value: Výstupní zdroj byl úspěšně odstraněn
+f5306e9d922c167682bc5bbcf11c8751276dd703979a70643cef00ae:
+  ref: Produced amount
+  value: Produkované množství
 1887011beb8375f0ccd6994d7482fff080c516a4bde5dc3fe2adb1a3:
   ref: Update building (label)
   value: Upravit budovu
@@ -371,6 +406,9 @@ fe57342d0588cea22f8259f5877597054ad8d9d71047cf3a34156829:
 2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
   ref: Game overview
   value: Přehled hry
+16d079616946841c540c9db101901a2def7f9b002b6079300a64a293:
+  ref: Game management (title)
+  value: Game management (title)
 8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
   ref: Game management
   value: Správa hry

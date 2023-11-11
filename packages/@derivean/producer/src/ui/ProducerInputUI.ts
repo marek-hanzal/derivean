@@ -6,3 +6,4 @@ export const ProducerInputUI = withDullUI({
     rpc:        ProducerInputRpc,
     queryStore: ProducerInputQueryStore,
 });
+export type ProducerInputUI = typeof ProducerInputUI;
