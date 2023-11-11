@@ -20,6 +20,7 @@ const register = [
 ] as const;
 
 export const container = withServerContainer();
+
 withClient.factory(container, () => withKysely({}));
 withRedisService.factory(container, () => withRedis({}));
 
