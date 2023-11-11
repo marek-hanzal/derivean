@@ -1,28 +1,18 @@
-import {ResourceIcon}         from "@derivean/ui";
-import {withDullSchema}       from "@use-pico/dull-stuff";
-import {
-    Form,
-    TextInput
-}                             from "@use-pico/form";
+import {ResourceIcon}       from "@derivean/ui";
+import {TextInput}          from "@use-pico/form";
 import {
     t,
     tx
-}                             from "@use-pico/i18n";
-import {type WithEntity}      from "@use-pico/types";
-import {type FC}              from "react";
-import {ResourceTypeSelect}   from "../input/ResourceTypeSelect";
-import {withResourceMutation} from "../mutation/withResourceMutation";
-import {ResourceSchema}       from "../schema/ResourceSchema";
+}                           from "@use-pico/i18n";
+import {
+    type ComponentProps,
+    type FC
+}                           from "react";
+import {ResourceTypeSelect} from "../input/ResourceTypeSelect";
+import {ResourceUI}         from "../ui/ResourceUI";
 
 export namespace ResourceUpsertForm {
-    export type Props =
-        Form.PropsEx<
-            withResourceMutation,
-            withDullSchema.Infer.ShapeSchema<ResourceSchema>,
-            withResourceMutation["schema"]["request"],
-            withResourceMutation["schema"]["response"]
-        >
-        & WithEntity.$<withDullSchema.Infer.Entity<ResourceSchema>>;
+    export type Props = Omit<ComponentProps<ResourceUI["MutationForm"]>, "inputs" | "defaultValues" | "Render">;
 }
 
 export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = (
@@ -31,7 +21,7 @@ export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = (
         ...props
     }
 ) => {
-    return <Form
+    return <ResourceUI.MutationForm
         text={{
             submit:  entity ? t()`Update resource (label)` : t()`Create resource (label)`,
             success: {
@@ -39,8 +29,6 @@ export const ResourceUpsertForm: FC<ResourceUpsertForm.Props> = (
                 message: entity ? t()`Resource updated` : t()`Resource created`,
             }
         }}
-        withMutation={withResourceMutation}
-        schema={ResourceSchema.shape}
         inputs={{
             name:   props => <TextInput
                 label={t()`Resource name`}

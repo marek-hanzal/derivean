@@ -1,26 +1,26 @@
-import {ProducerIcon}         from "@derivean/ui";
-import {withDullSchema}       from "@use-pico/dull-stuff";
+import {ProducerIcon}    from "@derivean/ui";
+import {withDullSchema}  from "@use-pico/dull-stuff";
 import {
     Form,
     NumberInput,
     TextInput
-}                             from "@use-pico/form";
+}                        from "@use-pico/form";
 import {
     t,
     tx
-}                             from "@use-pico/i18n";
-import {type WithEntity}      from "@use-pico/types";
-import {type FC}              from "react";
-import {withProducerMutation} from "../mutation/withProducerMutation";
-import {ProducerSchema}       from "../schema/ProducerSchema";
+}                        from "@use-pico/i18n";
+import {type WithEntity} from "@use-pico/types";
+import {type FC}         from "react";
+import {ProducerRpc}     from "../rpc/ProducerRpc";
+import {ProducerSchema}  from "../schema/ProducerSchema";
 
 export namespace ProducerUpsertForm {
     export type Props =
         Form.PropsEx<
-            withProducerMutation,
+            ProducerRpc["mutation"],
             withDullSchema.Infer.ShapeSchema<ProducerSchema>,
-            withProducerMutation["schema"]["request"],
-            withProducerMutation["schema"]["response"]
+            ProducerRpc["mutation"]["schema"]["request"],
+            ProducerRpc["mutation"]["schema"]["response"]
         >
         & WithEntity.$<withDullSchema.Infer.Entity<ProducerSchema>>;
 }
@@ -40,7 +40,7 @@ export const ProducerUpsertForm: FC<ProducerUpsertForm.Props> = (
             }
         }}
         icon={<ProducerIcon/>}
-        withMutation={withProducerMutation}
+        withMutation={ProducerRpc.mutation}
         schema={ProducerSchema.shape}
         inputs={{
             name: props => <TextInput

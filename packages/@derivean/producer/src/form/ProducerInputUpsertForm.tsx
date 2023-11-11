@@ -1,24 +1,24 @@
-import {ResourceSelect}            from "@derivean/resource";
-import {ProducerIcon}              from "@derivean/ui";
-import {withDullSchema}            from "@use-pico/dull-stuff";
+import {ResourceSelect}      from "@derivean/resource";
+import {ProducerIcon}        from "@derivean/ui";
+import {withDullSchema}      from "@use-pico/dull-stuff";
 import {
     Form,
     NumberInput
-}                                  from "@use-pico/form";
-import {t}                         from "@use-pico/i18n";
-import {type WithEntity}           from "@use-pico/types";
-import {type FC}                   from "react";
-import {ProducerSelect}            from "../input/ProducerSelect";
-import {withProducerInputMutation} from "../mutation/withProducerInputMutation";
-import {ProducerInputSchema}       from "../schema/ProducerInputSchema";
+}                            from "@use-pico/form";
+import {t}                   from "@use-pico/i18n";
+import {type WithEntity}     from "@use-pico/types";
+import {type FC}             from "react";
+import {ProducerSelect}      from "../input/ProducerSelect";
+import {ProducerInputRpc}    from "../rpc/ProducerInputRpc";
+import {ProducerInputSchema} from "../schema/ProducerInputSchema";
 
 export namespace ProducerInputUpsertForm {
     export type Props =
         Form.PropsEx<
-            withProducerInputMutation,
+            ProducerInputRpc["mutation"],
             withDullSchema.Infer.ShapeSchema<ProducerInputSchema>,
-            withProducerInputMutation["schema"]["request"],
-            withProducerInputMutation["schema"]["response"]
+            ProducerInputRpc["mutation"]["schema"]["request"],
+            ProducerInputRpc["mutation"]["schema"]["response"]
         >
         & WithEntity.$<withDullSchema.Infer.Entity<ProducerInputSchema>>
         & {
@@ -45,7 +45,7 @@ export const ProducerInputUpsertForm: FC<ProducerInputUpsertForm.Props> = (
             }
         }}
         icon={<ProducerIcon/>}
-        withMutation={withProducerInputMutation}
+        withMutation={ProducerInputRpc.mutation}
         schema={ProducerInputSchema.shape}
         hidden={producerId ? ["producerId"] : undefined}
         inputs={{

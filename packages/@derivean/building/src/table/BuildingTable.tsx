@@ -1,16 +1,15 @@
 "use client";
 
-import {BuildingIcon}         from "@derivean/ui";
-import {withDullSchema}       from "@use-pico/dull-stuff";
-import {t}                    from "@use-pico/i18n";
-import {ButtonLink}           from "@use-pico/ui";
-import {Table}                from "@use-pico/ui-extra";
-import {type FC}              from "react";
-import {BuildingUpsertForm}   from "../form/BuildingUpsertForm";
-import {withBuildingMutation} from "../mutation/withBuildingMutation";
-import {BuildingQueryStore}   from "../query/BuildingQueryStore";
-import {withBuildingQuery}    from "../query/withBuildingQuery";
-import {type BuildingSchema}  from "../schema/BuildingSchema";
+import {BuildingIcon}        from "@derivean/ui";
+import {withDullSchema}      from "@use-pico/dull-stuff";
+import {t}                   from "@use-pico/i18n";
+import {ButtonLink}          from "@use-pico/ui";
+import {Table}               from "@use-pico/ui-extra";
+import {type FC}             from "react";
+import {BuildingUpsertForm}  from "../form/BuildingUpsertForm";
+import {BuildingQueryStore}  from "../query/BuildingQueryStore";
+import {BuildingRpc}         from "../rpc/BuildingRpc";
+import {type BuildingSchema} from "../schema/BuildingSchema";
 
 export namespace BuildingTable {
     export type Columns =
@@ -45,7 +44,7 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
             />,
         }}
         rowActionProps={{
-            text: {
+            text:         {
                 update: {
                     title: t()`Update building`,
                     label: t()`Update building`,
@@ -62,7 +61,7 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
                     },
                 },
             },
-            withMutation: withBuildingMutation,
+            withMutation: BuildingRpc.mutation,
             upsertForm:   ({
                                item,
                                modalId
@@ -87,7 +86,7 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
             },
         }}
         withQueryStore={BuildingQueryStore}
-        withSourceQuery={withBuildingQuery}
+        withSourceQuery={BuildingRpc.query}
         {...props}
     />;
 };

@@ -8,14 +8,14 @@ import {
 }                               from "react";
 import {ProducerInline}         from "../inline/ProducerInline";
 import {ProducerQueryStore}     from "../query/ProducerQueryStore";
-import {withProducerQuery}      from "../query/withProducerQuery";
+import {ProducerRpc}            from "../rpc/ProducerRpc";
 import {ProducerSelectionStore} from "../store/ProducerSelectionStore";
 import {ProducerTable}          from "../table/ProducerTable";
 
 const ProducerQueryInput = withSourceQueryInput({
     withQueryStore:  ProducerQueryStore,
-    withSourceQuery: withProducerQuery,
-    SelectionStore: ProducerSelectionStore.single,
+    withSourceQuery: ProducerRpc.query,
+    SelectionStore:  ProducerSelectionStore.single,
 });
 type ProducerQueryInput<
     TValuesSchema extends ValuesSchema,

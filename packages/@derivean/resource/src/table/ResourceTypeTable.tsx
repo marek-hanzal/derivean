@@ -6,9 +6,8 @@ import {t}                          from "@use-pico/i18n";
 import {Table}                      from "@use-pico/ui-extra";
 import {type FC}                    from "react";
 import {ResourceTypeUpsertForm}     from "../form/ResourceTypeUpsertForm";
-import {withResourceTypeMutation}   from "../mutation/withResourceTypeMutation";
-import {ResourceTypeQueryStore}     from "../query/type/ResourceTypeQueryStore";
-import {withResourceTypeQuery}      from "../query/type/withResourceTypeQuery";
+import {ResourceTypeQueryStore}     from "../query/ResourceTypeQueryStore";
+import {ResourceTypeRpc}            from "../rpc/ResourceTypeRpc";
 import {ResourceTypeSchema}         from "../schema/ResourceTypeSchema";
 import {ResourceTypeSelectionStore} from "../store/ResourceTypeSelectionStore";
 
@@ -46,7 +45,7 @@ export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
             />,
         }}
         rowActionProps={{
-            text: {
+            text:         {
                 update: {
                     title: t()`Update resource type`,
                     label: t()`Update resource type`,
@@ -63,7 +62,7 @@ export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
                     }
                 }
             },
-            withMutation: withResourceTypeMutation,
+            withMutation: ResourceTypeRpc.mutation,
             upsertForm:   ({
                                item,
                                modalId
@@ -79,7 +78,7 @@ export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
             },
         }}
         withQueryStore={ResourceTypeQueryStore}
-        withSourceQuery={withResourceTypeQuery}
+        withSourceQuery={ResourceTypeRpc.query}
         {...props}
     />;
 };

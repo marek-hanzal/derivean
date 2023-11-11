@@ -1,21 +1,20 @@
 "use client";
 
 import {
-    ResourceFetch,
-    ResourceInline
-}                                  from "@derivean/resource";
-import {ProducerIcon}              from "@derivean/ui";
-import {withDullSchema}            from "@use-pico/dull-stuff";
-import {t}                         from "@use-pico/i18n";
-import {ButtonLink}                from "@use-pico/ui";
-import {Table}                     from "@use-pico/ui-extra";
-import {type FC}                   from "react";
-import {ProducerFetch}             from "../fetch/ProducerFetch";
-import {ProducerInputUpsertForm}   from "../form/ProducerInputUpsertForm";
-import {withProducerInputMutation} from "../mutation/withProducerInputMutation";
-import {ProducerInputQueryStore}   from "../query/input/ProducerInputQueryStore";
-import {withProducerInputQuery}    from "../query/input/withProducerInputQuery";
-import {ProducerInputSchema}       from "../schema/ProducerInputSchema";
+    ResourceInline,
+    ResourceUI
+}                                from "@derivean/resource";
+import {ProducerIcon}            from "@derivean/ui";
+import {withDullSchema}          from "@use-pico/dull-stuff";
+import {t}                       from "@use-pico/i18n";
+import {ButtonLink}              from "@use-pico/ui";
+import {Table}                   from "@use-pico/ui-extra";
+import {type FC}                 from "react";
+import {ProducerInputUpsertForm} from "../form/ProducerInputUpsertForm";
+import {ProducerInputQueryStore} from "../query/ProducerInputQueryStore";
+import {ProducerInputRpc}        from "../rpc/ProducerInputRpc";
+import {ProducerInputSchema}     from "../schema/ProducerInputSchema";
+import {ProducerInputUI}         from "../ui/ProducerInputUI";
 
 export namespace ProducerInputTable {
     export type Columns =
@@ -62,7 +61,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
             />,
         }}
         rowActionProps={{
-            text: {
+            text:         {
                 update: {
                     title: t()`Update producer input`,
                     label: t()`Update producer input`,
@@ -79,7 +78,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
                     }
                 },
             },
-            withMutation: withProducerInputMutation,
+            withMutation: ProducerInputRpc.mutation,
             upsertForm:   ({
                                item,
                                modalId
@@ -91,8 +90,8 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
         }}
         columns={{
             producerId: {
-                title: t()`Producer name`,
-                render: ({item}) => <ProducerFetch
+                title:  t()`Producer name`,
+                render: ({item}) => <ProducerInputUI.Fetch
                     override={item.producerId}
                     WithSuccess={({entity}) => <ButtonLink
                         icon={<ProducerIcon/>}
@@ -108,7 +107,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
             },
             resourceId: {
                 title:  t()`Resource name`,
-                render: ({item}) => <ResourceFetch
+                render: ({item}) => <ResourceUI.Fetch
                     override={item.resourceId}
                     WithSuccess={({entity}) => <ResourceInline entity={entity}/>}
                 />,
@@ -120,7 +119,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
             },
         }}
         withQueryStore={ProducerInputQueryStore}
-        withSourceQuery={withProducerInputQuery}
+        withSourceQuery={ProducerInputRpc.query}
         {...props}
     />;
 };

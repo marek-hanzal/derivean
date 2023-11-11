@@ -7,14 +7,14 @@ import {
     useCallback
 }                                   from "react";
 import {ResourceTypeInline}         from "../inline/ResourceTypeInline";
-import {ResourceTypeQueryStore}     from "../query/type/ResourceTypeQueryStore";
-import {withResourceTypeQuery}      from "../query/type/withResourceTypeQuery";
+import {ResourceTypeQueryStore}     from "../query/ResourceTypeQueryStore";
+import {ResourceTypeRpc}            from "../rpc/ResourceTypeRpc";
 import {ResourceTypeSelectionStore} from "../store/ResourceTypeSelectionStore";
 import {ResourceTypeTable}          from "../table/ResourceTypeTable";
 
 const ResourceTypeQueryInput = withSourceQueryInput({
     withQueryStore:  ResourceTypeQueryStore,
-    withSourceQuery: withResourceTypeQuery,
+    withSourceQuery: ResourceTypeRpc.query,
     SelectionStore:  ResourceTypeSelectionStore.single,
 });
 type ResourceTypeQueryInput<

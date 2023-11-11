@@ -8,13 +8,13 @@ import {
 }                               from "react";
 import {ResourceInline}         from "../inline/ResourceInline";
 import {ResourceQueryStore}     from "../query/ResourceQueryStore";
-import {withResourceQuery}      from "../query/withResourceQuery";
+import {ResourceRpc}            from "../rpc/ResourceRpc";
 import {ResourceSelectionStore} from "../store/ResourceSelectionStore";
 import {ResourceTable}          from "../table/ResourceTable";
 
 const ResourceQueryInput = withSourceQueryInput({
     withQueryStore:  ResourceQueryStore,
-    withSourceQuery: withResourceQuery,
+    withSourceQuery: ResourceRpc.query,
     SelectionStore:  ResourceSelectionStore.single,
 });
 type ResourceQueryInput<

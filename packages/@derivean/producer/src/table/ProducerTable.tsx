@@ -10,9 +10,8 @@ import {
 }                               from "@use-pico/ui-extra";
 import {type FC}                from "react";
 import {ProducerUpsertForm}     from "../form/ProducerUpsertForm";
-import {withProducerMutation}   from "../mutation/withProducerMutation";
 import {ProducerQueryStore}     from "../query/ProducerQueryStore";
-import {withProducerQuery}      from "../query/withProducerQuery";
+import {ProducerRpc}            from "../rpc/ProducerRpc";
 import {type ProducerSchema}    from "../schema/ProducerSchema";
 import {ProducerSelectionStore} from "../store/ProducerSelectionStore";
 
@@ -51,7 +50,7 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
             />,
         }}
         rowActionProps={{
-            text: {
+            text:         {
                 delete: {
                     label: t()`Delete producer`,
                     modal: {
@@ -68,7 +67,7 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
                     label: t()`Update producer`,
                 },
             },
-            withMutation: withProducerMutation,
+            withMutation: ProducerRpc.mutation,
             upsertForm:   ({
                                item,
                                modalId
@@ -98,7 +97,7 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
             },
         }}
         withQueryStore={ProducerQueryStore}
-        withSourceQuery={withProducerQuery}
+        withSourceQuery={ProducerRpc.query}
         {...props}
     />;
 };

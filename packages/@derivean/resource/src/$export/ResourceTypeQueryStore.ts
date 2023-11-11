@@ -1,1 +1,1 @@
-export {ResourceTypeQueryStore} from "../query/type/ResourceTypeQueryStore";
+export {ResourceTypeQueryStore} from "../query/ResourceTypeQueryStore";

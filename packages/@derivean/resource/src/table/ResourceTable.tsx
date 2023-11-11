@@ -5,14 +5,13 @@ import {withDullSchema}         from "@use-pico/dull-stuff";
 import {t}                      from "@use-pico/i18n";
 import {Table}                  from "@use-pico/ui-extra";
 import {type FC}                from "react";
-import {ResourceTypeFetch}      from "../fetch/ResourceTypeFetch";
 import {ResourceUpsertForm}     from "../form/ResourceUpsertForm";
 import {ResourceTypeInline}     from "../inline/ResourceTypeInline";
-import {withResourceMutation}   from "../mutation/withResourceMutation";
 import {ResourceQueryStore}     from "../query/ResourceQueryStore";
-import {withResourceQuery}      from "../query/withResourceQuery";
+import {ResourceRpc}            from "../rpc/ResourceRpc";
 import {ResourceSchema}         from "../schema/ResourceSchema";
 import {ResourceSelectionStore} from "../store/ResourceSelectionStore";
+import {ResourceTypeUI}         from "../ui/ResourceTypeUI";
 
 export namespace ResourceTable {
     export type Columns =
@@ -55,7 +54,7 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
         }}
         SelectionStore={ResourceSelectionStore.single}
         rowActionProps={{
-            text: {
+            text:         {
                 delete: {
                     label: t()`Delete resource`,
                     modal: {
@@ -72,7 +71,7 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
                     label: t()`Update resource`,
                 },
             },
-            withMutation: withResourceMutation,
+            withMutation: ResourceRpc.mutation,
             upsertForm:   ({
                                item,
                                modalId
@@ -87,7 +86,7 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
                 render: ({item}) => item.name,
             },
             typeId: {
-                title: t()`Resource type`,
+                title:  t()`Resource type`,
                 withFilter: {
                     isFilter: filter => filter?.typeId !== undefined,
                     onFilter: ({
@@ -104,7 +103,7 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
                         });
                     },
                 },
-                render:     ({item}) => <ResourceTypeFetch
+                render: ({item}) => <ResourceTypeUI.Fetch
                     override={item.typeId}
                     WithSuccess={ResourceTypeInline}
                 />,
@@ -112,7 +111,7 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
             },
         }}
         withQueryStore={ResourceQueryStore}
-        withSourceQuery={withResourceQuery}
+        withSourceQuery={ResourceRpc.query}
         {...props}
     />;
 };
