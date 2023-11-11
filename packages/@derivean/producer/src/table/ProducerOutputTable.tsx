@@ -46,7 +46,7 @@ export const ProducerOutputTable: FC<ProducerOutputTable.Props> = (
         text={{
             total: t()`Total count of producer outputs`,
         }}
-        name={"producer.input"}
+        name={"producer.output"}
         icon={<ProducerIcon/>}
         tableActionProps={{
             text:       {
