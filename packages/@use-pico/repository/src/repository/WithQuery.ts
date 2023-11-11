@@ -30,11 +30,14 @@ export class WithQuery<
                 (
                     await this.repository.applyFilter(
                         query,
-                        this.client
-                            .selectFrom(this.table)
-                            .select(({fn}) => [
-                                fn.count("id").as("count")
-                            ])
+                        this.repository.applyWhere(
+                            query,
+                            this.client
+                                .selectFrom(this.table)
+                                .select(({fn}) => [
+                                    fn.count("id").as("count")
+                                ])
+                        )
                     ).executeTakeFirst() as any
                 ).count as string
             ),
