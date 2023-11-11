@@ -1,6 +1,8 @@
 import {Form}            from "@use-pico/form";
+import {IQueryStore}     from "@use-pico/query";
 import {withFetch}       from "@use-pico/source-ui";
 import {type WithEntity} from "@use-pico/types";
+import {Table}           from "@use-pico/ui-extra";
 import {withDullRpc}     from "./withDullRpc";
 import {withDullSchema}  from "./withDullSchema";
 
@@ -9,6 +11,7 @@ export namespace withDullUI {
         TRpc extends withDullRpc.Rpc<withDullSchema.Schema<any, any, any, any>>,
     > {
         rpc: TRpc;
+        queryStore: IQueryStore.Store<TRpc["schema"]["query"]>;
     }
 }
 
@@ -17,6 +20,7 @@ export const withDullUI = <
 >(
     {
         rpc,
+        queryStore,
     }: withDullUI.Props<TRpc>,
 ) => {
     return {
@@ -40,6 +44,24 @@ export const withDullUI = <
                 withMutation={rpc.mutation}
                 schema={rpc.schema.shape}
                 values={entity}
+                {...props}
+            />;
+        },
+        Table: <
+                   TColumns extends string,
+               >(
+            props: Omit<
+                Table.Props<
+                    TColumns,
+                    TRpc["schema"]["entity"],
+                    TRpc["schema"]["query"]
+                >,
+                "withSourceQuery" | "withQueryStore"
+            >
+        ) => {
+            return <Table
+                withSourceQuery={rpc.query}
+                withQueryStore={queryStore}
                 {...props}
             />;
         },

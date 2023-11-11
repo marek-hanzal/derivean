@@ -1,32 +1,28 @@
 "use client";
 
-import {BuildingIcon}        from "@derivean/ui";
-import {withDullSchema}      from "@use-pico/dull-stuff";
-import {t}                   from "@use-pico/i18n";
-import {ButtonLink}          from "@use-pico/ui";
-import {Table}               from "@use-pico/ui-extra";
-import {type FC}             from "react";
-import {BuildingUpsertForm}  from "../form/BuildingUpsertForm";
-import {BuildingQueryStore}  from "../query/BuildingQueryStore";
-import {BuildingRpc}         from "../rpc/BuildingRpc";
-import {type BuildingSchema} from "../schema/BuildingSchema";
+import {BuildingIcon}       from "@derivean/ui";
+import {t}                  from "@use-pico/i18n";
+import {ButtonLink}         from "@use-pico/ui";
+import {
+    type ComponentProps,
+    type FC
+}                           from "react";
+import {BuildingUpsertForm} from "../form/BuildingUpsertForm";
+import {BuildingRpc}        from "../rpc/BuildingRpc";
+import {BuildingUI}         from "../ui/BuildingUI";
 
 export namespace BuildingTable {
     export type Columns =
         | "name";
 
     export type Props = Omit<
-        Table.Props<
-            Columns,
-            withDullSchema.Infer.EntitySchema<BuildingSchema>,
-            withDullSchema.Infer.QuerySchema<BuildingSchema>
-        >,
-        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
+        ComponentProps<BuildingUI["Table"]>,
+        "columns" | "name" | "icon" | "text"
     >
 }
 
 export const BuildingTable: FC<BuildingTable.Props> = props => {
-    return <Table
+    return <BuildingUI.Table
         text={{
             total: t()`Total count of buildings`,
         }}
@@ -85,8 +81,6 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
                 />,
             },
         }}
-        withQueryStore={BuildingQueryStore}
-        withSourceQuery={BuildingRpc.query}
         {...props}
     />;
 };

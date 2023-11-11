@@ -34,7 +34,11 @@ export default function Index() {
                 filter: {},
             }}
         >
-            <BuildingTable/>
+            <BuildingTable
+                order={[
+                    "dfsfg",
+                ]}
+            />
         </StoreProvider>
     </Page>;
 }

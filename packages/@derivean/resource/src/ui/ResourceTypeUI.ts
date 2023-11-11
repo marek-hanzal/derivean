@@ -1,7 +1,9 @@
-import {withDullUI}      from "@use-pico/dull-stuff";
-import {ResourceTypeRpc} from "../rpc/ResourceTypeRpc";
+import {withDullUI}             from "@use-pico/dull-stuff";
+import {ResourceTypeQueryStore} from "../query/ResourceTypeQueryStore";
+import {ResourceTypeRpc}        from "../rpc/ResourceTypeRpc";
 
 export const ResourceTypeUI = withDullUI({
-    rpc: ResourceTypeRpc,
+    rpc:        ResourceTypeRpc,
+    queryStore: ResourceTypeQueryStore,
 });
 export type ResourceTypeUI = typeof ResourceTypeUI;
