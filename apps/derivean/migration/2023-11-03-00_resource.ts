@@ -8,11 +8,15 @@ export async function up(db: Kysely<any>): Promise<void> {
         )
         .execute();
 
+    const resourceTypeId = await db.insertInto("ResourceType")
+        .values({
+            name: "resource",
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow();
+
     await db.insertInto("ResourceType")
         .values([
-            {
-                name: "resource",
-            },
             {
                 name: "building",
             }
@@ -27,5 +31,70 @@ export async function up(db: Kysely<any>): Promise<void> {
             col.references("ResourceType.id").onDelete("cascade").notNull()
         )
         .addUniqueConstraint("name_type", ["name", "typeId"])
+        .execute();
+
+    await db.insertInto("Resource")
+        .values([
+            {
+                name:   "gold",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "coin",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "bread",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "corn",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "beer",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "log",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "plank",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "stone",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "iron",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "pig",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "sausage",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "flour",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "coal",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "water",
+                typeId: resourceTypeId.id,
+            },
+            {
+                name:   "abalone",
+                typeId: resourceTypeId.id,
+            },
+        ])
         .execute();
 }

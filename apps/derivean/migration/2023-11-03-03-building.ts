@@ -8,6 +8,47 @@ export async function up(db: Kysely<any>): Promise<void> {
         )
         .execute();
 
+    await db.insertInto("Building")
+        .values([
+            {
+                name: "lumberjack",
+            },
+            {
+                name: "quarry",
+            },
+            {
+                name: "sawmill",
+            },
+            {
+                name: "bakery",
+            },
+            {
+                name: "butcher",
+            },
+            {
+                name: "windmill",
+            },
+            {
+                name: "coal mine",
+            },
+            {
+                name: "gold mine",
+            },
+            {
+                name: "farm",
+            },
+            {
+                name: "pig farm",
+            },
+            {
+                name: "well",
+            },
+            {
+                name: "tavern",
+            },
+        ])
+        .execute();
+
     /**
      * Building can have more producers, for example:
      *
