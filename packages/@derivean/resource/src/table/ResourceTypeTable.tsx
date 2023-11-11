@@ -1,32 +1,28 @@
 "use client";
 
 import {ResourceIcon}               from "@derivean/ui";
-import {withDullSchema}             from "@use-pico/dull-stuff";
 import {t}                          from "@use-pico/i18n";
-import {Table}                      from "@use-pico/ui-extra";
-import {type FC}                    from "react";
+import {
+    type ComponentProps,
+    type FC
+}                                   from "react";
 import {ResourceTypeUpsertForm}     from "../form/ResourceTypeUpsertForm";
-import {ResourceTypeQueryStore}     from "../query/ResourceTypeQueryStore";
 import {ResourceTypeRpc}            from "../rpc/ResourceTypeRpc";
-import {ResourceTypeSchema}         from "../schema/ResourceTypeSchema";
 import {ResourceTypeSelectionStore} from "../store/ResourceTypeSelectionStore";
+import {ResourceTypeUI}             from "../ui/ResourceTypeUI";
 
 export namespace ResourceTypeTable {
     export type Columns =
         | "name";
 
     export type Props = Omit<
-        Table.Props<
-            Columns,
-            withDullSchema.Infer.EntitySchema<ResourceTypeSchema>,
-            withDullSchema.Infer.QuerySchema<ResourceTypeSchema>
-        >,
-        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
+        ComponentProps<typeof ResourceTypeUI.Table<Columns>>,
+        "columns" | "name" | "icon" | "text"
     >
 }
 
 export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
-    return <Table
+    return <ResourceTypeUI.Table
         text={{
             total: t()`Resource type count`,
         }}
@@ -77,8 +73,6 @@ export const ResourceTypeTable: FC<ResourceTypeTable.Props> = props => {
                 render: ({item}) => item.name,
             },
         }}
-        withQueryStore={ResourceTypeQueryStore}
-        withSourceQuery={ResourceTypeRpc.query}
         {...props}
     />;
 };

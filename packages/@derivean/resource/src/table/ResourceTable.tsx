@@ -1,17 +1,17 @@
 "use client";
 
 import {ResourceIcon}           from "@derivean/ui";
-import {withDullSchema}         from "@use-pico/dull-stuff";
 import {t}                      from "@use-pico/i18n";
-import {Table}                  from "@use-pico/ui-extra";
-import {type FC}                from "react";
+import {
+    type ComponentProps,
+    type FC
+}                               from "react";
 import {ResourceUpsertForm}     from "../form/ResourceUpsertForm";
 import {ResourceTypeInline}     from "../inline/ResourceTypeInline";
-import {ResourceQueryStore}     from "../query/ResourceQueryStore";
 import {ResourceRpc}            from "../rpc/ResourceRpc";
-import {ResourceSchema}         from "../schema/ResourceSchema";
 import {ResourceSelectionStore} from "../store/ResourceSelectionStore";
 import {ResourceTypeUI}         from "../ui/ResourceTypeUI";
+import {ResourceUI}             from "../ui/ResourceUI";
 
 export namespace ResourceTable {
     export type Columns =
@@ -19,17 +19,13 @@ export namespace ResourceTable {
         | "typeId";
 
     export type Props = Omit<
-        Table.Props<
-            Columns,
-            withDullSchema.Infer.EntitySchema<ResourceSchema>,
-            withDullSchema.Infer.QuerySchema<ResourceSchema>
-        >,
-        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
+        ComponentProps<typeof ResourceUI.Table<Columns>>,
+        "columns" | "name" | "icon" | "text"
     >
 }
 
 export const ResourceTable: FC<ResourceTable.Props> = props => {
-    return <Table
+    return <ResourceUI.Table
         text={{
             total: t()`Resource count`,
             count: {
@@ -110,8 +106,6 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
                 width:      16,
             },
         }}
-        withQueryStore={ResourceQueryStore}
-        withSourceQuery={ResourceRpc.query}
         {...props}
     />;
 };

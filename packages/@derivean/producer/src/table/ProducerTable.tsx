@@ -1,19 +1,17 @@
 "use client";
 
 import {ProducerIcon}           from "@derivean/ui";
-import {withDullSchema}         from "@use-pico/dull-stuff";
 import {t}                      from "@use-pico/i18n";
 import {ButtonLink}             from "@use-pico/ui";
+import {HumanSeconds}           from "@use-pico/ui-extra";
 import {
-    HumanSeconds,
-    Table
-}                               from "@use-pico/ui-extra";
-import {type FC}                from "react";
+    type ComponentProps,
+    type FC
+}                               from "react";
 import {ProducerUpsertForm}     from "../form/ProducerUpsertForm";
-import {ProducerQueryStore}     from "../query/ProducerQueryStore";
 import {ProducerRpc}            from "../rpc/ProducerRpc";
-import {type ProducerSchema}    from "../schema/ProducerSchema";
 import {ProducerSelectionStore} from "../store/ProducerSelectionStore";
+import {ProducerUI}             from "../ui/ProducerUI";
 
 export namespace ProducerTable {
     export type Columns =
@@ -21,17 +19,13 @@ export namespace ProducerTable {
         | "time";
 
     export type Props = Omit<
-        Table.Props<
-            Columns,
-            withDullSchema.Infer.EntitySchema<ProducerSchema>,
-            withDullSchema.Infer.QuerySchema<ProducerSchema>
-        >,
-        "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
+        ComponentProps<typeof ProducerUI.Table<Columns>>,
+        "columns" | "name" | "icon" | "text"
     >
 }
 
 export const ProducerTable: FC<ProducerTable.Props> = props => {
-    return <Table
+    return <ProducerUI.Table
         text={{
             total: t()`Producer count`,
         }}
@@ -96,8 +90,6 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
                 width:  14,
             },
         }}
-        withQueryStore={ProducerQueryStore}
-        withSourceQuery={ProducerRpc.query}
         {...props}
     />;
 };

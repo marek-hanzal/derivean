@@ -5,15 +5,14 @@ import {
     ResourceUI
 }                                from "@derivean/resource";
 import {ProducerIcon}            from "@derivean/ui";
-import {withDullSchema}          from "@use-pico/dull-stuff";
 import {t}                       from "@use-pico/i18n";
 import {ButtonLink}              from "@use-pico/ui";
-import {Table}                   from "@use-pico/ui-extra";
-import {type FC}                 from "react";
+import {
+    type ComponentProps,
+    type FC
+}                                from "react";
 import {ProducerInputUpsertForm} from "../form/ProducerInputUpsertForm";
-import {ProducerInputQueryStore} from "../query/ProducerInputQueryStore";
 import {ProducerInputRpc}        from "../rpc/ProducerInputRpc";
-import {ProducerInputSchema}     from "../schema/ProducerInputSchema";
 import {ProducerInputUI}         from "../ui/ProducerInputUI";
 
 export namespace ProducerInputTable {
@@ -24,12 +23,8 @@ export namespace ProducerInputTable {
 
     export type Props =
         Omit<
-            Table.Props<
-                Columns,
-                withDullSchema.Infer.EntitySchema<ProducerInputSchema>,
-                withDullSchema.Infer.QuerySchema<ProducerInputSchema>
-            >,
-            "columns" | "withSourceQuery" | "withQueryStore" | "name" | "icon" | "text"
+            ComponentProps<typeof ProducerInputUI.Table<Columns>>,
+            "columns" | "name" | "icon" | "text"
         >
         & {
             producerId?: string;
@@ -42,7 +37,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
         ...props
     }
 ) => {
-    return <Table
+    return <ProducerInputUI.Table
         text={{
             total: t()`Total count of producer inputs`,
         }}
@@ -118,8 +113,6 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
                 width:  14,
             },
         }}
-        withQueryStore={ProducerInputQueryStore}
-        withSourceQuery={ProducerInputRpc.query}
         {...props}
     />;
 };

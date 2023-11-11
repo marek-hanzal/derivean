@@ -1,10 +1,10 @@
-import {Form}            from "@use-pico/form";
-import {IQueryStore}     from "@use-pico/query";
-import {withFetch}       from "@use-pico/source-ui";
-import {type WithEntity} from "@use-pico/types";
-import {Table}           from "@use-pico/ui-extra";
-import {withDullRpc}     from "./withDullRpc";
-import {withDullSchema}  from "./withDullSchema";
+import {Form}             from "@use-pico/form";
+import {type IQueryStore} from "@use-pico/query";
+import {withFetch}        from "@use-pico/source-ui";
+import {type WithEntity}  from "@use-pico/types";
+import {Table}            from "@use-pico/ui-extra";
+import {withDullRpc}      from "./withDullRpc";
+import {withDullSchema}   from "./withDullSchema";
 
 export namespace withDullUI {
     export interface Props<

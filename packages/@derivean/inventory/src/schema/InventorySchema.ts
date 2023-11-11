@@ -1,10 +1,17 @@
+import {withDullSchema} from "@use-pico/dull-stuff";
+import {
+    filterOf,
+    orderByOf
+}                       from "@use-pico/query";
 import {
     identityOf,
-    type PicoSchema
-} from "@use-pico/schema";
+    schema
+}                       from "@use-pico/schema";
 
-export const InventorySchema = identityOf(z => z.object({}));
+export const InventorySchema = withDullSchema({
+    entity:  identityOf(z => z.object({})),
+    shape:   schema(z => z.object({})),
+    filter:  filterOf(z => z.object({})),
+    orderBy: orderByOf(["id"]),
+});
 export type InventorySchema = typeof InventorySchema;
-export namespace InventorySchema {
-    export type Type = PicoSchema.Output<InventorySchema>;
-}

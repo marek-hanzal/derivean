@@ -9,7 +9,7 @@ export default function Index() {
     return <Page
         icon={<IconSubtask/>}
         text={{
-            title:  tx()`Game management`,
+            title: tx()`Game management (title)`,
             header: t()`Game management`,
         }}
     >

@@ -16,7 +16,7 @@ export namespace BuildingTable {
         | "name";
 
     export type Props = Omit<
-        ComponentProps<BuildingUI["Table"]>,
+        ComponentProps<typeof BuildingUI.Table<Columns>>,
         "columns" | "name" | "icon" | "text"
     >
 }
