@@ -6,7 +6,11 @@ import {
 }                                 from "@derivean/resource";
 import {ProducerIcon}             from "@derivean/ui";
 import {t}                        from "@use-pico/i18n";
-import {ButtonLink}               from "@use-pico/ui";
+import {
+    ButtonLink,
+    Group,
+    Text
+}                                 from "@use-pico/ui";
 import {
     type ComponentProps,
     type FC
@@ -14,6 +18,7 @@ import {
 import {ProducerOutputUpsertForm} from "../form/ProducerOutputUpsertForm";
 import {ProducerOutputRpc}        from "../rpc/ProducerOutputRpc";
 import {ProducerOutputUI}         from "../ui/ProducerOutputUI";
+import {ProducerUI}               from "../ui/ProducerUI";
 
 export namespace ProducerOutputTable {
     export type Columns =
@@ -86,7 +91,7 @@ export const ProducerOutputTable: FC<ProducerOutputTable.Props> = (
         columns={{
             producerId: {
                 title:  t()`Producer name`,
-                render: ({item}) => <ProducerOutputUI.Fetch
+                render: ({item}) => <ProducerUI.Fetch
                     override={item.producerId}
                     WithSuccess={({entity}) => <ButtonLink
                         icon={<ProducerIcon/>}
@@ -109,7 +114,18 @@ export const ProducerOutputTable: FC<ProducerOutputTable.Props> = (
             },
             amount:     {
                 title:  t()`Produced amount`,
-                render: ({item}) => `${item.amount} - toHuman()`,
+                render: ({item}) => <ProducerUI.Fetch
+                    override={item.producerId}
+                    WithSuccess={({entity}) => <Group gap={4}>
+                        <Text fw={"bold"}>
+                            {item.amount}
+                        </Text>
+                        /
+                        <Text>
+                            {entity.time}s
+                        </Text>
+                    </Group>}
+                />,
                 width:  14,
             },
         }}

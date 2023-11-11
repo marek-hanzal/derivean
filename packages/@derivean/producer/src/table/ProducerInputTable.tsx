@@ -6,7 +6,11 @@ import {
 }                                from "@derivean/resource";
 import {ProducerIcon}            from "@derivean/ui";
 import {t}                       from "@use-pico/i18n";
-import {ButtonLink}              from "@use-pico/ui";
+import {
+    ButtonLink,
+    Group,
+    Text
+}                                from "@use-pico/ui";
 import {
     type ComponentProps,
     type FC
@@ -14,6 +18,7 @@ import {
 import {ProducerInputUpsertForm} from "../form/ProducerInputUpsertForm";
 import {ProducerInputRpc}        from "../rpc/ProducerInputRpc";
 import {ProducerInputUI}         from "../ui/ProducerInputUI";
+import {ProducerUI}              from "../ui/ProducerUI";
 
 export namespace ProducerInputTable {
     export type Columns =
@@ -86,7 +91,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
         columns={{
             producerId: {
                 title:  t()`Producer name`,
-                render: ({item}) => <ProducerInputUI.Fetch
+                render: ({item}) => <ProducerUI.Fetch
                     override={item.producerId}
                     WithSuccess={({entity}) => <ButtonLink
                         icon={<ProducerIcon/>}
@@ -108,8 +113,19 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
                 />,
             },
             amount:     {
-                title: t()`Consumed amount`,
-                render: ({item}) => `${item.amount} - toHuman()`,
+                title:  t()`Consumed amount`,
+                render: ({item}) => <ProducerUI.Fetch
+                    override={item.producerId}
+                    WithSuccess={({entity}) => <Group gap={4}>
+                        <Text fw={"bold"}>
+                            {item.amount}
+                        </Text>
+                        /
+                        <Text>
+                            {entity.time}s
+                        </Text>
+                    </Group>}
+                />,
                 width:  14,
             },
         }}
