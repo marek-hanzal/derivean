@@ -1,4 +1,5 @@
 import {ResourceUI}       from "@derivean/resource";
+import {t}                from "@use-pico/i18n";
 import {
     NativeBreadcrumbs,
     Text
@@ -26,7 +27,7 @@ export const ProducerOutput: FC<ProducerOutput.Props> = (
             }
         }}
         WithSuccess={({entities}) => <>
-            <NativeBreadcrumbs
+            {entities.length > 0 && <NativeBreadcrumbs
                 separator={"&"}
                 separatorMargin={4}
             >
@@ -39,7 +40,12 @@ export const ProducerOutput: FC<ProducerOutput.Props> = (
                         {entity.name}
                     </Text>}
                 />)}
-            </NativeBreadcrumbs>
+            </NativeBreadcrumbs>}
+            {!entities.length && <Text
+                c={"dimmed"}
+            >
+                {t()`Producer without outputs`}
+            </Text>}
         </>}
     />;
 };

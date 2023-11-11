@@ -53,31 +53,12 @@ export const Dependencies: FC<Dependencies.Props> = (
                     color={"green"}
                     title={t()`Producer has no cyclic dependencies`}
                 >
-                    <NativeBreadcrumbs>
-                        {entity.producers.map((producer) => <ButtonLink
+                    {entity.producers.length > 0 && <NativeBreadcrumbs>
+                        {entity.producers.map((producer) => <Group
                                 key={producer.id}
-                                icon={<ProducerIcon/>}
-                                href={{
-                                    href:  "/manager/producer/[id]/pipeline",
-                                    query: {
-                                        id: producer.id,
-                                    },
-                                }}
-                                label={producer.name}
-                            />
-                        )}
-                    </NativeBreadcrumbs>
-                </Alert>;
-            } else if (isSchema(entity, DependencyCycleSchema)) {
-                return <Alert
-                    icon={<IconAlertTriangle/>}
-                    color={"red.5"}
-                    title={t()`Producer has cyclic dependencies`}
-                >
-                    <NativeBreadcrumbs>
-                        {entity.cycle.map((producer) => <Group gap={2}>
+                                gap={2}
+                            >
                                 <ButtonLink
-                                    key={producer.id}
                                     icon={<ProducerIcon/>}
                                     href={{
                                         href:  "/manager/producer/[id]/pipeline",
@@ -87,22 +68,48 @@ export const Dependencies: FC<Dependencies.Props> = (
                                     }}
                                     label={producer.name}
                                 />
-                                (
-                            <ProducerInput
-                                producerId={producer.id}
-                            />
+                                <ProducerInput producerId={producer.id}/>
                                 <WithIcon
                                     size={"xs"}
                                     icon={<IconArrowRight/>}
                                     color={"gray.8"}
                                 />
-                            <ProducerOutput
-                                producerId={producer.id}
-                            />
-                                )
+                                <ProducerOutput producerId={producer.id}/>
                             </Group>
                         )}
-                    </NativeBreadcrumbs>
+                    </NativeBreadcrumbs>}
+                </Alert>;
+            } else if (isSchema(entity, DependencyCycleSchema)) {
+                return <Alert
+                    icon={<IconAlertTriangle/>}
+                    color={"red.5"}
+                    title={t()`Producer has cyclic dependencies`}
+                >
+                    {entity.cycle.length > 0 && <NativeBreadcrumbs>
+                        {entity.cycle.map((producer) => <Group
+                                key={producer.id}
+                                gap={2}
+                            >
+                                <ButtonLink
+                                    icon={<ProducerIcon/>}
+                                    href={{
+                                        href:  "/manager/producer/[id]/pipeline",
+                                        query: {
+                                            id: producer.id,
+                                        },
+                                    }}
+                                    label={producer.name}
+                                />
+                                <ProducerInput producerId={producer.id}/>
+                                <WithIcon
+                                    size={"xs"}
+                                    icon={<IconArrowRight/>}
+                                    color={"gray.8"}
+                                />
+                                <ProducerOutput producerId={producer.id}/>
+                            </Group>
+                        )}
+                    </NativeBreadcrumbs>}
                 </Alert>;
             }
             return null;

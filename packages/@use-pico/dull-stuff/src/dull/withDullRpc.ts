@@ -15,6 +15,7 @@ export namespace withDullRpc {
          */
         key: string[];
         schema: TSchema;
+        invalidator?: ReadonlyArray<unknown>;
     }
 
     export interface Rpc<
@@ -42,6 +43,7 @@ export const withDullRpc = <
     {
         key,
         schema,
+        invalidator,
     }: withDullRpc.Props<
         TSchema
     >,
@@ -67,10 +69,13 @@ export const withDullRpc = <
             request:  schema.mutation,
             response: schema.entity,
         },
-        invalidator: async () => [
-            count.key,
-            query.key,
-        ]
+        invalidator: async () => {
+            return [
+                count.key,
+                query.key,
+                ...invalidator || [],
+            ];
+        }
     });
 
     return {

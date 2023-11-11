@@ -106,12 +106,6 @@ b0cf8a5dd758db7480606838271ff93da6792fdd8d3cb94816d6a40e:
 2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614:
   ref: Currently selected items
   value: Vybrané položky
-1c362dd111fcc66bd7912422019e3af4e2d36318cfa8776896aa5034:
-  ref: Producer has no cyclic dependencies
-  value: Producer has no cyclic dependencies
-170d573f6df889833e825dc720ef26da0d182ad4a772267ebd77f0fd:
-  ref: Producer has cyclic dependencies
-  value: Tato výrobna má cyklické závislosti, tudíž ji nebude možné použít.
 99b23be4aaf0714665a8ea5010d2c2dfea9d946d41e3fe497ecf2e3f:
   ref: Update resource type (label)
   value: Upravit typ zdroje
@@ -228,6 +222,18 @@ afb394104b3717272616722fc3a114bdcffca4f6d4046aab261cc46f:
 08242f310ba873219a72a8dee3678d07ad3236545f375d836f317d49:
   ref: Update resource
   value: Upravit zdroj
+6cc9a1b2a054e1fe7087cfa894a7ec67baa86ebb0a7edfd664eeac96:
+  ref: Producer without inputs
+  value: (Bez vstupů)
+1b0b2b57f2ea683dbedec95163c6eee85f3b9b55ccf47b9e267c908b:
+  ref: Producer without outputs
+  value: (Bez výstupů)
+1c362dd111fcc66bd7912422019e3af4e2d36318cfa8776896aa5034:
+  ref: Producer has no cyclic dependencies
+  value: Tato výrobna je v pořádku
+170d573f6df889833e825dc720ef26da0d182ad4a772267ebd77f0fd:
+  ref: Producer has cyclic dependencies
+  value: Tato výrobna má cyklické závislosti, tudíž ji nebude možné použít.
 02e1e25bace675d1ba7643838359f283680afd8df12a90eedd71fac6:
   ref: Update producer (label)
   value: Aktualizovat výrobnu
@@ -367,6 +373,9 @@ fad16a416ed45e4916eeb5c11c45c74a285d530628afbfd430d346d0:
 11888d85ae0ad4335fc6c54457c06e519b0041970b1d74b663cc787d:
   ref: Producer output has been successfully deleted.
   value: Výstupní zdroj byl úspěšně odstraněn
+316c345e67c38ac73c960ee9f1df7945d2355e0e7f64fb2e0e9f1f8c:
+  ref: Resource consumers
+  value: Vstup pro
 1887011beb8375f0ccd6994d7482fff080c516a4bde5dc3fe2adb1a3:
   ref: Update building (label)
   value: Upravit budovu
