@@ -1,20 +1,35 @@
 import {
     type IInventoryService,
     withInventoryService
-}                               from "@derivean/inventory";
-import {DateTime}               from "@use-pico/i18n";
-import {type IProducerProcess}  from "../api/IProducerProcess";
-import {type IProducerService}  from "../api/IProducerService";
-import {type IProducerSnapshot} from "../api/IProducerSnapshot";
-import {ProductionTimeSchema}   from "../schema/ProductionTimeSchema";
+}                                     from "@derivean/inventory";
+import {withDullSchema}               from "@use-pico/dull-stuff";
+import {DateTime}                     from "@use-pico/i18n";
+import {type IProducerProcess}        from "../api/IProducerProcess";
+import {type IProducerService}        from "../api/IProducerService";
+import {type IProducerSnapshot}       from "../api/IProducerSnapshot";
+import {withProducerInputRepository}  from "../container/withProducerInputRepository";
+import {withProducerOutputRepository} from "../container/withProducerOutputRepository";
+import {withProducerRepository}       from "../container/withProducerRepository";
+import {DependencyError}              from "../error/DependencyError";
+import {ProducerInputRepository}      from "../repository/ProducerInputRepository";
+import {ProducerOutputRepository}     from "../repository/ProducerOutputRepository";
+import {ProducerRepository}           from "../repository/ProducerRepository";
+import {ProducerSchema}               from "../schema/ProducerSchema";
+import {ProductionTimeSchema}         from "../schema/ProductionTimeSchema";
 
 export class ProducerService implements IProducerService {
     static inject = [
         withInventoryService.inject,
+        withProducerRepository.inject,
+        withProducerInputRepository.inject,
+        withProducerOutputRepository.inject,
     ];
 
     constructor(
         protected inventoryService: IInventoryService,
+        protected producerRepository: ProducerRepository.Type,
+        protected producerInputRepository: ProducerInputRepository.Type,
+        protected proOutputRepository: ProducerOutputRepository.Type,
     ) {
     }
 
@@ -89,9 +104,65 @@ export class ProducerService implements IProducerService {
         };
     }
 
+    public async dependencies(producerId: string, stack: string[] = []): Promise<withDullSchema.Infer.Entity<ProducerSchema>[]> {
+        const dependencies = [];
+        const producers = this.producerRepository.withQuery.query({
+            where: {
+                idIn: (await this.proOutputRepository
+                    .withQuery
+                    .select(["ProducerOutput.producerId"])
+                    .where(
+                        "resourceId",
+                        "in",
+                        this.producerInputRepository
+                            .withQuery
+                            .select(["ProducerInput.resourceId"])
+                            .where("producerId", "=", producerId)
+                    )
+                    .execute())
+                          .map(({producerId}) => producerId)
+            }
+        });
+
+        for (const producer of await producers) {
+            if (stack?.includes(producer.id)) {
+                throw new DependencyError(
+                    `Infinite loop detected: ${stack.join(" -> ")} -> ${producer.id}`,
+                    await this.producerRepository.withQuery.query({
+                        where: {
+                            idIn: stack
+                        }
+                    })
+                );
+            }
+
+            dependencies.push(
+                producer,
+                ...await this.dependencies(
+                    producer.id,
+                    [...stack, producer.id]
+                )
+            );
+        }
+
+        return dependencies;
+    }
+
     public async timeOf(producerId: string): Promise<ProductionTimeSchema.Type> {
+        let time = 0;
+
+        const producer = await this.producerRepository.withQuery.fetchOrThrow({
+            where: {
+                id: producerId,
+            }
+        });
+
+        for (const producer of await this.dependencies(producerId)) {
+            time += producer.time;
+        }
+
         return {
-            time: -1,
+            time: producer.time + time,
         };
     }
 }

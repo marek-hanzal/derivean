@@ -67,6 +67,12 @@ ffad743cbce08917e436ff30d0834c538a72e5fde2a801c510f94afc:
 9c98cff9e25fc568108143bf2d0b4476ac459a2fd8113c747badfc47:
   ref: Building list
   value: Seznam budov
+b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
+  ref: Producer detail (label)
+  value: Detail
+66624102d45745f792f2be2b8ddc4fdf3f9b864e165127e2e8576c9e:
+  ref: Producer pipeline
+  value: Nastavení výroby
 c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19:
   ref: Submit
   value: Odeslat
@@ -100,6 +106,12 @@ b0cf8a5dd758db7480606838271ff93da6792fdd8d3cb94816d6a40e:
 2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614:
   ref: Currently selected items
   value: Vybrané položky
+1c362dd111fcc66bd7912422019e3af4e2d36318cfa8776896aa5034:
+  ref: Producer has no cyclic dependencies
+  value: Producer has no cyclic dependencies
+170d573f6df889833e825dc720ef26da0d182ad4a772267ebd77f0fd:
+  ref: Producer has cyclic dependencies
+  value: Tato výrobna má cyklické závislosti, tudíž ji nebude možné použít.
 99b23be4aaf0714665a8ea5010d2c2dfea9d946d41e3fe497ecf2e3f:
   ref: Update resource type (label)
   value: Upravit typ zdroje
@@ -314,6 +326,15 @@ c6987ca9737bb51302e981700917bf4f4866753b5f283c1ed6de1b2b:
 2965000f3643d4b4a3e35619ad868140a2de9a2d934c8d8f2f1c17b7:
   ref: Producer input has been successfully deleted.
   value: Vstupní zdroj výrobny byl úspěšně odstraněn
+537071aa28255deff93f63d4396c2a2feae2001446daa23bcaedff31:
+  ref: Resource producers
+  value: Výrobny zdroje
+41ae8c80938285a6781fbc2fb2af58565e9fe75cef3ac862a0d13377:
+  ref: Resource without producers
+  value: Pro tento zdroj neexistují žádné výrobny
+f5306e9d922c167682bc5bbcf11c8751276dd703979a70643cef00ae:
+  ref: Produced amount
+  value: Produkované množství
 019af0c7c9b1f79db0e6927f842a508f81d999ef15bca4cf960b2e14:
   ref: Total count of producer outputs
   value: Počet produkovaných zdrojů
@@ -346,9 +367,6 @@ fad16a416ed45e4916eeb5c11c45c74a285d530628afbfd430d346d0:
 11888d85ae0ad4335fc6c54457c06e519b0041970b1d74b663cc787d:
   ref: Producer output has been successfully deleted.
   value: Výstupní zdroj byl úspěšně odstraněn
-f5306e9d922c167682bc5bbcf11c8751276dd703979a70643cef00ae:
-  ref: Produced amount
-  value: Produkované množství
 1887011beb8375f0ccd6994d7482fff080c516a4bde5dc3fe2adb1a3:
   ref: Update building (label)
   value: Upravit budovu

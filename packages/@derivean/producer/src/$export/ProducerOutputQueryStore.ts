@@ -1,1 +1,1 @@
-export {ProducerOutputQueryStore} from "../query/ProducerOutputQueryStore";
+export {ProducerOutputQueryStore} from "../store/ProducerOutputQueryStore";

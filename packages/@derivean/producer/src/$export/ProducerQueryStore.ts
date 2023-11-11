@@ -1,1 +1,1 @@
-export {ProducerQueryStore} from "../query/ProducerQueryStore";
+export {ProducerQueryStore} from "../store/ProducerQueryStore";

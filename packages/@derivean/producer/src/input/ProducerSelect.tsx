@@ -7,8 +7,8 @@ import {
     useCallback
 }                               from "react";
 import {ProducerInline}         from "../inline/ProducerInline";
-import {ProducerQueryStore}     from "../query/ProducerQueryStore";
 import {ProducerRpc}            from "../rpc/ProducerRpc";
+import {ProducerQueryStore}     from "../store/ProducerQueryStore";
 import {ProducerSelectionStore} from "../store/ProducerSelectionStore";
 import {ProducerTable}          from "../table/ProducerTable";
 

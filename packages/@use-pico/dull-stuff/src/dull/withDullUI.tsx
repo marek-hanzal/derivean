@@ -1,6 +1,9 @@
 import {Form}             from "@use-pico/form";
 import {type IQueryStore} from "@use-pico/query";
-import {withFetch}        from "@use-pico/source-ui";
+import {
+    withCollection,
+    withFetch
+}                         from "@use-pico/source-ui";
 import {type WithEntity}  from "@use-pico/types";
 import {Table}            from "@use-pico/ui-extra";
 import {withDullRpc}      from "./withDullRpc";
@@ -24,7 +27,8 @@ export const withDullUI = <
     }: withDullUI.Props<TRpc>,
 ) => {
     return {
-        Fetch: withFetch<TRpc["schema"]["query"], TRpc["schema"]["entity"]>({withQuery: rpc.query}),
+        Fetch:      withFetch<TRpc["schema"]["query"], TRpc["schema"]["entity"]>({withQuery: rpc.query}),
+        Collection: withCollection<TRpc["schema"]["query"], TRpc["schema"]["entity"]>({withSourceQuery: rpc.query}),
         MutationForm: (
                           {
                               entity,
@@ -47,9 +51,9 @@ export const withDullUI = <
                 {...props}
             />;
         },
-        Table: <
-                   TColumns extends string,
-               >(
+        Table:      <
+                        TColumns extends string,
+                    >(
             props: Omit<
                 Table.Props<
                     TColumns,

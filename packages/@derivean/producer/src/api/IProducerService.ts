@@ -1,6 +1,8 @@
-import {ProductionTimeSchema}   from "../schema/ProductionTimeSchema";
-import {type IProducerProcess}  from "./IProducerProcess";
-import {type IProducerSnapshot} from "./IProducerSnapshot";
+import {withDullSchema}            from "@use-pico/dull-stuff";
+import {type ProducerSchema}       from "../schema/ProducerSchema";
+import {type ProductionTimeSchema} from "../schema/ProductionTimeSchema";
+import {type IProducerProcess}     from "./IProducerProcess";
+import {type IProducerSnapshot}    from "./IProducerSnapshot";
 
 export interface IProducerService {
     /**
@@ -20,4 +22,11 @@ export interface IProducerService {
      * Get a minimal amount of time a producer needs to finish a cycle.
      */
     timeOf(producerId: string): Promise<ProductionTimeSchema.Type>;
+
+    /**
+     * Get a list of all dependencies of the given producer.
+     *
+     * Stack is used to prevent circular dependencies.
+     */
+    dependencies(producerId: string, stack?: string[]): Promise<withDullSchema.Infer.Entity<ProducerSchema>[]>;
 }

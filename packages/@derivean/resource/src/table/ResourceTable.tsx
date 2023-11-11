@@ -26,6 +26,7 @@ export namespace ResourceTable {
 
 export const ResourceTable: FC<ResourceTable.Props> = props => {
     return <ResourceUI.Table
+        key={"resource-table"}
         text={{
             total: t()`Resource count`,
             count: {

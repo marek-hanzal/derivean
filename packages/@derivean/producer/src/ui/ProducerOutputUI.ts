@@ -1,6 +1,6 @@
 import {withDullUI}               from "@use-pico/dull-stuff";
-import {ProducerOutputQueryStore} from "../query/ProducerOutputQueryStore";
 import {ProducerOutputRpc}        from "../rpc/ProducerOutputRpc";
+import {ProducerOutputQueryStore} from "../store/ProducerOutputQueryStore";
 
 export const ProducerOutputUI = withDullUI({
     rpc:        ProducerOutputRpc,

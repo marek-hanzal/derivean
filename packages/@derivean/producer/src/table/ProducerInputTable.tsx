@@ -9,6 +9,7 @@ import {t}                       from "@use-pico/i18n";
 import {
     ButtonLink,
     Group,
+    NativeBreadcrumbs,
     Text
 }                                from "@use-pico/ui";
 import {
@@ -18,12 +19,14 @@ import {
 import {ProducerInputUpsertForm} from "../form/ProducerInputUpsertForm";
 import {ProducerInputRpc}        from "../rpc/ProducerInputRpc";
 import {ProducerInputUI}         from "../ui/ProducerInputUI";
+import {ProducerOutputUI}        from "../ui/ProducerOutputUI";
 import {ProducerUI}              from "../ui/ProducerUI";
 
 export namespace ProducerInputTable {
     export type Columns =
         | "producerId"
         | "resourceId"
+        | "producers"
         | "amount";
 
     export type Props =
@@ -110,6 +113,38 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
                 render: ({item}) => <ResourceUI.Fetch
                     override={item.resourceId}
                     WithSuccess={({entity}) => <ResourceInline entity={entity}/>}
+                />,
+                width: 12,
+            },
+            producers:  {
+                title:  t()`Resource producers`,
+                render: ({item}) => <ProducerOutputUI.Collection
+                    query={{
+                        where: {
+                            resourceId: item.resourceId,
+                        }
+                    }}
+                    WithSuccess={({entities}) => <NativeBreadcrumbs>
+                        {entities.map(entity => <ProducerUI.Fetch
+                            override={entity.producerId}
+                            WithSuccess={({entity}) => <ButtonLink
+                                icon={<ProducerIcon/>}
+                                href={{
+                                    href:  "/manager/producer/[id]",
+                                    query: {
+                                        id: entity.id,
+                                    },
+                                }}
+                                label={entity.name}
+                            />}
+                        />)}
+                        {!entities.length && <Text
+                            fw={"bold"}
+                            c={"red.5"}
+                        >
+                            {t()`Resource without producers`}
+                        </Text>}
+                    </NativeBreadcrumbs>}
                 />,
             },
             amount:     {

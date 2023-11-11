@@ -1,8 +1,10 @@
 import {type IContainer}              from "@use-pico/container";
 import {
-    IHandler,
+    withHandler,
     withRepositoryHandler
 }                                     from "@use-pico/rpc-server";
+import {DependencyError}              from "../error/DependencyError";
+import {withDependenciesQuery}        from "../query/withDependenciesQuery";
 import {withProductionTimeQuery}      from "../query/withProductionTimeQuery";
 import {ProducerInputRepository}      from "../repository/ProducerInputRepository";
 import {ProducerOutputRepository}     from "../repository/ProducerOutputRepository";
@@ -38,13 +40,37 @@ export const withProducerContainer = (container: IContainer.Type) => {
         handler:        ProducerOutputRpc,
     });
 
-    container.useValue<IHandler<any, any>>(withProductionTimeQuery.key.join("."), {
+    withHandler({
+        container,
+        key: withProductionTimeQuery.key,
         schema: withProductionTimeQuery.schema,
         handle: async ({
                            container,
                            request
                        }) => {
             return withProducerService.use(container).timeOf(request.id);
+        },
+    });
+    withHandler({
+        container,
+        key:    withDependenciesQuery.key,
+        schema: withDependenciesQuery.schema,
+        handle: async ({
+                           container,
+                           request
+                       }) => {
+            try {
+                return {
+                    producers: await withProducerService.use(container).dependencies(request.id),
+                };
+            } catch (e) {
+                if (e instanceof DependencyError) {
+                    return {
+                        cycle: e.dependencies,
+                    };
+                }
+                throw e;
+            }
         },
     });
 };

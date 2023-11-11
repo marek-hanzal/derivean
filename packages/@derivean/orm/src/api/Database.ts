@@ -8,4 +8,16 @@ export type Database =
             id: GeneratedAlways<string>;
             name: string;
         };
+        ProducerInput: {
+            id: GeneratedAlways<string>;
+            producerId: string;
+            resourceId: string;
+            amount: number;
+        };
+        ProducerOutput: {
+            id: GeneratedAlways<string>;
+            producerId: string;
+            resourceId: string;
+            amount: number;
+        }
     }

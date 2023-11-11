@@ -8,6 +8,11 @@ import {
 }                            from "@use-pico/query";
 import {type PicoSchema}     from "@use-pico/schema";
 import {type MutationSchema} from "@use-pico/source";
+import {
+    type SelectExpression,
+    type Selection,
+    type SelectQueryBuilder
+}                            from "kysely";
 import {type IRepository}    from "../api/IRepository";
 import {type IWithQuery}     from "../api/IWithQuery";
 
@@ -87,5 +92,17 @@ export class WithQuery<
             query,
             this.client.selectFrom(this.table).selectAll()
         ).executeTakeFirstOrThrow();
+    }
+
+    public select<
+        TExpression extends SelectExpression<TDatabase, TTable>
+    >(
+        selections: ReadonlyArray<TExpression>
+    ): SelectQueryBuilder<
+        TDatabase,
+        TTable,
+        Selection<TDatabase, TTable, TExpression>
+    > {
+        return this.client.selectFrom(this.table).select(selections as any) as any;
     }
 }

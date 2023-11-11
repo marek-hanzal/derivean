@@ -1,6 +1,7 @@
 import {ProducerMenu} from "@derivean/manager";
 import {
     Dependencies,
+    Pipeline,
     withProducerRepository
 }                     from "@derivean/producer";
 import {container}    from "@derivean/server";
@@ -35,7 +36,7 @@ export default async function Index({params: {id}}: Index.Props) {
     return <Page
         icon={<ProducerIcon/>}
         text={{
-            title: tx({values: producer})`Producer detail (title)`,
+            title:  tx({values: producer})`Producer detail (title)`,
             header: t({values: producer})`Producer detail`,
         }}
         postfix={<Breadcrumbs
@@ -55,7 +56,7 @@ export default async function Index({params: {id}}: Index.Props) {
         />}
         append={<ProducerMenu
             producerId={producer.id}
-            active={["/manager/producer/[id]"]}
+            active={["/manager/producer/[id]/pipeline"]}
         />}
     >
         <Box mb={"xs"}>
@@ -64,6 +65,6 @@ export default async function Index({params: {id}}: Index.Props) {
             />
         </Box>
 
-        <h1>Show required buildings (resources) to run this producer + graph + production time</h1>
+        <Pipeline producerId={producer.id}/>
     </Page>;
-}
+};
