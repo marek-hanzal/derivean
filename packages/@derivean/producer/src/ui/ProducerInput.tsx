@@ -8,12 +8,14 @@ import {ProducerInputUI} from "./ProducerInputUI";
 
 export namespace ProducerInput {
     export interface Props {
+        mark?: string[];
         producerId: string;
     }
 }
 
 export const ProducerInput: FC<ProducerInput.Props> = (
     {
+        mark = [],
         producerId,
     }
 ) => {
@@ -28,9 +30,12 @@ export const ProducerInput: FC<ProducerInput.Props> = (
                 separator={"&"}
                 separatorMargin={4}
             >
-                {entities.map(producerInput => <ResourceUI.Fetch
-                    override={producerInput.resourceId}
-                    WithSuccess={({entity}) => <Text>
+                {entities.map(entity => <ResourceUI.Fetch
+                    override={entity.resourceId}
+                    WithSuccess={({entity}) => <Text
+                        fw={mark.includes(entity.id) ? "bold" : undefined}
+                        c={mark.includes(entity.id) ? undefined : "dimmed"}
+                    >
                         {entity.name}
                     </Text>}
                 />)}

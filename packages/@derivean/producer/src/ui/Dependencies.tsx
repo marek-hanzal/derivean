@@ -15,8 +15,8 @@ import {
     Alert,
     ButtonLink,
     Group,
-    Loader,
     NativeBreadcrumbs,
+    SkeletonBlock,
     WithIcon
 }                                  from "@use-pico/ui";
 import {type FC}                   from "react";
@@ -46,7 +46,7 @@ export const Dependencies: FC<Dependencies.Props> = (
 
     return <QueryResult
         result={result}
-        WithLoading={() => <Loader size={"sm"} type={"dots"}/>}
+        WithLoading={() => <SkeletonBlock lines={4}/>}
         WithSuccess={({entity}) => {
             if (isSchema(entity, DependencyProducersSchema)) {
                 return <Alert
@@ -88,13 +88,17 @@ export const Dependencies: FC<Dependencies.Props> = (
                                     label={producer.name}
                                 />
                                 (
-                                <ProducerInput producerId={producer.id}/>
+                            <ProducerInput
+                                producerId={producer.id}
+                            />
                                 <WithIcon
                                     size={"xs"}
                                     icon={<IconArrowRight/>}
                                     color={"gray.8"}
                                 />
-                                <ProducerOutput producerId={producer.id}/>
+                            <ProducerOutput
+                                producerId={producer.id}
+                            />
                                 )
                             </Group>
                         )}
