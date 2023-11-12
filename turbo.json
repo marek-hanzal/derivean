@@ -48,7 +48,7 @@
 				"NEXT_PUBLIC_CACHE",
 				"NEXT_PUBLIC_VERSION",
 				"NODE_ENV",
-				"PORT"
+				"PORT",
 				"REDIS_URL"
 			]
 		},
