@@ -99,7 +99,7 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
                 />,
             },
             requirements: {
-                title:  t()`Building requirement`,
+                title: t()`Building requirement (label)`,
                 render: ({item}) => <BuildingRequirement
                     buildingId={item.id}
                 />,

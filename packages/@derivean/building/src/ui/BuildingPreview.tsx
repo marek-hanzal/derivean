@@ -56,7 +56,7 @@ export const BuildingPreview: FC<BuildingPreview.Props> = (
                 value: <ProductionTime producerId={building.producerId}/>,
             },
             {
-                label: t()`Building requirement`,
+                label: t()`Building requirement (label)`,
                 value: <BuildingRequirement buildingId={building.id}/>
             },
             {
