@@ -79,7 +79,7 @@ export class RpcService implements IRpcService {
                     ),
                 });
 
-                this.redis.setex(key, 60 * 60 * 24, JSON.stringify(response.get(id)));
+                this.redis.set(key, JSON.stringify(response.get(id)));
             } catch (e) {
                 console.error(e);
                 if (e instanceof Error) {

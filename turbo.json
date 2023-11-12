@@ -43,12 +43,13 @@
 				"tsconfig.json"
 			],
 			"env": [
-				"NEXT_PUBLIC_CACHE",
 				"BUILD_ID",
-				"NEXT_PUBLIC_VERSION",
 				"NEXT_PUBLIC_BUILD",
+				"NEXT_PUBLIC_CACHE",
+				"NEXT_PUBLIC_VERSION",
 				"NODE_ENV",
 				"PORT"
+				"REDIS_URL"
 			]
 		},
 		"cleanup": {
