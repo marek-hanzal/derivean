@@ -179,10 +179,11 @@ export class ProducerService implements IProducerService {
 
         for (const producer of dependencies) {
             for (const input of await this.producerInputRepository.withQuery.select(["ProducerInput.resourceId"]).where("producerId", "=", producer.id).execute()) {
-                for (const output of await this.producerOutputRepository.withQuery.select(["ProducerOutput.producerId"]).where("resourceId", "=", input.resourceId).execute()) {
+                for (const output of await this.producerOutputRepository.withQuery.select(["ProducerOutput.producerId", "Resource.name"]).innerJoin("Resource", "Resource.id", "ProducerOutput.resourceId").where("resourceId", "=", input.resourceId).execute()) {
                     edges.push({
-                        to:   producer.id,
-                        from: output.producerId,
+                        to:    producer.id,
+                        from:  output.producerId,
+                        label: output.name,
                     });
                 }
             }

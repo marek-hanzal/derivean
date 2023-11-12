@@ -27,12 +27,6 @@ export const Diagram: FC<Diagram.Props> = (
         graph={{
             nodes: nodes.map(node => ({
                 ...node,
-                margin: {
-                    top:    8,
-                    bottom: 8,
-                    left:   12,
-                    right:  12,
-                },
             })),
             edges,
         }}
@@ -58,8 +52,8 @@ export const Diagram: FC<Diagram.Props> = (
                     direction:            "LR",
                     edgeMinimization:     true,
                     enabled:              true,
-                    levelSeparation:      200,
-                    nodeSpacing:          200,
+                    levelSeparation: 250,
+                    nodeSpacing:     250,
                     parentCentralization: true,
                     sortMethod:           "directed",
                 },
@@ -69,6 +63,12 @@ export const Diagram: FC<Diagram.Props> = (
                 fixed:           true,
                 font:            {
                     size: 32,
+                },
+                margin: {
+                    top:    8,
+                    bottom: 8,
+                    left:   12,
+                    right:  12,
                 },
                 shadow:          {
                     color:   "#BBB",
