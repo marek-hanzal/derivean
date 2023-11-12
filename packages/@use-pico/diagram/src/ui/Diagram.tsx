@@ -14,6 +14,10 @@ export namespace Diagram {
     }
 }
 
+/**
+ * Docs:
+ * https://visjs.github.io/vis-network/docs/network
+ */
 export const Diagram: FC<Diagram.Props> = (
     {
         graph: {
