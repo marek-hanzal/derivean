@@ -1,6 +1,7 @@
 export * from "./BuildingInline";
 export * from "./BuildingPreview";
 export * from "./BuildingQueryStore";
+export * from "./BuildingRequirement";
 export * from "./BuildingRequirementQueryStore";
 export * from "./BuildingRequirementRpc";
 export * from "./BuildingRequirementSchema";

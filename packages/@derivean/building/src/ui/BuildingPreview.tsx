@@ -5,19 +5,20 @@ import {
     ProducerOutput,
     ProducerUI,
     ProductionTime
-}                       from "@derivean/producer";
-import {withDullSchema} from "@use-pico/dull-stuff";
-import {t}              from "@use-pico/i18n";
+}                            from "@derivean/producer";
+import {withDullSchema}      from "@use-pico/dull-stuff";
+import {t}                   from "@use-pico/i18n";
 import {
     Group,
     Loader,
     Preview,
     Text
-}                       from "@use-pico/ui";
-import {HumanSeconds}   from "@use-pico/ui-extra";
-import {type FC}        from "react";
-import {BuildingInline} from "../inline/BuildingInline";
-import {BuildingSchema} from "../schema/BuildingSchema";
+}                            from "@use-pico/ui";
+import {HumanSeconds}        from "@use-pico/ui-extra";
+import {type FC}             from "react";
+import {BuildingInline}      from "../inline/BuildingInline";
+import {BuildingSchema}      from "../schema/BuildingSchema";
+import {BuildingRequirement} from "./BuildingRequirement";
 
 export namespace BuildingPreview {
     export interface Props {
@@ -53,6 +54,10 @@ export const BuildingPreview: FC<BuildingPreview.Props> = (
             {
                 label: t()`Building pipeline time`,
                 value: <ProductionTime producerId={building.producerId}/>,
+            },
+            {
+                label: t()`Building requirement`,
+                value: <BuildingRequirement buildingId={building.id}/>
             },
             {
                 label: t()`Building input`,

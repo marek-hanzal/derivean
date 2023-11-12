@@ -436,6 +436,9 @@ f9168b806190baf8b73505cdf6303ef25070b37c0fbaec0a29e69551:
 147e9486f8d63a5f40e8584c7569846198932b4c85ecad863c6fc223:
   ref: Building pipeline time
   value: Building pipeline time
+b0688cb7c2c6fed8c4f5204b01f7d8512afef57fd91b3534a58eaa5a:
+  ref: Building requirement
+  value: Požadavky pro [{name}]
 91d4a21023adbf6bcd610a86ae8d48c23e09b6c0dbe0730edb1b9a3a:
   ref: Building input
   value: Vstupy
@@ -538,11 +541,11 @@ bab1dfa013db089d1bf67008490c0ebb30e7dadf392929a861689826:
 7401742653cacefb254e91e23a79edaeb388a2a423cb1181c35f87ac:
   ref: Building detail (label)
   value: Detail
-b0688cb7c2c6fed8c4f5204b01f7d8512afef57fd91b3534a58eaa5a:
-  ref: Building requirement
+deae84dcbc7ba705ba1b1df7916ea58193ec331c1c9421382691d2aa:
+  ref: Building requirement (label)
   value: Požadavky
-e14c68cd1a8cac9008c40b658668bb390387cebc452453856e495a8c:
-  ref: Building pipeline
+6e22187ddff9c4026327f77e966f4bdb44cf801f01b29f059d576876:
+  ref: Building pipeline (label)
   value: Produkce
 e9b3ba72c318eb3fede0269608646b2fb2b6367380aec8e17d7a9eeb:
   ref: Resource management
@@ -574,18 +577,18 @@ b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
 66624102d45745f792f2be2b8ddc4fdf3f9b864e165127e2e8576c9e:
   ref: Producer pipeline
   value: Nastavení výroby
-16d079616946841c540c9db101901a2def7f9b002b6079300a64a293:
-  ref: Game management (title)
-  value: Game management (title)
-8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
-  ref: Game management
-  value: Správa hry
 77dca7c9b2e910050d0b2b1dcce64de0735c7561b5ffc7f2bfd66cb9:
   ref: Building detail (title)
   value: Detail budovy [{name}]
 553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
   ref: Building detail
   value: Detail budovy [{name}]
+a92da90d9e807dc543fb256cde35eb5e41f7cbea207701f2f6a04540:
+  ref: Building pipeline (title)
+  value: Produkce
+e14c68cd1a8cac9008c40b658668bb390387cebc452453856e495a8c:
+  ref: Building pipeline
+  value: Produkce [{name}]
 265ccb96b1fae8468252b58126a270fa7b0df6c7aefa5ac3f80a4c89:
   ref: Building requirement (title)
   value: Building requirement (title)
@@ -598,6 +601,12 @@ b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
 2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
   ref: Game overview
   value: Přehled hry
+16d079616946841c540c9db101901a2def7f9b002b6079300a64a293:
+  ref: Game management (title)
+  value: Game management (title)
+8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
+  ref: Game management
+  value: Správa hry
 c8d09d5db265dfe823e70a42e7ae660b380a3eccbdeaf2b2568c7685:
   ref: Translation list (title)
   value: Překlady

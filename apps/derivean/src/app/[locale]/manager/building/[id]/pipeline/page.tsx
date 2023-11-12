@@ -36,8 +36,8 @@ export default async function Index({params: {id}}: Index.Props) {
     return <Page
         icon={<BuildingIcon/>}
         text={{
-            title:  tx({values: building})`Building detail (title)`,
-            header: t({values: building})`Building detail`,
+            title:  tx({values: building})`Building pipeline (title)`,
+            header: t({values: building})`Building pipeline`,
         }}
         postfix={<Breadcrumbs
             items={[

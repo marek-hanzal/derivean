@@ -4,31 +4,33 @@ import {
     ProducerInline,
     ProducerUI,
     ProductionTime
-}                           from "@derivean/producer";
+}                            from "@derivean/producer";
 import {
     BuildingIcon,
     ProducerIcon
-}                           from "@derivean/ui";
-import {t}                  from "@use-pico/i18n";
+}                            from "@derivean/ui";
+import {t}                   from "@use-pico/i18n";
 import {
     ButtonLink,
     Loader
-}                           from "@use-pico/ui";
-import {HumanSeconds}       from "@use-pico/ui-extra";
+}                            from "@use-pico/ui";
+import {HumanSeconds}        from "@use-pico/ui-extra";
 import {
     type ComponentProps,
     type FC
-}                           from "react";
-import {BuildingUpsertForm} from "../form/BuildingUpsertForm";
-import {BuildingInline}     from "../inline/BuildingInline";
-import {BuildingRpc}        from "../rpc/BuildingRpc";
-import {BuildingUI}         from "../ui/BuildingUI";
+}                            from "react";
+import {BuildingUpsertForm}  from "../form/BuildingUpsertForm";
+import {BuildingInline}      from "../inline/BuildingInline";
+import {BuildingRpc}         from "../rpc/BuildingRpc";
+import {BuildingRequirement} from "../ui/BuildingRequirement";
+import {BuildingUI}          from "../ui/BuildingUI";
 
 export namespace BuildingTable {
     export type Columns =
         | "name"
         | "producer"
         | "time"
+        | "requirements"
         | "pipelineTime";
 
     export type Props = Omit<
@@ -95,6 +97,13 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
                     }}
                     label={<BuildingInline entity={item}/>}
                 />,
+            },
+            requirements: {
+                title:  t()`Building requirement`,
+                render: ({item}) => <BuildingRequirement
+                    buildingId={item.id}
+                />,
+                width:  32,
             },
             producer:     {
                 title:  t()`Producer name`,

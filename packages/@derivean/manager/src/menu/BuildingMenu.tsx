@@ -35,14 +35,14 @@ export const BuildingMenu: FC<BuildingMenu.Props> = (
             {
                 type:  "link",
                 href:  "/manager/building/[id]/requirement",
-                label: t()`Building requirement`,
+                label: t()`Building requirement (label)`,
                 icon:  <ResourceIcon/>,
                 query,
             },
             {
                 type:  "link",
                 href:  "/manager/building/[id]/pipeline",
-                label: t()`Building pipeline`,
+                label: t()`Building pipeline (label)`,
                 icon:  <PipelineIcon/>,
                 query,
             },

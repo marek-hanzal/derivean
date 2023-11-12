@@ -61,7 +61,11 @@ export default async function Requirement({params: {id}}: Index.Props) {
     >
         <StoreProvider
             store={BuildingRequirementQueryStore}
-            values={{}}
+            values={{
+                where: {
+                    buildingId: building.id,
+                },
+            }}
         >
             <BuildingRequirementTable
                 hidden={["building"]}
