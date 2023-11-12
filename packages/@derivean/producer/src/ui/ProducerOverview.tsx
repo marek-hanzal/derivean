@@ -37,6 +37,7 @@ export const ProducerOverview: FC<ProducerOverview.Props> = () => {
                                label={<ProducerInline entity={item}/>}
                            />,
                     value: <ProducerGraph
+                               border={false}
                                zoom={false}
                                producerId={item.id}
                            />,

@@ -1,27 +1,22 @@
-import {
-    BuildingPreview,
-    withBuildingRepository
-}                     from "@derivean/building";
-import {BuildingMenu} from "@derivean/manager";
+import {withBuildingRepository} from "@derivean/building";
+import {BuildingMenu}           from "@derivean/manager";
 import {
     Dependencies,
-    ProducerGraph
-}                     from "@derivean/producer";
-import {container}    from "@derivean/server";
-import {BuildingIcon} from "@derivean/ui";
+    Pipeline
+}                               from "@derivean/producer";
+import {container}              from "@derivean/server";
+import {BuildingIcon}           from "@derivean/ui";
 import {
     t,
     tx
-}                     from "@use-pico/i18n";
+}                               from "@use-pico/i18n";
 import {
     Box,
     Breadcrumbs,
-    Grid,
-    GridCol,
     HomeIcon,
     ListIcon,
     Page
-}                     from "@use-pico/ui";
+}                               from "@use-pico/ui";
 
 export namespace Index {
     export interface Props {
@@ -41,7 +36,7 @@ export default async function Index({params: {id}}: Index.Props) {
     return <Page
         icon={<BuildingIcon/>}
         text={{
-            title: tx({values: building})`Building detail (title)`,
+            title:  tx({values: building})`Building detail (title)`,
             header: t({values: building})`Building detail`,
         }}
         postfix={<Breadcrumbs
@@ -61,7 +56,7 @@ export default async function Index({params: {id}}: Index.Props) {
         />}
         append={<BuildingMenu
             buildingId={building.id}
-            active={["/manager/building/[id]"]}
+            active={["/manager/building/[id]/pipeline"]}
         />}
     >
         <Box mb={"xs"}>
@@ -69,17 +64,7 @@ export default async function Index({params: {id}}: Index.Props) {
                 producerId={building.producerId}
             />
         </Box>
-        <Grid pb={"md"}>
-            <GridCol span={6}>
-                <BuildingPreview
-                    building={building}
-                />
-            </GridCol>
-            <GridCol span={6}>
-                <ProducerGraph
-                    producerId={building.producerId}
-                />
-            </GridCol>
-        </Grid>
+
+        <Pipeline producerId={building.producerId}/>
     </Page>;
-}
+};

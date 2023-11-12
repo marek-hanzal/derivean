@@ -1,3 +1,5 @@
+"use client";
+
 import {ProducerIcon}    from "@derivean/ui";
 import {withDullSchema}  from "@use-pico/dull-stuff";
 import {

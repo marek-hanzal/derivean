@@ -1,19 +1,35 @@
 "use client";
 
-import {BuildingIcon}       from "@derivean/ui";
+import {
+    ProducerInline,
+    ProducerUI,
+    ProductionTime
+}                           from "@derivean/producer";
+import {
+    BuildingIcon,
+    ProducerIcon
+}                           from "@derivean/ui";
 import {t}                  from "@use-pico/i18n";
-import {ButtonLink}         from "@use-pico/ui";
+import {
+    ButtonLink,
+    Loader
+}                           from "@use-pico/ui";
+import {HumanSeconds}       from "@use-pico/ui-extra";
 import {
     type ComponentProps,
     type FC
 }                           from "react";
 import {BuildingUpsertForm} from "../form/BuildingUpsertForm";
+import {BuildingInline}     from "../inline/BuildingInline";
 import {BuildingRpc}        from "../rpc/BuildingRpc";
 import {BuildingUI}         from "../ui/BuildingUI";
 
 export namespace BuildingTable {
     export type Columns =
-        | "name";
+        | "name"
+        | "producer"
+        | "time"
+        | "pipelineTime";
 
     export type Props = Omit<
         ComponentProps<typeof BuildingUI.Table<Columns>>,
@@ -67,8 +83,8 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
             />,
         }}
         columns={{
-            name: {
-                title: t()`Building name`,
+            name:         {
+                title:  t()`Building name`,
                 render: ({item}) => <ButtonLink
                     icon={<BuildingIcon/>}
                     href={{
@@ -77,8 +93,44 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
                             id: item.id,
                         },
                     }}
-                    label={item.name}
+                    label={<BuildingInline entity={item}/>}
                 />,
+            },
+            producer:     {
+                title:  t()`Producer name`,
+                render: ({item}) => <ProducerUI.Fetch
+                    override={item.producerId}
+                    loader={<Loader size={"md"} type={"dots"}/>}
+                    WithSuccess={({entity}) => <ButtonLink
+                        icon={<ProducerIcon/>}
+                        href={{
+                            href:  "/manager/producer/[id]",
+                            query: {
+                                id: entity.id,
+                            },
+                        }}
+                        label={<ProducerInline entity={entity}/>}
+                    />}
+                />,
+                width:  18,
+            },
+            time:         {
+                title:  t()`Production time`,
+                render: ({item}) => <ProducerUI.Fetch
+                    override={item.producerId}
+                    loader={<Loader size={"md"} type={"dots"}/>}
+                    WithSuccess={({entity}) => <HumanSeconds seconds={entity.time}/>}
+                />,
+                width:  14,
+            },
+            pipelineTime: {
+                title:  t()`Producer pipeline time`,
+                render: ({item}) => <ProducerUI.Fetch
+                    override={item.producerId}
+                    loader={<Loader size={"md"} type={"dots"}/>}
+                    WithSuccess={({entity}) => <ProductionTime producerId={entity.id}/>}
+                />,
+                width:  14,
             },
         }}
         {...props}

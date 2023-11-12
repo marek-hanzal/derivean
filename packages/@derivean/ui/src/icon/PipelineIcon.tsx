@@ -1,1 +1,1 @@
-export {IconBuildingFactory2 as PipelineIcon} from "@tabler/icons-react";
+export {IconBuildingFactory as PipelineIcon} from "@tabler/icons-react";

@@ -8,6 +8,7 @@ import {GraphSchema} from "../schema/GraphSchema";
 export namespace Diagram {
     export interface Props {
         graph: GraphSchema.Type;
+        border?: boolean;
         zoom?: boolean;
 
         onClick?(id: string): void;
@@ -24,15 +25,16 @@ export const Diagram: FC<Diagram.Props> = (
                    nodes,
                    edges
                },
+        border = true,
         zoom = true,
         onClick,
     }
 ) => {
     return <Graph
-        style={{
+        style={border ? {
             border:    "1px solid #DDD",
             boxShadow: "4px 4px 6px #DDD",
-        }}
+        } : undefined}
         graph={{
             nodes: nodes.map(node => ({
                 ...node,

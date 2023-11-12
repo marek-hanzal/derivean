@@ -42,6 +42,12 @@ export const ManagerMenu: FC<ManagerMenu.Props> = () => {
                 ],
             },
             {
+                type:  "link",
+                href:  "/manager/building/list",
+                label: t()`Building list`,
+                icon:  <BuildingIcon/>,
+            },
+            {
                 type:  "group",
                 label: t()`Producer management`,
                 icon:  <ProducerIcon/>,
@@ -59,12 +65,6 @@ export const ManagerMenu: FC<ManagerMenu.Props> = () => {
                         icon:  <IconGraph/>,
                     },
                 ],
-            },
-            {
-                type:  "link",
-                href:  "/manager/building/list",
-                label: t()`Building list`,
-                icon:  <BuildingIcon/>,
             },
             {
                 type:  "link",
