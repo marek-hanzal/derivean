@@ -10,7 +10,7 @@ export const withLayout = (
     const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
     g.setGraph({
         rankdir: "RL",
-        align:   "DL",
+        align: "UL",
         edgesep: 80,
         ranksep: 160,
         marginx: 80,
