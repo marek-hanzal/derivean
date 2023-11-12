@@ -438,7 +438,7 @@ f9168b806190baf8b73505cdf6303ef25070b37c0fbaec0a29e69551:
   value: Název budovy
 147e9486f8d63a5f40e8584c7569846198932b4c85ecad863c6fc223:
   ref: Building pipeline time
-  value: Building pipeline time
+  value: Minimální čas produkce
 b0688cb7c2c6fed8c4f5204b01f7d8512afef57fd91b3534a58eaa5a:
   ref: Building requirement
   value: Požadavky pro [{name}]

@@ -1,27 +1,23 @@
 import {
     BuildingPreview,
     withBuildingRepository
-}                     from "@derivean/building";
-import {BuildingMenu} from "@derivean/manager";
-import {
-    Dependencies,
-    ProducerGraph
-}                     from "@derivean/producer";
-import {container}    from "@derivean/server";
-import {BuildingIcon} from "@derivean/ui";
+}                      from "@derivean/building";
+import {BuildingMenu}  from "@derivean/manager";
+import {ProducerGraph} from "@derivean/producer";
+import {container}     from "@derivean/server";
+import {BuildingIcon}  from "@derivean/ui";
 import {
     t,
     tx
-}                     from "@use-pico/i18n";
+}                      from "@use-pico/i18n";
 import {
-    Box,
     Breadcrumbs,
     Grid,
     GridCol,
     HomeIcon,
     ListIcon,
     Page
-}                     from "@use-pico/ui";
+}                      from "@use-pico/ui";
 
 export namespace Index {
     export interface Props {
@@ -64,11 +60,6 @@ export default async function Index({params: {id}}: Index.Props) {
             active={["/manager/building/[id]"]}
         />}
     >
-        <Box mb={"xs"}>
-            <Dependencies
-                producerId={building.producerId}
-            />
-        </Box>
         <Grid pb={"md"}>
             <GridCol span={6}>
                 <BuildingPreview

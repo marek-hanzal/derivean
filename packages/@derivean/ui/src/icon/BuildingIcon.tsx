@@ -1,1 +1,1 @@
-export {IconBuildingFactory2 as BuildingIcon} from "@tabler/icons-react";
+export {IconBuildingCottage as BuildingIcon} from "@tabler/icons-react";
