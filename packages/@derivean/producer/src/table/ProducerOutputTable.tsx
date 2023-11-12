@@ -17,6 +17,7 @@ import {
     type FC
 }                                 from "react";
 import {ProducerOutputUpsertForm} from "../form/ProducerOutputUpsertForm";
+import {ProducerInline}           from "../inline/ProducerInline";
 import {ProducerOutputRpc}        from "../rpc/ProducerOutputRpc";
 import {ProducerInputUI}          from "../ui/ProducerInputUI";
 import {ProducerOutputUI}         from "../ui/ProducerOutputUI";
@@ -136,7 +137,7 @@ export const ProducerOutputTable: FC<ProducerOutputTable.Props> = (
                                         id: entity.id,
                                     },
                                 }}
-                                label={entity.name}
+                                label={<ProducerInline entity={entity}/>}
                             />}
                         />)}
                         {!entities.length && <Text

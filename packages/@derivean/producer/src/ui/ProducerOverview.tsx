@@ -7,6 +7,7 @@ import {
     Preview
 }                           from "@use-pico/ui";
 import {type FC}            from "react";
+import {ProducerInline}     from "../inline/ProducerInline";
 import {ProducerRpc}        from "../rpc/ProducerRpc";
 import {ProducerQueryStore} from "../store/ProducerQueryStore";
 import {ProducerGraph}      from "./ProducerGraph";
@@ -33,7 +34,7 @@ export const ProducerOverview: FC<ProducerOverview.Props> = () => {
                                        id: item.id,
                                    },
                                }}
-                               label={item.name}
+                               label={<ProducerInline entity={item}/>}
                            />,
                     value: <ProducerGraph
                                zoom={false}

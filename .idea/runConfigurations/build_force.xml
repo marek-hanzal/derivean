@@ -1,0 +1,19 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="build:force" type="js.build_tools.npm" nameIsGenerated="true">
+    <package-json value="$PROJECT_DIR$/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="build:force" />
+    </scripts>
+    <node-interpreter value="project" />
+    <envs>
+      <env name="DATABASE_URL" value="postgresql://derivean:1234@localhost:10632/derivean?schema=public" />
+      <env name="NEXTAUTH_GITHUB_CLIENT_ID" value="abbc01fc85709ab26921" />
+      <env name="NEXTAUTH_GITHUB_CLIENT_SECRET" value="ab06a4165184b231882f9467cfccd44ce7a64d30" />
+      <env name="NEXTAUTH_SECRET" value="foobar" />
+      <env name="NEXTAUTH_URL" value="http://localhost:3000" />
+      <env name="REDIS_URL" value="redis://localhost:10379" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>
