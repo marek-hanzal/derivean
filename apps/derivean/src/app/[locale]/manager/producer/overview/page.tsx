@@ -1,6 +1,6 @@
 import {
-    ProducerQueryStore,
-    ProducerTable
+    ProducerOverview,
+    ProducerQueryStore
 }                      from "@derivean/producer";
 import {ProducerIcon}  from "@derivean/ui";
 import {
@@ -14,12 +14,12 @@ import {
     Page
 }                      from "@use-pico/ui";
 
-export default function List() {
+export default function Overview() {
     return <Page
         icon={<ProducerIcon/>}
         text={{
-            title:  tx()`Producer list`,
-            header: t()`Producer list`,
+            title:  tx()`Producer overview`,
+            header: t()`Producer overview`,
         }}
         postfix={<Breadcrumbs
             items={[
@@ -37,7 +37,7 @@ export default function List() {
                 filter: {},
             }}
         >
-            <ProducerTable/>
+            <ProducerOverview/>
         </StoreProvider>
     </Page>;
 }

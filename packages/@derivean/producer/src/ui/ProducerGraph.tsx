@@ -10,7 +10,7 @@ import {type FC}       from "react";
 import {withGraph}     from "../query/withGraph";
 
 export namespace ProducerGraph {
-    export interface Props {
+    export interface Props extends Omit<Diagram.Props, "graph"> {
         producerId: string;
     }
 }
@@ -18,6 +18,7 @@ export namespace ProducerGraph {
 export const ProducerGraph: FC<ProducerGraph.Props> = (
     {
         producerId,
+        ...props
     }
 ) => {
     const result = useQueryEx({
@@ -31,6 +32,7 @@ export const ProducerGraph: FC<ProducerGraph.Props> = (
         WithLoading={() => <SkeletonBlock lines={12}/>}
         WithSuccess={({entity}) => <Diagram
             graph={entity}
+            {...props}
         />}
     />;
 };

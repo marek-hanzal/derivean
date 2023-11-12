@@ -8,6 +8,7 @@ import {GraphSchema} from "../schema/GraphSchema";
 export namespace Diagram {
     export interface Props {
         graph: GraphSchema.Type;
+        zoom?: boolean;
     }
 }
 
@@ -16,7 +17,8 @@ export const Diagram: FC<Diagram.Props> = (
         graph: {
                    nodes,
                    edges
-               }
+               },
+        zoom = true,
     }
 ) => {
     return <Graph
@@ -45,6 +47,7 @@ export const Diagram: FC<Diagram.Props> = (
             interaction: {
                 hover:       true,
                 multiselect: true,
+                zoomView: zoom,
             },
             layout:      {
                 hierarchical: {

@@ -64,6 +64,12 @@ e886a6010df144ec211a2041dc77c8adc46a0921ba57458fada4c681:
 ffad743cbce08917e436ff30d0834c538a72e5fde2a801c510f94afc:
   ref: Producer list
   value: Seznam výroben
+560cd55b9ed24679aa54339c132febc7e3fedae21d2ca49299a09d2b:
+  ref: Producer overview
+  value: Přehled výroben
+fe765c1e42264c5e871762234b7c83df15fffb9522a3319aea1a49a9:
+  ref: Producer management
+  value: Správa výroben
 9c98cff9e25fc568108143bf2d0b4476ac459a2fd8113c747badfc47:
   ref: Building list
   value: Seznam budov
@@ -73,6 +79,12 @@ b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
 66624102d45745f792f2be2b8ddc4fdf3f9b864e165127e2e8576c9e:
   ref: Producer pipeline
   value: Nastavení výroby
+16d079616946841c540c9db101901a2def7f9b002b6079300a64a293:
+  ref: Game management (title)
+  value: Game management (title)
+8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
+  ref: Game management
+  value: Správa hry
 c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19:
   ref: Submit
   value: Odeslat
@@ -448,12 +460,6 @@ fe57342d0588cea22f8259f5877597054ad8d9d71047cf3a34156829:
 2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
   ref: Game overview
   value: Přehled hry
-16d079616946841c540c9db101901a2def7f9b002b6079300a64a293:
-  ref: Game management (title)
-  value: Game management (title)
-8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
-  ref: Game management
-  value: Správa hry
 77dca7c9b2e910050d0b2b1dcce64de0735c7561b5ffc7f2bfd66cb9:
   ref: Building detail (title)
   value: Detail budovy [{name}]
