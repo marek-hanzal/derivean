@@ -14,9 +14,10 @@
 		"cleanup": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
 	"dependencies": {
-		"@tabler/icons-react": "^2.40.0",
 		"@derivean/inventory": "^0.5.0",
-		"@derivean/resource": "^0.5.0"
+		"@derivean/resource": "^0.5.0",
+		"@tabler/icons-react": "^2.40.0",
+		"@use-pico/diagram": "^2.0.0"
 	},
 	"devDependencies": {
 		"@use-pico/esbuild": "^2.0.0",

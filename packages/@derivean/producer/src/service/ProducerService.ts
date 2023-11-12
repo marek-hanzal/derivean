@@ -2,6 +2,7 @@ import {
     type IInventoryService,
     withInventoryService
 }                                     from "@derivean/inventory";
+import {IGraph}                       from "@use-pico/diagram";
 import {withDullSchema}               from "@use-pico/dull-stuff";
 import {DateTime}                     from "@use-pico/i18n";
 import {uniqueOf}                     from "@use-pico/utils";
@@ -164,6 +165,27 @@ export class ProducerService implements IProducerService {
 
         return {
             time: producer.time + time,
+        };
+    }
+
+    public async graph(producerId: string): Promise<IGraph> {
+        return {
+            nodes: [
+                {
+                    id:      "1",
+                    content: "1",
+                },
+                {
+                    id:      "2",
+                    content: "2",
+                },
+            ],
+            links: [
+                {
+                    input:  "1",
+                    output: "2",
+                },
+            ],
         };
     }
 }

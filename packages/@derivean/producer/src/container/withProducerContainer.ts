@@ -5,6 +5,7 @@ import {
 }                                     from "@use-pico/rpc-server";
 import {DependencyError}              from "../error/DependencyError";
 import {withDependenciesQuery}        from "../query/withDependenciesQuery";
+import {withGraph}                    from "../query/withGraph";
 import {withProductionTimeQuery}      from "../query/withProductionTimeQuery";
 import {ProducerInputRepository}      from "../repository/ProducerInputRepository";
 import {ProducerOutputRepository}     from "../repository/ProducerOutputRepository";
@@ -77,6 +78,17 @@ export const withProducerContainer = (container: IContainer.Type) => {
                 }
                 throw e;
             }
+        },
+    });
+    withHandler({
+        container,
+        key:    withGraph.key,
+        schema: withGraph.schema,
+        handle: async ({
+                           container,
+                           request
+                       }) => {
+            return await withProducerService.use(container).graph(request.id) as any;
         },
     });
 };

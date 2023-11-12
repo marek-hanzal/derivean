@@ -34,6 +34,7 @@ export const ProducerInput: FC<ProducerInput.Props> = (
                 separatorMargin={4}
             >
                 {entities.map(entity => <ResourceUI.Fetch
+                    key={entity.id}
                     override={entity.resourceId}
                     WithSuccess={({entity}) => <Text
                         fw={mark.includes(entity.id) ? "bold" : undefined}
