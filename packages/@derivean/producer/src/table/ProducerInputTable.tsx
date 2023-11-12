@@ -126,6 +126,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
                     }}
                     WithSuccess={({entities}) => <NativeBreadcrumbs>
                         {entities.map(entity => <ProducerUI.Fetch
+                            key={entity.id}
                             override={entity.producerId}
                             WithSuccess={({entity}) => <ButtonLink
                                 icon={<ProducerIcon/>}

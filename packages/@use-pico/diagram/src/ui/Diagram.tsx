@@ -9,6 +9,8 @@ export namespace Diagram {
     export interface Props {
         graph: GraphSchema.Type;
         zoom?: boolean;
+
+        onClick?(id: string): void;
     }
 }
 
@@ -19,6 +21,7 @@ export const Diagram: FC<Diagram.Props> = (
                    edges
                },
         zoom = true,
+        onClick,
     }
 ) => {
     return <Graph
@@ -31,6 +34,11 @@ export const Diagram: FC<Diagram.Props> = (
                 ...node,
             })),
             edges,
+        }}
+        events={{
+            selectNode: (event: any) => {
+                onClick?.(event.nodes[0]);
+            },
         }}
         options={{
             edges:       {

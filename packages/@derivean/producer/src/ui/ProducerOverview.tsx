@@ -1,7 +1,11 @@
 "use client";
 
+import {ProducerIcon}       from "@derivean/ui";
 import {List}               from "@use-pico/table";
-import {Preview}            from "@use-pico/ui";
+import {
+    ButtonLink,
+    Preview
+}                           from "@use-pico/ui";
 import {type FC}            from "react";
 import {ProducerRpc}        from "../rpc/ProducerRpc";
 import {ProducerQueryStore} from "../store/ProducerQueryStore";
@@ -21,7 +25,16 @@ export const ProducerOverview: FC<ProducerOverview.Props> = () => {
             cols={1}
             items={[
                 {
-                    label: item.name,
+                    label: <ButtonLink
+                               icon={<ProducerIcon/>}
+                               href={{
+                                   href:  `/manager/producer/[id]/pipeline`,
+                                   query: {
+                                       id: item.id,
+                                   },
+                               }}
+                               label={item.name}
+                           />,
                     value: <ProducerGraph
                                zoom={false}
                                producerId={item.id}
