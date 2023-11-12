@@ -3,10 +3,15 @@
 import {ResourceIcon}           from "@derivean/ui";
 import {t}                      from "@use-pico/i18n";
 import {
+    Group,
+    Text
+}                               from "@use-pico/ui";
+import {
     type ComponentProps,
     type FC
 }                               from "react";
 import {ResourceUpsertForm}     from "../form/ResourceUpsertForm";
+import {ResourceInline}         from "../inline/ResourceInline";
 import {ResourceTypeInline}     from "../inline/ResourceTypeInline";
 import {ResourceRpc}            from "../rpc/ResourceRpc";
 import {ResourceSelectionStore} from "../store/ResourceSelectionStore";
@@ -26,7 +31,6 @@ export namespace ResourceTable {
 
 export const ResourceTable: FC<ResourceTable.Props> = props => {
     return <ResourceUI.Table
-        key={"resource-table"}
         text={{
             total: t()`Resource count`,
             count: {
@@ -79,8 +83,13 @@ export const ResourceTable: FC<ResourceTable.Props> = props => {
         }}
         columns={{
             name:   {
-                title: t()`Resource name`,
-                render: ({item}) => item.name,
+                title:  t()`Resource name`,
+                render: ({item}) => <Group gap={"xs"}>
+                    <ResourceInline entity={item}/>
+                    <Text c={"dimmed"}>
+                        ({item.name})
+                    </Text>
+                </Group>,
             },
             typeId: {
                 title:  t()`Resource type`,

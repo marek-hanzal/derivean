@@ -10,81 +10,6 @@ b4e8a29838ae1162bde0b03ce16b75d4739d6bfeeac544c56a20ac10:
 b23991ae4c7c5d41384356888bea36d9ad9180e35b63f2ca2ca27e74:
   ref: More
   value: More
-c028e668a86cc8c4bf3ba442001649e1036228031a9b79654cb53eb0:
-  ref: Sign-in
-  value: Sign-in
-605e1ba528eedac2c245b6f6a1257a048261dc5508e4c5440a30c50f:
-  ref: Delete
-  value: Delete
-c2e7d8c0ada03fcb5c1394b62f8b5576af8897c5bbf56725543da717:
-  ref: Filter by
-  value: Filter by
-53b5905ca1233d7615736035e9b1f30b7722d347074305df132ca255:
-  ref: Remove filter
-  value: Remove filter
-4fccd0115ce525399d4373acc187e76e675622bb5da7288d1b754825:
-  ref: Fulltext search
-  value: Fulltext search
-7e19894e0affa85c85b0bdd3bd8b0a7d237060d20a7aa47e044d8adc:
-  ref: Total number of items
-  value: Total number of items
-9787305b076729a8818974ec91c90b96e1bbeee3a189994587c92ff5:
-  ref: Nothing here
-  value: Nothing here
-91094cb11765887037d37cffbae80d80fd3e882763ff565e0b214213:
-  ref: This listing is empty
-  value: This listing is empty
-3c1469acd0f963d3ac3943e49b6a34b00183353765f5d3f004464093:
-  ref: Table is empty
-  value: Table is empty
-7a5c74ec4b4bdf2c097c62910ecb7fa4cc8fa591fc9c61e4543fee71:
-  ref: There is currently nothing to see
-  value: There is currently nothing to see
-fccca51f27d14b47f2c3f1865c215ddb180d6c65d942ab4e93aa9d65:
-  ref: Nothing found by current filter
-  value: Nothing found by current filter
-2867b125fbf240bd77e6eb70efb8f36eb5249a28a3786f4d3e2a796d:
-  ref: Currently set filter is too strict, so there is nothing to show
-  value: Currently set filter is too strict, so there is nothing to show
-bc3ca672207f85699202724ea21d719bbedb22cc44b71fba16c85cf8:
-  ref: Loading data
-  value: Loading data
-af3c230745c96f9395268ef3f7c7faec402a59ff2596290617b33e1e:
-  ref: We're preparing all the data for you (if any)...
-  value: We're preparing all the data for you (if any)...
-e9b3ba72c318eb3fede0269608646b2fb2b6367380aec8e17d7a9eeb:
-  ref: Resource management
-  value: Resource management
-cddaf1cd47d244eb61ac83dd53bcc19ab979249d1cfd7dd647253f11:
-  ref: Resource list
-  value: Resource list
-e886a6010df144ec211a2041dc77c8adc46a0921ba57458fada4c681:
-  ref: Resource type list
-  value: Resource type list
-ffad743cbce08917e436ff30d0834c538a72e5fde2a801c510f94afc:
-  ref: Producer list
-  value: Producer list
-560cd55b9ed24679aa54339c132febc7e3fedae21d2ca49299a09d2b:
-  ref: Producer overview
-  value: Producer overview
-fe765c1e42264c5e871762234b7c83df15fffb9522a3319aea1a49a9:
-  ref: Producer management
-  value: Producer management
-9c98cff9e25fc568108143bf2d0b4476ac459a2fd8113c747badfc47:
-  ref: Building list
-  value: Building list
-b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
-  ref: Producer detail (label)
-  value: Producer detail (label)
-66624102d45745f792f2be2b8ddc4fdf3f9b864e165127e2e8576c9e:
-  ref: Producer pipeline
-  value: Producer pipeline
-16d079616946841c540c9db101901a2def7f9b002b6079300a64a293:
-  ref: Game management (title)
-  value: Game management (title)
-8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
-  ref: Game management
-  value: Game management
 c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19:
   ref: Submit
   value: Submit
@@ -118,15 +43,147 @@ b0cf8a5dd758db7480606838271ff93da6792fdd8d3cb94816d6a40e:
 2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614:
   ref: Currently selected items
   value: Currently selected items
+605e1ba528eedac2c245b6f6a1257a048261dc5508e4c5440a30c50f:
+  ref: Delete
+  value: Delete
+c2e7d8c0ada03fcb5c1394b62f8b5576af8897c5bbf56725543da717:
+  ref: Filter by
+  value: Filter by
+53b5905ca1233d7615736035e9b1f30b7722d347074305df132ca255:
+  ref: Remove filter
+  value: Remove filter
+4fccd0115ce525399d4373acc187e76e675622bb5da7288d1b754825:
+  ref: Fulltext search
+  value: Fulltext search
+c028e668a86cc8c4bf3ba442001649e1036228031a9b79654cb53eb0:
+  ref: Sign-in
+  value: Sign-in
+7e19894e0affa85c85b0bdd3bd8b0a7d237060d20a7aa47e044d8adc:
+  ref: Total number of items
+  value: Total number of items
+9787305b076729a8818974ec91c90b96e1bbeee3a189994587c92ff5:
+  ref: Nothing here
+  value: Nothing here
+91094cb11765887037d37cffbae80d80fd3e882763ff565e0b214213:
+  ref: This listing is empty
+  value: This listing is empty
+3c1469acd0f963d3ac3943e49b6a34b00183353765f5d3f004464093:
+  ref: Table is empty
+  value: Table is empty
+7a5c74ec4b4bdf2c097c62910ecb7fa4cc8fa591fc9c61e4543fee71:
+  ref: There is currently nothing to see
+  value: There is currently nothing to see
+fccca51f27d14b47f2c3f1865c215ddb180d6c65d942ab4e93aa9d65:
+  ref: Nothing found by current filter
+  value: Nothing found by current filter
+2867b125fbf240bd77e6eb70efb8f36eb5249a28a3786f4d3e2a796d:
+  ref: Currently set filter is too strict, so there is nothing to show
+  value: Currently set filter is too strict, so there is nothing to show
+bc3ca672207f85699202724ea21d719bbedb22cc44b71fba16c85cf8:
+  ref: Loading data
+  value: Loading data
+af3c230745c96f9395268ef3f7c7faec402a59ff2596290617b33e1e:
+  ref: We're preparing all the data for you (if any)...
+  value: We're preparing all the data for you (if any)...
+0adb498d881d24f1ec8b5303067c44f27ab710c4dafc08aac5abb195:
+  ref: Update translation (label)
+  value: Update translation (label)
+6341a41cf0975516bc9a558ab17aa85a8fda429fe78a53c505e27ed4:
+  ref: Create translation (label)
+  value: Create translation (label)
+8a31506c52d0aed078087a8d14646cafc5d069dde8994b845edd28e5:
+  ref: Success
+  value: Success
+fc3c23f5a4fc3a2e4e740c928e62221b2e011d4849ab49bf1f7627d8:
+  ref: Translation updated
+  value: Translation updated
+57ea966b6e99faea318921f7fab40f98197a9deb09cac1dd4c7bef4f:
+  ref: Translation created
+  value: Translation created
+734b40c85cc1828f534b64ece847e7eff2edb0bc3d299f15639133b1:
+  ref: Locale
+  value: Locale
+3ce9de7f626ca9709696ea5afc9e03a8edb02ced4f6c62849f79f1e7:
+  ref: Locale (placeholder)
+  value: Locale (placeholder)
+a9fef1d9d008cc093532810bab5293f2cd97f9c079305dc8872c6f82:
+  ref: Translation key
+  value: Translation key
+f7a71bc51a4dc5b1fb8cf0eff18a030b37de904bf5782599c5c62437:
+  ref: Translation key (placeholder)
+  value: Translation key (placeholder)
+2c89fdd3ae768c74d3436a5d2300ffec6ec4ad7e1286f5586f416dea:
+  ref: Translation
+  value: Translation
+201b49219a267f554010fec2cc8be8a848eaac2f37370abf78384946:
+  ref: Translation (placeholder)
+  value: Translation (placeholder)
+8377378959831dce8926767c6732d5b0ac669d273e202b2ad25da6bd:
+  ref: Translation count
+  value: Translation count
+ac49e7dde14c9ef2189878e24374c9922f128e9a5d89b86f88d31f59:
+  ref: Loading translations
+  value: Loading translations
+a85cbcc09359cf8aaffb06c4a53c8e7fc3dd69ecfa3911c66b2b12e7:
+  ref: We're preparing translation list for you...
+  value: We're preparing translation list for you...
+3ebc5ce332d4b7c0c875b709c0e7627f1a995fb8f54482de979f660a:
+  ref: Create translation (modal)
+  value: Create translation (modal)
+b4badb0859543a09bff5fe06a607ae465b3b20604f6f7d2245ef9a37:
+  ref: Create translation
+  value: Create translation
+c4ca81da0b9d668c1ad621253207781bed46fe9bbbe9e4100e754b9d:
+  ref: Delete translation
+  value: Delete translation
+281028826f4b57c472534ad8b8f71bb4de771be0c6750fc2b3076364:
+  ref: Delete translation (modal)
+  value: Delete translation (modal)
+4ec9e61ef227e0ab654d877c27a5a668d611acde5aac806f104bb3cb:
+  ref: Do you really want to delete selected translation?
+  value: Do you really want to delete selected translation?
+40986e5da1fdd1a669d508746efeef65620f2725065ee5a31dc7f08c:
+  ref: Translation has been successfully deleted.
+  value: Translation has been successfully deleted.
+608c8f3ecee8f9e93586e58c61dad9408e199cb8c23c923e596eb26a:
+  ref: Update translation
+  value: Update translation
+e9b3ba72c318eb3fede0269608646b2fb2b6367380aec8e17d7a9eeb:
+  ref: Resource management
+  value: Resource management
+cddaf1cd47d244eb61ac83dd53bcc19ab979249d1cfd7dd647253f11:
+  ref: Resource list
+  value: Resource list
+e886a6010df144ec211a2041dc77c8adc46a0921ba57458fada4c681:
+  ref: Resource type list
+  value: Resource type list
+fe765c1e42264c5e871762234b7c83df15fffb9522a3319aea1a49a9:
+  ref: Producer management
+  value: Producer management
+ffad743cbce08917e436ff30d0834c538a72e5fde2a801c510f94afc:
+  ref: Producer list
+  value: Producer list
+560cd55b9ed24679aa54339c132febc7e3fedae21d2ca49299a09d2b:
+  ref: Producer overview
+  value: Producer overview
+9c98cff9e25fc568108143bf2d0b4476ac459a2fd8113c747badfc47:
+  ref: Building list
+  value: Building list
+ad2ca0324d62fa10364b56f445bb86fbd9cc6a7c7d1f30b9aad3268d:
+  ref: Translations
+  value: Translations
+b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
+  ref: Producer detail (label)
+  value: Producer detail (label)
+66624102d45745f792f2be2b8ddc4fdf3f9b864e165127e2e8576c9e:
+  ref: Producer pipeline
+  value: Producer pipeline
 99b23be4aaf0714665a8ea5010d2c2dfea9d946d41e3fe497ecf2e3f:
   ref: Update resource type (label)
   value: Update resource type (label)
 d87174f7edc1d34ca8602d791b0e9c6a0cae4c9f884e5e94b2bb24b0:
   ref: Create resource type (label)
   value: Create resource type (label)
-8a31506c52d0aed078087a8d14646cafc5d069dde8994b845edd28e5:
-  ref: Success
-  value: Success
 682cea3687a45430ef471de76485d7b3b7cd40eda4c1b9be1450c21f:
   ref: Resource type updated
   value: Resource type updated
@@ -367,6 +424,12 @@ f9168b806190baf8b73505cdf6303ef25070b37c0fbaec0a29e69551:
 5daa89ffc985bced5fd67fa69e137e139d6b5b43f73481605ca6351c:
   ref: Producer output
   value: Producer output
+c8d09d5db265dfe823e70a42e7ae660b380a3eccbdeaf2b2568c7685:
+  ref: Translation list (title)
+  value: Translation list (title)
+28de4de589af568ae36e721daad935078aa1cebbaf9bf70c3112e96e:
+  ref: Translation list
+  value: Translation list
 1887011beb8375f0ccd6994d7482fff080c516a4bde5dc3fe2adb1a3:
   ref: Update building (label)
   value: Update building (label)
@@ -409,21 +472,27 @@ fe57342d0588cea22f8259f5877597054ad8d9d71047cf3a34156829:
 82119185c01850436786aecbce7018c09a8045f38261534d28ae1ec2:
   ref: Building has been successfully removed
   value: Building has been successfully removed
-7efc8fada719e1a8f6162913dec8e4568da77c864373b1bb831a1168:
-  ref: Producer detail (title)
-  value: Producer detail (title)
-56db5cba41164e61cb42c625b8ccd3bb79e6aab4d8ffa4c194083f69:
-  ref: Producer detail
-  value: Producer detail
 2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
   ref: Game overview
   value: Game overview
+16d079616946841c540c9db101901a2def7f9b002b6079300a64a293:
+  ref: Game management (title)
+  value: Game management (title)
+8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
+  ref: Game management
+  value: Game management
 77dca7c9b2e910050d0b2b1dcce64de0735c7561b5ffc7f2bfd66cb9:
   ref: Building detail (title)
   value: Building detail (title)
 553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
   ref: Building detail
   value: Building detail
+7efc8fada719e1a8f6162913dec8e4568da77c864373b1bb831a1168:
+  ref: Producer detail (title)
+  value: Producer detail (title)
+56db5cba41164e61cb42c625b8ccd3bb79e6aab4d8ffa4c194083f69:
+  ref: Producer detail
+  value: Producer detail
 0d75b92cf8490826cff49057a3173b5d7ae6797abf298f54a6ce6550:
   ref: DeRivean - The Invisible Game (title)
   value: DeRivean - The Invisible Game (title)

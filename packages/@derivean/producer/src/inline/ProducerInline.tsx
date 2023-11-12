@@ -1,4 +1,5 @@
 import {withDullSchema}      from "@use-pico/dull-stuff";
+import {td}                  from "@use-pico/i18n";
 import {type WithEntity}     from "@use-pico/types";
 import {type FC}             from "react";
 import {type ProducerSchema} from "../schema/ProducerSchema";
@@ -13,5 +14,5 @@ export const ProducerInline: FC<ProducerInline.Props> = (
         entity,
     }
 ) => {
-    return entity.name;
+    return td()(`Producer [${entity.name}]`);
 };

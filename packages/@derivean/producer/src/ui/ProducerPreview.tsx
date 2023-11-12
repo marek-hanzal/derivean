@@ -1,8 +1,13 @@
 import {withDullSchema} from "@use-pico/dull-stuff";
 import {t}              from "@use-pico/i18n";
-import {Preview}        from "@use-pico/ui";
+import {
+    Group,
+    Preview,
+    Text
+}                       from "@use-pico/ui";
 import {HumanSeconds}   from "@use-pico/ui-extra";
 import {type FC}        from "react";
+import {ProducerInline} from "../inline/ProducerInline";
 import {ProducerSchema} from "../schema/ProducerSchema";
 import {ProducerInput}  from "./ProducerInput";
 import {ProducerOutput} from "./ProducerOutput";
@@ -24,7 +29,12 @@ export const ProducerPreview: FC<ProducerPreview.Props> = (
         items={[
             {
                 label: t()`Producer name`,
-                value: producer.name,
+                value: <Group gap={"xs"}>
+                           <ProducerInline entity={producer}/>
+                           <Text c={"dimmed"}>
+                               ({producer.name})
+                           </Text>
+                       </Group>,
             },
             {
                 label: t()`Production time`,

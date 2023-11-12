@@ -2,14 +2,17 @@ import {
     BuildingIcon,
     ProducerIcon,
     ResourceIcon
-}                  from "@derivean/ui";
-import {IconGraph} from "@tabler/icons-react";
-import {t}         from "@use-pico/i18n";
+}                from "@derivean/ui";
+import {
+    IconGraph,
+    IconLanguage
+}                from "@tabler/icons-react";
+import {t}       from "@use-pico/i18n";
 import {
     ListIcon,
     MainMenu
-}                  from "@use-pico/ui";
-import {type FC}   from "react";
+}                from "@use-pico/ui";
+import {type FC} from "react";
 
 export namespace ManagerMenu {
     export interface Props {
@@ -62,6 +65,12 @@ export const ManagerMenu: FC<ManagerMenu.Props> = () => {
                 href:  "/manager/building/list",
                 label: t()`Building list`,
                 icon:  <BuildingIcon/>,
+            },
+            {
+                type:  "link",
+                href:  "/manager/translation/list",
+                label: t()`Translations`,
+                icon:  <IconLanguage/>,
             },
         ]}
     />;

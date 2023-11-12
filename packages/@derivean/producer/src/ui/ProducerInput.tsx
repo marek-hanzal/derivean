@@ -1,6 +1,9 @@
 "use client";
 
-import {ResourceUI}      from "@derivean/resource";
+import {
+    ResourceInline,
+    ResourceUI
+}                        from "@derivean/resource";
 import {t}               from "@use-pico/i18n";
 import {
     NativeBreadcrumbs,
@@ -40,7 +43,7 @@ export const ProducerInput: FC<ProducerInput.Props> = (
                         fw={mark.includes(entity.id) ? "bold" : undefined}
                         c={mark.includes(entity.id) ? undefined : "dimmed"}
                     >
-                        {entity.name}
+                        <ResourceInline entity={entity}/>
                     </Text>}
                 />)}
             </NativeBreadcrumbs>}

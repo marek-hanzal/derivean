@@ -30,7 +30,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addColumn("typeId", "uuid", col =>
             col.references("ResourceType.id").onDelete("cascade").notNull()
         )
-        .addUniqueConstraint("name_type", ["name", "typeId"])
+        .addUniqueConstraint("Resource_name_type_unique", ["name", "typeId"])
         .execute();
 
     await db.insertInto("Resource")

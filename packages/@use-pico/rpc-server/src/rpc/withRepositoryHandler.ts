@@ -61,7 +61,6 @@ export const withRepositoryHandler = <
     >
 ) => {
     withRepository.bind(container, repository);
-    const redisService = withRedisService.use(container);
 
     container.useValue<
         IHandler<
@@ -103,7 +102,7 @@ export const withRepositoryHandler = <
                            request,
                            container
                        }) => {
-            await redisService.clear();
+            await withRedisService.use(container).clear();
             return withRepository.use(container).withMutation.mutation(request);
         },
     });

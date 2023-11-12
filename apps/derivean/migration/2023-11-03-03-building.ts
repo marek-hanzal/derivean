@@ -44,6 +44,9 @@ export async function up(db: Kysely<any>): Promise<void> {
                 name: "well",
             },
             {
+                name: "goldsmith",
+            },
+            {
                 name: "tavern",
             },
         ])

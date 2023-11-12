@@ -1,8 +1,10 @@
+import {container}              from "@derivean/server";
 import {
     withDefaultPipeline,
     withRichComponents
 }                               from "@derivean/ui";
 import {withInstance}           from "@use-pico/i18n";
+import {withTranslationService} from "@use-pico/i18n-server";
 import {LayoutShell}            from "@use-pico/ui-extra";
 import fs                       from "node:fs";
 import {type PropsWithChildren} from "react";
@@ -24,7 +26,10 @@ export default async function Layout(
 ) {
     const {translations} = withInstance({
         locale,
-        translations: parse(fs.readFileSync(`./src/translation/${locale}.yaml`, {encoding: "utf-8"})),
+        translations: {
+            ...parse(fs.readFileSync(`./src/translation/${locale}.yaml`, {encoding: "utf-8"})),
+            ...await withTranslationService.use(container).translations(locale),
+        },
         pipeline:     withDefaultPipeline(),
     });
 

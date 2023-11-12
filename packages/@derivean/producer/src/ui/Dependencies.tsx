@@ -19,6 +19,7 @@ import {
     WithIcon
 }                                  from "@use-pico/ui";
 import {type FC}                   from "react";
+import {ProducerInline}            from "../inline/ProducerInline";
 import {withDependenciesQuery}     from "../query/withDependenciesQuery";
 import {DependencyCycleSchema}     from "../schema/DependencyCycleSchema";
 import {DependencyProducersSchema} from "../schema/DependencyProducersSchema";
@@ -65,7 +66,7 @@ export const Dependencies: FC<Dependencies.Props> = (
                                             id: producer.id,
                                         },
                                     }}
-                                    label={producer.name}
+                                    label={<ProducerInline entity={producer}/>}
                                 />
                                 <ProducerInput producerId={producer.id}/>
                                 <WithIcon

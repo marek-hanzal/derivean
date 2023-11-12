@@ -24,12 +24,7 @@
 		"cleanup:sdk": "del-cli src/sdk/**",
 		"cleanup:lib": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
-	"dependencies": {
-		"@phenomnomnominal/tsquery": "^6.1.3"
-	},
 	"peerDependencies": {
-		"@use-pico/utils": "^2.0.0",
-		"yaml": "^2.3.4"
 	},
 	"devDependencies": {
 		"@use-pico/esbuild": "^2.0.4",

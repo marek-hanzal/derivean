@@ -4,7 +4,10 @@ import {
 }                                     from "@derivean/inventory";
 import {type GraphSchema}             from "@use-pico/diagram";
 import {withDullSchema}               from "@use-pico/dull-stuff";
-import {DateTime}                     from "@use-pico/i18n";
+import {
+    DateTime,
+    td
+}                                     from "@use-pico/i18n";
 import {uniqueOf}                     from "@use-pico/utils";
 import {type IProducerProcess}        from "../api/IProducerProcess";
 import {type IProducerService}        from "../api/IProducerService";
@@ -186,7 +189,7 @@ export class ProducerService implements IProducerService {
                     edges.push({
                         to:    producer.id,
                         from:  output.producerId,
-                        label: `${output.name} (x${output.amount})`,
+                        label: `${td()(`Resource [${output.name}]`)} (x${output.amount})`,
                     });
                 }
             }
@@ -195,7 +198,7 @@ export class ProducerService implements IProducerService {
         return {
             nodes: dependencies.map(producer => ({
                 id:    producer.id,
-                label: producer.name,
+                label: td()(`Producer [${producer.name}]`),
                 color: producer.id === producerId ? "#FFF" : "#DDD",
             })),
             edges,

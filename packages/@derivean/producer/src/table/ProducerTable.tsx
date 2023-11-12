@@ -9,6 +9,7 @@ import {
     type FC
 }                               from "react";
 import {ProducerUpsertForm}     from "../form/ProducerUpsertForm";
+import {ProducerInline}         from "../inline/ProducerInline";
 import {ProducerRpc}            from "../rpc/ProducerRpc";
 import {ProducerSelectionStore} from "../store/ProducerSelectionStore";
 import {Dependencies}           from "../ui/Dependencies";
@@ -77,7 +78,7 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
         }}
         columns={{
             name:         {
-                title: t()`Producer name`,
+                title:  t()`Producer name`,
                 render: ({item}) => <ButtonLink
                     icon={<ProducerIcon/>}
                     href={{
@@ -86,9 +87,9 @@ export const ProducerTable: FC<ProducerTable.Props> = props => {
                             id: item.id,
                         },
                     }}
-                    label={item.name}
+                    label={<ProducerInline entity={item}/>}
                 />,
-                width: 14,
+                width:  14,
             },
             time:         {
                 title:  t()`Production time`,
