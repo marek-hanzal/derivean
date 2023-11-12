@@ -4,10 +4,6 @@ import {
     type Client,
     withClient
 }                            from "@use-pico/orm";
-import {
-    IRedisService,
-    withRedisService
-}                            from "@use-pico/redis";
 import {AbstractRepository}  from "@use-pico/repository";
 import {ProducerInputSchema} from "../schema/ProducerInputSchema";
 
@@ -18,16 +14,13 @@ export class ProducerInputRepository extends AbstractRepository<
 > {
     static inject = [
         withClient.inject,
-        withRedisService.inject,
     ];
 
     constructor(
         client: Client<Database>,
-        redisService: IRedisService,
     ) {
         super(
             client,
-            redisService,
             ProducerInputSchema.repository,
             "ProducerInput",
         );

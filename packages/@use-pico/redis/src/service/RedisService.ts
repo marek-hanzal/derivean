@@ -13,7 +13,10 @@ export class RedisService implements IRedisService {
     ) {
     }
 
-    public async cache<TValue>(key: string | any[], value: () => Promise<TValue>): Promise<TValue> {
+    public async cache<TValue>(key: string | any[], value: () => Promise<TValue>, bypass: boolean = false): Promise<TValue> {
+        if (bypass) {
+            return value();
+        }
         const $key = isString(key) ? key : JSON.stringify(key);
         const cached = await this.redis.get($key);
         if (cached) {
@@ -22,5 +25,9 @@ export class RedisService implements IRedisService {
         const $value = await value();
         this.redis.set($key, JSON.stringify($value));
         return $value;
+    }
+
+    public async clear(): Promise<void> {
+        await this.redis.flushall();
     }
 }

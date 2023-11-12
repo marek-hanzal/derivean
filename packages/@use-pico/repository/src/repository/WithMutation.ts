@@ -3,7 +3,6 @@ import {
     type Database
 }                            from "@use-pico/orm";
 import {type QuerySchema}    from "@use-pico/query";
-import {type IRedisService}  from "@use-pico/redis";
 import {type PicoSchema}     from "@use-pico/schema";
 import {type MutationSchema} from "@use-pico/source";
 import {type IRepository}    from "../api/IRepository";
@@ -19,7 +18,6 @@ export class WithMutation<
         public schema: TSchema,
         public table: TTable,
         public repository: IRepository<TDatabase, TSchema, any>,
-        public redisService: IRedisService,
     ) {
     }
 

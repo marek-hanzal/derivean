@@ -6,7 +6,6 @@ import {
     type CountSchema,
     type QuerySchema
 }                            from "@use-pico/query";
-import {type IRedisService}  from "@use-pico/redis";
 import {type PicoSchema}     from "@use-pico/schema";
 import {type MutationSchema} from "@use-pico/source";
 import {
@@ -27,7 +26,6 @@ export class WithQuery<
         public schema: TSchema,
         public table: TTable,
         public repository: IRepository<TDatabase, TSchema, any>,
-        public redisService: IRedisService,
     ) {
     }
 
@@ -74,25 +72,19 @@ export class WithQuery<
     }
 
     public async query(query: PicoSchema.Output<TSchema["query"]>): Promise<PicoSchema.Output<TSchema["entity"]>[]> {
-        return this.redisService.cache(
-            [this.table, query],
-            async () => this.repository.applyTo(
-                query,
-                this.client
-                    .selectFrom(this.table)
-                    .selectAll()
-            ).execute()
-        );
+        return this.repository.applyTo(
+            query,
+            this.client
+                .selectFrom(this.table)
+                .selectAll()
+        ).execute();
     }
 
     public async fetch(query: PicoSchema.Output<TSchema["query"]>): Promise<PicoSchema.Output<TSchema["entity"]> | undefined> {
-        return this.redisService.cache(
-            [this.table, query],
-            async () => this.repository.applyTo(
-                query,
-                this.client.selectFrom(this.table).selectAll()
-            ).executeTakeFirst()
-        );
+        return this.repository.applyTo(
+            query,
+            this.client.selectFrom(this.table).selectAll()
+        ).executeTakeFirst();
     }
 
     public async fetchOrThrow(query: PicoSchema.Output<TSchema["query"]>): Promise<PicoSchema.Output<TSchema["entity"]>> {
