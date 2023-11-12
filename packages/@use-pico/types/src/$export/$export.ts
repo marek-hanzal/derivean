@@ -8,6 +8,7 @@ export * from "./NonNullable";
 export * from "./OptionalKeys";
 export * from "./PickOptional";
 export * from "./PickRequired";
+export * from "./Prettify";
 export * from "./RequiredKeys";
 export * from "./Unboxed";
 export * from "./Undefinable";

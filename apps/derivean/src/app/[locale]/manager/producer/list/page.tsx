@@ -33,9 +33,7 @@ export default function List() {
     >
         <StoreProvider
             store={ProducerQueryStore}
-            values={{
-                filter: {},
-            }}
+            values={{}}
         >
             <ProducerTable/>
         </StoreProvider>
