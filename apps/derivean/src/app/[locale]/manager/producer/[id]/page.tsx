@@ -1,3 +1,4 @@
+import {Diagram}      from "@/derivean/app/[locale]/manager/producer/[id]/Diagram";
 import {ProducerMenu} from "@derivean/manager";
 import {
     Dependencies,
@@ -68,6 +69,8 @@ export default async function Index({params: {id}}: Index.Props) {
         <ProducerPreview
             producer={producer}
         />
+
+        <Diagram/>
 
         <h1>Show required buildings (resources) to run this producer + graph + production time</h1>
     </Page>;
