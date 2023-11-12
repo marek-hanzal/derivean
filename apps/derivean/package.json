@@ -12,7 +12,7 @@
 		"cleanup": "del-cli .turbo .next tsconfig.tsbuildinfo"
 	},
 	"dependencies": {
-		"beautiful-react-diagrams": "^0.5.1",
+		"@dagrejs/dagre": "^1.0.4",
 		"@derivean/building": "^0.5.0",
 		"@derivean/game": "^0.5.0",
 		"@derivean/inventory": "^0.5.0",
@@ -45,6 +45,7 @@
 		"@use-pico/ui": "^2.0.0",
 		"@use-pico/ui-extra": "^2.0.0",
 		"@use-pico/utils": "^2.0.0",
+		"beautiful-react-diagrams": "^0.5.1",
 		"next": "^14.0.0",
 		"next-auth": "^4.24.4",
 		"next-compose-plugins": "^2.2.1",
