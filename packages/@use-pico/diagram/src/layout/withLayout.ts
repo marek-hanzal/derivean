@@ -9,7 +9,7 @@ export const withLayout = (
 ): IGraph.Layout => {
     const g = new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
     g.setGraph({
-        rankdir: "LR",
+        rankdir: "RL",
         align:   "DL",
         edgesep: 80,
         ranksep: 160,

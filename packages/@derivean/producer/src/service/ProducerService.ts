@@ -31,7 +31,7 @@ export class ProducerService implements IProducerService {
         protected inventoryService: IInventoryService,
         protected producerRepository: ProducerRepository.Type,
         protected producerInputRepository: ProducerInputRepository.Type,
-        protected proOutputRepository: ProducerOutputRepository.Type,
+        protected producerOutputRepository: ProducerOutputRepository.Type,
     ) {
     }
 
@@ -110,7 +110,7 @@ export class ProducerService implements IProducerService {
         const dependencies = [];
         const producers = this.producerRepository.withQuery.query({
             where: {
-                idIn: (await this.proOutputRepository
+                idIn: (await this.producerOutputRepository
                     .withQuery
                     .select(["ProducerOutput.producerId"])
                     .where(
@@ -169,23 +169,31 @@ export class ProducerService implements IProducerService {
     }
 
     public async graph(producerId: string): Promise<IGraph> {
+        const dependencies = (await this.dependencies(producerId))
+            .concat(
+                await this.producerRepository.withQuery.fetchOrThrow({
+                    where: {id: producerId},
+                })
+            );
+        const links: IGraph["links"] = [];
+
+        for (const producer of dependencies) {
+            for (const input of await this.producerInputRepository.withQuery.select(["ProducerInput.resourceId"]).where("producerId", "=", producer.id).execute()) {
+                for (const output of await this.producerOutputRepository.withQuery.select(["ProducerOutput.producerId"]).where("resourceId", "=", input.resourceId).execute()) {
+                    links.push({
+                        input:  producer.id,
+                        output: output.producerId,
+                    });
+                }
+            }
+        }
+
         return {
-            nodes: [
-                {
-                    id:      "1",
-                    content: "1",
-                },
-                {
-                    id:      "2",
-                    content: "2",
-                },
-            ],
-            links: [
-                {
-                    input:  "1",
-                    output: "2",
-                },
-            ],
+            nodes: dependencies.map(producer => ({
+                id:      producer.id,
+                content: producer.name,
+            })),
+            links,
         };
     }
 }
