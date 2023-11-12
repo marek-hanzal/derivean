@@ -4,6 +4,10 @@ import {
     type Client,
     withClient
 }                           from "@use-pico/orm";
+import {
+    type IRedisService,
+    withRedisService
+}                           from "@use-pico/redis";
 import {AbstractRepository} from "@use-pico/repository";
 import {ResourceTypeSchema} from "../schema/ResourceTypeSchema";
 
@@ -14,13 +18,16 @@ export class ResourceTypeRepository extends AbstractRepository<
 > {
     static inject = [
         withClient.inject,
+        withRedisService.inject,
     ];
 
     constructor(
         client: Client<Database>,
+        redisService: IRedisService,
     ) {
         super(
             client,
+            redisService,
             ResourceTypeSchema.repository,
             "ResourceType",
         );

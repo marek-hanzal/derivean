@@ -1,1 +1,1 @@
-export {withRedis} from "../utils/withRedis";
+export {withRedis} from "../container/withRedis";

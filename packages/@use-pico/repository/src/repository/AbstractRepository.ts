@@ -7,6 +7,7 @@ import {
     type OrderBySchema,
     type QuerySchema
 }                           from "@use-pico/query";
+import {type IRedisService} from "@use-pico/redis";
 import {
     type MutationSchema,
     type ShapeSchema
@@ -38,6 +39,7 @@ export class AbstractRepository<
 > {
     protected constructor(
         public client: Client<TDatabase>,
+        public redisService: IRedisService,
         schema: TSchema,
         table: TTable,
     ) {
@@ -56,6 +58,7 @@ export class AbstractRepository<
             this.schema,
             this.table,
             this,
+            this.redisService,
         ));
     }
 
@@ -65,6 +68,7 @@ export class AbstractRepository<
             this.schema,
             this.table,
             this,
+            this.redisService,
         ));
     }
 }

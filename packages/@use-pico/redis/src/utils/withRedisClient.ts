@@ -1,18 +1,20 @@
 import {Redis} from "ioredis";
 
-export namespace withRedis {
+export namespace withRedisClient {
     export interface Props {
         url?: string;
     }
 }
 
-export const withRedis = (
+export const withRedisClient = (
     {
         url = process.env.REDIS_URL,
-    }: withRedis.Props
+    }: withRedisClient.Props
 ) => {
     if (!url) {
         throw new Error(`No env.REDIS_URL provided!`);
     }
-    return new Redis(url);
+    return new Redis(url, {
+        lazyConnect: true,
+    });
 };

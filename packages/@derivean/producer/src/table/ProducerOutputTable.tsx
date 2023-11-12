@@ -140,13 +140,12 @@ export const ProducerOutputTable: FC<ProducerOutputTable.Props> = (
                         />)}
                         {!entities.length && <Text
                             fw={"bold"}
-                            c={"red.5"}
+                            c={"gray.6"}
                         >
-                            {t()`Resource without producers`}
+                            {t()`Resource without consumers`}
                         </Text>}
                     </NativeBreadcrumbs>}
                 />,
-
             },
             amount:     {
                 title:  t()`Produced amount`,
@@ -164,8 +163,7 @@ export const ProducerOutputTable: FC<ProducerOutputTable.Props> = (
                 />,
                 width:  14,
             },
-        }
-        }
+        }}
         {...props}
     />;
 };
