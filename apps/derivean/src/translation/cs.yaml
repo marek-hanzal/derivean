@@ -430,6 +430,9 @@ f9168b806190baf8b73505cdf6303ef25070b37c0fbaec0a29e69551:
 5daa89ffc985bced5fd67fa69e137e139d6b5b43f73481605ca6351c:
   ref: Producer output
   value: Výstup
+0d9133665b16468ae3e7eddab0e4ddf24422205d3d208881c81ce025:
+  ref: Building without requirements
+  value: Tato budova nemá žádné požadavky
 98bde802ea4ef18b74ed180278091dd1f828cb1bcda7053e87e71cf7:
   ref: Building name
   value: Název budovy
