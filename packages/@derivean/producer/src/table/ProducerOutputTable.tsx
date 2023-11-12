@@ -130,7 +130,7 @@ export const ProducerOutputTable: FC<ProducerOutputTable.Props> = (
                             WithSuccess={({entity}) => <ButtonLink
                                 icon={<ProducerIcon/>}
                                 href={{
-                                    href:  "/manager/producer/[id]",
+                                    href: "/manager/producer/[id]/pipeline",
                                     query: {
                                         id: entity.id,
                                     },
