@@ -28,8 +28,7 @@
 		"cleanup:lib": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
 	"dependencies": {
-		"@dagrejs/dagre": "^1.0.4",
-		"beautiful-react-diagrams": "^0.5.1"
+		"react-graph-vis": "^1.0.7"
 	},
 	"devDependencies": {
 		"@use-pico/esbuild": "^2.0.4",

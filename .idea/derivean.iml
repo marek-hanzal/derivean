@@ -217,6 +217,8 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/i18n-server/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/redis/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/redis/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/diagram/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/diagram/lib" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

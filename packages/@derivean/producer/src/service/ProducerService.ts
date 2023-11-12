@@ -2,7 +2,7 @@ import {
     type IInventoryService,
     withInventoryService
 }                                     from "@derivean/inventory";
-import {IGraph}                       from "@use-pico/diagram";
+import {type GraphSchema}             from "@use-pico/diagram";
 import {withDullSchema}               from "@use-pico/dull-stuff";
 import {DateTime}                     from "@use-pico/i18n";
 import {uniqueOf}                     from "@use-pico/utils";
@@ -168,21 +168,21 @@ export class ProducerService implements IProducerService {
         };
     }
 
-    public async graph(producerId: string): Promise<IGraph> {
+    public async graph(producerId: string): Promise<GraphSchema.Type> {
         const dependencies = (await this.dependencies(producerId))
             .concat(
                 await this.producerRepository.withQuery.fetchOrThrow({
                     where: {id: producerId},
                 })
             );
-        const links: IGraph["links"] = [];
+        const edges: GraphSchema.Type["edges"] = [];
 
         for (const producer of dependencies) {
             for (const input of await this.producerInputRepository.withQuery.select(["ProducerInput.resourceId"]).where("producerId", "=", producer.id).execute()) {
                 for (const output of await this.producerOutputRepository.withQuery.select(["ProducerOutput.producerId"]).where("resourceId", "=", input.resourceId).execute()) {
-                    links.push({
-                        input:  producer.id,
-                        output: output.producerId,
+                    edges.push({
+                        to:   producer.id,
+                        from: output.producerId,
                     });
                 }
             }
@@ -190,10 +190,11 @@ export class ProducerService implements IProducerService {
 
         return {
             nodes: dependencies.map(producer => ({
-                id:      producer.id,
-                content: producer.name,
+                id:    producer.id,
+                label: producer.name,
+                color: producer.id === producerId ? "#FFF" : "#DDD",
             })),
-            links,
+            edges,
         };
     }
 }

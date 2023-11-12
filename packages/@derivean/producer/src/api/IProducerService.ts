@@ -1,4 +1,4 @@
-import {type IGraph}               from "@use-pico/diagram";
+import {type GraphSchema}          from "@use-pico/diagram";
 import {withDullSchema}            from "@use-pico/dull-stuff";
 import {type ProducerSchema}       from "../schema/ProducerSchema";
 import {type ProductionTimeSchema} from "../schema/ProductionTimeSchema";
@@ -31,5 +31,5 @@ export interface IProducerService {
      */
     dependencies(producerId: string, stack?: string[]): Promise<withDullSchema.Infer.Entity<ProducerSchema>[]>;
 
-    graph(producerId: string): Promise<IGraph>;
+    graph(producerId: string): Promise<GraphSchema.Type>;
 }

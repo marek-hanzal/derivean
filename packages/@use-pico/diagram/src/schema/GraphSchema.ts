@@ -2,12 +2,12 @@ import {
     type PicoSchema,
     schema
 }                   from "@use-pico/schema";
-import {LinkSchema} from "./LinkSchema";
+import {EdgeSchema} from "./EdgeSchema";
 import {NodeSchema} from "./NodeSchema";
 
 export const GraphSchema = schema(z => z.object({
     nodes: z.array(NodeSchema),
-    links: z.array(LinkSchema),
+    edges: z.array(EdgeSchema),
 }));
 export type GraphSchema = typeof GraphSchema;
 export namespace GraphSchema {

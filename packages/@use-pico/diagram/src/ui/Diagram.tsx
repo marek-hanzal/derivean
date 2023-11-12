@@ -1,36 +1,86 @@
 "use client";
 
-import {
-    createSchema,
-    default as CoolDiagram
-} from "beautiful-react-diagrams";
-
-import {
-    type FC,
-    useMemo
-}                    from "react";
-import {type IGraph} from "../api/IGraph";
-import {withLayout}  from "../layout/withLayout";
+import {type FC}     from "react";
+// @ts-ignore
+import Graph         from "react-graph-vis";
+import {GraphSchema} from "../schema/GraphSchema";
 
 export namespace Diagram {
     export interface Props {
-        graph: IGraph;
+        graph: GraphSchema.Type;
     }
 }
 
 export const Diagram: FC<Diagram.Props> = (
     {
-        graph,
+        graph: {
+                   nodes,
+                   edges
+               }
     }
 ) => {
-    const schema = useMemo(() => createSchema(withLayout(graph)), [JSON.stringify(graph)]);
-    console.log(schema);
-
-    return (
-        <div style={{height: "22.5rem"}}>
-            <CoolDiagram
-                schema={schema}
-            />
-        </div>
-    );
+    return <Graph
+        style={{
+            border:    "1px solid #DDD",
+            boxShadow: "1px 6px 10px #DDD",
+        }}
+        graph={{
+            nodes: nodes.map(node => ({
+                ...node,
+                margin: {
+                    top:    8,
+                    bottom: 8,
+                    left:   12,
+                    right:  12,
+                },
+            })),
+            edges,
+        }}
+        options={{
+            edges:       {
+                color:  "#333",
+                shadow: {
+                    enabled: true,
+                },
+                smooth: {
+                    enabled: true,
+                    type:    "diagonalCross",
+                },
+            },
+            height:      "400px",
+            interaction: {
+                hover:       true,
+                multiselect: true,
+            },
+            layout:      {
+                hierarchical: {
+                    blockShifting:        true,
+                    direction:            "LR",
+                    edgeMinimization:     true,
+                    enabled:              true,
+                    levelSeparation:      200,
+                    nodeSpacing:          200,
+                    parentCentralization: true,
+                    sortMethod:           "directed",
+                },
+                randomSeed:   0,
+            },
+            nodes:       {
+                fixed:           true,
+                font:            {
+                    size: 18,
+                },
+                shadow:          {
+                    color:   "#BBB",
+                    enabled: true,
+                    size:    8,
+                },
+                shape:           "box",
+                shapeProperties: {
+                    borderRadius: 0,
+                },
+            },
+            physics:     false,
+        }}
+    />;
 };

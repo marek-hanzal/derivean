@@ -73,7 +73,5 @@ export default async function Index({params: {id}}: Index.Props) {
         <ProducerGraph
             producerId={producer.id}
         />
-
-        <h1>Show required buildings (resources) to run this producer + graph + production time</h1>
     </Page>;
 }
