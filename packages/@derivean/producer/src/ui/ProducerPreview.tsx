@@ -20,7 +20,7 @@ export const ProducerPreview: FC<ProducerPreview.Props> = (
     }
 ) => {
     return <Preview
-        cols={4}
+        cols={3}
         items={[
             {
                 label: t()`Producer name`,

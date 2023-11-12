@@ -1,12 +1,13 @@
 "use client";
 
-import {Diagram}   from "@use-pico/diagram";
+import {Diagram}       from "@use-pico/diagram";
 import {
     QueryResult,
     useQueryEx
-}                  from "@use-pico/query";
-import {type FC}   from "react";
-import {withGraph} from "../query/withGraph";
+}                      from "@use-pico/query";
+import {SkeletonBlock} from "@use-pico/ui";
+import {type FC}       from "react";
+import {withGraph}     from "../query/withGraph";
 
 export namespace ProducerGraph {
     export interface Props {
@@ -27,6 +28,7 @@ export const ProducerGraph: FC<ProducerGraph.Props> = (
     });
     return <QueryResult
         result={result}
+        WithLoading={() => <SkeletonBlock lines={12}/>}
         WithSuccess={({entity}) => <Diagram
             graph={entity}
         />}

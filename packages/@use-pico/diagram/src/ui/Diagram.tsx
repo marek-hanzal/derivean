@@ -22,7 +22,7 @@ export const Diagram: FC<Diagram.Props> = (
     return <Graph
         style={{
             border:    "1px solid #DDD",
-            boxShadow: "1px 6px 10px #DDD",
+            boxShadow: "4px 4px 6px #DDD",
         }}
         graph={{
             nodes: nodes.map(node => ({
@@ -68,7 +68,7 @@ export const Diagram: FC<Diagram.Props> = (
             nodes:       {
                 fixed:           true,
                 font:            {
-                    size: 18,
+                    size: 32,
                 },
                 shadow:          {
                     color:   "#BBB",

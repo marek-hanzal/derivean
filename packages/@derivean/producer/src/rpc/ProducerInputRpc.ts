@@ -1,5 +1,6 @@
 import {withDullRpc}             from "@use-pico/dull-stuff";
 import {withDependenciesQuery}   from "../query/withDependenciesQuery";
+import {withGraph}               from "../query/withGraph";
 import {withProductionTimeQuery} from "../query/withProductionTimeQuery";
 import {ProducerInputSchema}     from "../schema/ProducerInputSchema";
 
@@ -8,6 +9,7 @@ export const ProducerInputRpc = withDullRpc({
     schema:      ProducerInputSchema,
     invalidator: [
         withDependenciesQuery.key,
+        withGraph.key,
         withProductionTimeQuery.key,
     ],
 });

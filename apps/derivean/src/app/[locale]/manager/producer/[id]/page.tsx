@@ -14,6 +14,8 @@ import {
 import {
     Box,
     Breadcrumbs,
+    Grid,
+    GridCol,
     HomeIcon,
     ListIcon,
     Page
@@ -65,13 +67,17 @@ export default async function Index({params: {id}}: Index.Props) {
                 producerId={producer.id}
             />
         </Box>
-
-        <ProducerPreview
-            producer={producer}
-        />
-
-        <ProducerGraph
-            producerId={producer.id}
-        />
+        <Grid pb={"md"}>
+            <GridCol span={6}>
+                <ProducerPreview
+                    producer={producer}
+                />
+            </GridCol>
+            <GridCol span={6}>
+                <ProducerGraph
+                    producerId={producer.id}
+                />
+            </GridCol>
+        </Grid>
     </Page>;
 }
