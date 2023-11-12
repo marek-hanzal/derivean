@@ -40,20 +40,22 @@ export const ManagerMenu: FC<ManagerMenu.Props> = () => {
             },
             {
                 type:  "group",
+                label: t()`Producer management`,
+                icon:  <ProducerIcon/>,
                 items: [
                     {
+                        type: "link",
                         href:  "/manager/producer/list",
                         label: t()`Producer list`,
                         icon:  <ListIcon/>,
                     },
                     {
+                        type: "link",
                         href:  "/manager/producer/overview",
                         label: t()`Producer overview`,
                         icon:  <IconGraph/>,
                     },
                 ],
-                label: t()`Producer management`,
-                icon:  <ProducerIcon/>,
             },
             {
                 type:  "link",

@@ -179,7 +179,10 @@ export class ProducerService implements IProducerService {
 
         for (const producer of dependencies) {
             for (const input of await this.producerInputRepository.withQuery.select(["ProducerInput.resourceId"]).where("producerId", "=", producer.id).execute()) {
-                for (const output of await this.producerOutputRepository.withQuery.select(["ProducerOutput.producerId", "Resource.name"]).innerJoin("Resource", "Resource.id", "ProducerOutput.resourceId").where("resourceId", "=", input.resourceId).execute()) {
+                /**
+                 * @TODO fix select() method, add typing, so it would accept all tables
+                 */
+                for (const output of await this.producerOutputRepository.withQuery.select(["ProducerOutput.producerId", "Resource.name" as any]).innerJoin("Resource", "Resource.id", "ProducerOutput.resourceId" as any).where("resourceId", "=", input.resourceId).execute()) {
                     edges.push({
                         to:    producer.id,
                         from:  output.producerId,
