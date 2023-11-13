@@ -150,6 +150,10 @@ export const Table = <
         refetchInterval: refresh,
     });
 
+    const Wrap = (scrollWidth ? ({children}) => <CoolTable.ScrollContainer
+        minWidth={scrollWidth || 1200}
+    >{children}</CoolTable.ScrollContainer> : ({children}) => children) as const;
+
     return <LinkLockProvider
         isLock={withLinkLock}
     >
@@ -176,9 +180,7 @@ export const Table = <
             items={result.data}
             columns={$columns}
         />
-        <CoolTable.ScrollContainer
-            minWidth={scrollWidth || 1200}
-        >
+        <Wrap>
             <CoolTable
                 striped
                 highlightOnHover
@@ -217,7 +219,7 @@ export const Table = <
                     WithFooter={WithFooter}
                 />
             </CoolTable>
-        </CoolTable.ScrollContainer>
+        </Wrap>
         <TableCountResult
             withQueryStore={withQueryStore}
             withSourceQuery={withSourceQuery}
