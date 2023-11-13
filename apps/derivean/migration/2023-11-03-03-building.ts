@@ -6,6 +6,9 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addColumn("name", "varchar(64)", col =>
             col.notNull().unique()
         )
+        .addColumn("construction", "float4", col =>
+            col.notNull()
+        )
         .addColumn("producerId", "uuid", col =>
             col.references("Producer.id").onDelete("cascade").notNull()
         )
@@ -28,20 +31,6 @@ export async function up(db: Kysely<any>): Promise<void> {
                 producerId: (await db.insertInto("Producer").values({
                     name: "quarry",
                     time: 15,
-                }).returning("id").executeTakeFirstOrThrow()).id,
-            },
-            {
-                name:       "granary",
-                producerId: (await db.insertInto("Producer").values({
-                    name: "noop",
-                    time: 0,
-                }).returning("id").executeTakeFirstOrThrow()).id,
-            },
-            {
-                name:       "storage",
-                producerId: (await db.insertInto("Producer").values({
-                    name: "noop",
-                    time: 0,
                 }).returning("id").executeTakeFirstOrThrow()).id,
             },
             {
@@ -364,6 +353,9 @@ export async function up(db: Kysely<any>): Promise<void> {
     await withUuidTable("BuildingInstance", db)
         .addColumn("buildingId", "uuid", col =>
             col.references("Building.id").onDelete("cascade").notNull()
+        )
+        .addColumn("created", "datetime", col =>
+            col.notNull()
         )
         .addColumn("inventoryId", "uuid", col =>
             col.references("Inventory.id").onDelete("cascade").notNull()

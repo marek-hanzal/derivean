@@ -13,5 +13,6 @@ export default function Index() {
             header: t()`Game overview`,
         }}
     >
+        <h1>[Kingsomds]</h1>
     </Page>;
 }
