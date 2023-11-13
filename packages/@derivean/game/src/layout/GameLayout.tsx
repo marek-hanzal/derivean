@@ -14,6 +14,7 @@ export namespace GameLayout {
 export const GameLayout: FC<GameLayout.Props> = props => {
     return <>
         <AppLayout
+            homeUrl={"/game"}
             right={<SignOutButton/>}
             {...props}
         />

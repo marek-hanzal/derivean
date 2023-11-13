@@ -12,6 +12,7 @@ import {
     withRedisClient
 }                               from "@use-pico/redis";
 import {withServerContainer}    from "@use-pico/server";
+import {withContext}            from "./withContext";
 
 const register = [
     withBuildingContainer,
@@ -27,3 +28,5 @@ withClient.factory(container, () => withKysely({}));
 withRedis.factory(container, () => withRedisClient({}));
 
 register.forEach(register => register(container));
+
+withContext(container);

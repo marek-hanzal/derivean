@@ -18,6 +18,7 @@ import {
 import {
     type CSSProperties,
     type FC,
+    PropsWithChildren,
     type ReactNode
 }                                from "react";
 import {type ITableColumns}      from "../api/ITableColumns";
@@ -150,9 +151,9 @@ export const Table = <
         refetchInterval: refresh,
     });
 
-    const Wrap = (scrollWidth ? ({children}) => <CoolTable.ScrollContainer
+    const Wrap: FC<PropsWithChildren> = (scrollWidth ? ({children}) => <CoolTable.ScrollContainer
         minWidth={scrollWidth || 1200}
-    >{children}</CoolTable.ScrollContainer> : ({children}) => children) as const;
+    >{children}</CoolTable.ScrollContainer> : ({children}) => children);
 
     return <LinkLockProvider
         isLock={withLinkLock}

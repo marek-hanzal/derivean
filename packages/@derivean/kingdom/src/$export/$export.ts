@@ -1,4 +1,5 @@
 export * from "./KingdomInline";
+export * from "./KingdomMenu";
 export * from "./KingdomPreview";
 export * from "./KingdomQueryStore";
 export * from "./KingdomRpc";
