@@ -87,6 +87,7 @@ export const ItemTable: FC<ItemTable.Props> = (
                                item,
                                modalId
                            }) => <ItemUpsertForm
+                resourceTypeId={resourceTypeId}
                 withAutoClose={[modalId]}
                 entity={item}
             />,

@@ -546,7 +546,7 @@ bab1dfa013db089d1bf67008490c0ebb30e7dadf392929a861689826:
   value: Požadavek budovy byl úspěšně odstraněn
 69b160bba6899459b9c74f3d3c9b9a6a2ad8878ae5319b0cf6feeefe:
   ref: Event name
-  value: Event name
+  value: Název
 ba026ebc37593ee2930e7e59eb1abce6833953035a53c0836a6163a0:
   ref: Event pipeline time
   value: Event pipeline time
@@ -561,49 +561,88 @@ d8b28cee3a65ee2a368f025d1d3028d8e9f26fe1ac4d70d4fe7d06a2:
   value: Event output
 41ece34d16465b23c5a904d1cdf4676e10151591f1fa5648a182e7e5:
   ref: Update event (label)
-  value: Update event (label)
+  value: Aktualizovat událost
 ccc92c321f409d1b67ba4128a10c14b108ec547352f6d87fceee4150:
   ref: Create event (label)
-  value: Create event (label)
+  value: Vytvořit událost
 fa40815a9c846c1739335cf8404b4461781a368fe2a0dd930bd1376d:
   ref: Event updated
-  value: Event updated
+  value: Událost byla úspěšně aktualizována
 8a1fa329a34c6a3e41c7067e26062c6dd3a427062e10b067297af765:
   ref: Event created
-  value: Event created
+  value: Událost byla úspěšně vytvořena
 37c8b3ddc42d3ffca417aeb812209741279abd0fd918738ee085f6c0:
   ref: Event name (placeholder)
-  value: Event name (placeholder)
+  value: Zadejte prosím název události
+8e035e739539a65e8a12b4fdfa06e6651d935f3961ced9f74f383b0a:
+  ref: Event type
+  value: Typ události
+5edaabf8de9ebaa3329b7eb2efe51b62587a83f5f9bc406848981b96:
+  ref: Event type (placeholder)
+  value: Vyberte prosím typ události
+14f4963bccc577cf3d5e872ccbc9c4809cf99a602bf561da4b94f0d2:
+  ref: Event type [EventItem]
+  value: Změna inventáře (EventItem)
+44ef91e3c0760f64a13d6769815e3d3144b4f4666b986dc123ef687e:
+  ref: Event from (label)
+  value: Počátek
+894b8901e90f42942837d845edff7fb77e16409c1a3bb52d2d0cf7ef:
+  ref: Event from (placeholder)
+  value: Vyberte počátek události
+9d31898559b745da631e944345894e65fd1d4d82cbf2af22b51469d4:
+  ref: Event to (label)
+  value: Konec
+18cb536d15e6641d02394cd063980bdd32f0b15a10bc4918e5171634:
+  ref: Event to (placeholder)
+  value: Vyberte konec události
+1312d6c471178fc8dce0c93bf3555fb3eb5fce2cac44d8efb7e464a0:
+  ref: Event duration
+  value: Trvání události (dny)
+a0a3a82817e913af6a1a211e4f559635d4778f95f0042fcc97ade56b:
+  ref: Event instant
+  value: Instantní událost
+48057193c555bcfe3583631b417a0609ad7c27cae1990fe6dc6d8876:
+  ref: Event (fieldset)
+  value: Obecné
+6c8c85d1b6155898c2526f0e8d31fa92330d8f269ef62112cf0335d6:
+  ref: Event duration (fieldset)
+  value: Trvání události
 bcd9a7317f657479f93c850ef97a32ed0929219d8dd511fe7c0c00a2:
   ref: Total count of events
-  value: Total count of events
-66c91d97f1c14ad6c66cde997c6858323cef2ef3c08f8e3a9e9d34f1:
-  ref: Create new event
-  value: Create new event
+  value: Počet událostí
+fc58e8e8e08429c8fd4e1533cea52688b4da2fd34f57245479eb0708:
+  ref: Create event (modal)
+  value: Nová událost
 80b66dfdef399b1b3bbfc0833f0e35dcfc543026eb6b39232d9fcaab:
   ref: Create event
-  value: Create event
+  value: Vytvořit událost
 2cf329b554317db61b1e965727b56a4d105f57a93375553ccd2b2576:
   ref: Update event
-  value: Update event
+  value: Aktualizovat událost
 a3672593f121b57bfb00ab5a9c8e8c54e1c5d5dc74980c2fa92080fa:
   ref: Delete event
-  value: Delete event
+  value: Odstranit událost
 2ebe1651029bae85860b4ab047bf3697102a2aed19505ae78f5fac7c:
   ref: Delete event (modal)
-  value: Delete event (modal)
+  value: Odstranit událost?
 8cb3c328618e01c6c45916d304d46cb0f0be9cd86d94336ce4e55bf7:
   ref: Do you really want to delete selected event?
-  value: Do you really want to delete selected event?
+  value: |
+    <p>
+      Opravdu si přejete odstranit vybranou událost?
+    </p>
+    <p>
+      Tato akce bude mít <i>mírný dopad</i> na hratelnost.
+    </p>
 8ebc63848e27267b78a581ae5258397a96a09b5c6874084026ccedfe:
   ref: Event has been successfully removed
-  value: Event has been successfully removed
+  value: Událost byla úspěšně odstraněna
 21cd6111300cb9a9f56c02a420102fdf0184b83b261da40943e2304b:
   ref: Event start
-  value: Event start
+  value: Začátek
 123380aa40822f8a3676fd98eb3399eb1bbbedb080ff7705f4c42f48:
   ref: Event end
-  value: Event end
+  value: Konec
 18235d3b136a5b17619a8270b61349ba7666f0250fe7a6f904b423dd:
   ref: Kingdom overview (label)
   value: Přehled království
@@ -716,6 +755,9 @@ b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
 8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
   ref: Game management
   value: Správa hry
+b26b6df0874ba275fe15bfc9a827578dc878edd58036f0390a090159:
+  ref: Event list
+  value: Seznam událostí
 fc150b71e1abae2f5a01e5b04716f51d045dc06d150ec1960dcf8ebb:
   ref: Item type - item list
   value: Seznam předmětů pro typ [{name}]

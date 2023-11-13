@@ -1,9 +1,16 @@
 import {EventIcon} from "@derivean/ui";
-import {TextInput} from "@use-pico/form";
+import {
+    BoolInput,
+    DateInput,
+    NumberInput,
+    SelectInput,
+    TextInput
+}                  from "@use-pico/form";
 import {
     t,
     tx
 }                  from "@use-pico/i18n";
+import {Fieldset}  from "@use-pico/ui";
 import {
     type ComponentProps,
     type FC
@@ -30,9 +37,43 @@ export const EventUpsertForm: FC<EventUpsertForm.Props> = (
         }}
         icon={<EventIcon/>}
         inputs={{
-            name: props => <TextInput
+            name:     props => <TextInput
                 label={t()`Event name`}
                 placeholder={tx()`Event name (placeholder)`}
+                {...props}
+            />,
+            type:     props => <SelectInput
+                label={t()`Event type`}
+                placeholder={tx()`Event type (placeholder)`}
+                data={[
+                    {
+                        label: tx()`Event type [EventItem]`,
+                        value: "EventItem",
+                    }
+                ]}
+                {...props}
+            />,
+            from:     props => <DateInput
+                text={{
+                    label:       t()`Event from (label)`,
+                    placeholder: t()`Event from (placeholder)`,
+                }}
+                {...props}
+            />,
+            to:       props => <DateInput
+                text={{
+                    label:       t()`Event to (label)`,
+                    placeholder: t()`Event to (placeholder)`,
+                }}
+                {...props}
+            />,
+            duration: props => <NumberInput
+                label={t()`Event duration`}
+                min={0}
+                {...props}
+            />,
+            instant:  props => <BoolInput
+                label={t()`Event instant`}
                 {...props}
             />,
         }}
@@ -50,10 +91,28 @@ export const EventUpsertForm: FC<EventUpsertForm.Props> = (
             create: values,
         })}
         defaultValues={{
-            name: "",
+            name:     "",
+            type:     "",
+            duration: NaN,
+            from:     "",
+            to:       "",
+            userId:   "",
         }}
         Render={({Input}) => <>
-            <Input name={"name"}/>
+            <Fieldset
+                legend={t()`Event (fieldset)`}
+            >
+                <Input name={"name"}/>
+                <Input name={"type"}/>
+                <Input name={"instant"}/>
+            </Fieldset>
+            <Fieldset
+                legend={t()`Event duration (fieldset)`}
+            >
+                <Input name={"duration"}/>
+                <Input name={"from"}/>
+                <Input name={"to"}/>
+            </Fieldset>
         </>}
         {...props}
     />;

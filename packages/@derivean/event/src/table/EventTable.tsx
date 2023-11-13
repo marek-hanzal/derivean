@@ -2,10 +2,14 @@
 
 import {EventIcon}       from "@derivean/ui";
 import {
-    DateTimeInline,
-    t
+    DateInline,
+    t,
+    td
 }                        from "@use-pico/i18n";
-import {ButtonLink}      from "@use-pico/ui";
+import {
+    BoolInline,
+    ButtonLink
+}                        from "@use-pico/ui";
 import {
     type ComponentProps,
     type FC
@@ -13,12 +17,16 @@ import {
 import {EventUpsertForm} from "../form/EventUpsertForm";
 import {EventInline}     from "../inline/EventInline";
 import {EventRpc}        from "../rpc/EventRpc";
+import {EventDuration}   from "../ui/EventDuration";
 import {EventUI}         from "../ui/EventUI";
 
 export namespace EventTable {
     export type Columns =
         | "name"
+        | "instant"
+        | "duration"
         | "from"
+        | "type"
         | "to";
 
     export type Props = Omit<
@@ -37,7 +45,7 @@ export const EventTable: FC<EventTable.Props> = props => {
         tableActionProps={{
             text:       {
                 create: {
-                    title: t()`Create new event`,
+                    title: t()`Create event (modal)`,
                     label: t()`Create event`,
                 },
             },
@@ -73,7 +81,7 @@ export const EventTable: FC<EventTable.Props> = props => {
             />,
         }}
         columns={{
-            name: {
+            name:     {
                 title:  t()`Event name`,
                 render: ({item}) => <ButtonLink
                     icon={<EventIcon/>}
@@ -86,13 +94,30 @@ export const EventTable: FC<EventTable.Props> = props => {
                     label={<EventInline entity={item}/>}
                 />,
             },
-            from: {
-                title:  t()`Event start`,
-                render: ({item}) => item.from ? <DateTimeInline date={item.from}/> : "-",
+            instant:  {
+                title:  t()`Event instant`,
+                render: ({item}) => <BoolInline bool={item.instant}/>,
+                width:  14,
             },
-            to:   {
+            type:     {
+                title:  t()`Event type`,
+                render: ({item}) => td()(`Event type [${item.type}]`),
+                width:  14,
+            },
+            duration: {
+                title:  t()`Event duration`,
+                render: ({item}) => <EventDuration duration={item.duration}/>,
+                width:  14,
+            },
+            from:     {
+                title:  t()`Event start`,
+                render: ({item}) => item.from ? <DateInline date={item.from}/> : "-",
+                width:  14,
+            },
+            to:       {
                 title:  t()`Event end`,
-                render: ({item}) => item.to ? <DateTimeInline date={item.to}/> : "-",
+                render: ({item}) => item.to ? <DateInline date={item.to}/> : "-",
+                width:  14,
             },
         }}
         {...props}

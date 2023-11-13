@@ -148,7 +148,7 @@ export type Database =
              */
             to?: string;
             /**
-             * Optional duration of an event; used to compute event instance from/to.
+             * Optional duration (in days) of an event; used to compute event instance from/to.
              */
             duration?: number;
             /**

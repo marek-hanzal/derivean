@@ -9,7 +9,6 @@ import {
     withClient
 }                           from "@use-pico/orm";
 import {AbstractRepository} from "@use-pico/repository";
-import {type PicoSchema}    from "@use-pico/schema";
 import {EventSchema}        from "../schema/EventSchema";
 
 export class EventRepository extends AbstractRepository<
@@ -32,21 +31,13 @@ export class EventRepository extends AbstractRepository<
             "Event",
         );
         this.defaultOrderBy = {
+            from: "asc",
             name: "asc",
         };
         this.matchOf = {
-            name:       "name",
-            producerId: "producerId",
-        };
-    }
-
-    public async toCreate(create: NonNullable<PicoSchema.Output<withDullSchema.Infer.RepositorySchema<EventSchema>["mutation"]["shape"]["create"]>>): Promise<Omit<withDullSchema.Infer.Entity<EventSchema>, "id">> {
-        return {
-            ...create,
-            producerId: create.producerId || (await this.producerRepository.withMutation.create({
-                name: create.name,
-                time: 30,
-            })).id,
+            name:   "name",
+            type:   "type",
+            userId: "userId",
         };
     }
 }
