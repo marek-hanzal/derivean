@@ -186,6 +186,13 @@ export type Database =
             userId: string;
             from?: string;
             to?: string;
+            /**
+             * Used to properly show UI - when an event is instant, user just confirms it.
+             */
+            instant?: boolean;
+            /**
+             * Committed events are already applied.
+             */
             commit?: boolean;
         };
     }

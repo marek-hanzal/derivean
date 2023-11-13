@@ -40,6 +40,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         )
         .addColumn("from", "timestamp")
         .addColumn("to", "timestamp")
+        .addColumn("instant", "boolean")
         .addColumn("commit", "boolean")
         .execute();
 }
