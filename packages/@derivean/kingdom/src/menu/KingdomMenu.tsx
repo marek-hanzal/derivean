@@ -1,7 +1,11 @@
-import {IconHome2} from "@tabler/icons-react";
-import {t}         from "@use-pico/i18n";
-import {Menu}      from "@use-pico/ui";
-import {type FC}   from "react";
+import {InventoryIcon} from "@derivean/ui";
+import {IconHome2}     from "@tabler/icons-react";
+import {t}             from "@use-pico/i18n";
+import {
+    MainMenu,
+    Menu
+}                      from "@use-pico/ui";
+import {type FC}       from "react";
 
 export namespace KingdomMenu {
     export interface Props extends Menu.PropsEx {
@@ -17,15 +21,22 @@ export const KingdomMenu: FC<KingdomMenu.Props> = (
 ) => {
     const query = {kingdomId};
 
-    return <Menu
+    return <MainMenu
         items={[
             {
                 type:  "link",
-                label: t()`Overview`,
+                label: t()`Kingdom overview (label)`,
                 icon:  <IconHome2/>,
-                href:  `/game/kingdom/[kingdomId]`,
+                href:  `/kingdom/[kingdomId]`,
                 query,
-            }
+            },
+            {
+                type:  "link",
+                label: t()`Kingdom Inventory (label)`,
+                icon:  <InventoryIcon/>,
+                href:  `/kingdom/[kingdomId]/inventory`,
+                query,
+            },
         ]}
         {...props}
     />;

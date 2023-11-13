@@ -530,9 +530,12 @@ bab1dfa013db089d1bf67008490c0ebb30e7dadf392929a861689826:
 828c50cc71db3063fa6ba070ad4592d86f2fcf397e891a33e041d30b:
   ref: Building requirement has been successfully removed
   value: Požadavek budovy byl úspěšně odstraněn
-cc8fbdb9d7a01c996c607174aec16985e3583279f6cd61656a06a60c:
-  ref: Overview
-  value: Overview
+18235d3b136a5b17619a8270b61349ba7666f0250fe7a6f904b423dd:
+  ref: Kingdom overview (label)
+  value: Přehled království
+fec7f2879f3bb84fff1d52f69c59be1e6963e4d5b9f4e0ae9d6a171e:
+  ref: Kingdom Inventory (label)
+  value: Inventář
 a1d8caa2e759961438a7eadb24acff9c90d4a521a9ab865e21e53b11:
   ref: Kingdom name
   value: Jméno království
@@ -591,9 +594,15 @@ e8cf9d9c024947c1f7da74499347a95dffb9737b2668a1e7c9c838b2:
 2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
   ref: Game overview
   value: Přehled hry
+0a929e8d46db182c39f5605224af1457992d39743e7692fb2d143162:
+  ref: Selected kingdom
+  value: Království {name}
 a1fb8c003a02e2eac7ce1b756d67aaeb6ad344d5be95d80c11fc6705:
   ref: Kingdom overview
-  value: Přehled království {name}
+  value: Přehled
+adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
+  ref: Kingdom inventory
+  value: Inventář
 7401742653cacefb254e91e23a79edaeb388a2a423cb1181c35f87ac:
   ref: Building detail (label)
   value: Detail

@@ -79,9 +79,9 @@ export const KingdomTable: FC<KingdomTable.Props> = props => {
                 render: ({item}) => <ButtonLink
                     icon={<KingdomIcon/>}
                     href={{
-                        href:  "/game/kingdom/[id]",
+                        href:  "/kingdom/[kingdomId]",
                         query: {
-                            id: item.id,
+                            kingdomId: item.id,
                         },
                     }}
                     label={<KingdomInline entity={item}/>}
