@@ -34,6 +34,10 @@ export interface IRepository<
 
     get withMutation(): IWithMutation<TDatabase, TSchema, TTable>;
 
+    get(id: string): Promise<PicoSchema.Output<TSchema["entity"]> | undefined>;
+
+    getOrThrow(id: string): Promise<PicoSchema.Output<TSchema["entity"]>>;
+
     toCreate(create: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["create"]>>): Promise<Omit<PicoSchema.Output<TSchema["entity"]>, "id">>;
 
     toUpdate(update: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["update"]>>["update"]): Promise<Partial<PicoSchema.Output<TSchema["entity"]>>>;

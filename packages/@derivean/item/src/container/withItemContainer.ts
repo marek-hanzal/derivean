@@ -5,7 +5,7 @@ import {ItemTypeRepository}     from "../repository/ItemTypeRepository";
 import {ItemRpc}                from "../rpc/ItemRpc";
 import {ItemTypeRpc}            from "../rpc/ItemTypeRpc";
 import {withItemRepository}     from "./withItemRepository";
-import {withItemTypeRepository} from "./withResourcTypeeRepository";
+import {withItemTypeRepository} from "./withItemTypeRepository";
 
 export const withItemContainer: IContainer.Register = container => {
     withRepositoryHandler({

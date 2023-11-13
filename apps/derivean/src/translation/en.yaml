@@ -172,6 +172,12 @@ ce356e54c4a55e0e89efe9e8ccaf0bae3ef14ba3242249b851b1d58c:
 71754fe139798fcf1444aa42fb05d406c2b1757316360d99268a469a:
   ref: Item type count
   value: Item type count
+80678159cfda9c6b8aa3431b829b579a9f55a3e5e2cbf374ddc2d049:
+  ref: No item types found
+  value: No item types found
+7d5ea0f9612b358caff3c6c4cfeef71c310ea136c47cf47157ad0727:
+  ref: There are no item types yet. They're needed to create items itself.
+  value: There are no item types yet. They're needed to create items itself.
 4f5a76c7b647a3d97faa9a7b32bebefc82c9d934ec7a7cdaa6291b77:
   ref: Create item type (modal)
   value: Create item type (modal)
@@ -229,9 +235,9 @@ a52367fba938c900739dd028e591c832cbf2cd7c8a192c32b9150aa1:
 5878a1b2dabcdee51cc977a557ae8a5947e63ddaeb55294e0593e545:
   ref: We're preparing item list for you...
   value: We're preparing item list for you...
-20722bafadd4bcab1fcfe7e8451720f8bf13e0a37836812f57c6a4cb:
-  ref: Create new item
-  value: Create new item
+308992071c9735a22bdd992a9f54364cd3b6899bf6c832d27405a248:
+  ref: Create item (modal)
+  value: Create item (modal)
 320b02d807b1e14ada2f77d63bb1c698b88815e8b04d2be8b0d98e13:
   ref: Create item
   value: Create item
@@ -496,6 +502,66 @@ bab1dfa013db089d1bf67008490c0ebb30e7dadf392929a861689826:
 828c50cc71db3063fa6ba070ad4592d86f2fcf397e891a33e041d30b:
   ref: Building requirement has been successfully removed
   value: Building requirement has been successfully removed
+69b160bba6899459b9c74f3d3c9b9a6a2ad8878ae5319b0cf6feeefe:
+  ref: Event name
+  value: Event name
+ba026ebc37593ee2930e7e59eb1abce6833953035a53c0836a6163a0:
+  ref: Event pipeline time
+  value: Event pipeline time
+aa128ec717ee9c589b30158e8c667f3db062ec99240bfdd60a9cec76:
+  ref: Event requirement (label)
+  value: Event requirement (label)
+5bafc4fb4006425d758540dd02d59d6268939678ee11ea3097284ab3:
+  ref: Event input
+  value: Event input
+d8b28cee3a65ee2a368f025d1d3028d8e9f26fe1ac4d70d4fe7d06a2:
+  ref: Event output
+  value: Event output
+41ece34d16465b23c5a904d1cdf4676e10151591f1fa5648a182e7e5:
+  ref: Update event (label)
+  value: Update event (label)
+ccc92c321f409d1b67ba4128a10c14b108ec547352f6d87fceee4150:
+  ref: Create event (label)
+  value: Create event (label)
+fa40815a9c846c1739335cf8404b4461781a368fe2a0dd930bd1376d:
+  ref: Event updated
+  value: Event updated
+8a1fa329a34c6a3e41c7067e26062c6dd3a427062e10b067297af765:
+  ref: Event created
+  value: Event created
+37c8b3ddc42d3ffca417aeb812209741279abd0fd918738ee085f6c0:
+  ref: Event name (placeholder)
+  value: Event name (placeholder)
+bcd9a7317f657479f93c850ef97a32ed0929219d8dd511fe7c0c00a2:
+  ref: Total count of events
+  value: Total count of events
+66c91d97f1c14ad6c66cde997c6858323cef2ef3c08f8e3a9e9d34f1:
+  ref: Create new event
+  value: Create new event
+80b66dfdef399b1b3bbfc0833f0e35dcfc543026eb6b39232d9fcaab:
+  ref: Create event
+  value: Create event
+2cf329b554317db61b1e965727b56a4d105f57a93375553ccd2b2576:
+  ref: Update event
+  value: Update event
+a3672593f121b57bfb00ab5a9c8e8c54e1c5d5dc74980c2fa92080fa:
+  ref: Delete event
+  value: Delete event
+2ebe1651029bae85860b4ab047bf3697102a2aed19505ae78f5fac7c:
+  ref: Delete event (modal)
+  value: Delete event (modal)
+8cb3c328618e01c6c45916d304d46cb0f0be9cd86d94336ce4e55bf7:
+  ref: Do you really want to delete selected event?
+  value: Do you really want to delete selected event?
+8ebc63848e27267b78a581ae5258397a96a09b5c6874084026ccedfe:
+  ref: Event has been successfully removed
+  value: Event has been successfully removed
+21cd6111300cb9a9f56c02a420102fdf0184b83b261da40943e2304b:
+  ref: Event start
+  value: Event start
+123380aa40822f8a3676fd98eb3399eb1bbbedb080ff7705f4c42f48:
+  ref: Event end
+  value: Event end
 18235d3b136a5b17619a8270b61349ba7666f0250fe7a6f904b423dd:
   ref: Kingdom overview (label)
   value: Kingdom overview (label)
@@ -553,6 +619,12 @@ e8cf9d9c024947c1f7da74499347a95dffb9737b2668a1e7c9c838b2:
 96c3ec3f0e533bda8a31b9b725113ac662b6e15180f779455ac7e2f4:
   ref: Kingdom has been successfully removed
   value: Kingdom has been successfully removed
+0a929e8d46db182c39f5605224af1457992d39743e7692fb2d143162:
+  ref: Selected kingdom
+  value: Selected kingdom
+a1fb8c003a02e2eac7ce1b756d67aaeb6ad344d5be95d80c11fc6705:
+  ref: Kingdom overview
+  value: Kingdom overview
 7401742653cacefb254e91e23a79edaeb388a2a423cb1181c35f87ac:
   ref: Building detail (label)
   value: Building detail (label)
@@ -595,15 +667,12 @@ b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
 8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
   ref: Game management
   value: Game management
+fc150b71e1abae2f5a01e5b04716f51d045dc06d150ec1960dcf8ebb:
+  ref: Item type - item list
+  value: Item type - item list
 2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
   ref: Game overview
   value: Game overview
-0a929e8d46db182c39f5605224af1457992d39743e7692fb2d143162:
-  ref: Selected kingdom
-  value: Selected kingdom
-a1fb8c003a02e2eac7ce1b756d67aaeb6ad344d5be95d80c11fc6705:
-  ref: Kingdom overview
-  value: Kingdom overview
 adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
   ref: Kingdom inventory
   value: Kingdom inventory

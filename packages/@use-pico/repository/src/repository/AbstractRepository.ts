@@ -69,6 +69,18 @@ export class AbstractRepository<
         ));
     }
 
+    public async get(id: string): Promise<PicoSchema.Output<TSchema["entity"]> | undefined> {
+        return this.withQuery.fetch({
+            where: {id},
+        });
+    }
+
+    public async getOrThrow(id: string): Promise<PicoSchema.Output<TSchema["entity"]>> {
+        return this.withQuery.fetchOrThrow({
+            where: {id},
+        });
+    }
+
     public async toCreate(create: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["create"]>>): Promise<Omit<PicoSchema.Output<TSchema["entity"]>, "id">> {
         return create;
     }

@@ -23,13 +23,22 @@ export namespace ItemTable {
         | "name"
         | "typeId";
 
-    export type Props = Omit<
-        ComponentProps<typeof ItemUI.Table<Columns>>,
-        "columns" | "name" | "icon" | "text"
-    >
+    export type Props =
+        Omit<
+            ComponentProps<typeof ItemUI.Table<Columns>>,
+            "columns" | "name" | "icon" | "text"
+        >
+        & {
+            resourceTypeId?: string;
+        }
 }
 
-export const ItemTable: FC<ItemTable.Props> = props => {
+export const ItemTable: FC<ItemTable.Props> = (
+    {
+        resourceTypeId,
+        ...props
+    }
+) => {
     return <ItemUI.Table
         text={{
             total: t()`Item count`,
@@ -45,11 +54,12 @@ export const ItemTable: FC<ItemTable.Props> = props => {
         tableActionProps={{
             text:       {
                 create: {
-                    title: t()`Create new item`,
+                    title: t()`Create item (modal)`,
                     label: t()`Create item`,
                 },
             },
             upsertForm: ({modalId}) => <ItemUpsertForm
+                resourceTypeId={resourceTypeId}
                 withAutoClose={[modalId]}
             />,
         }}

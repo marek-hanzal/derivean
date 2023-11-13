@@ -2,6 +2,7 @@
 
 import {ItemIcon}               from "@derivean/ui";
 import {t}                      from "@use-pico/i18n";
+import {ButtonLink}             from "@use-pico/ui";
 import {
     type ComponentProps,
     type FC
@@ -25,6 +26,12 @@ export const ItemTypeTable: FC<ItemTypeTable.Props> = props => {
     return <ItemTypeUI.Table
         text={{
             total: t()`Item type count`,
+            count: {
+                empty: {
+                    title:   t()`No item types found`,
+                    message: t()`There are no item types yet. They're needed to create items itself.`,
+                },
+            },
         }}
         name={"item.type"}
         icon={<ItemIcon/>}
@@ -70,7 +77,13 @@ export const ItemTypeTable: FC<ItemTypeTable.Props> = props => {
         columns={{
             name: {
                 title:  t()`Item type name`,
-                render: ({item}) => item.name,
+                render: ({item}) => <ButtonLink
+                    href={{
+                        href:  `/manager/item/type/[id]`,
+                        query: {id: item.id},
+                    }}
+                    label={item.name}
+                />,
             },
         }}
         {...props}

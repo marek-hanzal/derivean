@@ -12,12 +12,17 @@ import {ItemTypeSelect} from "../input/ItemTypeSelect";
 import {ItemUI}         from "../ui/ItemUI";
 
 export namespace ItemUpsertForm {
-    export type Props = Omit<ComponentProps<ItemUI["MutationForm"]>, "inputs" | "defaultValues" | "Render">;
+    export type Props =
+        Omit<ComponentProps<ItemUI["MutationForm"]>, "inputs" | "defaultValues" | "Render">
+        & {
+            resourceTypeId?: string;
+        }
 }
 
 export const ItemUpsertForm: FC<ItemUpsertForm.Props> = (
     {
         entity,
+        resourceTypeId,
         ...props
     }
 ) => {
@@ -29,6 +34,7 @@ export const ItemUpsertForm: FC<ItemUpsertForm.Props> = (
                 message: entity ? t()`Item updated` : t()`Item created`,
             }
         }}
+        hidden={resourceTypeId ? ["typeId"] : []}
         inputs={{
             name:   props => <TextInput
                 label={t()`Item name`}
@@ -47,7 +53,10 @@ export const ItemUpsertForm: FC<ItemUpsertForm.Props> = (
             />,
         }}
         icon={<ItemIcon/>}
-        values={entity}
+        values={{
+            ...entity,
+            typeId: resourceTypeId,
+        }}
         toRequest={values => (entity ? {
             update: {
                 update: values,

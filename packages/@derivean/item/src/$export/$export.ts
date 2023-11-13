@@ -13,3 +13,4 @@ export * from "./ItemTypeUI";
 export * from "./ItemUI";
 export * from "./ItemUpsertForm";
 export * from "./withItemContainer";
+export * from "./withItemTypeRepository";
