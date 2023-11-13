@@ -4,7 +4,7 @@ import {Kysely}        from "kysely";
 export async function up(db: Kysely<any>): Promise<void> {
     await withUuidTable("Event", db)
         .addColumn("userId", "uuid", col =>
-            col.references("User.id").onDelete("cascade").notNull()
+            col.references("User.id").onDelete("cascade")
         )
         .addColumn("name", "varchar(64)", col =>
             col.notNull()
