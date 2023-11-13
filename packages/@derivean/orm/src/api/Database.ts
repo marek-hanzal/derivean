@@ -131,5 +131,48 @@ export type Database =
             producerId: string;
             itemId: string;
             amount: number;
-        }
+        };
+        /**
+         * General event definition
+         */
+        Event: {
+            id: GeneratedAlways<string>;
+            name: string;
+            type: string;
+            /**
+             * Optional duration of an event; used to compute event instance from/to.
+             */
+            duration?: number;
+            /**
+             * Instant events are executed immediately when a player does an action or
+             * when a player logs-in.
+             */
+            instant?: boolean;
+        };
+        /**
+         * Implementation of item transaction event.
+         *
+         * This could be, for example, give-away for a new players or event
+         * disaster event which takes some items.
+         */
+        EventItem: {
+            id: GeneratedAlways<string>;
+            eventId: string;
+            itemId: string;
+            amount?: number;
+        };
+        /**
+         * Event instance is bound to a player and kingdom.
+         *
+         * Player must commit instance to get the output.
+         */
+        EventInstance: {
+            id: GeneratedAlways<string>;
+            eventId: string;
+            kingdomId: string;
+            userId: string;
+            from?: string;
+            to?: string;
+            commit?: boolean;
+        };
     }

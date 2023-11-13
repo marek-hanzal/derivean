@@ -1,5 +1,6 @@
 import {
     BuildingIcon,
+    EventIcon,
     ItemIcon,
     ProducerIcon
 }                from "@derivean/ui";
@@ -21,7 +22,7 @@ export namespace ManagerMenu {
 
 export const ManagerMenu: FC<ManagerMenu.Props> = () => {
     return <MainMenu
-        links={[
+        items={[
             {
                 type:  "group",
                 label: t()`Item management`,
@@ -65,6 +66,12 @@ export const ManagerMenu: FC<ManagerMenu.Props> = () => {
                         icon:  <IconGraph/>,
                     },
                 ],
+            },
+            {
+                type:  "link",
+                href:  "/manager/event/list",
+                label: t()`Event list`,
+                icon:  <EventIcon/>,
             },
             {
                 type:  "link",

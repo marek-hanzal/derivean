@@ -1,4 +1,5 @@
 export * from "./BuildingIcon";
+export * from "./EventIcon";
 export * from "./GameIcon";
 export * from "./InventoryIcon";
 export * from "./ItemIcon";
