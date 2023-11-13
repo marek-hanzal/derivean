@@ -27,6 +27,14 @@ export default withAuthMiddleware({
             ]
         },
         {
+            path:   "/kingdom",
+            target: "/-/public",
+            auth:   true,
+            tokens: [
+                "game",
+            ]
+        },
+        {
             path:   "/manager",
             target: "/-/public",
             auth:   true,
