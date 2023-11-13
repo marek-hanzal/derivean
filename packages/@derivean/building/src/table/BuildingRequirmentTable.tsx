@@ -1,12 +1,12 @@
 "use client";
 
 import {
-    ResourceInline,
-    ResourceUI
-}                                      from "@derivean/resource";
+    ItemInline,
+    ItemUI
+}                                      from "@derivean/item";
 import {
     BuildingIcon,
-    ResourceIcon
+    ItemIcon
 }                                      from "@derivean/ui";
 import {t}                             from "@use-pico/i18n";
 import {
@@ -26,7 +26,7 @@ import {BuildingUI}                    from "../ui/BuildingUI";
 export namespace BuildingRequirementTable {
     export type Columns =
         | "building"
-        | "resource"
+        | "item"
         | "amount";
 
     export type Props =
@@ -50,7 +50,7 @@ export const BuildingRequirementTable: FC<BuildingRequirementTable.Props> = (
             total: t()`Total count of building requirements`,
         }}
         name={"building-requirement"}
-        icon={<ResourceIcon/>}
+        icon={<ItemIcon/>}
         tableActionProps={{
             text:       {
                 create: {
@@ -110,20 +110,20 @@ export const BuildingRequirementTable: FC<BuildingRequirementTable.Props> = (
                 />,
                 width:  18,
             },
-            resource: {
-                title:  t()`Resource name`,
-                render: ({item}) => <ResourceUI.Fetch
-                    override={item.resourceId}
+            item: {
+                title:  t()`Item name`,
+                render: ({item}) => <ItemUI.Fetch
+                    override={item.itemId}
                     loader={<Loader size={"md"} type={"dots"}/>}
                     WithSuccess={({entity}) => <ButtonLink
-                        icon={<ResourceIcon/>}
+                        icon={<ItemIcon/>}
                         href={{
-                            href:  "/manager/resource/[id]",
+                            href: "/manager/item/[id]",
                             query: {
                                 id: entity.id,
                             },
                         }}
-                        label={<ResourceInline entity={entity}/>}
+                        label={<ItemInline entity={entity}/>}
                     />}
                 />,
             },

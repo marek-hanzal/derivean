@@ -1,12 +1,12 @@
-import {type IResource} from "@derivean/resource";
+import {type IItem} from "@derivean/item";
 
 export interface IProducerOutput {
     /**
-     * Resource on output
+     * Item on output
      */
-    resource: IResource;
+    item: IItem;
     /**
-     * Amount of produced resource
+     * Amount of produced item
      */
     amount: number;
 }

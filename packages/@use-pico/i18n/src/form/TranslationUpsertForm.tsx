@@ -1,13 +1,11 @@
 import {IconLanguage}  from "@tabler/icons-react";
 import {TextInput}     from "@use-pico/form";
 import {
-    t,
-    tx
-}                      from "@use-pico/i18n";
-import {
     type ComponentProps,
     type FC
 }                      from "react";
+import {t}             from "../translator/t";
+import {tx}            from "../translator/tx";
 import {TranslationUI} from "../ui/TranslationUI";
 
 export namespace TranslationUpsertForm {

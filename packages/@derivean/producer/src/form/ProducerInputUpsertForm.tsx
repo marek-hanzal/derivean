@@ -1,4 +1,4 @@
-import {ResourceSelect}  from "@derivean/resource";
+import {ItemSelect}      from "@derivean/item";
 import {ProducerIcon}    from "@derivean/ui";
 import {NumberInput}     from "@use-pico/form";
 import {t}               from "@use-pico/i18n";
@@ -48,10 +48,10 @@ export const ProducerInputUpsertForm: FC<ProducerInputUpsertForm.Props> = (
                 }}
                 {...props}
             />,
-            resourceId: props => <ResourceSelect
+            itemId: props => <ItemSelect
                 text={{
-                    label:       t()`Resource name`,
-                    placeholder: t()`Resource (placeholder)`,
+                    label:       t()`Item name`,
+                    placeholder: t()`Item (placeholder)`,
                 }}
                 {...props}
             />,
@@ -78,12 +78,12 @@ export const ProducerInputUpsertForm: FC<ProducerInputUpsertForm.Props> = (
         })}
         defaultValues={{
             producerId: "",
-            resourceId: "",
+            itemId: "",
             amount:     0,
         }}
         Render={({Input}) => <>
             <Input name={"producerId"}/>
-            <Input name={"resourceId"}/>
+            <Input name={"itemId"}/>
             <Input name={"amount"}/>
         </>}
         {...props}

@@ -1,7 +1,7 @@
 import {
     BuildingIcon,
-    PipelineIcon,
-    ResourceIcon
+    ItemIcon,
+    PipelineIcon
 }                from "@derivean/ui";
 import {t}       from "@use-pico/i18n";
 import {Menu}    from "@use-pico/ui";
@@ -36,7 +36,7 @@ export const BuildingMenu: FC<BuildingMenu.Props> = (
                 type:  "link",
                 href:  "/manager/building/[id]/requirement",
                 label: t()`Building requirement (label)`,
-                icon:  <ResourceIcon/>,
+                icon: <ItemIcon/>,
                 query,
             },
             {

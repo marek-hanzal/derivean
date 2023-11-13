@@ -12,7 +12,7 @@ export const ProducerSchema = withDullSchema({
     entity:  identityOf(z => z.object({
         name: z.string,
         /**
-         * Runtime of a producer before resources can be picked up
+         * Runtime of a producer before items can be picked up
          */
         time: z.number,
     })),

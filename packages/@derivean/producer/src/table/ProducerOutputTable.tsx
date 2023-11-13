@@ -1,9 +1,9 @@
 "use client";
 
 import {
-    ResourceInline,
-    ResourceUI
-}                                 from "@derivean/resource";
+    ItemInline,
+    ItemUI
+}                                 from "@derivean/item";
 import {ProducerIcon}             from "@derivean/ui";
 import {t}                        from "@use-pico/i18n";
 import {
@@ -26,7 +26,7 @@ import {ProducerUI}               from "../ui/ProducerUI";
 export namespace ProducerOutputTable {
     export type Columns =
         | "producerId"
-        | "resourceId"
+        | "itemId"
         | "consumers"
         | "amount";
 
@@ -109,20 +109,20 @@ export const ProducerOutputTable: FC<ProducerOutputTable.Props> = (
                     />}
                 />,
             },
-            resourceId: {
-                title:  t()`Resource name`,
-                render: ({item}) => <ResourceUI.Fetch
-                    override={item.resourceId}
-                    WithSuccess={({entity}) => <ResourceInline entity={entity}/>}
+            itemId:     {
+                title:  t()`Item name`,
+                render: ({item}) => <ItemUI.Fetch
+                    override={item.itemId}
+                    WithSuccess={({entity}) => <ItemInline entity={entity}/>}
                 />,
                 width: 12,
             },
             consumers:  {
-                title:  t()`Resource consumers`,
+                title:  t()`Item consumers`,
                 render: ({item}) => <ProducerInputUI.Collection
                     query={{
                         where: {
-                            resourceId: item.resourceId,
+                            itemId: item.itemId,
                         }
                     }}
                     WithSuccess={({entities}) => <NativeBreadcrumbs>
@@ -144,7 +144,7 @@ export const ProducerOutputTable: FC<ProducerOutputTable.Props> = (
                             fw={"bold"}
                             c={"gray.6"}
                         >
-                            {t()`Resource without consumers`}
+                            {t()`Item without consumers`}
                         </Text>}
                     </NativeBreadcrumbs>}
                 />,

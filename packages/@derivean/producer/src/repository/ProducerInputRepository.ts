@@ -29,7 +29,7 @@ export class ProducerInputRepository extends AbstractRepository<
         };
         this.matchOf = {
             producerId: "producerId",
-            resourceId: "resourceId",
+            itemId: "itemId",
         };
     }
 }

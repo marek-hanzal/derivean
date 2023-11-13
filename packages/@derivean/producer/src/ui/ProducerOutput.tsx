@@ -1,9 +1,9 @@
 "use client";
 
 import {
-    ResourceInline,
-    ResourceUI
-}                         from "@derivean/resource";
+    ItemInline,
+    ItemUI
+}                         from "@derivean/item";
 import {t}                from "@use-pico/i18n";
 import {
     NativeBreadcrumbs,
@@ -36,14 +36,14 @@ export const ProducerOutput: FC<ProducerOutput.Props> = (
                 separator={"&"}
                 separatorMargin={4}
             >
-                {entities.map(entity => <ResourceUI.Fetch
+                {entities.map(entity => <ItemUI.Fetch
                     key={entity.id}
-                    override={entity.resourceId}
+                    override={entity.itemId}
                     WithSuccess={({entity}) => <Text
                         fw={mark.includes(entity.id) ? "bold" : undefined}
                         c={mark.includes(entity.id) ? undefined : "dimmed"}
                     >
-                        <ResourceInline entity={entity}/>
+                        <ItemInline entity={entity}/>
                     </Text>}
                 />)}
             </NativeBreadcrumbs>}

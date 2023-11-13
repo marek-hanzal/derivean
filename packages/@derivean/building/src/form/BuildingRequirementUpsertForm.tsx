@@ -1,5 +1,5 @@
-import {ResourceSelect}        from "@derivean/resource";
-import {ResourceIcon}          from "@derivean/ui";
+import {ItemSelect}            from "@derivean/item";
+import {ItemIcon}              from "@derivean/ui";
 import {NumberInput}           from "@use-pico/form";
 import {t}                     from "@use-pico/i18n";
 import {
@@ -32,7 +32,7 @@ export const BuildingRequirementUpsertForm: FC<BuildingRequirementUpsertForm.Pro
                 message: entity ? t()`Building requirement updated` : t()`Building requirement created`,
             }
         }}
-        icon={<ResourceIcon/>}
+        icon={<ItemIcon/>}
         hidden={buildingId ? ["buildingId"] : undefined}
         inputs={{
             buildingId: props => <BuildingSelect
@@ -42,10 +42,10 @@ export const BuildingRequirementUpsertForm: FC<BuildingRequirementUpsertForm.Pro
                 }}
                 {...props}
             />,
-            resourceId: props => <ResourceSelect
+            itemId: props => <ItemSelect
                 text={{
-                    label:       t()`Resource name`,
-                    placeholder: t()`Resource (placeholder)`,
+                    label:       t()`Item name`,
+                    placeholder: t()`Item (placeholder)`,
                 }}
                 {...props}
             />,
@@ -72,12 +72,12 @@ export const BuildingRequirementUpsertForm: FC<BuildingRequirementUpsertForm.Pro
         })}
         defaultValues={{
             buildingId: "",
-            resourceId: "",
+            itemId: "",
             amount:     1,
         }}
         Render={({Input}) => <>
             <Input name={"buildingId"}/>
-            <Input name={"resourceId"}/>
+            <Input name={"itemId"}/>
             <Input name={"amount"}/>
         </>}
         {...props}

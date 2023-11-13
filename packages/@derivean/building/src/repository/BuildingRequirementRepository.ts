@@ -34,7 +34,7 @@ export class BuildingRequirementRepository extends AbstractRepository<
             buildingId: "asc",
         };
         this.matchOf = {
-            resourceId: "resourceId",
+            itemId: "itemId",
             buildingId: "buildingId",
         };
     }

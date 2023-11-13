@@ -1,8 +1,8 @@
 import {
-    ResourceQueryStore,
-    ResourceTable
-}                      from "@derivean/resource";
-import {ResourceIcon}  from "@derivean/ui";
+    ItemQueryStore,
+    ItemTable
+}                      from "@derivean/item";
+import {ItemIcon}      from "@derivean/ui";
 import {
     t,
     tx
@@ -16,10 +16,10 @@ import {
 
 export default function Index() {
     return <Page
-        icon={<ResourceIcon/>}
+        icon={<ItemIcon/>}
         text={{
-            title:  tx()`Resource list`,
-            header: t()`Resource list`,
+            title:  tx()`Item list`,
+            header: t()`Item list`,
         }}
         postfix={<Breadcrumbs
             items={[
@@ -32,10 +32,10 @@ export default function Index() {
         />}
     >
         <StoreProvider
-            store={ResourceQueryStore}
+            store={ItemQueryStore}
             values={{}}
         >
-            <ResourceTable/>
+            <ItemTable/>
         </StoreProvider>
     </Page>;
 }

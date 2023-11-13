@@ -11,17 +11,17 @@ import {
 export const BuildingRequirementSchema = withDullSchema({
     entity:  identityOf(z => z.object({
         buildingId: z.string,
-        resourceId: z.string,
+        itemId: z.string,
         amount:     z.number,
     })),
     shape:   schema(z => z.object({
         buildingId: z.string,
-        resourceId: z.string,
+        itemId: z.string,
         amount:     z.number,
     })),
     filter:  filterOf(z => z.object({
         buildingId: z.string$,
-        resourceId: z.string$,
+        itemId: z.string$,
     })),
     orderBy: orderByOf(["buildingId"]),
 });

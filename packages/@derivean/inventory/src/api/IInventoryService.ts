@@ -1,5 +1,5 @@
-import {type IInventory}         from "./IInventory";
-import {type IInventoryResource} from "./IInventoryResource";
+import {type IInventory}     from "./IInventory";
+import {type IInventoryItem} from "./IInventoryItem";
 
 export interface IInventoryService {
     /**
@@ -15,12 +15,12 @@ export interface IInventoryService {
     arrayOf(inventory: IInventoryService.Inventory): IInventory;
 
     /**
-     * Extract given resource(s) from the inventory
+     * Extract given item(s) from the inventory
      */
-    resourceOf(inventory: IInventory, name: string): IInventoryResource[];
+    itemOf(inventory: IInventory, name: string): IInventoryItem[];
 
     /**
-     * Return amount of the given resource in the inventory
+     * Return amount of the given item in the inventory
      */
     amountOf(inventory: IInventory, name: string): number;
 }
@@ -29,5 +29,5 @@ export namespace IInventoryService {
     /**
      * Normalized inventory
      */
-    export type Inventory = Map<string, IInventoryResource>;
+    export type Inventory = Map<string, IInventoryItem>;
 }

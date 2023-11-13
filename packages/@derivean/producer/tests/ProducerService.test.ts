@@ -1,32 +1,32 @@
 import {
     withInventoryContainer,
     withInventoryService
-}                       from "@derivean/inventory";
-import {type IResource} from "@derivean/resource";
-import {Container}      from "@use-pico/container";
-import {DateTime}       from "@use-pico/i18n";
+}                   from "@derivean/inventory";
+import {type IItem} from "@derivean/item";
+import {Container}  from "@use-pico/container";
+import {DateTime}   from "@use-pico/i18n";
 import {
     describe,
     expect,
     test
-}                       from "vitest";
+}                   from "vitest";
 import {
     type IProducer,
     type IProducerProcess,
     withProducerContainer,
     withProducerService
-}                       from "../src";
+}                   from "../src";
 
-const TreeResource: IResource = {
+const TreeItem: IItem = {
     name: "tree",
 };
-const LeafsResource: IResource = {
+const LeafsItem: IItem = {
     name: "leafs",
 };
-const LogResource: IResource = {
+const LogItem: IItem = {
     name: "log",
 };
-const SawdustResource: IResource = {
+const SawdustItem: IItem = {
     name: "sawdust",
 };
 
@@ -34,21 +34,21 @@ const producer: IProducer = {
     time:   10,
     input:  [
         {
-            resource: TreeResource,
+            item: TreeItem,
             amount: 2,
         },
         {
-            resource: LeafsResource,
+            item: LeafsItem,
             amount:   2,
         },
     ],
     output: [
         {
-            resource: LogResource,
+            item: LogItem,
             amount:   6,
         },
         {
-            resource: SawdustResource,
+            item: SawdustItem,
             amount:   100,
         },
     ],
@@ -64,49 +64,49 @@ const goodProducerProcess: IProducerProcess = {
     date,
     producer,
     inventory: {
-        resources: [
+        items: [
             {
-                resource: TreeResource,
+                item: TreeItem,
                 amount:   10,
             },
             {
-                resource: LeafsResource,
+                item: LeafsItem,
                 amount:   10,
             },
             {
-                resource: LogResource,
+                item: LogItem,
                 amount:   2,
             },
         ],
     },
 };
-const notEnoughResourceProducerProcess: IProducerProcess = {
+const notEnoughItemProducerProcess: IProducerProcess = {
     date,
     producer,
     inventory: {
-        resources: [
+        items: [
             {
-                resource: TreeResource,
+                item: TreeItem,
                 amount: 2,
             },
             {
-                resource: LeafsResource,
+                item: LeafsItem,
                 amount:   1,
             },
             {
-                resource: LogResource,
+                item: LogItem,
                 amount:   2,
             },
         ],
     },
 };
-const missingResourceProducerProcess: IProducerProcess = {
+const missingItemProducerProcess: IProducerProcess = {
     date,
     producer,
     inventory: {
-        resources: [
+        items: [
             {
-                resource: LogResource,
+                item: LogItem,
                 amount:   2,
             },
         ],
@@ -129,17 +129,17 @@ describe("ProducerService", () => {
         expect(snapshot.isLimit).toBeFalsy();
         expect(snapshot.isReady).toBeTruthy();
 
-        const treeResource = inventoryService.resourceOf(snapshot.inventory, TreeResource.name);
-        const logResource = inventoryService.resourceOf(snapshot.inventory, LogResource.name);
-        const sawdustResource = inventoryService.resourceOf(snapshot.inventory, SawdustResource.name);
+        const treeItem = inventoryService.itemOf(snapshot.inventory, TreeItem.name);
+        const logItem = inventoryService.itemOf(snapshot.inventory, LogItem.name);
+        const sawdustItem = inventoryService.itemOf(snapshot.inventory, SawdustItem.name);
 
-        expect(treeResource.length).toBe(1);
-        expect(logResource.length).toBe(1);
-        expect(sawdustResource.length).toBe(1);
+        expect(treeItem.length).toBe(1);
+        expect(logItem.length).toBe(1);
+        expect(sawdustItem.length).toBe(1);
 
-        expect(treeResource[0].amount).toBe(-6);
-        expect(logResource[0].amount).toBe(18);
-        expect(sawdustResource[0].amount).toBe(300);
+        expect(treeItem[0].amount).toBe(-6);
+        expect(logItem[0].amount).toBe(18);
+        expect(sawdustItem[0].amount).toBe(300);
     });
 
     test("Production not ready", () => {
@@ -153,41 +153,41 @@ describe("ProducerService", () => {
         expect(snapshot.isReady).toBeFalsy();
     });
 
-    test("Production missing resources", () => {
-        const snapshot = producerService.process(missingResourceProducerProcess);
+    test("Production missing items", () => {
+        const snapshot = producerService.process(missingItemProducerProcess);
 
-        const treeResource = inventoryService.resourceOf(snapshot.inventory, TreeResource.name);
-        const logResource = inventoryService.resourceOf(snapshot.inventory, LogResource.name);
-        const sawdustResource = inventoryService.resourceOf(snapshot.inventory, SawdustResource.name);
+        const treeItem = inventoryService.itemOf(snapshot.inventory, TreeItem.name);
+        const logItem = inventoryService.itemOf(snapshot.inventory, LogItem.name);
+        const sawdustItem = inventoryService.itemOf(snapshot.inventory, SawdustItem.name);
 
-        expect(treeResource.length).toBe(0);
-        expect(logResource.length).toBe(1);
-        expect(sawdustResource.length).toBe(1);
+        expect(treeItem.length).toBe(0);
+        expect(logItem.length).toBe(1);
+        expect(sawdustItem.length).toBe(1);
 
-        expect(logResource[0].amount).toBe(0);
-        expect(sawdustResource[0].amount).toBe(0);
+        expect(logItem[0].amount).toBe(0);
+        expect(sawdustItem[0].amount).toBe(0);
     });
 
-    test("Production missing resources - is limit", () => {
-        const snapshot = producerService.process(missingResourceProducerProcess);
+    test("Production missing items - is limit", () => {
+        const snapshot = producerService.process(missingItemProducerProcess);
         expect(snapshot.isLimit).toBeTruthy();
         expect(snapshot.isReady).toBeFalsy();
     });
 
-    test("Production not enough resources", () => {
-        const snapshot = producerService.process(notEnoughResourceProducerProcess);
+    test("Production not enough items", () => {
+        const snapshot = producerService.process(notEnoughItemProducerProcess);
         expect(snapshot.isLimit).toBeTruthy();
         expect(snapshot.isReady).toBeFalsy();
 
-        const treeResource = inventoryService.resourceOf(snapshot.inventory, TreeResource.name);
-        const logResource = inventoryService.resourceOf(snapshot.inventory, LogResource.name);
-        const sawdustResource = inventoryService.resourceOf(snapshot.inventory, SawdustResource.name);
+        const treeItem = inventoryService.itemOf(snapshot.inventory, TreeItem.name);
+        const logItem = inventoryService.itemOf(snapshot.inventory, LogItem.name);
+        const sawdustItem = inventoryService.itemOf(snapshot.inventory, SawdustItem.name);
 
-        expect(treeResource.length).toBe(1);
-        expect(logResource.length).toBe(1);
-        expect(sawdustResource.length).toBe(1);
+        expect(treeItem.length).toBe(1);
+        expect(logItem.length).toBe(1);
+        expect(sawdustItem.length).toBe(1);
 
-        expect(logResource[0].amount).toBe(0);
-        expect(sawdustResource[0].amount).toBe(0);
+        expect(logItem[0].amount).toBe(0);
+        expect(sawdustItem[0].amount).toBe(0);
     });
 });

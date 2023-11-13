@@ -1,5 +1,5 @@
-import {type IInventoryResource} from "./IInventoryResource";
+import {type IInventoryItem} from "./IInventoryItem";
 
 export interface IInventory {
-    resources: IInventoryResource[];
+    items: IInventoryItem[];
 }

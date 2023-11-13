@@ -6,27 +6,27 @@ import {
 }                  from "vitest";
 import {
     type IInventory,
-    type IInventoryResource,
+    type IInventoryItem,
     withInventoryContainer,
     withInventoryService
 }                  from "../src";
 
 const inventory: IInventory = {
-    resources: [
+    items: [
         {
-            resource: {
+            item: {
                 name: "tree",
             },
             amount:   5,
         },
         {
-            resource: {
+            item: {
                 name: "tree",
             },
             amount:   7,
         },
         {
-            resource: {
+            item: {
                 name: "log",
             },
             amount:   1,
@@ -35,15 +35,15 @@ const inventory: IInventory = {
 };
 
 const normalizedInventory: IInventory = {
-    resources: [
+    items: [
         {
-            resource: {
+            item: {
                 name: "tree",
             },
             amount:   12,
         },
         {
-            resource: {
+            item: {
                 name: "log",
             },
             amount:   1,
@@ -57,13 +57,13 @@ describe("InventoryService", () => {
     const inventoryService = withInventoryService.use(container);
 
     test("Normalized inventory", () => {
-        expect(inventoryService.normalize(inventory)).toEqual(new Map<string, IInventoryResource>([
+        expect(inventoryService.normalize(inventory)).toEqual(new Map<string, IInventoryItem>([
             ["tree", {
-                resource: {name: "tree"},
+                item: {name: "tree"},
                 amount:   12
             }],
             ["log", {
-                resource: {name: "log"},
+                item: {name: "log"},
                 amount:   1
             }],
         ]));

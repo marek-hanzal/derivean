@@ -12,22 +12,22 @@ export const ProducerInputSchema = withDullSchema({
     entity:  identityOf(z => z.object({
         producerId: z.string,
         /**
-         * Resource on input
+         * Item on input
          */
-        resourceId: z.string,
+        itemId: z.string,
         /**
-         * Amount of processed resource (subtracted by time from an inventory)
+         * Amount of processed item (subtracted by time from an inventory)
          */
         amount: z.number,
     })),
     shape:   schema(z => z.object({
         producerId: z.string,
-        resourceId: z.string,
+        itemId: z.string,
         amount:     z.number,
     })),
     filter:  filterOf(z => z.object({
         producerId: z.string$,
-        resourceId: z.string$,
+        itemId: z.string$,
     })),
     orderBy: orderByOf(["producerId", "amount"]),
 });

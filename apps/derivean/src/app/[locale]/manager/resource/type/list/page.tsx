@@ -1,7 +1,7 @@
 import {
-    ResourceTypeQueryStore,
-    ResourceTypeTable
-}                      from "@derivean/resource";
+    ItemTypeQueryStore,
+    ItemTypeTable
+}                      from "@derivean/item";
 import {
     t,
     tx
@@ -18,8 +18,8 @@ export default function Index() {
     return <Page
         icon={<ListIcon/>}
         text={{
-            title:  tx()`Resource type list`,
-            header: t()`Resource type list`,
+            title:  tx()`Item type list`,
+            header: t()`Item type list`,
         }}
         postfix={<Breadcrumbs
             items={[
@@ -32,12 +32,12 @@ export default function Index() {
         />}
     >
         <StoreProvider
-            store={ResourceTypeQueryStore}
+            store={ItemTypeQueryStore}
             values={{
                 filter: {},
             }}
         >
-            <ResourceTypeTable/>
+            <ItemTypeTable/>
         </StoreProvider>
     </Page>;
 }

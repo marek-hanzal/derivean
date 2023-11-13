@@ -52,9 +52,9 @@ export class ProducerService implements IProducerService {
         return process
             .producer
             .input
-            .filter(({resource}) => resource.name === name)
-            .reduce((amount, resource) => {
-                return amount + resource.amount;
+            .filter(({item}) => item.name === name)
+            .reduce((amount, item) => {
+                return amount + item.amount;
             }, 0);
     }
 
@@ -62,46 +62,46 @@ export class ProducerService implements IProducerService {
         return process
             .producer
             .output
-            .filter(({resource}) => resource.name === name)
-            .reduce((amount, resource) => {
-                return amount + resource.amount;
+            .filter(({item}) => item.name === name)
+            .reduce((amount, item) => {
+                return amount + item.amount;
             }, 0);
     }
 
     public process(process: IProducerProcess): IProducerSnapshot {
         const cycles = Math.floor(this.cycles(process));
-        const resources = process.producer.input.map(({resource}) => resource.name);
+        const items = process.producer.input.map(({item}) => item.name);
 
         const maximums = [];
-        for (let resource of process.producer.input) {
-            const input = Math.max(1, this.inputAmountOf(process, resource.resource.name));
-            const available = this.inventoryService.amountOf(process.inventory, resource.resource.name);
+        for (let item of process.producer.input) {
+            const input = Math.max(1, this.inputAmountOf(process, item.item.name));
+            const available = this.inventoryService.amountOf(process.inventory, item.item.name);
 
             maximums.push(available / input);
         }
-        const resourceMaximum = Math.floor(Math.min(...maximums));
-        const maximum = Math.floor(Math.min(cycles, resourceMaximum));
+        const itemMaximum = Math.floor(Math.min(...maximums));
+        const maximum = Math.floor(Math.min(cycles, itemMaximum));
 
         return {
             isLimit:   cycles >= Math.min(...maximums),
-            isReady: cycles > 0 && resourceMaximum > 0,
+            isReady:   cycles > 0 && itemMaximum > 0,
             inventory: this.inventoryService.normalizeOf({
-                resources: [
+                items: [
                     ...process
                         .inventory
-                        .resources
-                        .filter(({resource}) => resources.includes(resource.name))
-                        .map(resource => {
+                        .items
+                        .filter(({item}) => items.includes(item.name))
+                        .map(item => {
                             return {
-                                ...resource,
-                                amount: this.inputAmountOf(process, resource.resource.name) * maximum * -1,
+                                ...item,
+                                amount: this.inputAmountOf(process, item.item.name) * maximum * -1,
                             };
                         }),
                     ...process.producer.output
-                        .map(resource => {
+                        .map(item => {
                             return {
-                                ...resource,
-                                amount: this.outputAmountOf(process, resource.resource.name) * maximum,
+                                ...item,
+                                amount: this.outputAmountOf(process, item.item.name) * maximum,
                             };
                         })
                 ],
@@ -117,11 +117,11 @@ export class ProducerService implements IProducerService {
                     .withQuery
                     .select(["ProducerOutput.producerId"])
                     .where(
-                        "resourceId",
+                        "itemId",
                         "in",
                         this.producerInputRepository
                             .withQuery
-                            .select(["ProducerInput.resourceId"])
+                            .select(["ProducerInput.itemId"])
                             .where("producerId", "=", producerId)
                     )
                     .execute())
@@ -181,15 +181,15 @@ export class ProducerService implements IProducerService {
         const edges: GraphSchema.Type["edges"] = [];
 
         for (const producer of dependencies) {
-            for (const input of await this.producerInputRepository.withQuery.select(["ProducerInput.resourceId"]).where("producerId", "=", producer.id).execute()) {
+            for (const input of await this.producerInputRepository.withQuery.select(["ProducerInput.itemId"]).where("producerId", "=", producer.id).execute()) {
                 /**
                  * @TODO fix select() method, add typing, so it would accept all tables
                  */
-                for (const output of await this.producerOutputRepository.withQuery.select(["ProducerOutput.producerId", "Resource.name" as any, "ProducerOutput.amount" as any]).innerJoin("Resource", "Resource.id", "ProducerOutput.resourceId" as any).where("resourceId", "=", input.resourceId).execute()) {
+                for (const output of await this.producerOutputRepository.withQuery.select(["ProducerOutput.producerId", "Item.name" as any, "ProducerOutput.amount" as any]).innerJoin("Item", "Item.id", "ProducerOutput.itemId" as any).where("itemId", "=", input.itemId).execute()) {
                     edges.push({
                         to:    producer.id,
                         from:  output.producerId,
-                        label: `${td()(`Resource [${output.name}]`)} (x${output.amount})`,
+                        label: `${td()(`Item [${output.name}]`)} (x${output.amount})`,
                     });
                 }
             }

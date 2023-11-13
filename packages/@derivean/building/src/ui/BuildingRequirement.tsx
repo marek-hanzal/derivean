@@ -1,7 +1,7 @@
 import {
-    ResourceInline,
-    ResourceUI
-}                              from "@derivean/resource";
+    ItemInline,
+    ItemUI
+}                              from "@derivean/item";
 import {t}                     from "@use-pico/i18n";
 import {
     NativeBreadcrumbs,
@@ -32,10 +32,10 @@ export const BuildingRequirement: FC<BuildingRequirement.Props> = (
                 separator={"&"}
                 separatorMargin={4}
             >
-                {entities.length > 0 && entities.map(entity => <ResourceUI.Fetch
+                {entities.length > 0 && entities.map(entity => <ItemUI.Fetch
                     key={entity.id}
-                    override={entity.resourceId}
-                    WithSuccess={({entity}) => <ResourceInline entity={entity}/>}
+                    override={entity.itemId}
+                    WithSuccess={({entity}) => <ItemInline entity={entity}/>}
                 />)}
                 {!entities.length && <Text c={"dimmed"}>({t()`Building without requirements`})</Text>}
             </NativeBreadcrumbs>;

@@ -1,6 +1,5 @@
 "use client";
 
-import {type Card}           from "@mantine/core";
 import {type ComponentProps} from "react";
 
 export {Card} from "@mantine/core";

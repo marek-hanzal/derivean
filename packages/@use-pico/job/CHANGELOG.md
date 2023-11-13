@@ -1,5 +1,38 @@
 # @use-pico/job
 
+## 2.0.10
+
+### Patch Changes
+
+- Job service translation
+
+## 2.0.9
+
+### Patch Changes
+
+- Version bump
+- Updated dependencies
+    - @use-pico/schema@2.0.7
+    - @use-pico/source@2.0.8
+    - @use-pico/query@2.0.11
+    - @use-pico/store@2.0.7
+    - @use-pico/utils@2.0.8
+    - @use-pico/hook@2.0.5
+    - @use-pico/i18n@2.0.9
+    - @use-pico/ui@2.0.15
+
+## 2.0.8
+
+### Patch Changes
+
+- Version bump
+- Updated dependencies
+    - @use-pico/schema@2.0.6
+    - @use-pico/store@2.0.6
+    - @use-pico/utils@2.0.7
+    - @use-pico/i18n@2.0.8
+    - @use-pico/ui@2.0.14
+
 ## 2.0.7
 
 ### Patch Changes

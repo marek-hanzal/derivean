@@ -1,7 +1,7 @@
 import {
     BuildingIcon,
-    ProducerIcon,
-    ResourceIcon
+    ItemIcon,
+    ProducerIcon
 }                from "@derivean/ui";
 import {
     IconGraph,
@@ -24,19 +24,19 @@ export const ManagerMenu: FC<ManagerMenu.Props> = () => {
         links={[
             {
                 type:  "group",
-                label: t()`Resource management`,
-                icon:  <ResourceIcon/>,
+                label: t()`Item management`,
+                icon:  <ItemIcon/>,
                 items: [
                     {
                         type:  "link",
-                        href:  "/manager/resource/list",
-                        label: t()`Resource list`,
-                        icon:  <ResourceIcon/>,
+                        href:  "/manager/item/list",
+                        label: t()`Item list`,
+                        icon:  <ItemIcon/>,
                     },
                     {
                         type:  "link",
-                        href:  "/manager/resource/type/list",
-                        label: t()`Resource type list`,
+                        href:  "/manager/item/type/list",
+                        label: t()`Item type list`,
                         icon:  <ListIcon/>,
                     },
                 ],

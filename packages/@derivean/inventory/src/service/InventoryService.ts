@@ -1,19 +1,18 @@
-import {type IInventory}         from "../api/IInventory";
-import {type IInventoryResource} from "../api/IInventoryResource";
-import {type IInventoryService}  from "../api/IInventoryService";
+import {type IInventory}        from "../api/IInventory";
+import {type IInventoryItem}    from "../api/IInventoryItem";
+import {type IInventoryService} from "../api/IInventoryService";
 
 export class InventoryService implements IInventoryService {
     public normalize(inventory: IInventory): IInventoryService.Inventory {
-        const map = new Map<string, IInventoryResource>();
-        for (let resource of inventory.resources) {
-            if (!map.has(resource.resource.name)) {
-                map.set(resource.resource.name, {
-                    resource: resource.resource,
-                    amount:   0,
+        const map = new Map<string, IInventoryItem>();
+        for (let item of inventory.items) {
+            if (!map.has(item.item.name)) {
+                map.set(item.item.name, {
+                    item:   item.item,
+                    amount: 0,
                 });
             }
-            const item = map.get(resource.resource.name) as typeof resource;
-            item["amount"] += resource.amount;
+            item["amount"] += (map.get(item.item.name) as typeof item).amount;
         }
         return map;
     }
@@ -26,17 +25,17 @@ export class InventoryService implements IInventoryService {
 
     public arrayOf(inventory: IInventoryService.Inventory): IInventory {
         return {
-            resources: [...inventory.values()],
+            items: [...inventory.values()],
         };
     }
 
-    public resourceOf(inventory: IInventory, name: string): IInventoryResource[] {
-        return inventory.resources.filter(({resource}) => resource.name === name);
+    public itemOf(inventory: IInventory, name: string): IInventoryItem[] {
+        return inventory.items.filter(({item}) => item.name === name);
     }
 
     public amountOf(inventory: IInventory, name: string): number {
-        return this.resourceOf(inventory, name).reduce((amount, resource) => {
-            return amount + resource.amount;
+        return this.itemOf(inventory, name).reduce((amount, item) => {
+            return amount + item.amount;
         }, 0);
     }
 }
