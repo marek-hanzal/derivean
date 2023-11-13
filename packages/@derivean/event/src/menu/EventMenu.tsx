@@ -1,6 +1,8 @@
-import {t}       from "@use-pico/i18n";
-import {Menu}    from "@use-pico/ui";
-import {type FC} from "react";
+import {InventoryIcon} from "@derivean/ui";
+import {IconSearch}    from "@tabler/icons-react";
+import {t}             from "@use-pico/i18n";
+import {Menu}          from "@use-pico/ui";
+import {type FC}       from "react";
 
 export namespace EventMenu {
     export interface Props extends Menu.PropsEx {
@@ -21,14 +23,16 @@ export const EventMenu: FC<EventMenu.Props> = (
             {
                 type:  "link",
                 href:  "/manager/event/[id]",
+                icon: <IconSearch/>,
                 query,
                 label: t()`Detail`,
             },
             {
                 type:  "link",
-                href:  "/manager/event/[id]/type/EventItem",
+                href:  "/manager/event/[id]/type/EventInventory",
+                icon:  <InventoryIcon/>,
                 query,
-                label: t()`Event type [EventItem]`,
+                label: t()`Event type [EventInventory]`,
             },
         ]}
         {...props}

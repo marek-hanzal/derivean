@@ -1,15 +1,3 @@
-b4e8a29838ae1162bde0b03ce16b75d4739d6bfeeac544c56a20ac10:
-  ref: Cancel
-  value: Zavřít
-7056d01d885e2e1c2bc274b88194ee72234432a7dc8090652f1577f9:
-  ref: Value not set
-  value: Nenastaveno
-2848b629790c621cbe5ab25e79e831dfe7a52eb8052ecbcb7406a527:
-  ref: Show more items
-  value: Show more items
-b23991ae4c7c5d41384356888bea36d9ad9180e35b63f2ca2ca27e74:
-  ref: More
-  value: Více
 c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19:
   ref: Submit
   value: Odeslat
@@ -46,6 +34,9 @@ b0cf8a5dd758db7480606838271ff93da6792fdd8d3cb94816d6a40e:
 2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614:
   ref: Currently selected items
   value: Vybrané položky
+b4e8a29838ae1162bde0b03ce16b75d4739d6bfeeac544c56a20ac10:
+  ref: Cancel
+  value: Zavřít
 605e1ba528eedac2c245b6f6a1257a048261dc5508e4c5440a30c50f:
   ref: Delete
   value: Odstranit
@@ -151,6 +142,15 @@ c4ca81da0b9d668c1ad621253207781bed46fe9bbbe9e4100e754b9d:
 608c8f3ecee8f9e93586e58c61dad9408e199cb8c23c923e596eb26a:
   ref: Update translation
   value: Aktualizovat překlad
+7056d01d885e2e1c2bc274b88194ee72234432a7dc8090652f1577f9:
+  ref: Value not set
+  value: Nenastaveno
+2848b629790c621cbe5ab25e79e831dfe7a52eb8052ecbcb7406a527:
+  ref: Show more items
+  value: Show more items
+b23991ae4c7c5d41384356888bea36d9ad9180e35b63f2ca2ca27e74:
+  ref: More
+  value: Více
 d36a3f0b059a8475e4d22b802c4575c3f6634cad685d947983005ff6:
   ref: Update item type (label)
   value: Update item type (label)
@@ -547,9 +547,9 @@ bab1dfa013db089d1bf67008490c0ebb30e7dadf392929a861689826:
 9d68fd7d2b9e208edb77ede71fe6c547b34f40f0b4b28741f68c0614:
   ref: Detail
   value: Detail
-14f4963bccc577cf3d5e872ccbc9c4809cf99a602bf561da4b94f0d2:
-  ref: Event type [EventItem]
-  value: Změna inventáře (EventItem)
+769cc0bb937b0a0a9bb2388933382c748e2722fdd8652de63b817f57:
+  ref: Event type [EventInventory]
+  value: Změna inventáře
 69b160bba6899459b9c74f3d3c9b9a6a2ad8878ae5319b0cf6feeefe:
   ref: Event name
   value: Název
@@ -701,15 +701,6 @@ e8cf9d9c024947c1f7da74499347a95dffb9737b2668a1e7c9c838b2:
 2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
   ref: Game overview
   value: Přehled hry
-0a929e8d46db182c39f5605224af1457992d39743e7692fb2d143162:
-  ref: Selected kingdom
-  value: Království {name}
-a1fb8c003a02e2eac7ce1b756d67aaeb6ad344d5be95d80c11fc6705:
-  ref: Kingdom overview
-  value: Přehled
-adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
-  ref: Kingdom inventory
-  value: Inventář
 7401742653cacefb254e91e23a79edaeb388a2a423cb1181c35f87ac:
   ref: Building detail (label)
   value: Detail
@@ -758,9 +749,24 @@ b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
 b26b6df0874ba275fe15bfc9a827578dc878edd58036f0390a090159:
   ref: Event list
   value: Seznam událostí
-1808ffb86ee5503daef6b3465b736398d2f00132551268dd677602ef:
-  ref: EventItem settings (label)
-  value: Nastavení události změny inventáře pro [{name}]
+36d8ff886fe97ed9c7458bdc4c0343af18f7ec7402c9b4a5303c527c:
+  ref: Event type [EventInventory] (label)
+  value: Událost [{name}] - Změna inventáře
+28de4de589af568ae36e721daad935078aa1cebbaf9bf70c3112e96e:
+  ref: Translation list
+  value: Překlady
+e263ec6a176204dd2a48c458d632d6a02b4173d37fe6c291b3619693:
+  ref: DeRivean - The Invisible Game
+  value: DeRivean - Neviditelná hra
+0a929e8d46db182c39f5605224af1457992d39743e7692fb2d143162:
+  ref: Selected kingdom
+  value: Království {name}
+a1fb8c003a02e2eac7ce1b756d67aaeb6ad344d5be95d80c11fc6705:
+  ref: Kingdom overview
+  value: Přehled
+adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
+  ref: Kingdom inventory
+  value: Inventář
 553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
   ref: Building detail
   value: Detail budovy [{name}]
@@ -776,12 +782,6 @@ fc150b71e1abae2f5a01e5b04716f51d045dc06d150ec1960dcf8ebb:
 56db5cba41164e61cb42c625b8ccd3bb79e6aab4d8ffa4c194083f69:
   ref: Producer detail
   value: Detail výrobny [{name}]
-28de4de589af568ae36e721daad935078aa1cebbaf9bf70c3112e96e:
-  ref: Translation list
-  value: Překlady
-e263ec6a176204dd2a48c458d632d6a02b4173d37fe6c291b3619693:
-  ref: DeRivean - The Invisible Game
-  value: DeRivean - The Invisible Game
 366c4ebefbd1bd2dedbd6ef50c16353460122b80dcd950beb3eef525:
   ref: 4o4
   value: 4o4

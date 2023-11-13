@@ -38,7 +38,6 @@ export class EventRepository extends AbstractRepository<
             name:    "name",
             type:    "type",
             instant: "instant",
-            commit:  "commit",
             userId:  "userId",
         };
     }

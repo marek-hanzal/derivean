@@ -47,8 +47,8 @@ export const EventUpsertForm: FC<EventUpsertForm.Props> = (
                 placeholder={tx()`Event type (placeholder)`}
                 data={[
                     {
-                        label: tx()`Event type [EventItem]`,
-                        value: "EventItem",
+                        label: tx()`Event type [EventInventory]`,
+                        value: "EventInventory",
                     }
                 ]}
                 {...props}
@@ -93,8 +93,8 @@ export const EventUpsertForm: FC<EventUpsertForm.Props> = (
         defaultValues={{
             name:     "",
             type:     "",
-            duration: NaN,
-            instant: false,
+            duration: 0,
+            instant:  false,
             from:     "",
             to:       "",
             userId:   "",

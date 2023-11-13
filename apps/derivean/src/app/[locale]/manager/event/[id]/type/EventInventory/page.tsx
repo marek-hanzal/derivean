@@ -26,7 +26,7 @@ export default async function Index({params: {id}}: Index.Props) {
     return <Page
         icon={<EventIcon/>}
         text={{
-            header: t({values: event})`EventItem settings (label)`,
+            header: t({values: event})`Event type [EventInventory] (label)`,
         }}
         postfix={<Breadcrumbs
             items={[
@@ -45,7 +45,7 @@ export default async function Index({params: {id}}: Index.Props) {
         />}
         append={<EventMenu
             eventId={event.id}
-            active={["/manager/event/[id]/type/EventItem"]}
+            active={["/manager/event/[id]/type/EventInventory"]}
         />}
     >
         event item table
