@@ -10,17 +10,19 @@ import {
 
 export const EventSchema = withDullSchema({
     entity:  identityOf(z => z.object({
-        name:       z.string,
-        producerId: z.string,
+        name:     z.string,
+        from:     z.string$,
+        to:       z.string$,
+        duration: z.number$,
+        userId:   z.string$,
     })),
     shape:   schema(z => z.object({
-        name:       z.string,
-        producerId: z.string$,
+        name: z.string,
     })),
     filter:  filterOf(z => z.object({
-        name:       z.string$,
-        producerId: z.string$,
+        name:   z.string$,
+        userId: z.string$,
     })),
-    orderBy: orderByOf(["name"]),
+    orderBy: orderByOf(["from", "name"]),
 });
 export type EventSchema = typeof EventSchema;

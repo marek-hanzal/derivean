@@ -1,37 +1,25 @@
 "use client";
 
+import {EventIcon}       from "@derivean/ui";
 import {
-    ProducerInline,
-    ProducerUI,
-    ProductionTime
-}                         from "@derivean/producer";
-import {
-    EventIcon,
-    ProducerIcon
-}                         from "@derivean/ui";
-import {t}                from "@use-pico/i18n";
-import {
-    ButtonLink,
-    Loader
-}                         from "@use-pico/ui";
-import {HumanSeconds}     from "@use-pico/ui-extra";
+    DateTimeInline,
+    t
+}                        from "@use-pico/i18n";
+import {ButtonLink}      from "@use-pico/ui";
 import {
     type ComponentProps,
     type FC
-}                         from "react";
-import {EventUpsertForm}  from "../form/EventUpsertForm";
-import {EventInline}      from "../inline/EventInline";
-import {EventRpc}         from "../rpc/EventRpc";
-import {EventRequirement} from "../ui/EventRequirement";
-import {EventUI}          from "../ui/EventUI";
+}                        from "react";
+import {EventUpsertForm} from "../form/EventUpsertForm";
+import {EventInline}     from "../inline/EventInline";
+import {EventRpc}        from "../rpc/EventRpc";
+import {EventUI}         from "../ui/EventUI";
 
 export namespace EventTable {
     export type Columns =
         | "name"
-        | "producer"
-        | "time"
-        | "requirements"
-        | "pipelineTime";
+        | "from"
+        | "to";
 
     export type Props = Omit<
         ComponentProps<typeof EventUI.Table<Columns>>,
@@ -85,7 +73,7 @@ export const EventTable: FC<EventTable.Props> = props => {
             />,
         }}
         columns={{
-            name:         {
+            name: {
                 title:  t()`Event name`,
                 render: ({item}) => <ButtonLink
                     icon={<EventIcon/>}
@@ -98,48 +86,13 @@ export const EventTable: FC<EventTable.Props> = props => {
                     label={<EventInline entity={item}/>}
                 />,
             },
-            requirements: {
-                title:  t()`Event requirement (label)`,
-                render: ({item}) => <EventRequirement
-                    eventId={item.id}
-                />,
-                width:  32,
+            from: {
+                title:  t()`Event start`,
+                render: ({item}) => item.from ? <DateTimeInline date={item.from}/> : "-",
             },
-            producer:     {
-                title:  t()`Producer name`,
-                render: ({item}) => <ProducerUI.Fetch
-                    override={item.producerId}
-                    loader={<Loader size={"md"} type={"dots"}/>}
-                    WithSuccess={({entity}) => <ButtonLink
-                        icon={<ProducerIcon/>}
-                        href={{
-                            href:  "/manager/producer/[id]",
-                            query: {
-                                id: entity.id,
-                            },
-                        }}
-                        label={<ProducerInline entity={entity}/>}
-                    />}
-                />,
-                width:  18,
-            },
-            time:         {
-                title:  t()`Production time`,
-                render: ({item}) => <ProducerUI.Fetch
-                    override={item.producerId}
-                    loader={<Loader size={"md"} type={"dots"}/>}
-                    WithSuccess={({entity}) => <HumanSeconds seconds={entity.time}/>}
-                />,
-                width:  14,
-            },
-            pipelineTime: {
-                title:  t()`Producer pipeline time`,
-                render: ({item}) => <ProducerUI.Fetch
-                    override={item.producerId}
-                    loader={<Loader size={"md"} type={"dots"}/>}
-                    WithSuccess={({entity}) => <ProductionTime producerId={entity.id}/>}
-                />,
-                width:  14,
+            to:   {
+                title:  t()`Event end`,
+                render: ({item}) => item.to ? <DateTimeInline date={item.to}/> : "-",
             },
         }}
         {...props}

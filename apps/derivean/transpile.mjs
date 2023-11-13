@@ -3,6 +3,7 @@ export const transpile = [
     '@derivean/game',
     '@derivean/inventory',
     '@derivean/item',
+    '@derivean/event',
     '@derivean/manager',
     '@derivean/orm',
     '@derivean/producer',
