@@ -94,6 +94,7 @@ export const EventUpsertForm: FC<EventUpsertForm.Props> = (
             name:     "",
             type:     "",
             duration: NaN,
+            instant: false,
             from:     "",
             to:       "",
             userId:   "",

@@ -1,8 +1,8 @@
-import {DateTime} from "@use-pico/i18n";
 import {
     Kysely,
     PostgresDialect
 }                 from "kysely";
+import {DateTime} from "luxon";
 import {
     Pool,
     types

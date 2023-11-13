@@ -35,9 +35,11 @@ export class EventRepository extends AbstractRepository<
             name: "asc",
         };
         this.matchOf = {
-            name:   "name",
-            type:   "type",
-            userId: "userId",
+            name:    "name",
+            type:    "type",
+            instant: "instant",
+            commit:  "commit",
+            userId:  "userId",
         };
     }
 }

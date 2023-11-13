@@ -13,6 +13,7 @@ export class Pack {
         } catch (error) {
             console.log("Input", input);
             console.error(error);
+            throw error;
         }
     }
 

@@ -1,4 +1,4 @@
-import {withUuidTable} from "@use-pico/orm";
+import {withUuidTable} from "@use-pico/migrator";
 import {Kysely}        from "kysely";
 
 export async function up(db: Kysely<any>): Promise<void> {

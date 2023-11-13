@@ -21,6 +21,10 @@ export namespace Page {
          */
         text?: {
             /**
+             * Page title (tab)
+             */
+            title?: string;
+            /**
              * Page header (shown at the top of page)
              */
             header?: ReactNode;

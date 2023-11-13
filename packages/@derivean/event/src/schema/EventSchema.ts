@@ -17,6 +17,7 @@ export const EventSchema = withDullSchema({
         duration: z.number$,
         userId:   z.string$,
         instant: z.bool,
+        commit:  z.bool,
     })),
     shape:   schema(z => z.object({
         name:     z.string,
@@ -32,6 +33,7 @@ export const EventSchema = withDullSchema({
         type:    z.string$,
         userId:  z.string$,
         instant: z.bool$,
+        commit: z.bool$,
     })),
     orderBy: orderByOf(["from", "name"]),
 });

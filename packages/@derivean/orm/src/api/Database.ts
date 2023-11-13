@@ -169,7 +169,7 @@ export type Database =
          *
          * Takes inventory of this event and apply it to a kingdom inventory of a player.
          */
-        EventItem: {
+        EventInventory: {
             id: GeneratedAlways<string>;
             eventId: string;
             inventoryId: string;

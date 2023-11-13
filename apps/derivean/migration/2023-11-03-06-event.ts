@@ -1,4 +1,4 @@
-import {withUuidTable} from "@use-pico/orm";
+import {withUuidTable} from "@use-pico/migrator";
 import {Kysely}        from "kysely";
 
 export async function up(db: Kysely<any>): Promise<void> {
@@ -19,7 +19,7 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addUniqueConstraint("Event_name_type_unique", ["name", "type"])
         .execute();
 
-    await withUuidTable("EventItem", db)
+    await withUuidTable("EventInventory", db)
         .addColumn("eventId", "uuid", col =>
             col.references("Event.id").onDelete("cascade").notNull()
         )

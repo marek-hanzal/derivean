@@ -41,15 +41,6 @@ export default async function Index({params: {id}}: Index.Props) {
                     label: t()`Event list`,
                     icon:  <ListIcon/>,
                 },
-                {
-                    type:  "link",
-                    href:  {
-                        href:  "/manager/event/[id]",
-                        query: {id: event.id},
-                    },
-                    label: t({values: event})`Event detail`,
-                    icon:  <EventIcon/>,
-                },
             ]}
         />}
         append={<EventMenu

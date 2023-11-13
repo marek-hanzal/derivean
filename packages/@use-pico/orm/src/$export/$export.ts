@@ -4,4 +4,3 @@ export * from "./migration";
 export * from "./sql";
 export * from "./withClient";
 export * from "./withKysely";
-export * from "./withUuidTable";
