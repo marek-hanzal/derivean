@@ -123,7 +123,6 @@ export const InventoryItemTable: FC<InventoryItemTable.Props> = (
                     loader={<Loader size={"md"} type={"dots"}/>}
                     WithSuccess={({entity}) => <ItemInline entity={entity}/>}
                 />,
-                width:  14,
             },
             amount:    {
                 title:  t()`Amount`,

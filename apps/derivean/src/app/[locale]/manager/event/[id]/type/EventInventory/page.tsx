@@ -68,6 +68,7 @@ export default async function Index({params: {id}}: Index.Props) {
             }}
         >
             <InventoryItemTable
+                hidden={["inventory"]}
                 inventoryId={eventInventory.inventoryId}
             />
         </StoreProvider>

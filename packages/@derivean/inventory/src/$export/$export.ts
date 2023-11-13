@@ -1,6 +1,7 @@
 export * from "./IInventory";
 export * from "./IInventoryItem";
 export * from "./IInventoryService";
+export * from "./Inventory";
 export * from "./InventoryItemQueryStore";
 export * from "./InventoryItemRpc";
 export * from "./InventoryItemSchema";
