@@ -1,42 +1,18 @@
-c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19:
-  ref: Submit
-  value: Submit
-f654b712f05e612855d1000fbf3c3ba098dd606e9927ae6b0c9aca24:
-  ref: If you want to omit given value from the result, switch this button off.
-  value: If you want to omit given value from the result, switch this button off.
-5f4c0265ae687bb9acf17235514c89e027d524b3382dc6f68c59f6f9:
-  ref: Close
-  value: Close
-3d6199acf6308d3eae9112d43fe64a3b942ee97a303909418c58bcd9:
-  ref: Clear filter
-  value: Clear filter
-b6b23c7b3bb6becf7ad41aa96f31565a78725bfed6bfe317d0a7b0cc:
-  ref: Filter (button)
-  value: Filter (button)
-a7c528329f9a28e5785d20397bd38b513fc077dd5327bcde34b8fa79:
-  ref: Clear selection
-  value: Clear selection
-1ca37bf0a71fed53ead98154c92cd4f339c37c7cd37e3bbf53348e9c:
-  ref: Submit selection
-  value: Submit selection
-f2f4bd5edcfc70f89becee2b8f807ca587843f8f416f5107a1fcda53:
-  ref: Select an item
-  value: Select an item
-0eff7c020a109eb63582cefb44e136d867e6b48da0b94ae47bc8c078:
-  ref: Currently selected item
-  value: Currently selected item
-b0cf8a5dd758db7480606838271ff93da6792fdd8d3cb94816d6a40e:
-  ref: Confirm selection
-  value: Confirm selection
-3b18d029c1268960f252ed750fff581bd958cb283921ab3aec47ea8e:
-  ref: Select items
-  value: Select items
-2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614:
-  ref: Currently selected items
-  value: Currently selected items
 b4e8a29838ae1162bde0b03ce16b75d4739d6bfeeac544c56a20ac10:
   ref: Cancel
   value: Cancel
+7056d01d885e2e1c2bc274b88194ee72234432a7dc8090652f1577f9:
+  ref: Value not set
+  value: Value not set
+2848b629790c621cbe5ab25e79e831dfe7a52eb8052ecbcb7406a527:
+  ref: Show more items
+  value: Show more items
+b23991ae4c7c5d41384356888bea36d9ad9180e35b63f2ca2ca27e74:
+  ref: More
+  value: More
+c028e668a86cc8c4bf3ba442001649e1036228031a9b79654cb53eb0:
+  ref: Sign-in
+  value: Sign-in
 605e1ba528eedac2c245b6f6a1257a048261dc5508e4c5440a30c50f:
   ref: Delete
   value: Delete
@@ -49,9 +25,6 @@ c2e7d8c0ada03fcb5c1394b62f8b5576af8897c5bbf56725543da717:
 4fccd0115ce525399d4373acc187e76e675622bb5da7288d1b754825:
   ref: Fulltext search
   value: Fulltext search
-c028e668a86cc8c4bf3ba442001649e1036228031a9b79654cb53eb0:
-  ref: Sign-in
-  value: Sign-in
 7e19894e0affa85c85b0bdd3bd8b0a7d237060d20a7aa47e044d8adc:
   ref: Total number of items
   value: Total number of items
@@ -142,15 +115,42 @@ c4ca81da0b9d668c1ad621253207781bed46fe9bbbe9e4100e754b9d:
 608c8f3ecee8f9e93586e58c61dad9408e199cb8c23c923e596eb26a:
   ref: Update translation
   value: Update translation
-7056d01d885e2e1c2bc274b88194ee72234432a7dc8090652f1577f9:
-  ref: Value not set
-  value: Value not set
-2848b629790c621cbe5ab25e79e831dfe7a52eb8052ecbcb7406a527:
-  ref: Show more items
-  value: Show more items
-b23991ae4c7c5d41384356888bea36d9ad9180e35b63f2ca2ca27e74:
-  ref: More
-  value: More
+c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19:
+  ref: Submit
+  value: Submit
+f654b712f05e612855d1000fbf3c3ba098dd606e9927ae6b0c9aca24:
+  ref: If you want to omit given value from the result, switch this button off.
+  value: If you want to omit given value from the result, switch this button off.
+5f4c0265ae687bb9acf17235514c89e027d524b3382dc6f68c59f6f9:
+  ref: Close
+  value: Close
+3d6199acf6308d3eae9112d43fe64a3b942ee97a303909418c58bcd9:
+  ref: Clear filter
+  value: Clear filter
+b6b23c7b3bb6becf7ad41aa96f31565a78725bfed6bfe317d0a7b0cc:
+  ref: Filter (button)
+  value: Filter (button)
+a7c528329f9a28e5785d20397bd38b513fc077dd5327bcde34b8fa79:
+  ref: Clear selection
+  value: Clear selection
+1ca37bf0a71fed53ead98154c92cd4f339c37c7cd37e3bbf53348e9c:
+  ref: Submit selection
+  value: Submit selection
+f2f4bd5edcfc70f89becee2b8f807ca587843f8f416f5107a1fcda53:
+  ref: Select an item
+  value: Select an item
+0eff7c020a109eb63582cefb44e136d867e6b48da0b94ae47bc8c078:
+  ref: Currently selected item
+  value: Currently selected item
+b0cf8a5dd758db7480606838271ff93da6792fdd8d3cb94816d6a40e:
+  ref: Confirm selection
+  value: Confirm selection
+3b18d029c1268960f252ed750fff581bd958cb283921ab3aec47ea8e:
+  ref: Select items
+  value: Select items
+2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614:
+  ref: Currently selected items
+  value: Currently selected items
 d36a3f0b059a8475e4d22b802c4575c3f6634cad685d947983005ff6:
   ref: Update item type (label)
   value: Update item type (label)
@@ -268,6 +268,102 @@ a52367fba938c900739dd028e591c832cbf2cd7c8a192c32b9150aa1:
 170d573f6df889833e825dc720ef26da0d182ad4a772267ebd77f0fd:
   ref: Producer has cyclic dependencies
   value: Producer has cyclic dependencies
+648a9bd88580b075c4b2b5b829b8dd218e26fa96013ec90fabba62bc:
+  ref: Update inventory item (label)
+  value: Update inventory item (label)
+71f5759dd354e1080fe627bf1950053fd30606e02108f3e966f43fbb:
+  ref: Create inventory item (label)
+  value: Create inventory item (label)
+071916c9c453b992c9c961ab001fc0bee89bad019e015e39d322b4be:
+  ref: Inventory updated
+  value: Inventory updated
+5a36381ff07fca36e99622b002d4b542ac1a3ce43c691f647b5efa3e:
+  ref: Inventory created
+  value: Inventory created
+00c1980f1e986a7728ff07161345ea55f5d43328d609ffa1030f05f4:
+  ref: Inventory name
+  value: Inventory name
+a345151f54af3a6d29d6f456cc9024fd0d7e0e5150e27cfb0d19275a:
+  ref: Inventory name (placeholder)
+  value: Inventory name (placeholder)
+02d647d898f101106cbc6397b5af09a2b0419e1e50c9147460b6fc8b:
+  ref: Total count of inventories
+  value: Total count of inventories
+e528a295875f7433759b33ef7ea08c9a3fb19bc6625b248c945bd38b:
+  ref: Create inventory (modal)
+  value: Create inventory (modal)
+a33ee655c9ed7f6b816cf1e1b0877f9c5f554b25462257bf0338c4c1:
+  ref: Create inventory
+  value: Create inventory
+6fdea7273e03afc83ad47adc10aa49fafb1666d080973eb1dfd983d8:
+  ref: Update inventory
+  value: Update inventory
+3bcd85c3ff2abe925b4b1763e41dcaf48432fb8d183c8cae7cc609d6:
+  ref: Delete inventory
+  value: Delete inventory
+c62f45812c1e30e4ab0b8e50762a4d88499d1303c17d849b81fe87d0:
+  ref: Delete inventory (modal)
+  value: Delete inventory (modal)
+cb7246c28ec4149127157593fb5cebc665268ca4c03b514c72360751:
+  ref: Do you really want to delete selected inventory?
+  value: Do you really want to delete selected inventory?
+611889b150bbba39b5e11c93eb1d5439493bc9b0c56747d3d3201418:
+  ref: Inventory has been successfully removed
+  value: Inventory has been successfully removed
+27a5b047f955a2c1f94577835e750e65604349899a8e69752723422d:
+  ref: InventoryItem updated
+  value: InventoryItem updated
+357bc7b0b586fbfb216dc298c752b058e6eac0a15dda5bf285d57a04:
+  ref: InventoryItem created
+  value: InventoryItem created
+98ae65157d4bf888e8270d26d3156d4a416f747c0c6dc8c6773561e7:
+  ref: Inventory
+  value: Inventory
+9034bc1c447e134bd719641b47d10269aa881c2de57db4855be457da:
+  ref: Inventory (placeholder)
+  value: Inventory (placeholder)
+66404924cea8f3b46b53d0ea38850d3c46dc339e57dff73a69681c65:
+  ref: Item
+  value: Item
+0892a16e250bcd9d7ff4fb31023dddd38c210be53264c4b79ebeefbd:
+  ref: item (placeholder)
+  value: item (placeholder)
+2dc007e932619d69a3764f194224cb28fcd5e9ffb60d3cf82a144ca7:
+  ref: Amount
+  value: Amount
+d7067a95d5c91769dbba2df85d04cffccf7d5e37cda549e7ecc9581b:
+  ref: Limit
+  value: Limit
+77e2b92646c5b9c50c74a06c8e33877af87ed3f537a817fbaf5cf981:
+  ref: Total count of inventory items
+  value: Total count of inventory items
+a902b653563ecc1e083ba2766f7b3dadedaa429479aab348d66ad69b:
+  ref: Empty inventory
+  value: Empty inventory
+10341664bf8478db1a880f970ee4de0e68c3c1b4744ba8dfbf2d9ba7:
+  ref: This inventory is empty
+  value: This inventory is empty
+f165b141cf3cf9c827d3cc3aae4805b776041028645be2f046492294:
+  ref: Create inventory item (modal)
+  value: Create inventory item (modal)
+0fa56436985c0ede3404a59bf828a0bb9e4712fe2583b1a9bf53ff14:
+  ref: Create inventory item
+  value: Create inventory item
+96d5926c9a60378e23484b97be7d20098541bac29943df79fadfdde6:
+  ref: Update inventory item
+  value: Update inventory item
+a6eb27f457d5d2fc548079123e76826dfedb4fcc6cc1af466708f88d:
+  ref: Delete inventory item
+  value: Delete inventory item
+eecd2930a1fa4de61bc29f8080f2f452a6f21ad4a2c593d6a7e852e7:
+  ref: Delete inventory item (modal)
+  value: Delete inventory item (modal)
+91c67a9d842a24617768201376e82a48a5f4621bf842013ad886deee:
+  ref: Do you really want to delete selected inventory item?
+  value: Do you really want to delete selected inventory item?
+bf724e995587a78734797d2f175b0ec9348e03f4e796425cd6116aea:
+  ref: InventoryItem has been successfully removed
+  value: InventoryItem has been successfully removed
 02e1e25bace675d1ba7643838359f283680afd8df12a90eedd71fac6:
   ref: Update producer (label)
   value: Update producer (label)
@@ -643,9 +739,6 @@ e8cf9d9c024947c1f7da74499347a95dffb9737b2668a1e7c9c838b2:
 96c3ec3f0e533bda8a31b9b725113ac662b6e15180f779455ac7e2f4:
   ref: Kingdom has been successfully removed
   value: Kingdom has been successfully removed
-2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
-  ref: Game overview
-  value: Game overview
 7401742653cacefb254e91e23a79edaeb388a2a423cb1181c35f87ac:
   ref: Building detail (label)
   value: Building detail (label)
@@ -685,9 +778,6 @@ b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
 66624102d45745f792f2be2b8ddc4fdf3f9b864e165127e2e8576c9e:
   ref: Producer pipeline
   value: Producer pipeline
-8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
-  ref: Game management
-  value: Game management
 49036c4c363613fe423d0de97373c833a18e6c859af2187dacd569e2:
   ref: Event detail
   value: Event detail
@@ -697,12 +787,9 @@ b26b6df0874ba275fe15bfc9a827578dc878edd58036f0390a090159:
 36d8ff886fe97ed9c7458bdc4c0343af18f7ec7402c9b4a5303c527c:
   ref: Event type [EventInventory] (label)
   value: Event type [EventInventory] (label)
-28de4de589af568ae36e721daad935078aa1cebbaf9bf70c3112e96e:
-  ref: Translation list
-  value: Translation list
-e263ec6a176204dd2a48c458d632d6a02b4173d37fe6c291b3619693:
-  ref: DeRivean - The Invisible Game
-  value: DeRivean - The Invisible Game
+2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
+  ref: Game overview
+  value: Game overview
 0a929e8d46db182c39f5605224af1457992d39743e7692fb2d143162:
   ref: Selected kingdom
   value: Selected kingdom
@@ -712,6 +799,9 @@ a1fb8c003a02e2eac7ce1b756d67aaeb6ad344d5be95d80c11fc6705:
 adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
   ref: Kingdom inventory
   value: Kingdom inventory
+8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
+  ref: Game management
+  value: Game management
 553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
   ref: Building detail
   value: Building detail
@@ -727,6 +817,12 @@ fc150b71e1abae2f5a01e5b04716f51d045dc06d150ec1960dcf8ebb:
 56db5cba41164e61cb42c625b8ccd3bb79e6aab4d8ffa4c194083f69:
   ref: Producer detail
   value: Producer detail
+28de4de589af568ae36e721daad935078aa1cebbaf9bf70c3112e96e:
+  ref: Translation list
+  value: Translation list
+e263ec6a176204dd2a48c458d632d6a02b4173d37fe6c291b3619693:
+  ref: DeRivean - The Invisible Game
+  value: DeRivean - The Invisible Game
 366c4ebefbd1bd2dedbd6ef50c16353460122b80dcd950beb3eef525:
   ref: 4o4
   value: 4o4

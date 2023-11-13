@@ -1,16 +1,22 @@
 import {
     EventMenu,
+    withEventInventoryRepository,
     withEventRepository
-}                  from "@derivean/event";
-import {container} from "@derivean/server";
-import {EventIcon} from "@derivean/ui";
-import {t}         from "@use-pico/i18n";
+}                      from "@derivean/event";
+import {
+    InventoryItemQueryStore,
+    InventoryItemTable
+}                      from "@derivean/inventory";
+import {container}     from "@derivean/server";
+import {EventIcon}     from "@derivean/ui";
+import {t}             from "@use-pico/i18n";
+import {StoreProvider} from "@use-pico/store";
 import {
     Breadcrumbs,
     HomeIcon,
     ListIcon,
     Page
-}                  from "@use-pico/ui";
+}                      from "@use-pico/ui";
 
 export namespace Index {
     export interface Props {
@@ -22,6 +28,11 @@ export namespace Index {
 
 export default async function Index({params: {id}}: Index.Props) {
     const event = await withEventRepository.use(container).getOrThrow(id);
+    const eventInventory = await withEventInventoryRepository.use(container).withQuery.fetchOrThrow({
+        where: {
+            eventId: event.id,
+        }
+    });
 
     return <Page
         icon={<EventIcon/>}
@@ -44,10 +55,21 @@ export default async function Index({params: {id}}: Index.Props) {
             ]}
         />}
         append={<EventMenu
-            eventId={event.id}
+            event={event}
             active={["/manager/event/[id]/type/EventInventory"]}
         />}
     >
-        event item table
+        <StoreProvider
+            store={InventoryItemQueryStore}
+            values={{
+                where: {
+                    inventoryId: eventInventory.inventoryId,
+                },
+            }}
+        >
+            <InventoryItemTable
+                inventoryId={eventInventory.inventoryId}
+            />
+        </StoreProvider>
     </Page>;
 }

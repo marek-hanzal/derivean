@@ -8,23 +8,19 @@ import {
     schema
 }                       from "@use-pico/schema";
 
-export const InventoryItemSchema = withDullSchema({
+export const EventInventorySchema = withDullSchema({
     entity:  identityOf(z => z.object({
+        eventId:     z.string,
         inventoryId: z.string,
-        itemId:      z.string,
-        amount:      z.number,
-        limit:       z.number$,
     })),
     shape:   schema(z => z.object({
+        eventId:     z.string,
         inventoryId: z.string,
-        itemId:      z.string,
-        amount:      z.number,
-        limit:       z.number$,
     })),
     filter:  filterOf(z => z.object({
+        eventId:     z.string$,
         inventoryId: z.string$,
-        itemId:      z.string$,
     })),
-    orderBy: orderByOf(["id"]),
+    orderBy: orderByOf(["eventId"]),
 });
-export type InventoryItemSchema = typeof InventoryItemSchema;
+export type EventInventorySchema = typeof EventInventorySchema;

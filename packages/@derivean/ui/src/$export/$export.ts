@@ -2,6 +2,7 @@ export * from "./BuildingIcon";
 export * from "./EventIcon";
 export * from "./GameIcon";
 export * from "./InventoryIcon";
+export * from "./InventoryItemIcon";
 export * from "./ItemIcon";
 export * from "./KingdomIcon";
 export * from "./PipelineIcon";

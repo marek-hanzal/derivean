@@ -40,7 +40,11 @@ export interface IRepository<
 
     toCreate(create: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["create"]>>): Promise<Omit<PicoSchema.Output<TSchema["entity"]>, "id">>;
 
+    onCreate(entity: PicoSchema.Output<TSchema["entity"]>): Promise<any>;
+
     toUpdate(update: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["update"]>>["update"]): Promise<Partial<PicoSchema.Output<TSchema["entity"]>>>;
+
+    onUpdate(entity: PicoSchema.Output<TSchema["entity"]>): Promise<any>;
 }
 
 export namespace IRepository {

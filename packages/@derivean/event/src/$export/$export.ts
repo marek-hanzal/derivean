@@ -1,4 +1,5 @@
 export * from "./EventInline";
+export * from "./EventInventorySchema";
 export * from "./EventMenu";
 export * from "./EventPreview";
 export * from "./EventQueryStore";
@@ -10,4 +11,5 @@ export * from "./EventTable";
 export * from "./EventUI";
 export * from "./withEventContainer";
 export * from "./withEventContext";
+export * from "./withEventInventoryRepository";
 export * from "./withEventRepository";

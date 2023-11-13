@@ -85,7 +85,13 @@ export class AbstractRepository<
         return create;
     }
 
+    public async onCreate(entity: PicoSchema.Output<TSchema["entity"]>): Promise<any> {
+    }
+
     public async toUpdate(update: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["update"]>>["update"]): Promise<Partial<PicoSchema.Output<TSchema["entity"]>>> {
         return update;
+    }
+
+    public async onUpdate(entity: PicoSchema.Output<TSchema["entity"]>): Promise<any> {
     }
 }

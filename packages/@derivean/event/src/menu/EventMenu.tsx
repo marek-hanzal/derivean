@@ -1,22 +1,24 @@
-import {InventoryIcon} from "@derivean/ui";
-import {IconSearch}    from "@tabler/icons-react";
-import {t}             from "@use-pico/i18n";
-import {Menu}          from "@use-pico/ui";
-import {type FC}       from "react";
+import {InventoryIcon}  from "@derivean/ui";
+import {IconSearch}     from "@tabler/icons-react";
+import {withDullSchema} from "@use-pico/dull-stuff";
+import {t}              from "@use-pico/i18n";
+import {Menu}           from "@use-pico/ui";
+import {type FC}        from "react";
+import {EventSchema}    from "../schema/EventSchema";
 
 export namespace EventMenu {
     export interface Props extends Menu.PropsEx {
-        eventId: string;
+        event: withDullSchema.Infer.Entity<EventSchema>;
     }
 }
 
 export const EventMenu: FC<EventMenu.Props> = (
     {
-        eventId,
+        event,
         ...props
     },
 ) => {
-    const query = {id: eventId};
+    const query = {id: event.id};
 
     return <Menu
         items={[
@@ -27,7 +29,7 @@ export const EventMenu: FC<EventMenu.Props> = (
                 query,
                 label: t()`Detail`,
             },
-            {
+            event.type === "EventInventory" && {
                 type:  "link",
                 href:  "/manager/event/[id]/type/EventInventory",
                 icon:  <InventoryIcon/>,

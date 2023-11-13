@@ -33,11 +33,13 @@ export class WithMutation<
     }
 
     public async create(create: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["create"]>>): Promise<PicoSchema.Output<TSchema["entity"]>> {
-        return await this.client
+        const entity = await this.client
             .insertInto(this.table)
             .values(await this.repository.toCreate(create) as PicoSchema.Output<TSchema["entity"]>)
             .returningAll()
             .executeTakeFirstOrThrow();
+        await this.repository.onCreate(entity);
+        return entity;
     }
 
     public async update(
@@ -46,11 +48,11 @@ export class WithMutation<
             query,
         }: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["update"]>>
     ): Promise<PicoSchema.Output<TSchema["entity"]>> {
-        const entity = await this.repository.withQuery.fetchOrThrow(query);
+        let entity = await this.repository.withQuery.fetchOrThrow(query);
         if (!update) {
             return entity;
         }
-        return await this.client
+        entity = await this.client
             .updateTable(this.table)
             .set(await this.repository.toUpdate(update))
             /**
@@ -58,7 +60,9 @@ export class WithMutation<
              */
             .where("id", "=", entity.id)
             .returningAll()
-            .executeTakeFirst();
+            .executeTakeFirstOrThrow() as PicoSchema.Output<TSchema["entity"]>;
+        await this.repository.onUpdate(entity);
+        return entity;
     }
 
     public async delete(query: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["delete"]>>): Promise<PicoSchema.Output<TSchema["entity"]>> {

@@ -14,6 +14,6 @@ export async function up(db: Kysely<any>): Promise<void> {
             col.references("Item.id").onDelete("cascade").notNull()
         )
         .addColumn("amount", "float4", col => col.notNull())
-        .addColumn("limit", "float4", col => col.notNull())
+        .addColumn("limit", "float4")
         .execute();
 }

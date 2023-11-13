@@ -45,7 +45,7 @@ export default async function Index({params: {id}}: Index.Props) {
             ]}
         />}
         append={<EventMenu
-            eventId={event.id}
+            event={event}
             active={["/manager/event/[id]"]}
         />}
     >

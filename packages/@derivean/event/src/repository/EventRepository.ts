@@ -1,15 +1,18 @@
-import {type Database}      from "@derivean/orm";
 import {
-    ProducerRepository,
-    withProducerRepository
-}                           from "@derivean/producer";
-import {withDullSchema}     from "@use-pico/dull-stuff";
+    InventoryRepository,
+    withInventoryRepository
+}                                     from "@derivean/inventory";
+import {type Database}                from "@derivean/orm";
+import {withDullSchema}               from "@use-pico/dull-stuff";
 import {
     type Client,
     withClient
-}                           from "@use-pico/orm";
-import {AbstractRepository} from "@use-pico/repository";
-import {EventSchema}        from "../schema/EventSchema";
+}                                     from "@use-pico/orm";
+import {AbstractRepository}           from "@use-pico/repository";
+import {type PicoSchema}              from "@use-pico/schema";
+import {withEventInventoryRepository} from "../container/withEventInventoryRepository";
+import {EventSchema}                  from "../schema/EventSchema";
+import {EventInventoryRepository}     from "./EventInventoryRepository";
 
 export class EventRepository extends AbstractRepository<
     Database,
@@ -18,12 +21,14 @@ export class EventRepository extends AbstractRepository<
 > {
     static inject = [
         withClient.inject,
-        withProducerRepository.inject,
+        withInventoryRepository.inject,
+        withEventInventoryRepository.inject,
     ];
 
     constructor(
         client: Client<Database>,
-        protected producerRepository: ProducerRepository.Type,
+        protected readonly inventoryRepository: InventoryRepository.Type,
+        protected readonly eventInventoryRepository: EventInventoryRepository.Type,
     ) {
         super(
             client,
@@ -40,6 +45,19 @@ export class EventRepository extends AbstractRepository<
             instant: "instant",
             userId:  "userId",
         };
+    }
+
+    public async onCreate(entity: PicoSchema.Output<withDullSchema.Infer.RepositorySchema<EventSchema>["entity"]>): Promise<any> {
+        switch (entity.type) {
+            case "EventInventory":
+                await this.eventInventoryRepository.withMutation.create({
+                    eventId:     entity.id,
+                    inventoryId: (await this.inventoryRepository.withMutation.create({
+                        name: `EventInventory ${entity.name}`,
+                    })).id,
+                });
+                break;
+        }
     }
 }
 
