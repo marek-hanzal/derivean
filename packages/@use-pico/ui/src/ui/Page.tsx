@@ -1,4 +1,3 @@
-import Head         from "next/head";
 import {
     type FC,
     type PropsWithChildren,
@@ -21,10 +20,6 @@ export namespace Page {
          * Customize texts used in a page itself
          */
         text?: {
-            /**
-             * Page title (shown in browser tab)
-             */
-            title?: string;
             /**
              * Page header (shown at the top of page)
              */
@@ -57,11 +52,6 @@ export const Page: FC<Page.Props> = (
     }) => {
     return <Container fluid>
         <Unblock/>
-        {text?.title && <Head>
-            <title>
-                {text?.title}
-            </title>
-        </Head>}
         {(onBack || postfix || extra || text?.header) && <Grid
             align={"center"}
             py={"xs"}

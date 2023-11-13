@@ -89,6 +89,7 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/redis/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/tx/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/item/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/kingdom/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@derivean/public/.turbo" />

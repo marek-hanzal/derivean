@@ -9,6 +9,7 @@ export const transpile = [
     '@derivean/public',
     '@derivean/root',
     '@derivean/server',
+    '@derivean/kingdom',
     '@derivean/ui',
     '@use-pico/auth',
     '@use-pico/auth-server',

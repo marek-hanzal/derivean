@@ -3,6 +3,7 @@ import {Kysely}        from "kysely";
 
 export async function up(db: Kysely<any>): Promise<void> {
     await withUuidTable("Inventory", db)
+        .addColumn("name", "varchar(128)", col => col.notNull())
         .execute();
 
     await withUuidTable("InventoryItem", db)

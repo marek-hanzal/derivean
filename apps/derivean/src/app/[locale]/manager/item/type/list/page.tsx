@@ -2,10 +2,7 @@ import {
     ItemTypeQueryStore,
     ItemTypeTable
 }                      from "@derivean/item";
-import {
-    t,
-    tx
-}                      from "@use-pico/i18n";
+import {t}             from "@use-pico/i18n";
 import {StoreProvider} from "@use-pico/store";
 import {
     Breadcrumbs,
@@ -14,11 +11,10 @@ import {
     Page
 }                      from "@use-pico/ui";
 
-export default function Index() {
+export default function List() {
     return <Page
         icon={<ListIcon/>}
         text={{
-            title:  tx()`Item type list`,
             header: t()`Item type list`,
         }}
         postfix={<Breadcrumbs

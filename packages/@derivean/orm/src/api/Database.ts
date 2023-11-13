@@ -11,6 +11,10 @@ export type Database =
          */
         Kingdom: {
             id: GeneratedAlways<string>;
+            /**
+             * Overall kingdom's inventory
+             */
+            inventoryId: string;
             userId: string;
             created: string;
             name: string;

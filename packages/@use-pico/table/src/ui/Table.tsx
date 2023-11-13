@@ -89,6 +89,7 @@ export namespace Table {
         withLinkLock?: boolean;
         refresh?: number;
         minWidth?: CSSProperties["minWidth"];
+        compact?: boolean;
     }
 
     export type Classes = typeof classes;
@@ -124,6 +125,7 @@ export const Table = <
         onClick,
         withLinkLock = false,
         refresh,
+        compact = false,
         ...props
     }: Table.Props<TColumns, TSchema, TQuerySchema>) => {
     const $order = order || Object.keys(columns) as TColumns[];
@@ -151,14 +153,14 @@ export const Table = <
     return <LinkLockProvider
         isLock={withLinkLock}
     >
-        <TableHeaderControls
+        {!compact && <TableHeaderControls
             isFetching={result.isFetching}
             withQueryStore={withQueryStore}
             withSourceQuery={withSourceQuery}
             Filter={Filter}
             Postfix={WithPostfix}
             text={text.header}
-        />
+        />}
         {$pagination?.position?.includes("top") && <>
             <Pagination
                 text={text}

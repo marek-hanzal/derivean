@@ -15,7 +15,6 @@ export default function Index() {
     return <Page
         icon={<BuildingIcon/>}
         text={{
-            title:  tx()`Building list`,
             header: tx()`Building list`,
         }}
         postfix={<Breadcrumbs

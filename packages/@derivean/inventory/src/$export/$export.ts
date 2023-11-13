@@ -2,6 +2,8 @@ export * from "./IInventory";
 export * from "./IInventoryItem";
 export * from "./IInventoryService";
 export * from "./InventoryItemSchema";
+export * from "./InventoryRepository";
 export * from "./InventorySchema";
 export * from "./withInventoryContainer";
+export * from "./withInventoryRepository";
 export * from "./withInventoryService";

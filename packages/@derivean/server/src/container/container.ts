@@ -1,6 +1,7 @@
 import {withBuildingContainer}  from "@derivean/building";
 import {withInventoryContainer} from "@derivean/inventory";
 import {withItemContainer}      from "@derivean/item";
+import {withKingdomContainer}   from "@derivean/kingdom";
 import {withProducerContainer}  from "@derivean/producer";
 import {
     withClient,
@@ -14,9 +15,10 @@ import {withServerContainer}    from "@use-pico/server";
 
 const register = [
     withBuildingContainer,
-    withProducerContainer,
-    withItemContainer,
     withInventoryContainer,
+    withItemContainer,
+    withProducerContainer,
+    withKingdomContainer,
 ] as const;
 
 export const container = withServerContainer();

@@ -3,10 +3,7 @@ import {
     ProducerQueryStore
 }                      from "@derivean/producer";
 import {ProducerIcon}  from "@derivean/ui";
-import {
-    t,
-    tx
-}                      from "@use-pico/i18n";
+import {t}             from "@use-pico/i18n";
 import {StoreProvider} from "@use-pico/store";
 import {
     Breadcrumbs,
@@ -18,7 +15,6 @@ export default function Overview() {
     return <Page
         icon={<ProducerIcon/>}
         text={{
-            title:  tx()`Producer overview`,
             header: t()`Producer overview`,
         }}
         postfix={<Breadcrumbs

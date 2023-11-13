@@ -6,10 +6,7 @@ import {BuildingMenu}  from "@derivean/manager";
 import {ProducerGraph} from "@derivean/producer";
 import {container}     from "@derivean/server";
 import {BuildingIcon}  from "@derivean/ui";
-import {
-    t,
-    tx
-}                      from "@use-pico/i18n";
+import {t}             from "@use-pico/i18n";
 import {
     Breadcrumbs,
     Grid,
@@ -37,7 +34,6 @@ export default async function Index({params: {id}}: Index.Props) {
     return <Page
         icon={<BuildingIcon/>}
         text={{
-            title: tx({values: building})`Building detail (title)`,
             header: t({values: building})`Building detail`,
         }}
         postfix={<Breadcrumbs

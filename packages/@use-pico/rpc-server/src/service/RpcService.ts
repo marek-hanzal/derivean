@@ -1,4 +1,10 @@
 import {
+    getToken,
+    UserService,
+    withUserService,
+    withUserSession
+}                         from "@use-pico/auth-server";
+import {
     type IContainer,
     withContainer
 }                         from "@use-pico/container";
@@ -33,6 +39,7 @@ export class RpcService implements IRpcService {
     }
 
     public async handle({request}: IRpcService.HandleProps): Promise<NextResponse> {
+        const user = await getToken({request});
         const bulks = parse$(RpcBulkRequestSchema, await request.json());
         if (!bulks.success) {
             return NextResponse.json({
@@ -46,6 +53,21 @@ export class RpcService implements IRpcService {
         }
 
         const container = this.container.child();
+        if (user) {
+            /**
+             * When we have user, we must create a new UserService as it's bound to global container, so
+             * it would not see current user session.
+             */
+            withUserService.bind(container, UserService);
+            /**
+             * Bind user session to the container.
+             */
+            withUserSession.value(container, {
+                userId: user.sub as string,
+                user,
+                tokens: user.tokens,
+            });
+        }
 
         const response = new Map<string, RpcResponseSchema.Type>();
 

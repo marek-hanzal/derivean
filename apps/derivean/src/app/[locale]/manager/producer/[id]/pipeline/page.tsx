@@ -6,10 +6,7 @@ import {
 }                     from "@derivean/producer";
 import {container}    from "@derivean/server";
 import {ProducerIcon} from "@derivean/ui";
-import {
-    t,
-    tx
-}                     from "@use-pico/i18n";
+import {t}            from "@use-pico/i18n";
 import {
     Box,
     Breadcrumbs,
@@ -36,7 +33,6 @@ export default async function Index({params: {id}}: Index.Props) {
     return <Page
         icon={<ProducerIcon/>}
         text={{
-            title:  tx({values: producer})`Producer detail (title)`,
             header: t({values: producer})`Producer detail`,
         }}
         postfix={<Breadcrumbs
