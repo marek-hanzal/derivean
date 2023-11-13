@@ -38,7 +38,7 @@ export class AbstractRepository<
     TTable
 > {
     protected constructor(
-        public client: Client<TDatabase>,
+        protected client: Client<TDatabase>,
         schema: TSchema,
         table: TTable,
     ) {

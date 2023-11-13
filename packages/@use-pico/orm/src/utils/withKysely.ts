@@ -14,10 +14,17 @@ export const withKysely = <TDatabase>(
     {
         dsn = process.env.DATABASE_URL,
     }: withKysely.Props
-) => new Kysely<TDatabase>({
-    dialect: new PostgresDialect({
-        pool: new Pool({
-            connectionString: dsn,
+) => {
+    return new Kysely<TDatabase>({
+        dialect: new PostgresDialect({
+            pool: new Pool({
+                connectionString: dsn,
+                types:            {
+                    getTypeParser: () => {
+                        return value => value;
+                    },
+                },
+            }),
         }),
-    }),
-});
+    });
+};

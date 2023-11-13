@@ -4,7 +4,7 @@ import {
 }                           from "@derivean/inventory";
 import {type Database}      from "@derivean/orm";
 import {
-    IUserService,
+    type IUserService,
     withUserService
 }                           from "@use-pico/auth-server";
 import {withDullSchema}     from "@use-pico/dull-stuff";
@@ -50,7 +50,7 @@ export class KingdomRepository extends AbstractRepository<
     public async toCreate(create: NonNullable<PicoSchema.Output<withDullSchema.Infer.RepositorySchema<KingdomSchema>["mutation"]["shape"]["create"]>>): Promise<Omit<withDullSchema.Infer.Entity<KingdomSchema>, "id">> {
         return {
             ...create,
-            created:     DateTime.now().toUTC().toFormat("YYYY-MM-DD HH:mm:ss"),
+            created: DateTime.utc().toISO()!,
             inventoryId: create.inventoryId || (await this.inventoryRepository.withMutation.create({
                 name: `Kingdom [${create.name}]`,
             })).id,

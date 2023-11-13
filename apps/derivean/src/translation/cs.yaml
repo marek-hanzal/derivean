@@ -565,16 +565,22 @@ fa9a3eebbe64fd9bb5c9a40cca53b48f21b8ee5c4b28becc1a381d75:
   value: Založit nové království
 321ccacaf0e511fb867acc4a6f8187c4fd63af4be822e2a67aa25f22:
   ref: Update kingdom
-  value: Update kingdom
+  value: Upravit
 f240dcc1abf5fa4b4b6eedb0212152d527c282db71842670c0ebe638:
   ref: Delete kingdom
-  value: Delete kingdom
+  value: Opustit království
 07caf676e65faaf0982aa1909a0b5d80446b009f213980745a6acfb8:
   ref: Delete kingdom (modal)
-  value: Delete kingdom (modal)
+  value: Opustit království?
 e8cf9d9c024947c1f7da74499347a95dffb9737b2668a1e7c9c838b2:
   ref: Do you really want to delete selected kingdom?
-  value: Do you really want to delete selected kingdom?
+  value: |
+    <p>
+      <b>Opravdu</b> si přejete opustit vybrané království?
+    </p>
+    <p>
+      <mark>Tato akce je nezvratná a přijdete o <i>veškerý postup</i>, v tomto království!</mark>
+    </p>
 96c3ec3f0e533bda8a31b9b725113ac662b6e15180f779455ac7e2f4:
   ref: Kingdom has been successfully removed
   value: Kingdom has been successfully removed

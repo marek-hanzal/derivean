@@ -38,7 +38,10 @@ export class RpcService implements IRpcService {
     ) {
     }
 
-    public async handle({request}: IRpcService.HandleProps): Promise<NextResponse> {
+    public async handle({
+                            request,
+                            context
+                        }: IRpcService.HandleProps): Promise<NextResponse> {
         const user = await getToken({request});
         const bulks = parse$(RpcBulkRequestSchema, await request.json());
         if (!bulks.success) {
@@ -53,6 +56,11 @@ export class RpcService implements IRpcService {
         }
 
         const container = this.container.child();
+        /**
+         * Because some services needs an access container itself, it must be connected to the right (child) container
+         * or it would resolve services from the global container.
+         */
+        withContainer.value(container, container);
         if (user) {
             /**
              * When we have user, we must create a new UserService as it's bound to global container, so
@@ -68,6 +76,7 @@ export class RpcService implements IRpcService {
                 tokens: user.tokens,
             });
         }
+        context?.(container);
 
         const response = new Map<string, RpcResponseSchema.Type>();
 
