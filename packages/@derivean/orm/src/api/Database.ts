@@ -140,6 +140,14 @@ export type Database =
             name: string;
             type: string;
             /**
+             * Time boundary when an event should automatically trigger (create an instance or instantly apply an effect)
+             */
+            from?: string;
+            /**
+             * Time boundary when an event should automatically trigger (create an instance or instantly apply an effect)
+             */
+            to?: string;
+            /**
              * Optional duration of an event; used to compute event instance from/to.
              */
             duration?: number;

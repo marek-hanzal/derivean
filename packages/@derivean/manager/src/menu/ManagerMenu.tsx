@@ -70,7 +70,7 @@ export const ManagerMenu: FC<ManagerMenu.Props> = () => {
             {
                 type:  "link",
                 href:  "/manager/event/list",
-                label: t()`Event list`,
+                label: t()`Event list (label)`,
                 icon:  <EventIcon/>,
             },
             {

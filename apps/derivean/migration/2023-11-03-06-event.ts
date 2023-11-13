@@ -9,6 +9,8 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addColumn("type", "varchar(64)", col =>
             col.notNull()
         )
+        .addColumn("from", "timestamp")
+        .addColumn("to", "timestamp")
         .addColumn("duration", "float4")
         .addColumn("instant", "boolean")
         .addUniqueConstraint("Event_name_type_unique", ["name", "type"])
