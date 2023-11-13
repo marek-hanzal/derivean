@@ -1,7 +1,7 @@
 {
 	"version": "0.5.0",
-	"name": "@derivean/server",
-	"description": "Server-side common stuff.",
+	"name": "@derivean/event",
+	"description": "Events.",
 	"sideEffects": false,
 	"type": "module",
 	"main": "src/index.ts",
@@ -14,26 +14,18 @@
 		"cleanup": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
 	"dependencies": {
-		"@derivean/building": "^0.5.0",
-		"@derivean/event": "^0.5.0",
-		"@derivean/item": "^0.5.0",
-		"@derivean/kingdom": "^0.5.0",
-		"@derivean/producer": "^0.5.0",
 		"@use-pico/orm": "^2.0.0",
-		"@use-pico/redis": "^2.0.0",
-		"@use-pico/server": "^2.0.0",
-		"pg": "^8.11.3"
-	},
-	"peerDependencies": {
-		"kysely": "^0.26.3"
+		"@use-pico/query": "^2.0.0",
+		"@use-pico/repository": "^2.0.0",
+		"@use-pico/schema": "^2.0.0",
+		"@use-pico/table": "^2.0.0"
 	},
 	"devDependencies": {
-		"@types/node": "^20.4.2",
-		"@types/pg": "^8.10.7",
-		"@types/react": "^18.2.15",
 		"@use-pico/esbuild": "^2.0.0",
 		"@use-pico/eslint-config-eslint": "^2.0.0",
 		"@use-pico/tsconfig": "^2.0.0",
+		"@types/node": "^20.4.2",
+		"@types/react": "^18.2.15",
 		"concurrently": "^8.2.2",
 		"del-cli": "^5.0.0",
 		"eslint": "^8.45.0",

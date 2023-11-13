@@ -1,4 +1,5 @@
 import {withBuildingContainer}  from "@derivean/building";
+import {withEventContainer}     from "@derivean/event";
 import {withInventoryContainer} from "@derivean/inventory";
 import {withItemContainer}      from "@derivean/item";
 import {withKingdomContainer}   from "@derivean/kingdom";
@@ -16,10 +17,11 @@ import {withContext}            from "./withContext";
 
 const register = [
     withBuildingContainer,
+    withEventContainer,
     withInventoryContainer,
     withItemContainer,
-    withProducerContainer,
     withKingdomContainer,
+    withProducerContainer,
 ] as const;
 
 export const container = withServerContainer();
