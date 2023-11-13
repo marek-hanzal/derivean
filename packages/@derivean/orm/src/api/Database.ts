@@ -156,6 +156,10 @@ export type Database =
              * when a player logs-in.
              */
             instant?: boolean;
+            /**
+             * User-specific event
+             */
+            userId?: string;
         };
         /**
          * Implementation of item transaction event.
