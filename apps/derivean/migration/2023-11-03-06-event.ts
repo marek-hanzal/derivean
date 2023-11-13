@@ -23,10 +23,9 @@ export async function up(db: Kysely<any>): Promise<void> {
         .addColumn("eventId", "uuid", col =>
             col.references("Event.id").onDelete("cascade").notNull()
         )
-        .addColumn("itemId", "uuid", col =>
-            col.references("Item.id").onDelete("cascade").notNull()
+        .addColumn("inventoryId", "uuid", col =>
+            col.references("Inventory.id").onDelete("cascade").notNull()
         )
-        .addColumn("amount", "float4", col => col.notNull())
         .execute();
 
     await withUuidTable("EventInstance", db)

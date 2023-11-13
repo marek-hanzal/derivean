@@ -166,12 +166,13 @@ export type Database =
          *
          * This could be, for example, give-away for a new players or event
          * disaster event which takes some items.
+         *
+         * Takes inventory of this event and apply it to a kingdom inventory of a player.
          */
         EventItem: {
             id: GeneratedAlways<string>;
             eventId: string;
-            itemId: string;
-            amount?: number;
+            inventoryId: string;
         };
         /**
          * Event instance is bound to a player and kingdom.
