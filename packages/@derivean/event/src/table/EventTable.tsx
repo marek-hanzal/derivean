@@ -94,14 +94,14 @@ export const EventTable: FC<EventTable.Props> = props => {
                     label={<EventInline entity={item}/>}
                 />,
             },
+            type: {
+                title:  t()`Event type`,
+                render: ({item}) => td()(`Event type [${item.type}]`),
+                width:  14,
+            },
             instant:  {
                 title:  t()`Event instant`,
                 render: ({item}) => <BoolInline bool={item.instant}/>,
-                width:  14,
-            },
-            type:     {
-                title:  t()`Event type`,
-                render: ({item}) => td()(`Event type [${item.type}]`),
                 width:  14,
             },
             duration: {

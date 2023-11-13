@@ -25,11 +25,7 @@ export namespace Index {
 }
 
 export default async function Index({params: {id}}: Index.Props) {
-    const building = await withBuildingRepository.use(container).withQuery.fetchOrThrow({
-        where: {
-            id,
-        }
-    });
+    const building = await withBuildingRepository.use(container).getOrThrow(id);
 
     return <Page
         icon={<BuildingIcon/>}
