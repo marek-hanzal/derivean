@@ -12,6 +12,7 @@ import {
     NativeBreadcrumbs,
     Text
 }                                 from "@use-pico/ui";
+import {HumanSeconds}             from "@use-pico/ui-extra";
 import {
     type ComponentProps,
     type FC
@@ -159,7 +160,7 @@ export const ProducerOutputTable: FC<ProducerOutputTable.Props> = (
                         </Text>
                         /
                         <Text>
-                            {entity.time}s
+                            <HumanSeconds seconds={entity.time}/>
                         </Text>
                     </Group>}
                 />,

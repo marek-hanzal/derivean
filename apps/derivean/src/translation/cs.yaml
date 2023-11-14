@@ -448,7 +448,7 @@ f073a9f96b3c2e747900f5790d9504f1edcab87addf5a80db2d70a62:
   value: Vyberte prosím výrobnu
 1405a3c39304e20346e99293e5353fc4bd95c608e025f18e3cb2343b:
   ref: Item (placeholder)
-  value: Item (placeholder)
+  value: Vyberte prosím předmět
 9cb6b24d87914f0c0ee944bc0c9e0e160102f2ba32dd5f9317c19f2f:
   ref: Consumed amount
   value: Spotřebované množství
@@ -480,10 +480,10 @@ c6987ca9737bb51302e981700917bf4f4866753b5f283c1ed6de1b2b:
   value: Vstupní zdroj výrobny byl úspěšně odstraněn
 1be44ffb82fc0b0d5e468d98fc4975c9208f8289939b6c7164dfc178:
   ref: Item producers
-  value: Item producers
+  value: Výrobci předmětu
 7b49e8b1e1dfe9a9d4289038ef32e4c7763ecad2f101b0ba9a66428d:
   ref: Item without producers
-  value: Item without producers
+  value: Předmět bez výrobců
 f5306e9d922c167682bc5bbcf11c8751276dd703979a70643cef00ae:
   ref: Produced amount
   value: Produkované množství
@@ -524,7 +524,7 @@ fad16a416ed45e4916eeb5c11c45c74a285d530628afbfd430d346d0:
   value: Item consumers
 c859b6a50776680e4117e3c29ba2a631e36875255789622733151704:
   ref: Item without consumers
-  value: Item without consumers
+  value: Předmět bez konzumentů
 75f94ebd2d3ed92dc38dbd514637e9c21928a22dab76431246c2a985:
   ref: Producer input
   value: Požadavky
@@ -752,7 +752,7 @@ ed471b7d961376ee0e1774162b21ca28774b3444936064a9ac5c678f:
   value: Kingdom updated
 64f2a9365e4f26a78d2883409aff78068634ecd3aac8b48a0c41ab44:
   ref: Kingdom created
-  value: Kingdom created
+  value: Úspěšně jste založili nové království, vítejte!
 36a5d8b3c1756857a8a4acdd4f8338cbeb94735b34413a834ba696fd:
   ref: Kingdom name (placeholder)
   value: Zadejte prosím název vašeho království

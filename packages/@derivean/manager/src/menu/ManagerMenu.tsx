@@ -30,15 +30,15 @@ export const ManagerMenu: FC<ManagerMenu.Props> = () => {
                 items: [
                     {
                         type:  "link",
-                        href:  "/manager/item/list",
-                        label: t()`Item list`,
-                        icon:  <ItemIcon/>,
-                    },
-                    {
-                        type:  "link",
                         href:  "/manager/item/type/list",
                         label: t()`Item type list`,
                         icon:  <ListIcon/>,
+                    },
+                    {
+                        type:  "link",
+                        href:  "/manager/item/list",
+                        label: t()`Item list`,
+                        icon:  <ItemIcon/>,
                     },
                 ],
             },
