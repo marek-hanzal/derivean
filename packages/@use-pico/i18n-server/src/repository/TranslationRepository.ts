@@ -1,3 +1,4 @@
+import {lazyOf}                from "@use-pico/container";
 import {withDullSchema}        from "@use-pico/dull-stuff";
 import {TranslationDullSchema} from "@use-pico/i18n";
 import {
@@ -15,7 +16,7 @@ export class TranslationRepository extends AbstractRepository<
     "Translation"
 > {
     static inject = [
-        withClient.inject,
+        lazyOf(withClient.inject),
     ];
 
     constructor(

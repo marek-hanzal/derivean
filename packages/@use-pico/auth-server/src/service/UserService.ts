@@ -1,5 +1,6 @@
 import {
-    IContainer,
+    type IContainer,
+    lazyOf,
     withContainer
 }                          from "@use-pico/container";
 import {type IUserService} from "../api/IUserService";
@@ -10,7 +11,7 @@ export class UserService implements IUserService {
         /**
          * Container, because user session is deferred
          */
-        withContainer.inject,
+        lazyOf(withContainer.inject),
     ];
 
     constructor(

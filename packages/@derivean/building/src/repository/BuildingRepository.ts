@@ -3,6 +3,7 @@ import {
     ProducerRepository,
     withProducerRepository
 }                           from "@derivean/producer";
+import {lazyOf}             from "@use-pico/container";
 import {withDullSchema}     from "@use-pico/dull-stuff";
 import {
     type Client,
@@ -18,8 +19,8 @@ export class BuildingRepository extends AbstractRepository<
     "Building"
 > {
     static inject = [
-        withClient.inject,
-        withProducerRepository.inject,
+        lazyOf(withClient.inject),
+        lazyOf(withProducerRepository.inject),
     ];
 
     constructor(

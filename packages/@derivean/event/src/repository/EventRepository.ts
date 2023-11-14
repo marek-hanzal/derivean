@@ -3,6 +3,7 @@ import {
     withInventoryRepository
 }                                     from "@derivean/inventory";
 import {type Database}                from "@derivean/orm";
+import {lazyOf}                       from "@use-pico/container";
 import {withDullSchema}               from "@use-pico/dull-stuff";
 import {
     type Client,
@@ -20,9 +21,9 @@ export class EventRepository extends AbstractRepository<
     "Event"
 > {
     static inject = [
-        withClient.inject,
-        withInventoryRepository.inject,
-        withEventInventoryRepository.inject,
+        lazyOf(withClient.inject),
+        lazyOf(withInventoryRepository.inject),
+        lazyOf(withEventInventoryRepository.inject),
     ];
 
     constructor(

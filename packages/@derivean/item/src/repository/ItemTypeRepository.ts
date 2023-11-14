@@ -1,4 +1,5 @@
 import {type Database}      from "@derivean/orm";
+import {lazyOf}             from "@use-pico/container";
 import {withDullSchema}     from "@use-pico/dull-stuff";
 import {
     type Client,
@@ -13,7 +14,7 @@ export class ItemTypeRepository extends AbstractRepository<
     "ItemType"
 > {
     static inject = [
-        withClient.inject,
+        lazyOf(withClient.inject),
     ];
 
     constructor(

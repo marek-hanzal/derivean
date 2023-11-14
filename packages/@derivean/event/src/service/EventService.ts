@@ -1,3 +1,4 @@
+import {lazyOf}                      from "@use-pico/container";
 import {type IEventInventoryService} from "../api/IEventInventoryService";
 import {type IEventService}          from "../api/IEventService";
 import {withEventInventoryService}   from "../container/withEventInventoryService";
@@ -6,8 +7,8 @@ import {EventRepository}             from "../repository/EventRepository";
 
 export class EventService implements IEventService {
     static inject = [
-        withEventRepository.inject,
-        withEventInventoryService.inject,
+        lazyOf(withEventRepository.inject),
+        lazyOf(withEventInventoryService.inject),
     ];
 
     constructor(

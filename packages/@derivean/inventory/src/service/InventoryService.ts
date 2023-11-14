@@ -1,3 +1,4 @@
+import {lazyOf}                   from "@use-pico/container";
 import {type withDullSchema}      from "@use-pico/dull-stuff";
 import {type IInventory}          from "../api/IInventory";
 import {type IInventoryItem}      from "../api/IInventoryItem";
@@ -8,7 +9,7 @@ import {type InventoryItemSchema} from "../schema/InventoryItemSchema";
 
 export class InventoryService implements IInventoryService {
     static inject = [
-        withInventoryRepository.inject,
+        lazyOf(withInventoryRepository.inject),
     ];
 
     constructor(

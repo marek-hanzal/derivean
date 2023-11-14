@@ -6,6 +6,7 @@ import {
 }                         from "@use-pico/auth-server";
 import {
     type IContainer,
+    lazyOf,
     withContainer
 }                         from "@use-pico/container";
 import {
@@ -28,8 +29,8 @@ import {type IRpcService} from "../api/IRpcService";
 
 export class RpcService implements IRpcService {
     static inject = [
-        withContainer.inject,
-        withRedisService.inject,
+        lazyOf(withContainer.inject),
+        lazyOf(withRedisService.inject),
     ];
 
     constructor(

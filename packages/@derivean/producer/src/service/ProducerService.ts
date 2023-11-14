@@ -2,6 +2,7 @@ import {
     type IInventoryService,
     withInventoryService
 }                                     from "@derivean/inventory";
+import {lazyOf}                       from "@use-pico/container";
 import {type GraphSchema}             from "@use-pico/diagram";
 import {withDullSchema}               from "@use-pico/dull-stuff";
 import {
@@ -24,10 +25,10 @@ import {ProductionTimeSchema}         from "../schema/ProductionTimeSchema";
 
 export class ProducerService implements IProducerService {
     static inject = [
-        withInventoryService.inject,
-        withProducerRepository.inject,
-        withProducerInputRepository.inject,
-        withProducerOutputRepository.inject,
+        lazyOf(withInventoryService.inject),
+        lazyOf(withProducerRepository.inject),
+        lazyOf(withProducerInputRepository.inject),
+        lazyOf(withProducerOutputRepository.inject),
     ];
 
     constructor(
