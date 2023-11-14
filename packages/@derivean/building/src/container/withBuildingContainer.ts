@@ -6,11 +6,14 @@ import {BuildingRequirementRepository}                 from "../repository/Build
 import {BuildingConstructionRequirementRpc}            from "../rpc/BuildingConstructionRequirementRpc";
 import {BuildingRequirementRpc}                        from "../rpc/BuildingRequirementRpc";
 import {BuildingRpc}                                   from "../rpc/BuildingRpc";
+import {ConstructionService}                           from "../service/ConstructionService";
 import {withBuildingConstructionRequirementRepository} from "./withBuildingConstructionRequirementRepository";
 import {withBuildingRepository}                        from "./withBuildingRepository";
 import {withBuildingRequirementRepository}             from "./withBuildingRequirementRepository";
+import {withConstructionService}                       from "./withConstructionService";
 
 export const withBuildingContainer: IContainer.Register = container => {
+    withConstructionService.bind(container, ConstructionService);
     withRepositoryHandler({
         container,
         repository:     BuildingRepository,

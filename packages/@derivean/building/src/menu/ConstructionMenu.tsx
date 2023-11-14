@@ -1,8 +1,11 @@
-import {ConstructionIcon} from "@derivean/ui";
-import {IconHammer}       from "@tabler/icons-react";
-import {t}                from "@use-pico/i18n";
-import {Menu}             from "@use-pico/ui";
-import {type FC}          from "react";
+import {
+    BuildingIcon,
+    ConstructionIcon
+}                   from "@derivean/ui";
+import {IconHammer} from "@tabler/icons-react";
+import {t}          from "@use-pico/i18n";
+import {Menu}       from "@use-pico/ui";
+import {type FC}    from "react";
 
 export namespace ConstructionMenu {
     export interface Props extends Menu.PropsEx {
@@ -18,6 +21,13 @@ export const ConstructionMenu: FC<ConstructionMenu.Props> = (
 ) => {
     return <Menu
         items={[
+            {
+                type:  "link",
+                label: t()`Kingdom building list (label)`,
+                icon:  <BuildingIcon/>,
+                href:  `/kingdom/[kingdomId]/building/list`,
+                query: {kingdomId},
+            },
             {
                 type:  "link",
                 label: t()`Kingdom current construction (label)`,

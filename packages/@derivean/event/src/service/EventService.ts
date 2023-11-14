@@ -32,25 +32,25 @@ export class EventService implements IEventService {
             EventInventory: this.eventInventoryService,
         } as const;
 
-        try {
-            const event = await this.eventRepository.withQuery.fetchOrThrow({
-                where: {
-                    name,
-                },
-            });
+        const events = this.eventRepository.withQuery.query({
+            where: {name},
+        });
 
-            await map[event.type as keyof typeof map]?.execute(kingdomId, event.id);
+        for (const event of await events) {
+            try {
 
-            await this.eventInstanceRepository.withMutation.create({
-                kingdomId,
-                eventId: event.id,
-                userId:  this.userService.requiredId(),
-                instant: true,
-                commit:  false,
-            });
-        } catch (e) {
-            console.error(e);
-            // swallow, sssht
+                await map[event.type as keyof typeof map]?.execute(kingdomId, event.id);
+
+                await this.eventInstanceRepository.withMutation.create({
+                    kingdomId,
+                    eventId: event.id,
+                    userId:  this.userService.requiredId(),
+                    instant: true,
+                    commit:  false,
+                });
+            } catch (e) {
+                console.error(e);
+            }
         }
     }
 }

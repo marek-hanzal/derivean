@@ -1,3 +1,4 @@
+export * from "./ConstructionDetail";
 export * from "./EventMenu";
 export * from "./KingdomConstructionTable";
 export * from "./KingdomInline";

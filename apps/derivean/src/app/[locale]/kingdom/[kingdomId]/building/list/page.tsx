@@ -1,4 +1,7 @@
-import {BuildingQueryStore}    from "@derivean/building";
+import {
+    BuildingQueryStore,
+    ConstructionMenu
+}                              from "@derivean/building";
 import {withKingdomRepository} from "@derivean/kingdom";
 import {container}             from "@derivean/server";
 import {BuildingIcon}          from "@derivean/ui";
@@ -24,7 +27,7 @@ export default async function List({params: {kingdomId}}: List.Props) {
     return <Page
         icon={<BuildingIcon/>}
         text={{
-            header: tx()`Kingdom Building List (label)`,
+            header: tx()`Kingdom building list (label)`,
         }}
         postfix={<Breadcrumbs
             items={[
@@ -37,6 +40,10 @@ export default async function List({params: {kingdomId}}: List.Props) {
                     icon: <HomeIcon/>,
                 },
             ]}
+        />}
+        append={<ConstructionMenu
+            kingdomId={kingdom.id}
+            active={["/kingdom/[kingdomId]/building/list"]}
         />}
     >
         <StoreProvider

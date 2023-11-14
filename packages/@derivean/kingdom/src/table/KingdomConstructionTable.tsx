@@ -5,14 +5,18 @@ import {
     BuildingInline,
     BuildingRequirement,
     BuildingUI
-}                         from "@derivean/building";
-import {ConstructionIcon} from "@derivean/ui";
-import {t}                from "@use-pico/i18n";
-import {HumanSeconds}     from "@use-pico/ui-extra";
+}                     from "@derivean/building";
+import {
+    BuildingIcon,
+    ConstructionIcon
+}                     from "@derivean/ui";
+import {t}            from "@use-pico/i18n";
+import {ButtonLink}   from "@use-pico/ui";
+import {HumanSeconds} from "@use-pico/ui-extra";
 import {
     type ComponentProps,
     type FC
-}                         from "react";
+}                     from "react";
 
 export namespace KingdomConstructionTable {
     export type Columns =
@@ -22,13 +26,22 @@ export namespace KingdomConstructionTable {
         | "time"
         | "requirements";
 
-    export type Props = Omit<
-        ComponentProps<typeof BuildingUI.Table<Columns>>,
-        "columns" | "name" | "icon" | "text"
-    >
+    export type Props =
+        Omit<
+            ComponentProps<typeof BuildingUI.Table<Columns>>,
+            "columns" | "name" | "icon" | "text"
+        >
+        & {
+            kingdomId: string;
+        }
 }
 
-export const KingdomConstructionTable: FC<KingdomConstructionTable.Props> = props => {
+export const KingdomConstructionTable: FC<KingdomConstructionTable.Props> = (
+    {
+        kingdomId,
+        ...props
+    },
+) => {
     return <BuildingUI.Table
         text={{
             total: t()`Total count of buildings`,
@@ -38,7 +51,17 @@ export const KingdomConstructionTable: FC<KingdomConstructionTable.Props> = prop
         columns={{
             name:         {
                 title:  t()`Building name`,
-                render: ({item}) => <BuildingInline entity={item}/>,
+                render: ({item}) => <ButtonLink
+                    icon={<BuildingIcon/>}
+                    href={{
+                        href:  "/kingdom/[kingdomId]/building/construction/available/[buildingId]",
+                        query: {
+                            kingdomId,
+                            buildingId: item.id,
+                        },
+                    }}
+                    label={<BuildingInline entity={item}/>}
+                />,
             },
             construction: {
                 title:  t()`Building construction requirement (label)`,

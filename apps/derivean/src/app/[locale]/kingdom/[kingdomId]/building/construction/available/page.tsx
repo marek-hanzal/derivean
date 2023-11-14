@@ -7,8 +7,8 @@ import {
     withKingdomRepository
 }                      from "@derivean/kingdom";
 import {container}     from "@derivean/server";
-import {BuildingIcon}  from "@derivean/ui";
-import {tx}            from "@use-pico/i18n";
+import {IconHammer}    from "@tabler/icons-react";
+import {t}             from "@use-pico/i18n";
 import {StoreProvider} from "@use-pico/store";
 import {
     Breadcrumbs,
@@ -28,9 +28,9 @@ export default async function Available({params: {kingdomId}}: List.Props) {
     const kingdom = await withKingdomRepository.use(container).getOrThrow(kingdomId);
 
     return <Page
-        icon={<BuildingIcon/>}
+        icon={<IconHammer/>}
         text={{
-            header: tx()`Kingdom Building Construction (label)`,
+            header: t()`Kingdom building construction (label)`,
         }}
         postfix={<Breadcrumbs
             items={[
@@ -53,7 +53,9 @@ export default async function Available({params: {kingdomId}}: List.Props) {
             store={BuildingQueryStore}
             values={{}}
         >
-            <KingdomConstructionTable/>
+            <KingdomConstructionTable
+                kingdomId={kingdom.id}
+            />
         </StoreProvider>
     </Page>;
 }

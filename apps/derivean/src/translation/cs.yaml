@@ -264,6 +264,9 @@ a52367fba938c900739dd028e591c832cbf2cd7c8a192c32b9150aa1:
 6a2b27215d35a6ff6e8f0d5def0c5a818603e3205d8e1769715c3eb9:
   ref: Update item
   value: Update item
+0d9133665b16468ae3e7eddab0e4ddf24422205d3d208881c81ce025:
+  ref: Building without requirements
+  value: Bez požadavků
 1887011beb8375f0ccd6994d7482fff080c516a4bde5dc3fe2adb1a3:
   ref: Update building (label)
   value: Upravit budovu
@@ -288,9 +291,6 @@ a52367fba938c900739dd028e591c832cbf2cd7c8a192c32b9150aa1:
 3bb4bbcf6b2c5d29e47676a3fbd07711932e480239258d288d6ad490:
   ref: Building limit
   value: Maximální množství
-0d9133665b16468ae3e7eddab0e4ddf24422205d3d208881c81ce025:
-  ref: Building without requirements
-  value: Bez požadavků
 19f7b1b2cc2b0d861124553e7ebdb4500b898392948caef37d9125e2:
   ref: Total count of buildings
   value: Počet budov
@@ -324,12 +324,12 @@ fe57342d0588cea22f8259f5877597054ad8d9d71047cf3a34156829:
 0d7423d5e2ded3ab747e900ba9f6fbe39ac1caf82b02dfe7241c50fe:
   ref: Building construction requirement (label)
   value: Požadavky na stavbu
-deae84dcbc7ba705ba1b1df7916ea58193ec331c1c9421382691d2aa:
-  ref: Building requirement (label)
-  value: Požadavky
 24699ce3ca72204726061c62bec3b4a4d3fcf38c3251e572a5298b96:
   ref: Building construction time (label)
   value: Čas stavby
+deae84dcbc7ba705ba1b1df7916ea58193ec331c1c9421382691d2aa:
+  ref: Building requirement (label)
+  value: Požadavky
 6c44039acbc4cd9a41e89f5c7b2d163e40d661fac496d2376fde0c41:
   ref: Building construction limit (label)
   value: Maximum
@@ -384,6 +384,9 @@ bab1dfa013db089d1bf67008490c0ebb30e7dadf392929a861689826:
 828c50cc71db3063fa6ba070ad4592d86f2fcf397e891a33e041d30b:
   ref: Building requirement has been successfully removed
   value: Požadavek budovy byl úspěšně odstraněn
+604a0a282c8c30ebf88f023a276cc71bf9e52f63aa60f5b8c6141357:
+  ref: Kingdom building list (label)
+  value: Budovy
 7e9374fb318748f2c0282e7135972d141d9c11241f58a2f10bd1518d:
   ref: Kingdom current construction (label)
   value: Aktuální výstavba
@@ -578,21 +581,30 @@ eecd2930a1fa4de61bc29f8080f2f452a6f21ad4a2c593d6a7e852e7:
 bf724e995587a78734797d2f175b0ec9348e03f4e796425cd6116aea:
   ref: InventoryItem has been successfully removed
   value: InventoryItem has been successfully removed
+f3bcb21973062cd91deccddce5bb0c709280a118725b5f000e30ea3e:
+  ref: Construction is available
+  value: Stavba je možné
+8d31793e7e9fdb3074361e12e7bdb005890f7daeecfbfc7cb119bf2f:
+  ref: This building is available for construction.
+  value: |
+    Pro stavbu této budovy máte <b>dostupné veškeré</b> prostředky.
+a8cd609da08d34dada332bfb162d2b958ab05a06e458c59925c3336b:
+  ref: Construction is not available
+  value: Stavba není možné
+43638b362ac0e4c78b046f947f670486a88032097da06853306a3ebc:
+  ref: You do not have enough resources or workers to build this building. Check
+    requirements.
+  value: >
+    Tuto budovu v současnosti <b>není možné</b> postavit.<br/>
+    
+    <i>Zkontrolujte</i>, zda máte dostatek <b>surovin</b>, <b>pracovníků</b> a zda splňujete
+    <b>požadavky</b> budovy jako takové.
 1d39bb404381cef30c85128a62aa3cc2e61abc9348fbc819824c2854:
   ref: Current events (label)
   value: Aktuální události
 a9b6548dd661bf89f586535929e8d1a377cbb9d0649d6f745702271f:
   ref: Past events (label)
   value: Staré události
-376758cd1bfe4fb1ed7d47c11bcb3a2f5d2a84b4f4b507ba3da52242:
-  ref: Kingdom Buildings (label)
-  value: Budovy
-4c7ac6e8c02b51717a8b8454096d202fa1857e8db810a570af844004:
-  ref: Kingdom Building List (label)
-  value: Správa budov
-86882aca03b237e797524b4e10de2fcd25b959e15ae77790d7e93cff:
-  ref: Kingdom Building Construction (label)
-  value: Výstavba
 fec7f2879f3bb84fff1d52f69c59be1e6963e4d5b9f4e0ae9d6a171e:
   ref: Kingdom Inventory (label)
   value: Inventář
@@ -830,6 +842,15 @@ c859b6a50776680e4117e3c29ba2a631e36875255789622733151704:
 a1fb8c003a02e2eac7ce1b756d67aaeb6ad344d5be95d80c11fc6705:
   ref: Kingdom overview
   value: Přehled
+a2c3003f7ac7c54aa58af38706fa0c4a82daa41c90f1b6df9d20f12b:
+  ref: Kingdom building construction (label)
+  value: Dostupné budovy
+41c1b7c250288649eedf9ff20eb70c815619a8533515c853c2505f90:
+  ref: Kingdom building construction detail (label)
+  value: Detail stavby [{name}]
+86882aca03b237e797524b4e10de2fcd25b959e15ae77790d7e93cff:
+  ref: Kingdom Building Construction (label)
+  value: Výstavba
 adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
   ref: Kingdom inventory
   value: Inventář
@@ -878,15 +899,24 @@ b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
 553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
   ref: Building detail
   value: Detail budovy [{name}]
-b0688cb7c2c6fed8c4f5204b01f7d8512afef57fd91b3534a58eaa5a:
-  ref: Building requirement
-  value: Požadavky pro [{name}]
 49036c4c363613fe423d0de97373c833a18e6c859af2187dacd569e2:
   ref: Event detail
   value: Detail události [{name}]
 b26b6df0874ba275fe15bfc9a827578dc878edd58036f0390a090159:
   ref: Event list
   value: Seznam událostí
+28de4de589af568ae36e721daad935078aa1cebbaf9bf70c3112e96e:
+  ref: Translation list
+  value: Překlady
+8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
+  ref: Game management
+  value: Správa hry
+b0688cb7c2c6fed8c4f5204b01f7d8512afef57fd91b3534a58eaa5a:
+  ref: Building requirement
+  value: Požadavky pro [{name}]
+e14c68cd1a8cac9008c40b658668bb390387cebc452453856e495a8c:
+  ref: Building pipeline
+  value: Produkce [{name}]
 36d8ff886fe97ed9c7458bdc4c0343af18f7ec7402c9b4a5303c527c:
   ref: Event type [EventInventory] (label)
   value: Událost [{name}] - Změna inventáře
@@ -896,15 +926,6 @@ fc150b71e1abae2f5a01e5b04716f51d045dc06d150ec1960dcf8ebb:
 56db5cba41164e61cb42c625b8ccd3bb79e6aab4d8ffa4c194083f69:
   ref: Producer detail
   value: Detail výrobny [{name}]
-28de4de589af568ae36e721daad935078aa1cebbaf9bf70c3112e96e:
-  ref: Translation list
-  value: Překlady
-8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
-  ref: Game management
-  value: Správa hry
-e14c68cd1a8cac9008c40b658668bb390387cebc452453856e495a8c:
-  ref: Building pipeline
-  value: Produkce [{name}]
 e263ec6a176204dd2a48c458d632d6a02b4173d37fe6c291b3619693:
   ref: DeRivean - The Invisible Game
   value: DeRivean - Neviditelná hra
