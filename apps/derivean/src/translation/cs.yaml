@@ -583,14 +583,14 @@ bf724e995587a78734797d2f175b0ec9348e03f4e796425cd6116aea:
   value: InventoryItem has been successfully removed
 f3bcb21973062cd91deccddce5bb0c709280a118725b5f000e30ea3e:
   ref: Construction is available
-  value: Stavba je možné
+  value: Stavba je možná
 8d31793e7e9fdb3074361e12e7bdb005890f7daeecfbfc7cb119bf2f:
   ref: This building is available for construction.
   value: |
     Pro stavbu této budovy máte <b>dostupné veškeré</b> prostředky.
 a8cd609da08d34dada332bfb162d2b958ab05a06e458c59925c3336b:
   ref: Construction is not available
-  value: Stavba není možné
+  value: Stavba není možná
 43638b362ac0e4c78b046f947f670486a88032097da06853306a3ebc:
   ref: You do not have enough resources or workers to build this building. Check
     requirements.
