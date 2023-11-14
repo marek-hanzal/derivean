@@ -36,6 +36,15 @@ export abstract class AbstractWithApply<
             string
         >
     >;
+    public fulltextOf?: Partial<
+        Record<
+            keyof Omit<
+                NonNullable<PicoSchema.Output<TSchema["query"]["shape"]["where"]>>,
+                keyof FilterSchema.Type
+            >,
+            string
+        >
+    >;
 
     protected constructor(
         public schema: TSchema,
