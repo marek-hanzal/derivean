@@ -23,6 +23,13 @@ export interface IInventoryService {
      * Return amount of the given item in the inventory
      */
     amountOf(inventory: IInventory, name: string): number;
+
+    /**
+     * Copy contents of the source inventory and apply it to target inventory (normalizing it during the process).
+     *
+     * Source inventory is not modified.
+     */
+    applyTo(sourceId: string, targetId: string): Promise<void>;
 }
 
 export namespace IInventoryService {

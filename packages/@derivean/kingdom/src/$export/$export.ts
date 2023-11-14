@@ -3,6 +3,7 @@ export * from "./KingdomLayout";
 export * from "./KingdomMenu";
 export * from "./KingdomPreview";
 export * from "./KingdomQueryStore";
+export * from "./KingdomRepository";
 export * from "./KingdomRpc";
 export * from "./KingdomSchema";
 export * from "./KingdomSelect";

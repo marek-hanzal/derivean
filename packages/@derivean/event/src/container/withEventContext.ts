@@ -4,8 +4,12 @@ import {EventInventoryRepository}     from "../repository/EventInventoryReposito
 import {EventRepository}              from "../repository/EventRepository";
 import {EventInventoryRpc}            from "../rpc/EventRepositoryRpc";
 import {EventRpc}                     from "../rpc/EventRpc";
+import {EventInventoryService}        from "../service/EventInventoryService";
+import {EventService}                 from "../service/EventService";
 import {withEventInventoryRepository} from "./withEventInventoryRepository";
+import {withEventInventoryService}    from "./withEventInventoryService";
 import {withEventRepository}          from "./withEventRepository";
+import {withEventService}             from "./withEventService";
 
 export const withEventContext: IContainer.Register = container => {
     withRepositoryHandler({
@@ -20,4 +24,6 @@ export const withEventContext: IContainer.Register = container => {
         withRepository: withEventInventoryRepository,
         handler:        EventInventoryRpc,
     });
+    withEventService.bind(container, EventService);
+    withEventInventoryService.bind(container, EventInventoryService);
 };

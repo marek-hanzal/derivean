@@ -1,8 +1,19 @@
-import {type IInventory}        from "../api/IInventory";
-import {type IInventoryItem}    from "../api/IInventoryItem";
-import {type IInventoryService} from "../api/IInventoryService";
+import {type IInventory}         from "../api/IInventory";
+import {type IInventoryItem}     from "../api/IInventoryItem";
+import {type IInventoryService}  from "../api/IInventoryService";
+import {withInventoryRepository} from "../container/withInventoryRepository";
+import {InventoryRepository}     from "../repository/InventoryRepository";
 
 export class InventoryService implements IInventoryService {
+    static inject = [
+        withInventoryRepository.inject,
+    ];
+
+    constructor(
+        protected inventoryRepository: InventoryRepository.Type,
+    ) {
+    }
+
     public normalize(inventory: IInventory): IInventoryService.Inventory {
         const map = new Map<string, IInventoryItem>();
         for (let item of inventory.items) {
@@ -37,5 +48,11 @@ export class InventoryService implements IInventoryService {
         return this.itemOf(inventory, name).reduce((amount, item) => {
             return amount + item.amount;
         }, 0);
+    }
+
+    public async applyTo(sourceId: string, targetId: string): Promise<void> {
+
+
+        console.log("Yepyky Yep!");
     }
 }

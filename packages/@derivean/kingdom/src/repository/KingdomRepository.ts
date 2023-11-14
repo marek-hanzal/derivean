@@ -1,4 +1,8 @@
 import {
+    type IEventService,
+    withEventService
+}                           from "@derivean/event";
+import {
     type InventoryRepository,
     withInventoryRepository
 }                           from "@derivean/inventory";
@@ -7,6 +11,7 @@ import {
     type IUserService,
     withUserService
 }                           from "@use-pico/auth-server";
+import {lazyOf}             from "@use-pico/container";
 import {withDullSchema}     from "@use-pico/dull-stuff";
 import {DateTime}           from "@use-pico/i18n";
 import {
@@ -23,15 +28,17 @@ export class KingdomRepository extends AbstractRepository<
     "Kingdom"
 > {
     static inject = [
-        withClient.inject,
-        withInventoryRepository.inject,
-        withUserService.inject,
+        lazyOf(withClient.inject),
+        lazyOf(withInventoryRepository.inject),
+        lazyOf(withUserService.inject),
+        lazyOf(withEventService.inject),
     ];
 
     constructor(
         client: Client<Database>,
         protected inventoryRepository: InventoryRepository.Type,
         protected userService: IUserService,
+        protected eventService: IEventService,
     ) {
         super(
             client,
@@ -56,6 +63,10 @@ export class KingdomRepository extends AbstractRepository<
             })).id,
             userId:      this.userService.requiredId(),
         };
+    }
+
+    public async onCreate(entity: PicoSchema.Output<withDullSchema.Infer.RepositorySchema<KingdomSchema>["entity"]>): Promise<any> {
+        return this.eventService.execute(entity.id, "welcome-gift");
     }
 }
 

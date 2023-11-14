@@ -2,6 +2,7 @@
 
 import {
     type PropsWithChildren,
+    useEffect,
     useMemo
 }                    from "react";
 import {type IStore} from "../api/IStore";
@@ -28,12 +29,10 @@ export const StoreProvider = <
     }: StoreProvider.Props<TStore>
 ) => {
     const memo = useMemo(() => store(values), []);
-    /**
-     * @TODO clean this piece, may fail on re-renders (selection?)
-     */
-    // useEffect(() => {
-    //     values && memo.setState(values);
-    // }, [Pack.pack(values)]);
+    let key = Object.keys(values).map(key => `${key}${values[key]}`).join("");
+    useEffect(() => {
+        values && memo.setState(values);
+    }, [key]);
     return <Context.Provider value={memo}>
         {children}
     </Context.Provider>;
