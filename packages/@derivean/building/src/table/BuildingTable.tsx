@@ -1,21 +1,26 @@
 "use client";
 
-import {BuildingIcon}        from "@derivean/ui";
-import {t}                   from "@use-pico/i18n";
-import {ButtonLink}          from "@use-pico/ui";
+import {BuildingIcon}                    from "@derivean/ui";
+import {t}                               from "@use-pico/i18n";
+import {ButtonLink}                      from "@use-pico/ui";
+import {HumanSeconds}                    from "@use-pico/ui-extra";
 import {
     type ComponentProps,
     type FC
-}                            from "react";
-import {BuildingUpsertForm}  from "../form/BuildingUpsertForm";
-import {BuildingInline}      from "../inline/BuildingInline";
-import {BuildingRpc}         from "../rpc/BuildingRpc";
-import {BuildingRequirement} from "../ui/BuildingRequirement";
-import {BuildingUI}          from "../ui/BuildingUI";
+}                                        from "react";
+import {BuildingUpsertForm}              from "../form/BuildingUpsertForm";
+import {BuildingInline}                  from "../inline/BuildingInline";
+import {BuildingRpc}                     from "../rpc/BuildingRpc";
+import {BuildingConstructionRequirement} from "../ui/BuildingConstructionRequirement";
+import {BuildingRequirement}             from "../ui/BuildingRequirement";
+import {BuildingUI}                      from "../ui/BuildingUI";
 
 export namespace BuildingTable {
     export type Columns =
         | "name"
+        | "construction"
+        | "maximum"
+        | "time"
         | "requirements";
 
     export type Props = Omit<
@@ -83,12 +88,27 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
                     label={<BuildingInline entity={item}/>}
                 />,
             },
+            construction: {
+                title:  t()`Building construction requirement (label)`,
+                render: ({item}) => <BuildingConstructionRequirement
+                    buildingId={item.id}
+                />,
+            },
+            time:         {
+                title:  t()`Building construction time (label)`,
+                render: ({item}) => <HumanSeconds seconds={item.construction}/>,
+                width:  10,
+            },
             requirements: {
-                title: t()`Building requirement (label)`,
+                title:  t()`Building requirement (label)`,
                 render: ({item}) => <BuildingRequirement
                     buildingId={item.id}
                 />,
-                width:  32,
+            },
+            maximum:      {
+                title:  t()`Building construction limit (label)`,
+                render: ({item}) => item.maximum,
+                width:  10,
             },
         }}
         {...props}

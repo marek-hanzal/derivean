@@ -307,9 +307,18 @@ fe57342d0588cea22f8259f5877597054ad8d9d71047cf3a34156829:
 82119185c01850436786aecbce7018c09a8045f38261534d28ae1ec2:
   ref: Building has been successfully removed
   value: Building has been successfully removed
+0d7423d5e2ded3ab747e900ba9f6fbe39ac1caf82b02dfe7241c50fe:
+  ref: Building construction requirement (label)
+  value: Building construction requirement (label)
 deae84dcbc7ba705ba1b1df7916ea58193ec331c1c9421382691d2aa:
   ref: Building requirement (label)
   value: Building requirement (label)
+24699ce3ca72204726061c62bec3b4a4d3fcf38c3251e572a5298b96:
+  ref: Building construction time (label)
+  value: Building construction time (label)
+6c44039acbc4cd9a41e89f5c7b2d163e40d661fac496d2376fde0c41:
+  ref: Building construction limit (label)
+  value: Building construction limit (label)
 074092ff27e2c292d6e7d04388f78186d4a0a759b3b48cde0cb03efd:
   ref: Update building requirement (label)
   value: Update building requirement (label)
@@ -769,9 +778,6 @@ adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
 7401742653cacefb254e91e23a79edaeb388a2a423cb1181c35f87ac:
   ref: Building detail (label)
   value: Building detail (label)
-0d7423d5e2ded3ab747e900ba9f6fbe39ac1caf82b02dfe7241c50fe:
-  ref: Building construction requirement (label)
-  value: Building construction requirement (label)
 6e22187ddff9c4026327f77e966f4bdb44cf801f01b29f059d576876:
   ref: Building pipeline (label)
   value: Building pipeline (label)

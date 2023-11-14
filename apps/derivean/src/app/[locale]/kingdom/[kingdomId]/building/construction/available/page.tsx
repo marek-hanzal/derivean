@@ -1,17 +1,20 @@
 import {
     BuildingQueryStore,
     ConstructionMenu
-}                              from "@derivean/building";
-import {withKingdomRepository} from "@derivean/kingdom";
-import {container}             from "@derivean/server";
-import {BuildingIcon}          from "@derivean/ui";
-import {tx}                    from "@use-pico/i18n";
-import {StoreProvider}         from "@use-pico/store";
+}                      from "@derivean/building";
+import {
+    KingdomConstructionTable,
+    withKingdomRepository
+}                      from "@derivean/kingdom";
+import {container}     from "@derivean/server";
+import {BuildingIcon}  from "@derivean/ui";
+import {tx}            from "@use-pico/i18n";
+import {StoreProvider} from "@use-pico/store";
 import {
     Breadcrumbs,
     HomeIcon,
     Page
-}                              from "@use-pico/ui";
+}                      from "@use-pico/ui";
 
 export namespace List {
     export interface Props {
@@ -48,13 +51,9 @@ export default async function Available({params: {kingdomId}}: List.Props) {
     >
         <StoreProvider
             store={BuildingQueryStore}
-            values={{
-                filter: {
-                    // kingdomId:
-                },
-            }}
+            values={{}}
         >
-            {/*<KingdomBuildingTable/>*/}
+            <KingdomConstructionTable/>
         </StoreProvider>
     </Page>;
 }

@@ -1,4 +1,5 @@
 export * from "./EventMenu";
+export * from "./KingdomConstructionTable";
 export * from "./KingdomInline";
 export * from "./KingdomLayout";
 export * from "./KingdomMenu";

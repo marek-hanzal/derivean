@@ -1,3 +1,4 @@
+export * from "./BuildingConstructionRequirement";
 export * from "./BuildingConstructionRequirementQueryStore";
 export * from "./BuildingConstructionRequirementTable";
 export * from "./BuildingInline";
