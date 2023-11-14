@@ -375,6 +375,12 @@ bab1dfa013db089d1bf67008490c0ebb30e7dadf392929a861689826:
 828c50cc71db3063fa6ba070ad4592d86f2fcf397e891a33e041d30b:
   ref: Building requirement has been successfully removed
   value: Požadavek budovy byl úspěšně odstraněn
+7e9374fb318748f2c0282e7135972d141d9c11241f58a2f10bd1518d:
+  ref: Kingdom current construction (label)
+  value: Aktuální výstavba
+cebcc12cf4a374accb2762b75c8412c89875df9117ff9cc33e1d1355:
+  ref: Kingdom available buildings (label)
+  value: Dostupné budovy
 9d68fd7d2b9e208edb77ede71fe6c547b34f40f0b4b28741f68c0614:
   ref: Detail
   value: Detail

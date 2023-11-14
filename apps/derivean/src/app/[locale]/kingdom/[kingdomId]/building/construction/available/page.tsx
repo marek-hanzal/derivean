@@ -1,4 +1,7 @@
-import {BuildingQueryStore}    from "@derivean/building";
+import {
+    BuildingQueryStore,
+    ConstructionMenu
+}                              from "@derivean/building";
 import {withKingdomRepository} from "@derivean/kingdom";
 import {container}             from "@derivean/server";
 import {BuildingIcon}          from "@derivean/ui";
@@ -18,7 +21,7 @@ export namespace List {
     }
 }
 
-export default async function Construction({params: {kingdomId}}: List.Props) {
+export default async function Available({params: {kingdomId}}: List.Props) {
     const kingdom = await withKingdomRepository.use(container).getOrThrow(kingdomId);
 
     return <Page
@@ -37,6 +40,10 @@ export default async function Construction({params: {kingdomId}}: List.Props) {
                     icon: <HomeIcon/>,
                 },
             ]}
+        />}
+        append={<ConstructionMenu
+            kingdomId={kingdom.id}
+            active={["/kingdom/[kingdomId]/building/construction/available"]}
         />}
     >
         <StoreProvider

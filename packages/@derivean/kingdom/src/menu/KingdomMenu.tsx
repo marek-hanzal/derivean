@@ -1,16 +1,16 @@
 import {
     BuildingIcon,
+    ConstructionIcon,
     EventIcon,
     InventoryIcon
-}                         from "@derivean/ui";
-import {IconBarrierBlock} from "@tabler/icons-react";
-import {t}                from "@use-pico/i18n";
+}                from "@derivean/ui";
+import {t}       from "@use-pico/i18n";
 import {
     ListIcon,
     MainMenu,
     Menu
-}                         from "@use-pico/ui";
-import {type FC}          from "react";
+}                from "@use-pico/ui";
+import {type FC} from "react";
 
 export namespace KingdomMenu {
     export interface Props extends Menu.PropsEx {
@@ -43,8 +43,8 @@ export const KingdomMenu: FC<KingdomMenu.Props> = (
                     {
                         type:  "link",
                         label: t()`Kingdom Building Construction (label)`,
-                        icon:  <IconBarrierBlock/>,
-                        href:  `/kingdom/[kingdomId]/building/construction`,
+                        icon: <ConstructionIcon/>,
+                        href: `/kingdom/[kingdomId]/building/construction/current`,
                         query,
                     },
                 ],
