@@ -22,7 +22,7 @@ export const withAuthMiddleware = (
         {
             callbacks: {
                 async authorized({req}) {
-                    const token = await getToken({request: req});
+                    const token = await getToken({cookies: req.cookies});
                     for (const {
                         path,
                         auth

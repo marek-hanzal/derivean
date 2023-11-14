@@ -1,9 +1,10 @@
 import {decode}                 from "next-auth/jwt";
 import {cookies as coolCookies} from "next/headers";
+import {NextRequest}            from "next/server";
 
 export namespace getToken {
     export interface Props {
-        cookies?: ReturnType<typeof coolCookies>;
+        cookies?: ReturnType<typeof coolCookies> | NextRequest["cookies"];
         secret?: string;
     }
 }

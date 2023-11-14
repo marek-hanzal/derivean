@@ -25,7 +25,7 @@
 		"cleanup:lib": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts.map,js,js.map}"
 	},
 	"dependencies": {
-		"next-auth": "^4.24.3"
+		"next-auth": "^4.24.5"
 	},
 	"peerDependencies": {
 		"@auth/kysely-adapter": "^0.1.4",

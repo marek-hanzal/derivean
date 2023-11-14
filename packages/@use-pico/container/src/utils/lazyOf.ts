@@ -1,4 +1,6 @@
-import {get}          from "pumpit";
-import {type BindKey} from "pumpit/src/types";
+import {
+    type BindKey,
+    get
+} from "pumpit";
 
 export const lazyOf = (key: BindKey) => get(key, {lazy: true});

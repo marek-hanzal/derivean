@@ -1,4 +1,3 @@
-export * from "./IRegistrationService";
 export * from "./IUserService";
 export * from "./IUserTokenService";
 export * from "./UserService";
@@ -6,7 +5,6 @@ export * from "./getToken";
 export * from "./withAuthContainer";
 export * from "./withAuthEndpoint";
 export * from "./withAuthMiddleware";
-export * from "./withRegistrationService";
 export * from "./withUserService";
 export * from "./withUserSession";
 export * from "./withUserTokenService";

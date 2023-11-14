@@ -10,7 +10,7 @@ import {
     withContainer
 }                         from "@use-pico/container";
 import {
-    IRedisService,
+    type IRedisService,
     withRedisService
 }                         from "@use-pico/redis";
 import {
@@ -39,11 +39,13 @@ export class RpcService implements IRpcService {
     ) {
     }
 
-    public async handle({
-                            request,
-                            context
-                        }: IRpcService.HandleProps): Promise<NextResponse> {
-        const user = await getToken({request});
+    public async handle(
+        {
+            request,
+            context
+        }: IRpcService.HandleProps
+    ): Promise<NextResponse> {
+        const user = await getToken({cookies: request.cookies});
         const bulks = parse$(RpcBulkRequestSchema, await request.json());
         if (!bulks.success) {
             return NextResponse.json({
@@ -74,7 +76,7 @@ export class RpcService implements IRpcService {
             withUserSession.value(container, {
                 userId: user.sub as string,
                 user,
-                tokens: user.tokens,
+                tokens: user.tokens as string[],
             });
         }
         context?.(container);
