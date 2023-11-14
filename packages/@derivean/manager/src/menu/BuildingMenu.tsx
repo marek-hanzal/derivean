@@ -1,5 +1,6 @@
 import {
     BuildingIcon,
+    InventoryItemIcon,
     ItemIcon,
     PipelineIcon
 }                from "@derivean/ui";
@@ -30,6 +31,13 @@ export const BuildingMenu: FC<BuildingMenu.Props> = (
                 href:  "/manager/building/[id]",
                 label: t()`Building detail (label)`,
                 icon:  <BuildingIcon/>,
+                query,
+            },
+            {
+                type:  "link",
+                href:  "/manager/building/[id]/construction-requirement",
+                label: t()`Building construction requirement (label)`,
+                icon:  <InventoryItemIcon/>,
                 query,
             },
             {

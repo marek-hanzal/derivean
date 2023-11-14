@@ -1,5 +1,8 @@
 import {BuildingIcon} from "@derivean/ui";
-import {TextInput}    from "@use-pico/form";
+import {
+    NumberInput,
+    TextInput
+}                     from "@use-pico/form";
 import {
     t,
     tx
@@ -30,9 +33,19 @@ export const BuildingUpsertForm: FC<BuildingUpsertForm.Props> = (
         }}
         icon={<BuildingIcon/>}
         inputs={{
-            name: props => <TextInput
+            name:         props => <TextInput
                 label={t()`Building name`}
                 placeholder={tx()`Building name (placeholder)`}
+                {...props}
+            />,
+            construction: props => <NumberInput
+                label={t()`Building construction time`}
+                {...props}
+            />,
+            maximum:      props => <NumberInput
+                label={t()`Building limit`}
+                min={-1}
+                allowNegative
                 {...props}
             />,
         }}
@@ -50,10 +63,14 @@ export const BuildingUpsertForm: FC<BuildingUpsertForm.Props> = (
             create: values,
         })}
         defaultValues={{
-            name: "",
+            name:         "",
+            construction: 0,
+            maximum:      -1,
         }}
         Render={({Input}) => <>
             <Input name={"name"}/>
+            <Input name={"construction"}/>
+            <Input name={"maximum"}/>
         </>}
         {...props}
     />;

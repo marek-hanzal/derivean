@@ -1,20 +1,8 @@
 "use client";
 
-import {
-    ProducerInline,
-    ProducerUI,
-    ProductionTime
-}                            from "@derivean/producer";
-import {
-    BuildingIcon,
-    ProducerIcon
-}                            from "@derivean/ui";
+import {BuildingIcon}        from "@derivean/ui";
 import {t}                   from "@use-pico/i18n";
-import {
-    ButtonLink,
-    Loader
-}                            from "@use-pico/ui";
-import {HumanSeconds}        from "@use-pico/ui-extra";
+import {ButtonLink}          from "@use-pico/ui";
 import {
     type ComponentProps,
     type FC
@@ -28,10 +16,7 @@ import {BuildingUI}          from "../ui/BuildingUI";
 export namespace BuildingTable {
     export type Columns =
         | "name"
-        | "producer"
-        | "time"
-        | "requirements"
-        | "pipelineTime";
+        | "requirements";
 
     export type Props = Omit<
         ComponentProps<typeof BuildingUI.Table<Columns>>,
@@ -104,42 +89,6 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
                     buildingId={item.id}
                 />,
                 width:  32,
-            },
-            producer:     {
-                title:  t()`Producer name`,
-                render: ({item}) => <ProducerUI.Fetch
-                    override={item.producerId}
-                    loader={<Loader size={"md"} type={"dots"}/>}
-                    WithSuccess={({entity}) => <ButtonLink
-                        icon={<ProducerIcon/>}
-                        href={{
-                            href:  "/manager/producer/[id]",
-                            query: {
-                                id: entity.id,
-                            },
-                        }}
-                        label={<ProducerInline entity={entity}/>}
-                    />}
-                />,
-                width:  18,
-            },
-            time:         {
-                title:  t()`Production time`,
-                render: ({item}) => <ProducerUI.Fetch
-                    override={item.producerId}
-                    loader={<Loader size={"md"} type={"dots"}/>}
-                    WithSuccess={({entity}) => <HumanSeconds seconds={entity.time}/>}
-                />,
-                width:  14,
-            },
-            pipelineTime: {
-                title:  t()`Producer pipeline time`,
-                render: ({item}) => <ProducerUI.Fetch
-                    override={item.producerId}
-                    loader={<Loader size={"md"} type={"dots"}/>}
-                    WithSuccess={({entity}) => <ProductionTime producerId={entity.id}/>}
-                />,
-                width:  14,
             },
         }}
         {...props}

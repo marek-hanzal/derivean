@@ -34,10 +34,6 @@ export type Database =
              */
             construction: number;
             /**
-             * Inventory connected to this building
-             */
-            inventoryId: string;
-            /**
              * Maximum number of buildings of this type.
              */
             maximum: number;
