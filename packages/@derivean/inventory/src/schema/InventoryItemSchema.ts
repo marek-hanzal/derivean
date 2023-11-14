@@ -25,6 +25,6 @@ export const InventoryItemSchema = withDullSchema({
         inventoryId: z.string$,
         itemId:      z.string$,
     })),
-    orderBy: orderByOf(["id"]),
+    orderBy: orderByOf(["amount", "Item.name", "limit"]),
 });
 export type InventoryItemSchema = typeof InventoryItemSchema;

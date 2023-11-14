@@ -103,7 +103,7 @@ export const InventoryItemTable: FC<InventoryItemTable.Props> = (
                 title:  t()`Inventory`,
                 render: ({item}) => <InventoryUI.Fetch
                     override={item.inventoryId}
-                    loader={<Loader size={"md"} type={"dots"}/>}
+                    loader={<Loader size={"xs"} type={"dots"}/>}
                     WithSuccess={({entity}) => <ButtonLink
                         icon={<InventoryIcon/>}
                         href={{

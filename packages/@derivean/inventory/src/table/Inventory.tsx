@@ -52,7 +52,7 @@ export const Inventory: FC<Inventory.Props> = (
                 title:  t()`Item`,
                 render: ({item}) => <ItemUI.Fetch
                     override={item.itemId}
-                    loader={<Loader size={"md"} type={"dots"}/>}
+                    loader={<Loader size={"xs"} type={"dots"}/>}
                     WithSuccess={({entity}) => <ItemInline entity={entity}/>}
                 />,
             },

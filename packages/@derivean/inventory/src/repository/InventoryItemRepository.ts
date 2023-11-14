@@ -28,7 +28,10 @@ export class InventoryItemRepository extends AbstractRepository<
             InventoryItemSchema,
             "InventoryItem",
         );
-        this.defaultOrderBy = {};
+        this.defaultOrderBy = {
+            amount:      "desc",
+            "Item.name": "asc",
+        };
         this.matchOf = {
             inventoryId: "inventoryId",
             itemId:      "itemId",
@@ -36,7 +39,11 @@ export class InventoryItemRepository extends AbstractRepository<
     }
 
     public with<T>(query: withDullSchema.Infer.Query<InventoryItemSchema>, select: SelectOf<Database, "InventoryItem", T>): SelectOf<Database, "InventoryItem", T> {
-        return super.with(query, select);
+        let $select = select;
+
+        $select = $select.innerJoin("Item", "Item.id", "InventoryItem.itemId" as any);
+
+        return $select;
     }
 }
 
