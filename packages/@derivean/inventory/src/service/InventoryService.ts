@@ -1,8 +1,10 @@
-import {type IInventory}         from "../api/IInventory";
-import {type IInventoryItem}     from "../api/IInventoryItem";
-import {type IInventoryService}  from "../api/IInventoryService";
-import {withInventoryRepository} from "../container/withInventoryRepository";
-import {InventoryRepository}     from "../repository/InventoryRepository";
+import {type withDullSchema}      from "@use-pico/dull-stuff";
+import {type IInventory}          from "../api/IInventory";
+import {type IInventoryItem}      from "../api/IInventoryItem";
+import {type IInventoryService}   from "../api/IInventoryService";
+import {withInventoryRepository}  from "../container/withInventoryRepository";
+import {InventoryRepository}      from "../repository/InventoryRepository";
+import {type InventoryItemSchema} from "../schema/InventoryItemSchema";
 
 export class InventoryService implements IInventoryService {
     static inject = [
@@ -50,8 +52,13 @@ export class InventoryService implements IInventoryService {
         }, 0);
     }
 
-    public async applyTo(sourceId: string, targetId: string): Promise<void> {
+    public load(inventoryId: string): Promise<withDullSchema.Infer.Entity<InventoryItemSchema>[]> {
+        return Promise.resolve([]);
+    }
 
+    public async applyTo(sourceId: string, targetId: string): Promise<void> {
+        const source = await this.load(sourceId);
+        const target = await this.load(targetId);
 
         console.log("Yepyky Yep!");
     }
