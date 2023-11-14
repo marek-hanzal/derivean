@@ -1,26 +1,18 @@
 import {
     defaultLocale,
     locales
-}                  from "@/derivean/locales";
-import {
-    LoadingOverlay,
-    LocaleRedirect
-}                  from "@use-pico/ui";
-import {Providers} from "@use-pico/ui-extra";
+}                       from "@/derivean/locales";
+import {LocaleRedirect} from "@use-pico/ui";
 
 export default function Index() {
     /**
-     * Keep providers here as layout is too high for "empty" providers.
+     * Here is not loader, because LocaleRedirect is using `redirect` from
+     * Next.js which trows an exception, so it would render nothing.
      */
-    return <Providers
-        locale={"en"}
-    >
-        <LocaleRedirect
-            locale={{
-                available: locales,
-                fallback:  defaultLocale,
-            }}
-        />
-        <LoadingOverlay visible/>
-    </Providers>;
+    return <LocaleRedirect
+        locale={{
+            available: locales,
+            fallback:  defaultLocale,
+        }}
+    />;
 }

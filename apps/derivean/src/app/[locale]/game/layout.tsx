@@ -3,7 +3,11 @@ import {type PropsWithChildren} from "react";
 import logo                     from "../../../../public/assets/logo/logo.svg";
 
 export namespace Layout {
-    export type Props = PropsWithChildren;
+    export type Props = PropsWithChildren<{
+        params: {
+            locale: string;
+        };
+    }>;
 }
 
 export default function Layout(
