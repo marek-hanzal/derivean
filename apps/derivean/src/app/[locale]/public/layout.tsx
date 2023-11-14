@@ -3,21 +3,17 @@ import {type PropsWithChildren} from "react";
 import logo                     from "../../../../public/assets/logo/logo.svg";
 
 export namespace Layout {
-    export type Props = PropsWithChildren<{
-        params: {
-            locale: string;
-        };
-    }>;
+    export type Props = PropsWithChildren;
 }
 
-export default function Layout(
+export default async function Layout(
     {
         children,
-        params
     }: Layout.Props
 ) {
     return <PublicLayout
         logo={logo}
+        loginUrl={"/game"}
     >
         {children}
     </PublicLayout>;
