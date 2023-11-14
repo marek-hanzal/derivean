@@ -45,7 +45,7 @@ export interface IWithQuery<
     select<
         TExpression extends SelectExpression<TDatabase, TTable>
     >(
-        selections: ReadonlyArray<TExpression>
+        selections?: ReadonlyArray<TExpression>
     ): SelectQueryBuilder<
         TDatabase,
         TTable,

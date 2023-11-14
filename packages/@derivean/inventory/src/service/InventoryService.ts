@@ -1,19 +1,19 @@
-import {lazyOf}                   from "@use-pico/container";
-import {type withDullSchema}      from "@use-pico/dull-stuff";
-import {type IInventory}          from "../api/IInventory";
-import {type IInventoryItem}      from "../api/IInventoryItem";
-import {type IInventoryService}   from "../api/IInventoryService";
-import {withInventoryRepository}  from "../container/withInventoryRepository";
-import {InventoryRepository}      from "../repository/InventoryRepository";
-import {type InventoryItemSchema} from "../schema/InventoryItemSchema";
+import {lazyOf}                      from "@use-pico/container";
+import {type withDullSchema}         from "@use-pico/dull-stuff";
+import {type IInventory}             from "../api/IInventory";
+import {type IInventoryItem}         from "../api/IInventoryItem";
+import {type IInventoryService}      from "../api/IInventoryService";
+import {withInventoryItemRepository} from "../container/withInventoryItemRepository";
+import {InventoryItemRepository}     from "../repository/InventoryItemRepository";
+import {type InventoryItemSchema}    from "../schema/InventoryItemSchema";
 
 export class InventoryService implements IInventoryService {
     static inject = [
-        lazyOf(withInventoryRepository.inject),
+        lazyOf(withInventoryItemRepository.inject),
     ];
 
     constructor(
-        protected inventoryRepository: InventoryRepository.Type,
+        protected inventoryItemRepository: InventoryItemRepository.Type,
     ) {
     }
 
@@ -53,14 +53,23 @@ export class InventoryService implements IInventoryService {
         }, 0);
     }
 
-    public load(inventoryId: string): Promise<withDullSchema.Infer.Entity<InventoryItemSchema>[]> {
-        return Promise.resolve([]);
+    public async load(inventoryId: string): Promise<withDullSchema.Infer.Entity<InventoryItemSchema>[]> {
+        return await this.inventoryItemRepository
+            .withQuery
+            .select()
+            .where("InventoryItem.inventoryId" as any, "=", inventoryId)
+            .execute() as withDullSchema.Infer.Entity<InventoryItemSchema>[];
     }
 
     public async applyTo(sourceId: string, targetId: string): Promise<void> {
-        const source = await this.load(sourceId);
-        const target = await this.load(targetId);
-
-        console.log("Yepyky Yep!");
+        for (const {
+            id,
+            ...item
+        } of await this.load(sourceId)) {
+            await this.inventoryItemRepository.withMutation.create({
+                ...item,
+                inventoryId: targetId,
+            });
+        }
     }
 }

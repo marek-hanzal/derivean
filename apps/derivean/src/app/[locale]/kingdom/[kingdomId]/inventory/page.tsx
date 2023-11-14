@@ -7,7 +7,11 @@ import {container}             from "@derivean/server";
 import {InventoryIcon}         from "@derivean/ui";
 import {t}                     from "@use-pico/i18n";
 import {StoreProvider}         from "@use-pico/store";
-import {Page}                  from "@use-pico/ui";
+import {
+    Breadcrumbs,
+    HomeIcon,
+    Page
+}                              from "@use-pico/ui";
 
 export namespace Index {
     export interface Props {
@@ -25,6 +29,18 @@ export default async function Index({params: {kingdomId}}: Index.Props) {
         text={{
             header: t({values: kingdom})`Kingdom inventory`,
         }}
+        postfix={<Breadcrumbs
+            items={[
+                {
+                    type: "link",
+                    href: {
+                        href:  "/kingdom/[kingdomId]",
+                        query: {kingdomId: kingdom.id},
+                    },
+                    icon: <HomeIcon/>,
+                },
+            ]}
+        />}
     >
         <StoreProvider
             store={InventoryItemQueryStore}

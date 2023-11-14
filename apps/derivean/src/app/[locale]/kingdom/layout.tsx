@@ -4,8 +4,10 @@ import {
     withKingdomRepository
 }                               from "@derivean/kingdom";
 import {container}              from "@derivean/server";
+import {IconArrowLeft}          from "@tabler/icons-react";
 import {t}                      from "@use-pico/i18n";
 import {
+    ButtonLink,
     Divider,
     Group,
     Title
@@ -34,7 +36,13 @@ export default async function Layout(
         logo={logo}
         center={<Group>
             <Divider orientation={"vertical"}/>
-            <Title c={"dimmed"} order={3}>{t({values: kingdom})`Selected kingdom`}</Title>
+            <Group gap={"xs"}>
+                <ButtonLink
+                    href={"/game"}
+                    label={<IconArrowLeft/>}
+                />
+                <Title c={"dimmed"} order={4}>{t({values: kingdom})`Selected kingdom`}</Title>
+            </Group>
             <Divider orientation={"vertical"}/>
             <KingdomMenu kingdomId={kingdom.id}/>
         </Group>}

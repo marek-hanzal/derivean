@@ -27,12 +27,12 @@ export interface IInventoryService {
     amountOf(inventory: IInventory, name: string): number;
 
     /**
-     * Load items from the inventory (normalizing it during the process).
+     * Load items from the inventory
      */
     load(inventoryId: string): Promise<withDullSchema.Infer.Entity<InventoryItemSchema>[]>;
 
     /**
-     * Copy contents of the source inventory and apply it to target inventory (normalizing it during the process).
+     * Copy contents of the source inventory and apply it to target inventory
      *
      * Source inventory is not modified.
      */

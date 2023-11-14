@@ -278,7 +278,7 @@ a52367fba938c900739dd028e591c832cbf2cd7c8a192c32b9150aa1:
   value: Tato výrobna má cyklické závislosti, tudíž ji nebude možné použít.
 648a9bd88580b075c4b2b5b829b8dd218e26fa96013ec90fabba62bc:
   ref: Update inventory item (label)
-  value: Update inventory item (label)
+  value: Aktualizovat položku
 71f5759dd354e1080fe627bf1950053fd30606e02108f3e966f43fbb:
   ref: Create inventory item (label)
   value: Přidat předmět
@@ -813,7 +813,7 @@ e8cf9d9c024947c1f7da74499347a95dffb9737b2668a1e7c9c838b2:
     </p>
 96c3ec3f0e533bda8a31b9b725113ac662b6e15180f779455ac7e2f4:
   ref: Kingdom has been successfully removed
-  value: Kingdom has been successfully removed
+  value: Úspěšně jste opustili jste svoje království. Vaši poddaní strádali a všichni zemřeli v důsledku této králokalypsy.
 2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
   ref: Game overview
   value: Přehled hry

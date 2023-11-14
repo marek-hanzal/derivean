@@ -1,6 +1,7 @@
 export * from "./IItem";
 export * from "./ItemInline";
 export * from "./ItemQueryStore";
+export * from "./ItemRepository";
 export * from "./ItemRpc";
 export * from "./ItemSchema";
 export * from "./ItemSelect";
@@ -13,4 +14,5 @@ export * from "./ItemTypeUI";
 export * from "./ItemUI";
 export * from "./ItemUpsertForm";
 export * from "./withItemContainer";
+export * from "./withItemRepository";
 export * from "./withItemTypeRepository";

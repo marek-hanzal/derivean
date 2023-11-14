@@ -97,12 +97,13 @@ export class WithQuery<
     public select<
         TExpression extends SelectExpression<TDatabase, TTable>
     >(
-        selections: ReadonlyArray<TExpression>
+        selections?: ReadonlyArray<TExpression>
     ): SelectQueryBuilder<
         TDatabase,
         TTable,
-        Selection<TDatabase, TTable, TExpression>
+        Selection<TDatabase, TTable, {} & TExpression>
     > {
-        return this.client.selectFrom(this.table).select(selections as any) as any;
+        const query = this.client.selectFrom(this.table);
+        return (selections ? query.select(selections as any) : query.selectAll()) as any;
     }
 }
