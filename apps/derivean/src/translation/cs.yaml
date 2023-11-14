@@ -569,6 +569,15 @@ bf724e995587a78734797d2f175b0ec9348e03f4e796425cd6116aea:
 a9b6548dd661bf89f586535929e8d1a377cbb9d0649d6f745702271f:
   ref: Past events (label)
   value: Staré události
+376758cd1bfe4fb1ed7d47c11bcb3a2f5d2a84b4f4b507ba3da52242:
+  ref: Kingdom Buildings (label)
+  value: Budovy
+4c7ac6e8c02b51717a8b8454096d202fa1857e8db810a570af844004:
+  ref: Kingdom Building List (label)
+  value: Správa budov
+86882aca03b237e797524b4e10de2fcd25b959e15ae77790d7e93cff:
+  ref: Kingdom Building Construction (label)
+  value: Výstavba
 fec7f2879f3bb84fff1d52f69c59be1e6963e4d5b9f4e0ae9d6a171e:
   ref: Kingdom Inventory (label)
   value: Inventář
@@ -797,9 +806,15 @@ c859b6a50776680e4117e3c29ba2a631e36875255789622733151704:
 5daa89ffc985bced5fd67fa69e137e139d6b5b43f73481605ca6351c:
   ref: Producer output
   value: Výstup
+2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
+  ref: Game overview
+  value: Přehled hry
 0a929e8d46db182c39f5605224af1457992d39743e7692fb2d143162:
   ref: Selected kingdom
   value: Království {name}
+a1fb8c003a02e2eac7ce1b756d67aaeb6ad344d5be95d80c11fc6705:
+  ref: Kingdom overview
+  value: Přehled
 adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
   ref: Kingdom inventory
   value: Inventář
@@ -839,6 +854,9 @@ abf8e9c74232f71de6ade635b6877ee2b820f12a67063d718ed7a582:
 ad2ca0324d62fa10364b56f445bb86fbd9cc6a7c7d1f30b9aad3268d:
   ref: Translations
   value: Překlady
+6374dffaadb261ff3f3b7d477aca76092cea9252e9124936f6ea59c9:
+  ref: Hra
+  value: Hra
 b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
   ref: Producer detail (label)
   value: Detail
@@ -869,12 +887,6 @@ fc150b71e1abae2f5a01e5b04716f51d045dc06d150ec1960dcf8ebb:
 28de4de589af568ae36e721daad935078aa1cebbaf9bf70c3112e96e:
   ref: Translation list
   value: Překlady
-2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
-  ref: Game overview
-  value: Přehled hry
-a1fb8c003a02e2eac7ce1b756d67aaeb6ad344d5be95d80c11fc6705:
-  ref: Kingdom overview
-  value: Přehled
 8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
   ref: Game management
   value: Správa hry

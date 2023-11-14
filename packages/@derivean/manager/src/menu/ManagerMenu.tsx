@@ -5,6 +5,7 @@ import {
     ProducerIcon
 }                from "@derivean/ui";
 import {
+    IconCrown,
     IconGraph,
     IconLanguage
 }                from "@tabler/icons-react";
@@ -78,6 +79,12 @@ export const ManagerMenu: FC<ManagerMenu.Props> = () => {
                 href:  "/manager/translation/list",
                 label: t()`Translations`,
                 icon:  <IconLanguage/>,
+            },
+            {
+                type:  "link",
+                href:  "/game",
+                label: t()`Hra`,
+                icon:  <IconCrown/>,
             },
         ]}
     />;
