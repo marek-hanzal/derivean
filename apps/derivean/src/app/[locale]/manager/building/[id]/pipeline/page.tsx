@@ -1,14 +1,9 @@
 import {withBuildingRepository} from "@derivean/building";
 import {BuildingMenu}           from "@derivean/manager";
-import {
-    Dependencies,
-    Pipeline
-}                               from "@derivean/producer";
 import {container}              from "@derivean/server";
 import {BuildingIcon}           from "@derivean/ui";
 import {t}                      from "@use-pico/i18n";
 import {
-    Box,
     Breadcrumbs,
     HomeIcon,
     ListIcon,
@@ -55,12 +50,6 @@ export default async function Index({params: {id}}: Index.Props) {
             active={["/manager/building/[id]/pipeline"]}
         />}
     >
-        <Box mb={"xs"}>
-            <Dependencies
-                producerId={building.producerId}
-            />
-        </Box>
-
-        <Pipeline producerId={building.producerId}/>
+        Pipeline (producer) setup here
     </Page>;
 };
