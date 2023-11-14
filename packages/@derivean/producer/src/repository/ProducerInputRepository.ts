@@ -1,6 +1,5 @@
 import {type Database}       from "@derivean/orm";
 import {lazyOf}              from "@use-pico/container";
-import {withDullSchema}      from "@use-pico/dull-stuff";
 import {
     type Client,
     withClient
@@ -10,7 +9,7 @@ import {ProducerInputSchema} from "../schema/ProducerInputSchema";
 
 export class ProducerInputRepository extends AbstractRepository<
     Database,
-    withDullSchema.Infer.RepositorySchema<ProducerInputSchema>,
+    ProducerInputSchema,
     "ProducerInput"
 > {
     static inject = [
@@ -22,7 +21,7 @@ export class ProducerInputRepository extends AbstractRepository<
     ) {
         super(
             client,
-            ProducerInputSchema.repository,
+            ProducerInputSchema,
             "ProducerInput",
         );
         this.defaultOrderBy = {

@@ -10,14 +10,13 @@ import {
     withClient
 }                                     from "@use-pico/orm";
 import {AbstractRepository}           from "@use-pico/repository";
-import {type PicoSchema}              from "@use-pico/schema";
 import {withEventInventoryRepository} from "../container/withEventInventoryRepository";
 import {EventSchema}                  from "../schema/EventSchema";
 import {EventInventoryRepository}     from "./EventInventoryRepository";
 
 export class EventRepository extends AbstractRepository<
     Database,
-    withDullSchema.Infer.RepositorySchema<EventSchema>,
+    EventSchema,
     "Event"
 > {
     static inject = [
@@ -33,7 +32,7 @@ export class EventRepository extends AbstractRepository<
     ) {
         super(
             client,
-            EventSchema.repository,
+            EventSchema,
             "Event",
         );
         this.defaultOrderBy = {
@@ -48,7 +47,7 @@ export class EventRepository extends AbstractRepository<
         };
     }
 
-    public async onCreate(entity: PicoSchema.Output<withDullSchema.Infer.RepositorySchema<EventSchema>["entity"]>): Promise<any> {
+    public async onCreate(entity: withDullSchema.Infer.Entity<EventSchema>): Promise<any> {
         switch (entity.type) {
             case "EventInventory":
                 await this.eventInventoryRepository.withMutation.create({

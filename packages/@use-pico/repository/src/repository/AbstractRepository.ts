@@ -1,32 +1,18 @@
+import {type withDullSchema} from "@use-pico/dull-stuff";
 import {
     type Client,
     type Database
-}                           from "@use-pico/orm";
-import {
-    type FilterSchema,
-    type OrderBySchema,
-    type QuerySchema
-}                           from "@use-pico/query";
-import {PicoSchema}         from "@use-pico/schema";
-import {
-    type MutationSchema,
-    type ShapeSchema
-}                           from "@use-pico/source";
-import {type IRepository}   from "../api/IRepository";
-import {type IWithMutation} from "../api/IWithMutation";
-import {type IWithQuery}    from "../api/IWithQuery";
-import {AbstractWithApply}  from "./AbstractWithApply";
-import {WithMutation}       from "./WithMutation";
-import {WithQuery}          from "./WithQuery";
+}                            from "@use-pico/orm";
+import {type IRepository}    from "../api/IRepository";
+import {type IWithMutation}  from "../api/IWithMutation";
+import {type IWithQuery}     from "../api/IWithQuery";
+import {AbstractWithApply}   from "./AbstractWithApply";
+import {WithMutation}        from "./WithMutation";
+import {WithQuery}           from "./WithQuery";
 
 export class AbstractRepository<
     TDatabase extends Database,
-    TSchema extends IRepository.Schema<
-        any,
-        any,
-        QuerySchema<FilterSchema, OrderBySchema>,
-        MutationSchema<ShapeSchema, QuerySchema<FilterSchema, OrderBySchema>>
-    >,
+    TSchema extends withDullSchema.Schema<any, any, any, any>,
     TTable extends keyof TDatabase & string,
 > extends AbstractWithApply<
     TDatabase,
@@ -69,29 +55,29 @@ export class AbstractRepository<
         ));
     }
 
-    public async get(id: string): Promise<PicoSchema.Output<TSchema["entity"]> | undefined> {
+    public async get(id: string): Promise<withDullSchema.Infer.Entity<TSchema> | undefined> {
         return this.withQuery.fetch({
             where: {id},
         });
     }
 
-    public async getOrThrow(id: string): Promise<PicoSchema.Output<TSchema["entity"]>> {
+    public async getOrThrow(id: string): Promise<withDullSchema.Infer.Entity<TSchema>> {
         return this.withQuery.fetchOrThrow({
             where: {id},
         });
     }
 
-    public async toCreate(create: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["create"]>>): Promise<Omit<PicoSchema.Output<TSchema["entity"]>, "id">> {
+    public async toCreate(create: withDullSchema.Infer.Create<TSchema>): Promise<withDullSchema.Infer.EntityWithoutId<TSchema>> {
         return create;
     }
 
-    public async onCreate(entity: PicoSchema.Output<TSchema["entity"]>): Promise<any> {
+    public async onCreate(entity: withDullSchema.Infer.Entity<TSchema>): Promise<any> {
     }
 
-    public async toUpdate(update: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["update"]>>["update"]): Promise<Partial<PicoSchema.Output<TSchema["entity"]>>> {
+    public async toUpdate(update: withDullSchema.Infer.Update<TSchema>["update"]): Promise<withDullSchema.Infer.Entity$<TSchema>> {
         return update;
     }
 
-    public async onUpdate(entity: PicoSchema.Output<TSchema["entity"]>): Promise<any> {
+    public async onUpdate(entity: withDullSchema.Infer.Entity<TSchema>): Promise<any> {
     }
 }

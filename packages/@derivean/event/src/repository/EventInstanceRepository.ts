@@ -1,6 +1,5 @@
 import {type Database}       from "@derivean/orm";
 import {lazyOf}              from "@use-pico/container";
-import {withDullSchema}      from "@use-pico/dull-stuff";
 import {
     type Client,
     withClient
@@ -10,7 +9,7 @@ import {EventInstanceSchema} from "../schema/EventInstanceSchema";
 
 export class EventInstanceRepository extends AbstractRepository<
     Database,
-    withDullSchema.Infer.RepositorySchema<EventInstanceSchema>,
+    EventInstanceSchema,
     "EventInstance"
 > {
     static inject = [
@@ -22,7 +21,7 @@ export class EventInstanceRepository extends AbstractRepository<
     ) {
         super(
             client,
-            EventInstanceSchema.repository,
+            EventInstanceSchema,
             "EventInstance",
         );
         this.defaultOrderBy = {

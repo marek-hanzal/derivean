@@ -1,29 +1,12 @@
-import {type Database}      from "@use-pico/orm";
-import {
-    type FilterSchema,
-    type OrderBySchema,
-    type QuerySchema
-}                           from "@use-pico/query";
-import {
-    PicoSchema,
-    type WithIdentitySchema
-}                           from "@use-pico/schema";
-import {
-    type MutationSchema,
-    type ShapeSchema
-}                           from "@use-pico/source";
-import {type IWithApply}    from "./IWithApply";
-import {type IWithMutation} from "./IWithMutation";
-import {type IWithQuery}    from "./IWithQuery";
+import {type withDullSchema} from "@use-pico/dull-stuff";
+import {type Database}       from "@use-pico/orm";
+import {type IWithApply}     from "./IWithApply";
+import {type IWithMutation}  from "./IWithMutation";
+import {type IWithQuery}     from "./IWithQuery";
 
 export interface IRepository<
     TDatabase extends Database,
-    TSchema extends IRepository.Schema<
-        any,
-        any,
-        QuerySchema<FilterSchema, OrderBySchema>,
-        MutationSchema<ShapeSchema, QuerySchema<FilterSchema, OrderBySchema>>
-    >,
+    TSchema extends withDullSchema.Schema<any, any, any, any>,
     TTable extends keyof TDatabase & string,
 > extends IWithApply<
     TDatabase,
@@ -34,29 +17,15 @@ export interface IRepository<
 
     get withMutation(): IWithMutation<TDatabase, TSchema, TTable>;
 
-    get(id: string): Promise<PicoSchema.Output<TSchema["entity"]> | undefined>;
+    get(id: string): Promise<withDullSchema.Infer.Entity<TSchema> | undefined>;
 
-    getOrThrow(id: string): Promise<PicoSchema.Output<TSchema["entity"]>>;
+    getOrThrow(id: string): Promise<withDullSchema.Infer.Entity<TSchema>>;
 
-    toCreate(create: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["create"]>>): Promise<Omit<PicoSchema.Output<TSchema["entity"]>, "id">>;
+    toCreate(create: withDullSchema.Infer.Create<TSchema>): Promise<withDullSchema.Infer.EntityWithoutId<TSchema>>;
 
-    onCreate(entity: PicoSchema.Output<TSchema["entity"]>): Promise<any>;
+    onCreate(entity: withDullSchema.Infer.Entity<TSchema>): Promise<any>;
 
-    toUpdate(update: NonNullable<PicoSchema.Output<TSchema["mutation"]["shape"]["update"]>>["update"]): Promise<Partial<PicoSchema.Output<TSchema["entity"]>>>;
+    toUpdate(update: withDullSchema.Infer.Update<TSchema>["update"]): Promise<Partial<withDullSchema.Infer.Entity<TSchema>>>;
 
-    onUpdate(entity: PicoSchema.Output<TSchema["entity"]>): Promise<any>;
-}
-
-export namespace IRepository {
-    export interface Schema<
-        TEntitySchema extends WithIdentitySchema,
-        TShapeSchema extends ShapeSchema,
-        TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
-        TMutationSchema extends MutationSchema<TShapeSchema, TQuerySchema>,
-    > {
-        readonly entity: TEntitySchema;
-        readonly shape: TShapeSchema;
-        readonly query: TQuerySchema;
-        readonly mutation: TMutationSchema;
-    }
+    onUpdate(entity: withDullSchema.Infer.Entity<TSchema>): Promise<any>;
 }

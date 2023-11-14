@@ -1,6 +1,5 @@
 import {type Database}        from "@derivean/orm";
 import {lazyOf}               from "@use-pico/container";
-import {withDullSchema}       from "@use-pico/dull-stuff";
 import {
     type Client,
     withClient
@@ -10,7 +9,7 @@ import {EventInventorySchema} from "../schema/EventInventorySchema";
 
 export class EventInventoryRepository extends AbstractRepository<
     Database,
-    withDullSchema.Infer.RepositorySchema<EventInventorySchema>,
+    EventInventorySchema,
     "EventInventory"
 > {
     static inject = [
@@ -22,7 +21,7 @@ export class EventInventoryRepository extends AbstractRepository<
     ) {
         super(
             client,
-            EventInventorySchema.repository,
+            EventInventorySchema,
             "EventInventory",
         );
         this.matchOf = {

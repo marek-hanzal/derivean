@@ -1,17 +1,19 @@
 import {type Database}       from "@derivean/orm";
-import {ProducerRepository}  from "@derivean/producer";
 import {lazyOf}              from "@use-pico/container";
 import {withDullSchema}      from "@use-pico/dull-stuff";
 import {
     type Client,
     withClient
 }                            from "@use-pico/orm";
-import {AbstractRepository}  from "@use-pico/repository";
+import {
+    AbstractRepository,
+    type SelectOf
+}                            from "@use-pico/repository";
 import {InventoryItemSchema} from "../schema/InventoryItemSchema";
 
 export class InventoryItemRepository extends AbstractRepository<
     Database,
-    withDullSchema.Infer.RepositorySchema<InventoryItemSchema>,
+    InventoryItemSchema,
     "InventoryItem"
 > {
     static inject = [
@@ -20,11 +22,10 @@ export class InventoryItemRepository extends AbstractRepository<
 
     constructor(
         client: Client<Database>,
-        protected producerRepository: ProducerRepository.Type,
     ) {
         super(
             client,
-            InventoryItemSchema.repository,
+            InventoryItemSchema,
             "InventoryItem",
         );
         this.defaultOrderBy = {};
@@ -32,6 +33,10 @@ export class InventoryItemRepository extends AbstractRepository<
             inventoryId: "inventoryId",
             itemId:      "itemId",
         };
+    }
+
+    public with<T>(query: withDullSchema.Infer.Query<InventoryItemSchema>, select: SelectOf<Database, "InventoryItem", T>): SelectOf<Database, "InventoryItem", T> {
+        return super.with(query, select);
     }
 }
 

@@ -1,10 +1,5 @@
 import {type Database}             from "@derivean/orm";
-import {
-    ProducerRepository,
-    withProducerRepository
-}                                  from "@derivean/producer";
 import {lazyOf}                    from "@use-pico/container";
-import {withDullSchema}            from "@use-pico/dull-stuff";
 import {
     type Client,
     withClient
@@ -14,21 +9,19 @@ import {BuildingRequirementSchema} from "../schema/BuildingRequirementSchema";
 
 export class BuildingRequirementRepository extends AbstractRepository<
     Database,
-    withDullSchema.Infer.RepositorySchema<BuildingRequirementSchema>,
+    BuildingRequirementSchema,
     "BuildingRequirement"
 > {
     static inject = [
         lazyOf(withClient.inject),
-        lazyOf(withProducerRepository.inject),
     ];
 
     constructor(
         client: Client<Database>,
-        protected producerRepository: ProducerRepository.Type,
     ) {
         super(
             client,
-            BuildingRequirementSchema.repository,
+            BuildingRequirementSchema,
             "BuildingRequirement",
         );
         this.defaultOrderBy = {

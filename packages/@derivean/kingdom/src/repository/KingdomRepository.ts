@@ -1,30 +1,29 @@
 import {
     type IEventService,
     withEventService
-}                           from "@derivean/event";
+}                            from "@derivean/event";
 import {
     type InventoryRepository,
     withInventoryRepository
-}                           from "@derivean/inventory";
-import {type Database}      from "@derivean/orm";
+}                            from "@derivean/inventory";
+import {type Database}       from "@derivean/orm";
 import {
     type IUserService,
     withUserService
-}                           from "@use-pico/auth-server";
-import {lazyOf}             from "@use-pico/container";
-import {withDullSchema}     from "@use-pico/dull-stuff";
-import {DateTime}           from "@use-pico/i18n";
+}                            from "@use-pico/auth-server";
+import {lazyOf}              from "@use-pico/container";
+import {type withDullSchema} from "@use-pico/dull-stuff";
+import {DateTime}            from "@use-pico/i18n";
 import {
     type Client,
     withClient
-}                           from "@use-pico/orm";
-import {AbstractRepository} from "@use-pico/repository";
-import {type PicoSchema}    from "@use-pico/schema";
-import {KingdomSchema}      from "../schema/KingdomSchema";
+}                            from "@use-pico/orm";
+import {AbstractRepository}  from "@use-pico/repository";
+import {KingdomSchema}       from "../schema/KingdomSchema";
 
 export class KingdomRepository extends AbstractRepository<
     Database,
-    withDullSchema.Infer.RepositorySchema<KingdomSchema>,
+    KingdomSchema,
     "Kingdom"
 > {
     static inject = [
@@ -42,7 +41,7 @@ export class KingdomRepository extends AbstractRepository<
     ) {
         super(
             client,
-            KingdomSchema.repository,
+            KingdomSchema,
             "Kingdom",
         );
         this.defaultOrderBy = {
@@ -54,7 +53,7 @@ export class KingdomRepository extends AbstractRepository<
         };
     }
 
-    public async toCreate(create: NonNullable<PicoSchema.Output<withDullSchema.Infer.RepositorySchema<KingdomSchema>["mutation"]["shape"]["create"]>>): Promise<Omit<withDullSchema.Infer.Entity<KingdomSchema>, "id">> {
+    public async toCreate(create: withDullSchema.Infer.Create<KingdomSchema>): Promise<withDullSchema.Infer.EntityWithoutId<KingdomSchema>> {
         return {
             ...create,
             created: DateTime.utc().toISO()!,
@@ -65,7 +64,7 @@ export class KingdomRepository extends AbstractRepository<
         };
     }
 
-    public async onCreate(entity: PicoSchema.Output<withDullSchema.Infer.RepositorySchema<KingdomSchema>["entity"]>): Promise<any> {
+    public async onCreate(entity: withDullSchema.Infer.Entity<KingdomSchema>): Promise<any> {
         return this.eventService.execute(entity.id, "welcome-gift");
     }
 }

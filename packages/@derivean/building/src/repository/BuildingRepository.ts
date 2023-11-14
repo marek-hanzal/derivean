@@ -1,21 +1,20 @@
-import {type Database}      from "@derivean/orm";
+import {type Database}       from "@derivean/orm";
 import {
     ProducerRepository,
     withProducerRepository
-}                           from "@derivean/producer";
-import {lazyOf}             from "@use-pico/container";
-import {withDullSchema}     from "@use-pico/dull-stuff";
+}                            from "@derivean/producer";
+import {lazyOf}              from "@use-pico/container";
+import {type withDullSchema} from "@use-pico/dull-stuff";
 import {
     type Client,
     withClient
-}                           from "@use-pico/orm";
-import {AbstractRepository} from "@use-pico/repository";
-import {type PicoSchema}    from "@use-pico/schema";
-import {BuildingSchema}     from "../schema/BuildingSchema";
+}                            from "@use-pico/orm";
+import {AbstractRepository}  from "@use-pico/repository";
+import {BuildingSchema}      from "../schema/BuildingSchema";
 
 export class BuildingRepository extends AbstractRepository<
     Database,
-    withDullSchema.Infer.RepositorySchema<BuildingSchema>,
+    BuildingSchema,
     "Building"
 > {
     static inject = [
@@ -29,7 +28,7 @@ export class BuildingRepository extends AbstractRepository<
     ) {
         super(
             client,
-            BuildingSchema.repository,
+            BuildingSchema,
             "Building",
         );
         this.defaultOrderBy = {
@@ -41,7 +40,7 @@ export class BuildingRepository extends AbstractRepository<
         };
     }
 
-    public async toCreate(create: NonNullable<PicoSchema.Output<withDullSchema.Infer.RepositorySchema<BuildingSchema>["mutation"]["shape"]["create"]>>): Promise<Omit<withDullSchema.Infer.Entity<BuildingSchema>, "id">> {
+    public async toCreate(create: withDullSchema.Infer.Create<BuildingSchema>): Promise<withDullSchema.Infer.EntityWithoutId<BuildingSchema>> {
         return {
             ...create,
             producerId: create.producerId || (await this.producerRepository.withMutation.create({

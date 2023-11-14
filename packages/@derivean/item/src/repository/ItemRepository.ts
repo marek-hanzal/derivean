@@ -1,6 +1,5 @@
 import {type Database}      from "@derivean/orm";
 import {lazyOf}             from "@use-pico/container";
-import {withDullSchema}     from "@use-pico/dull-stuff";
 import {
     type Client,
     withClient
@@ -10,7 +9,7 @@ import {ItemSchema}         from "../schema/ItemSchema";
 
 export class ItemRepository extends AbstractRepository<
     Database,
-    withDullSchema.Infer.RepositorySchema<ItemSchema>,
+    ItemSchema,
     "Item"
 > {
     static inject = [
@@ -22,7 +21,7 @@ export class ItemRepository extends AbstractRepository<
     ) {
         super(
             client,
-            ItemSchema.repository,
+            ItemSchema,
             "Item",
         );
         this.defaultOrderBy = {
