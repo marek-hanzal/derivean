@@ -36,7 +36,7 @@ export const KingdomMenu: FC<KingdomMenu.Props> = (
                 type:  "link",
                 label: t()`Events (label)`,
                 icon:  <EventIcon/>,
-                href:  `/kingdom/[kingdomId]/events`,
+                href: `/kingdom/[kingdomId]/events/current`,
                 query,
             },
         ]}

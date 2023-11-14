@@ -268,6 +268,24 @@ a52367fba938c900739dd028e591c832cbf2cd7c8a192c32b9150aa1:
 170d573f6df889833e825dc720ef26da0d182ad4a772267ebd77f0fd:
   ref: Producer has cyclic dependencies
   value: Producer has cyclic dependencies
+77e2b92646c5b9c50c74a06c8e33877af87ed3f537a817fbaf5cf981:
+  ref: Total count of inventory items
+  value: Total count of inventory items
+a902b653563ecc1e083ba2766f7b3dadedaa429479aab348d66ad69b:
+  ref: Empty inventory
+  value: Empty inventory
+10341664bf8478db1a880f970ee4de0e68c3c1b4744ba8dfbf2d9ba7:
+  ref: This inventory is empty
+  value: This inventory is empty
+66404924cea8f3b46b53d0ea38850d3c46dc339e57dff73a69681c65:
+  ref: Item
+  value: Item
+2dc007e932619d69a3764f194224cb28fcd5e9ffb60d3cf82a144ca7:
+  ref: Amount
+  value: Amount
+d7067a95d5c91769dbba2df85d04cffccf7d5e37cda549e7ecc9581b:
+  ref: Limit
+  value: Limit
 648a9bd88580b075c4b2b5b829b8dd218e26fa96013ec90fabba62bc:
   ref: Update inventory item (label)
   value: Update inventory item (label)
@@ -322,48 +340,18 @@ cb7246c28ec4149127157593fb5cebc665268ca4c03b514c72360751:
 9034bc1c447e134bd719641b47d10269aa881c2de57db4855be457da:
   ref: Inventory (placeholder)
   value: Inventory (placeholder)
-66404924cea8f3b46b53d0ea38850d3c46dc339e57dff73a69681c65:
-  ref: Item
-  value: Item
 0892a16e250bcd9d7ff4fb31023dddd38c210be53264c4b79ebeefbd:
   ref: item (placeholder)
   value: item (placeholder)
-2dc007e932619d69a3764f194224cb28fcd5e9ffb60d3cf82a144ca7:
-  ref: Amount
-  value: Amount
-d7067a95d5c91769dbba2df85d04cffccf7d5e37cda549e7ecc9581b:
-  ref: Limit
-  value: Limit
-77e2b92646c5b9c50c74a06c8e33877af87ed3f537a817fbaf5cf981:
-  ref: Total count of inventory items
-  value: Total count of inventory items
-a902b653563ecc1e083ba2766f7b3dadedaa429479aab348d66ad69b:
-  ref: Empty inventory
-  value: Empty inventory
-10341664bf8478db1a880f970ee4de0e68c3c1b4744ba8dfbf2d9ba7:
-  ref: This inventory is empty
-  value: This inventory is empty
-96d5926c9a60378e23484b97be7d20098541bac29943df79fadfdde6:
-  ref: Update inventory item
-  value: Update inventory item
-ff168c45439464bafd0d0bf4975c62c70700732c727daaee910d95ef:
-  ref: Discard inventory item
-  value: Discard inventory item
-c2c44c5ab8a7eedfb0932406f9ff7dd65d8dd5676e981da3e124c776:
-  ref: Discard inventory item (modal)
-  value: Discard inventory item (modal)
-3518463a4e6a79eaeebb2f353c7a7559d84f7721d78a5cdc5f0d1adb:
-  ref: Do you really want to discard selected inventory item?
-  value: Do you really want to discard selected inventory item?
-8c88ba0123cad9531554c0c0500a4ef6ba5ef6e7d587d768222d3680:
-  ref: InventoryItem has been successfully discarded
-  value: InventoryItem has been successfully discarded
 f165b141cf3cf9c827d3cc3aae4805b776041028645be2f046492294:
   ref: Create inventory item (modal)
   value: Create inventory item (modal)
 0fa56436985c0ede3404a59bf828a0bb9e4712fe2583b1a9bf53ff14:
   ref: Create inventory item
   value: Create inventory item
+96d5926c9a60378e23484b97be7d20098541bac29943df79fadfdde6:
+  ref: Update inventory item
+  value: Update inventory item
 a6eb27f457d5d2fc548079123e76826dfedb4fcc6cc1af466708f88d:
   ref: Delete inventory item
   value: Delete inventory item
@@ -694,9 +682,6 @@ a3672593f121b57bfb00ab5a9c8e8c54e1c5d5dc74980c2fa92080fa:
 8ebc63848e27267b78a581ae5258397a96a09b5c6874084026ccedfe:
   ref: Event has been successfully removed
   value: Event has been successfully removed
-18235d3b136a5b17619a8270b61349ba7666f0250fe7a6f904b423dd:
-  ref: Kingdom overview (label)
-  value: Kingdom overview (label)
 fec7f2879f3bb84fff1d52f69c59be1e6963e4d5b9f4e0ae9d6a171e:
   ref: Kingdom Inventory (label)
   value: Kingdom Inventory (label)
@@ -760,9 +745,12 @@ e8cf9d9c024947c1f7da74499347a95dffb9737b2668a1e7c9c838b2:
 a1fb8c003a02e2eac7ce1b756d67aaeb6ad344d5be95d80c11fc6705:
   ref: Kingdom overview
   value: Kingdom overview
-d81580ca6211140c286501141878829abb5e26849504cfd16fe63c5a:
-  ref: Events
-  value: Events
+1d39bb404381cef30c85128a62aa3cc2e61abc9348fbc819824c2854:
+  ref: Current events (label)
+  value: Current events (label)
+a9b6548dd661bf89f586535929e8d1a377cbb9d0649d6f745702271f:
+  ref: Past events (label)
+  value: Past events (label)
 adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
   ref: Kingdom inventory
   value: Kingdom inventory
@@ -817,6 +805,15 @@ b26b6df0874ba275fe15bfc9a827578dc878edd58036f0390a090159:
 fc150b71e1abae2f5a01e5b04716f51d045dc06d150ec1960dcf8ebb:
   ref: Item type - item list
   value: Item type - item list
+366c4ebefbd1bd2dedbd6ef50c16353460122b80dcd950beb3eef525:
+  ref: 4o4
+  value: 4o4
+700793a55f415a8f2822f5f38736661af6b2e62650cfc6f7d4c23ca0:
+  ref: You found a place where nothing is hidden.
+  value: You found a place where nothing is hidden.
+6bb1fb8895c7ff06682e188e0d450060a59dd74635f4e17f6aa84217:
+  ref: Here or there, you see nothing interesting. Try another page.
+  value: Here or there, you see nothing interesting. Try another page.
 8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
   ref: Game management
   value: Game management
@@ -838,15 +835,6 @@ b0688cb7c2c6fed8c4f5204b01f7d8512afef57fd91b3534a58eaa5a:
 e263ec6a176204dd2a48c458d632d6a02b4173d37fe6c291b3619693:
   ref: DeRivean - The Invisible Game
   value: DeRivean - The Invisible Game
-366c4ebefbd1bd2dedbd6ef50c16353460122b80dcd950beb3eef525:
-  ref: 4o4
-  value: 4o4
-700793a55f415a8f2822f5f38736661af6b2e62650cfc6f7d4c23ca0:
-  ref: You found a place where nothing is hidden.
-  value: You found a place where nothing is hidden.
-6bb1fb8895c7ff06682e188e0d450060a59dd74635f4e17f6aa84217:
-  ref: Here or there, you see nothing interesting. Try another page.
-  value: Here or there, you see nothing interesting. Try another page.
 6d005622708a0d4dc2a7c837714470b2443d2fde38fbe0a0ebcfe91b:
   ref: Low-level system administration
   value: Low-level system administration

@@ -1,3 +1,4 @@
+export * from "./EventMenu";
 export * from "./KingdomInline";
 export * from "./KingdomLayout";
 export * from "./KingdomMenu";
