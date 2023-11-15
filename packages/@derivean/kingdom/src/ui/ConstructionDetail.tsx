@@ -39,6 +39,7 @@ export const ConstructionDetail: FC<ConstructionDetail.Props> = async (
     }
 ) => {
     const result = await withConstructionService.use(container).isAvailable(kingdom.inventoryId, building.id);
+
     return <>
         <Box
             mb={"xs"}
