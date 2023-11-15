@@ -373,90 +373,6 @@ bab1dfa013db089d1bf67008490c0ebb30e7dadf392929a861689826:
 cebcc12cf4a374accb2762b75c8412c89875df9117ff9cc33e1d1355:
   ref: Kingdom available buildings (label)
   value: Kingdom available buildings (label)
-9d68fd7d2b9e208edb77ede71fe6c547b34f40f0b4b28741f68c0614:
-  ref: Detail
-  value: Detail
-769cc0bb937b0a0a9bb2388933382c748e2722fdd8652de63b817f57:
-  ref: Event type [EventInventory]
-  value: Event type [EventInventory]
-69b160bba6899459b9c74f3d3c9b9a6a2ad8878ae5319b0cf6feeefe:
-  ref: Event name
-  value: Event name
-8e035e739539a65e8a12b4fdfa06e6651d935f3961ced9f74f383b0a:
-  ref: Event type
-  value: Event type
-a0a3a82817e913af6a1a211e4f559635d4778f95f0042fcc97ade56b:
-  ref: Event instant
-  value: Event instant
-1312d6c471178fc8dce0c93bf3555fb3eb5fce2cac44d8efb7e464a0:
-  ref: Event duration
-  value: Event duration
-21cd6111300cb9a9f56c02a420102fdf0184b83b261da40943e2304b:
-  ref: Event start
-  value: Event start
-123380aa40822f8a3676fd98eb3399eb1bbbedb080ff7705f4c42f48:
-  ref: Event end
-  value: Event end
-41ece34d16465b23c5a904d1cdf4676e10151591f1fa5648a182e7e5:
-  ref: Update event (label)
-  value: Update event (label)
-ccc92c321f409d1b67ba4128a10c14b108ec547352f6d87fceee4150:
-  ref: Create event (label)
-  value: Create event (label)
-fa40815a9c846c1739335cf8404b4461781a368fe2a0dd930bd1376d:
-  ref: Event updated
-  value: Event updated
-8a1fa329a34c6a3e41c7067e26062c6dd3a427062e10b067297af765:
-  ref: Event created
-  value: Event created
-37c8b3ddc42d3ffca417aeb812209741279abd0fd918738ee085f6c0:
-  ref: Event name (placeholder)
-  value: Event name (placeholder)
-5edaabf8de9ebaa3329b7eb2efe51b62587a83f5f9bc406848981b96:
-  ref: Event type (placeholder)
-  value: Event type (placeholder)
-44ef91e3c0760f64a13d6769815e3d3144b4f4666b986dc123ef687e:
-  ref: Event from (label)
-  value: Event from (label)
-894b8901e90f42942837d845edff7fb77e16409c1a3bb52d2d0cf7ef:
-  ref: Event from (placeholder)
-  value: Event from (placeholder)
-9d31898559b745da631e944345894e65fd1d4d82cbf2af22b51469d4:
-  ref: Event to (label)
-  value: Event to (label)
-18cb536d15e6641d02394cd063980bdd32f0b15a10bc4918e5171634:
-  ref: Event to (placeholder)
-  value: Event to (placeholder)
-48057193c555bcfe3583631b417a0609ad7c27cae1990fe6dc6d8876:
-  ref: Event (fieldset)
-  value: Event (fieldset)
-6c8c85d1b6155898c2526f0e8d31fa92330d8f269ef62112cf0335d6:
-  ref: Event duration (fieldset)
-  value: Event duration (fieldset)
-bcd9a7317f657479f93c850ef97a32ed0929219d8dd511fe7c0c00a2:
-  ref: Total count of events
-  value: Total count of events
-fc58e8e8e08429c8fd4e1533cea52688b4da2fd34f57245479eb0708:
-  ref: Create event (modal)
-  value: Create event (modal)
-80b66dfdef399b1b3bbfc0833f0e35dcfc543026eb6b39232d9fcaab:
-  ref: Create event
-  value: Create event
-2cf329b554317db61b1e965727b56a4d105f57a93375553ccd2b2576:
-  ref: Update event
-  value: Update event
-a3672593f121b57bfb00ab5a9c8e8c54e1c5d5dc74980c2fa92080fa:
-  ref: Delete event
-  value: Delete event
-2ebe1651029bae85860b4ab047bf3697102a2aed19505ae78f5fac7c:
-  ref: Delete event (modal)
-  value: Delete event (modal)
-8cb3c328618e01c6c45916d304d46cb0f0be9cd86d94336ce4e55bf7:
-  ref: Do you really want to delete selected event?
-  value: Do you really want to delete selected event?
-8ebc63848e27267b78a581ae5258397a96a09b5c6874084026ccedfe:
-  ref: Event has been successfully removed
-  value: Event has been successfully removed
 77e2b92646c5b9c50c74a06c8e33877af87ed3f537a817fbaf5cf981:
   ref: Total count of inventory items
   value: Total count of inventory items
@@ -553,6 +469,90 @@ eecd2930a1fa4de61bc29f8080f2f452a6f21ad4a2c593d6a7e852e7:
 bf724e995587a78734797d2f175b0ec9348e03f4e796425cd6116aea:
   ref: InventoryItem has been successfully removed
   value: InventoryItem has been successfully removed
+9d68fd7d2b9e208edb77ede71fe6c547b34f40f0b4b28741f68c0614:
+  ref: Detail
+  value: Detail
+769cc0bb937b0a0a9bb2388933382c748e2722fdd8652de63b817f57:
+  ref: Event type [EventInventory]
+  value: Event type [EventInventory]
+69b160bba6899459b9c74f3d3c9b9a6a2ad8878ae5319b0cf6feeefe:
+  ref: Event name
+  value: Event name
+8e035e739539a65e8a12b4fdfa06e6651d935f3961ced9f74f383b0a:
+  ref: Event type
+  value: Event type
+a0a3a82817e913af6a1a211e4f559635d4778f95f0042fcc97ade56b:
+  ref: Event instant
+  value: Event instant
+1312d6c471178fc8dce0c93bf3555fb3eb5fce2cac44d8efb7e464a0:
+  ref: Event duration
+  value: Event duration
+21cd6111300cb9a9f56c02a420102fdf0184b83b261da40943e2304b:
+  ref: Event start
+  value: Event start
+123380aa40822f8a3676fd98eb3399eb1bbbedb080ff7705f4c42f48:
+  ref: Event end
+  value: Event end
+41ece34d16465b23c5a904d1cdf4676e10151591f1fa5648a182e7e5:
+  ref: Update event (label)
+  value: Update event (label)
+ccc92c321f409d1b67ba4128a10c14b108ec547352f6d87fceee4150:
+  ref: Create event (label)
+  value: Create event (label)
+fa40815a9c846c1739335cf8404b4461781a368fe2a0dd930bd1376d:
+  ref: Event updated
+  value: Event updated
+8a1fa329a34c6a3e41c7067e26062c6dd3a427062e10b067297af765:
+  ref: Event created
+  value: Event created
+37c8b3ddc42d3ffca417aeb812209741279abd0fd918738ee085f6c0:
+  ref: Event name (placeholder)
+  value: Event name (placeholder)
+5edaabf8de9ebaa3329b7eb2efe51b62587a83f5f9bc406848981b96:
+  ref: Event type (placeholder)
+  value: Event type (placeholder)
+44ef91e3c0760f64a13d6769815e3d3144b4f4666b986dc123ef687e:
+  ref: Event from (label)
+  value: Event from (label)
+894b8901e90f42942837d845edff7fb77e16409c1a3bb52d2d0cf7ef:
+  ref: Event from (placeholder)
+  value: Event from (placeholder)
+9d31898559b745da631e944345894e65fd1d4d82cbf2af22b51469d4:
+  ref: Event to (label)
+  value: Event to (label)
+18cb536d15e6641d02394cd063980bdd32f0b15a10bc4918e5171634:
+  ref: Event to (placeholder)
+  value: Event to (placeholder)
+48057193c555bcfe3583631b417a0609ad7c27cae1990fe6dc6d8876:
+  ref: Event (fieldset)
+  value: Event (fieldset)
+6c8c85d1b6155898c2526f0e8d31fa92330d8f269ef62112cf0335d6:
+  ref: Event duration (fieldset)
+  value: Event duration (fieldset)
+bcd9a7317f657479f93c850ef97a32ed0929219d8dd511fe7c0c00a2:
+  ref: Total count of events
+  value: Total count of events
+fc58e8e8e08429c8fd4e1533cea52688b4da2fd34f57245479eb0708:
+  ref: Create event (modal)
+  value: Create event (modal)
+80b66dfdef399b1b3bbfc0833f0e35dcfc543026eb6b39232d9fcaab:
+  ref: Create event
+  value: Create event
+2cf329b554317db61b1e965727b56a4d105f57a93375553ccd2b2576:
+  ref: Update event
+  value: Update event
+a3672593f121b57bfb00ab5a9c8e8c54e1c5d5dc74980c2fa92080fa:
+  ref: Delete event
+  value: Delete event
+2ebe1651029bae85860b4ab047bf3697102a2aed19505ae78f5fac7c:
+  ref: Delete event (modal)
+  value: Delete event (modal)
+8cb3c328618e01c6c45916d304d46cb0f0be9cd86d94336ce4e55bf7:
+  ref: Do you really want to delete selected event?
+  value: Do you really want to delete selected event?
+8ebc63848e27267b78a581ae5258397a96a09b5c6874084026ccedfe:
+  ref: Event has been successfully removed
+  value: Event has been successfully removed
 f3bcb21973062cd91deccddce5bb0c709280a118725b5f000e30ea3e:
   ref: Construction is available
   value: Construction is available
@@ -567,6 +567,12 @@ a8cd609da08d34dada332bfb162d2b958ab05a06e458c59925c3336b:
     requirements.
   value: You do not have enough resources or workers to build this building. Check
     requirements.
+e1b4e3be592d66e55024250ff15b784999d9f125b7036b1ffdbafd95:
+  ref: Construction - missing items
+  value: Construction - missing items
+0efe118e6142bbbe9213939523e7b9f3a900fc2b0c881e27535a81d2:
+  ref: Missing required items
+  value: Missing required items
 1d39bb404381cef30c85128a62aa3cc2e61abc9348fbc819824c2854:
   ref: Current events (label)
   value: Current events (label)
@@ -837,27 +843,27 @@ b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
 553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
   ref: Building detail
   value: Building detail
+b0688cb7c2c6fed8c4f5204b01f7d8512afef57fd91b3534a58eaa5a:
+  ref: Building requirement
+  value: Building requirement
 49036c4c363613fe423d0de97373c833a18e6c859af2187dacd569e2:
   ref: Event detail
   value: Event detail
 b26b6df0874ba275fe15bfc9a827578dc878edd58036f0390a090159:
   ref: Event list
   value: Event list
+36d8ff886fe97ed9c7458bdc4c0343af18f7ec7402c9b4a5303c527c:
+  ref: Event type [EventInventory] (label)
+  value: Event type [EventInventory] (label)
 28de4de589af568ae36e721daad935078aa1cebbaf9bf70c3112e96e:
   ref: Translation list
   value: Translation list
 8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
   ref: Game management
   value: Game management
-b0688cb7c2c6fed8c4f5204b01f7d8512afef57fd91b3534a58eaa5a:
-  ref: Building requirement
-  value: Building requirement
 e14c68cd1a8cac9008c40b658668bb390387cebc452453856e495a8c:
   ref: Building pipeline
   value: Building pipeline
-36d8ff886fe97ed9c7458bdc4c0343af18f7ec7402c9b4a5303c527c:
-  ref: Event type [EventInventory] (label)
-  value: Event type [EventInventory] (label)
 fc150b71e1abae2f5a01e5b04716f51d045dc06d150ec1960dcf8ebb:
   ref: Item type - item list
   value: Item type - item list

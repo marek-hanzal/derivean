@@ -23,7 +23,7 @@ export class ConstructionService implements IConstructionService {
     ) {
     }
 
-    public async isAvailable(inventoryId: string, buildingId: string): Promise<boolean> {
+    public async isAvailable(inventoryId: string, buildingId: string): Promise<IConstructionService.AvailableResult> {
         const items = await this.inventoryService.load(inventoryId);
         const itemIds = items.map(item => item.itemId);
         const constructionItems = await this.buildingConstructionRequirementRepository.withQuery.query({
@@ -37,50 +37,50 @@ export class ConstructionService implements IConstructionService {
             },
         });
 
-        const missingConstructionItems: string[] = [];
-        const missingRequiredItems: string[] = [];
-        const notEnoughConstructionItems: {
-            itemId: string,
-            diff: number,
-        }[] = [];
-        const notEnoughRequiredItems: {
-            itemId: string,
-            diff: number,
-        }[] = [];
-        let result = true;
+        const result: IConstructionService.AvailableResult = {
+            result:    true,
+            missing:   {
+                construction: [],
+                required:     [],
+            },
+            notEnough: {
+                construction: [],
+                required:     [],
+            },
+        };
 
         for (const item of constructionItems) {
             if (!itemIds.includes(item.itemId)) {
-                missingConstructionItems.push(item.itemId);
-                result = false;
+                result.missing.construction.push(item.itemId);
+                result.result = false;
                 continue;
             }
             const amount = items.reduce((prev, current) => {
-                return item.itemId === current.itemId ? prev + item.amount : prev;
+                return item.itemId === current.itemId ? prev + current.amount : prev;
             }, 0);
             if (amount < item.amount) {
-                notEnoughConstructionItems.push({
+                result.notEnough.construction.push({
                     itemId: item.itemId,
                     diff:   item.amount - amount,
                 });
-                result = false;
+                result.result = false;
             }
         }
         for (const item of requiredItems) {
             if (!itemIds.includes(item.itemId)) {
-                missingRequiredItems.push(item.itemId);
-                result = false;
+                result.missing.required.push(item.itemId);
+                result.result = false;
                 continue;
             }
             const amount = items.reduce((prev, current) => {
-                return item.itemId === current.itemId ? prev + item.amount : prev;
+                return item.itemId === current.itemId ? prev + current.amount : prev;
             }, 0);
             if (amount < item.amount) {
-                notEnoughRequiredItems.push({
+                result.notEnough.required.push({
                     itemId: item.itemId,
                     diff:   item.amount - amount,
                 });
-                result = false;
+                result.result = false;
             }
         }
 
