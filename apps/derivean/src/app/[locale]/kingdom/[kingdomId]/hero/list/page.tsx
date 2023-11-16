@@ -1,10 +1,10 @@
 import {
-    BuildingQueryStore,
-    ConstructionMenu
-}                              from "@derivean/building";
+    HeroQueryStore,
+    HeroTable
+}                              from "@derivean/hero";
 import {withKingdomRepository} from "@derivean/kingdom";
 import {container}             from "@derivean/server";
-import {BuildingIcon}          from "@derivean/ui";
+import {HeroIcon}              from "@derivean/ui";
 import {t}                     from "@use-pico/i18n";
 import {StoreProvider}         from "@use-pico/store";
 import {
@@ -25,9 +25,9 @@ export default async function List({params: {kingdomId}}: List.Props) {
     const kingdom = await withKingdomRepository.use(container).getOrThrow(kingdomId);
 
     return <Page
-        icon={<BuildingIcon/>}
+        icon={<HeroIcon/>}
         text={{
-            header: t()`Kingdom building list (label)`,
+            header: t()`Kingdom hero list (label)`,
         }}
         postfix={<Breadcrumbs
             items={[
@@ -41,20 +41,18 @@ export default async function List({params: {kingdomId}}: List.Props) {
                 },
             ]}
         />}
-        append={<ConstructionMenu
-            kingdomId={kingdom.id}
-            active={["/kingdom/[kingdomId]/building/list"]}
-        />}
     >
         <StoreProvider
-            store={BuildingQueryStore}
+            store={HeroQueryStore}
             values={{
-                filter: {
-                    // kingdomId:
+                where: {
+                    kingdomId: kingdom.id,
                 },
             }}
         >
-            {/*<KingdomBuildingTable/>*/}
+            <HeroTable
+                kingdomId={kingdom.id}
+            />
         </StoreProvider>
     </Page>;
 }

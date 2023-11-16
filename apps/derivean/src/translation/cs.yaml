@@ -1,18 +1,42 @@
+c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19:
+  ref: Submit
+  value: Odeslat
+f654b712f05e612855d1000fbf3c3ba098dd606e9927ae6b0c9aca24:
+  ref: If you want to omit given value from the result, switch this button off.
+  value: If you want to omit given value from the result, switch this button off.
+5f4c0265ae687bb9acf17235514c89e027d524b3382dc6f68c59f6f9:
+  ref: Close
+  value: Zavřít
+3d6199acf6308d3eae9112d43fe64a3b942ee97a303909418c58bcd9:
+  ref: Clear filter
+  value: Clear filter
+b6b23c7b3bb6becf7ad41aa96f31565a78725bfed6bfe317d0a7b0cc:
+  ref: Filter (button)
+  value: Filter (button)
+a7c528329f9a28e5785d20397bd38b513fc077dd5327bcde34b8fa79:
+  ref: Clear selection
+  value: Zrušit výběr
+1ca37bf0a71fed53ead98154c92cd4f339c37c7cd37e3bbf53348e9c:
+  ref: Submit selection
+  value: Potvrdit výběr
+f2f4bd5edcfc70f89becee2b8f807ca587843f8f416f5107a1fcda53:
+  ref: Select an item
+  value: Vyberte položku
+0eff7c020a109eb63582cefb44e136d867e6b48da0b94ae47bc8c078:
+  ref: Currently selected item
+  value: Vybraná položka
+b0cf8a5dd758db7480606838271ff93da6792fdd8d3cb94816d6a40e:
+  ref: Confirm selection
+  value: Potvrdit výběr
+3b18d029c1268960f252ed750fff581bd958cb283921ab3aec47ea8e:
+  ref: Select items
+  value: Vybrané položky
+2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614:
+  ref: Currently selected items
+  value: Vybrané položky
 b4e8a29838ae1162bde0b03ce16b75d4739d6bfeeac544c56a20ac10:
   ref: Cancel
   value: Zavřít
-7056d01d885e2e1c2bc274b88194ee72234432a7dc8090652f1577f9:
-  ref: Value not set
-  value: Nenastaveno
-2848b629790c621cbe5ab25e79e831dfe7a52eb8052ecbcb7406a527:
-  ref: Show more items
-  value: Show more items
-b23991ae4c7c5d41384356888bea36d9ad9180e35b63f2ca2ca27e74:
-  ref: More
-  value: Více
-c028e668a86cc8c4bf3ba442001649e1036228031a9b79654cb53eb0:
-  ref: Sign-in
-  value: Přihlásit se
 605e1ba528eedac2c245b6f6a1257a048261dc5508e4c5440a30c50f:
   ref: Delete
   value: Odstranit
@@ -25,6 +49,9 @@ c2e7d8c0ada03fcb5c1394b62f8b5576af8897c5bbf56725543da717:
 4fccd0115ce525399d4373acc187e76e675622bb5da7288d1b754825:
   ref: Fulltext search
   value: Vyhledat
+c028e668a86cc8c4bf3ba442001649e1036228031a9b79654cb53eb0:
+  ref: Sign-in
+  value: Přihlásit se
 7e19894e0affa85c85b0bdd3bd8b0a7d237060d20a7aa47e044d8adc:
   ref: Total number of items
   value: Počet položek
@@ -115,42 +142,15 @@ c4ca81da0b9d668c1ad621253207781bed46fe9bbbe9e4100e754b9d:
 608c8f3ecee8f9e93586e58c61dad9408e199cb8c23c923e596eb26a:
   ref: Update translation
   value: Aktualizovat překlad
-c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19:
-  ref: Submit
-  value: Odeslat
-f654b712f05e612855d1000fbf3c3ba098dd606e9927ae6b0c9aca24:
-  ref: If you want to omit given value from the result, switch this button off.
-  value: If you want to omit given value from the result, switch this button off.
-5f4c0265ae687bb9acf17235514c89e027d524b3382dc6f68c59f6f9:
-  ref: Close
-  value: Zavřít
-3d6199acf6308d3eae9112d43fe64a3b942ee97a303909418c58bcd9:
-  ref: Clear filter
-  value: Clear filter
-b6b23c7b3bb6becf7ad41aa96f31565a78725bfed6bfe317d0a7b0cc:
-  ref: Filter (button)
-  value: Filter (button)
-a7c528329f9a28e5785d20397bd38b513fc077dd5327bcde34b8fa79:
-  ref: Clear selection
-  value: Zrušit výběr
-1ca37bf0a71fed53ead98154c92cd4f339c37c7cd37e3bbf53348e9c:
-  ref: Submit selection
-  value: Potvrdit výběr
-f2f4bd5edcfc70f89becee2b8f807ca587843f8f416f5107a1fcda53:
-  ref: Select an item
-  value: Vyberte položku
-0eff7c020a109eb63582cefb44e136d867e6b48da0b94ae47bc8c078:
-  ref: Currently selected item
-  value: Vybraná položka
-b0cf8a5dd758db7480606838271ff93da6792fdd8d3cb94816d6a40e:
-  ref: Confirm selection
-  value: Potvrdit výběr
-3b18d029c1268960f252ed750fff581bd958cb283921ab3aec47ea8e:
-  ref: Select items
-  value: Vybrané položky
-2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614:
-  ref: Currently selected items
-  value: Vybrané položky
+7056d01d885e2e1c2bc274b88194ee72234432a7dc8090652f1577f9:
+  ref: Value not set
+  value: Nenastaveno
+2848b629790c621cbe5ab25e79e831dfe7a52eb8052ecbcb7406a527:
+  ref: Show more items
+  value: Show more items
+b23991ae4c7c5d41384356888bea36d9ad9180e35b63f2ca2ca27e74:
+  ref: More
+  value: Více
 d36a3f0b059a8475e4d22b802c4575c3f6634cad685d947983005ff6:
   ref: Update item type (label)
   value: Update item type (label)
@@ -610,6 +610,9 @@ e1b4e3be592d66e55024250ff15b784999d9f125b7036b1ffdbafd95:
 a9b6548dd661bf89f586535929e8d1a377cbb9d0649d6f745702271f:
   ref: Past events (label)
   value: Staré události
+a05f09e2adef90c2191dcc0ee5987154b66aea7d575a6b3152342a64:
+  ref: Kingdom hero list (label)
+  value: Hrdinové
 fec7f2879f3bb84fff1d52f69c59be1e6963e4d5b9f4e0ae9d6a171e:
   ref: Kingdom Inventory (label)
   value: Inventář
@@ -838,6 +841,21 @@ c859b6a50776680e4117e3c29ba2a631e36875255789622733151704:
 5daa89ffc985bced5fd67fa69e137e139d6b5b43f73481605ca6351c:
   ref: Producer output
   value: Výstup
+5977ce8dee1ef68f63387bb5e446aec9a1044a3393419a81e8b6d26a:
+  ref: Total count of heroes
+  value: Počet hrdinů
+5f9ac8a936d59f6d2b0d2763d7778fab1ad3394372e0b14d73931e5b:
+  ref: Hero name
+  value: Jméno hrdiny
+096396dcc94d892e1837b095a1022981843ba2757db46c5b0e51c539:
+  ref: Hero health (label)
+  value: Zdraví
+c31c157ca8ebbef6cd1a257f7d65106bc92a692165dce2b98c9564cd:
+  ref: Hero level (label)
+  value: Úroveň
+d30addcedf3b19437cc836a8ccea51fad129ac39eb33c01cd15949a2:
+  ref: Hero prestige (label)
+  value: Prestiž
 2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
   ref: Game overview
   value: Přehled hry
@@ -850,12 +868,12 @@ a1fb8c003a02e2eac7ce1b756d67aaeb6ad344d5be95d80c11fc6705:
 a2c3003f7ac7c54aa58af38706fa0c4a82daa41c90f1b6df9d20f12b:
   ref: Kingdom building construction (label)
   value: Dostupné budovy
-41c1b7c250288649eedf9ff20eb70c815619a8533515c853c2505f90:
-  ref: Kingdom building construction detail (label)
-  value: Detail stavby [{name}]
 86882aca03b237e797524b4e10de2fcd25b959e15ae77790d7e93cff:
   ref: Kingdom Building Construction (label)
   value: Výstavba
+41c1b7c250288649eedf9ff20eb70c815619a8533515c853c2505f90:
+  ref: Kingdom building construction detail (label)
+  value: Detail stavby [{name}]
 adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
   ref: Kingdom inventory
   value: Inventář
@@ -901,12 +919,18 @@ b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
 66624102d45745f792f2be2b8ddc4fdf3f9b864e165127e2e8576c9e:
   ref: Producer pipeline
   value: Nastavení výroby
+8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
+  ref: Game management
+  value: Správa hry
 553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
   ref: Building detail
   value: Detail budovy [{name}]
 b0688cb7c2c6fed8c4f5204b01f7d8512afef57fd91b3534a58eaa5a:
   ref: Building requirement
   value: Požadavky pro [{name}]
+e14c68cd1a8cac9008c40b658668bb390387cebc452453856e495a8c:
+  ref: Building pipeline
+  value: Produkce [{name}]
 49036c4c363613fe423d0de97373c833a18e6c859af2187dacd569e2:
   ref: Event detail
   value: Detail události [{name}]
@@ -916,21 +940,15 @@ b26b6df0874ba275fe15bfc9a827578dc878edd58036f0390a090159:
 36d8ff886fe97ed9c7458bdc4c0343af18f7ec7402c9b4a5303c527c:
   ref: Event type [EventInventory] (label)
   value: Událost [{name}] - Změna inventáře
-28de4de589af568ae36e721daad935078aa1cebbaf9bf70c3112e96e:
-  ref: Translation list
-  value: Překlady
-8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
-  ref: Game management
-  value: Správa hry
-e14c68cd1a8cac9008c40b658668bb390387cebc452453856e495a8c:
-  ref: Building pipeline
-  value: Produkce [{name}]
 fc150b71e1abae2f5a01e5b04716f51d045dc06d150ec1960dcf8ebb:
   ref: Item type - item list
   value: Seznam předmětů pro typ [{name}]
 56db5cba41164e61cb42c625b8ccd3bb79e6aab4d8ffa4c194083f69:
   ref: Producer detail
   value: Detail výrobny [{name}]
+28de4de589af568ae36e721daad935078aa1cebbaf9bf70c3112e96e:
+  ref: Translation list
+  value: Překlady
 e263ec6a176204dd2a48c458d632d6a02b4173d37fe6c291b3619693:
   ref: DeRivean - The Invisible Game
   value: DeRivean - Neviditelná hra

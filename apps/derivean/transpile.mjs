@@ -7,6 +7,7 @@ export const transpile = [
     '@derivean/manager',
     '@derivean/orm',
     '@derivean/producer',
+    '@derivean/hero',
     '@derivean/public',
     '@derivean/root',
     '@derivean/server',

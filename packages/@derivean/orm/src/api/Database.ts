@@ -5,21 +5,6 @@ export type Database =
     CoolDatabase
     & {
         /**
-         * Kingdom collects all the building and items a user have.
-         *
-         * User can have more kingdoms.
-         */
-        Kingdom: {
-            id: GeneratedAlways<string>;
-            /**
-             * Overall kingdom's inventory
-             */
-            inventoryId: string;
-            userId: string;
-            created: string;
-            name: string;
-        };
-        /**
          * Definition of a building. This is a template for building instances.
          * Every user's building instance is created from this template.
          */
@@ -39,18 +24,6 @@ export type Database =
             maximum: number;
         };
         /**
-         * General building requirements that need to be met to enable
-         * building construction.
-         *
-         * Those items are not subtracted from the kingdom's inventory.
-         */
-        BuildingRequirement: {
-            id: GeneratedAlways<string>;
-            buildingId: string;
-            itemId: string;
-            amount: number;
-        };
-        /**
          * Defines what's needed to build a building.
          *
          * Given items are subtracted from the kingdom's inventory.
@@ -60,14 +33,6 @@ export type Database =
             buildingId: string;
             itemId: string;
             amount: number;
-        };
-        /**
-         * Every building could have more producers.
-         */
-        BuildingProducer: {
-            id: GeneratedAlways<string>;
-            buildingId: string;
-            producerId: string;
         };
         /**
          * When a player builds a building, it's represented by this instance.
@@ -85,46 +50,30 @@ export type Database =
             level: number;
         };
         /**
-         * Every item available in the game used for all mechanics.
+         * Buildings can have perks too!
          */
-        Item: {
+        BuildingPerk: {
             id: GeneratedAlways<string>;
-            name: string;
-            typeId: string;
+            buildingId: string;
+            perkId: string;
         };
         /**
-         * Organize items in categories: for example, item, weapon, item, ...
+         * Every building could have more producers.
          */
-        ItemType: {
+        BuildingProducer: {
             id: GeneratedAlways<string>;
-            name: string;
-        };
-        /**
-         * Template for producers: defines what's an input and
-         * what's going out during specified time.
-         */
-        Producer: {
-            id: GeneratedAlways<string>;
-            name: string;
-            time: number;
-        };
-        /**
-         * Input for a producer; defines consumed item of the given
-         * amount and time.
-         */
-        ProducerInput: {
-            id: GeneratedAlways<string>;
+            buildingId: string;
             producerId: string;
-            itemId: string;
-            amount: number;
         };
         /**
-         * Output of a producer; defines produced item of the given
-         * amount and time.
+         * General building requirements that need to be met to enable
+         * building construction.
+         *
+         * Those items are not subtracted from the kingdom's inventory.
          */
-        ProducerOutput: {
+        BuildingRequirement: {
             id: GeneratedAlways<string>;
-            producerId: string;
+            buildingId: string;
             itemId: string;
             amount: number;
         };
@@ -158,17 +107,12 @@ export type Database =
             userId?: string;
         };
         /**
-         * Implementation of item transaction event.
-         *
-         * This could be, for example, give-away for a new players or event
-         * disaster event which takes some items.
-         *
-         * Takes inventory of this event and apply it to a kingdom inventory of a player.
+         * Event that generates heroes (based on an amount).
          */
-        EventInventory: {
+        EventHero: {
             id: GeneratedAlways<string>;
             eventId: string;
-            inventoryId: string;
+            amount: number;
         };
         /**
          * Event instance is bound to a player and kingdom.
@@ -190,5 +134,141 @@ export type Database =
              * Committed events are already applied.
              */
             commit?: boolean;
+        };
+        /**
+         * Implementation of item transaction event.
+         *
+         * This could be, for example, give-away for a new players or event
+         * disaster event which takes some items.
+         *
+         * Takes inventory of this event and apply it to a kingdom inventory of a player.
+         */
+        EventInventory: {
+            id: GeneratedAlways<string>;
+            eventId: string;
+            inventoryId: string;
+        };
+        /**
+         * Here is general "character" used to do anything.
+         *
+         * It can be used in buildings, to fight, to basically do all the things in the game.
+         */
+        Hero: {
+            id: GeneratedAlways<string>;
+            /**
+             * User who owns this hero
+             */
+            userId: string;
+            /**
+             * Where this hero is located
+             */
+            kingdomId: string;
+            /**
+             * Yaaay, hero's name!
+             */
+            name: string;
+            /**
+             * Current hero's health; perks define maximum.
+             */
+            health: number;
+            /**
+             * Current level of the hero
+             */
+            level: number;
+            /**
+             * Prestige is kind of hero's "rarity"
+             */
+            prestige: number;
+        };
+        /**
+         * Perks assigned to the given hero
+         */
+        HeroPerk: {
+            id: GeneratedAlways<string>;
+            heroId: string;
+            perkId: string;
+        };
+        /**
+         * Every item available in the game used for all mechanics.
+         */
+        Item: {
+            id: GeneratedAlways<string>;
+            name: string;
+            typeId: string;
+        };
+        /**
+         * Organize items in categories: for example, item, weapon, item, ...
+         */
+        ItemType: {
+            id: GeneratedAlways<string>;
+            name: string;
+        };
+        /**
+         * Kingdom collects all the building and items a user have.
+         *
+         * User can have more kingdoms.
+         */
+        Kingdom: {
+            id: GeneratedAlways<string>;
+            /**
+             * Overall kingdom's inventory
+             */
+            inventoryId: string;
+            userId: string;
+            created: string;
+            name: string;
+        };
+        /**
+         * Perks are used to define hero's abilities. All the computations in the game are based on perks.
+         *
+         * "Perk" is maybe a bit incorrect word, but it's much shorter, than "Attribute".
+         */
+        Perk: {
+            id: GeneratedAlways<string>;
+            /**
+             * Perk's name
+             */
+            name: string;
+            /**
+             * Perk modifier value
+             */
+            value: number;
+            /**
+             * Perk's level
+             */
+            level: number;
+            /**
+             * Before computation is done, perks are ordered by this value.
+             */
+            order: number;
+        };
+        /**
+         * Template for producers: defines what's an input and
+         * what's going out during specified time.
+         */
+        Producer: {
+            id: GeneratedAlways<string>;
+            name: string;
+            time: number;
+        };
+        /**
+         * Input for a producer; defines consumed item of the given
+         * amount and time.
+         */
+        ProducerInput: {
+            id: GeneratedAlways<string>;
+            producerId: string;
+            itemId: string;
+            amount: number;
+        };
+        /**
+         * Output of a producer; defines produced item of the given
+         * amount and time.
+         */
+        ProducerOutput: {
+            id: GeneratedAlways<string>;
+            producerId: string;
+            itemId: string;
+            amount: number;
         };
     }

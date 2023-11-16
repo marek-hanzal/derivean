@@ -15,6 +15,7 @@
 		"@derivean/building": "^0.5.0",
 		"@derivean/event": "^0.5.0",
 		"@derivean/game": "^0.5.0",
+		"@derivean/hero": "^0.5.0",
 		"@derivean/inventory": "^0.5.0",
 		"@derivean/item": "^0.5.0",
 		"@derivean/kingdom": "^0.5.0",

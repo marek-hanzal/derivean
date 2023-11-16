@@ -1,6 +1,7 @@
 import {
     BuildingIcon,
     EventIcon,
+    HeroIcon,
     InventoryIcon
 }                from "@derivean/ui";
 import {t}       from "@use-pico/i18n";
@@ -31,6 +32,13 @@ export const KingdomMenu: FC<KingdomMenu.Props> = (
                 label: t()`Kingdom building list (label)`,
                 icon:  <BuildingIcon/>,
                 href:  `/kingdom/[kingdomId]/building/list`,
+                query,
+            },
+            {
+                type:  "link",
+                label: t()`Kingdom hero list (label)`,
+                icon:  <HeroIcon/>,
+                href:  `/kingdom/[kingdomId]/hero/list`,
                 query,
             },
             {
