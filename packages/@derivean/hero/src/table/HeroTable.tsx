@@ -1,6 +1,9 @@
 "use client";
 
-import {HeroIcon}   from "@derivean/ui";
+import {
+    HeroIcon,
+    Prestige
+}                   from "@derivean/ui";
 import {t}          from "@use-pico/i18n";
 import {ButtonLink} from "@use-pico/ui";
 import {
@@ -8,6 +11,7 @@ import {
     type FC
 }                   from "react";
 import {HeroInline} from "../inline/HeroInline";
+import {HeroHealth} from "../ui/HeroHealth";
 import {HeroUI}     from "../ui/HeroUI";
 
 export namespace HeroTable {
@@ -56,7 +60,7 @@ export const HeroTable: FC<HeroTable.Props> = (
             },
             health:   {
                 title:  t()`Hero health (label)`,
-                render: ({item}) => "health progress bar",
+                render: ({item}) => <HeroHealth hero={item}/>,
                 width:  28,
             },
             level:    {
@@ -66,7 +70,7 @@ export const HeroTable: FC<HeroTable.Props> = (
             },
             prestige: {
                 title:  t()`Hero prestige (label)`,
-                render: ({item}) => "prestige component (colorful stars)",
+                render: ({item}) => <Prestige prestige={0}/>,
                 width:  10,
             },
         }}

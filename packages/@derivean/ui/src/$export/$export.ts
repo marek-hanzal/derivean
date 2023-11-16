@@ -8,6 +8,7 @@ export * from "./InventoryItemIcon";
 export * from "./ItemIcon";
 export * from "./KingdomIcon";
 export * from "./PipelineIcon";
+export * from "./Prestige";
 export * from "./ProducerIcon";
 export * from "./withDefaultPipeline";
 export * from "./withRichComponents";

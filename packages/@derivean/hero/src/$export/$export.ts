@@ -1,3 +1,4 @@
+export * from "./HeroHealth";
 export * from "./HeroInline";
 export * from "./HeroQueryStore";
 export * from "./HeroRepository";
