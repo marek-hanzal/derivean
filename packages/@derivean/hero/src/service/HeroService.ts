@@ -6,10 +6,10 @@ import {type IHeroService} from "../api/IHeroService";
 
 export class HeroService implements IHeroService {
     public async random(): Promise<IHeroService.RandomResult> {
-        const $faker = allFakers[faker.helpers.arrayElement(Object.keys(allFakers)) as keyof allFakers];
+        const $faker = faker.helpers.objectValue(allFakers);
         return {
             hero:  {
-                name: $fake.names.name(),
+                name: $faker.name.fullName(),
                 health:   100,
                 level:    0,
                 prestige: 0,
