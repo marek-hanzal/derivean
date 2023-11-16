@@ -3,8 +3,10 @@ import {
     withUserService
 }                                    from "@use-pico/auth-server";
 import {lazyOf}                      from "@use-pico/container";
+import {type IEventHeroService}      from "../api/IEventHeroService";
 import {type IEventInventoryService} from "../api/IEventInventoryService";
 import {type IEventService}          from "../api/IEventService";
+import {withEventHeroService}        from "../container/withEventHeroService";
 import {withEventInstanceRepository} from "../container/withEventInstanceRepository";
 import {withEventInventoryService}   from "../container/withEventInventoryService";
 import {withEventRepository}         from "../container/withEventRepository";
@@ -16,6 +18,7 @@ export class EventService implements IEventService {
         lazyOf(withEventRepository.inject),
         lazyOf(withEventInventoryService.inject),
         lazyOf(withEventInstanceRepository.inject),
+        lazyOf(withEventHeroService.inject),
         lazyOf(withUserService.inject),
     ];
 
@@ -23,6 +26,7 @@ export class EventService implements IEventService {
         protected eventRepository: EventRepository.Type,
         protected eventInventoryService: IEventInventoryService,
         protected eventInstanceRepository: EventInstanceRepository.Type,
+        protected eventHeroService: IEventHeroService,
         protected userService: IUserService,
     ) {
     }
@@ -30,6 +34,7 @@ export class EventService implements IEventService {
     public async execute(kingdomId: string, name: string): Promise<void> {
         const map = {
             EventInventory: this.eventInventoryService,
+            EventHero: this.eventHeroService,
         } as const;
 
         const events = this.eventRepository.withQuery.query({

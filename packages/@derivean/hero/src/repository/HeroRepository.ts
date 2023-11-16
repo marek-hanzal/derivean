@@ -1,5 +1,10 @@
 import {type Database}      from "@derivean/orm";
+import {
+    type IUserService,
+    withUserService
+}                           from "@use-pico/auth-server";
 import {lazyOf}             from "@use-pico/container";
+import {withDullSchema}     from "@use-pico/dull-stuff";
 import {
     type Client,
     withClient
@@ -14,10 +19,12 @@ export class HeroRepository extends AbstractRepository<
 > {
     static inject = [
         lazyOf(withClient.inject),
+        lazyOf(withUserService.inject),
     ];
 
     constructor(
         client: Client<Database>,
+        protected userService: IUserService,
     ) {
         super(
             client,
@@ -32,6 +39,13 @@ export class HeroRepository extends AbstractRepository<
         this.matchOf = {
             userId:    "userId",
             kingdomId: "kingdomId",
+        };
+    }
+
+    public async toCreate(create: withDullSchema.Infer.Create<HeroSchema>): Promise<withDullSchema.Infer.EntityWithoutId<HeroSchema>> {
+        return {
+            ...create,
+            userId: create.userId ?? this.userService.requiredId(),
         };
     }
 }

@@ -18,6 +18,7 @@ export const HeroSchema = withDullSchema({
         prestige:  z.number,
     })),
     shape:   schema(z => z.object({
+        userId: z.string$,
         kingdomId: z.string,
         name:      z.string,
         health:    z.number,

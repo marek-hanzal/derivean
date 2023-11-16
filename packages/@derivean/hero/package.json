@@ -20,7 +20,8 @@
 		"@use-pico/query": "^2.0.0",
 		"@use-pico/repository": "^2.0.0",
 		"@use-pico/schema": "^2.0.0",
-		"@use-pico/table": "^2.0.0"
+		"@use-pico/table": "^2.0.0",
+		"fakerator": "^0.3.6"
 	},
 	"devDependencies": {
 		"@use-pico/esbuild": "^2.0.0",

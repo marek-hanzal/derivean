@@ -10,8 +10,10 @@ import {
     withClient
 }                                     from "@use-pico/orm";
 import {AbstractRepository}           from "@use-pico/repository";
+import {withEventHeroRepository}      from "../container/withEventHeroRepository";
 import {withEventInventoryRepository} from "../container/withEventInventoryRepository";
 import {EventSchema}                  from "../schema/EventSchema";
+import {EventHeroRepository}          from "./EventHeroRepository";
 import {EventInventoryRepository}     from "./EventInventoryRepository";
 
 export class EventRepository extends AbstractRepository<
@@ -23,12 +25,14 @@ export class EventRepository extends AbstractRepository<
         lazyOf(withClient.inject),
         lazyOf(withInventoryRepository.inject),
         lazyOf(withEventInventoryRepository.inject),
+        lazyOf(withEventHeroRepository.inject),
     ];
 
     constructor(
         client: Client<Database>,
         protected readonly inventoryRepository: InventoryRepository.Type,
         protected readonly eventInventoryRepository: EventInventoryRepository.Type,
+        protected readonly eventHeroRepository: EventHeroRepository.Type,
     ) {
         super(
             client,
@@ -55,6 +59,12 @@ export class EventRepository extends AbstractRepository<
                     inventoryId: (await this.inventoryRepository.withMutation.create({
                         name: `EventInventory ${entity.name}`,
                     })).id,
+                });
+                break;
+            case "EventHero":
+                await this.eventHeroRepository.withMutation.create({
+                    eventId: entity.id,
+                    amount:  1,
                 });
                 break;
         }

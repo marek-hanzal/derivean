@@ -49,7 +49,11 @@ export const EventUpsertForm: FC<EventUpsertForm.Props> = (
                     {
                         label: tx()`Event type [EventInventory]`,
                         value: "EventInventory",
-                    }
+                    },
+                    {
+                        label: tx()`Event type [EventHero]`,
+                        value: "EventHero",
+                    },
                 ]}
                 {...props}
             />,

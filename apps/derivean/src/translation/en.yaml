@@ -469,12 +469,30 @@ eecd2930a1fa4de61bc29f8080f2f452a6f21ad4a2c593d6a7e852e7:
 bf724e995587a78734797d2f175b0ec9348e03f4e796425cd6116aea:
   ref: InventoryItem has been successfully removed
   value: InventoryItem has been successfully removed
+41ece34d16465b23c5a904d1cdf4676e10151591f1fa5648a182e7e5:
+  ref: Update event (label)
+  value: Update event (label)
+ccc92c321f409d1b67ba4128a10c14b108ec547352f6d87fceee4150:
+  ref: Create event (label)
+  value: Create event (label)
+9b39f2a945d423471ddad7b4932db671f913f637556fec708b7e0c7a:
+  ref: EventHero updated
+  value: EventHero updated
+5cf9aa1589a8aef2b0a1daf52ec5394099672c494dedf596e17a576e:
+  ref: EventHero created
+  value: EventHero created
+97883c1e388ec6dfa88698c6d5bf11f7877e793115f46fa32e4b5613:
+  ref: EventHero amount
+  value: EventHero amount
 9d68fd7d2b9e208edb77ede71fe6c547b34f40f0b4b28741f68c0614:
   ref: Detail
   value: Detail
 769cc0bb937b0a0a9bb2388933382c748e2722fdd8652de63b817f57:
   ref: Event type [EventInventory]
   value: Event type [EventInventory]
+f032197c7264046aec06a858aecb38f1c0b69410bf4c1ac3de768664:
+  ref: Event type [EventHero]
+  value: Event type [EventHero]
 69b160bba6899459b9c74f3d3c9b9a6a2ad8878ae5319b0cf6feeefe:
   ref: Event name
   value: Event name
@@ -493,12 +511,6 @@ a0a3a82817e913af6a1a211e4f559635d4778f95f0042fcc97ade56b:
 123380aa40822f8a3676fd98eb3399eb1bbbedb080ff7705f4c42f48:
   ref: Event end
   value: Event end
-41ece34d16465b23c5a904d1cdf4676e10151591f1fa5648a182e7e5:
-  ref: Update event (label)
-  value: Update event (label)
-ccc92c321f409d1b67ba4128a10c14b108ec547352f6d87fceee4150:
-  ref: Create event (label)
-  value: Create event (label)
 fa40815a9c846c1739335cf8404b4461781a368fe2a0dd930bd1376d:
   ref: Event updated
   value: Event updated
@@ -553,6 +565,21 @@ a3672593f121b57bfb00ab5a9c8e8c54e1c5d5dc74980c2fa92080fa:
 8ebc63848e27267b78a581ae5258397a96a09b5c6874084026ccedfe:
   ref: Event has been successfully removed
   value: Event has been successfully removed
+5977ce8dee1ef68f63387bb5e446aec9a1044a3393419a81e8b6d26a:
+  ref: Total count of heroes
+  value: Total count of heroes
+5f9ac8a936d59f6d2b0d2763d7778fab1ad3394372e0b14d73931e5b:
+  ref: Hero name
+  value: Hero name
+096396dcc94d892e1837b095a1022981843ba2757db46c5b0e51c539:
+  ref: Hero health (label)
+  value: Hero health (label)
+c31c157ca8ebbef6cd1a257f7d65106bc92a692165dce2b98c9564cd:
+  ref: Hero level (label)
+  value: Hero level (label)
+d30addcedf3b19437cc836a8ccea51fad129ac39eb33c01cd15949a2:
+  ref: Hero prestige (label)
+  value: Hero prestige (label)
 f3bcb21973062cd91deccddce5bb0c709280a118725b5f000e30ea3e:
   ref: Construction is available
   value: Construction is available
@@ -780,21 +807,6 @@ c859b6a50776680e4117e3c29ba2a631e36875255789622733151704:
 5daa89ffc985bced5fd67fa69e137e139d6b5b43f73481605ca6351c:
   ref: Producer output
   value: Producer output
-5977ce8dee1ef68f63387bb5e446aec9a1044a3393419a81e8b6d26a:
-  ref: Total count of heroes
-  value: Total count of heroes
-5f9ac8a936d59f6d2b0d2763d7778fab1ad3394372e0b14d73931e5b:
-  ref: Hero name
-  value: Hero name
-096396dcc94d892e1837b095a1022981843ba2757db46c5b0e51c539:
-  ref: Hero health (label)
-  value: Hero health (label)
-c31c157ca8ebbef6cd1a257f7d65106bc92a692165dce2b98c9564cd:
-  ref: Hero level (label)
-  value: Hero level (label)
-d30addcedf3b19437cc836a8ccea51fad129ac39eb33c01cd15949a2:
-  ref: Hero prestige (label)
-  value: Hero prestige (label)
 2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
   ref: Game overview
   value: Game overview
@@ -810,12 +822,6 @@ a2c3003f7ac7c54aa58af38706fa0c4a82daa41c90f1b6df9d20f12b:
 86882aca03b237e797524b4e10de2fcd25b959e15ae77790d7e93cff:
   ref: Kingdom Building Construction (label)
   value: Kingdom Building Construction (label)
-41c1b7c250288649eedf9ff20eb70c815619a8533515c853c2505f90:
-  ref: Kingdom building construction detail (label)
-  value: Kingdom building construction detail (label)
-adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
-  ref: Kingdom inventory
-  value: Kingdom inventory
 7401742653cacefb254e91e23a79edaeb388a2a423cb1181c35f87ac:
   ref: Building detail (label)
   value: Building detail (label)
@@ -858,24 +864,33 @@ b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
 66624102d45745f792f2be2b8ddc4fdf3f9b864e165127e2e8576c9e:
   ref: Producer pipeline
   value: Producer pipeline
-8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
-  ref: Game management
-  value: Game management
-553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
-  ref: Building detail
-  value: Building detail
 b0688cb7c2c6fed8c4f5204b01f7d8512afef57fd91b3534a58eaa5a:
   ref: Building requirement
   value: Building requirement
-e14c68cd1a8cac9008c40b658668bb390387cebc452453856e495a8c:
-  ref: Building pipeline
-  value: Building pipeline
 49036c4c363613fe423d0de97373c833a18e6c859af2187dacd569e2:
   ref: Event detail
   value: Event detail
 b26b6df0874ba275fe15bfc9a827578dc878edd58036f0390a090159:
   ref: Event list
   value: Event list
+ab038006cd10ffbb711861a2849694e0c6c5fd676982f26b911354ea:
+  ref: Event type [EventHero] (label)
+  value: Event type [EventHero] (label)
+41c1b7c250288649eedf9ff20eb70c815619a8533515c853c2505f90:
+  ref: Kingdom building construction detail (label)
+  value: Kingdom building construction detail (label)
+adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
+  ref: Kingdom inventory
+  value: Kingdom inventory
+8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
+  ref: Game management
+  value: Game management
+553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
+  ref: Building detail
+  value: Building detail
+e14c68cd1a8cac9008c40b658668bb390387cebc452453856e495a8c:
+  ref: Building pipeline
+  value: Building pipeline
 36d8ff886fe97ed9c7458bdc4c0343af18f7ec7402c9b4a5303c527c:
   ref: Event type [EventInventory] (label)
   value: Event type [EventInventory] (label)
