@@ -70,7 +70,7 @@ export const HeroTable: FC<HeroTable.Props> = (
             },
             prestige: {
                 title:  t()`Hero prestige (label)`,
-                render: ({item}) => <Prestige prestige={0}/>,
+                render: ({item}) => <Prestige prestige={item.prestige}/>,
                 width:  10,
             },
         }}
