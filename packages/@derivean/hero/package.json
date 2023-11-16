@@ -14,14 +14,14 @@
 		"cleanup": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
 	"dependencies": {
+		"@faker-js/faker": "^8.3.1",
 		"@tabler/icons-react": "^2.28.0",
 		"@use-pico/dull-stuff": "^2.0.0",
 		"@use-pico/orm": "^2.0.0",
 		"@use-pico/query": "^2.0.0",
 		"@use-pico/repository": "^2.0.0",
 		"@use-pico/schema": "^2.0.0",
-		"@use-pico/table": "^2.0.0",
-		"fakerator": "^0.3.6"
+		"@use-pico/table": "^2.0.0"
 	},
 	"devDependencies": {
 		"@use-pico/esbuild": "^2.0.0",
