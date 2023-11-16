@@ -1,42 +1,18 @@
-c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19:
-  ref: Submit
-  value: Submit
-f654b712f05e612855d1000fbf3c3ba098dd606e9927ae6b0c9aca24:
-  ref: If you want to omit given value from the result, switch this button off.
-  value: If you want to omit given value from the result, switch this button off.
-5f4c0265ae687bb9acf17235514c89e027d524b3382dc6f68c59f6f9:
-  ref: Close
-  value: Close
-3d6199acf6308d3eae9112d43fe64a3b942ee97a303909418c58bcd9:
-  ref: Clear filter
-  value: Clear filter
-b6b23c7b3bb6becf7ad41aa96f31565a78725bfed6bfe317d0a7b0cc:
-  ref: Filter (button)
-  value: Filter (button)
-a7c528329f9a28e5785d20397bd38b513fc077dd5327bcde34b8fa79:
-  ref: Clear selection
-  value: Clear selection
-1ca37bf0a71fed53ead98154c92cd4f339c37c7cd37e3bbf53348e9c:
-  ref: Submit selection
-  value: Submit selection
-f2f4bd5edcfc70f89becee2b8f807ca587843f8f416f5107a1fcda53:
-  ref: Select an item
-  value: Select an item
-0eff7c020a109eb63582cefb44e136d867e6b48da0b94ae47bc8c078:
-  ref: Currently selected item
-  value: Currently selected item
-b0cf8a5dd758db7480606838271ff93da6792fdd8d3cb94816d6a40e:
-  ref: Confirm selection
-  value: Confirm selection
-3b18d029c1268960f252ed750fff581bd958cb283921ab3aec47ea8e:
-  ref: Select items
-  value: Select items
-2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614:
-  ref: Currently selected items
-  value: Currently selected items
 b4e8a29838ae1162bde0b03ce16b75d4739d6bfeeac544c56a20ac10:
   ref: Cancel
   value: Cancel
+7056d01d885e2e1c2bc274b88194ee72234432a7dc8090652f1577f9:
+  ref: Value not set
+  value: Value not set
+2848b629790c621cbe5ab25e79e831dfe7a52eb8052ecbcb7406a527:
+  ref: Show more items
+  value: Show more items
+b23991ae4c7c5d41384356888bea36d9ad9180e35b63f2ca2ca27e74:
+  ref: More
+  value: More
+c028e668a86cc8c4bf3ba442001649e1036228031a9b79654cb53eb0:
+  ref: Sign-in
+  value: Sign-in
 605e1ba528eedac2c245b6f6a1257a048261dc5508e4c5440a30c50f:
   ref: Delete
   value: Delete
@@ -49,9 +25,6 @@ c2e7d8c0ada03fcb5c1394b62f8b5576af8897c5bbf56725543da717:
 4fccd0115ce525399d4373acc187e76e675622bb5da7288d1b754825:
   ref: Fulltext search
   value: Fulltext search
-c028e668a86cc8c4bf3ba442001649e1036228031a9b79654cb53eb0:
-  ref: Sign-in
-  value: Sign-in
 7e19894e0affa85c85b0bdd3bd8b0a7d237060d20a7aa47e044d8adc:
   ref: Total number of items
   value: Total number of items
@@ -142,15 +115,42 @@ c4ca81da0b9d668c1ad621253207781bed46fe9bbbe9e4100e754b9d:
 608c8f3ecee8f9e93586e58c61dad9408e199cb8c23c923e596eb26a:
   ref: Update translation
   value: Update translation
-7056d01d885e2e1c2bc274b88194ee72234432a7dc8090652f1577f9:
-  ref: Value not set
-  value: Value not set
-2848b629790c621cbe5ab25e79e831dfe7a52eb8052ecbcb7406a527:
-  ref: Show more items
-  value: Show more items
-b23991ae4c7c5d41384356888bea36d9ad9180e35b63f2ca2ca27e74:
-  ref: More
-  value: More
+c304e011756dd1f477172fd27e03858f55f779841716a1b26d6c3f19:
+  ref: Submit
+  value: Submit
+f654b712f05e612855d1000fbf3c3ba098dd606e9927ae6b0c9aca24:
+  ref: If you want to omit given value from the result, switch this button off.
+  value: If you want to omit given value from the result, switch this button off.
+5f4c0265ae687bb9acf17235514c89e027d524b3382dc6f68c59f6f9:
+  ref: Close
+  value: Close
+3d6199acf6308d3eae9112d43fe64a3b942ee97a303909418c58bcd9:
+  ref: Clear filter
+  value: Clear filter
+b6b23c7b3bb6becf7ad41aa96f31565a78725bfed6bfe317d0a7b0cc:
+  ref: Filter (button)
+  value: Filter (button)
+a7c528329f9a28e5785d20397bd38b513fc077dd5327bcde34b8fa79:
+  ref: Clear selection
+  value: Clear selection
+1ca37bf0a71fed53ead98154c92cd4f339c37c7cd37e3bbf53348e9c:
+  ref: Submit selection
+  value: Submit selection
+f2f4bd5edcfc70f89becee2b8f807ca587843f8f416f5107a1fcda53:
+  ref: Select an item
+  value: Select an item
+0eff7c020a109eb63582cefb44e136d867e6b48da0b94ae47bc8c078:
+  ref: Currently selected item
+  value: Currently selected item
+b0cf8a5dd758db7480606838271ff93da6792fdd8d3cb94816d6a40e:
+  ref: Confirm selection
+  value: Confirm selection
+3b18d029c1268960f252ed750fff581bd958cb283921ab3aec47ea8e:
+  ref: Select items
+  value: Select items
+2f1900e8e0611fc4851ddf992a9d50873497eacc823bd103273da614:
+  ref: Currently selected items
+  value: Currently selected items
 d36a3f0b059a8475e4d22b802c4575c3f6634cad685d947983005ff6:
   ref: Update item type (label)
   value: Update item type (label)
@@ -807,21 +807,30 @@ c859b6a50776680e4117e3c29ba2a631e36875255789622733151704:
 5daa89ffc985bced5fd67fa69e137e139d6b5b43f73481605ca6351c:
   ref: Producer output
   value: Producer output
-2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
-  ref: Game overview
-  value: Game overview
 0a929e8d46db182c39f5605224af1457992d39743e7692fb2d143162:
   ref: Selected kingdom
   value: Selected kingdom
+2b7c107dc18efe14b68a7590ea851b638607db16de647b5b8eb03b10:
+  ref: Kingdom hero detail (label)
+  value: Kingdom hero detail (label)
+2e649458c76381655a1f507b689bdc16bd3ab6fd92e29e497df9c6c6:
+  ref: Game overview
+  value: Game overview
 a1fb8c003a02e2eac7ce1b756d67aaeb6ad344d5be95d80c11fc6705:
   ref: Kingdom overview
   value: Kingdom overview
 a2c3003f7ac7c54aa58af38706fa0c4a82daa41c90f1b6df9d20f12b:
   ref: Kingdom building construction (label)
   value: Kingdom building construction (label)
+41c1b7c250288649eedf9ff20eb70c815619a8533515c853c2505f90:
+  ref: Kingdom building construction detail (label)
+  value: Kingdom building construction detail (label)
 86882aca03b237e797524b4e10de2fcd25b959e15ae77790d7e93cff:
   ref: Kingdom Building Construction (label)
   value: Kingdom Building Construction (label)
+adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
+  ref: Kingdom inventory
+  value: Kingdom inventory
 7401742653cacefb254e91e23a79edaeb388a2a423cb1181c35f87ac:
   ref: Building detail (label)
   value: Building detail (label)
@@ -864,9 +873,18 @@ b052437e766f6f6dc4b015ac3f48a7a5bfeae8bdd6a37c7c224ad994:
 66624102d45745f792f2be2b8ddc4fdf3f9b864e165127e2e8576c9e:
   ref: Producer pipeline
   value: Producer pipeline
+8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
+  ref: Game management
+  value: Game management
+553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
+  ref: Building detail
+  value: Building detail
 b0688cb7c2c6fed8c4f5204b01f7d8512afef57fd91b3534a58eaa5a:
   ref: Building requirement
   value: Building requirement
+e14c68cd1a8cac9008c40b658668bb390387cebc452453856e495a8c:
+  ref: Building pipeline
+  value: Building pipeline
 49036c4c363613fe423d0de97373c833a18e6c859af2187dacd569e2:
   ref: Event detail
   value: Event detail
@@ -876,21 +894,6 @@ b26b6df0874ba275fe15bfc9a827578dc878edd58036f0390a090159:
 ab038006cd10ffbb711861a2849694e0c6c5fd676982f26b911354ea:
   ref: Event type [EventHero] (label)
   value: Event type [EventHero] (label)
-41c1b7c250288649eedf9ff20eb70c815619a8533515c853c2505f90:
-  ref: Kingdom building construction detail (label)
-  value: Kingdom building construction detail (label)
-adf34f008b91ad7be700ba8c115c130e45a94c02afdcfeeb548e5544:
-  ref: Kingdom inventory
-  value: Kingdom inventory
-8fbace0737031bb6b1169bfc0a9459f691893a8b63054765f529445b:
-  ref: Game management
-  value: Game management
-553590b780723643a3bced4f02578a2e84820b14649d063f4295d1a7:
-  ref: Building detail
-  value: Building detail
-e14c68cd1a8cac9008c40b658668bb390387cebc452453856e495a8c:
-  ref: Building pipeline
-  value: Building pipeline
 36d8ff886fe97ed9c7458bdc4c0343af18f7ec7402c9b4a5303c527c:
   ref: Event type [EventInventory] (label)
   value: Event type [EventInventory] (label)
