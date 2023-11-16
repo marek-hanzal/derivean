@@ -10,7 +10,7 @@ export async function up(db: Kysely<any>): Promise<void> {
             col.references("Kingdom.id").onDelete("cascade").notNull()
         )
         .addColumn("inventoryId", "uuid", col =>
-            col.references("Kingdom.id").onDelete("cascade").notNull()
+            col.references("Inventory.id").onDelete("cascade").notNull()
         )
         .addColumn("name", "varchar(64)", col =>
             col.notNull()

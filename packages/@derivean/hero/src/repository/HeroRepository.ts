@@ -1,3 +1,7 @@
+import {
+    InventoryRepository,
+    withInventoryRepository
+}                           from "@derivean/inventory";
 import {type Database}      from "@derivean/orm";
 import {
     type IUserService,
@@ -20,11 +24,13 @@ export class HeroRepository extends AbstractRepository<
     static inject = [
         lazyOf(withClient.inject),
         lazyOf(withUserService.inject),
+        lazyOf(withInventoryRepository.inject),
     ];
 
     constructor(
         client: Client<Database>,
         protected userService: IUserService,
+        protected inventoryRepository: InventoryRepository.Type
     ) {
         super(
             client,
@@ -45,7 +51,10 @@ export class HeroRepository extends AbstractRepository<
     public async toCreate(create: withDullSchema.Infer.Create<HeroSchema>): Promise<withDullSchema.Infer.EntityWithoutId<HeroSchema>> {
         return {
             ...create,
-            userId: create.userId ?? this.userService.requiredId(),
+            inventoryId: create.inventoryId ?? (await this.inventoryRepository.withMutation.create({
+                name: `Hero [${create.name}]`,
+            })).id,
+            userId:      create.userId ?? this.userService.requiredId(),
         };
     }
 }
