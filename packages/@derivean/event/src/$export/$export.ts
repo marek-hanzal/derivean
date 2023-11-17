@@ -1,4 +1,5 @@
-export {};
+export * from "./IEventService";
+export * from "./withEventService";
 
 // export * from "./EventHeroRepository";
 // export * from "./EventHeroRpc";
@@ -16,11 +17,9 @@ export {};
 // export * from "./EventSelectionStore";
 // export * from "./EventTable";
 // export * from "./EventUI";
-// export * from "./IEventService";
 // export * from "./withEventContainer";
 // export * from "./withEventContext";
 // export * from "./withEventHeroRepository";
 // export * from "./withEventInstanceRepository";
 // export * from "./withEventInventoryRepository";
 // export * from "./withEventRepository";
-// export * from "./withEventService";

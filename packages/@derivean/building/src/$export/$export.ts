@@ -1,4 +1,4 @@
-export {};
+export * from "./withBuildingRepository";
 
 // export * from "./BuildingConstructionRequirement";
 // export * from "./BuildingConstructionRequirementQueryStore";
@@ -21,6 +21,5 @@ export {};
 // export * from "./ConstructionMenu";
 // export * from "./IConstructionService";
 // export * from "./withBuildingContainer";
-// export * from "./withBuildingRepository";
 // export * from "./withBuildingRequirementRepository";
 // export * from "./withConstructionService";

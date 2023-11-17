@@ -1,4 +1,5 @@
-export {};
+export * from "./InventoryRepository";
+export * from "./withInventoryRepository";
 
 // export * from "./IInventory";
 // export * from "./IInventoryItem";
@@ -10,12 +11,10 @@ export {};
 // export * from "./InventoryItemTable";
 // export * from "./InventoryItemUI";
 // export * from "./InventoryQueryStore";
-// export * from "./InventoryRepository";
 // export * from "./InventoryRpc";
 // export * from "./InventorySchema";
 // export * from "./InventorySelect";
 // export * from "./InventoryUI";
 // export * from "./withInventoryContainer";
 // export * from "./withInventoryItemRepository";
-// export * from "./withInventoryRepository";
 // export * from "./withInventoryService";

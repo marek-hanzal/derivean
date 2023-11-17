@@ -1,25 +1,25 @@
 import {
     type IEventService,
     withEventService
-}                            from "@derivean/event";
+}                      from "@derivean/event";
 import {
     type InventoryRepository,
     withInventoryRepository
-}                            from "@derivean/inventory";
-import {type Database}       from "@derivean/orm";
+}                      from "@derivean/inventory";
 import {
+    type Database,
+    withConnection
+}                      from "@derivean/orm";
+import {Infer}         from "@use-pico/extras";
+import {
+    AbstractRepository,
+    type Connection,
     type IUserService,
+    lazyOf,
     withUserService
-}                            from "@use-pico/auth-server";
-import {lazyOf}              from "@use-pico/container";
-import {type withDullSchema} from "@use-pico/dull-stuff";
-import {DateTime}            from "@use-pico/i18n";
-import {
-    type Client,
-    withClient
-}                            from "@use-pico/orm";
-import {AbstractRepository}  from "@use-pico/repository";
-import {KingdomSchema}       from "../schema/KingdomSchema";
+}                      from "@use-pico/server";
+import {utc}           from "@use-pico/utils";
+import {KingdomSchema} from "../schema/KingdomSchema";
 
 export class KingdomRepository extends AbstractRepository<
     Database,
@@ -27,20 +27,20 @@ export class KingdomRepository extends AbstractRepository<
     "Kingdom"
 > {
     static inject = [
-        lazyOf(withClient.inject),
+        lazyOf(withConnection.inject),
         lazyOf(withInventoryRepository.inject),
         lazyOf(withUserService.inject),
         lazyOf(withEventService.inject),
     ];
 
     constructor(
-        client: Client<Database>,
+        connection: Connection<Database>,
         protected inventoryRepository: InventoryRepository.Type,
         protected userService: IUserService,
         protected eventService: IEventService,
     ) {
         super(
-            client,
+            connection,
             KingdomSchema,
             "Kingdom",
         );
@@ -53,10 +53,10 @@ export class KingdomRepository extends AbstractRepository<
         };
     }
 
-    public async toCreate(create: withDullSchema.Infer.Create<KingdomSchema>): Promise<withDullSchema.Infer.EntityWithoutId<KingdomSchema>> {
+    public async toCreate(create: Infer.Create<KingdomSchema>): Promise<Infer.EntityWithoutId<KingdomSchema>> {
         return {
             ...create,
-            created: DateTime.utc().toISO()!,
+            created: utc(),
             inventoryId: create.inventoryId || (await this.inventoryRepository.withMutation.create({
                 name: `Kingdom [${create.name}]`,
             })).id,
@@ -64,7 +64,7 @@ export class KingdomRepository extends AbstractRepository<
         };
     }
 
-    public async onCreate(entity: withDullSchema.Infer.Entity<KingdomSchema>): Promise<any> {
+    public async onCreate(entity: Infer.Entity<KingdomSchema>): Promise<any> {
         return this.eventService.execute(entity.id, "welcome-gift");
     }
 }

@@ -6,3 +6,4 @@ export * from "./isEmpty";
 export * from "./isString";
 export * from "./iso2locale";
 export * from "./toHumanTime";
+export * from "./utc";

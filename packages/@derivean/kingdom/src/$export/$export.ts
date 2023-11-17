@@ -1,4 +1,5 @@
-export {};
+export * from "./withKingdomRepository";
+export * from "./KingdomRepository";
 
 // export * from "./ConstructionDetail";
 // export * from "./EventMenu";
@@ -8,7 +9,6 @@ export {};
 // export * from "./KingdomMenu";
 // export * from "./KingdomPreview";
 // export * from "./KingdomQueryStore";
-// export * from "./KingdomRepository";
 // export * from "./KingdomRpc";
 // export * from "./KingdomSchema";
 // export * from "./KingdomSelect";
@@ -17,4 +17,3 @@ export {};
 // export * from "./KingdomUI";
 // export * from "./withKingdomContainer";
 // export * from "./withKingdomContext";
-// export * from "./withKingdomRepository";
