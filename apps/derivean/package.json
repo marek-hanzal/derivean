@@ -28,6 +28,7 @@
 		"@tabler/icons-react": "^2.40.0",
 		"@use-pico/client": "^3.0.0",
 		"@use-pico/env": "^2.0.0",
+		"@use-pico/migrator": "^3.0.0",
 		"@use-pico/server": "^3.0.0",
 		"@use-pico/translator": "^3.0.0",
 		"next": "^14.0.0",
