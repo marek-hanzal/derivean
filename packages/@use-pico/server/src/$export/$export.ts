@@ -8,6 +8,7 @@ export * from "./createConnection";
 export * from "./getToken";
 export * from "./lazyOf";
 export * from "./withAuthEndpoint";
+export * from "./withAuthMiddleware";
 export * from "./withCacheService";
 export * from "./withConnection";
 export * from "./withContainer";
