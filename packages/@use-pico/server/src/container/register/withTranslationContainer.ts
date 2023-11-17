@@ -1,4 +1,4 @@
-import {type IContainer}        from "index";
+import {type IContainer}        from "../../api/IContainer";
 import {TranslationService}     from "../../translator/service/TranslationService";
 import {withTranslationService} from "../service/withTranslationService";
 
