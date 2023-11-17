@@ -4,12 +4,12 @@ import {
 }                  from "@derivean/kingdom";
 import {container} from "@derivean/server";
 import {EventIcon} from "@derivean/ui";
-import {t}         from "@use-pico/i18n";
 import {
-    Breadcrumbs,
     HomeIcon,
+    Nav,
     Page
-}                  from "@use-pico/ui";
+}                  from "@use-pico/client";
+import {t}         from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {
@@ -27,7 +27,7 @@ export default async function Events({params: {kingdomId}}: Index.Props) {
         text={{
             header: t()`Current events (label)`,
         }}
-        postfix={<Breadcrumbs
+        postfix={<Nav
             items={[
                 {
                     type: "link",

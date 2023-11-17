@@ -1,17 +1,14 @@
 import {withBuildingRepository} from "@derivean/building";
-import {
-    ConstructionDetail,
-    withKingdomRepository
-}                               from "@derivean/kingdom";
+import {withKingdomRepository}  from "@derivean/kingdom";
 import {container}              from "@derivean/server";
 import {BuildingIcon}           from "@derivean/ui";
 import {IconHammer}             from "@tabler/icons-react";
-import {t}                      from "@use-pico/i18n";
 import {
-    Breadcrumbs,
     HomeIcon,
+    Nav,
     Page
-}                               from "@use-pico/ui";
+}                               from "@use-pico/client";
+import {t}                      from "@use-pico/translator";
 
 export namespace List {
     export interface Props {
@@ -38,7 +35,7 @@ export default async function Available(
         text={{
             header: t({values: building})`Kingdom building construction detail (label)`,
         }}
-        postfix={<Breadcrumbs
+        postfix={<Nav
             items={[
                 {
                     type: "link",
@@ -60,9 +57,9 @@ export default async function Available(
             ]}
         />}
     >
-        <ConstructionDetail
-            kingdom={kingdom}
-            building={building}
-        />
+        {/*<ConstructionDetail*/}
+        {/*    kingdom={kingdom}*/}
+        {/*    building={building}*/}
+        {/*/>*/}
     </Page>;
 }

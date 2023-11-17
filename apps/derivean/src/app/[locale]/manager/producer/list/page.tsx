@@ -1,15 +1,10 @@
+import {ProducerIcon} from "@derivean/ui";
 import {
-    ProducerQueryStore,
-    ProducerTable
-}                      from "@derivean/producer";
-import {ProducerIcon}  from "@derivean/ui";
-import {t}             from "@use-pico/i18n";
-import {StoreProvider} from "@use-pico/store";
-import {
-    Breadcrumbs,
     HomeIcon,
+    Nav,
     Page
-}                      from "@use-pico/ui";
+}                     from "@use-pico/client";
+import {t}            from "@use-pico/translator";
 
 export default function List() {
     return <Page
@@ -17,7 +12,7 @@ export default function List() {
         text={{
             header: t()`Producer list`,
         }}
-        postfix={<Breadcrumbs
+        postfix={<Nav
             items={[
                 {
                     type: "link",
@@ -27,11 +22,11 @@ export default function List() {
             ]}
         />}
     >
-        <StoreProvider
-            store={ProducerQueryStore}
-            values={{}}
-        >
-            <ProducerTable/>
-        </StoreProvider>
+        {/*<StoreProvider*/}
+        {/*    store={ProducerQueryStore}*/}
+        {/*    values={{}}*/}
+        {/*>*/}
+        {/*    <ProducerTable/>*/}
+        {/*</StoreProvider>*/}
     </Page>;
 }

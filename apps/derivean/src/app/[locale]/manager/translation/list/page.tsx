@@ -1,11 +1,6 @@
-import {IconLanguage}  from "@tabler/icons-react";
-import {
-    t,
-    TranslationQueryStore,
-    TranslationTable
-}                      from "@use-pico/i18n";
-import {StoreProvider} from "@use-pico/store";
-import {Page}          from "@use-pico/ui";
+import {IconLanguage} from "@tabler/icons-react";
+import {Page}         from "@use-pico/client";
+import {t}            from "@use-pico/translator";
 
 export default function List() {
     return <Page
@@ -14,11 +9,11 @@ export default function List() {
             header: t()`Translation list`,
         }}
     >
-        <StoreProvider
-            store={TranslationQueryStore}
-            values={{}}
-        >
-            <TranslationTable/>
-        </StoreProvider>
+        {/*<StoreProvider*/}
+        {/*    store={TranslationQueryStore}*/}
+        {/*    values={{}}*/}
+        {/*>*/}
+        {/*    <TranslationTable/>*/}
+        {/*</StoreProvider>*/}
     </Page>;
 }

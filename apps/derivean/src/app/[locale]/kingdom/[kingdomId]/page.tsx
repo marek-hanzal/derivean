@@ -1,8 +1,8 @@
 import {withKingdomRepository} from "@derivean/kingdom";
 import {container}             from "@derivean/server";
 import {KingdomIcon}           from "@derivean/ui";
-import {t}                     from "@use-pico/i18n";
-import {Page}                  from "@use-pico/ui";
+import {Page}                  from "@use-pico/client";
+import {t}                     from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {

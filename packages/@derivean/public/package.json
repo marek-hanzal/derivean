@@ -13,7 +13,7 @@
 	"scripts": {
 		"cleanup": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
-	"dependencies": {
+	"peerDependencies": {
 		"react": "^18.2.0"
 	},
 	"devDependencies": {

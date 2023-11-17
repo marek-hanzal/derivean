@@ -1,8 +1,7 @@
 "use client";
 
 import {HeroIcon}    from "@derivean/ui";
-import {NumberInput} from "@use-pico/form";
-import {t}           from "@use-pico/i18n";
+import {t}           from "@use-pico/translator";
 import {
     type ComponentProps,
     type FC

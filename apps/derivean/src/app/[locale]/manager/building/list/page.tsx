@@ -1,23 +1,18 @@
+import {BuildingIcon} from "@derivean/ui";
 import {
-    BuildingQueryStore,
-    BuildingTable
-}                      from "@derivean/building";
-import {BuildingIcon}  from "@derivean/ui";
-import {tx}            from "@use-pico/i18n";
-import {StoreProvider} from "@use-pico/store";
-import {
-    Breadcrumbs,
     HomeIcon,
+    Nav,
     Page
-}                      from "@use-pico/ui";
+}                     from "@use-pico/client";
+import {t}            from "@use-pico/translator";
 
 export default function Index() {
     return <Page
         icon={<BuildingIcon/>}
         text={{
-            header: tx()`Building list`,
+            header: t()`Building list`,
         }}
-        postfix={<Breadcrumbs
+        postfix={<Nav
             items={[
                 {
                     type: "link",
@@ -27,13 +22,13 @@ export default function Index() {
             ]}
         />}
     >
-        <StoreProvider
-            store={BuildingQueryStore}
-            values={{
-                filter: {},
-            }}
-        >
-            <BuildingTable/>
-        </StoreProvider>
+        {/*<StoreProvider*/}
+        {/*    store={BuildingQueryStore}*/}
+        {/*    values={{*/}
+        {/*        filter: {},*/}
+        {/*    }}*/}
+        {/*>*/}
+        {/*    <BuildingTable/>*/}
+        {/*</StoreProvider>*/}
     </Page>;
 }

@@ -3,9 +3,9 @@ import {
     withDefaultPipeline,
     withRichComponents
 }                               from "@derivean/ui";
-import {withInstance}           from "@use-pico/i18n";
-import {withTranslationService} from "@use-pico/i18n-server";
-import {LayoutShell}            from "@use-pico/ui-extra";
+import {Providers}              from "@use-pico/client";
+import {withTranslationService} from "@use-pico/server";
+import {withInstance}           from "@use-pico/translator";
 import fs                       from "node:fs";
 import {type PropsWithChildren} from "react";
 import {parse}                  from "yaml";
@@ -33,14 +33,7 @@ export default async function Layout(
         pipeline:     withDefaultPipeline(),
     });
 
-    return <LayoutShell
-        theme={{
-            /**
-             * Default primary color (usually blue)
-             */
-            primaryColor: "blue",
-            primaryShade: 5,
-        }}
+    return <Providers
         locale={locale}
         translations={{
             translations,
@@ -48,5 +41,5 @@ export default async function Layout(
         }}
     >
         {children}
-    </LayoutShell>;
+    </Providers>;
 }

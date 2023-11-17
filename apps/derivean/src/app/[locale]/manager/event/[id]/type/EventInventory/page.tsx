@@ -2,21 +2,16 @@ import {
     EventMenu,
     withEventInventoryRepository,
     withEventRepository
-}                      from "@derivean/event";
+}                  from "@derivean/event";
+import {container} from "@derivean/server";
+import {EventIcon} from "@derivean/ui";
 import {
-    InventoryItemQueryStore,
-    InventoryItemTable
-}                      from "@derivean/inventory";
-import {container}     from "@derivean/server";
-import {EventIcon}     from "@derivean/ui";
-import {t}             from "@use-pico/i18n";
-import {StoreProvider} from "@use-pico/store";
-import {
-    Breadcrumbs,
     HomeIcon,
     ListIcon,
+    Nav,
     Page
-}                      from "@use-pico/ui";
+}                  from "@use-pico/client";
+import {t}         from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {
@@ -39,7 +34,7 @@ export default async function Index({params: {id}}: Index.Props) {
         text={{
             header: t({values: event})`Event type [EventInventory] (label)`,
         }}
-        postfix={<Breadcrumbs
+        postfix={<Nav
             items={[
                 {
                     type: "link",
@@ -59,18 +54,18 @@ export default async function Index({params: {id}}: Index.Props) {
             active={["/manager/event/[id]/type/EventInventory"]}
         />}
     >
-        <StoreProvider
-            store={InventoryItemQueryStore}
-            values={{
-                where: {
-                    inventoryId: eventInventory.inventoryId,
-                },
-            }}
-        >
-            <InventoryItemTable
-                hidden={["inventory"]}
-                inventoryId={eventInventory.inventoryId}
-            />
-        </StoreProvider>
+        {/*<StoreProvider*/}
+        {/*    store={InventoryItemQueryStore}*/}
+        {/*    values={{*/}
+        {/*        where: {*/}
+        {/*            inventoryId: eventInventory.inventoryId,*/}
+        {/*        },*/}
+        {/*    }}*/}
+        {/*>*/}
+        {/*    <InventoryItemTable*/}
+        {/*        hidden={["inventory"]}*/}
+        {/*        inventoryId={eventInventory.inventoryId}*/}
+        {/*    />*/}
+        {/*</StoreProvider>*/}
     </Page>;
 }

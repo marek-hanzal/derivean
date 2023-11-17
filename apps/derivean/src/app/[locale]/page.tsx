@@ -1,4 +1,4 @@
-import {getToken} from "@use-pico/auth-server";
+import {getToken} from "@use-pico/server";
 import {redirect} from "next/navigation";
 
 export namespace Index {

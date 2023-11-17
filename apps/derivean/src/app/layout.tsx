@@ -5,6 +5,7 @@ import "@mantine/notifications/styles.css";
 import "@mantine/spotlight/styles.css";
 import {type Metadata}          from "next";
 import {type PropsWithChildren} from "react";
+import "./global.css";
 
 export const metadata: Metadata = {
     title: "The Legacy of DeRivean",

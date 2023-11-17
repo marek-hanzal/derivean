@@ -7,16 +7,16 @@ import {
 }                     from "@derivean/producer";
 import {container}    from "@derivean/server";
 import {ProducerIcon} from "@derivean/ui";
-import {t}            from "@use-pico/i18n";
 import {
     Box,
-    Breadcrumbs,
     Grid,
     GridCol,
     HomeIcon,
     ListIcon,
+    Nav,
     Page
-}                     from "@use-pico/ui";
+}                     from "@use-pico/client";
+import {t}            from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {
@@ -38,7 +38,7 @@ export default async function Index({params: {id}}: Index.Props) {
         text={{
             header: t({values: producer})`Producer detail`,
         }}
-        postfix={<Breadcrumbs
+        postfix={<Nav
             items={[
                 {
                     type: "link",

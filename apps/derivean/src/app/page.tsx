@@ -2,7 +2,7 @@ import {
     defaultLocale,
     locales
 }                       from "@/derivean/locales";
-import {LocaleRedirect} from "@use-pico/ui";
+import {LocaleRedirect} from "@use-pico/client";
 
 export default function Index() {
     /**

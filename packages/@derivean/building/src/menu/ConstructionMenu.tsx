@@ -3,8 +3,8 @@ import {
     ConstructionIcon
 }                   from "@derivean/ui";
 import {IconHammer} from "@tabler/icons-react";
-import {t}          from "@use-pico/i18n";
-import {Menu}       from "@use-pico/ui";
+import {Menu}       from "@use-pico/client";
+import {t}          from "@use-pico/translator";
 import {type FC}    from "react";
 
 export namespace ConstructionMenu {

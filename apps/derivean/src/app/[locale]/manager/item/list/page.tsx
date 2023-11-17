@@ -1,15 +1,10 @@
+import {ItemIcon} from "@derivean/ui";
 import {
-    ItemQueryStore,
-    ItemTable
-}                      from "@derivean/item";
-import {ItemIcon}      from "@derivean/ui";
-import {t}             from "@use-pico/i18n";
-import {StoreProvider} from "@use-pico/store";
-import {
-    Breadcrumbs,
     HomeIcon,
+    Nav,
     Page
-}                      from "@use-pico/ui";
+}                 from "@use-pico/client";
+import {t}        from "@use-pico/translator";
 
 export default function List() {
     return <Page
@@ -17,7 +12,7 @@ export default function List() {
         text={{
             header: t()`Item list`,
         }}
-        postfix={<Breadcrumbs
+        postfix={<Nav
             items={[
                 {
                     type: "link",
@@ -27,11 +22,11 @@ export default function List() {
             ]}
         />}
     >
-        <StoreProvider
-            store={ItemQueryStore}
-            values={{}}
-        >
-            <ItemTable/>
-        </StoreProvider>
+        {/*<StoreProvider*/}
+        {/*    store={ItemQueryStore}*/}
+        {/*    values={{}}*/}
+        {/*>*/}
+        {/*    <ItemTable/>*/}
+        {/*</StoreProvider>*/}
     </Page>;
 }

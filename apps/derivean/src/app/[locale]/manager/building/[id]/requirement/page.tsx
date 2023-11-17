@@ -1,19 +1,14 @@
+import {withBuildingRepository} from "@derivean/building";
+import {BuildingMenu}           from "@derivean/manager";
+import {container}              from "@derivean/server";
+import {BuildingIcon}           from "@derivean/ui";
 import {
-    BuildingRequirementQueryStore,
-    BuildingRequirementTable,
-    withBuildingRepository
-}                      from "@derivean/building";
-import {BuildingMenu}  from "@derivean/manager";
-import {container}     from "@derivean/server";
-import {BuildingIcon}  from "@derivean/ui";
-import {t}             from "@use-pico/i18n";
-import {StoreProvider} from "@use-pico/store";
-import {
-    Breadcrumbs,
     HomeIcon,
     ListIcon,
+    Nav,
     Page
-}                      from "@use-pico/ui";
+}                               from "@use-pico/client";
+import {t}                      from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {
@@ -35,7 +30,7 @@ export default async function Requirement({params: {id}}: Index.Props) {
         text={{
             header: t({values: building})`Building requirement`,
         }}
-        postfix={<Breadcrumbs
+        postfix={<Nav
             items={[
                 {
                     type: "link",
@@ -55,18 +50,18 @@ export default async function Requirement({params: {id}}: Index.Props) {
             active={["/manager/building/[id]/requirement"]}
         />}
     >
-        <StoreProvider
-            store={BuildingRequirementQueryStore}
-            values={{
-                where: {
-                    buildingId: building.id,
-                },
-            }}
-        >
-            <BuildingRequirementTable
-                hidden={["building"]}
-                buildingId={building.id}
-            />
-        </StoreProvider>
+        {/*<StoreProvider*/}
+        {/*    store={BuildingRequirementQueryStore}*/}
+        {/*    values={{*/}
+        {/*        where: {*/}
+        {/*            buildingId: building.id,*/}
+        {/*        },*/}
+        {/*    }}*/}
+        {/*>*/}
+        {/*    <BuildingRequirementTable*/}
+        {/*        hidden={["building"]}*/}
+        {/*        buildingId={building.id}*/}
+        {/*    />*/}
+        {/*</StoreProvider>*/}
     </Page>;
 };

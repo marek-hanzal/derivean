@@ -1,23 +1,18 @@
+import {EventIcon} from "@derivean/ui";
 import {
-    EventQueryStore,
-    EventTable
-}                      from "@derivean/event";
-import {EventIcon}     from "@derivean/ui";
-import {tx}            from "@use-pico/i18n";
-import {StoreProvider} from "@use-pico/store";
-import {
-    Breadcrumbs,
     HomeIcon,
+    Nav,
     Page
-}                      from "@use-pico/ui";
+}                  from "@use-pico/client";
+import {t}         from "@use-pico/translator";
 
 export default function Index() {
     return <Page
         icon={<EventIcon/>}
         text={{
-            header: tx()`Event list`,
+            header: t()`Event list`,
         }}
-        postfix={<Breadcrumbs
+        postfix={<Nav
             items={[
                 {
                     type: "link",
@@ -27,13 +22,13 @@ export default function Index() {
             ]}
         />}
     >
-        <StoreProvider
-            store={EventQueryStore}
-            values={{
-                filter: {},
-            }}
-        >
-            <EventTable/>
-        </StoreProvider>
+        {/*<StoreProvider*/}
+        {/*    store={EventQueryStore}*/}
+        {/*    values={{*/}
+        {/*        filter: {},*/}
+        {/*    }}*/}
+        {/*>*/}
+        {/*    <EventTable/>*/}
+        {/*</StoreProvider>*/}
     </Page>;
 }

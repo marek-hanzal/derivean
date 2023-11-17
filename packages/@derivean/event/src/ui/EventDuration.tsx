@@ -1,5 +1,5 @@
-import {HumanSeconds} from "@use-pico/ui-extra";
-import {type FC}      from "react";
+import {HumanTime} from "@use-pico/client";
+import {type FC}   from "react";
 
 export namespace EventDuration {
     export interface Props {
@@ -12,5 +12,5 @@ export const EventDuration: FC<EventDuration.Props> = (
         duration,
     }
 ) => {
-    return duration ? <HumanSeconds seconds={duration * 60 * 60 * 24}/> : "-";
+    return duration ? <HumanTime seconds={duration * 60 * 60 * 24}/> : "-";
 };

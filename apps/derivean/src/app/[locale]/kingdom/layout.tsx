@@ -5,13 +5,13 @@ import {
 }                               from "@derivean/kingdom";
 import {container}              from "@derivean/server";
 import {IconArrowLeft}          from "@tabler/icons-react";
-import {t}                      from "@use-pico/i18n";
 import {
     ButtonLink,
     Divider,
     Group,
     Title
-}                               from "@use-pico/ui";
+}                               from "@use-pico/client";
+import {t}                      from "@use-pico/translator";
 import {type PropsWithChildren} from "react";
 import logo                     from "../../../../public/assets/logo/logo.svg";
 

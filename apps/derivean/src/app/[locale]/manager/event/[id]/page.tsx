@@ -5,13 +5,13 @@ import {
 }                  from "@derivean/event";
 import {container} from "@derivean/server";
 import {EventIcon} from "@derivean/ui";
-import {t}         from "@use-pico/i18n";
 import {
-    Breadcrumbs,
     HomeIcon,
     ListIcon,
+    Nav,
     Page
-}                  from "@use-pico/ui";
+}                  from "@use-pico/client";
+import {t}         from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {
@@ -29,7 +29,7 @@ export default async function Index({params: {id}}: Index.Props) {
         text={{
             header: t({values: event})`Event detail`,
         }}
-        postfix={<Breadcrumbs
+        postfix={<Nav
             items={[
                 {
                     type: "link",

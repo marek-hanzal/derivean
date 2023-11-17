@@ -1,15 +1,10 @@
+import {ProducerIcon} from "@derivean/ui";
 import {
-    ProducerOverview,
-    ProducerQueryStore
-}                      from "@derivean/producer";
-import {ProducerIcon}  from "@derivean/ui";
-import {t}             from "@use-pico/i18n";
-import {StoreProvider} from "@use-pico/store";
-import {
-    Breadcrumbs,
     HomeIcon,
+    Nav,
     Page
-}                      from "@use-pico/ui";
+}                     from "@use-pico/client";
+import {t}            from "@use-pico/translator";
 
 export default function Overview() {
     return <Page
@@ -17,7 +12,7 @@ export default function Overview() {
         text={{
             header: t()`Producer overview`,
         }}
-        postfix={<Breadcrumbs
+        postfix={<Nav
             items={[
                 {
                     type: "link",
@@ -27,13 +22,13 @@ export default function Overview() {
             ]}
         />}
     >
-        <StoreProvider
-            store={ProducerQueryStore}
-            values={{
-                filter: {},
-            }}
-        >
-            <ProducerOverview/>
-        </StoreProvider>
+        {/*<StoreProvider*/}
+        {/*    store={ProducerQueryStore}*/}
+        {/*    values={{*/}
+        {/*        filter: {},*/}
+        {/*    }}*/}
+        {/*>*/}
+        {/*    <ProducerOverview/>*/}
+        {/*</StoreProvider>*/}
     </Page>;
 }

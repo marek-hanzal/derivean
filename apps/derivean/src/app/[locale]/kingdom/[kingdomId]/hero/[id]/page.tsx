@@ -2,12 +2,12 @@ import {withHeroRepository}    from "@derivean/hero";
 import {withKingdomRepository} from "@derivean/kingdom";
 import {container}             from "@derivean/server";
 import {HeroIcon}              from "@derivean/ui";
-import {t}                     from "@use-pico/i18n";
 import {
-    Breadcrumbs,
     HomeIcon,
+    Nav,
     Page
-}                              from "@use-pico/ui";
+}                              from "@use-pico/client";
+import {t}                     from "@use-pico/translator";
 
 export namespace List {
     export interface Props {
@@ -34,7 +34,7 @@ export default async function List(
         text={{
             header: t({values: hero})`Kingdom hero detail (label)`,
         }}
-        postfix={<Breadcrumbs
+        postfix={<Nav
             items={[
                 {
                     type: "link",

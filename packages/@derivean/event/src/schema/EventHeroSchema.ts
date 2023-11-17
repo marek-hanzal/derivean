@@ -1,14 +1,14 @@
-import {withDullSchema} from "@use-pico/dull-stuff";
+import {withSchema} from "@use-pico/extras";
 import {
     filterOf,
     orderByOf
-}                       from "@use-pico/query";
+}                   from "@use-pico/query";
 import {
     identityOf,
     schema
-}                       from "@use-pico/schema";
+}                   from "@use-pico/schema";
 
-export const EventHeroSchema = withDullSchema({
+export const EventHeroSchema = withSchema({
     entity:  identityOf(z => z.object({
         eventId: z.string,
         amount:  z.number,

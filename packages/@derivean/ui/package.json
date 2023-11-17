@@ -13,8 +13,8 @@
 	"scripts": {
 		"cleanup": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
-	"dependencies": {
-		"@tabler/icons-react": "^2.28.0",
+	"peerDependencies": {
+		"@tabler/icons-react": "^2.40.0",
 		"react": "^18.2.0"
 	},
 	"devDependencies": {

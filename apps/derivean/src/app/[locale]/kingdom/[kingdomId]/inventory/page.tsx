@@ -1,17 +1,12 @@
-import {
-    Inventory,
-    InventoryItemQueryStore
-}                              from "@derivean/inventory";
 import {withKingdomRepository} from "@derivean/kingdom";
 import {container}             from "@derivean/server";
 import {InventoryIcon}         from "@derivean/ui";
-import {t}                     from "@use-pico/i18n";
-import {StoreProvider}         from "@use-pico/store";
 import {
-    Breadcrumbs,
     HomeIcon,
+    Nav,
     Page
-}                              from "@use-pico/ui";
+}                              from "@use-pico/client";
+import {t}                     from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {
@@ -29,7 +24,7 @@ export default async function Index({params: {kingdomId}}: Index.Props) {
         text={{
             header: t({values: kingdom})`Kingdom inventory`,
         }}
-        postfix={<Breadcrumbs
+        postfix={<Nav
             items={[
                 {
                     type: "link",
@@ -42,15 +37,15 @@ export default async function Index({params: {kingdomId}}: Index.Props) {
             ]}
         />}
     >
-        <StoreProvider
-            store={InventoryItemQueryStore}
-            values={{
-                where: {
-                    inventoryId: kingdom.inventoryId,
-                },
-            }}
-        >
-            <Inventory/>
-        </StoreProvider>
+        {/*<StoreProvider*/}
+        {/*    store={InventoryItemQueryStore}*/}
+        {/*    values={{*/}
+        {/*        where: {*/}
+        {/*            inventoryId: kingdom.inventoryId,*/}
+        {/*        },*/}
+        {/*    }}*/}
+        {/*>*/}
+        {/*    <Inventory/>*/}
+        {/*</StoreProvider>*/}
     </Page>;
 }

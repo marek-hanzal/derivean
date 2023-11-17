@@ -92,6 +92,9 @@
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/item/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/kingdom/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/@derivean/hero/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/client/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/extras/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/@use-pico/translator/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/apps/blackfox/dist" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@derivean/public/.turbo" />
@@ -226,6 +229,14 @@
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/diagram/lib" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/tx/.turbo" />
       <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/tx/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/client/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/client/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/extras/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/extras/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/translator/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/translator/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/translator/src/schema/.turbo" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/@use-pico/translator/src/schema/lib" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
