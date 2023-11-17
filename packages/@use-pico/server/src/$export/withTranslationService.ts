@@ -1,1 +1,1 @@
-export {withTranslationService} from "../container/withTranslationService";
+export {withTranslationService} from "../container/service/withTranslationService";

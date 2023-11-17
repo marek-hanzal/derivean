@@ -1,1 +1,1 @@
-export {withContainer} from "../container/withContainer";
+export {withContainer} from "../container/service/withContainer";

@@ -1,1 +1,1 @@
-export {withConnection} from "../container/withConnection";
+export {withConnection} from "../container/service/withConnection";

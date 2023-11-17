@@ -1,7 +1,7 @@
 import {isString}           from "@use-pico/utils";
 import type Redis           from "ioredis";
 import {type ICacheService} from "../../api/ICacheService";
-import {withRedis}          from "../../container/withRedis";
+import {withRedis}          from "../../container/service/withRedis";
 import {lazyOf}             from "../../utils/lazyOf";
 
 export class RedisService implements ICacheService {

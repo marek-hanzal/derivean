@@ -1,8 +1,8 @@
-import {type IContainer}          from "../api/IContainer";
-import {Container}                from "./Container";
+import {type IContainer}          from "../../api/IContainer";
+import {Container}                from "../Container";
+import {withContainer}            from "../service/withContainer";
 import {withAuthContainer}        from "./withAuthContainer";
 import {withCacheContainer}       from "./withCacheContainer";
-import {withContainer}            from "./withContainer";
 import {withRpcContainer}         from "./withRpcContainer";
 import {withTranslationContainer} from "./withTranslationContainer";
 

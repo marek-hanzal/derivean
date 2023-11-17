@@ -1,1 +1,1 @@
-export {withCacheService} from "../container/withCacheService";
+export {withCacheService} from "../container/service/withCacheService";

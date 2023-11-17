@@ -3,8 +3,8 @@ import NextAuth, {type AuthOptions} from "next-auth";
 import {type Provider}              from "next-auth/providers";
 import {type Connection}            from "../api/Connection";
 import {type IContainer}            from "../api/IContainer";
-import {withConnection}             from "../container/withConnection";
-import {withUserTokenService}       from "../container/withUserTokenService";
+import {withConnection}             from "../container/service/withConnection";
+import {withUserTokenService}       from "../container/service/withUserTokenService";
 import {withLogger}                 from "../utils/withLogger";
 
 export namespace withAuthEndpoint {

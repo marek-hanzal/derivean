@@ -1,1 +1,1 @@
-export {withServerContainer} from "../container/withServerContainer";
+export {withServerContainer} from "../container/register/withServerContainer";

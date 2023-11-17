@@ -1,10 +1,8 @@
-import {
-    type IContainer,
-    lazyOf,
-    withContainer
-}                          from "@use-pico/container";
+import {type IContainer}   from "../api/IContainer";
 import {type IUserService} from "../api/IUserService";
-import {withUserSession}   from "../container/withUserSession";
+import {withContainer}     from "../container/service/withContainer";
+import {withUserSession}   from "../container/service/withUserSession";
+import {lazyOf}            from "../utils/lazyOf";
 
 export class UserService implements IUserService {
     static inject = [

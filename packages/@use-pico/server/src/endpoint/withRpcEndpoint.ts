@@ -3,7 +3,7 @@ import {
     NextResponse
 }                        from "next/server";
 import {type IContainer} from "../api/IContainer";
-import {withRpcService}  from "../container/withRpcService";
+import {withRpcService}  from "../container/service/withRpcService";
 
 export namespace withRpcEndpoint {
     export interface Props {
