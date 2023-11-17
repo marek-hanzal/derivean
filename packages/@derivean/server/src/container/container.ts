@@ -5,14 +5,9 @@ import {withItemContainer}      from "@derivean/item";
 import {withKingdomContainer}   from "@derivean/kingdom";
 import {withProducerContainer}  from "@derivean/producer";
 import {
-    withClient,
-    withKysely
-}                               from "@use-pico/orm";
-import {
-    withRedis,
-    withRedisClient
-}                               from "@use-pico/redis";
-import {withServerContainer}    from "@use-pico/server";
+    createConnection,
+    withServerContainer
+}                               from "@use-pico/server";
 import {withContext}            from "./withContext";
 
 const register = [
@@ -26,7 +21,7 @@ const register = [
 
 export const container = withServerContainer();
 
-withClient.factory(container, () => withKysely({}));
+withClient.factory(container, () => createConnection({}));
 withRedis.factory(container, () => withRedisClient({}));
 
 register.forEach(register => register(container));

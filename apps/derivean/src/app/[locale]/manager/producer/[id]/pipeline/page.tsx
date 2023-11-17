@@ -1,13 +1,10 @@
-import {ProducerMenu} from "@derivean/manager";
 import {
-    Dependencies,
-    Pipeline,
+    ProducerMenu,
     withProducerRepository
 }                     from "@derivean/producer";
 import {container}    from "@derivean/server";
 import {ProducerIcon} from "@derivean/ui";
 import {
-    Box,
     HomeIcon,
     ListIcon,
     Nav,
@@ -55,12 +52,12 @@ export default async function Index({params: {id}}: Index.Props) {
             active={["/manager/producer/[id]/pipeline"]}
         />}
     >
-        <Box mb={"xs"}>
-            <Dependencies
-                producerId={producer.id}
-            />
-        </Box>
+        {/*<Box mb={"xs"}>*/}
+        {/*    <Dependencies*/}
+        {/*        producerId={producer.id}*/}
+        {/*    />*/}
+        {/*</Box>*/}
 
-        <Pipeline producerId={producer.id}/>
+        {/*<Pipeline producerId={producer.id}/>*/}
     </Page>;
 };

@@ -1,8 +1,3 @@
-import {ColorSchemeScript}      from "@mantine/core";
-import "@mantine/core/styles.css";
-import "@mantine/dropzone/styles.css";
-import "@mantine/notifications/styles.css";
-import "@mantine/spotlight/styles.css";
 import {type Metadata}          from "next";
 import {type PropsWithChildren} from "react";
 import "./global.css";
@@ -12,10 +7,7 @@ export const metadata: Metadata = {
 };
 
 export default function Layout({children}: PropsWithChildren) {
-    return <html>
-        <head>
-            <ColorSchemeScript/>
-        </head>
+    return <html lang={"en"}>
         <body>
             {children}
         </body>

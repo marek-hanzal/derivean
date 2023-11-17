@@ -45,6 +45,7 @@
 		"is-object": "^1.0.2",
 		"is-string": "^1.0.7",
 		"js-sha256": "^0.10.1",
+		"luxon": "^3.4.4",
 		"timer-node": "^5.0.7"
 	},
 	"devDependencies": {

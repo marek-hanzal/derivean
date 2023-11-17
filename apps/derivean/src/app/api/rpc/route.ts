@@ -2,7 +2,7 @@ import {
     container,
     withContext
 }                        from "@derivean/server";
-import {withRpcEndpoint} from "@use-pico/rpc-server";
+import {withRpcEndpoint} from "@use-pico/server";
 
 const endpoint = withRpcEndpoint({
     container,

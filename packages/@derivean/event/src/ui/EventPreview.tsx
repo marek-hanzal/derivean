@@ -1,25 +1,22 @@
-"use client";
-
-import {withDullSchema} from "@use-pico/dull-stuff";
-import {
-    DateInline,
-    t,
-    td
-}                       from "@use-pico/i18n";
 import {
     BoolInline,
     Group,
     Preview,
     Text
-}                       from "@use-pico/ui";
-import {type FC}        from "react";
-import {EventInline}    from "../inline/EventInline";
-import {EventSchema}    from "../schema/EventSchema";
-import {EventDuration}  from "./EventDuration";
+}                      from "@use-pico/client";
+import {type Infer}    from "@use-pico/extras";
+import {
+    t,
+    td
+}                      from "@use-pico/translator";
+import {type FC}       from "react";
+import {EventInline}   from "../inline/EventInline";
+import {EventSchema}   from "../schema/EventSchema";
+import {EventDuration} from "./EventDuration";
 
 export namespace EventPreview {
     export interface Props {
-        event: withDullSchema.Infer.Entity<EventSchema>;
+        event: Infer.Entity<EventSchema>;
     }
 }
 
@@ -29,7 +26,6 @@ export const EventPreview: FC<EventPreview.Props> = (
     }
 ) => {
     return <Preview
-        cols={3}
         items={[
             {
                 label: t()`Event name`,

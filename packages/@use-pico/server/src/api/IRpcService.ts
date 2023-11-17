@@ -1,0 +1,17 @@
+import {
+    type NextRequest,
+    type NextResponse
+}                        from "next/server";
+import {type IContainer} from "./IContainer";
+
+export interface IRpcService {
+    handle(props: IRpcService.HandleProps): Promise<NextResponse>;
+}
+
+export namespace IRpcService {
+    export interface HandleProps {
+        context?: IContainer.Register;
+        request: NextRequest;
+        response: NextResponse;
+    }
+}

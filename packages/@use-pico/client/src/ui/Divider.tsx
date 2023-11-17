@@ -7,7 +7,11 @@ import {type CommonProps} from "../api/CommonProps";
 export namespace Divider {
     export type Props = PropsWithChildren<CommonProps & {
         orientation?: Orientation;
+        variant?: Variant;
     }>;
+
+    export type Variant =
+        | "dotted";
 
     export type Orientation =
         | "horizontal"
