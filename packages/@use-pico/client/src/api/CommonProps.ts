@@ -19,9 +19,16 @@ export namespace CommonProps {
         | "xl";
 
     export type Color =
-        | "dimmed"
         | "green"
+        | "yellow"
+        | "orange"
+        | "violet"
+        | "grape"
         | "red"
         | "blue"
+        /**
+         * Specials
+         */
+        | "dimmed"
         | "primary";
 }

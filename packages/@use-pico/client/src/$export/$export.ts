@@ -30,6 +30,7 @@ export * from "./Preview";
 export * from "./Providers";
 export * from "./PublicLayout";
 export * from "./QueryClientProvider";
+export * from "./Rating";
 export * from "./Text";
 export * from "./Title";
 export * from "./VersionStamp";

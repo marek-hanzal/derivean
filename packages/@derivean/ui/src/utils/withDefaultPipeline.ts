@@ -1,4 +1,4 @@
-import {withDefaultPipeline as withCoolDefaultPipeline} from "@use-pico/i18n";
+import {withDefaultPipeline as withCoolDefaultPipeline} from "@use-pico/translator";
 import {withRichComponents}                             from "./withRichComponents";
 
 export const withDefaultPipeline = () => withCoolDefaultPipeline({

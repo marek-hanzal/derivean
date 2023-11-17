@@ -3,13 +3,13 @@ import {
     IconStarFilled
 }                from "@tabler/icons-react";
 import {
-    type Color,
+    type CommonProps,
     Rating,
     WithIcon
-}                from "@use-pico/ui";
+}                from "@use-pico/client";
 import {type FC} from "react";
 
-const colors: Record<number, Color> = {
+const colors: Record<number, CommonProps.Color> = {
     1: "green",
     2: "blue",
     3: "yellow",

@@ -1,3 +1,3 @@
-import {withRichComponents as withCoolRichComponents} from "@use-pico/i18n";
+import {withRichComponents as withCoolRichComponents} from "@use-pico/translator";
 
 export const withRichComponents = () => withCoolRichComponents();
