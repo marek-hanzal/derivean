@@ -17,9 +17,21 @@ export namespace withSchema {
         TFilterSchema extends FilterSchema,
         TOrderBySchema extends OrderBySchema,
     > {
+        /**
+         * Define shape of an entity (usually shape of database table or an output from a Repository)
+         */
         entity: TEntity;
+        /**
+         * Working shape of an entity outside of Database (usually when creating/updating one)
+         */
         shape: TShapeSchema;
+        /**
+         * Define available filters of a Repository (used by a client)
+         */
         filter: TFilterSchema;
+        /**
+         * Define available sorting of a Repository (used by a client)
+         */
         orderBy: TOrderBySchema;
     }
 }

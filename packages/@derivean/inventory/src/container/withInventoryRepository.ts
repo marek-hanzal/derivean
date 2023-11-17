@@ -1,4 +1,4 @@
-import {withService}         from "@use-pico/container";
-import {InventoryRepository} from "../repository/InventoryRepository";
+import {withService}              from "@use-pico/server";
+import {type InventoryRepository} from "../repository/InventoryRepository";
 
 export const withInventoryRepository = withService<InventoryRepository.Type>("@derivean/inventory/InventoryRepository");
