@@ -1,1 +1,1 @@
-export {RpcResponseSchema} from "../schema/common/RpcResponseSchema";
+export {RpcResponseSchema} from "../schema/common/rpc/RpcResponseSchema";

@@ -1,1 +1,1 @@
-export {DataResponseSchema} from "../schema/common/DataResponseSchema";
+export {DataResponseSchema} from "../schema/common/rpc/DataResponseSchema";

@@ -1,1 +1,1 @@
-export {RpcBulkRequestSchema} from "../schema/common/RpcBulkRequestSchema";
+export {RpcBulkRequestSchema} from "../schema/common/rpc/RpcBulkRequestSchema";

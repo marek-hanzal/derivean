@@ -1,5 +1,4 @@
-import {GraphSchema}        from "@use-pico/diagram";
-import {withRpcQuery}       from "@use-pico/rpc";
+import {withRpcQuery}       from "@use-pico/client";
 import {WithIdentitySchema} from "@use-pico/schema";
 
 export const withGraph = withRpcQuery({
