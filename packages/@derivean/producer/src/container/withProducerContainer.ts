@@ -1,8 +1,8 @@
-import {type IContainer}              from "@use-pico/container";
 import {
+    IContainer,
     withHandler,
     withRepositoryHandler
-}                                     from "@use-pico/rpc-server";
+}                                     from "@use-pico/server";
 import {DependencyError}              from "../error/DependencyError";
 import {withDependenciesQuery}        from "../query/withDependenciesQuery";
 import {withGraph}                    from "../query/withGraph";
@@ -19,7 +19,7 @@ import {withProducerOutputRepository} from "./withProducerOutputRepository";
 import {withProducerRepository}       from "./withProducerRepository";
 import {withProducerService}          from "./withProducerService";
 
-export const withProducerContainer = (container: IContainer.Type) => {
+export const withProducerContainer: IContainer.Register = container => {
     withProducerService.bind(container, ProducerService);
 
     withRepositoryHandler({

@@ -16,6 +16,7 @@ export * from "./withAuthMiddleware";
 export * from "./withCacheService";
 export * from "./withConnection";
 export * from "./withContainer";
+export * from "./withHandler";
 export * from "./withRedis";
 export * from "./withRegister";
 export * from "./withRepositoryHandler";

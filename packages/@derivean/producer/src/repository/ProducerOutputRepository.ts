@@ -1,10 +1,11 @@
-import {type Database}        from "@derivean/orm";
-import {lazyOf}               from "@use-pico/container";
 import {
-    type Client,
-    withClient
-}                             from "@use-pico/orm";
-import {AbstractRepository}   from "@use-pico/repository";
+    type Database,
+    withConnection
+}                             from "@derivean/orm";
+import {
+    AbstractRepository,
+    lazyOf
+}                             from "@use-pico/server";
 import {ProducerOutputSchema} from "../schema/ProducerOutputSchema";
 
 export class ProducerOutputRepository extends AbstractRepository<
@@ -13,14 +14,14 @@ export class ProducerOutputRepository extends AbstractRepository<
     "ProducerOutput"
 > {
     static inject = [
-        lazyOf(withClient.inject),
+        lazyOf(withConnection.inject),
     ];
 
     constructor(
-        client: Client<Database>,
+        connection: withConnection,
     ) {
         super(
-            client,
+            connection,
             ProducerOutputSchema,
             "ProducerOutput",
         );

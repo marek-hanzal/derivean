@@ -1,7 +1,7 @@
-import {withDullRpc}    from "@use-pico/dull-stuff";
+import {withRpc}        from "@use-pico/extras";
 import {ProducerSchema} from "../schema/ProducerSchema";
 
-export const ProducerRpc = withDullRpc({
+export const ProducerRpc = withRpc({
     key:    ["derivean", "producer"],
     schema: ProducerSchema,
 });
