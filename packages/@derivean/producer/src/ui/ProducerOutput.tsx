@@ -2,7 +2,11 @@ import {
     ItemFetch,
     ItemInline
 }                                 from "@derivean/item";
-import {Nav}                      from "@use-pico/client";
+import {
+    Nav,
+    Text
+}                                 from "@use-pico/client";
+import {t}                        from "@use-pico/translator";
 import {type FC}                  from "react";
 import {ProducerOutputCollection} from "./ProducerOutputComponents";
 
@@ -35,7 +39,7 @@ export const ProducerOutput: FC<ProducerOutput.Props> = (
                                    key={entity.id}
                                    override={entity.itemId}
                                    WithSuccess={({entity}) => <Text
-                                       fw={mark.includes(entity.id) ? "bold" : undefined}
+                                       fw={mark.includes(entity.id) ? 600 : undefined}
                                        c={mark.includes(entity.id) ? undefined : "dimmed"}
                                    >
                                        <ItemInline entity={entity}/>
