@@ -1,5 +1,4 @@
-import {type IContainer}                               from "@use-pico/container";
-import {withRepositoryHandler}                         from "@use-pico/rpc-server";
+import {type IContainer}                               from "@use-pico/server";
 import {BuildingConstructionRequirementRepository}     from "../repository/BuildingConstructionRequirementRepository";
 import {BuildingRepository}                            from "../repository/BuildingRepository";
 import {BuildingRequirementRepository}                 from "../repository/BuildingRequirementRepository";

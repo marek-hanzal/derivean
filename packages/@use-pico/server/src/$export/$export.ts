@@ -17,6 +17,7 @@ export * from "./withConnection";
 export * from "./withContainer";
 export * from "./withRedis";
 export * from "./withRegister";
+export * from "./withRepositoryHandler";
 export * from "./withRpcEndpoint";
 export * from "./withServerContainer";
 export * from "./withService";
