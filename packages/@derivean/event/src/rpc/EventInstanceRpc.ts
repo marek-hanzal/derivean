@@ -1,7 +1,7 @@
-import {withDullRpc}         from "@use-pico/dull-stuff";
+import {withRpc}             from "@use-pico/extras";
 import {EventInstanceSchema} from "../schema/EventInstanceSchema";
 
-export const EventInstanceRpc = withDullRpc({
+export const EventInstanceRpc = withRpc({
     key:    ["derivean", "event", "instance"],
     schema: EventInstanceSchema,
 });
