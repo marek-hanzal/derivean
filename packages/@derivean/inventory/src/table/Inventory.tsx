@@ -1,17 +1,12 @@
 "use client";
 
-import {
-    ItemInline,
-    ItemUI
-}                                from "@derivean/item";
-import {InventoryItemIcon}       from "@derivean/ui";
-import {t}                       from "@use-pico/i18n";
-import {Loader}                  from "@use-pico/ui";
+import {ItemInline}        from "@derivean/item";
+import {InventoryItemIcon} from "@derivean/ui";
+import {t}                 from "@use-pico/translator";
 import {
     type ComponentProps,
     type FC
-}                                from "react";
-import {InventoryItemComponents} from "../ui/InventoryItemComponents";
+}                          from "react";
 
 export namespace Inventory {
     export type Columns =

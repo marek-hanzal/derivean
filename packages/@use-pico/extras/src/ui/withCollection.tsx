@@ -1,6 +1,6 @@
 import {
-    type IWithSourceQuery,
-    QueryFetch
+    Collection,
+    type IWithSourceQuery
 }                                from "@use-pico/client";
 import {
     type FilterSchema,
@@ -23,7 +23,7 @@ export namespace withCollection {
         TResponseSchema extends WithIdentitySchema,
     > = FC<
         Omit<
-            QueryFetch.Props<TQuerySchema, TResponseSchema>,
+            Collection.Props<TQuerySchema, TResponseSchema>,
             "withSourceQuery"
         >
     >;
@@ -37,5 +37,5 @@ export const withCollection = <
         withSourceQuery,
     }: withCollection.Props<TQuerySchema, TResponseSchema>
 ): withCollection.Query<TQuerySchema, TResponseSchema> => {
-    return props => <QueryFetch withSourceQuery={withSourceQuery} {...props}/>;
+    return props => <Collection withSourceQuery={withSourceQuery} {...props}/>;
 };

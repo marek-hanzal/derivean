@@ -1,17 +1,17 @@
-import {InventoryIcon} from "@derivean/ui";
-import {TextInput}     from "@use-pico/form";
+import {InventoryIcon}       from "@derivean/ui";
+import {TextInput}           from "@use-pico/form";
 import {
     t,
     tx
-}                      from "@use-pico/i18n";
+}                            from "@use-pico/i18n";
 import {
     type ComponentProps,
     type FC
-}                      from "react";
-import {InventoryUI}   from "../ui/InventoryUI";
+}                            from "react";
+import {InventoryComponents} from "../ui/InventoryComponents";
 
 export namespace InventoryUpsertForm {
-    export type Props = Omit<ComponentProps<InventoryUI["MutationForm"]>, "inputs" | "defaultValues" | "Render">;
+    export type Props = Omit<ComponentProps<InventoryComponents["MutationForm"]>, "inputs" | "defaultValues" | "Render">;
 }
 
 export const InventoryUpsertForm: FC<InventoryUpsertForm.Props> = (
@@ -20,7 +20,7 @@ export const InventoryUpsertForm: FC<InventoryUpsertForm.Props> = (
         ...props
     }
 ) => {
-    return <InventoryUI.MutationForm
+    return <InventoryComponents.MutationForm
         text={{
             submit:  entity ? t()`Update inventory item (label)` : t()`Create inventory item (label)`,
             success: {

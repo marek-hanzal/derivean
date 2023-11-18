@@ -20,8 +20,8 @@ import {
 import {InventoryItemUpsertForm} from "../form/InventoryItemUpsertForm";
 import {InventoryInline}         from "../inline/InventoryInline";
 import {InventoryItemRpc}        from "../rpc/InventoryItemRpc";
+import {InventoryComponents}     from "../ui/InventoryComponents";
 import {InventoryItemComponents} from "../ui/InventoryItemComponents";
-import {InventoryUI}             from "../ui/InventoryUI";
 
 export namespace InventoryItemTable {
     export type Columns =
@@ -101,7 +101,7 @@ export const InventoryItemTable: FC<InventoryItemTable.Props> = (
         columns={{
             inventory: {
                 title:  t()`Inventory`,
-                render: ({item}) => <InventoryUI.Fetch
+                render: ({item}) => <InventoryComponents.Fetch
                     override={item.inventoryId}
                     loader={<Loader size={"xs"} type={"dots"}/>}
                     WithSuccess={({entity}) => <ButtonLink

@@ -19,7 +19,7 @@ import {useQueryEx}            from "../hook/useQueryEx";
 import {Loader}                from "./Loader";
 import {QueryResult}           from "./QueryResult";
 
-export namespace QueryFetch {
+export namespace Collection {
     export interface Props<
         TQuerySchema extends QuerySchema<any, any>,
         TResponseSchema extends WithIdentitySchema,
@@ -53,7 +53,7 @@ export namespace QueryFetch {
     }
 }
 
-export const QueryFetch = <
+export const Collection = <
     TQuerySchema extends QuerySchema<any, any>,
     TResponseSchema extends WithIdentitySchema,
 >(
@@ -65,7 +65,7 @@ export const QueryFetch = <
         WithSuccess,
         enabled = true,
         options,
-    }: QueryFetch.Props<
+    }: Collection.Props<
         TQuerySchema,
         TResponseSchema
     >

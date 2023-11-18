@@ -1,9 +1,11 @@
-import {withDullUI}          from "@use-pico/dull-stuff";
+import {withComponents}      from "@use-pico/extras";
 import {InventoryQueryStore} from "../query/InventoryQueryStore";
 import {InventoryRpc}        from "../rpc/InventoryRpc";
 
-export const InventoryUI = withDullUI({
+export const {
+    Fetch:      InventoryFetch,
+    Collection: InventoryCollection,
+} = withComponents({
     rpc:        InventoryRpc,
     queryStore: InventoryQueryStore,
 });
-export type InventoryUI = typeof InventoryUI;
