@@ -1,1 +1,1 @@
-export {InventoryItemUI} from "../ui/InventoryItemUI";
+export {InventoryItemComponents} from "../ui/InventoryItemComponents";

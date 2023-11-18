@@ -8,6 +8,8 @@ export * from "./IInventory";
 export * from "./IInventoryItem";
 export * from "./IInventoryService";
 export * from "./Inventory";
+export * from "./InventoryItemCollection";
+export * from "./InventoryItemFetch";
 export * from "./InventoryItemRpc";
 export * from "./InventoryItemSchema";
 export * from "./InventoryRepository";

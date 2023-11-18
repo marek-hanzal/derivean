@@ -20,7 +20,7 @@ import {
 import {InventoryItemUpsertForm} from "../form/InventoryItemUpsertForm";
 import {InventoryInline}         from "../inline/InventoryInline";
 import {InventoryItemRpc}        from "../rpc/InventoryItemRpc";
-import {InventoryItemUI}         from "../ui/InventoryItemUI";
+import {InventoryItemComponents} from "../ui/InventoryItemComponents";
 import {InventoryUI}             from "../ui/InventoryUI";
 
 export namespace InventoryItemTable {
@@ -32,7 +32,7 @@ export namespace InventoryItemTable {
 
     export type Props =
         Omit<
-            ComponentProps<typeof InventoryItemUI.Table<Columns>>,
+            ComponentProps<typeof InventoryItemComponents.Table<Columns>>,
             "columns" | "name" | "icon" | "text"
         >
         & {
@@ -46,7 +46,7 @@ export const InventoryItemTable: FC<InventoryItemTable.Props> = (
         ...props
     }
 ) => {
-    return <InventoryItemUI.Table
+    return <InventoryItemComponents.Table
         text={{
             total: t()`Total count of inventory items`,
             count: {

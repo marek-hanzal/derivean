@@ -3,15 +3,15 @@
 import {
     ItemInline,
     ItemUI
-}                          from "@derivean/item";
-import {InventoryItemIcon} from "@derivean/ui";
-import {t}                 from "@use-pico/i18n";
-import {Loader}            from "@use-pico/ui";
+}                                from "@derivean/item";
+import {InventoryItemIcon}       from "@derivean/ui";
+import {t}                       from "@use-pico/i18n";
+import {Loader}                  from "@use-pico/ui";
 import {
     type ComponentProps,
     type FC
-}                          from "react";
-import {InventoryItemUI}   from "../ui/InventoryItemUI";
+}                                from "react";
+import {InventoryItemComponents} from "../ui/InventoryItemComponents";
 
 export namespace Inventory {
     export type Columns =
@@ -21,7 +21,7 @@ export namespace Inventory {
 
     export type Props =
         Omit<
-            ComponentProps<typeof InventoryItemUI.Table<Columns>>,
+            ComponentProps<typeof InventoryItemComponents.Table<Columns>>,
             "columns" | "name" | "icon" | "text"
         >
         & {
@@ -35,7 +35,7 @@ export const Inventory: FC<Inventory.Props> = (
         ...props
     }
 ) => {
-    return <InventoryItemUI.Table
+    return <InventoryItemComponents.Table
         text={{
             total: t()`Total count of inventory items`,
             count: {
