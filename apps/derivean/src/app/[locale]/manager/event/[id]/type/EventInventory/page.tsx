@@ -1,8 +1,8 @@
 import {
-    EventMenu,
     withEventInventoryRepository,
     withEventRepository
 }                  from "@derivean/event";
+import {EventMenu} from "@derivean/manager";
 import {container} from "@derivean/server";
 import {EventIcon} from "@derivean/ui";
 import {

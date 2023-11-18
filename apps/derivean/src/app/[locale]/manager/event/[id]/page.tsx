@@ -50,7 +50,7 @@ export default async function Index({params: {id}}: Index.Props) {
         />}
     >
         <EventPreview
-            event={event}
+            entity={event}
         />
     </Page>;
 }

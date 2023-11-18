@@ -1,4 +1,7 @@
-import {type IContainer}                               from "@use-pico/server";
+import {
+    type IContainer,
+    withRepositoryHandler
+}                                                      from "@use-pico/server";
 import {BuildingConstructionRequirementRepository}     from "../repository/BuildingConstructionRequirementRepository";
 import {BuildingRepository}                            from "../repository/BuildingRepository";
 import {BuildingRequirementRepository}                 from "../repository/BuildingRequirementRepository";

@@ -66,7 +66,7 @@ export default async function Index({params: {id}}: Index.Props) {
         <Grid pb={"md"}>
             <GridCol span={6}>
                 <ProducerPreview
-                    producer={producer}
+                    entity={producer}
                 />
             </GridCol>
             <GridCol span={6}>
