@@ -1,21 +1,20 @@
-import {Divider}       from "@use-pico/ui";
 import {
     AppLayout,
-    PublicLayout as CoolPublicLayout
-}                      from "@use-pico/ui-extra";
+    Divider
+}                      from "@use-pico/client";
 import {type FC}       from "react";
 import {ManagerMenu}   from "../menu/ManagerMenu";
 import {Footer}        from "../ui/Footer";
 import {SignOutButton} from "./GameLayout/SignOutButton";
 
 export namespace ManagerLayout {
-    export type Props = CoolPublicLayout.Props;
+    export type Props = AppLayout.Props;
 }
 
 export const ManagerLayout: FC<ManagerLayout.Props> = props => {
     return <>
         <AppLayout
-            homeUrl={"/manager"}
+            home={"/manager"}
             right={<SignOutButton/>}
             center={<ManagerMenu/>}
             {...props}

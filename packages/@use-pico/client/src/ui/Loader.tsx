@@ -11,6 +11,11 @@ export namespace Loader {
         | "dots";
 }
 
-export const Loader: FC<Loader.Props> = () => {
+export const Loader: FC<Loader.Props> = (
+    {
+        type = "dots",
+        size = "sm",
+    }
+) => {
     return "Loader";
 };

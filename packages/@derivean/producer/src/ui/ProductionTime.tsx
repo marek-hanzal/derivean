@@ -1,11 +1,11 @@
 "use client";
 
 import {
+    HumanTime,
+    Loader,
     QueryResult,
     useQueryEx
-}                                from "@use-pico/query";
-import {Loader}                  from "@use-pico/ui";
-import {HumanSeconds}            from "@use-pico/ui-extra";
+}                                from "@use-pico/client";
 import {type FC}                 from "react";
 import {withProductionTimeQuery} from "../query/withProductionTimeQuery";
 
@@ -29,9 +29,7 @@ export const ProductionTime: FC<ProductionTime.Props> = (
 
     return <QueryResult
         result={result}
-        WithLoading={() => <Loader size={"sm"} type={"dots"}/>}
-        WithSuccess={({entity}) => {
-            return entity.time ? <HumanSeconds seconds={entity.time}/> : "-";
-        }}
+        WithLoading={() => <Loader/>}
+        WithSuccess={({entity}) => entity.time ? <HumanTime seconds={entity.time}/> : "-"}
     />;
 };
