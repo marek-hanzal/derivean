@@ -31,11 +31,17 @@ export namespace Nav {
         icon?: ReactNode;
     }
 
+    export interface Custom {
+        type: "custom";
+        component: ReactNode;
+    }
+
     export type Label =
         | WithIcon
         | WithLabel;
 
     export type Item =
+        | Custom
         | Label
         | Link;
 }

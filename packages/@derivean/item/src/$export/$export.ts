@@ -1,17 +1,4 @@
-// export * from "./IItem";
-// export * from "./ItemQueryStore";
-// export * from "./ItemRepository";
-// export * from "./ItemRpc";
-// export * from "./ItemSchema";
-// export * from "./ItemSelect";
-// export * from "./ItemTable";
-// export * from "./ItemTypeQueryStore";
-// export * from "./ItemTypeRpc";
-// export * from "./ItemTypeSchema";
-// export * from "./ItemTypeTable";
-// export * from "./ItemTypeUI";
-// export * from "./ItemUI";
-// export * from "./ItemUpsertForm";
+export * from "./ItemFetch";
 export * from "./ItemInline";
 export * from "./withItemContainer";
 export * from "./withItemRepository";

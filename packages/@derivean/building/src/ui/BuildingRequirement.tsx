@@ -1,6 +1,6 @@
 import {
-    ItemInline,
-    ItemUI
+    ItemFetch,
+    ItemInline
 }                                      from "@derivean/item";
 import {
     Group,
@@ -9,7 +9,7 @@ import {
 }                                      from "@use-pico/client";
 import {t}                             from "@use-pico/translator";
 import {type FC}                       from "react";
-import {BuildingRequirementComponents} from "./BuildingRequirementComponents";
+import {BuildingRequirementCollection} from "./BuildingRequirementComponents";
 
 export namespace BuildingRequirement {
     export interface Props {
@@ -22,7 +22,7 @@ export const BuildingRequirement: FC<BuildingRequirement.Props> = (
         buildingId,
     }
 ) => {
-    return <BuildingRequirementComponents.Collection
+    return <BuildingRequirementCollection
         query={{
             where: {
                 buildingId,
@@ -32,14 +32,17 @@ export const BuildingRequirement: FC<BuildingRequirement.Props> = (
             return entities.length > 0 ? <Nav
                 separator={"&"}
                 separatorMargin={4}
-                items={entities.map(requirement => <ItemUI.Fetch
-                    key={requirement.id}
-                    override={requirement.itemId}
-                    WithSuccess={({entity}) => <Group gap={4}>
-                        <ItemInline entity={entity}/>
-                        <Text fw={500}>x{requirement.amount}</Text>
-                    </Group>}
-                />)}
+                items={entities.map(requirement => ({
+                    type:      "custom",
+                    component: <ItemFetch
+                                   key={requirement.id}
+                                   override={requirement.itemId}
+                                   WithSuccess={({entity}) => <Group gap={4}>
+                                       <ItemInline entity={entity}/>
+                                       <Text fw={500}>x{requirement.amount}</Text>
+                                   </Group>}
+                               />,
+                }))}
             /> : <Text c={"dimmed"}>({t()`Building without requirements`})</Text>;
         }}
     />;

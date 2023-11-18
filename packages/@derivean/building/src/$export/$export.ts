@@ -21,5 +21,7 @@
 export * from "./BuildingCollection";
 export * from "./BuildingFetch";
 export * from "./BuildingPreview";
+export * from "./BuildingRequirementCollection";
+export * from "./BuildingRequirementFetch";
 export * from "./withBuildingContainer";
 export * from "./withBuildingRepository";

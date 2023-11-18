@@ -15,8 +15,8 @@ import {ItemInline}         from "../inline/ItemInline";
 import {ItemTypeInline}     from "../inline/ItemTypeInline";
 import {ItemRpc}            from "../rpc/ItemRpc";
 import {ItemSelectionStore} from "../store/ItemSelectionStore";
+import {ItemUI}             from "../ui/ItemComponents";
 import {ItemTypeUI}         from "../ui/ItemTypeUI";
-import {ItemUI}             from "../ui/ItemUI";
 
 export namespace ItemTable {
     export type Columns =

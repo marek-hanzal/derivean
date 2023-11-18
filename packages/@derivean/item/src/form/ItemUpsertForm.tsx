@@ -9,7 +9,7 @@ import {
     type FC
 }                       from "react";
 import {ItemTypeSelect} from "../input/ItemTypeSelect";
-import {ItemUI}         from "../ui/ItemUI";
+import {ItemUI}         from "../ui/ItemComponents";
 
 export namespace ItemUpsertForm {
     export type Props =

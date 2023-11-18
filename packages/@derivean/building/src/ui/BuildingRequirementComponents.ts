@@ -3,8 +3,8 @@ import {BuildingRequirementQueryStore} from "../query/BuildingRequirementQuerySt
 import {BuildingRequirementRpc}        from "../rpc/BuildingRequirementRpc";
 
 export const {
-    Fetch:      BuildingFetch,
-    Collection: BuildingCollection,
+    Fetch:      BuildingRequirementFetch,
+    Collection: BuildingRequirementCollection,
 } = withComponents({
     rpc:        BuildingRequirementRpc,
     queryStore: BuildingRequirementQueryStore,
