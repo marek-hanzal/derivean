@@ -1,20 +1,18 @@
 import {
     InventoryRepository,
     withInventoryRepository
-}                           from "@derivean/inventory";
-import {type Database}      from "@derivean/orm";
+}                   from "@derivean/inventory";
 import {
-    type IUserService,
+    type Database,
+    withConnection
+}                   from "@derivean/orm";
+import {type Infer} from "@use-pico/extras";
+import {
+    AbstractRepository,
+    lazyOf,
     withUserService
-}                           from "@use-pico/auth-server";
-import {lazyOf}             from "@use-pico/container";
-import {withDullSchema}     from "@use-pico/dull-stuff";
-import {
-    type Client,
-    withClient
-}                           from "@use-pico/orm";
-import {AbstractRepository} from "@use-pico/repository";
-import {HeroSchema}         from "../schema/HeroSchema";
+}                   from "@use-pico/server";
+import {HeroSchema} from "../schema/HeroSchema";
 
 export class HeroRepository extends AbstractRepository<
     Database,
@@ -22,18 +20,18 @@ export class HeroRepository extends AbstractRepository<
     "Hero"
 > {
     static inject = [
-        lazyOf(withClient.inject),
+        lazyOf(withConnection.inject),
         lazyOf(withUserService.inject),
         lazyOf(withInventoryRepository.inject),
     ];
 
     constructor(
-        client: Client<Database>,
-        protected userService: IUserService,
+        connection: withConnection,
+        protected userService: withUserService,
         protected inventoryRepository: InventoryRepository.Type
     ) {
         super(
-            client,
+            connection,
             HeroSchema,
             "Hero",
         );
@@ -48,7 +46,7 @@ export class HeroRepository extends AbstractRepository<
         };
     }
 
-    public async toCreate(create: withDullSchema.Infer.Create<HeroSchema>): Promise<withDullSchema.Infer.EntityWithoutId<HeroSchema>> {
+    public async toCreate(create: Infer.Create<HeroSchema>): Promise<Infer.EntityWithoutId<HeroSchema>> {
         return {
             ...create,
             inventoryId: create.inventoryId ?? (await this.inventoryRepository.withMutation.create({
