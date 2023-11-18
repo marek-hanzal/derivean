@@ -1,17 +1,11 @@
 import {
-    HeroRepository,
-    type IHeroService,
     withHeroRepository,
     withHeroService
 }                                from "@derivean/hero";
-import {
-    KingdomRepository,
-    withKingdomRepository
-}                                from "@derivean/kingdom";
+import {withKingdomRepository}   from "@derivean/kingdom";
 import {lazyOf}                  from "@use-pico/server";
 import {type IEventHeroService}  from "../api/IEventHeroService";
 import {withEventHeroRepository} from "../container/withEventHeroRepository";
-import {EventHeroRepository}     from "../repository/EventHeroRepository";
 
 export class EventHeroService implements IEventHeroService {
     static inject = [
@@ -22,10 +16,10 @@ export class EventHeroService implements IEventHeroService {
     ];
 
     constructor(
-        protected eventHeroRepository: EventHeroRepository.Type,
-        protected kingdomRepository: KingdomRepository.Type,
-        protected heroRepository: HeroRepository.Type,
-        protected heroService: IHeroService,
+        protected eventHeroRepository: withEventHeroRepository,
+        protected kingdomRepository: withKingdomRepository,
+        protected heroRepository: withHeroRepository,
+        protected heroService: withHeroService,
     ) {
     }
 

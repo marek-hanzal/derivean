@@ -1,9 +1,10 @@
-import {type Database}  from "@derivean/orm";
+import {
+    type Database,
+    withConnection
+}                       from "@derivean/orm";
 import {
     AbstractRepository,
-    type Connection,
-    lazyOf,
-    withConnection
+    lazyOf
 }                       from "@use-pico/server";
 import {ProducerSchema} from "../schema/ProducerSchema";
 
@@ -17,7 +18,7 @@ export class ProducerRepository extends AbstractRepository<
     ];
 
     constructor(
-        connection: Connection<Database>,
+        connection: withConnection,
     ) {
         super(
             connection,

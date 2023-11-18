@@ -1,22 +1,16 @@
-import {
-    InventoryRepository,
-    withInventoryRepository
-}                                     from "@derivean/inventory";
+import {withInventoryRepository}      from "@derivean/inventory";
 import {
     type Database,
     withConnection
 }                                     from "@derivean/orm";
-import {Infer}                        from "@use-pico/extras";
+import {type Infer}                   from "@use-pico/extras";
 import {
     AbstractRepository,
-    type Connection,
     lazyOf
 }                                     from "@use-pico/server";
 import {withEventHeroRepository}      from "../container/withEventHeroRepository";
 import {withEventInventoryRepository} from "../container/withEventInventoryRepository";
 import {EventSchema}                  from "../schema/EventSchema";
-import {EventHeroRepository}          from "./EventHeroRepository";
-import {EventInventoryRepository}     from "./EventInventoryRepository";
 
 export class EventRepository extends AbstractRepository<
     Database,
@@ -31,10 +25,10 @@ export class EventRepository extends AbstractRepository<
     ];
 
     constructor(
-        connection: Connection<Database>,
-        protected readonly inventoryRepository: InventoryRepository.Type,
-        protected readonly eventInventoryRepository: EventInventoryRepository.Type,
-        protected readonly eventHeroRepository: EventHeroRepository.Type,
+        connection: withConnection,
+        protected inventoryRepository: withInventoryRepository,
+        protected eventInventoryRepository: withEventInventoryRepository,
+        protected eventHeroRepository: withEventHeroRepository,
     ) {
         super(
             connection,

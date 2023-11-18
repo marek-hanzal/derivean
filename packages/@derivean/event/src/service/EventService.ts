@@ -1,5 +1,4 @@
 import {
-    type IUserService,
     lazyOf,
     withUserService
 }                                    from "@use-pico/server";
@@ -8,8 +7,6 @@ import {withEventHeroService}        from "../container/withEventHeroService";
 import {withEventInstanceRepository} from "../container/withEventInstanceRepository";
 import {withEventInventoryService}   from "../container/withEventInventoryService";
 import {withEventRepository}         from "../container/withEventRepository";
-import {EventInstanceRepository}     from "../repository/EventInstanceRepository";
-import {EventRepository}             from "../repository/EventRepository";
 
 export class EventService implements IEventService {
     static inject = [
@@ -21,11 +18,11 @@ export class EventService implements IEventService {
     ];
 
     constructor(
-        protected eventRepository: EventRepository.Type,
+        protected eventRepository: withEventRepository,
         protected eventInventoryService: withEventInventoryService,
-        protected eventInstanceRepository: EventInstanceRepository.Type,
+        protected eventInstanceRepository: withEventInstanceRepository,
         protected eventHeroService: withEventHeroService,
-        protected userService: IUserService,
+        protected userService: withUserService,
     ) {
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import {createQueryStore}    from "@use-pico/query";
+import {createQueryStore}    from "@use-pico/client";
 import {InventoryItemSchema} from "../schema/InventoryItemSchema";
 
 export const InventoryItemQueryStore = createQueryStore({

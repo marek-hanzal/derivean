@@ -1,13 +1,8 @@
-import {
-    type IInventoryService,
-    withInventoryService
-}                                                      from "@derivean/inventory";
+import {withInventoryService}                          from "@derivean/inventory";
 import {lazyOf}                                        from "@use-pico/server";
 import {type IConstructionService}                     from "../api/IConstructionService";
 import {withBuildingConstructionRequirementRepository} from "../container/withBuildingConstructionRequirementRepository";
 import {withBuildingRequirementRepository}             from "../container/withBuildingRequirementRepository";
-import {BuildingConstructionRequirementRepository}     from "../repository/BuildingConstructionRequirementRepository";
-import {BuildingRequirementRepository}                 from "../repository/BuildingRequirementRepository";
 
 export class ConstructionService implements IConstructionService {
     static inject = [
@@ -17,9 +12,9 @@ export class ConstructionService implements IConstructionService {
     ];
 
     constructor(
-        protected buildingConstructionRequirementRepository: BuildingConstructionRequirementRepository.Type,
-        protected buildingRequirementRepository: BuildingRequirementRepository.Type,
-        protected inventoryService: IInventoryService,
+        protected buildingConstructionRequirementRepository: withBuildingConstructionRequirementRepository,
+        protected buildingRequirementRepository: withBuildingRequirementRepository,
+        protected inventoryService: withInventoryService,
     ) {
     }
 

@@ -4,7 +4,6 @@ import {
 }                        from "@derivean/orm";
 import {
     AbstractRepository,
-    type Connection,
     lazyOf
 }                        from "@use-pico/server";
 import {InventorySchema} from "../schema/InventorySchema";
@@ -19,7 +18,7 @@ export class InventoryRepository extends AbstractRepository<
     ];
 
     constructor(
-        connection: Connection<Database>,
+        connection: withConnection,
     ) {
         super(
             connection,

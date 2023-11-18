@@ -1,15 +1,8 @@
-import {
-    type IInventoryService,
-    withInventoryService
-}                                     from "@derivean/inventory";
-import {
-    KingdomRepository,
-    withKingdomRepository
-}                                     from "@derivean/kingdom";
+import {withInventoryService}         from "@derivean/inventory";
+import {withKingdomRepository}        from "@derivean/kingdom";
 import {lazyOf}                       from "@use-pico/server";
 import {type IEventInventoryService}  from "../api/IEventInventoryService";
 import {withEventInventoryRepository} from "../container/withEventInventoryRepository";
-import {EventInventoryRepository}     from "../repository/EventInventoryRepository";
 
 export class EventInventoryService implements IEventInventoryService {
     static inject = [
@@ -19,9 +12,9 @@ export class EventInventoryService implements IEventInventoryService {
     ];
 
     constructor(
-        protected eventInventoryRepository: EventInventoryRepository.Type,
-        protected kingdomRepository: KingdomRepository.Type,
-        protected inventoryService: IInventoryService,
+        protected eventInventoryRepository: withEventInventoryRepository,
+        protected kingdomRepository: withKingdomRepository,
+        protected inventoryService: withInventoryService,
     ) {
     }
 

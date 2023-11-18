@@ -1,18 +1,15 @@
-import {
-    InventoryRepository,
-    withInventoryRepository
-}                   from "@derivean/inventory";
+import {withInventoryRepository} from "@derivean/inventory";
 import {
     type Database,
     withConnection
-}                   from "@derivean/orm";
-import {type Infer} from "@use-pico/extras";
+}                                from "@derivean/orm";
+import {type Infer}              from "@use-pico/extras";
 import {
     AbstractRepository,
     lazyOf,
     withUserService
-}                   from "@use-pico/server";
-import {HeroSchema} from "../schema/HeroSchema";
+}                                from "@use-pico/server";
+import {HeroSchema}              from "../schema/HeroSchema";
 
 export class HeroRepository extends AbstractRepository<
     Database,
@@ -28,7 +25,7 @@ export class HeroRepository extends AbstractRepository<
     constructor(
         connection: withConnection,
         protected userService: withUserService,
-        protected inventoryRepository: InventoryRepository.Type
+        protected inventoryRepository: withInventoryRepository,
     ) {
         super(
             connection,
