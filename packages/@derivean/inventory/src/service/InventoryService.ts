@@ -1,10 +1,9 @@
-import {lazyOf}                      from "@use-pico/container";
-import {type withDullSchema}         from "@use-pico/dull-stuff";
+import {type Infer}                  from "@use-pico/extras";
+import {lazyOf}                      from "@use-pico/server";
 import {type IInventory}             from "../api/IInventory";
 import {type IInventoryItem}         from "../api/IInventoryItem";
 import {type IInventoryService}      from "../api/IInventoryService";
 import {withInventoryItemRepository} from "../container/withInventoryItemRepository";
-import {InventoryItemRepository}     from "../repository/InventoryItemRepository";
 import {type InventoryItemSchema}    from "../schema/InventoryItemSchema";
 
 export class InventoryService implements IInventoryService {
@@ -13,7 +12,7 @@ export class InventoryService implements IInventoryService {
     ];
 
     constructor(
-        protected inventoryItemRepository: InventoryItemRepository.Type,
+        protected inventoryItemRepository: withInventoryItemRepository,
     ) {
     }
 
@@ -53,12 +52,12 @@ export class InventoryService implements IInventoryService {
         }, 0);
     }
 
-    public async load(inventoryId: string): Promise<withDullSchema.Infer.Entity<InventoryItemSchema>[]> {
+    public async load(inventoryId: string): Promise<Infer.Entity<InventoryItemSchema>[]> {
         return await this.inventoryItemRepository
             .withQuery
             .select()
             .where("InventoryItem.inventoryId" as any, "=", inventoryId)
-            .execute() as withDullSchema.Infer.Entity<InventoryItemSchema>[];
+            .execute() as Infer.Entity<InventoryItemSchema>[];
     }
 
     public async applyTo(sourceId: string, targetId: string): Promise<void> {

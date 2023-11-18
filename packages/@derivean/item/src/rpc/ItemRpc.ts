@@ -1,7 +1,7 @@
-import {withDullRpc} from "@use-pico/dull-stuff";
-import {ItemSchema}  from "../schema/ItemSchema";
+import {withRpc}    from "@use-pico/extras";
+import {ItemSchema} from "../schema/ItemSchema";
 
-export const ItemRpc = withDullRpc({
+export const ItemRpc = withRpc({
     key:    ["derivean", "item"],
     schema: ItemSchema,
 });

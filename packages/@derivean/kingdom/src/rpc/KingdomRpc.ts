@@ -1,7 +1,7 @@
-import {withDullRpc}   from "@use-pico/dull-stuff";
+import {withRpc}       from "@use-pico/extras";
 import {KingdomSchema} from "../schema/KingdomSchema";
 
-export const KingdomRpc = withDullRpc({
+export const KingdomRpc = withRpc({
     key:    ["derivean", "kingdom"],
     schema: KingdomSchema,
 });

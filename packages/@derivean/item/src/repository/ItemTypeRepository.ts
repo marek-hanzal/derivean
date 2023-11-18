@@ -1,11 +1,12 @@
-import {type Database}      from "@derivean/orm";
-import {lazyOf}             from "@use-pico/container";
 import {
-    type Client,
-    withClient
-}                           from "@use-pico/orm";
-import {AbstractRepository} from "@use-pico/repository";
-import {ItemTypeSchema}     from "../schema/ItemTypeSchema";
+    type Database,
+    withConnection
+}                       from "@derivean/orm";
+import {
+    AbstractRepository,
+    lazyOf
+}                       from "@use-pico/server";
+import {ItemTypeSchema} from "../schema/ItemTypeSchema";
 
 export class ItemTypeRepository extends AbstractRepository<
     Database,
@@ -13,14 +14,14 @@ export class ItemTypeRepository extends AbstractRepository<
     "ItemType"
 > {
     static inject = [
-        lazyOf(withClient.inject),
+        lazyOf(withConnection.inject),
     ];
 
     constructor(
-        client: Client<Database>,
+        connection: withConnection,
     ) {
         super(
-            client,
+            connection,
             ItemTypeSchema,
             "ItemType",
         );
