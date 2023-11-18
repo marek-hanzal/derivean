@@ -18,4 +18,5 @@ export * from "./withRpcEndpoint";
 export * from "./withServerContainer";
 export * from "./withService";
 export * from "./withTranslationService";
+export * from "./withTx";
 export * from "./withUserService";
