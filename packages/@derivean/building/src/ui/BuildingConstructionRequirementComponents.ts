@@ -1,9 +1,11 @@
-import {withDullUI}                                from "@use-pico/dull-stuff";
+import {withComponents}                            from "@use-pico/extras";
 import {BuildingConstructionRequirementQueryStore} from "../query/BuildingConstructionRequirementQueryStore";
 import {BuildingConstructionRequirementRpc}        from "../rpc/BuildingConstructionRequirementRpc";
 
-export const BuildingConstructionRequirementUI = withDullUI({
+export const {
+    Fetch:      BuildingConstructionRequirementFetch,
+    Collection: BuildingConstructionRequirementCollection,
+} = withComponents({
     rpc:        BuildingConstructionRequirementRpc,
     queryStore: BuildingConstructionRequirementQueryStore,
 });
-export type BuildingConstructionRequirementUI = typeof BuildingConstructionRequirementUI;

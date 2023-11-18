@@ -20,8 +20,8 @@ import {
 import {BuildingRequirementUpsertForm} from "../form/BuildingRequirementUpsertForm";
 import {BuildingInline}                from "../inline/BuildingInline";
 import {BuildingRequirementRpc}        from "../rpc/BuildingRequirementRpc";
+import {BuildingComponents}            from "../ui/BuildingComponents";
 import {BuildingRequirementComponents} from "../ui/BuildingRequirementComponents";
-import {BuildingUI}                    from "../ui/BuildingUI";
 
 export namespace BuildingRequirementTable {
     export type Columns =
@@ -94,7 +94,7 @@ export const BuildingRequirementTable: FC<BuildingRequirementTable.Props> = (
         columns={{
             building: {
                 title:  t()`Building name`,
-                render: ({item}) => <BuildingUI.Fetch
+                render: ({item}) => <BuildingComponents.Fetch
                     override={item.buildingId}
                     loader={<Loader size={"md"} type={"dots"}/>}
                     WithSuccess={({entity}) => <ButtonLink

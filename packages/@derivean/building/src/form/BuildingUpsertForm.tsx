@@ -1,20 +1,20 @@
-import {BuildingIcon} from "@derivean/ui";
+import {BuildingIcon}       from "@derivean/ui";
 import {
     NumberInput,
     TextInput
-}                     from "@use-pico/form";
+}                           from "@use-pico/form";
 import {
     t,
     tx
-}                     from "@use-pico/i18n";
+}                           from "@use-pico/i18n";
 import {
     type ComponentProps,
     type FC
-}                     from "react";
-import {BuildingUI}   from "../ui/BuildingUI";
+}                           from "react";
+import {BuildingComponents} from "../ui/BuildingComponents";
 
 export namespace BuildingUpsertForm {
-    export type Props = Omit<ComponentProps<BuildingUI["MutationForm"]>, "inputs" | "defaultValues" | "Render">;
+    export type Props = Omit<ComponentProps<BuildingComponents["MutationForm"]>, "inputs" | "defaultValues" | "Render">;
 }
 
 export const BuildingUpsertForm: FC<BuildingUpsertForm.Props> = (
@@ -23,7 +23,7 @@ export const BuildingUpsertForm: FC<BuildingUpsertForm.Props> = (
         ...props
     }
 ) => {
-    return <BuildingUI.MutationForm
+    return <BuildingComponents.MutationForm
         text={{
             submit:  entity ? t()`Update building (label)` : t()`Create building (label)`,
             success: {

@@ -1,1 +1,1 @@
-export {BuildingCollection} from "../ui/BuildingRequirementComponents";
+export {BuildingCollection} from "../ui/BuildingComponents";

@@ -20,8 +20,8 @@ import {
 import {BuildingConstructionRequirementUpsertForm} from "../form/BuildingConstructionRequirementUpsertForm";
 import {BuildingInline}                            from "../inline/BuildingInline";
 import {BuildingConstructionRequirementRpc}        from "../rpc/BuildingConstructionRequirementRpc";
-import {BuildingConstructionRequirementUI}         from "../ui/BuildingConstructionRequirementUI";
-import {BuildingUI}                                from "../ui/BuildingUI";
+import {BuildingComponents}                        from "../ui/BuildingComponents";
+import {BuildingConstructionRequirementComponents} from "../ui/BuildingConstructionRequirementComponents";
 
 export namespace BuildingConstructionRequirementTable {
     export type Columns =
@@ -31,7 +31,7 @@ export namespace BuildingConstructionRequirementTable {
 
     export type Props =
         Omit<
-            ComponentProps<typeof BuildingConstructionRequirementUI.Table<Columns>>,
+            ComponentProps<typeof BuildingConstructionRequirementComponents.Table<Columns>>,
             "columns" | "name" | "icon" | "text"
         >
         & {
@@ -45,7 +45,7 @@ export const BuildingConstructionRequirementTable: FC<BuildingConstructionRequir
         ...props
     }
 ) => {
-    return <BuildingConstructionRequirementUI.Table
+    return <BuildingConstructionRequirementComponents.Table
         text={{
             total: t()`Total count of building requirements`,
         }}
@@ -94,7 +94,7 @@ export const BuildingConstructionRequirementTable: FC<BuildingConstructionRequir
         columns={{
             building: {
                 title:  t()`Building name`,
-                render: ({item}) => <BuildingUI.Fetch
+                render: ({item}) => <BuildingComponents.Fetch
                     override={item.buildingId}
                     loader={<Loader size={"md"} type={"dots"}/>}
                     WithSuccess={({entity}) => <ButtonLink

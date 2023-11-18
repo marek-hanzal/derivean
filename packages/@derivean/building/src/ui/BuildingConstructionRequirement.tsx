@@ -1,15 +1,15 @@
 import {
-    ItemInline,
-    ItemUI
-}                                          from "@derivean/item";
-import {t}                                 from "@use-pico/i18n";
+    ItemFetch,
+    ItemInline
+}                                                  from "@derivean/item";
 import {
     Group,
-    NativeBreadcrumbs,
+    Nav,
     Text
-}                                          from "@use-pico/ui";
-import {type FC}                           from "react";
-import {BuildingConstructionRequirementUI} from "./BuildingConstructionRequirementUI";
+}                                                  from "@use-pico/client";
+import {t}                                         from "@use-pico/translator";
+import {type FC}                                   from "react";
+import {BuildingConstructionRequirementCollection} from "./BuildingConstructionRequirementComponents";
 
 export namespace BuildingConstructionRequirement {
     export interface Props {
@@ -22,27 +22,28 @@ export const BuildingConstructionRequirement: FC<BuildingConstructionRequirement
         buildingId,
     }
 ) => {
-    return <BuildingConstructionRequirementUI.Collection
+    return <BuildingConstructionRequirementCollection
         query={{
             where: {
                 buildingId,
             }
         }}
         WithSuccess={({entities}) => {
-            return <NativeBreadcrumbs
+            return entities.length > 0 ? <Nav
                 separator={"&"}
                 separatorMargin={4}
-            >
-                {entities.length > 0 && entities.map(requirement => <ItemUI.Fetch
-                    key={requirement.id}
-                    override={requirement.itemId}
-                    WithSuccess={({entity}) => <Group gap={4}>
-                        <ItemInline entity={entity}/>
-                        <Text fw={500}>x{requirement.amount}</Text>
-                    </Group>}
-                />)}
-                {!entities.length && <Text c={"dimmed"}>({t()`Building without requirements`})</Text>}
-            </NativeBreadcrumbs>;
+                items={entities.map(requirement => ({
+                    type:      "custom",
+                    component: <ItemFetch
+                                   key={requirement.id}
+                                   override={requirement.itemId}
+                                   WithSuccess={({entity}) => <Group gap={4}>
+                                       <ItemInline entity={entity}/>
+                                       <Text fw={500}>x{requirement.amount}</Text>
+                                   </Group>}
+                               />,
+                }))}
+            /> : <Text c={"dimmed"}>({t()`Building without requirements`})</Text>;
         }}
     />;
 };

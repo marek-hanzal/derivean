@@ -1,1 +1,1 @@
-export {BuildingFetch} from "../ui/BuildingRequirementComponents";
+export {BuildingFetch} from "../ui/BuildingComponents";
