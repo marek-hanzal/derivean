@@ -1,11 +1,10 @@
-import {withDullSchema} from "@use-pico/dull-stuff";
-import {t}              from "@use-pico/i18n";
 import {
     Group,
-    Preview,
-    Text
-}                       from "@use-pico/ui";
-import {HumanSeconds}   from "@use-pico/ui-extra";
+    Text,
+    type WithEntity
+}                       from "@use-pico/client";
+import {type Infer}     from "@use-pico/extras";
+import {t}              from "@use-pico/translator";
 import {type FC}        from "react";
 import {ProducerInline} from "../inline/ProducerInline";
 import {ProducerSchema} from "../schema/ProducerSchema";
@@ -14,43 +13,41 @@ import {ProducerOutput} from "./ProducerOutput";
 import {ProductionTime} from "./ProductionTime";
 
 export namespace ProducerPreview {
-    export interface Props {
-        producer: withDullSchema.Infer.Entity<ProducerSchema>;
+    export interface Props extends WithEntity.Schema<Infer.Entity<ProducerSchema>> {
     }
 }
 
 export const ProducerPreview: FC<ProducerPreview.Props> = (
     {
-        producer,
+        entity,
     }
 ) => {
     return <Preview
-        cols={3}
         items={[
             {
                 label: t()`Producer name`,
                 value: <Group gap={"xs"}>
-                           <ProducerInline entity={producer}/>
+                           <ProducerInline entity={entity}/>
                            <Text c={"dimmed"}>
-                               ({producer.name})
+                               ({entity.name})
                            </Text>
                        </Group>,
             },
             {
                 label: t()`Production time`,
-                value: <HumanSeconds seconds={producer.time}/>,
+                value: <HumanSeconds seconds={entity.time}/>,
             },
             {
                 label: t()`Producer pipeline time`,
-                value: <ProductionTime producerId={producer.id}/>,
+                value: <ProductionTime producerId={entity.id}/>,
             },
             {
                 label: t()`Producer input`,
-                value: <ProducerInput producerId={producer.id}/>
+                value: <ProducerInput producerId={entity.id}/>
             },
             {
                 label: t()`Producer output`,
-                value: <ProducerOutput producerId={producer.id}/>
+                value: <ProducerOutput producerId={entity.id}/>
             },
         ]}
     />;
