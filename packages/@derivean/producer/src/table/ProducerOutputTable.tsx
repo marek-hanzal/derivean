@@ -20,7 +20,7 @@ import {
 import {ProducerOutputUpsertForm} from "../form/ProducerOutputUpsertForm";
 import {ProducerInline}           from "../inline/ProducerInline";
 import {ProducerOutputRpc}        from "../rpc/ProducerOutputRpc";
-import {ProducerInputUI}          from "../ui/ProducerInputUI";
+import {ProducerInputComponents}  from "../ui/ProducerInputComponents";
 import {ProducerOutputUI}         from "../ui/ProducerOutputUI";
 import {ProducerUI}               from "../ui/ProducerUI";
 
@@ -120,7 +120,7 @@ export const ProducerOutputTable: FC<ProducerOutputTable.Props> = (
             },
             consumers:  {
                 title:  t()`Item consumers`,
-                render: ({item}) => <ProducerInputUI.Collection
+                render: ({item}) => <ProducerInputComponents.Collection
                     query={{
                         where: {
                             itemId: item.itemId,

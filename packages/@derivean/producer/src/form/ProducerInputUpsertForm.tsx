@@ -1,18 +1,18 @@
-import {ItemSelect}      from "@derivean/item";
-import {ProducerIcon}    from "@derivean/ui";
-import {NumberInput}     from "@use-pico/form";
-import {t}               from "@use-pico/i18n";
+import {ItemSelect}              from "@derivean/item";
+import {ProducerIcon}            from "@derivean/ui";
+import {NumberInput}             from "@use-pico/form";
+import {t}                       from "@use-pico/i18n";
 import {
     type ComponentProps,
     type FC
-}                        from "react";
-import {ProducerSelect}  from "../input/ProducerSelect";
-import {ProducerInputUI} from "../ui/ProducerInputUI";
+}                                from "react";
+import {ProducerSelect}          from "../input/ProducerSelect";
+import {ProducerInputComponents} from "../ui/ProducerInputComponents";
 
 export namespace ProducerInputUpsertForm {
     export type Props =
         Omit<
-            ComponentProps<ProducerInputUI["MutationForm"]>,
+            ComponentProps<ProducerInputComponents["MutationForm"]>,
             "inputs" | "defaultValues" | "Render"
         >
         & {
@@ -27,7 +27,7 @@ export const ProducerInputUpsertForm: FC<ProducerInputUpsertForm.Props> = (
         ...props
     }
 ) => {
-    return <ProducerInputUI.MutationForm
+    return <ProducerInputComponents.MutationForm
         text={{
             submit:  entity ? t()`Update producer input` : t()`Create producer input`,
             success: entity ? {

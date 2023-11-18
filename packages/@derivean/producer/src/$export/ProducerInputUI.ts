@@ -1,1 +1,1 @@
-export {ProducerInputUI} from "../ui/ProducerInputUI";
+export {ProducerInputComponents} from "../ui/ProducerInputComponents";

@@ -1,9 +1,11 @@
-import {withDullUI}              from "@use-pico/dull-stuff";
+import {withComponents}          from "@use-pico/extras";
 import {ProducerInputRpc}        from "../rpc/ProducerInputRpc";
 import {ProducerInputQueryStore} from "../store/ProducerInputQueryStore";
 
-export const ProducerInputUI = withDullUI({
+export const {
+    Fetch:      ProducerInputFetch,
+    Collection: ProducerInputCollection,
+} = withComponents({
     rpc:        ProducerInputRpc,
     queryStore: ProducerInputQueryStore,
 });
-export type ProducerInputUI = typeof ProducerInputUI;

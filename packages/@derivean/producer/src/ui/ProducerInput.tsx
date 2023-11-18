@@ -1,16 +1,16 @@
 "use client";
 
 import {
-    ItemInline,
-    ItemUI
-}                        from "@derivean/item";
-import {t}               from "@use-pico/i18n";
+    ItemFetch,
+    ItemInline
+}                                from "@derivean/item";
 import {
-    NativeBreadcrumbs,
+    Nav,
     Text
-}                        from "@use-pico/ui";
-import {type FC}         from "react";
-import {ProducerInputUI} from "./ProducerInputUI";
+}                                from "@use-pico/client";
+import {t}                       from "@use-pico/translator";
+import {type FC}                 from "react";
+import {ProducerInputCollection} from "./ProducerInputComponents";
 
 export namespace ProducerInput {
     export interface Props {
@@ -25,28 +25,30 @@ export const ProducerInput: FC<ProducerInput.Props> = (
         producerId,
     }
 ) => {
-    return <ProducerInputUI.Collection
+    return <ProducerInputCollection
         query={{
             where: {
                 producerId,
             }
         }}
         WithSuccess={({entities}) => <>
-            {entities.length > 0 && <NativeBreadcrumbs
+            {entities.length > 0 && <Nav
                 separator={"&"}
                 separatorMargin={4}
-            >
-                {entities.map(entity => <ItemUI.Fetch
-                    key={entity.id}
-                    override={entity.itemId}
-                    WithSuccess={({entity}) => <Text
-                        fw={mark.includes(entity.id) ? "bold" : undefined}
-                        c={mark.includes(entity.id) ? undefined : "dimmed"}
-                    >
-                        <ItemInline entity={entity}/>
-                    </Text>}
-                />)}
-            </NativeBreadcrumbs>}
+                items={entities.map(entity => ({
+                    type:      "custom",
+                    component: <ItemFetch
+                                   key={entity.id}
+                                   override={entity.itemId}
+                                   WithSuccess={({entity}) => <Text
+                                       fw={mark.includes(entity.id) ? 600 : undefined}
+                                       c={mark.includes(entity.id) ? undefined : "dimmed"}
+                                   >
+                                       <ItemInline entity={entity}/>
+                                   </Text>}
+                               />,
+                }))}
+            />}
             {!entities.length && <Text
                 c={"dimmed"}
             >

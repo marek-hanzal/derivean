@@ -20,7 +20,7 @@ import {
 import {ProducerInputUpsertForm} from "../form/ProducerInputUpsertForm";
 import {ProducerInline}          from "../inline/ProducerInline";
 import {ProducerInputRpc}        from "../rpc/ProducerInputRpc";
-import {ProducerInputUI}         from "../ui/ProducerInputUI";
+import {ProducerInputComponents} from "../ui/ProducerInputComponents";
 import {ProducerOutputUI}        from "../ui/ProducerOutputUI";
 import {ProducerUI}              from "../ui/ProducerUI";
 
@@ -33,7 +33,7 @@ export namespace ProducerInputTable {
 
     export type Props =
         Omit<
-            ComponentProps<typeof ProducerInputUI.Table<Columns>>,
+            ComponentProps<typeof ProducerInputComponents.Table<Columns>>,
             "columns" | "name" | "icon" | "text"
         >
         & {
@@ -47,7 +47,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
         ...props
     }
 ) => {
-    return <ProducerInputUI.Table
+    return <ProducerInputComponents.Table
         text={{
             total: t()`Total count of producer inputs`,
         }}
