@@ -11,5 +11,5 @@ export const LoadingOverlay: FC<LoadingOverlay.Props> = (
         visible = true
     }
 ) => {
-    return "LoadingOverlay";
+    return visible ? "LoadingOverlay" : null;
 };

@@ -17,7 +17,7 @@ export namespace CommonProps {
         | "subtle";
 
     export type Size =
-        | number
+        | string
         | "xs"
         | "sm"
         | "md"

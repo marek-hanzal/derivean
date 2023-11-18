@@ -30,6 +30,7 @@
 		"path-to-regexp": "^6.2.1",
 		"preferred-locale": "^2.0.2",
 		"react-graph-vis": "^1.0.7",
+		"tailwind-merge": "^2.0.0",
 		"zustand": "^4.4.6"
 	},
 	"peerDependencies": {

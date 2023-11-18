@@ -11,6 +11,22 @@ export namespace Button {
     }>;
 }
 
-export const Button: FC<Button.Props> = () => {
-    return "Button";
+export const Button: FC<Button.Props> = (
+    {
+        children,
+    }
+) => {
+    return <button
+        type={"button"}
+        className={`
+            border-1
+            border-b-blue-600 
+            rounded-md 
+            bg-amber-200
+            px-8
+        `}
+
+    >
+        {children}
+    </button>;
 };

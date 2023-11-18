@@ -40,5 +40,7 @@ export const Page: FC<Page.Props> = (
         children
     }
 ) => {
-    return "page!";
+    return <div>
+        {children}
+    </div>;
 };

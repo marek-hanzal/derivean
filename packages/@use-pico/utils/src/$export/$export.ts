@@ -1,6 +1,7 @@
 export * from "./IDateInput";
 export * from "./Timer";
 export * from "./cleanOf";
+export * from "./cn";
 export * from "./diffOf";
 export * from "./generateId";
 export * from "./hashOf";

@@ -9,6 +9,7 @@ import {BlockLoadingOverlay} from "../ui/BlockLoadingOverlay";
 import {Grid}                from "../ui/Grid";
 import {GridCol}             from "../ui/Grid/GridCol";
 import {Group}               from "../ui/Group";
+import {GroupCol}            from "../ui/Group/GroupCol";
 import {LocaleLink}          from "../ui/LocaleLink";
 import {Unblock}             from "../utils/Unblock";
 import {SignInButton}        from "./PublicLayout/SignInButton";
@@ -76,13 +77,19 @@ export const PublicLayout: FC<PublicLayout.Props> = (
             </GridCol>
             <GridCol span={"content"}>
                 <Group gap={"xs"}>
-                    {right}
-                    {!withoutLogin && <Group>
-                        <SignInButton
-                            loginUrl={loginUrl}
-                            signInOptions={signInOptions}
-                        />
-                    </Group>}
+                    <GroupCol>
+                        {right}
+                    </GroupCol>
+                    <GroupCol>
+                        {!withoutLogin && <Group>
+                            <GroupCol>
+                                <SignInButton
+                                    loginUrl={loginUrl}
+                                    signInOptions={signInOptions}
+                                />
+                            </GroupCol>
+                        </Group>}
+                    </GroupCol>
                 </Group>
             </GridCol>
         </Grid>

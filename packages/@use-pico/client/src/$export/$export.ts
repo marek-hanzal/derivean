@@ -18,6 +18,7 @@ export * from "./Fetch";
 export * from "./Grid";
 export * from "./GridCol";
 export * from "./Group";
+export * from "./GroupCol";
 export * from "./HomeIcon";
 export * from "./HumanTime";
 export * from "./IHrefProps";

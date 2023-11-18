@@ -9,6 +9,7 @@ import {BlockLoadingOverlay} from "../ui/BlockLoadingOverlay";
 import {Grid}                from "../ui/Grid";
 import {GridCol}             from "../ui/Grid/GridCol";
 import {Group}               from "../ui/Group";
+import {GroupCol}            from "../ui/Group/GroupCol";
 import {LocaleLink}          from "../ui/LocaleLink";
 import {Unblock}             from "../utils/Unblock";
 
@@ -63,7 +64,9 @@ export const AppLayout: FC<AppLayout.Props> = (
             </GridCol>
             <GridCol span={"content"}>
                 <Group gap={"xs"}>
-                    {right}
+                    <GroupCol>
+                        {right}
+                    </GroupCol>
                 </Group>
             </GridCol>
         </Grid>
