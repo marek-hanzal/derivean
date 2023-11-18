@@ -48,12 +48,24 @@ export namespace IQueryStore {
         TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
         TStore extends IQueryStore<TQuerySchema> = IQueryStore<TQuerySchema>,
     > {
+        /**
+         * Store definition (could be used directly in useStore and StoreProvider if used manually).
+         */
         store: IStore.Store<TStore>;
 
+        /**
+         * Store provider shortcut
+         */
         Provider: FC<Omit<StoreProvider.Props<TStore>, "store">>;
 
+        /**
+         * Use whole store
+         */
         useStore(): ReturnType<typeof useCoolStore<IQueryStore<TQuerySchema>>>;
 
+        /**
+         * Use the store with a selector
+         */
         useSelector<TValue>(selector: (state: TStore["props"] & TStore["values"]) => TValue): ReturnType<typeof useCoolStore<IQueryStore<TQuerySchema>, TValue>>;
     }
 }
