@@ -43,3 +43,6 @@ export * from "./useLocaleLinkTo";
 export * from "./useLocaleOf";
 export * from "./useLocaleRedirect";
 export * from "./useLocaleRouter";
+export * from "./withRpcMutation";
+export * from "./withRpcQuery";
+export * from "./withRpcSourceQuery";

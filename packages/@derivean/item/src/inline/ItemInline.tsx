@@ -1,11 +1,11 @@
-import {withDullSchema}  from "@use-pico/dull-stuff";
-import {td}              from "@use-pico/i18n";
-import {type WithEntity} from "@use-pico/types";
+import {type WithEntity} from "@use-pico/client";
+import {type Infer}      from "@use-pico/extras";
+import {td}              from "@use-pico/translator";
 import {type FC}         from "react";
 import {type ItemSchema} from "../schema/ItemSchema";
 
 export namespace ItemInline {
-    export interface Props extends WithEntity<withDullSchema.Infer.Entity<ItemSchema>> {
+    export interface Props extends WithEntity<Infer.Entity<ItemSchema>> {
     }
 }
 

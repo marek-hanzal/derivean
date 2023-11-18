@@ -25,6 +25,7 @@
 	},
 	"dependencies": {
 		"@tanstack/react-query": "^5.8.4",
+		"axios": "^1.6.2",
 		"build-url-ts": "^6.1.5",
 		"path-to-regexp": "^6.2.1",
 		"preferred-locale": "^2.0.2",

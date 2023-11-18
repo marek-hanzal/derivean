@@ -7,6 +7,7 @@ import {
     Nav,
     Text
 }                              from "@use-pico/client";
+import {t}                     from "@use-pico/translator";
 import {type FC}               from "react";
 import {BuildingRequirementUI} from "./BuildingRequirementUI";
 
