@@ -1,7 +1,4 @@
-export {};
-
 // export * from "./IItem";
-// export * from "./ItemInline";
 // export * from "./ItemQueryStore";
 // export * from "./ItemRepository";
 // export * from "./ItemRpc";
@@ -18,3 +15,4 @@ export {};
 // export * from "./withItemContainer";
 // export * from "./withItemRepository";
 // export * from "./withItemTypeRepository";
+export * from "./ItemInline";

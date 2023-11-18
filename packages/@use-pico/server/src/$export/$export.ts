@@ -6,6 +6,7 @@ export * from "./ICacheService";
 export * from "./IContainer";
 export * from "./IUserService";
 export * from "./createConnection";
+export * from "./default-migration";
 export * from "./getToken";
 export * from "./lazyOf";
 export * from "./withAuthEndpoint";

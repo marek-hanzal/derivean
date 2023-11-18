@@ -2,6 +2,7 @@ export * from "./EventMenu";
 export * from "./KingdomLayout";
 export * from "./KingdomMenu";
 export * from "./KingdomRepository";
+export * from "./ConstructionMenu";
 export * from "./withKingdomRepository";
 
 // export * from "./ConstructionDetail";

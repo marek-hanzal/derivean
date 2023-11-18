@@ -1,12 +1,13 @@
 import {
     type FC,
-    PropsWithChildren
+    type PropsWithChildren
 }                         from "react";
 import {type CommonProps} from "../api/CommonProps";
 
 export namespace Text {
     export type Props = PropsWithChildren<CommonProps & {
         c?: CommonProps.Color;
+        fw?: number;
     }>;
 }
 

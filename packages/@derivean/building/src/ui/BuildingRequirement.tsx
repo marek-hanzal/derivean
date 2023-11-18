@@ -2,12 +2,11 @@ import {
     ItemInline,
     ItemUI
 }                              from "@derivean/item";
-import {t}                     from "@use-pico/i18n";
 import {
     Group,
-    NativeBreadcrumbs,
+    Nav,
     Text
-}                              from "@use-pico/ui";
+}                              from "@use-pico/client";
 import {type FC}               from "react";
 import {BuildingRequirementUI} from "./BuildingRequirementUI";
 
@@ -29,11 +28,10 @@ export const BuildingRequirement: FC<BuildingRequirement.Props> = (
             }
         }}
         WithSuccess={({entities}) => {
-            return <NativeBreadcrumbs
+            return entities.length > 0 ? <Nav
                 separator={"&"}
                 separatorMargin={4}
-            >
-                {entities.length > 0 && entities.map(requirement => <ItemUI.Fetch
+                items={entities.map(requirement => <ItemUI.Fetch
                     key={requirement.id}
                     override={requirement.itemId}
                     WithSuccess={({entity}) => <Group gap={4}>
@@ -41,8 +39,7 @@ export const BuildingRequirement: FC<BuildingRequirement.Props> = (
                         <Text fw={500}>x{requirement.amount}</Text>
                     </Group>}
                 />)}
-                {!entities.length && <Text c={"dimmed"}>({t()`Building without requirements`})</Text>}
-            </NativeBreadcrumbs>;
+            /> : <Text c={"dimmed"}>({t()`Building without requirements`})</Text>;
         }}
     />;
 };

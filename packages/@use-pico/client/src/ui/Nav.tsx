@@ -1,12 +1,15 @@
 import {
     type FC,
     type ReactNode
-}                        from "react";
-import {type IHrefProps} from "../api/IHrefProps";
+}                         from "react";
+import {type CommonProps} from "../api/CommonProps";
+import {type IHrefProps}  from "../api/IHrefProps";
 
 export namespace Nav {
-    export interface Prop {
+    export interface Prop extends CommonProps {
         items: Item[];
+        separator?: ReactNode;
+        separatorMargin?: CommonProps.Size;
     }
 
     export interface WithIcon {

@@ -1,4 +1,4 @@
-import {withTx} from "@use-pico/tx";
+import {withTx} from "@use-pico/server";
 
 withTx({
     packages: [
