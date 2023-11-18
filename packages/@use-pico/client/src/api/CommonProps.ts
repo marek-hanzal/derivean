@@ -1,9 +1,11 @@
+import {twPadding} from "../tools/tailwindify/twPadding";
+
 export interface CommonProps {
-    px?: CommonProps.Size;
-    py?: CommonProps.Size;
-    pt?: CommonProps.Size;
-    pb?: CommonProps.Size;
-    p?: CommonProps.Size;
+    px?: keyof twPadding["x"];
+    py?: keyof twPadding["y"];
+    pt?: keyof twPadding["t"];
+    pb?: keyof twPadding["b"];
+    p?: keyof twPadding["p"];
 
     mx?: CommonProps.Size;
     my?: CommonProps.Size;

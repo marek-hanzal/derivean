@@ -52,6 +52,7 @@ export * from "./WithEntity";
 export * from "./WithIcon";
 export * from "./createQueryStore";
 export * from "./localeOf";
+export * from "./tailwindify";
 export * from "./useLocale";
 export * from "./useLocaleLinkTo";
 export * from "./useLocaleOf";

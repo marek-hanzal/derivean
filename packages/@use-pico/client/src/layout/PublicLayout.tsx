@@ -53,9 +53,9 @@ export const PublicLayout: FC<PublicLayout.Props> = (
         <Unblock/>
         <BlockLoadingOverlay/>
         <Grid
-            align={"center"}
-            px={"md"}
-            pt={"xs"}
+            align={"baseline"}
+            px={"sm"}
+            pt={"sm"}
         >
             <GridCol span={"content"}>
                 <LocaleLink
@@ -72,7 +72,7 @@ export const PublicLayout: FC<PublicLayout.Props> = (
                     />
                 </LocaleLink>
             </GridCol>
-            <GridCol span={"auto"} m={0}>
+            <GridCol span={"auto"}>
                 {center}
             </GridCol>
             <GridCol span={"content"}>

@@ -1,17 +1,18 @@
 import {cn}               from "@use-pico/utils";
 import {
-    type CSSProperties,
     type FC,
     type PropsWithChildren
 }                         from "react";
 import {type CommonProps} from "../api/CommonProps";
+import {tailwindify}      from "../tools/tailwindify";
 
 const twGap = {
-    "xs": "gap-1",
-    "sm": "gap-2",
-    "md": "gap-4",
-    "lg": "gap-6",
-    "xl": "gap-8",
+    "none": "gap-0",
+    "xs":   "gap-1",
+    "sm":   "gap-2",
+    "md":   "gap-4",
+    "lg":   "gap-6",
+    "xl":   "gap-8",
 } as const;
 
 const twCols = {
@@ -29,28 +30,39 @@ const twCols = {
     12: "grid-cols-12",
 } as const;
 
+const twAlignItems = {
+    "baseline": "items-baseline",
+    "center":   "items-center",
+};
+
 export namespace Grid {
     export type Props = PropsWithChildren<CommonProps & {
-        align?: CSSProperties["alignItems"];
-        gap?: CommonProps.Size;
+        align?: AlignItems;
+        gap?: Gap;
         cols?: Cols;
     }>;
 
+    export type Gap = keyof typeof twGap;
     export type Cols = keyof typeof twCols;
+    export type AlignItems = keyof typeof twAlignItems;
 }
 
 export const Grid: FC<Grid.Props> = (
     {
+        align,
         gap,
         cols,
         children,
+        ...props
     }
 ) => {
     return <div
         className={cn(
             "grid auto-cols-max",
             cols ? twCols[cols] : "grid-flow-col",
-            gap ? (twGap[gap as keyof typeof twGap] ?? gap) : undefined
+            gap ? twGap[gap] : undefined,
+            align ? twAlignItems[align] : undefined,
+            ...tailwindify(props)
         )}
     >
         {children}
