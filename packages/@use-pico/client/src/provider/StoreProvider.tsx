@@ -11,7 +11,7 @@ export namespace StoreProvider {
     export type Props<
         TStore extends IStore<any>,
     > = PropsWithChildren<{
-        store: IStore.Store<TStore>;
+        store: Pick<IStore.Store<TStore>, "Context" | "store">;
         values: TStore["values"];
     }>;
 }

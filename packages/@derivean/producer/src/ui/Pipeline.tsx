@@ -1,14 +1,11 @@
 import {IconArrowDown}            from "@tabler/icons-react";
-import {StoreProvider}            from "@use-pico/store";
 import {
     Center,
     WithIcon
-}                                 from "@use-pico/ui";
+}                                 from "@use-pico/client";
 import {type FC}                  from "react";
 import {ProducerInputQueryStore}  from "../store/ProducerInputQueryStore";
 import {ProducerOutputQueryStore} from "../store/ProducerOutputQueryStore";
-import {ProducerInputTable}       from "../table/ProducerInputTable";
-import {ProducerOutputTable}      from "../table/ProducerOutputTable";
 
 export namespace Pipeline {
     export interface Props {
@@ -22,40 +19,38 @@ export const Pipeline: FC<Pipeline.Props> = (
     }
 ) => {
     return <>
-        <StoreProvider
-            store={ProducerInputQueryStore}
+        <ProducerInputQueryStore.Provider
             values={{
                 where: {
                     producerId,
                 },
             }}
         >
-            <ProducerInputTable
-                hidden={["producerId"]}
-                producerId={producerId}
-            />
-        </StoreProvider>
+            {/*<ProducerInputTable*/}
+            {/*    hidden={["producerId"]}*/}
+            {/*    producerId={producerId}*/}
+            {/*/>*/}
+        </ProducerInputQueryStore.Provider>
 
         <Center my={"xl"}>
             <WithIcon
-                color={"gray.5"}
+                color={"gray"}
                 size={64}
-                icon={<IconArrowDown size={64}/>}
+                icon={<IconArrowDown/>}
             />
         </Center>
 
-        <StoreProvider
-            store={ProducerOutputQueryStore}
+        <ProducerOutputQueryStore.Provider
             values={{
                 where: {
                     producerId,
                 },
             }}
         >
-            <ProducerOutputTable
-                hidden={["producerId"]}
-                producerId={producerId}
-            />
-        </StoreProvider>
+            {/*<ProducerOutputTable*/}
+            {/*    hidden={["producerId"]}*/}
+            {/*    producerId={producerId}*/}
+            {/*/>*/}
+        </ProducerOutputQueryStore.Provider>
     </>;
 };

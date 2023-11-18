@@ -3,12 +3,9 @@ import {
     type FilterSchema,
     type OrderBySchema,
     type QuerySchema
-}                                 from "@use-pico/query";
-import {type PicoSchema}          from "@use-pico/schema";
-import {FC}                       from "react";
-import {useStore as useCoolStore} from "../hook/useStore";
-import {StoreProvider}            from "../provider/StoreProvider";
-import {type IStore}              from "./IStore";
+}                        from "@use-pico/query";
+import {type PicoSchema} from "@use-pico/schema";
+import {type IStore}     from "./IStore";
 
 export type IQueryStore<
     TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>
@@ -44,28 +41,7 @@ export type IQueryStore<
 }>;
 
 export namespace IQueryStore {
-    export interface Store<
+    export type Store<
         TQuerySchema extends QuerySchema<FilterSchema, OrderBySchema>,
-        TStore extends IQueryStore<TQuerySchema> = IQueryStore<TQuerySchema>,
-    > {
-        /**
-         * Store definition (could be used directly in useStore and StoreProvider if used manually).
-         */
-        store: IStore.Store<TStore>;
-
-        /**
-         * Store provider shortcut
-         */
-        Provider: FC<Omit<StoreProvider.Props<TStore>, "store">>;
-
-        /**
-         * Use whole store
-         */
-        useStore(): ReturnType<typeof useCoolStore<IQueryStore<TQuerySchema>>>;
-
-        /**
-         * Use the store with a selector
-         */
-        useSelector<TValue>(selector: (state: TStore["props"] & TStore["values"]) => TValue): ReturnType<typeof useCoolStore<IQueryStore<TQuerySchema>, TValue>>;
-    }
+    > = IStore.Store<IQueryStore<TQuerySchema>>;
 }

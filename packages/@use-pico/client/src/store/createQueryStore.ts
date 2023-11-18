@@ -12,8 +12,6 @@ import {
     isEmpty
 }                         from "@use-pico/utils";
 import {type IQueryStore} from "../api/IQueryStore";
-import {useStore}         from "../hook/useStore";
-import {StoreProvider}    from "../provider/StoreProvider";
 import {createStore}      from "./createStore";
 
 export namespace createQueryStore {
@@ -33,7 +31,7 @@ export const createQueryStore = <
         schema,
     }: createQueryStore.Props<TQuerySchema>
 ): IQueryStore.Store<TQuerySchema> => {
-    const store = createStore<IQueryStore<TQuerySchema>>({
+    return createStore<IQueryStore<TQuerySchema>>({
         name,
         factory: values => (set, get) => ({
             schema,
@@ -104,14 +102,4 @@ export const createQueryStore = <
             ...values,
         }),
     });
-
-    return {
-        store,
-        useStore:    () => useStore(store),
-        useSelector: selector => useStore(store, selector),
-        Provider:    props => <StoreProvider
-            store={store}
-            {...props}
-        />,
-    };
 };

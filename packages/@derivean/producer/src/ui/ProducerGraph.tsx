@@ -1,18 +1,15 @@
 "use client";
 
-import {Diagram}               from "@use-pico/diagram";
-import {useWithLocaleRedirect} from "@use-pico/i18n";
-import {
-    QueryResult,
-    useQueryEx
-}                              from "@use-pico/query";
-import {useStore}              from "@use-pico/store";
 import {
     BlockStore,
-    SkeletonBlock
-}                              from "@use-pico/ui";
-import {type FC}               from "react";
-import {withGraph}             from "../query/withGraph";
+    Diagram,
+    QueryResult,
+    Skeleton,
+    useQueryEx,
+    useWithLocaleRedirect
+}                  from "@use-pico/client";
+import {type FC}   from "react";
+import {withGraph} from "../query/withGraph";
 
 export namespace ProducerGraph {
     export interface Props extends Omit<Diagram.Props, "graph"> {
@@ -27,7 +24,7 @@ export const ProducerGraph: FC<ProducerGraph.Props> = (
     }
 ) => {
     const redirect = useWithLocaleRedirect();
-    const block = useStore(BlockStore, ({block}) => ({block}));
+    const block = BlockStore.useSelector(({block}) => ({block}));
     const result = useQueryEx({
         withQuery: withGraph,
         request:   {
@@ -37,7 +34,7 @@ export const ProducerGraph: FC<ProducerGraph.Props> = (
 
     return <QueryResult
         result={result}
-        WithLoading={() => <SkeletonBlock lines={12}/>}
+        WithLoading={() => <Skeleton lines={12}/>}
         WithSuccess={({entity}) => <Diagram
             graph={entity}
             onClick={id => {

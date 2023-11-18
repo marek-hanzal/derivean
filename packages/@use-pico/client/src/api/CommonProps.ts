@@ -1,8 +1,14 @@
 export interface CommonProps {
     px?: CommonProps.Size;
+    py?: CommonProps.Size;
     pt?: CommonProps.Size;
     pb?: CommonProps.Size;
+    p?: CommonProps.Size;
+
+    mx?: CommonProps.Size;
+    my?: CommonProps.Size;
     mb?: CommonProps.Size;
+    mt?: CommonProps.Size;
     m?: CommonProps.Size;
 }
 

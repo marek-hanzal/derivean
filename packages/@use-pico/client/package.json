@@ -29,10 +29,12 @@
 		"build-url-ts": "^6.1.5",
 		"path-to-regexp": "^6.2.1",
 		"preferred-locale": "^2.0.2",
+		"react-graph-vis": "^1.0.7",
 		"zustand": "^4.4.6"
 	},
 	"peerDependencies": {
 		"@tabler/icons-react": "^2.40.0",
+		"@use-pico/extras": "^3.0.0",
 		"@use-pico/utils": "^3.0.0",
 		"next": "^14.0.0",
 		"react": "^18.2.0"

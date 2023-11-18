@@ -6,14 +6,14 @@ export function useStore<
     TStore extends IStore<any>,
     TValue,
 >(
-    {Context}: IStore.Store<TStore>,
+    {Context}: Pick<IStore.Store<TStore>, "Context">,
     selector: (state: TStore["props"] & TStore["values"]) => TValue,
 ): TValue;
 
 export function useStore<
     TStore extends IStore<any>,
 >(
-    {Context}: IStore.Store<TStore>,
+    {Context}: Pick<IStore.Store<TStore>, "Context">,
 ): TStore["props"] & TStore["values"];
 
 export function useStore<
@@ -22,7 +22,7 @@ export function useStore<
     {
         Context,
         name
-    }: IStore.Store<TStore>,
+    }: Pick<IStore.Store<TStore>, "Context" | "name">,
     selector?: <TValue>(state: TStore["props"] & TStore["values"]) => TValue,
 ) {
     const store = useContext(Context, name ?? "useStore");

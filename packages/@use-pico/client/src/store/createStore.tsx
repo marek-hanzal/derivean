@@ -1,9 +1,13 @@
+"use client";
+
 import {
     createStore as coolCreateStore,
     type StateCreator,
     type StoreApi
 }                      from "zustand";
 import {type IStore}   from "../api/IStore";
+import {useStore}      from "../hook/useStore";
+import {StoreProvider} from "../provider/StoreProvider";
 import {createContext} from "../tools/createContext";
 
 export namespace createStore {
@@ -30,6 +34,11 @@ export const createStore = <
         factory,
     }: createStore.Props<TStore>
 ): IStore.Store<TStore> => {
+    const Context: IStore.Store<TStore>["Context"] = createContext<StoreApi<TStore["props"] & TStore["values"]>>();
+    const store: IStore.Store<TStore>["store"] = values => coolCreateStore<TStore["props"] & TStore["values"]>(
+        ($set, $get, $store) => factory(values)($set, $get, $store)
+    );
+
     return {
         /**
          * Store name.
@@ -38,12 +47,16 @@ export const createStore = <
         /**
          * Store context.
          */
-        Context: createContext<StoreApi<TStore["props"] & TStore["values"]>>(),
+        Context,
         /**
          * Store factory.
          */
-        store: (values) => coolCreateStore<TStore["props"] & TStore["values"]>(
-            ($set, $get, $store) => factory(values)($set, $get, $store)
-        ),
+        store,
+        useStore:    () => useStore({Context}),
+        useSelector: selector => useStore({Context}, selector),
+        Provider:    props => <StoreProvider
+            store={{Context, store}}
+            {...props}
+        />,
     };
 };
