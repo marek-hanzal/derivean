@@ -1,14 +1,14 @@
-import {withDullSchema} from "@use-pico/dull-stuff";
+import {withSchema} from "@use-pico/extras";
 import {
     filterOf,
     orderByOf
-}                       from "@use-pico/query";
+}                   from "@use-pico/query";
 import {
     identityOf,
     schema
-}                       from "@use-pico/schema";
+}                   from "@use-pico/schema";
 
-export const ProducerInputSchema = withDullSchema({
+export const ProducerInputSchema = withSchema({
     entity:  identityOf(z => z.object({
         producerId: z.string,
         /**

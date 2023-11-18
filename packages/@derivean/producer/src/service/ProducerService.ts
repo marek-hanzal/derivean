@@ -1,15 +1,12 @@
+import {withInventoryService}         from "@derivean/inventory";
 import {
-    type IInventoryService,
-    withInventoryService
-}                                     from "@derivean/inventory";
-import {lazyOf}                       from "@use-pico/container";
-import {type GraphSchema}             from "@use-pico/diagram";
-import {withDullSchema}               from "@use-pico/dull-stuff";
-import {
-    DateTime,
-    td
-}                                     from "@use-pico/i18n";
+    type GraphSchema,
+    type Infer
+}                                     from "@use-pico/extras";
+import {lazyOf}                       from "@use-pico/server";
+import {td}                           from "@use-pico/translator";
 import {uniqueOf}                     from "@use-pico/utils";
+import {DateTime}                     from "luxon";
 import {type IProducerProcess}        from "../api/IProducerProcess";
 import {type IProducerService}        from "../api/IProducerService";
 import {type IProducerSnapshot}       from "../api/IProducerSnapshot";
@@ -17,9 +14,6 @@ import {withProducerInputRepository}  from "../container/withProducerInputReposi
 import {withProducerOutputRepository} from "../container/withProducerOutputRepository";
 import {withProducerRepository}       from "../container/withProducerRepository";
 import {DependencyError}              from "../error/DependencyError";
-import {ProducerInputRepository}      from "../repository/ProducerInputRepository";
-import {ProducerOutputRepository}     from "../repository/ProducerOutputRepository";
-import {ProducerRepository}           from "../repository/ProducerRepository";
 import {ProducerSchema}               from "../schema/ProducerSchema";
 import {ProductionTimeSchema}         from "../schema/ProductionTimeSchema";
 
@@ -32,10 +26,10 @@ export class ProducerService implements IProducerService {
     ];
 
     constructor(
-        protected inventoryService: IInventoryService,
-        protected producerRepository: ProducerRepository.Type,
-        protected producerInputRepository: ProducerInputRepository.Type,
-        protected producerOutputRepository: ProducerOutputRepository.Type,
+        protected inventoryService: withInventoryService,
+        protected producerRepository: withProducerRepository,
+        protected producerInputRepository: withProducerInputRepository,
+        protected producerOutputRepository: withProducerOutputRepository,
     ) {
     }
 
@@ -110,7 +104,7 @@ export class ProducerService implements IProducerService {
         };
     }
 
-    public async dependencies(producerId: string, stack: string[] = []): Promise<withDullSchema.Infer.Entity<ProducerSchema>[]> {
+    public async dependencies(producerId: string, stack: string[] = []): Promise<Infer.Entity<ProducerSchema>[]> {
         const dependencies = [];
         const producers = this.producerRepository.withQuery.query({
             where: {

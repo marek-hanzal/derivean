@@ -9,4 +9,5 @@ export * from "./isObject";
 export * from "./isString";
 export * from "./iso2locale";
 export * from "./toHumanTime";
+export * from "./uniqueOf";
 export * from "./utc";
