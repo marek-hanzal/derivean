@@ -1,10 +1,12 @@
 "use client";
 
-import {IconLogout}      from "@tabler/icons-react";
-import {useLocaleLinkTo} from "@use-pico/i18n";
-import {ActionIcon}      from "@use-pico/ui";
-import {signOut}         from "next-auth/react";
-import {type FC}         from "react";
+import {IconLogout} from "@tabler/icons-react";
+import {
+    ActionIcon,
+    useLocaleLinkTo
+}                   from "@use-pico/client";
+import {signOut}    from "next-auth/react";
+import {type FC}    from "react";
 
 export namespace SignOutButton {
     export interface Props extends ActionIcon.Props {

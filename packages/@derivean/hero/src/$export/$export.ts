@@ -1,4 +1,4 @@
-export {};
+export * from "./withHeroRepository";
 
 // export * from "./HeroHealth";
 // export * from "./HeroInline";
@@ -10,5 +10,4 @@ export {};
 // export * from "./HeroUI";
 // export * from "./IHeroService";
 // export * from "./withHeroContainer";
-// export * from "./withHeroRepository";
 // export * from "./withHeroService";

@@ -1,14 +1,13 @@
-import {Divider}       from "@use-pico/ui";
 import {
     AppLayout,
-    PublicLayout as CoolPublicLayout
-}                      from "@use-pico/ui-extra";
+    Divider
+}                      from "@use-pico/client";
 import {type FC}       from "react";
 import {Footer}        from "../ui/Footer";
 import {SignOutButton} from "./KingdomLayout/SignOutButton";
 
 export namespace KingdomLayout {
-    export type Props = CoolPublicLayout.Props;
+    export type Props = AppLayout.Props;
 }
 
 export const KingdomLayout: FC<KingdomLayout.Props> = props => {
