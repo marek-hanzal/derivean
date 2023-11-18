@@ -1,5 +1,5 @@
-import {withDullSchema} from "@use-pico/dull-stuff";
-import {HeroSchema}     from "../schema/HeroSchema";
+import {type Infer} from "@use-pico/extras";
+import {HeroSchema} from "../schema/HeroSchema";
 
 export interface IHeroService {
     /**
@@ -10,7 +10,7 @@ export interface IHeroService {
 
 export namespace IHeroService {
     export interface RandomResult {
-        hero: Pick<withDullSchema.Infer.Shape<HeroSchema>, "name" | "health" | "level" | "prestige">;
+        hero: Pick<Infer.Shape<HeroSchema>, "name" | "health" | "level" | "prestige">;
         /**
          * @TODO perks not yet implemented
          */
