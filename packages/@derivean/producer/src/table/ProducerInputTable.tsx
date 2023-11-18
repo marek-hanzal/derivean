@@ -3,26 +3,26 @@
 import {
     ItemInline,
     ItemUI
-}                                from "@derivean/item";
-import {ProducerIcon}            from "@derivean/ui";
-import {t}                       from "@use-pico/i18n";
+}                                 from "@derivean/item";
+import {ProducerIcon}             from "@derivean/ui";
+import {t}                        from "@use-pico/i18n";
 import {
     ButtonLink,
     Group,
     NativeBreadcrumbs,
     Text
-}                                from "@use-pico/ui";
-import {HumanSeconds}            from "@use-pico/ui-extra";
+}                                 from "@use-pico/ui";
+import {HumanSeconds}             from "@use-pico/ui-extra";
 import {
     type ComponentProps,
     type FC
-}                                from "react";
-import {ProducerInputUpsertForm} from "../form/ProducerInputUpsertForm";
-import {ProducerInline}          from "../inline/ProducerInline";
-import {ProducerInputRpc}        from "../rpc/ProducerInputRpc";
-import {ProducerInputComponents} from "../ui/ProducerInputComponents";
-import {ProducerOutputUI}        from "../ui/ProducerOutputUI";
-import {ProducerUI}              from "../ui/ProducerUI";
+}                                 from "react";
+import {ProducerInputUpsertForm}  from "../form/ProducerInputUpsertForm";
+import {ProducerInline}           from "../inline/ProducerInline";
+import {ProducerInputRpc}         from "../rpc/ProducerInputRpc";
+import {ProducerInputComponents}  from "../ui/ProducerInputComponents";
+import {ProducerOutputComponents} from "../ui/ProducerOutputComponents";
+import {ProducerUI}               from "../ui/ProducerUI";
 
 export namespace ProducerInputTable {
     export type Columns =
@@ -120,7 +120,7 @@ export const ProducerInputTable: FC<ProducerInputTable.Props> = (
             },
             producers:  {
                 title:  t()`Item producers`,
-                render: ({item}) => <ProducerOutputUI.Collection
+                render: ({item}) => <ProducerOutputComponents.Collection
                     query={{
                         where: {
                             itemId: item.itemId,

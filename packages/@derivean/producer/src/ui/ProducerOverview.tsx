@@ -1,11 +1,9 @@
-"use client";
-
 import {ProducerIcon}       from "@derivean/ui";
-import {List}               from "@use-pico/table";
 import {
     ButtonLink,
+    List,
     Preview
-}                           from "@use-pico/ui";
+}                           from "@use-pico/client";
 import {type FC}            from "react";
 import {ProducerInline}     from "../inline/ProducerInline";
 import {ProducerRpc}        from "../rpc/ProducerRpc";
@@ -23,7 +21,6 @@ export const ProducerOverview: FC<ProducerOverview.Props> = () => {
         withSourceQuery={ProducerRpc.query}
         Item={({item}) => <Preview
             key={item.id}
-            cols={1}
             items={[
                 {
                     label: <ButtonLink

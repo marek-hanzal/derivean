@@ -21,7 +21,7 @@ import {ProducerOutputUpsertForm} from "../form/ProducerOutputUpsertForm";
 import {ProducerInline}           from "../inline/ProducerInline";
 import {ProducerOutputRpc}        from "../rpc/ProducerOutputRpc";
 import {ProducerInputComponents}  from "../ui/ProducerInputComponents";
-import {ProducerOutputUI}         from "../ui/ProducerOutputUI";
+import {ProducerOutputComponents} from "../ui/ProducerOutputComponents";
 import {ProducerUI}               from "../ui/ProducerUI";
 
 export namespace ProducerOutputTable {
@@ -33,7 +33,7 @@ export namespace ProducerOutputTable {
 
     export type Props =
         Omit<
-            ComponentProps<typeof ProducerOutputUI.Table<Columns>>,
+            ComponentProps<typeof ProducerOutputComponents.Table<Columns>>,
             "columns" | "name" | "icon" | "text"
         >
         & {
@@ -47,7 +47,7 @@ export const ProducerOutputTable: FC<ProducerOutputTable.Props> = (
         ...props
     }
 ) => {
-    return <ProducerOutputUI.Table
+    return <ProducerOutputComponents.Table
         text={{
             total: t()`Total count of producer outputs`,
         }}

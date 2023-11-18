@@ -1,16 +1,10 @@
-"use client";
-
 import {
-    ItemInline,
-    ItemUI
-}                         from "@derivean/item";
-import {t}                from "@use-pico/i18n";
-import {
-    NativeBreadcrumbs,
-    Text
-}                         from "@use-pico/ui";
-import {type FC}          from "react";
-import {ProducerOutputUI} from "./ProducerOutputUI";
+    ItemFetch,
+    ItemInline
+}                                 from "@derivean/item";
+import {Nav}                      from "@use-pico/client";
+import {type FC}                  from "react";
+import {ProducerOutputCollection} from "./ProducerOutputComponents";
 
 export namespace ProducerOutput {
     export interface Props {
@@ -25,28 +19,30 @@ export const ProducerOutput: FC<ProducerOutput.Props> = (
         producerId,
     }
 ) => {
-    return <ProducerOutputUI.Collection
+    return <ProducerOutputCollection
         query={{
             where: {
                 producerId,
             }
         }}
         WithSuccess={({entities}) => <>
-            {entities.length > 0 && <NativeBreadcrumbs
+            {entities.length > 0 && <Nav
                 separator={"&"}
                 separatorMargin={4}
-            >
-                {entities.map(entity => <ItemUI.Fetch
-                    key={entity.id}
-                    override={entity.itemId}
-                    WithSuccess={({entity}) => <Text
-                        fw={mark.includes(entity.id) ? "bold" : undefined}
-                        c={mark.includes(entity.id) ? undefined : "dimmed"}
-                    >
-                        <ItemInline entity={entity}/>
-                    </Text>}
-                />)}
-            </NativeBreadcrumbs>}
+                items={entities.map(entity => ({
+                    type:      "custom",
+                    component: <ItemFetch
+                                   key={entity.id}
+                                   override={entity.itemId}
+                                   WithSuccess={({entity}) => <Text
+                                       fw={mark.includes(entity.id) ? "bold" : undefined}
+                                       c={mark.includes(entity.id) ? undefined : "dimmed"}
+                                   >
+                                       <ItemInline entity={entity}/>
+                                   </Text>}
+                               />,
+                }))}
+            />}
             {!entities.length && <Text
                 c={"dimmed"}
             >
