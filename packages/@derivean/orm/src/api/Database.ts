@@ -1,4 +1,4 @@
-import {type Database as CoolDatabase} from "@use-pico/orm";
+import {type Database as CoolDatabase} from "@use-pico/server";
 import {type GeneratedAlways}          from "kysely";
 
 export type Database =

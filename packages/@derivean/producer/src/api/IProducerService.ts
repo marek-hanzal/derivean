@@ -1,5 +1,7 @@
-import {type GraphSchema}          from "@use-pico/diagram";
-import {withDullSchema}            from "@use-pico/dull-stuff";
+import {
+    type GraphSchema,
+    type Infer
+}                                  from "@use-pico/extras";
 import {type ProducerSchema}       from "../schema/ProducerSchema";
 import {type ProductionTimeSchema} from "../schema/ProductionTimeSchema";
 import {type IProducerProcess}     from "./IProducerProcess";
@@ -29,7 +31,7 @@ export interface IProducerService {
      *
      * Stack is used to prevent circular dependencies.
      */
-    dependencies(producerId: string, stack?: string[]): Promise<withDullSchema.Infer.Entity<ProducerSchema>[]>;
+    dependencies(producerId: string, stack?: string[]): Promise<Infer.Entity<ProducerSchema>[]>;
 
     graph(producerId: string): Promise<GraphSchema.Type>;
 }
