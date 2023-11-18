@@ -5,6 +5,7 @@ export * from "./Database";
 export * from "./ICacheService";
 export * from "./IContainer";
 export * from "./IUserService";
+export * from "./SelectOf";
 export * from "./createConnection";
 export * from "./createRedisClient";
 export * from "./default-migration";

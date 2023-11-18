@@ -1,14 +1,13 @@
-import {type Database}       from "@derivean/orm";
-import {lazyOf}              from "@use-pico/container";
-import {withDullSchema}      from "@use-pico/dull-stuff";
 import {
-    type Client,
-    withClient
-}                            from "@use-pico/orm";
+    type Database,
+    withConnection
+}                            from "@derivean/orm";
+import {type Infer}          from "@use-pico/extras";
 import {
     AbstractRepository,
-    type SelectOf
-}                            from "@use-pico/repository";
+    lazyOf,
+    SelectOf
+}                            from "@use-pico/server";
 import {InventoryItemSchema} from "../schema/InventoryItemSchema";
 
 export class InventoryItemRepository extends AbstractRepository<
@@ -17,14 +16,14 @@ export class InventoryItemRepository extends AbstractRepository<
     "InventoryItem"
 > {
     static inject = [
-        lazyOf(withClient.inject),
+        lazyOf(withConnection.inject),
     ];
 
     constructor(
-        client: Client<Database>,
+        connection: withConnection,
     ) {
         super(
-            client,
+            connection,
             InventoryItemSchema,
             "InventoryItem",
         );
@@ -38,7 +37,7 @@ export class InventoryItemRepository extends AbstractRepository<
         };
     }
 
-    public with<T>(query: withDullSchema.Infer.Query<InventoryItemSchema>, select: SelectOf<Database, "InventoryItem", T>): SelectOf<Database, "InventoryItem", T> {
+    public with<T>(query: Infer.Query<InventoryItemSchema>, select: SelectOf<Database, "InventoryItem", T>): SelectOf<Database, "InventoryItem", T> {
         let $select = select;
 
         $select = $select.innerJoin("Item", "Item.id", "InventoryItem.itemId" as any);

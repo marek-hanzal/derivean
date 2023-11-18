@@ -1,7 +1,7 @@
-import {withDullRpc}     from "@use-pico/dull-stuff";
+import {withRpc}         from "@use-pico/extras";
 import {InventorySchema} from "../schema/InventorySchema";
 
-export const InventoryRpc = withDullRpc({
+export const InventoryRpc = withRpc({
     key:    ["derivean", "inventory"],
     schema: InventorySchema,
 });

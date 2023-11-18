@@ -1,5 +1,7 @@
-import {type IContainer}             from "@use-pico/container";
-import {withRepositoryHandler}       from "@use-pico/rpc-server";
+import {
+    type IContainer,
+    withRepositoryHandler
+}                                    from "@use-pico/server";
 import {InventoryItemRepository}     from "../repository/InventoryItemRepository";
 import {InventoryRepository}         from "../repository/InventoryRepository";
 import {InventoryItemRpc}            from "../rpc/InventoryItemRpc";
