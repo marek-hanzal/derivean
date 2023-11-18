@@ -4,6 +4,7 @@ import {
     withRpcSourceQuery
 }                    from "@use-pico/client";
 import {CountSchema} from "@use-pico/query";
+import {type Rpc}    from "../api/Rpc";
 import {type Schema} from "../api/Schema";
 
 export namespace withRpc {
@@ -17,24 +18,6 @@ export namespace withRpc {
         schema: TSchema;
         invalidator?: ReadonlyArray<unknown>;
     }
-
-    export interface Rpc<
-        TSchema extends Schema<any, any, any, any>,
-    > {
-        schema: TSchema;
-        query: ReturnType<typeof withRpcSourceQuery<
-            TSchema["query"],
-            TSchema["entity"]
-        >>;
-        count: ReturnType<typeof withRpcQuery<
-            TSchema["query"],
-            CountSchema
-        >>;
-        mutation: ReturnType<typeof withRpcMutation<
-            TSchema["mutation"],
-            TSchema["entity"]
-        >>;
-    }
 }
 
 export const withRpc = <
@@ -47,7 +30,7 @@ export const withRpc = <
     }: withRpc.Props<
         TSchema
     >,
-) => {
+): Rpc<TSchema> => {
     const count = withRpcQuery({
         key:    key.concat(["count"]),
         schema: {
