@@ -1,1 +1,1 @@
-export {QueryClientProvider} from "../utils/QueryClientProvider";
+export {QueryClientProvider} from "../provider/QueryClientProvider";

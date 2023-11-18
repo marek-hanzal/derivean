@@ -1,1 +1,1 @@
-export {Providers} from "../utils/Providers";
+export {Providers} from "../provider/Providers";
