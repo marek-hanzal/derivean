@@ -9,11 +9,11 @@ import {
     IconGraph,
     IconLanguage
 }                from "@tabler/icons-react";
-import {t}       from "@use-pico/i18n";
 import {
     ListIcon,
     MainMenu
-}                from "@use-pico/ui";
+}                from "@use-pico/client";
+import {t}       from "@use-pico/translator";
 import {type FC} from "react";
 
 export namespace ManagerMenu {
