@@ -2,7 +2,6 @@ import {lazyOf}                    from "@use-pico/server";
 import {type TranslationSchema}    from "@use-pico/translator";
 import {type ITranslationService}  from "../../api/ITranslationService";
 import {withTranslationRepository} from "../../container/service/withTranslationRepository";
-import {TranslationRepository}     from "../repository/TranslationRepository";
 
 export class TranslationService implements ITranslationService {
     static inject = [
@@ -10,7 +9,7 @@ export class TranslationService implements ITranslationService {
     ];
 
     constructor(
-        protected translationRepository: TranslationRepository.Type,
+        protected translationRepository: withTranslationRepository,
     ) {
     }
 

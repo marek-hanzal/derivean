@@ -1,7 +1,6 @@
 import {type Infer}        from "@use-pico/extras";
 import {
     AbstractRepository,
-    type Connection,
     type Database,
     lazyOf,
     withConnection
@@ -19,7 +18,7 @@ export class TranslationRepository extends AbstractRepository<
     ];
 
     constructor(
-        client: Connection<Database>,
+        client: withConnection,
     ) {
         super(
             client,
