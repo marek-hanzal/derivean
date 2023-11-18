@@ -1,16 +1,14 @@
-import {
-    ProducerMenu,
-    withProducerRepository
-}                     from "@derivean/producer";
-import {container}    from "@derivean/server";
-import {ProducerIcon} from "@derivean/ui";
+import {ProducerMenu}           from "@derivean/manager";
+import {withProducerRepository} from "@derivean/producer";
+import {container}              from "@derivean/server";
+import {ProducerIcon}           from "@derivean/ui";
 import {
     HomeIcon,
     ListIcon,
     Nav,
     Page
-}                     from "@use-pico/client";
-import {t}            from "@use-pico/translator";
+}                               from "@use-pico/client";
+import {t}                      from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {

@@ -1,9 +1,8 @@
 import {
-    EventHeroUpsertForm,
-    EventMenu,
     withEventHeroRepository,
     withEventRepository
 }                  from "@derivean/event";
+import {EventMenu} from "@derivean/manager";
 import {container} from "@derivean/server";
 import {EventIcon} from "@derivean/ui";
 import {
@@ -57,10 +56,10 @@ export default async function Index({params: {id}}: Index.Props) {
         />}
     >
         <Container>
-            <EventHeroUpsertForm
-                entity={eventHero}
-                refresh
-            />
+            {/*<EventHeroUpsertForm*/}
+            {/*    entity={eventHero}*/}
+            {/*    refresh*/}
+            {/*/>*/}
         </Container>
     </Page>;
 }

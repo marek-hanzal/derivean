@@ -1,6 +1,6 @@
+import {KingdomMenu}            from "@derivean/game";
 import {
     KingdomLayout,
-    KingdomMenu,
     withKingdomRepository
 }                               from "@derivean/kingdom";
 import {container}              from "@derivean/server";
@@ -32,7 +32,7 @@ export default async function Layout(
     const kingdom = await withKingdomRepository.use(container).withQuery.fetchOrThrow({where: {id: kingdomId}});
 
     return <KingdomLayout
-        homeUrl={`/kingdom/${kingdom.id}`}
+        home={`/kingdom/${kingdom.id}`}
         logo={logo}
         center={<Group>
             <Divider orientation={"vertical"}/>
