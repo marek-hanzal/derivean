@@ -1,5 +1,8 @@
+"use client";
+
 import {cn} from "@use-pico/utils";
 import {
+    ButtonHTMLAttributes,
     type FC,
     type PropsWithChildren,
     type ReactNode
@@ -15,11 +18,12 @@ const twSize = {
 type twSize = typeof twSize;
 
 export namespace Button {
-    export type Props = PropsWithChildren<{
-        leftSection?: ReactNode;
-        size?: Size;
-        onClick?: () => void;
-    }>;
+    export type Props = PropsWithChildren<
+        {
+            leftSection?: ReactNode;
+            size?: Size;
+        } & ButtonHTMLAttributes<HTMLButtonElement>
+    >;
 
     export type Size = keyof twSize;
 }
@@ -27,6 +31,7 @@ export namespace Button {
 export const Button: FC<Button.Props> = (
     {
         size = "md",
+        onClick,
         children,
     }
 ) => {
@@ -35,10 +40,15 @@ export const Button: FC<Button.Props> = (
         className={cn(`
             border-1
             rounded-md
-            bg-primary-500
-            hover:bg-primary-600
+            bg-gradient-to-r
+            from-primary-500
+            to-primary-600
+            hover:bg-gradient-to-r
+            hover:from-primary-600
+            hover:to-primary-700
             text-white
         `, size ? twSize[size] : undefined)}
+        onClick={onClick}
     >
         {children}
     </button>;
