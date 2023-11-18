@@ -1,15 +1,13 @@
-import {
-    EventMenu,
-    withKingdomRepository
-}                  from "@derivean/kingdom";
-import {container} from "@derivean/server";
-import {EventIcon} from "@derivean/ui";
+import {EventMenu}             from "@derivean/game";
+import {withKingdomRepository} from "@derivean/kingdom";
+import {container}             from "@derivean/server";
+import {EventIcon}             from "@derivean/ui";
 import {
     HomeIcon,
     Nav,
     Page
-}                  from "@use-pico/client";
-import {t}         from "@use-pico/translator";
+}                              from "@use-pico/client";
+import {t}                     from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {

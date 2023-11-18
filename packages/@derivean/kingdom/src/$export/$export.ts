@@ -9,10 +9,7 @@
 // export * from "./KingdomSelectionStore";
 // export * from "./KingdomTable";
 // export * from "./KingdomUI";
-export * from "./ConstructionMenu";
-export * from "./EventMenu";
 export * from "./KingdomLayout";
-export * from "./KingdomMenu";
 export * from "./KingdomRepository";
 export * from "./withKingdomContainer";
 export * from "./withKingdomContext";

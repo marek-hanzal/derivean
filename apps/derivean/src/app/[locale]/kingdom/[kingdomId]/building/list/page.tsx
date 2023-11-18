@@ -1,4 +1,4 @@
-import {ConstructionMenu}      from "@derivean/building";
+import {ConstructionMenu}      from "@derivean/game";
 import {withKingdomRepository} from "@derivean/kingdom";
 import {container}             from "@derivean/server";
 import {BuildingIcon}          from "@derivean/ui";

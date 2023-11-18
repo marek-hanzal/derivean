@@ -1,16 +1,14 @@
-import {BuildingQueryStore} from "@derivean/building";
-import {
-    ConstructionMenu,
-    withKingdomRepository
-}                           from "@derivean/kingdom";
-import {container}          from "@derivean/server";
-import {IconHammer}         from "@tabler/icons-react";
+import {BuildingQueryStore}    from "@derivean/building";
+import {ConstructionMenu}      from "@derivean/game";
+import {withKingdomRepository} from "@derivean/kingdom";
+import {container}             from "@derivean/server";
+import {IconHammer}            from "@tabler/icons-react";
 import {
     HomeIcon,
     Nav,
     Page
-}                           from "@use-pico/client";
-import {t}                  from "@use-pico/translator";
+}                              from "@use-pico/client";
+import {t}                     from "@use-pico/translator";
 
 export namespace List {
     export interface Props {

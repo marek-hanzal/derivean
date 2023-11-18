@@ -1,16 +1,17 @@
+import {type EventSchema} from "@derivean/event";
 import {
     HeroIcon,
     InventoryIcon
-}                    from "@derivean/ui";
-import {IconSearch}  from "@tabler/icons-react";
-import {Menu}        from "@use-pico/client";
-import {t}           from "@use-pico/translator";
-import {type FC}     from "react";
-import {EventSchema} from "../schema/EventSchema";
+}                         from "@derivean/ui";
+import {IconSearch}       from "@tabler/icons-react";
+import {Menu}             from "@use-pico/client";
+import {type Infer}       from "@use-pico/extras";
+import {t}                from "@use-pico/translator";
+import {type FC}          from "react";
 
 export namespace EventMenu {
     export interface Props extends Menu.PropsEx {
-        event: withDullSchema.Infer.Entity<EventSchema>;
+        event: Infer.Entity<EventSchema>;
     }
 }
 

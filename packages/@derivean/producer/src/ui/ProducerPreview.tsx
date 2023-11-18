@@ -1,5 +1,7 @@
 import {
     Group,
+    HumanTime,
+    Preview,
     Text,
     type WithEntity
 }                       from "@use-pico/client";
@@ -13,7 +15,7 @@ import {ProducerOutput} from "./ProducerOutput";
 import {ProductionTime} from "./ProductionTime";
 
 export namespace ProducerPreview {
-    export interface Props extends WithEntity.Schema<Infer.Entity<ProducerSchema>> {
+    export interface Props extends WithEntity<Infer.Entity<ProducerSchema>> {
     }
 }
 
@@ -35,7 +37,7 @@ export const ProducerPreview: FC<ProducerPreview.Props> = (
             },
             {
                 label: t()`Production time`,
-                value: <HumanSeconds seconds={entity.time}/>,
+                value: <HumanTime seconds={entity.time}/>,
             },
             {
                 label: t()`Producer pipeline time`,
