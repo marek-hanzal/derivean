@@ -6,7 +6,7 @@ import {
     KingdomRepository,
     withKingdomRepository
 }                                     from "@derivean/kingdom";
-import {lazyOf}                       from "@use-pico/container";
+import {lazyOf}                       from "@use-pico/server";
 import {type IEventInventoryService}  from "../api/IEventInventoryService";
 import {withEventInventoryRepository} from "../container/withEventInventoryRepository";
 import {EventInventoryRepository}     from "../repository/EventInventoryRepository";

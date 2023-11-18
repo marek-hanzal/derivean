@@ -1,10 +1,8 @@
 import {
     type IUserService,
+    lazyOf,
     withUserService
-}                                    from "@use-pico/auth-server";
-import {lazyOf}                      from "@use-pico/container";
-import {type IEventHeroService}      from "../api/IEventHeroService";
-import {type IEventInventoryService} from "../api/IEventInventoryService";
+}                                    from "@use-pico/server";
 import {type IEventService}          from "../api/IEventService";
 import {withEventHeroService}        from "../container/withEventHeroService";
 import {withEventInstanceRepository} from "../container/withEventInstanceRepository";
@@ -24,9 +22,9 @@ export class EventService implements IEventService {
 
     constructor(
         protected eventRepository: EventRepository.Type,
-        protected eventInventoryService: IEventInventoryService,
+        protected eventInventoryService: withEventInventoryService,
         protected eventInstanceRepository: EventInstanceRepository.Type,
-        protected eventHeroService: IEventHeroService,
+        protected eventHeroService: withEventHeroService,
         protected userService: IUserService,
     ) {
     }

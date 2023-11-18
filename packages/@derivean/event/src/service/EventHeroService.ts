@@ -8,7 +8,7 @@ import {
     KingdomRepository,
     withKingdomRepository
 }                                from "@derivean/kingdom";
-import {lazyOf}                  from "@use-pico/container";
+import {lazyOf}                  from "@use-pico/server";
 import {type IEventHeroService}  from "../api/IEventHeroService";
 import {withEventHeroRepository} from "../container/withEventHeroRepository";
 import {EventHeroRepository}     from "../repository/EventHeroRepository";
