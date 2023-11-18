@@ -1,4 +1,5 @@
 import {type Config} from "tailwindcss";
+import colors        from "tailwindcss/colors";
 
 module.exports = {
     content: [
@@ -6,6 +7,10 @@ module.exports = {
         "../../packages/**/*.{js,ts,jsx,tsx,mdx}",
     ],
     theme:   {
+        colors: {
+            ...colors,
+            primary: colors.sky,
+        },
         extend: {},
     },
     plugins: [],
