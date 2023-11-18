@@ -2,14 +2,16 @@ import {
     InventoryRepository,
     withInventoryRepository
 }                                     from "@derivean/inventory";
-import {type Database}                from "@derivean/orm";
-import {lazyOf}                       from "@use-pico/container";
-import {withDullSchema}               from "@use-pico/dull-stuff";
 import {
-    type Client,
-    withClient
-}                                     from "@use-pico/orm";
-import {AbstractRepository}           from "@use-pico/repository";
+    type Database,
+    withConnection
+}                                     from "@derivean/orm";
+import {Infer}                        from "@use-pico/extras";
+import {
+    AbstractRepository,
+    type Connection,
+    lazyOf
+}                                     from "@use-pico/server";
 import {withEventHeroRepository}      from "../container/withEventHeroRepository";
 import {withEventInventoryRepository} from "../container/withEventInventoryRepository";
 import {EventSchema}                  from "../schema/EventSchema";
@@ -22,20 +24,20 @@ export class EventRepository extends AbstractRepository<
     "Event"
 > {
     static inject = [
-        lazyOf(withClient.inject),
+        lazyOf(withConnection.inject),
         lazyOf(withInventoryRepository.inject),
         lazyOf(withEventInventoryRepository.inject),
         lazyOf(withEventHeroRepository.inject),
     ];
 
     constructor(
-        client: Client<Database>,
+        connection: Connection<Database>,
         protected readonly inventoryRepository: InventoryRepository.Type,
         protected readonly eventInventoryRepository: EventInventoryRepository.Type,
         protected readonly eventHeroRepository: EventHeroRepository.Type,
     ) {
         super(
-            client,
+            connection,
             EventSchema,
             "Event",
         );
@@ -51,7 +53,7 @@ export class EventRepository extends AbstractRepository<
         };
     }
 
-    public async onCreate(entity: withDullSchema.Infer.Entity<EventSchema>): Promise<any> {
+    public async onCreate(entity: Infer.Entity<EventSchema>): Promise<any> {
         switch (entity.type) {
             case "EventInventory":
                 await this.eventInventoryRepository.withMutation.create({

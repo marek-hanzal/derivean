@@ -1,11 +1,13 @@
-import {type Database}      from "@derivean/orm";
-import {lazyOf}             from "@use-pico/container";
 import {
-    type Client,
-    withClient
-}                           from "@use-pico/orm";
-import {AbstractRepository} from "@use-pico/repository";
-import {EventHeroSchema}    from "../schema/EventHeroSchema";
+    type Database,
+    withConnection
+}                        from "@derivean/orm";
+import {
+    AbstractRepository,
+    type Connection,
+    lazyOf
+}                        from "@use-pico/server";
+import {EventHeroSchema} from "../schema/EventHeroSchema";
 
 export class EventHeroRepository extends AbstractRepository<
     Database,
@@ -13,14 +15,14 @@ export class EventHeroRepository extends AbstractRepository<
     "EventHero"
 > {
     static inject = [
-        lazyOf(withClient.inject),
+        lazyOf(withConnection.inject),
     ];
 
     constructor(
-        client: Client<Database>,
+        connection: Connection<Database>,
     ) {
         super(
-            client,
+            connection,
             EventHeroSchema,
             "EventHero",
         );

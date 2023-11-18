@@ -2,7 +2,7 @@ import {
     type IInventoryService,
     withInventoryService
 }                                                      from "@derivean/inventory";
-import {lazyOf}                                        from "@use-pico/container";
+import {lazyOf}                                        from "@use-pico/server";
 import {type IConstructionService}                     from "../api/IConstructionService";
 import {withBuildingConstructionRequirementRepository} from "../container/withBuildingConstructionRequirementRepository";
 import {withBuildingRequirementRepository}             from "../container/withBuildingRequirementRepository";
@@ -49,12 +49,24 @@ export class ConstructionService implements IConstructionService {
             },
         };
 
+        /**
+         * Go through all the items required for a construction
+         */
         for (const item of constructionItems) {
+            /**
+             * See if the required construction item is in an inventory - this is a simple check
+             */
             if (!itemIds.includes(item.itemId)) {
                 result.missing.construction.push(item.itemId);
                 result.result = false;
                 continue;
             }
+            /**
+             * So we have an item in inventory, now we've to check, if we have enough required items.
+             *
+             * This is a bit more complicated, because we've to go through all the items in inventory and sum them up, because
+             * one item type can be in inventory multiple times.
+             */
             const amount = items.reduce((prev, current) => {
                 return item.itemId === current.itemId ? prev + current.amount : prev;
             }, 0);
@@ -66,6 +78,9 @@ export class ConstructionService implements IConstructionService {
                 result.result = false;
             }
         }
+        /**
+         * Same as for items.
+         */
         for (const item of requiredItems) {
             if (!itemIds.includes(item.itemId)) {
                 result.missing.required.push(item.itemId);

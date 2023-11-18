@@ -1,5 +1,7 @@
-import {type IContainer}              from "@use-pico/container";
-import {withRepositoryHandler}        from "@use-pico/rpc-server";
+import {
+    type IContainer,
+    withRepositoryHandler
+}                                     from "@use-pico/server";
 import {EventHeroRepository}          from "../repository/EventHeroRepository";
 import {EventInstanceRepository}      from "../repository/EventInstanceRepository";
 import {EventInventoryRepository}     from "../repository/EventInventoryRepository";
