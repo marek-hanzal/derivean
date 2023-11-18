@@ -6,8 +6,8 @@ import {
     type ReactNode
 }                            from "react";
 import {BlockLoadingOverlay} from "../ui/BlockLoadingOverlay";
-import {Grid}                from "../ui/Grid";
-import {GridCol}             from "../ui/Grid/GridCol";
+import {Flex}                from "../ui/Flex";
+import {FlexItem}            from "../ui/Flex/FlexItem";
 import {Group}               from "../ui/Group";
 import {GroupCol}            from "../ui/Group/GroupCol";
 import {LocaleLink}          from "../ui/LocaleLink";
@@ -52,12 +52,12 @@ export const PublicLayout: FC<PublicLayout.Props> = (
     return <>
         <Unblock/>
         <BlockLoadingOverlay/>
-        <Grid
-            align={"baseline"}
+        <Flex
+            align={"center"}
             px={"sm"}
             pt={"sm"}
         >
-            <GridCol span={"content"}>
+            <FlexItem span={"content"}>
                 <LocaleLink
                     href={home}
                     style={{
@@ -71,11 +71,11 @@ export const PublicLayout: FC<PublicLayout.Props> = (
                         src={logo}
                     />
                 </LocaleLink>
-            </GridCol>
-            <GridCol span={"auto"}>
+            </FlexItem>
+            <FlexItem span={"auto"}>
                 {center}
-            </GridCol>
-            <GridCol span={"content"}>
+            </FlexItem>
+            <FlexItem span={"content"}>
                 <Group gap={"xs"}>
                     <GroupCol>
                         {right}
@@ -91,8 +91,8 @@ export const PublicLayout: FC<PublicLayout.Props> = (
                         </Group>}
                     </GroupCol>
                 </Group>
-            </GridCol>
-        </Grid>
+            </FlexItem>
+        </Flex>
         {children}
     </>;
 };

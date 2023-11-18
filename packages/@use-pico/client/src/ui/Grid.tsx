@@ -5,6 +5,7 @@ import {
 }                         from "react";
 import {type CommonProps} from "../api/CommonProps";
 import {tailwindify}      from "../tools/tailwindify";
+import {twAlignItems}     from "../tools/tailwindify/twAlignItems";
 
 const twGap = {
     "none": "gap-0",
@@ -30,11 +31,6 @@ const twCols = {
     12: "grid-cols-12",
 } as const;
 
-const twAlignItems = {
-    "baseline": "items-baseline",
-    "center":   "items-center",
-};
-
 export namespace Grid {
     export type Props = PropsWithChildren<CommonProps & {
         align?: AlignItems;
@@ -44,7 +40,7 @@ export namespace Grid {
 
     export type Gap = keyof typeof twGap;
     export type Cols = keyof typeof twCols;
-    export type AlignItems = keyof typeof twAlignItems;
+    export type AlignItems = twAlignItems.Values;
 }
 
 export const Grid: FC<Grid.Props> = (

@@ -15,6 +15,8 @@ export * from "./DetectLocale";
 export * from "./Diagram";
 export * from "./Divider";
 export * from "./Fetch";
+export * from "./Flex";
+export * from "./FlexItem";
 export * from "./Grid";
 export * from "./GridCol";
 export * from "./Group";
