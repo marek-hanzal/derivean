@@ -6,10 +6,8 @@ import {
     type ReactNode
 }                            from "react";
 import {BlockLoadingOverlay} from "../ui/BlockLoadingOverlay";
-import {Grid}                from "../ui/Grid";
-import {GridCol}             from "../ui/Grid/GridCol";
-import {Group}               from "../ui/Group";
-import {GroupCol}            from "../ui/Group/GroupCol";
+import {Flex}                from "../ui/Flex";
+import {FlexItem}            from "../ui/Flex/FlexItem";
 import {LocaleLink}          from "../ui/LocaleLink";
 import {Unblock}             from "../utils/Unblock";
 
@@ -39,12 +37,12 @@ export const AppLayout: FC<AppLayout.Props> = (
     return <>
         <Unblock/>
         <BlockLoadingOverlay/>
-        <Grid
+        <Flex
             align={"center"}
             px={"md"}
             pt={"xs"}
         >
-            <GridCol span={"content"}>
+            <FlexItem span={"content"}>
                 <LocaleLink
                     href={home}
                     style={{
@@ -58,18 +56,14 @@ export const AppLayout: FC<AppLayout.Props> = (
                         src={logo}
                     />
                 </LocaleLink>
-            </GridCol>
-            <GridCol span={"auto"} m={0}>
+            </FlexItem>
+            <FlexItem span={"auto"}>
                 {center}
-            </GridCol>
-            <GridCol span={"content"}>
-                <Group gap={"xs"}>
-                    <GroupCol>
-                        {right}
-                    </GroupCol>
-                </Group>
-            </GridCol>
-        </Grid>
+            </FlexItem>
+            <FlexItem span={"content"}>
+                {right}
+            </FlexItem>
+        </Flex>
         {children}
     </>;
 };

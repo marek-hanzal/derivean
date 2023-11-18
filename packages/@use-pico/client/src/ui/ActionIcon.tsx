@@ -1,21 +1,22 @@
-import {
-    type FC,
-    type PropsWithChildren
-}                         from "react";
-import {type CommonProps} from "../api/CommonProps";
+import {type FC} from "react";
+import {Button}  from "./Button";
 
 export namespace ActionIcon {
-    export type Props = PropsWithChildren<CommonProps & {
-        variant?: CommonProps.Variant;
-        size?: CommonProps.Size;
-
-        /**
-         * @TODO extend from HTML element or use direct onClick type from an HTML element
-         */
-        onClick?: () => void;
-    }>;
+    export interface Props extends Button.Props {
+    }
 }
 
-export const ActionIcon: FC<ActionIcon.Props> = () => {
-    return "ActionIcon";
+export const ActionIcon: FC<ActionIcon.Props> = (
+    {
+        children,
+        ...props
+    }
+) => {
+    return <Button
+        variant={"subtle"}
+        className={"p-2"}
+        {...props}
+    >
+        {children}
+    </Button>;
 };

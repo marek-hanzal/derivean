@@ -1,3 +1,4 @@
+import {twMargin}  from "../tools/tailwindify/twMargin";
 import {twPadding} from "../tools/tailwindify/twPadding";
 
 export interface CommonProps {
@@ -7,37 +8,14 @@ export interface CommonProps {
     pb?: keyof twPadding["b"];
     p?: keyof twPadding["p"];
 
-    mx?: CommonProps.Size;
-    my?: CommonProps.Size;
-    mb?: CommonProps.Size;
-    mt?: CommonProps.Size;
-    m?: CommonProps.Size;
+    mx?: keyof twMargin["x"];
+    my?: keyof twMargin["y"];
+    mt?: keyof twMargin["t"];
+    mb?: keyof twMargin["b"];
+    m?: keyof twMargin["m"];
 }
 
 export namespace CommonProps {
     export type Variant =
         | "subtle";
-
-    export type Size =
-        | string
-        | "xs"
-        | "sm"
-        | "md"
-        | "lg"
-        | "xl";
-
-    export type Color =
-        | "green"
-        | "gray"
-        | "yellow"
-        | "orange"
-        | "violet"
-        | "grape"
-        | "red"
-        | "blue"
-        /**
-         * Specials
-         */
-        | "dimmed"
-        | "primary";
 }
