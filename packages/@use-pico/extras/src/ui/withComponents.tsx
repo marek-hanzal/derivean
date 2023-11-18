@@ -1,8 +1,11 @@
-import {type IQueryStore} from "@use-pico/client";
-import {type Rpc}         from "../api/Rpc";
-import {type Schema}      from "../api/Schema";
-import {withCollection}   from "./withCollection";
-import {withFetch}        from "./withFetch";
+import {
+    type IQueryStore,
+    Table
+}                       from "@use-pico/client";
+import {type Rpc}       from "../api/Rpc";
+import {type Schema}    from "../api/Schema";
+import {withCollection} from "./withCollection";
+import {withFetch}      from "./withFetch";
 
 export namespace withComponents {
     export interface Props<
@@ -49,23 +52,22 @@ export const withComponents = <
         //         {...props}
         //     />;
         // },
-        // Table:        <
-        //                   TColumns extends string,
-        //               >(
-        //     props: Omit<
-        //         Table.Props<
-        //             TColumns,
-        //             TRpc["schema"]["entity"],
-        //             TRpc["schema"]["query"]
-        //         >,
-        //         "withSourceQuery" | "withQueryStore"
-        //     >
-        // ) => {
-        //     return <Table
-        //         withSourceQuery={rpc.query}
-        //         withQueryStore={queryStore}
-        //         {...props}
-        //     />;
-        // },
+        Table: <
+                   TColumns extends string,
+               >(
+            props: Omit<
+                Table.Props<
+                    TColumns,
+                    TRpc["schema"]
+                >,
+                "withSourceQuery" | "withQueryStore"
+            >
+        ) => {
+            return <Table
+                withSourceQuery={rpc.query}
+                withQueryStore={queryStore}
+                {...props}
+            />;
+        },
     };
 };

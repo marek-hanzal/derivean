@@ -1,12 +1,17 @@
 "use client";
 
-import {ItemInline}        from "@derivean/item";
-import {InventoryItemIcon} from "@derivean/ui";
-import {t}                 from "@use-pico/translator";
+import {
+    ItemFetch,
+    ItemInline
+}                           from "@derivean/item";
+import {InventoryItemIcon}  from "@derivean/ui";
+import {Loader}             from "@use-pico/client";
+import {t}                  from "@use-pico/translator";
 import {
     type ComponentProps,
     type FC
-}                          from "react";
+}                           from "react";
+import {InventoryItemTable} from "../ui/InventoryItemComponents";
 
 export namespace Inventory {
     export type Columns =
@@ -16,7 +21,7 @@ export namespace Inventory {
 
     export type Props =
         Omit<
-            ComponentProps<typeof InventoryItemComponents.Table<Columns>>,
+            ComponentProps<typeof InventoryItemTable<Columns>>,
             "columns" | "name" | "icon" | "text"
         >
         & {
@@ -30,22 +35,19 @@ export const Inventory: FC<Inventory.Props> = (
         ...props
     }
 ) => {
-    return <InventoryItemComponents.Table
+    return <InventoryItemTable
         text={{
             total: t()`Total count of inventory items`,
-            count: {
-                empty: {
-                    title:   t()`Empty inventory`,
-                    message: t()`This inventory is empty`,
-                },
+            empty: {
+                title:   t()`Empty inventory`,
+                message: t()`This inventory is empty`,
             },
         }}
-        name={"inventory.item"}
         icon={<InventoryItemIcon/>}
         columns={{
             item:   {
                 title:  t()`Item`,
-                render: ({item}) => <ItemUI.Fetch
+                render: ({item}) => <ItemFetch
                     override={item.itemId}
                     loader={<Loader size={"xs"} type={"dots"}/>}
                     WithSuccess={({entity}) => <ItemInline entity={entity}/>}

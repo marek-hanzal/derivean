@@ -1,4 +1,4 @@
-import {type withDullSchema}      from "@use-pico/dull-stuff";
+import {type Infer}               from "@use-pico/extras";
 import {type InventoryItemSchema} from "../schema/InventoryItemSchema";
 import {type IInventory}          from "./IInventory";
 import {type IInventoryItem}      from "./IInventoryItem";
@@ -29,7 +29,7 @@ export interface IInventoryService {
     /**
      * Load items from the inventory
      */
-    load(inventoryId: string): Promise<withDullSchema.Infer.Entity<InventoryItemSchema>[]>;
+    load(inventoryId: string): Promise<Infer.Entity<InventoryItemSchema>[]>;
 
     /**
      * Copy contents of the source inventory and apply it to target inventory

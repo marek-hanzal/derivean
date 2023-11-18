@@ -42,6 +42,7 @@ export * from "./QueryClientProvider";
 export * from "./QueryResult";
 export * from "./Rating";
 export * from "./Skeleton";
+export * from "./Table";
 export * from "./Text";
 export * from "./Title";
 export * from "./VersionStamp";
