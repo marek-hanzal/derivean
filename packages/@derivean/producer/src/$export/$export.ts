@@ -1,7 +1,3 @@
-export * from "./ProducerMenu";
-export * from "./withProducerRepository";
-export * from "./ProducerRepository";
-
 // export * from "./Dependencies";
 // export * from "./IProducer";
 // export * from "./IProducerInput";
@@ -35,6 +31,9 @@ export * from "./ProducerRepository";
 // export * from "./ProductionTime";
 // export * from "./withDependenciesQuery";
 // export * from "./withGraph";
-// export * from "./withProducerContainer";
-// export * from "./withProducerService";
 // export * from "./withProductionTimeQuery";
+export * from "./ProducerMenu";
+export * from "./ProducerRepository";
+export * from "./withProducerContainer";
+export * from "./withProducerRepository";
+export * from "./withProducerService";

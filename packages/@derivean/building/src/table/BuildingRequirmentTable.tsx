@@ -20,7 +20,7 @@ import {
 import {BuildingRequirementUpsertForm} from "../form/BuildingRequirementUpsertForm";
 import {BuildingInline}                from "../inline/BuildingInline";
 import {BuildingRequirementRpc}        from "../rpc/BuildingRequirementRpc";
-import {BuildingRequirementUI}         from "../ui/BuildingRequirementUI";
+import {BuildingRequirementComponents} from "../ui/BuildingRequirementComponents";
 import {BuildingUI}                    from "../ui/BuildingUI";
 
 export namespace BuildingRequirementTable {
@@ -31,7 +31,7 @@ export namespace BuildingRequirementTable {
 
     export type Props =
         Omit<
-            ComponentProps<typeof BuildingRequirementUI.Table<Columns>>,
+            ComponentProps<typeof BuildingRequirementComponents.Table<Columns>>,
             "columns" | "name" | "icon" | "text"
         >
         & {
@@ -45,7 +45,7 @@ export const BuildingRequirementTable: FC<BuildingRequirementTable.Props> = (
         ...props
     }
 ) => {
-    return <BuildingRequirementUI.Table
+    return <BuildingRequirementComponents.Table
         text={{
             total: t()`Total count of building requirements`,
         }}

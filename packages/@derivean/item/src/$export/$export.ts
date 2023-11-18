@@ -12,7 +12,7 @@
 // export * from "./ItemTypeUI";
 // export * from "./ItemUI";
 // export * from "./ItemUpsertForm";
-// export * from "./withItemContainer";
-// export * from "./withItemRepository";
-// export * from "./withItemTypeRepository";
 export * from "./ItemInline";
+export * from "./withItemContainer";
+export * from "./withItemRepository";
+export * from "./withItemTypeRepository";

@@ -1,15 +1,15 @@
 import {
     ItemInline,
     ItemUI
-}                              from "@derivean/item";
+}                                      from "@derivean/item";
 import {
     Group,
     Nav,
     Text
-}                              from "@use-pico/client";
-import {t}                     from "@use-pico/translator";
-import {type FC}               from "react";
-import {BuildingRequirementUI} from "./BuildingRequirementUI";
+}                                      from "@use-pico/client";
+import {t}                             from "@use-pico/translator";
+import {type FC}                       from "react";
+import {BuildingRequirementComponents} from "./BuildingRequirementComponents";
 
 export namespace BuildingRequirement {
     export interface Props {
@@ -22,7 +22,7 @@ export const BuildingRequirement: FC<BuildingRequirement.Props> = (
         buildingId,
     }
 ) => {
-    return <BuildingRequirementUI.Collection
+    return <BuildingRequirementComponents.Collection
         query={{
             where: {
                 buildingId,

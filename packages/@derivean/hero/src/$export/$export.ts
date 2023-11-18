@@ -1,5 +1,3 @@
-export * from "./withHeroRepository";
-
 // export * from "./HeroHealth";
 // export * from "./HeroInline";
 // export * from "./HeroQueryStore";
@@ -9,5 +7,6 @@ export * from "./withHeroRepository";
 // export * from "./HeroTable";
 // export * from "./HeroUI";
 // export * from "./IHeroService";
-// export * from "./withHeroContainer";
 // export * from "./withHeroService";
+export * from "./withHeroContainer";
+export * from "./withHeroRepository";

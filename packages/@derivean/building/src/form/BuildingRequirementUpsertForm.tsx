@@ -1,17 +1,17 @@
-import {ItemSelect}            from "@derivean/item";
-import {ItemIcon}              from "@derivean/ui";
-import {NumberInput}           from "@use-pico/form";
-import {t}                     from "@use-pico/i18n";
+import {ItemSelect}                    from "@derivean/item";
+import {ItemIcon}                      from "@derivean/ui";
+import {NumberInput}                   from "@use-pico/form";
+import {t}                             from "@use-pico/i18n";
 import {
     type ComponentProps,
     type FC
-}                              from "react";
-import {BuildingSelect}        from "../input/BuildingSelect";
-import {BuildingRequirementUI} from "../ui/BuildingRequirementUI";
+}                                      from "react";
+import {BuildingSelect}                from "../input/BuildingSelect";
+import {BuildingRequirementComponents} from "../ui/BuildingRequirementComponents";
 
 export namespace BuildingRequirementUpsertForm {
     export type Props =
-        Omit<ComponentProps<BuildingRequirementUI["MutationForm"]>, "inputs" | "defaultValues" | "Render">
+        Omit<ComponentProps<BuildingRequirementComponents["MutationForm"]>, "inputs" | "defaultValues" | "Render">
         & {
             buildingId?: string;
         }
@@ -24,7 +24,7 @@ export const BuildingRequirementUpsertForm: FC<BuildingRequirementUpsertForm.Pro
         ...props
     }
 ) => {
-    return <BuildingRequirementUI.MutationForm
+    return <BuildingRequirementComponents.MutationForm
         text={{
             submit:  entity ? t()`Update building requirement (label)` : t()`Create building requirement (label)`,
             success: {

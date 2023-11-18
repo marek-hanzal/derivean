@@ -1,7 +1,7 @@
 import {withEventContext}   from "@derivean/event";
 import {withHeroContainer}  from "@derivean/hero";
 import {withKingdomContext} from "@derivean/kingdom";
-import {type IContainer}    from "@use-pico/container";
+import {type IContainer}    from "@use-pico/server";
 
 const context = [
     withEventContext,
