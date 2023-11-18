@@ -1,6 +1,5 @@
 import {type QuerySchema} from "@use-pico/query";
 import {type IQueryStore} from "../api/IQueryStore";
-import {useStore}         from "./useStore";
 
 export namespace useQueryStore {
     export interface Props<
@@ -19,7 +18,7 @@ export const useQueryOf = <
         store
     }: useQueryStore.Props<TQuerySchema>
 ) => {
-    return useStore(store, (
+    return store.useSelector((
         {
             filter,
             where,

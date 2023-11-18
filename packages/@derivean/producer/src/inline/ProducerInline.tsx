@@ -1,11 +1,11 @@
-import {withDullSchema}      from "@use-pico/dull-stuff";
-import {td}                  from "@use-pico/i18n";
-import {type WithEntity}     from "@use-pico/types";
+import {type WithEntity}     from "@use-pico/client";
+import {type Infer}          from "@use-pico/extras";
+import {td}                  from "@use-pico/translator";
 import {type FC}             from "react";
 import {type ProducerSchema} from "../schema/ProducerSchema";
 
 export namespace ProducerInline {
-    export interface Props extends WithEntity<withDullSchema.Infer.Entity<ProducerSchema>> {
+    export interface Props extends WithEntity<Infer.Entity<ProducerSchema>> {
     }
 }
 

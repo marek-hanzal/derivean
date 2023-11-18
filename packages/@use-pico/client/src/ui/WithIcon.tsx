@@ -7,6 +7,7 @@ import {type CommonProps} from "../api/CommonProps";
 export namespace WithIcon {
     export interface Props {
         icon: ReactNode;
+        size?: CommonProps.Size;
         color?: CommonProps.Color;
     }
 }

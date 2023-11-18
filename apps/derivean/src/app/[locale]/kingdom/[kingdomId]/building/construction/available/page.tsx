@@ -1,13 +1,16 @@
-import {ConstructionMenu}      from "@derivean/building";
-import {withKingdomRepository} from "@derivean/kingdom";
-import {container}             from "@derivean/server";
-import {IconHammer}            from "@tabler/icons-react";
+import {BuildingQueryStore} from "@derivean/building";
+import {
+    ConstructionMenu,
+    withKingdomRepository
+}                           from "@derivean/kingdom";
+import {container}          from "@derivean/server";
+import {IconHammer}         from "@tabler/icons-react";
 import {
     HomeIcon,
     Nav,
     Page
-}                              from "@use-pico/client";
-import {t}                     from "@use-pico/translator";
+}                           from "@use-pico/client";
+import {t}                  from "@use-pico/translator";
 
 export namespace List {
     export interface Props {
@@ -42,13 +45,12 @@ export default async function Available({params: {kingdomId}}: List.Props) {
             active={["/kingdom/[kingdomId]/building/construction/available"]}
         />}
     >
-        {/*<StoreProvider*/}
-        {/*    store={BuildingQueryStore}*/}
-        {/*    values={{}}*/}
-        {/*>*/}
-        {/*    <KingdomConstructionTable*/}
-        {/*        kingdomId={kingdom.id}*/}
-        {/*    />*/}
-        {/*</StoreProvider>*/}
+        <BuildingQueryStore.Provider
+            values={{}}
+        >
+            {/*    <KingdomConstructionTable*/}
+            {/*        kingdomId={kingdom.id}*/}
+            {/*    />*/}
+        </BuildingQueryStore.Provider>
     </Page>;
 }

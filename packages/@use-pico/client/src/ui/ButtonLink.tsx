@@ -7,6 +7,7 @@ import {type IHrefProps}  from "../api/IHrefProps";
 
 export namespace ButtonLink {
     export interface Props extends CommonProps {
+        icon?: ReactNode;
         href: IHrefProps | string;
         label?: ReactNode;
     }

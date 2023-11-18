@@ -5,19 +5,17 @@ import {
     IconAlertTriangle,
     IconArrowRight
 }                                  from "@tabler/icons-react";
-import {t}                         from "@use-pico/i18n";
-import {
-    QueryResult,
-    useQueryEx
-}                                  from "@use-pico/query";
-import {isSchema}                  from "@use-pico/schema";
 import {
     Alert,
     ButtonLink,
     Group,
-    SkeletonBlock,
+    QueryResult,
+    Skeleton,
+    useQueryEx,
     WithIcon
-}                                  from "@use-pico/ui";
+}                                  from "@use-pico/client";
+import {isSchema}                  from "@use-pico/schema";
+import {t}                         from "@use-pico/translator";
 import {type FC}                   from "react";
 import {ProducerInline}            from "../inline/ProducerInline";
 import {withDependenciesQuery}     from "../query/withDependenciesQuery";
@@ -46,7 +44,7 @@ export const Dependencies: FC<Dependencies.Props> = (
 
     return <QueryResult
         result={result}
-        WithLoading={() => <SkeletonBlock lines={4}/>}
+        WithLoading={() => <Skeleton lines={4}/>}
         WithSuccess={({entity}) => {
             if (isSchema(entity, DependencyProducersSchema)) {
                 return <Alert
@@ -72,7 +70,7 @@ export const Dependencies: FC<Dependencies.Props> = (
                                 <WithIcon
                                     size={"xs"}
                                     icon={<IconArrowRight/>}
-                                    color={"gray.8"}
+                                    color={"gray"}
                                 />
                                 <ProducerOutput producerId={producer.id}/>
                             </Group>
@@ -82,7 +80,7 @@ export const Dependencies: FC<Dependencies.Props> = (
             } else if (isSchema(entity, DependencyCycleSchema)) {
                 return <Alert
                     icon={<IconAlertTriangle/>}
-                    color={"red.5"}
+                    color={"red"}
                     title={t()`Producer has cyclic dependencies`}
                 >
                     {entity.cycle.length > 0 && <Group>
@@ -104,7 +102,7 @@ export const Dependencies: FC<Dependencies.Props> = (
                                 <WithIcon
                                     size={"xs"}
                                     icon={<IconArrowRight/>}
-                                    color={"gray.8"}
+                                    color={"gray"}
                                 />
                                 <ProducerOutput producerId={producer.id}/>
                             </Group>

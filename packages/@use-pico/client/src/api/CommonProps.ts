@@ -20,6 +20,7 @@ export namespace CommonProps {
 
     export type Color =
         | "green"
+        | "gray"
         | "yellow"
         | "orange"
         | "violet"
