@@ -17,11 +17,11 @@ import {t}       from "@use-pico/translator";
 import {type FC} from "react";
 
 export namespace ManagerMenu {
-    export interface Props {
+    export interface Props extends MainMenu.PropsEx {
     }
 }
 
-export const ManagerMenu: FC<ManagerMenu.Props> = () => {
+export const ManagerMenu: FC<ManagerMenu.Props> = props => {
     return <MainMenu
         items={[
             {
@@ -87,5 +87,6 @@ export const ManagerMenu: FC<ManagerMenu.Props> = () => {
                 icon:  <IconCrown/>,
             },
         ]}
+        {...props}
     />;
 };
