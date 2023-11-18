@@ -3,7 +3,7 @@ import {
     type RequestSchema,
     type ResponseSchema
 }                  from "@use-pico/schema";
-import {useStore}  from "@use-pico/store";
+import {useStore}  from "../hook/useStore";
 import {RpcStore}  from "../store/RpcStore";
 import {withBulk}  from "./withBulk";
 

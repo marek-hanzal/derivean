@@ -3,8 +3,8 @@ import {
     schema,
     type WithIdentitySchema
 }                         from "@use-pico/schema";
-import {withSourceQuery}  from "@use-pico/source";
-import {useStore}         from "@use-pico/store";
+import {useStore}         from "../hook/useStore";
+import {withSourceQuery}  from "../query/withSourceQuery";
 import {RpcStore}         from "../store/RpcStore";
 import {withBulk}         from "./withBulk";
 

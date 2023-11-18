@@ -1,7 +1,7 @@
-import {withDullRpc}               from "@use-pico/dull-stuff";
+import {withRpc}                   from "@use-pico/extras";
 import {BuildingRequirementSchema} from "../schema/BuildingRequirementSchema";
 
-export const BuildingRequirementRpc = withDullRpc({
+export const BuildingRequirementRpc = withRpc({
     key:    ["derivean", "building", "requirement"],
     schema: BuildingRequirementSchema,
 });
