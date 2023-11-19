@@ -4,8 +4,8 @@ import {
 }                from "@tabler/icons-react";
 import {
     type CommonProps,
-    Rating,
-    WithIcon
+    Icon,
+    Rating
 }                from "@use-pico/client";
 import {type FC} from "react";
 
@@ -33,8 +33,8 @@ export const Prestige: FC<Prestige.Props> = (
         defaultValue={prestige}
         readOnly
         size={"md"}
-        emptySymbol={value => <WithIcon color={colors[value] ?? "green"} icon={<IconStar/>}/>}
-        fullSymbol={value => <WithIcon color={colors[value] ?? "green"} icon={<IconStarFilled/>}/>}
+        emptySymbol={value => <Icon color={colors[value] ?? "green"} Icon={IconStar}/>}
+        fullSymbol={value => <Icon color={colors[value] ?? "green"} Icon={IconStarFilled}/>}
         count={6}
     />;
 };

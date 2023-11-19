@@ -9,10 +9,10 @@ import {
     Alert,
     ButtonLink,
     Group,
+    Icon,
     QueryResult,
     Skeleton,
-    useQueryEx,
-    WithIcon
+    useQueryEx
 }                                  from "@use-pico/client";
 import {isSchema}                  from "@use-pico/schema";
 import {t}                         from "@use-pico/translator";
@@ -54,7 +54,6 @@ export const Dependencies: FC<Dependencies.Props> = (
                     {entity.producers.length > 0 && <Group>
                         {entity.producers.map((producer) => <Group
                                 key={producer.id}
-                                gap={2}
                             >
                                 <ButtonLink
                                     icon={<ProducerIcon/>}
@@ -67,9 +66,9 @@ export const Dependencies: FC<Dependencies.Props> = (
                                     label={<ProducerInline entity={producer}/>}
                                 />
                                 <ProducerInput producerId={producer.id}/>
-                                <WithIcon
+                            <Icon
                                     size={"xs"}
-                                    icon={<IconArrowRight/>}
+                                    Icon={IconArrowRight}
                                     color={"gray"}
                                 />
                                 <ProducerOutput producerId={producer.id}/>
@@ -86,7 +85,7 @@ export const Dependencies: FC<Dependencies.Props> = (
                     {entity.cycle.length > 0 && <Group>
                         {entity.cycle.map((producer) => <Group
                                 key={producer.id}
-                                gap={2}
+                                gap={"gap-2"}
                             >
                                 <ButtonLink
                                     icon={<ProducerIcon/>}
@@ -99,9 +98,9 @@ export const Dependencies: FC<Dependencies.Props> = (
                                     label={producer.name}
                                 />
                                 <ProducerInput producerId={producer.id}/>
-                                <WithIcon
+                            <Icon
                                     size={"xs"}
-                                    icon={<IconArrowRight/>}
+                                    Icon={IconArrowRight}
                                     color={"gray"}
                                 />
                                 <ProducerOutput producerId={producer.id}/>

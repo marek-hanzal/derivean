@@ -8,7 +8,7 @@ import {tailwindify}      from "../tools/tailwindify";
 import {GroupCol}         from "./Group/GroupCol";
 
 export namespace Group {
-    export type Group = &
+    export type Group =
         HTMLAttributes<HTMLDivElement>
         &
         CommonProps

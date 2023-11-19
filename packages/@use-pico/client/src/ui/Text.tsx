@@ -5,19 +5,27 @@ import {
 import {type CommonProps} from "../api/CommonProps";
 import {tailwindify}      from "../tools/tailwindify";
 
+const twFw = {
+    500: "font-medium",
+} as const;
+type twFw = typeof twFw;
+
 export namespace Text {
     export type Props =
         HTMLAttributes<HTMLSpanElement>
         & CommonProps
         & {
             c?: string;
-            fw?: number;
+            fw?: Fw;
         };
+
+    export type Fw = keyof twFw;
 }
 
 export const Text: FC<Text.Props> = (
     {
         c,
+        fw,
         children,
         ...props
     }
@@ -27,6 +35,7 @@ export const Text: FC<Text.Props> = (
     return <span
         className={cn([
             c === "dimmed" ? "text-secondary-500" : c,
+            fw && twFw[fw],
         ])}
         {...$props}
     >

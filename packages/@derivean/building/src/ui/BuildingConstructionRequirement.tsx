@@ -31,13 +31,13 @@ export const BuildingConstructionRequirement: FC<BuildingConstructionRequirement
         WithSuccess={({entities}) => {
             return entities.length > 0 ? <Nav
                 separator={"&"}
-                separatorMargin={4}
+                separatorMargin={"gap-4"}
                 items={entities.map(requirement => ({
                     type:      "custom",
                     component: <ItemFetch
                                    key={requirement.id}
                                    override={requirement.itemId}
-                                   WithSuccess={({entity}) => <Group gap={4}>
+                                   WithSuccess={({entity}) => <Group gap={"gap-4"}>
                                        <ItemInline entity={entity}/>
                                        <Text fw={500}>x{requirement.amount}</Text>
                                    </Group>}

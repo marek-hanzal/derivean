@@ -1,49 +1,30 @@
-import {IconWhirl}        from "@tabler/icons-react";
-import {isString}         from "@use-pico/utils";
-import {
-    type ComponentProps,
-    type FC,
-    type HTMLAttributes
-}                         from "react";
-import {type CommonProps} from "../api/CommonProps";
-import {tailwindify}      from "../tools/tailwindify";
-
-const twSize: Record<CommonProps.Size, number> = {
-    "xs":  8,
-    "sm":  16,
-    "md":  24,
-    "lg":  32,
-    "xl":  64,
-    "xl2": 92,
-} as const;
+import {IconWhirl}           from "@tabler/icons-react";
+import {type HTMLAttributes} from "react";
+import {tailwindify}         from "../tools/tailwindify";
+import {Icon}                from "./Icon";
 
 export namespace Loader {
-    export interface Props<
-        TIconProps extends IconProps = ComponentProps<typeof IconWhirl>,
-    > {
-        size?: CommonProps.Size | number;
-        Icon?: FC<TIconProps>;
-        sx?: {
-            root?: HTMLAttributes<HTMLDivElement>;
-            icon?: TIconProps;
-        };
-    }
-
-    export interface IconProps {
-        size?: number | string;
-        className?: string;
-    }
+    export type Props<
+        TIconProps extends Icon.IconProps,
+    > =
+        Partial<Icon.Props<TIconProps>>
+        & {
+            sx?: {
+                root?: HTMLAttributes<HTMLDivElement>;
+            };
+        }
 }
 
-export const Loader: FC<Loader.Props> = (
+export const Loader = <
+    TIconProps extends Icon.IconProps,
+>(
     {
-        size = 16,
-        Icon = IconWhirl,
         sx,
-    }
+        Icon: $Icon,
+        ...   props
+    }: Loader.Props<TIconProps>,
 ) => {
     const root = tailwindify(sx?.root || {});
-    const icon = tailwindify(sx?.icon || {});
 
     return <div
         className={root.cn([
@@ -52,11 +33,12 @@ export const Loader: FC<Loader.Props> = (
         {...root.$props}
     >
         <Icon
-            size={isString(size) ? (twSize[size] ?? size) : size}
-            className={icon.cn([
-                "text-primary-500 animate-spin"
-            ])}
-            {...icon.$props}
+            size={"sm"}
+            cn={[
+                "text-primary-500 animate-spin",
+            ]}
+            Icon={$Icon || IconWhirl as Icon.Props<any>}
+            {...props}
         />
     </div>;
 };

@@ -1,7 +1,7 @@
 import {IconArrowDown}            from "@tabler/icons-react";
 import {
     Center,
-    WithIcon
+    Icon
 }                                 from "@use-pico/client";
 import {type FC}                  from "react";
 import {ProducerInputQueryStore}  from "../store/ProducerInputQueryStore";
@@ -33,10 +33,10 @@ export const Pipeline: FC<Pipeline.Props> = (
         </ProducerInputQueryStore.Provider>
 
         <Center my={"xl"}>
-            <WithIcon
+            <Icon
                 color={"gray"}
-                size={64}
-                icon={<IconArrowDown/>}
+                size={"xl"}
+                Icon={IconArrowDown}
             />
         </Center>
 
