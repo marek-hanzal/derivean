@@ -1,6 +1,6 @@
 export const twAlignItems = {
     "baseline": "items-baseline",
-    "center":   "items-center",
+    "center": "justify-center",
 } as const;
 export type twAlignItems = typeof twAlignItems;
 export namespace twAlignItems {

@@ -20,7 +20,9 @@ export const Center: FC<Center.Props> = (
         align={"center"}
         {...props}
     >
-        <FlexItem>
+        <FlexItem
+            span={"content"}
+        >
             {children}
         </FlexItem>
     </Flex>;

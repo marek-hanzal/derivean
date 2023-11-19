@@ -1,8 +1,17 @@
 import {
     Center,
     VersionStamp
-} from "@use-pico/client";
+}                from "@use-pico/client";
+import {type FC} from "react";
 
-export const Footer = () => {
-    return <Center><VersionStamp/></Center>;
+export namespace Footer {
+    export type Props = Center.Props;
+}
+
+export const Footer: FC<Footer.Props> = props => {
+    return <Center
+        {...props}
+    >
+        <VersionStamp/>
+    </Center>;
 };

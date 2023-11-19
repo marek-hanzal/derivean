@@ -28,6 +28,8 @@ export const ManagerLayout: FC<ManagerLayout.Props> = (
             {...props}
         />
         <Divider variant={"dotted"} m={"lg"}/>
-        <Footer/>
+        <Footer
+            mb={"xl"}
+        />
     </>;
 };

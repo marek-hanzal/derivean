@@ -26,6 +26,8 @@ export const GameLayout: FC<GameLayout.Props> = (
             {...props}
         />
         <Divider variant={"dotted"} my={"md"} mt={"xs"}/>
-        <Footer/>
+        <Footer
+            mb={"xl"}
+        />
     </>;
 };
