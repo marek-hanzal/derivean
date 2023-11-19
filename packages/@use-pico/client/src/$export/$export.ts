@@ -35,6 +35,7 @@ export * from "./Loader";
 export * from "./LoadingOverlay";
 export * from "./LocaleLink";
 export * from "./LocaleRedirect";
+export * from "./Main";
 export * from "./MainMenu";
 export * from "./Menu";
 export * from "./Nav";

@@ -3,9 +3,8 @@
 	"private": true,
 	"version": "0.5.0.beta0",
 	"scripts": {
-		"build": "dotenv -- next build",
+		"build": "dotenv -- next build --experimental-app-only",
 		"start": "dotenv -- next start",
-		"migration": "dotenv -- tsx ./cli/migration.ts",
 		"translations": "tsx ./cli/translations.ts",
 		"dev": "next dev",
 		"lint": "dotenv -c development -- next lint",
