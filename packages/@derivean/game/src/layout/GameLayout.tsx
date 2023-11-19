@@ -7,14 +7,22 @@ import {Footer}        from "../ui/Footer";
 import {SignOutButton} from "./GameLayout/SignOutButton";
 
 export namespace GameLayout {
-    export type Props = AppLayout.Props;
+    export type Props = Partial<AppLayout.Props>;
 }
 
-export const GameLayout: FC<GameLayout.Props> = props => {
+export const GameLayout: FC<GameLayout.Props> = (
+    {
+        header,
+        ...props
+    }
+) => {
     return <>
         <AppLayout
-            home={"/game"}
-            right={<SignOutButton/>}
+            header={{
+                home:  "/game",
+                right: <SignOutButton/>,
+                ...header,
+            }}
             {...props}
         />
         <Divider variant={"dotted"} my={"md"} mt={"xs"}/>

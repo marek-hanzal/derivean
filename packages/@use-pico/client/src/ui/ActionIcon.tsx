@@ -14,7 +14,7 @@ export const ActionIcon: FC<ActionIcon.Props> = (
 ) => {
     return <Button
         variant={"subtle"}
-        className={"p-2"}
+        cn={["p-2"]}
         {...props}
     >
         {children}

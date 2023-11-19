@@ -16,7 +16,9 @@ export default function Layout(
     }: Layout.Props
 ) {
     return <GameLayout
-        logo={logo}
+        header={{
+            logo,
+        }}
     >
         {children}
     </GameLayout>;

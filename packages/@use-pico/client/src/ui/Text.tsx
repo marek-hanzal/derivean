@@ -7,6 +7,7 @@ import {tailwindify}      from "../tools/tailwindify";
 
 const twFw = {
     500: "font-medium",
+    600: "font-semibold",
 } as const;
 type twFw = typeof twFw;
 
@@ -34,7 +35,7 @@ export const Text: FC<Text.Props> = (
 
     return <span
         className={cn([
-            c === "dimmed" ? "text-secondary-500" : c,
+            c === "dimmed" ? "text-secondary-500 font-light" : c,
             fw && twFw[fw],
         ])}
         {...$props}

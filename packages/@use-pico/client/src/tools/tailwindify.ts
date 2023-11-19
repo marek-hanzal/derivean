@@ -64,9 +64,6 @@ export const tailwindify = <
     $props.mb && classes.push(twMargin.b[$props.mb]);
     $props.m && classes.push(twMargin.m[$props.m]);
 
-    $props.cn && classes.push(...$props.cn.filter(Boolean));
-    $props.className && classes.push($props.className);
-
     for (const key of cleanup) {
         $props[key] = undefined;
         delete $props[key];
@@ -75,9 +72,14 @@ export const tailwindify = <
     return {
         tw: classes,
         $props,
-        cn: input => twMerge([
+        cn: input => twMerge(
             ...classes,
-            ...(input?.filter(Boolean) || []),
-        ]),
+            ...input?.filter(Boolean) || [],
+            /**
+             * Things passed through props wins.
+             */
+            props.className,
+            ...props.cn?.filter(Boolean) || [],
+        ),
     };
 };

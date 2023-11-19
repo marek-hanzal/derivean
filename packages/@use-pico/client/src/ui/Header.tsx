@@ -15,10 +15,11 @@ export namespace Header {
         /**
          * Optional logo on the left side
          */
-        logo?: {
-            src: ComponentProps<typeof Image>["src"];
-            link?: IHrefProps | string;
-        };
+        logo?: ComponentProps<typeof Image>["src"];
+        /**
+         * Home link (logo link)
+         */
+        home?: IHrefProps | string;
         /**
          * Center part of the layout (header)
          */
@@ -30,6 +31,7 @@ export namespace Header {
 export const Header: FC<Header.Props> = (
     {
         logo,
+        home,
         center,
         right,
         ...props
@@ -42,22 +44,24 @@ export const Header: FC<Header.Props> = (
         {...props}
     >
         <FlexItem span={"content"}>
-            {logo && logo.link && <LocaleLink
-                href={logo.link}
+            {logo && home && <LocaleLink
+                href={home}
                 style={{
                     display: "block",
                 }}
             >
                 <Image
+                    priority
                     height={32}
                     alt={"logo"}
-                    src={logo.src}
+                    src={logo}
                 />
             </LocaleLink>}
-            {logo && !logo.link && <Image
+            {logo && !home && <Image
+                priority
                 height={32}
                 alt={"logo"}
-                src={logo.src}
+                src={logo}
             />}
         </FlexItem>
         <FlexItem span={"auto"}>

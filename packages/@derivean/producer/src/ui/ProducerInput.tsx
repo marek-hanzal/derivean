@@ -32,7 +32,7 @@ export const ProducerInput: FC<ProducerInput.Props> = (
         WithSuccess={({entities}) => <>
             {entities.length > 0 && <Nav
                 separator={"&"}
-                separatorMargin={4}
+                separatorMargin={"gap-4"}
                 items={entities.map(entity => ({
                     type:      "custom",
                     component: <ItemFetch

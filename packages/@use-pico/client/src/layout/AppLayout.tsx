@@ -1,22 +1,14 @@
-import Image                 from "next/image";
 import {
-    type ComponentProps,
     type FC,
-    type PropsWithChildren,
-    type ReactNode
+    type PropsWithChildren
 }                            from "react";
 import {BlockLoadingOverlay} from "../ui/BlockLoadingOverlay";
+import {Header}              from "../ui/Header";
 import {Unblock}             from "../utils/Unblock";
 
 export namespace AppLayout {
     export interface Props extends PropsWithChildren {
-        logo: ComponentProps<typeof Image>["src"];
-        home?: string;
-        /**
-         * Center part of the layout (header)
-         */
-        center?: ReactNode;
-        right?: ReactNode;
+        header?: Header.Props;
     }
 }
 
@@ -25,16 +17,15 @@ export namespace AppLayout {
  */
 export const AppLayout: FC<AppLayout.Props> = (
     {
-        logo,
-        home = "/root",
-        center,
-        right,
+        header,
         children
     }) => {
     return <>
         <Unblock/>
         <BlockLoadingOverlay/>
-
+        {header && <Header
+            {...header}
+        />}
         {children}
     </>;
 };
