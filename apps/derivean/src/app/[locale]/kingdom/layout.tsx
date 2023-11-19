@@ -32,20 +32,22 @@ export default async function Layout(
     const kingdom = await withKingdomRepository.use(container).withQuery.fetchOrThrow({where: {id: kingdomId}});
 
     return <KingdomLayout
-        home={`/kingdom/${kingdom.id}`}
-        logo={logo}
-        center={<Group>
-            <Divider orientation={"vertical"}/>
-            <Group gap={"xs"}>
-                <ButtonLink
-                    href={"/game"}
-                    label={<IconArrowLeft/>}
-                />
-                <Title c={"dimmed"} order={4}>{t({values: kingdom})`Selected kingdom`}</Title>
-            </Group>
-            <Divider orientation={"vertical"}/>
-            <KingdomMenu kingdomId={kingdom.id}/>
-        </Group>}
+        header={{
+            home:   `/kingdom/${kingdom.id}`,
+            logo,
+            center: <Group>
+                        <Divider orientation={"vertical"}/>
+                        <Group gap={"xs"}>
+                            <ButtonLink
+                                href={"/game"}
+                                label={<IconArrowLeft/>}
+                            />
+                            <Title c={"dimmed"} order={4}>{t({values: kingdom})`Selected kingdom`}</Title>
+                        </Group>
+                        <Divider orientation={"vertical"}/>
+                        <KingdomMenu kingdomId={kingdom.id}/>
+                    </Group>,
+        }}
     >
         {children}
     </KingdomLayout>;

@@ -11,12 +11,20 @@ export namespace ManagerLayout {
     export type Props = AppLayout.Props;
 }
 
-export const ManagerLayout: FC<ManagerLayout.Props> = props => {
+export const ManagerLayout: FC<ManagerLayout.Props> = (
+    {
+        header,
+        ...props
+    }
+) => {
     return <>
         <AppLayout
-            home={"/manager"}
-            right={<SignOutButton/>}
-            center={<ManagerMenu/>}
+            header={{
+                home:   "/manager",
+                right:  <SignOutButton/>,
+                center: <ManagerMenu/>,
+                ...header,
+            }}
             {...props}
         />
         <Divider variant={"dotted"} m={"lg"}/>

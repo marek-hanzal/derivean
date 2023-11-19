@@ -10,10 +10,18 @@ export namespace KingdomLayout {
     export type Props = AppLayout.Props;
 }
 
-export const KingdomLayout: FC<KingdomLayout.Props> = props => {
+export const KingdomLayout: FC<KingdomLayout.Props> = (
+    {
+        header,
+        ...props
+    }
+) => {
     return <>
         <AppLayout
-            right={<SignOutButton/>}
+            header={{
+                right: <SignOutButton/>,
+                ...header,
+            }}
             {...props}
         />
         <Divider variant={"dotted"} m={"lg"}/>

@@ -12,7 +12,9 @@ export default function Layout(
     }: Layout.Props
 ) {
     return <ManagerLayout
-        logo={logo}
+        header={{
+            logo,
+        }}
     >
         {children}
     </ManagerLayout>;

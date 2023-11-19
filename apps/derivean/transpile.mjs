@@ -1,9 +1,4 @@
 export const transpile = [
-    '@derivean/public',
-    '@use-pico/client',
-    '@use-pico/server',
-    '@use-pico/translator',
-    '@use-pico/utils',
     // '@derivean/building',
     // '@derivean/event',
     // '@derivean/game',
@@ -14,7 +9,12 @@ export const transpile = [
     // '@derivean/manager',
     // '@derivean/orm',
     // '@derivean/producer',
+    // '@derivean/public',
     // '@derivean/root',
     // '@derivean/server',
-    // '@derivean/ui',
+    '@derivean/ui',
+    '@use-pico/client',
+    '@use-pico/server',
+    '@use-pico/translator',
+    '@use-pico/utils',
 ];
