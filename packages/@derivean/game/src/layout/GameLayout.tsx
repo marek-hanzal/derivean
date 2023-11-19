@@ -17,7 +17,7 @@ export const GameLayout: FC<GameLayout.Props> = props => {
             right={<SignOutButton/>}
             {...props}
         />
-        <Divider variant={"dotted"} my={"lg"}/>
+        <Divider variant={"dotted"} my={"md"} mt={"xs"}/>
         <Footer/>
     </>;
 };
