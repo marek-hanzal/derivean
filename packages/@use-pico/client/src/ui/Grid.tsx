@@ -1,7 +1,6 @@
-import {cn}               from "@use-pico/utils";
 import {
     type FC,
-    type PropsWithChildren
+    type HTMLAttributes
 }                         from "react";
 import {type CommonProps} from "../api/CommonProps";
 import {tailwindify}      from "../tools/tailwindify";
@@ -32,11 +31,14 @@ const twCols = {
 } as const;
 
 export namespace Grid {
-    export type Props = PropsWithChildren<CommonProps & {
-        align?: AlignItems;
-        gap?: Gap;
-        cols?: Cols;
-    }>;
+    export type Props =
+        HTMLAttributes<HTMLDivElement>
+        & CommonProps
+        & {
+            align?: AlignItems;
+            gap?: Gap;
+            cols?: Cols;
+        };
 
     export type Gap = keyof typeof twGap;
     export type Cols = keyof typeof twCols;
@@ -52,14 +54,16 @@ export const Grid: FC<Grid.Props> = (
         ...props
     }
 ) => {
+    const {cn, $props} = tailwindify(props);
+
     return <div
-        className={cn(
+        className={cn([
             "grid auto-cols-max",
             cols ? twCols[cols] : "grid-flow-col",
             gap ? twGap[gap] : undefined,
             align ? twAlignItems[align] : undefined,
-            ...tailwindify(props)
-        )}
+        ])}
+        {...$props}
     >
         {children}
     </div>;

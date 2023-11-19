@@ -1,4 +1,5 @@
 export * from "./IDateInput";
+export * from "./Prettify";
 export * from "./Timer";
 export * from "./cleanOf";
 export * from "./cn";

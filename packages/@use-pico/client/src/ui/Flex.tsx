@@ -1,16 +1,18 @@
-import {cn}               from "@use-pico/utils";
 import {
     type FC,
-    type PropsWithChildren
+    type HTMLAttributes
 }                         from "react";
 import {type CommonProps} from "../api/CommonProps";
 import {tailwindify}      from "../tools/tailwindify";
 import {twAlignItems}     from "../tools/tailwindify/twAlignItems";
 
 export namespace Flex {
-    export type Props = PropsWithChildren<CommonProps & {
-        align?: Flex.AlignItems;
-    }>;
+    export type Props =
+        HTMLAttributes<HTMLDivElement>
+        & CommonProps
+        & {
+            align?: Flex.AlignItems;
+        };
 
     export type AlignItems = twAlignItems.Values;
 }
@@ -22,12 +24,14 @@ export const Flex: FC<Flex.Props> = (
         ...props
     },
 ) => {
+    const {cn, $props} = tailwindify(props);
+
     return <div
-        className={cn(
+        className={cn([
             "flex",
             align ? twAlignItems[align] : undefined,
-            ...tailwindify(props)
-        )}
+        ])}
+        {...$props}
     >
         {children}
     </div>;

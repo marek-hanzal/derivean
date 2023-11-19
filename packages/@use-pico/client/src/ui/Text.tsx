@@ -1,16 +1,18 @@
-import {cn}               from "@use-pico/utils";
 import {
     type FC,
-    type PropsWithChildren
+    type HTMLAttributes
 }                         from "react";
 import {type CommonProps} from "../api/CommonProps";
 import {tailwindify}      from "../tools/tailwindify";
 
 export namespace Text {
-    export type Props = PropsWithChildren<CommonProps & {
-        c?: string;
-        fw?: number;
-    }>;
+    export type Props =
+        HTMLAttributes<HTMLSpanElement>
+        & CommonProps
+        & {
+            c?: string;
+            fw?: number;
+        };
 }
 
 export const Text: FC<Text.Props> = (
@@ -20,12 +22,13 @@ export const Text: FC<Text.Props> = (
         ...props
     }
 ) => {
+    const {cn, $props} = tailwindify(props);
+
     return <span
-        className={cn(
-            "",
+        className={cn([
             c === "dimmed" ? "text-secondary-500" : c,
-            tailwindify(props),
-        )}
+        ])}
+        {...$props}
     >
         {children}
     </span>;

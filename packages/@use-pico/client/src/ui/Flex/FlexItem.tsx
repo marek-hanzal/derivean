@@ -1,7 +1,6 @@
-import {cn}               from "@use-pico/utils";
 import {
     type FC,
-    type PropsWithChildren
+    HTMLAttributes
 }                         from "react";
 import {type CommonProps} from "../../api/CommonProps";
 import {tailwindify}      from "../../tools/tailwindify";
@@ -13,9 +12,12 @@ const twSpan = {
 type twSpan = typeof twSpan;
 
 export namespace FlexItem {
-    export type Props = PropsWithChildren<CommonProps & {
-        span?: Span;
-    }>;
+    export type Props =
+        HTMLAttributes<HTMLDivElement>
+        & CommonProps
+        & {
+            span?: Span;
+        };
 
     export type Span = keyof twSpan;
 }
@@ -27,11 +29,13 @@ export const FlexItem: FC<FlexItem.Props> = (
         ...props
     },
 ) => {
+    const {cn, $props} = tailwindify(props);
+
     return <div
-        className={cn(
+        className={cn([
             span ? twSpan[span] : undefined,
-            ...tailwindify(props)
-        )}
+        ])}
+        {...$props}
     >
         {children}
     </div>;

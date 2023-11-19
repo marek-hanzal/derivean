@@ -1,13 +1,10 @@
 "use client";
 
-import {cn}               from "@use-pico/utils";
 import {
     type ButtonHTMLAttributes,
     type FC,
-    type PropsWithChildren,
     type ReactNode
 }                         from "react";
-import {twMerge}          from "tailwind-merge";
 import {type CommonProps} from "../api/CommonProps";
 import {tailwindify}      from "../tools/tailwindify";
 
@@ -27,14 +24,15 @@ const twVariant = {
 type twVariant = typeof twVariant;
 
 export namespace Button {
-    export type Props = PropsWithChildren<
-        CommonProps &
+    export type Props =
+        ButtonHTMLAttributes<HTMLButtonElement>
+        & CommonProps
+        &
         {
             leftSection?: ReactNode;
             size?: Size;
             variant?: Variant;
-        } & ButtonHTMLAttributes<HTMLButtonElement>
-    >;
+        };
 
     export type Size = keyof twSize;
     export type Variant = keyof twVariant;
@@ -42,29 +40,29 @@ export namespace Button {
 
 export const Button: FC<Button.Props> = (
     {
+        leftSection,
         variant = "primary",
         size = "md",
         onClick,
         children,
-        className,
         ...props
     }
 ) => {
+    const {cn, $props} = tailwindify(props);
+
     return <button
         type={"button"}
-        className={twMerge(
-            cn(`
+        className={cn([
+            `
                 border-1
                 rounded-md
                 text-white
             `,
-                size ? twSize[size] : undefined,
-                variant ? twVariant[variant] : undefined,
-                tailwindify(props),
-                className
-            )
-        )}
+            size ? twSize[size] : undefined,
+            variant ? twVariant[variant] : undefined,
+        ])}
         onClick={onClick}
+        {...$props}
     >
         {children}
     </button>;

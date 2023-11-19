@@ -1,7 +1,6 @@
-import {cn}               from "@use-pico/utils";
 import {
     type FC,
-    type PropsWithChildren
+    type HTMLAttributes
 }                         from "react";
 import {type CommonProps} from "../api/CommonProps";
 import {tailwindify}      from "../tools/tailwindify";
@@ -12,10 +11,13 @@ const twVariant = {
 type twVariant = typeof twVariant;
 
 export namespace Divider {
-    export type Props = PropsWithChildren<CommonProps & {
-        orientation?: Orientation;
-        variant?: Variant;
-    }>;
+    export type Props =
+        HTMLAttributes<HTMLHRElement>
+        & CommonProps
+        & {
+            orientation?: Orientation;
+            variant?: Variant;
+        };
 
     export type Variant = keyof twVariant;
 
@@ -31,11 +33,13 @@ export const Divider: FC<Divider.Props> = (
         ...props
     }
 ) => {
+    const {cn, $props} = tailwindify(props);
+
     return <hr
-        className={cn(
+        className={cn([
             "h-0.5 border bg-secondary-300 opacity-100",
             variant ? twVariant[variant] : undefined,
-            tailwindify(props),
-        )}
+        ])}
+        {...$props}
     />;
 };

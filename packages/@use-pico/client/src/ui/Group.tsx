@@ -1,15 +1,22 @@
 import {
     type FC,
+    type HTMLAttributes,
     type ReactElement
 }                         from "react";
 import {type CommonProps} from "../api/CommonProps";
+import {tailwindify}      from "../tools/tailwindify";
 import {GroupCol}         from "./Group/GroupCol";
 
 export namespace Group {
-    export type Group =
+    export type Group = &
+        HTMLAttributes<HTMLDivElement>
+        &
         CommonProps
         & {
-            gap?: CommonProps.Size;
+            /**
+             * TailwindCSS gap property.
+             */
+            gap?: string;
             children: ReactElement<GroupCol.Props> | ReactElement<GroupCol.Props>[];
         };
 }
@@ -20,9 +27,17 @@ export namespace Group {
 export const Group: FC<Group.Group> = (
     {
         children,
+        ...props
     }
 ) => {
-    return <div className={"flex flex-row"}>
+    const {cn, $props} = tailwindify(props);
+
+    return <div
+        className={cn([
+            "flex flex-row",
+        ])}
+        {...$props}
+    >
         {children}
     </div>;
 };
