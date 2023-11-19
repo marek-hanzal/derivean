@@ -9,7 +9,7 @@ export namespace Nav {
     export interface Prop extends CommonProps {
         items: Item[];
         separator?: ReactNode;
-        separatorMargin?: CommonProps.Size;
+        separatorMargin?: string;
     }
 
     export interface WithIcon {

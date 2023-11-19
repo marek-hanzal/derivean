@@ -13,7 +13,8 @@ export namespace BlockLoadingOverlay {
 export const BlockLoadingOverlay: FC<BlockLoadingOverlay.Props> = props => {
     const block = useStore$(BlockStore, ({isBlock}) => ({isBlock}));
     return <LoadingOverlay
-        visible={block?.isBlock}
+        // visible={block?.isBlock}
+        visible
         {...props}
     />;
 };

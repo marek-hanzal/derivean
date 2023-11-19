@@ -51,7 +51,6 @@ export * from "./Title";
 export * from "./TranslationRpc";
 export * from "./VersionStamp";
 export * from "./WithEntity";
-export * from "./WithIcon";
 export * from "./createQueryStore";
 export * from "./localeOf";
 export * from "./tailwindify";

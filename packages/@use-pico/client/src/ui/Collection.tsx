@@ -80,7 +80,7 @@ export const Collection = <
     });
     return <QueryResult
         result={result}
-        WithLoading={() => loader || <Loader type={"dots"} size={"xs"}/>}
+        WithLoading={() => loader || <Loader size={"xs"}/>}
         WithError={WithError}
         WithSuccess={({entity}) => <WithSuccess entities={entity}/>}
     />;

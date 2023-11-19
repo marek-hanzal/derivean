@@ -102,7 +102,7 @@ export const Fetch = <
 
     return <QueryResult
         result={result}
-        WithLoading={() => loader === undefined ? <Loader type={"dots"} size={"xs"}/> : loader}
+        WithLoading={() => loader === undefined ? <Loader size={"xs"}/> : loader}
         WithError={WithError}
         WithSuccess={({entity}) => entity.length > 0 ? <WithSuccess
             entity={entity[0]}

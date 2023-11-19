@@ -31,6 +31,17 @@ export namespace CommonProps {
         | "subtle";
 
     /**
+     * If some component supports size, this is a default list of sizes.
+     */
+    export type Size =
+        | "xs"
+        | "sm"
+        | "md"
+        | "lg"
+        | "xl"
+        | "xl2"
+
+    /**
      * TailwindCSS color.
      * https://tailwindcss.com/docs/customizing-colors
      */
