@@ -1,5 +1,4 @@
-import {withDullSchema}     from "@use-pico/dull-stuff";
-import {withSelectionStore} from "@use-pico/selection";
+import {type Infer}         from "@use-pico/extras";
 import {type KingdomSchema} from "../schema/KingdomSchema";
 
-export const KingdomSelectionStore = withSelectionStore<withDullSchema.Infer.Entity<KingdomSchema>>();
+export const KingdomSelectionStore = withSelectionStore<Infer.Entity<KingdomSchema>>();

@@ -7,8 +7,8 @@ import {
     useCallback
 }                              from "react";
 import {KingdomInline}         from "../inline/KingdomInline";
-import {KingdomQueryStore}     from "../query/KingdomQueryStore";
 import {KingdomRpc}            from "../rpc/KingdomRpc";
+import {KingdomQueryStore}     from "../store/KingdomQueryStore";
 import {KingdomSelectionStore} from "../store/KingdomSelectionStore";
 import {KingdomTable}          from "../table/KingdomTable";
 

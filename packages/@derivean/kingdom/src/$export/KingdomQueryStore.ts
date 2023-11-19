@@ -1,1 +1,1 @@
-export {KingdomQueryStore} from "../query/KingdomQueryStore";
+export {KingdomQueryStore} from "../store/KingdomQueryStore";

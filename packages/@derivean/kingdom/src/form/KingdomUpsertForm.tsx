@@ -1,17 +1,17 @@
-import {KingdomIcon} from "@derivean/ui";
-import {TextInput}   from "@use-pico/form";
+import {KingdomIcon}       from "@derivean/ui";
+import {TextInput}         from "@use-pico/form";
 import {
     t,
     tx
-}                    from "@use-pico/i18n";
+}                          from "@use-pico/i18n";
 import {
     type ComponentProps,
     type FC
-}                    from "react";
-import {KingdomUI}   from "../ui/KingdomUI";
+}                          from "react";
+import {KingdomComponents} from "../ui/KingdomComponents";
 
 export namespace KingdomUpsertForm {
-    export type Props = Omit<ComponentProps<KingdomUI["MutationForm"]>, "inputs" | "defaultValues" | "Render">;
+    export type Props = Omit<ComponentProps<KingdomComponents["MutationForm"]>, "inputs" | "defaultValues" | "Render">;
 }
 
 export const KingdomUpsertForm: FC<KingdomUpsertForm.Props> = (
@@ -20,7 +20,7 @@ export const KingdomUpsertForm: FC<KingdomUpsertForm.Props> = (
         ...props
     }
 ) => {
-    return <KingdomUI.MutationForm
+    return <KingdomComponents.MutationForm
         text={{
             submit:  entity ? t()`Update kingdom (label)` : t()`Create kingdom (label)`,
             success: {

@@ -28,6 +28,7 @@ export namespace Table {
                 message?: ReactNode;
             }
         };
+        compact?: boolean;
         icon?: ReactNode;
         columns: Columns<TColumns, TSchema>;
     }
