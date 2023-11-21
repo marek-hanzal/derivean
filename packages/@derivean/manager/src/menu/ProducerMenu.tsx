@@ -27,14 +27,14 @@ export const ProducerMenu: FC<ProducerMenu.Props> = (
             {
                 type:  "link",
                 href:  "/manager/producer/[id]",
-                label: t()`Producer detail (label)`,
+                label: t`Producer detail (label)`,
                 icon:  <ProducerIcon/>,
                 query,
             },
             {
                 type:  "link",
                 href:  "/manager/producer/[id]/pipeline",
-                label: t()`Producer pipeline`,
+                label: t`Producer pipeline`,
                 icon:  <PipelineIcon/>,
                 query,
             },

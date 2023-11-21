@@ -28,23 +28,23 @@ export const EventMenu: FC<EventMenu.Props> = (
             {
                 type:  "link",
                 href:  "/manager/event/[id]",
-                icon: <IconSearch/>,
+                icon:  <IconSearch/>,
                 query,
-                label: t()`Detail`,
+                label: t`Detail`,
             },
             event.type === "EventInventory" && {
                 type:  "link",
-                href: `/manager/event/[id]/type/${event.type}`,
+                href:  `/manager/event/[id]/type/${event.type}`,
                 icon:  <InventoryIcon/>,
                 query,
-                label: t()`Event type [EventInventory]`,
+                label: t`Event type [EventInventory]`,
             },
             event.type === "EventHero" && {
                 type:  "link",
                 href:  `/manager/event/[id]/type/${event.type}`,
                 icon:  <HeroIcon/>,
                 query,
-                label: t()`Event type [EventHero]`,
+                label: t`Event type [EventHero]`,
             },
         ]}
         {...props}

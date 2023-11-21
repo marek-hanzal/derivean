@@ -12,7 +12,10 @@ import {
     Nav,
     Page
 }                  from "@use-pico/client";
-import {t}         from "@use-pico/translator";
+import {
+    t,
+    tv
+}                  from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {
@@ -33,7 +36,7 @@ export default async function Index({params: {id}}: Index.Props) {
     return <Page
         icon={<EventIcon/>}
         text={{
-            header: t({values: event})`Event type [EventHero] (label)`,
+            header: tv(event)`Event type [EventHero] (label)`,
         }}
         nav={<Nav
             items={[
@@ -45,7 +48,7 @@ export default async function Index({params: {id}}: Index.Props) {
                 {
                     type:  "link",
                     href:  "/manager/event/list",
-                    label: t()`Event list`,
+                    label: t`Event list`,
                     icon:  <ListIcon/>,
                 },
             ]}

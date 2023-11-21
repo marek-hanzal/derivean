@@ -43,7 +43,7 @@ export const BuildingConstructionRequirement: FC<BuildingConstructionRequirement
                                    </Group>}
                                />,
                 }))}
-            /> : <Text c={"dimmed"}>({t()`Building without requirements`})</Text>;
+            /> : <Text c={"dimmed"}>({t`Building without requirements`})</Text>;
         }}
     />;
 };

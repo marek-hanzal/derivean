@@ -24,7 +24,7 @@ export const BuildingPreview: FC<BuildingPreview.Props> = (
     return <Preview
         items={[
             {
-                label: t()`Building name`,
+                label: t`Building name`,
                 value: <Group gap={"xs"}>
                            <BuildingInline entity={building}/>
                            <Text c={"dimmed"}>
@@ -33,7 +33,7 @@ export const BuildingPreview: FC<BuildingPreview.Props> = (
                        </Group>,
             },
             {
-                label: t()`Building requirement (label)`,
+                label: t`Building requirement (label)`,
                 value: <BuildingRequirement buildingId={building.id}/>
             },
         ]}

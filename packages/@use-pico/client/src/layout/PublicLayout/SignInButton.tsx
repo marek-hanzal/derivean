@@ -31,6 +31,6 @@ export const SignInButton: FC<SignInButton.Props> = (
             href: loginUrl,
         }) : signIn(undefined, signInOptions)}
     >
-        {t()`Sign-in`}
+        {t`Sign-in`}
     </Button>;
 };

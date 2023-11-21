@@ -26,19 +26,19 @@ export const ManagerMenu: FC<ManagerMenu.Props> = props => {
         items={[
             {
                 type:  "group",
-                label: t()`Item management`,
+                label: t`Item management`,
                 icon:  <ItemIcon/>,
                 items: [
                     {
                         type:  "link",
                         href:  "/manager/item/type/list",
-                        label: t()`Item type list`,
+                        label: t`Item type list`,
                         icon:  <ListIcon/>,
                     },
                     {
                         type:  "link",
                         href:  "/manager/item/list",
-                        label: t()`Item list`,
+                        label: t`Item list`,
                         icon:  <ItemIcon/>,
                     },
                 ],
@@ -46,24 +46,24 @@ export const ManagerMenu: FC<ManagerMenu.Props> = props => {
             {
                 type:  "link",
                 href:  "/manager/building/list",
-                label: t()`Building list`,
+                label: t`Building list`,
                 icon:  <BuildingIcon/>,
             },
             {
                 type:  "group",
-                label: t()`Producer management`,
+                label: t`Producer management`,
                 icon:  <ProducerIcon/>,
                 items: [
                     {
-                        type: "link",
+                        type:  "link",
                         href:  "/manager/producer/list",
-                        label: t()`Producer list`,
+                        label: t`Producer list`,
                         icon:  <ListIcon/>,
                     },
                     {
-                        type: "link",
+                        type:  "link",
                         href:  "/manager/producer/overview",
-                        label: t()`Producer overview`,
+                        label: t`Producer overview`,
                         icon:  <IconGraph/>,
                     },
                 ],
@@ -71,19 +71,19 @@ export const ManagerMenu: FC<ManagerMenu.Props> = props => {
             {
                 type:  "link",
                 href:  "/manager/event/list",
-                label: t()`Event list (label)`,
+                label: t`Event list (label)`,
                 icon:  <EventIcon/>,
             },
             {
                 type:  "link",
                 href:  "/manager/translation/list",
-                label: t()`Translations`,
+                label: t`Translations`,
                 icon:  <IconLanguage/>,
             },
             {
                 type:  "link",
                 href:  "/game",
-                label: t()`Hra`,
+                label: t`Hra`,
                 icon:  <IconCrown/>,
             },
         ]}

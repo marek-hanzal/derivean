@@ -49,7 +49,7 @@ export const Dependencies: FC<Dependencies.Props> = (
             if (isSchema(entity, DependencyProducersSchema)) {
                 return <Alert
                     color={"green"}
-                    title={t()`Producer has no cyclic dependencies`}
+                    title={t`Producer has no cyclic dependencies`}
                 >
                     {entity.producers.length > 0 && <Group>
                         {entity.producers.map((producer) => <Group
@@ -80,7 +80,7 @@ export const Dependencies: FC<Dependencies.Props> = (
                 return <Alert
                     icon={<IconAlertTriangle/>}
                     color={"red"}
-                    title={t()`Producer has cyclic dependencies`}
+                    title={t`Producer has cyclic dependencies`}
                 >
                     {entity.cycle.length > 0 && <Group>
                         {entity.cycle.map((producer) => <Group

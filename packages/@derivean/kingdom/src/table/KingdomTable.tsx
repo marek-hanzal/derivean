@@ -23,10 +23,10 @@ export namespace KingdomTable {
 export const KingdomTable: FC<KingdomTable.Props> = props => {
     return <KingdomComponents.Table
         text={{
-            total: t()`Total count of kingdoms`,
+            total: t`Total count of kingdoms`,
             empty: {
-                title:   t()`No kingdoms found`,
-                message: t()`There are not kingdoms yet`,
+                title:   t`No kingdoms found`,
+                message: t`There are not kingdoms yet`,
             }
         }}
         icon={<KingdomIcon/>}
@@ -70,7 +70,7 @@ export const KingdomTable: FC<KingdomTable.Props> = props => {
         // }}
         columns={{
             name: {
-                title:  t()`Kingdom name`,
+                title: t`Kingdom name`,
                 render: ({item}) => <ButtonLink
                     icon={<KingdomIcon/>}
                     href={{

@@ -9,7 +9,7 @@ import {
     ButtonLink,
     Title
 }                               from "@use-pico/client";
-import {t}                      from "@use-pico/translator";
+import {tv}                     from "@use-pico/translator";
 import {type PropsWithChildren} from "react";
 import logo                     from "../../../../public/assets/logo/logo.svg";
 
@@ -53,7 +53,7 @@ export default async function Layout(
                                 "font-bold",
                             ]}
                         >
-                            {t({values: kingdom})`Selected kingdom`}
+                            {tv(kingdom)`Selected kingdom`}
                         </Title>
                         <KingdomMenu
                             kingdomId={kingdom.id}

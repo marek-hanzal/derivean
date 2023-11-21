@@ -27,14 +27,14 @@ export default async function Available({params: {kingdomId}}: List.Props) {
     return <Page
         icon={<IconHammer/>}
         text={{
-            header: t()`Kingdom building construction (label)`,
+            header: t`Kingdom building construction (label)`,
         }}
         nav={<Nav
             items={[
                 {
                     type: "link",
                     href: {
-                        href:  "/kingdom/[kingdomId]",
+                        href: "/kingdom/[kingdomId]",
                         query: {kingdomId: kingdom.id},
                     },
                     icon: <HomeIcon/>,

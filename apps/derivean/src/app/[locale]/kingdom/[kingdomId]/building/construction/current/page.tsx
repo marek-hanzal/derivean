@@ -23,7 +23,7 @@ export default async function Current({params: {kingdomId}}: List.Props) {
     return <Page
         icon={<ConstructionIcon/>}
         text={{
-            header: t()`Kingdom Building Construction (label)`,
+            header: t`Kingdom Building Construction (label)`,
         }}
         nav={<Nav
             items={[

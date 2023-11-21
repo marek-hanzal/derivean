@@ -50,7 +50,7 @@ export const ProducerInput: FC<ProducerInput.Props> = (
             {!entities.length && <Text
                 c={"dimmed"}
             >
-                {t()`Producer without inputs`}
+                {t`Producer without inputs`}
             </Text>}
         </>}
     />;

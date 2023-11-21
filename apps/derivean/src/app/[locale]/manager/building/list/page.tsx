@@ -10,7 +10,7 @@ export default function Index() {
     return <Page
         icon={<BuildingIcon/>}
         text={{
-            header: t()`Building list`,
+            header: t`Building list`,
         }}
         nav={<Nav
             items={[

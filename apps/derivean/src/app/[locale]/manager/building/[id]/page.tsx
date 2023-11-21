@@ -13,7 +13,10 @@ import {
     Nav,
     Page
 }                     from "@use-pico/client";
-import {t}            from "@use-pico/translator";
+import {
+    t,
+    tv
+}                     from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {
@@ -29,7 +32,7 @@ export default async function Index({params: {id}}: Index.Props) {
     return <Page
         icon={<BuildingIcon/>}
         text={{
-            header: t({values: building})`Building detail`,
+            header: tv(building)`Building detail`,
         }}
         nav={<Nav
             items={[
@@ -41,7 +44,7 @@ export default async function Index({params: {id}}: Index.Props) {
                 {
                     type:  "link",
                     href:  "/manager/building/list",
-                    label: t()`Building list`,
+                    label: t`Building list`,
                     icon:  <ListIcon/>,
                 },
             ]}

@@ -32,7 +32,7 @@ export namespace BuildingTable {
 export const BuildingTable: FC<BuildingTable.Props> = props => {
     return <BuildingComponents.Table
         text={{
-            total: t()`Total count of buildings`,
+            total: t`Total count of buildings`,
         }}
         icon={<BuildingIcon/>}
         // tableActionProps={{
@@ -75,7 +75,7 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
         // }}
         columns={{
             name:         {
-                title:  t()`Building name`,
+                title: t`Building name`,
                 render: ({item}) => <ButtonLink
                     icon={<BuildingIcon/>}
                     href={{
@@ -89,24 +89,24 @@ export const BuildingTable: FC<BuildingTable.Props> = props => {
                 </ButtonLink>,
             },
             construction: {
-                title:  t()`Building construction requirement (label)`,
+                title: t`Building construction requirement (label)`,
                 render: ({item}) => <BuildingConstructionRequirement
                     buildingId={item.id}
                 />,
             },
             time:         {
-                title:  t()`Building construction time (label)`,
+                title: t`Building construction time (label)`,
                 render: ({item}) => <HumanTime seconds={item.construction}/>,
                 width:  10,
             },
             requirements: {
-                title:  t()`Building requirement (label)`,
+                title: t`Building requirement (label)`,
                 render: ({item}) => <BuildingRequirement
                     buildingId={item.id}
                 />,
             },
             maximum:      {
-                title:  t()`Building construction limit (label)`,
+                title: t`Building construction limit (label)`,
                 render: ({item}) => item.maximum,
                 width:  10,
             },

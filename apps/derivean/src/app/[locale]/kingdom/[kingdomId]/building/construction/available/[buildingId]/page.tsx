@@ -8,7 +8,10 @@ import {
     Nav,
     Page
 }                               from "@use-pico/client";
-import {t}                      from "@use-pico/translator";
+import {
+    t,
+    tv
+}                               from "@use-pico/translator";
 
 export namespace List {
     export interface Props {
@@ -33,7 +36,7 @@ export default async function Available(
     return <Page
         icon={<BuildingIcon/>}
         text={{
-            header: t({values: building})`Kingdom building construction detail (label)`,
+            header: tv(building)`Kingdom building construction detail (label)`,
         }}
         nav={<Nav
             items={[
@@ -47,7 +50,7 @@ export default async function Available(
                 },
                 {
                     type:  "link",
-                    label: t()`Kingdom building construction (label)`,
+                    label: t`Kingdom building construction (label)`,
                     icon:  <IconHammer/>,
                     href:  {
                         href:  "/kingdom/[kingdomId]/building/construction/available",

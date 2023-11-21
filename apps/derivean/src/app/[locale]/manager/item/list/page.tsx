@@ -10,9 +10,9 @@ export default function List() {
     return <Page
         icon={<ItemIcon/>}
         text={{
-            header: t()`Item list`,
+            header: t`Item list`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",

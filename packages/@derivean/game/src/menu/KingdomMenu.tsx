@@ -29,30 +29,30 @@ export const KingdomMenu: FC<KingdomMenu.Props> = (
         items={[
             {
                 type:  "link",
-                label: t()`Kingdom building list (label)`,
+                label: t`Kingdom building list (label)`,
                 icon:  <BuildingIcon/>,
                 href:  `/kingdom/[kingdomId]/building/list`,
                 query,
             },
             {
                 type:  "link",
-                label: t()`Kingdom hero list (label)`,
+                label: t`Kingdom hero list (label)`,
                 icon:  <HeroIcon/>,
                 href:  `/kingdom/[kingdomId]/hero/list`,
                 query,
             },
             {
                 type:  "link",
-                label: t()`Kingdom Inventory (label)`,
+                label: t`Kingdom Inventory (label)`,
                 icon:  <InventoryIcon/>,
                 href:  `/kingdom/[kingdomId]/inventory`,
                 query,
             },
             {
                 type:  "link",
-                label: t()`Events (label)`,
+                label: t`Events (label)`,
                 icon:  <EventIcon/>,
-                href: `/kingdom/[kingdomId]/events/current`,
+                href:  `/kingdom/[kingdomId]/events/current`,
                 query,
             },
         ]}

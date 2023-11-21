@@ -13,7 +13,7 @@ export default function Index() {
     return <Page
         icon={<GameIcon/>}
         text={{
-            header: t()`Game overview`,
+            header: t`Game overview`,
         }}
     >
         <Container>

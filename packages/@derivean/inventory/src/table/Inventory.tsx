@@ -37,16 +37,16 @@ export const Inventory: FC<Inventory.Props> = (
 ) => {
     return <InventoryItemTable
         text={{
-            total: t()`Total count of inventory items`,
+            total: t`Total count of inventory items`,
             empty: {
-                title:   t()`Empty inventory`,
-                message: t()`This inventory is empty`,
+                title:   t`Empty inventory`,
+                message: t`This inventory is empty`,
             },
         }}
         icon={<InventoryItemIcon/>}
         columns={{
             item:   {
-                title:  t()`Item`,
+                title: t`Item`,
                 render: ({item}) => <ItemFetch
                     override={item.itemId}
                     loader={<Loader size={"xs"} type={"dots"}/>}
@@ -54,12 +54,12 @@ export const Inventory: FC<Inventory.Props> = (
                 />,
             },
             amount: {
-                title:  t()`Amount`,
+                title: t`Amount`,
                 render: ({item}) => item.amount,
                 width:  10,
             },
             limit:  {
-                title:  t()`Limit`,
+                title: t`Limit`,
                 render: ({item}) => item.limit,
                 width:  10,
             },

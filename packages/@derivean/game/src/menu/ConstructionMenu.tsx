@@ -23,21 +23,21 @@ export const ConstructionMenu: FC<ConstructionMenu.Props> = (
         items={[
             {
                 type:  "link",
-                label: t()`Kingdom building list (label)`,
+                label: t`Kingdom building list (label)`,
                 icon:  <BuildingIcon/>,
                 href:  `/kingdom/[kingdomId]/building/list`,
                 query: {kingdomId},
             },
             {
                 type:  "link",
-                label: t()`Kingdom current construction (label)`,
+                label: t`Kingdom current construction (label)`,
                 icon:  <ConstructionIcon/>,
                 href:  `/kingdom/[kingdomId]/building/construction/current`,
                 query: {kingdomId},
             },
             {
                 type:  "link",
-                label: t()`Kingdom available buildings (label)`,
+                label: t`Kingdom available buildings (label)`,
                 icon:  <IconHammer/>,
                 href:  `/kingdom/[kingdomId]/building/construction/available`,
                 query: {kingdomId},

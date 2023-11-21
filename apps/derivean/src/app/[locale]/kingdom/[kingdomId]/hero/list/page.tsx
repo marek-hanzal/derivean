@@ -22,14 +22,14 @@ export default async function List({params: {kingdomId}}: List.Props) {
     return <Page
         icon={<HeroIcon/>}
         text={{
-            header: t()`Kingdom hero list (label)`,
+            header: t`Kingdom hero list (label)`,
         }}
         nav={<Nav
             items={[
                 {
                     type: "link",
                     href: {
-                        href:  "/kingdom/[kingdomId]",
+                        href: "/kingdom/[kingdomId]",
                         query: {kingdomId: kingdom.id},
                     },
                     icon: <HomeIcon/>,

@@ -7,7 +7,10 @@ import {
     Nav,
     Page
 }                               from "@use-pico/client";
-import {t}                      from "@use-pico/translator";
+import {
+    t,
+    tv
+}                               from "@use-pico/translator";
 
 export namespace List {
     export interface Props {
@@ -23,9 +26,9 @@ export default async function List({params: {id}}: List.Props) {
     return <Page
         icon={<ItemIcon/>}
         text={{
-            header: t({values: itemType})`Item type - item list`,
+            header: tv(itemType)`Item type - item list`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",
@@ -35,7 +38,7 @@ export default async function List({params: {id}}: List.Props) {
                 {
                     type:  "link",
                     href:  "/manager/item/type/list",
-                    label: t()`Item type list`,
+                    label: t`Item type list`,
                     icon:  <ListIcon/>,
                 },
             ]}

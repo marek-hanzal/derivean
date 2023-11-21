@@ -10,9 +10,9 @@ export default function Index() {
     return <Page
         icon={<EventIcon/>}
         text={{
-            header: t()`Event list`,
+            header: t`Event list`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",

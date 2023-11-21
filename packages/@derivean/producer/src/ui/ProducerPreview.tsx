@@ -27,7 +27,7 @@ export const ProducerPreview: FC<ProducerPreview.Props> = (
     return <Preview
         items={[
             {
-                label: t()`Producer name`,
+                label: t`Producer name`,
                 value: <Group gap={"xs"}>
                            <ProducerInline entity={entity}/>
                            <Text c={"dimmed"}>
@@ -36,19 +36,19 @@ export const ProducerPreview: FC<ProducerPreview.Props> = (
                        </Group>,
             },
             {
-                label: t()`Production time`,
+                label: t`Production time`,
                 value: <HumanTime seconds={entity.time}/>,
             },
             {
-                label: t()`Producer pipeline time`,
+                label: t`Producer pipeline time`,
                 value: <ProductionTime producerId={entity.id}/>,
             },
             {
-                label: t()`Producer input`,
+                label: t`Producer input`,
                 value: <ProducerInput producerId={entity.id}/>
             },
             {
-                label: t()`Producer output`,
+                label: t`Producer output`,
                 value: <ProducerOutput producerId={entity.id}/>
             },
         ]}

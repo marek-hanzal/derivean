@@ -6,7 +6,7 @@ export default function List() {
     return <Page
         icon={<IconLanguage/>}
         text={{
-            header: t()`Translation list`,
+            header: t`Translation list`,
         }}
     >
         {/*<StoreProvider*/}

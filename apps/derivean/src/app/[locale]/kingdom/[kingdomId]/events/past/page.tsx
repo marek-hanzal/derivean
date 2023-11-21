@@ -23,7 +23,7 @@ export default async function Events({params: {kingdomId}}: Index.Props) {
     return <Page
         icon={<EventIcon/>}
         text={{
-            header: t()`Past events (label)`,
+            header: t`Past events (label)`,
         }}
         nav={<Nav
             items={[

@@ -20,16 +20,16 @@ export const EventHeroUpsertForm: FC<EventHeroUpsertForm.Props> = (
 ) => {
     return <EventHeroUI.MutationForm
         text={{
-            submit:  entity ? t()`Update event (label)` : t()`Create event (label)`,
+            submit:  entity ? t`Update event (label)` : t`Create event (label)`,
             success: {
-                title:   t()`Success`,
-                message: entity ? t()`EventHero updated` : t()`EventHero created`,
+                title:   t`Success`,
+                message: entity ? t`EventHero updated` : t`EventHero created`,
             }
         }}
         icon={<HeroIcon/>}
         inputs={{
             amount: props => <NumberInput
-                label={t()`EventHero amount`}
+                label={t`EventHero amount`}
                 {...props}
             />,
         }}

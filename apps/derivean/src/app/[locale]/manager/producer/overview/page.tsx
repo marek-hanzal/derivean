@@ -10,9 +10,9 @@ export default function Overview() {
     return <Page
         icon={<ProducerIcon/>}
         text={{
-            header: t()`Producer overview`,
+            header: t`Producer overview`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",

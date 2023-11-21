@@ -20,14 +20,14 @@ export const EventMenu: FC<EventMenu.Props> = (
         items={[
             {
                 type:  "link",
-                label: t()`Current events (label)`,
+                label: t`Current events (label)`,
                 icon:  <EventIcon/>,
                 href:  `/kingdom/[kingdomId]/events/current`,
                 query: {kingdomId},
             },
             {
                 type:  "link",
-                label: t()`Past events (label)`,
+                label: t`Past events (label)`,
                 icon:  <IconTimelineEventMinus/>,
                 href:  `/kingdom/[kingdomId]/events/past`,
                 query: {kingdomId},

@@ -29,7 +29,7 @@ export const EventPreview: FC<EventPreview.Props> = (
     return <Preview
         items={[
             {
-                label: t()`Event name`,
+                label: t`Event name`,
                 value: <Group gap={"xs"}>
                            <EventInline entity={entity}/>
                            <Text c={"dimmed"}>
@@ -38,23 +38,23 @@ export const EventPreview: FC<EventPreview.Props> = (
                        </Group>,
             },
             {
-                label: t()`Event type`,
+                label: t`Event type`,
                 value: td()(`Event type [${entity.type}]`),
             },
             {
-                label: t()`Event instant`,
+                label: t`Event instant`,
                 value: <BoolInline bool={entity.instant}/>,
             },
             {
-                label: t()`Event duration`,
+                label: t`Event duration`,
                 value: <EventDuration duration={entity.duration}/>,
             },
             {
-                label: t()`Event start`,
+                label: t`Event start`,
                 value: entity.from ? <DateInline date={entity.from}/> : "-",
             },
             {
-                label: t()`Event end`,
+                label: t`Event end`,
                 value: entity.to ? <DateInline date={entity.to}/> : "-",
             },
         ]}

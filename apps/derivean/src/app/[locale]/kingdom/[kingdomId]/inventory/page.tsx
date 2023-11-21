@@ -6,7 +6,7 @@ import {
     Nav,
     Page
 }                              from "@use-pico/client";
-import {t}                     from "@use-pico/translator";
+import {tv}                    from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {
@@ -22,7 +22,7 @@ export default async function Index({params: {kingdomId}}: Index.Props) {
     return <Page
         icon={<InventoryIcon/>}
         text={{
-            header: t({values: kingdom})`Kingdom inventory`,
+            header: tv(kingdom)`Kingdom inventory`,
         }}
         nav={<Nav
             items={[

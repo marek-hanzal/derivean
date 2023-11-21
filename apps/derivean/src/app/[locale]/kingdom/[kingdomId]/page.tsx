@@ -2,7 +2,7 @@ import {withKingdomRepository} from "@derivean/kingdom";
 import {container}             from "@derivean/server";
 import {KingdomIcon}           from "@derivean/ui";
 import {Page}                  from "@use-pico/client";
-import {t}                     from "@use-pico/translator";
+import {tv}                    from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {
@@ -18,7 +18,7 @@ export default async function Index({params: {kingdomId}}: Index.Props) {
     return <Page
         icon={<KingdomIcon/>}
         text={{
-            header: t({values: kingdom})`Kingdom overview`,
+            header: tv(kingdom)`Kingdom overview`,
         }}
     >
         buildings, ...

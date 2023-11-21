@@ -16,7 +16,10 @@ import {
     Nav,
     Page
 }                     from "@use-pico/client";
-import {t}            from "@use-pico/translator";
+import {
+    t,
+    tv
+}                     from "@use-pico/translator";
 
 export namespace Index {
     export interface Props {
@@ -36,9 +39,9 @@ export default async function Index({params: {id}}: Index.Props) {
     return <Page
         icon={<ProducerIcon/>}
         text={{
-            header: t({values: producer})`Producer detail`,
+            header: tv(producer)`Producer detail`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",
@@ -48,12 +51,12 @@ export default async function Index({params: {id}}: Index.Props) {
                 {
                     type:  "link",
                     href:  "/manager/producer/list",
-                    label: t()`Producer list`,
+                    label: t`Producer list`,
                     icon:  <ListIcon/>,
                 },
             ]}
         />}
-        append={<ProducerMenu
+        menu={<ProducerMenu
             producerId={producer.id}
             active={["/manager/producer/[id]"]}
         />}

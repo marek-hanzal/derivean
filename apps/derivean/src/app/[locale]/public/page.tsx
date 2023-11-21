@@ -6,7 +6,7 @@ export default function Index() {
     return <Page
         icon={<GameIcon/>}
         text={{
-            header: t()`DeRivean - The Invisible Game`,
+            header: t`DeRivean - The Invisible Game`,
         }}
     >
     </Page>;
