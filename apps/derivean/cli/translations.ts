@@ -1,4 +1,4 @@
-import {withTx} from "@use-pico/server";
+import {withTx} from "@use-pico/server/src/generator/withTx";
 
 withTx({
     packages: [
