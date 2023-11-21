@@ -41,6 +41,7 @@ export const Rows = <
 
     return <>
         {result.data?.map((item) => <Row
+            className={"grow"}
             key={item.id}
             columns={columns}
             entity={item}
