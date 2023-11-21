@@ -8,6 +8,7 @@ import {type CommonProps} from "../../api/CommonProps";
 import {type IHrefProps}  from "../../api/IHrefProps";
 import {tailwindify}      from "../../tools/tailwindify";
 import {ButtonLink}       from "../ButtonLink";
+import {Text}             from "../Text";
 import {isNavLabel}       from "./isNavLabel";
 import {isNavLink}        from "./isNavLink";
 
@@ -55,6 +56,8 @@ export namespace Nav {
 export const Nav: FC<Nav.Prop> = (
     {
         items,
+        separator = "|",
+        separatorMargin = "mx-1",
         ...props
     }
 ) => {
@@ -62,14 +65,16 @@ export const Nav: FC<Nav.Prop> = (
         cn,
         $props
     } = tailwindify(props);
+    const length = items.length;
+    const $separator = <Text c={"text-zinc-400 font-bold"} className={separatorMargin}>{separator}</Text>;
 
     return <div
         className={cn([
-            "flex flex-row",
+            "flex flex-row items-center",
         ])}
         {...$props}
     >
-        {items.map(item => {
+        {items.map((item, index) => {
             if (isNavLink(item)) {
                 const {
                     type,
@@ -77,25 +82,31 @@ export const Nav: FC<Nav.Prop> = (
                     ...$item
                 } = item;
 
-                return <ButtonLink
-                    key={`breadcrumb-${generateId()}`}
-                    {...$item}
-                >
-                    {label}
-                </ButtonLink>;
+                return <>
+                    <ButtonLink
+                        key={`breadcrumb-${generateId()}`}
+                        {...$item}
+                    >
+                        {label}
+                    </ButtonLink>
+                    {index < length - 1 && $separator}
+                </>;
             } else if (isNavLabel(item)) {
                 const {
                     type,
                     ...$item
                 } = item;
 
-                return <div
-                    key={`breadcrumb-${generateId()}`}
-                    {...$item}
-                >
-                    {$item.icon}
-                    {$item.label}
-                </div>;
+                return <>
+                    <div
+                        key={`breadcrumb-${generateId()}`}
+                        {...$item}
+                    >
+                        {$item.icon}
+                        {$item.label}
+                    </div>
+                    {index < length - 1 && $separator}
+                </>;
             }
             return null;
         })}
