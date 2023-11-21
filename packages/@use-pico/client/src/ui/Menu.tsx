@@ -73,7 +73,7 @@ export const Menu: FC<Menu.Props> = (
                     cn={[
                         "text-zinc-500",
                         "hover:text-zinc-700",
-                        active?.includes(item.href) && "text-sky-500 hover:text-sky-600",
+                        active?.includes(item.href) && "text-sky-500 hover:text-sky-500 hover:shadow-none hover:bg-inherit hover:cursor-default",
                         ...linkProps.cn ?? [],
                     ]}
                 >
