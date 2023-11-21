@@ -67,8 +67,13 @@ export const Page: FC<Page.Props> = (
                 flex flex-row items-center
                 shadow-sm shadow-zinc-200 
                 px-3 py-3
+                h-14
+                gap-4
             `}
         >
+            {nav && <div className={"shrink"}>
+                {nav}
+            </div>}
             <div className={"grow"}>
                 <Title
                     order={4}
@@ -81,13 +86,17 @@ export const Page: FC<Page.Props> = (
                     </div>
                 </Title>
             </div>
-            {extra && <div className={"flex-auto"}>
+            {extra && <div className={"shrink"}>
                 {extra}
             </div>}
         </div>
-        {menu && <div className={"flex py-1 m-1"}>
+        {menu && <div className={"flex py-1 px-2"}>
             {menu}
         </div>}
-        {children}
+        <div
+            className={"mt-4"}
+        >
+            {children}
+        </div>
     </div>;
 };
