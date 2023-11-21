@@ -79,6 +79,9 @@ export const Button: FC<Button.Props> = (
                 border-1
                 rounded-md
                 text-white
+                
+                flex gap-1
+                
                 disabled:bg-secondary-200
                 disabled:text-slate-600
                 disabled:hover:bg-secondary-200
@@ -91,9 +94,7 @@ export const Button: FC<Button.Props> = (
         onClick={onClick}
         {...$props}
     >
-        <div className={"flex gap-1"}>
-            {leftSection}
-            {children}
-        </div>
+        {leftSection}
+        {children}
     </button>;
 };
