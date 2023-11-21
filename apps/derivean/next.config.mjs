@@ -1,11 +1,11 @@
 import withPlugins from 'next-compose-plugins';
 import { transpile } from './transpile.mjs';
 
-export default withPlugins([], {
+/**
+ * @type {import('next').NextConfig}
+ */
+const config = {
     distDir:                     'dist',
-    images:                      {
-        unoptimized: true,
-    },
     swcMinify:                   true,
     poweredByHeader:             false,
     productionBrowserSourceMaps: false,
@@ -23,4 +23,6 @@ export default withPlugins([], {
         return acc;
     }, {}),
     reactStrictMode:   true,
-});
+};
+
+export default withPlugins([], config);
