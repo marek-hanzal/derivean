@@ -43,7 +43,7 @@ export const Body = <
 
     return <div
         className={cn([
-            "flex flex-row items-center",
+            "flex",
             "divide-solid divide-x divide-zinc-300",
         ])}
         {...$props}

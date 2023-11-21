@@ -36,13 +36,17 @@ export const Row = <
             return <div
                 key={key}
                 className={cn([
+                    "grow",
+                    "flex items-center",
                     "font-bold",
                     "py-2 px-4",
                     "bg-zinc-50",
                 ])}
                 {...$props}
             >
-                {column.render({item: entity})}
+                <div className={"grow"}>
+                    {column.render({item: entity})}
+                </div>
             </div>;
         })}
     </>;
