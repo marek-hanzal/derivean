@@ -45,7 +45,8 @@ export const Header: FC<Header.Props> = (
     return <div
         className={cn([
             "px-3 py-2 mb-6",
-            "shadow-sm shadow-zinc-300",
+            "bg-zinc-100",
+            "shadow-md shadow-zinc-300",
             "flex flex-row items-center",
         ])}
         {...$props}
