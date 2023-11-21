@@ -7,8 +7,6 @@ import {container}              from "@derivean/server";
 import {IconArrowLeft}          from "@tabler/icons-react";
 import {
     ButtonLink,
-    Divider,
-    Group,
     Title
 }                               from "@use-pico/client";
 import {t}                      from "@use-pico/translator";
@@ -35,18 +33,34 @@ export default async function Layout(
         header={{
             home:   `/kingdom/${kingdom.id}`,
             logo,
-            center: <Group>
-                        <Divider orientation={"vertical"}/>
-                        <Group gap={"xs"}>
-                            <ButtonLink
-                                href={"/game"}
-                                label={<IconArrowLeft/>}
-                            />
-                            <Title c={"dimmed"} order={4}>{t({values: kingdom})`Selected kingdom`}</Title>
-                        </Group>
-                        <Divider orientation={"vertical"}/>
-                        <KingdomMenu kingdomId={kingdom.id}/>
-                    </Group>,
+            center: <div
+                        className={"flex flex-row items-center"}
+                    >
+                        <ButtonLink
+                            href={"/game"}
+                            cn={[
+                                "ml-4",
+                                "mr-1",
+                            ]}
+                        >
+                            <IconArrowLeft/>
+                        </ButtonLink>
+                        <Title
+                            c={"text-zinc-600"}
+                            order={4}
+                            cn={[
+                                "text-md",
+                            ]}
+                        >
+                            {t({values: kingdom})`Selected kingdom`}
+                        </Title>
+                        <KingdomMenu
+                            kingdomId={kingdom.id}
+                            cn={[
+                                "ml-4",
+                            ]}
+                        />
+                    </div>,
         }}
     >
         {children}

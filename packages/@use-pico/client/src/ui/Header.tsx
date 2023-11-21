@@ -2,16 +2,16 @@ import Image              from "next/image";
 import {
     type ComponentProps,
     type FC,
+    type HtmlHTMLAttributes,
     type ReactNode
 }                         from "react";
 import {type CommonProps} from "../api/CommonProps";
 import {type IHrefProps}  from "../api/IHrefProps";
-import {Flex}             from "./Flex/Flex";
-import {FlexItem}         from "./Flex/FlexItem";
+import {tailwindify}      from "../tools/tailwindify";
 import {LocaleLink}       from "./LocaleLink";
 
 export namespace Header {
-    export interface Props extends CommonProps {
+    export interface Props extends HtmlHTMLAttributes<HTMLDivElement>, CommonProps {
         /**
          * Optional logo on the left side
          */
@@ -37,13 +37,20 @@ export const Header: FC<Header.Props> = (
         ...props
     }
 ) => {
-    return <Flex
-        align={"center"}
-        px={"md"}
-        pt={"xs"}
-        {...props}
+    const {
+        cn,
+        $props
+    } = tailwindify(props);
+
+    return <div
+        className={cn([
+            "px-3 py-2 mb-6",
+            "shadow-sm shadow-zinc-300",
+            "flex flex-row items-center",
+        ])}
+        {...$props}
     >
-        <FlexItem span={"content"}>
+        <div className={"shrink"}>
             {logo && home && <LocaleLink
                 href={home}
                 style={{
@@ -63,12 +70,12 @@ export const Header: FC<Header.Props> = (
                 alt={"logo"}
                 src={logo}
             />}
-        </FlexItem>
-        <FlexItem span={"auto"}>
+        </div>
+        <div className={"flex-auto"}>
             {center}
-        </FlexItem>
-        <FlexItem span={"content"}>
+        </div>
+        <div className={"shrink"}>
             {right}
-        </FlexItem>
-    </Flex>;
+        </div>
+    </div>;
 };

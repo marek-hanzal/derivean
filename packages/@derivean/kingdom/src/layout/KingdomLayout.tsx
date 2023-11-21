@@ -1,7 +1,4 @@
-import {
-    AppLayout,
-    Divider
-}                      from "@use-pico/client";
+import {AppLayout}     from "@use-pico/client";
 import {type FC}       from "react";
 import {Footer}        from "../ui/Footer";
 import {SignOutButton} from "./KingdomLayout/SignOutButton";
@@ -24,7 +21,6 @@ export const KingdomLayout: FC<KingdomLayout.Props> = (
             }}
             {...props}
         />
-        <Divider variant={"dotted"} m={"lg"}/>
         <Footer/>
     </>;
 };

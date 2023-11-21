@@ -3,7 +3,6 @@ import {
     type PropsWithChildren
 }                            from "react";
 import {BlockLoadingOverlay} from "../ui/BlockLoadingOverlay";
-import {Divider}             from "../ui/Divider";
 import {Header}              from "../ui/Header";
 import {Main}                from "../ui/Main";
 import {Unblock}             from "../utils/Unblock";
@@ -29,7 +28,6 @@ export const AppLayout: FC<AppLayout.Props> = (
             <Header
                 {...header}
             />
-            <Divider variant={"dotted"} my={"md"} mt={"xs"}/>
         </>}
         <Main>
             {children}

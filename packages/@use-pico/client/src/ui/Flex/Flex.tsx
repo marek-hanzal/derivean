@@ -12,6 +12,7 @@ export namespace Flex {
         & CommonProps
         & {
             align?: Flex.AlignItems;
+            justify?: string;
         };
 
     export type AlignItems = twAlignItems.Values;
@@ -24,7 +25,10 @@ export const Flex: FC<Flex.Props> = (
         ...props
     },
 ) => {
-    const {cn, $props} = tailwindify(props);
+    const {
+        cn,
+        $props
+    } = tailwindify(props);
 
     return <div
         className={cn([
