@@ -30,7 +30,7 @@ export default async function Index({params: {id}}: Index.Props) {
         text={{
             header: t({values: building})`Building pipeline`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",
@@ -45,7 +45,7 @@ export default async function Index({params: {id}}: Index.Props) {
                 },
             ]}
         />}
-        append={<BuildingMenu
+        menu={<BuildingMenu
             buildingId={building.id}
             active={["/manager/building/[id]/pipeline"]}
         />}

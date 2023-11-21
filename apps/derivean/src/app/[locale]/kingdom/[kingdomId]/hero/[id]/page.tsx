@@ -34,7 +34,7 @@ export default async function List(
         text={{
             header: t({values: hero})`Kingdom hero detail (label)`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",

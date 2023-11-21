@@ -25,7 +25,7 @@ export default async function Events({params: {kingdomId}}: Index.Props) {
         text={{
             header: t()`Past events (label)`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",
@@ -37,7 +37,7 @@ export default async function Events({params: {kingdomId}}: Index.Props) {
                 },
             ]}
         />}
-        append={<EventMenu
+        menu={<EventMenu
             kingdomId={kingdom.id}
             active={["/kingdom/[kingdomId]/events/past"]}
         />}

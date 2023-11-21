@@ -30,7 +30,7 @@ export default async function ConstructionRequirement({params: {id}}: Index.Prop
         text={{
             header: t({values: building})`Building requirement`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",
@@ -45,7 +45,7 @@ export default async function ConstructionRequirement({params: {id}}: Index.Prop
                 },
             ]}
         />}
-        append={<BuildingMenu
+        menu={<BuildingMenu
             buildingId={building.id}
             active={["/manager/building/[id]/construction-requirement"]}
         />}

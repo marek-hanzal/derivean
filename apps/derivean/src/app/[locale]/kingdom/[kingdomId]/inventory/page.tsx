@@ -24,7 +24,7 @@ export default async function Index({params: {kingdomId}}: Index.Props) {
         text={{
             header: t({values: kingdom})`Kingdom inventory`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",

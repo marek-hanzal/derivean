@@ -12,7 +12,7 @@ export default function Index() {
         text={{
             header: t()`Building list`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",
