@@ -85,7 +85,7 @@ export const Table = <
 
     return <div
         className={cn([
-            "flex flex-col",
+            "table w-full",
             "border border-zinc-300",
             "divide-solid divide-y divide-zinc-300",
         ])}

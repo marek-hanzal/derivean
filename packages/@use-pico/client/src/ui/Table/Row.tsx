@@ -26,7 +26,7 @@ export const Row = <
         ...props
     }: Row.Props<TColumns, TSchema>
 ) => {
-    return <>
+    return <div className={"table-row"}>
         {Object.entries<Table.Column<TSchema>>(columns).map(([key, column]) => {
             const {
                 cn,
@@ -36,18 +36,14 @@ export const Row = <
             return <div
                 key={key}
                 className={cn([
-                    "grow",
-                    "flex items-center",
+                    "table-cell",
                     "font-bold",
                     "py-2 px-4",
-                    "bg-zinc-50",
                 ])}
                 {...$props}
             >
-                <div className={"grow"}>
-                    {column.render({item: entity})}
-                </div>
+                {column.render({item: entity})}
             </div>;
         })}
-    </>;
+    </div>;
 };

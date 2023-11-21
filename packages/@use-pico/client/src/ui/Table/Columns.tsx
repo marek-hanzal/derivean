@@ -28,28 +28,29 @@ export const Columns = <
 
     return <div
         className={cn([
-            "flex",
-            "divide-solid divide-x divide-zinc-300",
+            "table-header-group",
         ])}
         {...$props}
     >
-        {Object.entries<Table.Column<TSchema>>(columns).map(([key, column]) => {
-            const {
-                cn,
-                $props
-            } = tailwindify({});
-            return <div
-                key={key}
-                className={cn([
-                    "flex-auto",
-                    "font-bold",
-                    "py-2 px-4",
-                    "bg-zinc-100",
-                ])}
-                {...$props}
-            >
-                {column.title}
-            </div>;
-        })}
+        <div className={"table-row"}>
+            {Object.entries<Table.Column<TSchema>>(columns).map(([key, column]) => {
+                const {
+                    cn,
+                    $props
+                } = tailwindify({});
+                return <div
+                    key={key}
+                    className={cn([
+                        "table-cell",
+                        "font-bold",
+                        "py-2 px-4",
+                        "bg-zinc-100",
+                    ])}
+                    {...$props}
+                >
+                    {column.title}
+                </div>;
+            })}
+        </div>
     </div>;
 };
