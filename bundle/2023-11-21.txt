@@ -2,32 +2,32 @@ derivean:build: Route (app)                                                     
 derivean:build: ┌ ○ /                                                                           1.41 kB        85.6 kB
 derivean:build: ├ ○ /_not-found                                                                 0 B                0 B
 derivean:build: ├ λ /[locale]                                                                   180 B          84.3 kB
-derivean:build: ├ λ /[locale]/game                                                              942 B           135 kB
-derivean:build: ├ λ /[locale]/kingdom/[kingdomId]                                               2.31 kB        86.5 kB
-derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/building/construction/available               2.7 kB           91 kB
-derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/building/construction/available/[buildingId]  2.31 kB        86.5 kB
-derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/building/construction/current                 2.31 kB        86.5 kB
-derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/building/list                                 2.31 kB        86.5 kB
-derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/events/current                                2.31 kB        86.5 kB
-derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/events/past                                   2.31 kB        86.5 kB
-derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/hero/[id]                                     2.31 kB        86.5 kB
-derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/hero/list                                     2.31 kB        86.5 kB
-derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/inventory                                     2.31 kB        86.5 kB
+derivean:build: ├ λ /[locale]/game                                                              951 B           145 kB
+derivean:build: ├ λ /[locale]/kingdom/[kingdomId]                                               2.32 kB        86.5 kB
+derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/building/construction/available               1.15 kB         108 kB
+derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/building/construction/available/[buildingId]  2.32 kB        86.5 kB
+derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/building/construction/current                 2.57 kB         103 kB
+derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/building/list                                 2.57 kB         103 kB
+derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/events/current                                2.57 kB         103 kB
+derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/events/past                                   2.57 kB         103 kB
+derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/hero/[id]                                     2.32 kB        86.5 kB
+derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/hero/list                                     2.32 kB        86.5 kB
+derivean:build: ├ λ /[locale]/kingdom/[kingdomId]/inventory                                     2.32 kB        86.5 kB
 derivean:build: ├ λ /[locale]/manager                                                           180 B          84.3 kB
-derivean:build: ├ λ /[locale]/manager/building/[id]                                             2.5 kB          106 kB
-derivean:build: ├ λ /[locale]/manager/building/[id]/construction-requirement                    2.31 kB        86.5 kB
-derivean:build: ├ λ /[locale]/manager/building/[id]/pipeline                                    2.31 kB        86.5 kB
-derivean:build: ├ λ /[locale]/manager/building/[id]/requirement                                 2.31 kB        86.5 kB
+derivean:build: ├ λ /[locale]/manager/building/[id]                                             2.08 kB         115 kB
+derivean:build: ├ λ /[locale]/manager/building/[id]/construction-requirement                    2.57 kB         103 kB
+derivean:build: ├ λ /[locale]/manager/building/[id]/pipeline                                    2.57 kB         103 kB
+derivean:build: ├ λ /[locale]/manager/building/[id]/requirement                                 2.57 kB         103 kB
 derivean:build: ├ λ /[locale]/manager/building/list                                             180 B          84.3 kB
-derivean:build: ├ λ /[locale]/manager/event/[id]                                                25.1 kB         115 kB
-derivean:build: ├ λ /[locale]/manager/event/[id]/type/EventHero                                 2.31 kB        86.5 kB
-derivean:build: ├ λ /[locale]/manager/event/[id]/type/EventInventory                            2.31 kB        86.5 kB
+derivean:build: ├ λ /[locale]/manager/event/[id]                                                25.3 kB         132 kB
+derivean:build: ├ λ /[locale]/manager/event/[id]/type/EventHero                                 2.57 kB         103 kB
+derivean:build: ├ λ /[locale]/manager/event/[id]/type/EventInventory                            2.57 kB         103 kB
 derivean:build: ├ λ /[locale]/manager/event/list                                                180 B          84.3 kB
 derivean:build: ├ λ /[locale]/manager/item/list                                                 180 B          84.3 kB
-derivean:build: ├ λ /[locale]/manager/item/type/[id]                                            2.31 kB        86.5 kB
+derivean:build: ├ λ /[locale]/manager/item/type/[id]                                            2.32 kB        86.5 kB
 derivean:build: ├ λ /[locale]/manager/item/type/list                                            179 B          84.3 kB
-derivean:build: ├ λ /[locale]/manager/producer/[id]                                             206 kB          347 kB
-derivean:build: ├ λ /[locale]/manager/producer/[id]/pipeline                                    2.31 kB        86.5 kB
+derivean:build: ├ λ /[locale]/manager/producer/[id]                                             204 kB          354 kB
+derivean:build: ├ λ /[locale]/manager/producer/[id]/pipeline                                    2.57 kB         103 kB
 derivean:build: ├ λ /[locale]/manager/producer/list                                             180 B          84.3 kB
 derivean:build: ├ λ /[locale]/manager/producer/overview                                         180 B          84.3 kB
 derivean:build: ├ λ /[locale]/manager/translation/list                                          180 B          84.3 kB
@@ -40,7 +40,7 @@ derivean:build: + First Load JS shared by all                                   
 derivean:build:   ├ chunks/1053-0198b939cbe23bbb.js                                             28.9 kB
 derivean:build:   ├ chunks/1dd3208c-b5b57ea5b69d1c12.js                                         53.3 kB
 derivean:build:   ├ chunks/main-app-369226a19d49a73c.js                                         228 B
-derivean:build:   └ chunks/webpack-4cc822ba41d2977a.js                                          1.79 kB
+derivean:build:   └ chunks/webpack-c59631c5d6b5422c.js                                          1.79 kB
 derivean:build:
 derivean:build:
 derivean:build: ƒ Middleware                                                                    63.9 kB

@@ -50,6 +50,7 @@ export default async function Layout(
                             order={4}
                             cn={[
                                 "text-md",
+                                "text-bold",
                             ]}
                         >
                             {t({values: kingdom})`Selected kingdom`}
