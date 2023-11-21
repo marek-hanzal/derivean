@@ -7,8 +7,8 @@ import {
     useCallback
 }                               from "react";
 import {BuildingInline}         from "../inline/BuildingInline";
-import {BuildingQueryStore}     from "../query/BuildingQueryStore";
 import {BuildingRpc}            from "../rpc/BuildingRpc";
+import {BuildingQueryStore}     from "../store/BuildingQueryStore";
 import {BuildingSelectionStore} from "../store/BuildingSelectionStore";
 import {BuildingTable}          from "../table/BuildingTable";
 

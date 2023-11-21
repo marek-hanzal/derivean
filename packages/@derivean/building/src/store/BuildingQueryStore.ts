@@ -7,3 +7,6 @@ export const BuildingQueryStore = createQueryStore({
     name: "BuildingQueryStore",
     schema: BuildingSchema.query,
 });
+export const {
+    Provider: BuildingQueryProvider,
+} = BuildingQueryStore;

@@ -1,18 +1,19 @@
 import {
     type FC,
-    HTMLAttributes,
+    type HTMLAttributes,
     type ReactNode
-}                    from "react";
-import {CommonProps} from "../api/CommonProps";
-import {type ILink}  from "../api/ILink";
-import {isHrefProps} from "../tools/isHrefProps";
-import {tailwindify} from "../tools/tailwindify";
-import {ButtonLink}  from "./ButtonLink";
+}                         from "react";
+import {type CommonProps} from "../api/CommonProps";
+import {type ILink}       from "../api/ILink";
+import {isHrefProps}      from "../tools/isHrefProps";
+import {tailwindify}      from "../tools/tailwindify";
+import {ButtonLink}       from "./ButtonLink";
 
 export namespace Menu {
     export interface Props extends HTMLAttributes<HTMLDivElement>, CommonProps {
         items: Items;
         active?: string[];
+        linkProps?: Partial<ButtonLink.Props>;
     }
 
     export type PropsEx = Omit<Props, "items">;
@@ -43,6 +44,9 @@ export const Menu: FC<Menu.Props> = (
     {
         items,
         active,
+        linkProps = {
+            size: "sm",
+        },
         ...props
     }
 ) => {
@@ -57,17 +61,26 @@ export const Menu: FC<Menu.Props> = (
         ])}
         {...$props}
     >
-        {items.filter(Boolean).map((item, index) => {
+        {items.filter(Boolean).map(item => {
             if (isHrefProps(item)) {
                 return <ButtonLink
-                    size={"lg"}
+                    key={item.href}
+                    size={linkProps.size}
                     href={{
                         href:  item.href,
                         query: item.query,
                     }}
+                    cn={[
+                        "text-zinc-500",
+                        "hover:text-zinc-700",
+                        active?.includes(item.href) && "text-sky-500 hover:text-sky-600",
+                        ...linkProps.cn ?? [],
+                    ]}
                 >
-                    {item.icon}
-                    {item.label}
+                    <div className={"flex flex-row gap-1 items-center"}>
+                        {item.icon}
+                        {item.label}
+                    </div>
                 </ButtonLink>;
             }
             return null;

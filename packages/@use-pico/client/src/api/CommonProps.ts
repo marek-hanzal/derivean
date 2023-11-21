@@ -11,7 +11,7 @@ export interface CommonProps {
     /**
      * Classes to be passed to the component.
      */
-    cn?: (string | undefined)[];
+    cn?: (string | undefined | false)[];
 
     px?: keyof twPadding["x"];
     py?: keyof twPadding["y"];

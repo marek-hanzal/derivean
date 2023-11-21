@@ -4,7 +4,10 @@ import {
     HeroIcon,
     InventoryIcon
 }                from "@derivean/ui";
-import {Menu}    from "@use-pico/client";
+import {
+    MainMenu,
+    Menu
+}                from "@use-pico/client";
 import {t}       from "@use-pico/translator";
 import {type FC} from "react";
 
@@ -22,7 +25,7 @@ export const KingdomMenu: FC<KingdomMenu.Props> = (
 ) => {
     const query = {kingdomId};
 
-    return <Menu
+    return <MainMenu
         items={[
             {
                 type:  "link",

@@ -1,11 +1,16 @@
 import {
     type FC,
+    type HTMLAttributes,
     type PropsWithChildren,
     type ReactNode
-} from "react";
+}                    from "react";
+import {tailwindify} from "../tools/tailwindify";
+import {Title}       from "./Title";
 
 export namespace Page {
-    export type Props = PropsWithChildren<{
+    export type Props =
+        HTMLAttributes<HTMLDivElement>
+        & PropsWithChildren<{
         /**
          * Icon in a page title
          */
@@ -20,13 +25,17 @@ export namespace Page {
             header?: ReactNode;
         };
         /**
-         * Postfix for a page (usually a navigation)
+         * Append something to the page header (for example primary action button).
          */
-        postfix?: ReactNode;
+        extra?: ReactNode;
         /**
-         * Append "something" at the bottom of page header (usually a menu)
+         * Socket for navigation (could be basically anything - menu, breadcrumbs, etc.)
          */
-        append?: ReactNode;
+        nav?: ReactNode;
+        /**
+         * Socket for menu (could be basically anything - menu, breadcrumbs, etc.)
+         */
+        menu?: ReactNode;
     }>;
 }
 
@@ -37,10 +46,48 @@ export const Page: FC<Page.Props> = (
     {
         icon,
         text,
-        children
+        extra,
+        nav,
+        menu,
+        children,
+        ...props
     }
 ) => {
-    return <div>
+    const {
+        cn,
+        $props
+    } = tailwindify(props);
+
+    return <div
+        className={cn([])}
+        {...$props}
+    >
+        <div
+            className={`
+                flex flex-row items-center
+                shadow-sm shadow-zinc-200 
+                px-3 py-3
+            `}
+        >
+            <div className={"grow"}>
+                <Title
+                    order={4}
+                >
+                    <div className={"flex flex-row items-center gap-2"}>
+                        {icon && <div>
+                            {icon}
+                        </div>}
+                        {text?.header}
+                    </div>
+                </Title>
+            </div>
+            {extra && <div className={"flex-auto"}>
+                {extra}
+            </div>}
+        </div>
+        {menu && <div className={"flex py-1 m-1"}>
+            {menu}
+        </div>}
         {children}
     </div>;
 };

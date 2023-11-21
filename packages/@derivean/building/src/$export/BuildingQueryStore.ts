@@ -1,1 +1,1 @@
-export {BuildingQueryStore} from "../query/BuildingQueryStore";
+export {BuildingQueryStore} from "../store/BuildingQueryStore";

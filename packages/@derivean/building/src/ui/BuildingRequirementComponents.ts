@@ -1,6 +1,6 @@
 import {withComponents}                from "@use-pico/extras";
-import {BuildingRequirementQueryStore} from "../query/BuildingRequirementQueryStore";
 import {BuildingRequirementRpc}        from "../rpc/BuildingRequirementRpc";
+import {BuildingRequirementQueryStore} from "../store/BuildingRequirementQueryStore";
 
 export const {
     Fetch:      BuildingRequirementFetch,

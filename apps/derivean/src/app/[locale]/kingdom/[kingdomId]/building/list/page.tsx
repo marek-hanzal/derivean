@@ -25,7 +25,7 @@ export default async function List({params: {kingdomId}}: List.Props) {
         text={{
             header: t()`Kingdom building list (label)`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",
@@ -33,20 +33,19 @@ export default async function List({params: {kingdomId}}: List.Props) {
                         href:  "/kingdom/[kingdomId]",
                         query: {kingdomId: kingdom.id},
                     },
-                    icon: <HomeIcon/>,
+                    icon: <HomeIcon className={"min-h-max min-w-max"}/>,
                 },
             ]}
         />}
-        append={<ConstructionMenu
+        menu={<ConstructionMenu
             kingdomId={kingdom.id}
             active={["/kingdom/[kingdomId]/building/list"]}
         />}
     >
-        {/*<StoreProvider*/}
-        {/*    store={BuildingQueryStore}*/}
+        {/*<BuildingQueryProvider*/}
         {/*    values={{}}*/}
         {/*>*/}
         {/*    /!*<KingdomBuildingTable/>*!/*/}
-        {/*</StoreProvider>*/}
+        {/*</BuildingQueryProvider>*/}
     </Page>;
 }
