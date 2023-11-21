@@ -2,9 +2,9 @@ import {
     type FC,
     type HTMLAttributes
 }                         from "react";
-import {type CommonProps} from "../api/CommonProps";
-import {tailwindify}      from "../tools/tailwindify";
-import {twAlignItems}     from "../tools/tailwindify/twAlignItems";
+import {type CommonProps} from "../../api/CommonProps";
+import {tailwindify}      from "../../tools/tailwindify";
+import {twAlignItems}     from "../../tools/tailwindify/twAlignItems";
 
 export namespace Flex {
     export type Props =

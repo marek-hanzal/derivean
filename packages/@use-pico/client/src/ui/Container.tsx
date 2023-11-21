@@ -19,7 +19,7 @@ export const Container: FC<Container.Props> = (
 
     return <div
         className={cn([
-            "container-lg"
+            "container mx-auto"
         ])}
         {...$props}
     >

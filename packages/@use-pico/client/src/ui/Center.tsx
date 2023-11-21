@@ -3,7 +3,7 @@ import {
     type PropsWithChildren
 }                         from "react";
 import {type CommonProps} from "../api/CommonProps";
-import {Flex}             from "./Flex";
+import {Flex}             from "./Flex/Flex";
 import {FlexItem}         from "./Flex/FlexItem";
 
 export namespace Center {

@@ -3,9 +3,9 @@ import {
     type HTMLAttributes,
     type ReactElement
 }                         from "react";
-import {type CommonProps} from "../api/CommonProps";
-import {tailwindify}      from "../tools/tailwindify";
-import {GroupCol}         from "./Group/GroupCol";
+import {type CommonProps} from "../../api/CommonProps";
+import {tailwindify}      from "../../tools/tailwindify";
+import {GroupCol}         from "./GroupCol";
 
 export namespace Group {
     export type Group =

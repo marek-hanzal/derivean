@@ -64,6 +64,7 @@ export * from "./useLocaleRedirect";
 export * from "./useLocaleRouter";
 export * from "./useParam";
 export * from "./useQueryEx";
+export * from "./useSourceQuery";
 export * from "./useWithLocaleRedirect";
 export * from "./withRpcMutation";
 export * from "./withRpcQuery";

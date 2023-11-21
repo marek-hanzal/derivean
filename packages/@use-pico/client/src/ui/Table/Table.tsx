@@ -1,3 +1,5 @@
+"use client";
+
 import {
     type Infer,
     type Schema
@@ -6,14 +8,19 @@ import {
     type FC,
     type ReactNode
 }                              from "react";
-import {type IQueryStore}      from "../api/IQueryStore";
-import {type IWithSourceQuery} from "../api/IWithSourceQuery";
+import {type CommonProps}      from "../../api/CommonProps";
+import {type IQueryStore}      from "../../api/IQueryStore";
+import {type IWithSourceQuery} from "../../api/IWithSourceQuery";
+import {tailwindify}           from "../../tools/tailwindify";
+import {Body}                  from "./Body";
+import {Columns}               from "./Columns";
 
 export namespace Table {
     export interface Props<
         TColumns extends string,
         TSchema extends Schema<any, any, any, any>,
-    > {
+    > extends CommonProps {
+        columns: Columns<TColumns, TSchema>;
         withQueryStore: IQueryStore.Store<
             Infer.QuerySchema<TSchema>
         >;
@@ -30,7 +37,6 @@ export namespace Table {
         };
         compact?: boolean;
         icon?: ReactNode;
-        columns: Columns<TColumns, TSchema>;
     }
 
     export type Columns<
@@ -69,7 +75,28 @@ export const Table = <
         text,
         icon,
         compact = false,
+        ...props
     }: Table.Props<TColumns, TSchema>,
 ) => {
-    return "Table";
+    const {
+        cn,
+        $props
+    } = tailwindify(props);
+
+    return <div
+        className={cn([
+            "grid grid-flow-row-dense",
+            "border border-zinc-300",
+            "divide-solid divide-y divide-zinc-300",
+        ])}
+    >
+        <Columns
+            columns={columns}
+        />
+        <Body
+            columns={columns}
+            withQueryStore={withQueryStore}
+            withSourceQuery={withSourceQuery}
+        />
+    </div>;
 };

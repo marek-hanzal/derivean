@@ -1,1 +1,1 @@
-export {Grid} from "../ui/Grid";
+export {Grid} from "../ui/Grid/Grid";

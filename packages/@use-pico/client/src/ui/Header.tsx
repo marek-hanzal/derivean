@@ -6,7 +6,7 @@ import {
 }                         from "react";
 import {type CommonProps} from "../api/CommonProps";
 import {type IHrefProps}  from "../api/IHrefProps";
-import {Flex}             from "./Flex";
+import {Flex}             from "./Flex/Flex";
 import {FlexItem}         from "./Flex/FlexItem";
 import {LocaleLink}       from "./LocaleLink";
 

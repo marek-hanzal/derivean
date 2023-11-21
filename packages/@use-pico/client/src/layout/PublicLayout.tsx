@@ -6,9 +6,9 @@ import {
     type ReactNode
 }                            from "react";
 import {BlockLoadingOverlay} from "../ui/BlockLoadingOverlay";
-import {Flex}                from "../ui/Flex";
+import {Flex}                from "../ui/Flex/Flex";
 import {FlexItem}            from "../ui/Flex/FlexItem";
-import {Group}               from "../ui/Group";
+import {Group}               from "../ui/Group/Group";
 import {GroupCol}            from "../ui/Group/GroupCol";
 import {LocaleLink}          from "../ui/LocaleLink";
 import {Unblock}             from "../utils/Unblock";

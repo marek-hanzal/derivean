@@ -1,1 +1,1 @@
-export {Group} from "../ui/Group";
+export {Group} from "../ui/Group/Group";
