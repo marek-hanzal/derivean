@@ -15,9 +15,22 @@
 	"main": "src/index.ts",
 	"module": "src/index.ts",
 	"types": "src/index.ts",
+	"typesVersions": {
+		"*": {
+			"*": [
+				"./src/*"
+			]
+		}
+	},
 	"files": [
 		"src"
 	],
+	"exports": {
+		"./*": {
+			"import": "./src/*.ts",
+			"require": "./src/*.ts"
+		}
+	},
 	"scripts": {
 		"build": "concurrently npm:build:*",
 		"build:esbuild": "node esbuild.mjs",
