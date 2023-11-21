@@ -1,4 +1,4 @@
-import {createConnection} from "@use-pico/server";
+import {createConnection} from "@use-pico/server/src/$export/createConnection";
 import {promises}         from "fs";
 import {
     FileMigrationProvider,
