@@ -79,8 +79,9 @@ export const KingdomTable: FC<KingdomTable.Props> = props => {
                             kingdomId: item.id,
                         },
                     }}
-                    label={<KingdomInline entity={item}/>}
-                />,
+                >
+                    <KingdomInline entity={item}/>
+                </ButtonLink>,
             },
         }}
         {...props}

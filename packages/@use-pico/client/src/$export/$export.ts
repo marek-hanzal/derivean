@@ -29,6 +29,7 @@ export * from "./INavigate";
 export * from "./IQueryStore";
 export * from "./IWithSourceQuery";
 export * from "./Icon";
+export * from "./LinkLockStore";
 export * from "./List";
 export * from "./ListIcon";
 export * from "./Loader";

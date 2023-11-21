@@ -7,6 +7,7 @@ import {
 }                      from "zustand";
 import {type IStore}   from "../api/IStore";
 import {useStore}      from "../hook/useStore";
+import {useStore$}     from "../hook/useStore$";
 import {StoreProvider} from "../provider/StoreProvider";
 import {createContext} from "../tools/createContext";
 
@@ -52,10 +53,15 @@ export const createStore = <
          * Store factory.
          */
         store,
-        useStore:    () => useStore({Context}),
-        useSelector: selector => useStore({Context}, selector),
-        Provider:    props => <StoreProvider
-            store={{Context, store}}
+        useStore:     () => useStore({Context}),
+        useStore$:    () => useStore$({Context}),
+        useSelector:  selector => useStore({Context}, selector),
+        useSelector$: selector => useStore$({Context}, selector),
+        Provider:     props => <StoreProvider
+            store={{
+                Context,
+                store
+            }}
             {...props}
         />,
     };

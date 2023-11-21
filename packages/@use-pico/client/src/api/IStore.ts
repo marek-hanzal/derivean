@@ -1,10 +1,11 @@
 import {
     type Context,
     FC
-}                                 from "react";
-import {type StoreApi}            from "zustand";
-import {useStore as useCoolStore} from "../hook/useStore";
-import {StoreProvider}            from "../provider/StoreProvider";
+}                                   from "react";
+import {type StoreApi}              from "zustand";
+import {useStore as useCoolStore}   from "../hook/useStore";
+import {useStore$ as useCoolStore$} from "../hook/useStore$";
+import {StoreProvider}              from "../provider/StoreProvider";
 
 export interface IStore<
     TProps extends IStore.Type,
@@ -44,8 +45,18 @@ export namespace IStore {
         useStore(): ReturnType<typeof useCoolStore<TStore>>;
 
         /**
+         * Use whole optional store
+         */
+        useStore$(): ReturnType<typeof useCoolStore$<TStore>>;
+
+        /**
          * Use the store with a selector
          */
         useSelector<TValue>(selector: (state: TStore["props"] & TStore["values"]) => TValue): ReturnType<typeof useCoolStore<TStore, TValue>>;
+
+        /**
+         * Use optional store with a selector
+         */
+        useSelector$<TValue>(selector: (state: TStore["props"] & TStore["values"]) => TValue): ReturnType<typeof useCoolStore$<TStore, TValue>>;
     }
 }

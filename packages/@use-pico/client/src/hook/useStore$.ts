@@ -6,23 +6,23 @@ export function useStore$<
     TStore extends IStore<any>,
     TValue,
 >(
-    store: IStore.Store<TStore>,
+    {Context}: Pick<IStore.Store<TStore>, "Context">,
     selector: (state: TStore["props"] & TStore["values"]) => TValue,
 ): TValue | null;
 
 export function useStore$<
     TStore extends IStore<any>,
 >(
-    store: IStore.Store<TStore>,
+    {Context}: Pick<IStore.Store<TStore>, "Context">,
 ): (TStore["props"] & TStore["values"]) | null;
 
 export function useStore$<
     TStore extends IStore<any>,
 >(
-    store: IStore.Store<TStore>,
+    {Context}: Pick<IStore.Store<TStore>, "Context">,
     selector?: <TValue>(state: TStore["props"] & TStore["values"]) => TValue,
 ) {
-    const $store = useContext$(store.Context);
+    const $store = useContext$(Context);
     if ($store) {
         // eslint-disable-next-line react-hooks/rules-of-hooks
         return selector ? useStore($store, selector) : useStore($store);
