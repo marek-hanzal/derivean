@@ -92,12 +92,8 @@ export const Button: FC<Button.Props> = (
         {...$props}
     >
         <div className={"flex gap-1"}>
-            <div>
-                {leftSection}
-            </div>
-            <div>
-                {children}
-            </div>
+            {leftSection}
+            {children}
         </div>
     </button>;
 };
