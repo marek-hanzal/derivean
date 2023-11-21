@@ -85,7 +85,7 @@ export const Table = <
 
     return <div
         className={cn([
-            "grid grid-flow-row-dense",
+            "flex flex-col",
             "border border-zinc-300",
             "divide-solid divide-y divide-zinc-300",
         ])}

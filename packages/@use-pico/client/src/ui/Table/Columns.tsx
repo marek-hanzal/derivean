@@ -28,7 +28,7 @@ export const Columns = <
 
     return <div
         className={cn([
-            "grid grid-flow-col-dense",
+            "flex",
             "divide-solid divide-x divide-zinc-300",
         ])}
         {...$props}
@@ -41,6 +41,7 @@ export const Columns = <
             return <div
                 key={key}
                 className={cn([
+                    "flex-auto",
                     "font-bold",
                     "py-2 px-4",
                     "bg-zinc-100",
