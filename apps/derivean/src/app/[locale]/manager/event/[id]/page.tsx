@@ -29,7 +29,7 @@ export default async function Index({params: {id}}: Index.Props) {
         text={{
             header: t({values: event})`Event detail`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",
@@ -44,7 +44,7 @@ export default async function Index({params: {id}}: Index.Props) {
                 },
             ]}
         />}
-        append={<EventMenu
+        menu={<EventMenu
             event={event}
             active={["/manager/event/[id]"]}
         />}
