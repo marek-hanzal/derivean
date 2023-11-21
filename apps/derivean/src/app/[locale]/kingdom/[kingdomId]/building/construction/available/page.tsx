@@ -1,4 +1,4 @@
-import {BuildingQueryStore}    from "@derivean/building";
+import {BuildingQueryProvider} from "@derivean/building";
 import {ConstructionMenu}      from "@derivean/game";
 import {withKingdomRepository} from "@derivean/kingdom";
 import {container}             from "@derivean/server";
@@ -26,7 +26,7 @@ export default async function Available({params: {kingdomId}}: List.Props) {
         text={{
             header: t()`Kingdom building construction (label)`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",
@@ -38,17 +38,17 @@ export default async function Available({params: {kingdomId}}: List.Props) {
                 },
             ]}
         />}
-        append={<ConstructionMenu
+        menu={<ConstructionMenu
             kingdomId={kingdom.id}
             active={["/kingdom/[kingdomId]/building/construction/available"]}
         />}
     >
-        <BuildingQueryStore.Provider
+        <BuildingQueryProvider
             values={{}}
         >
             {/*    <KingdomConstructionTable*/}
             {/*        kingdomId={kingdom.id}*/}
             {/*    />*/}
-        </BuildingQueryStore.Provider>
+        </BuildingQueryProvider>
     </Page>;
 }

@@ -35,7 +35,7 @@ export default async function Available(
         text={{
             header: t({values: building})`Kingdom building construction detail (label)`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",

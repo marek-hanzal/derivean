@@ -24,7 +24,7 @@ export default async function List({params: {kingdomId}}: List.Props) {
         text={{
             header: t()`Kingdom hero list (label)`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",

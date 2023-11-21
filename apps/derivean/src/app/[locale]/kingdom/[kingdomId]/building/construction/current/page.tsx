@@ -25,7 +25,7 @@ export default async function Current({params: {kingdomId}}: List.Props) {
         text={{
             header: t()`Kingdom Building Construction (label)`,
         }}
-        postfix={<Nav
+        nav={<Nav
             items={[
                 {
                     type: "link",
@@ -37,7 +37,7 @@ export default async function Current({params: {kingdomId}}: List.Props) {
                 },
             ]}
         />}
-        append={<ConstructionMenu
+        menu={<ConstructionMenu
             kingdomId={kingdom.id}
             active={["/kingdom/[kingdomId]/building/construction/current"]}
         />}
