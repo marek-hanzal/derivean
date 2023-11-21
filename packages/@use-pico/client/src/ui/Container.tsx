@@ -18,7 +18,9 @@ export const Container: FC<Container.Props> = (
     const {cn, $props} = tailwindify(props);
 
     return <div
-        className={cn([])}
+        className={cn([
+            "container-lg"
+        ])}
         {...$props}
     >
         {children}

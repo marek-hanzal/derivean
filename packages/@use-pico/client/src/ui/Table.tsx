@@ -63,7 +63,12 @@ export const Table = <
     TSchema extends Schema<any, any, any, any>,
 >(
     {
-        //
+        withQueryStore,
+        withSourceQuery,
+        columns,
+        text,
+        icon,
+        compact = false,
     }: Table.Props<TColumns, TSchema>,
 ) => {
     return "Table";
