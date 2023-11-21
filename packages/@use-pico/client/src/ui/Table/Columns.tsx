@@ -29,6 +29,7 @@ export const Columns = <
     return <div
         className={cn([
             "table-header-group",
+            "shadow-md shadow-zinc-200",
         ])}
         {...$props}
     >
