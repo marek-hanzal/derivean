@@ -36,8 +36,8 @@ const twVariant = {
         text-slate-500
         transition ease-in-out delay-50 duration-150
         hover:bg-secondary-50
-        hover:text-slate-700
-        hover:shadow-slate-300 hover:shadow-md
+        hover:text-zinc-700
+        hover:shadow-zinc-300 hover:shadow-md
     `,
 } as const;
 type twVariant = typeof twVariant;
