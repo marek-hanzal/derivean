@@ -38,7 +38,7 @@ export const Row = <
                 className={cn([
                     "font-bold",
                     "py-2 px-4",
-                    "bg-zinc-100",
+                    "bg-zinc-50",
                 ])}
                 {...$props}
             >
