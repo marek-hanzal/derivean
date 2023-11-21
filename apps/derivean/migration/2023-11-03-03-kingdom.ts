@@ -1,4 +1,4 @@
-import {withUuidTable} from "@use-pico/migrator";
+import {withUuidTable} from "@use-pico/migrator/src/migrator/withUuidTable";
 import {
     Kysely,
     sql
