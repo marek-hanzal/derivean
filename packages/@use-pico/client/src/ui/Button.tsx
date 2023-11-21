@@ -91,6 +91,13 @@ export const Button: FC<Button.Props> = (
         onClick={onClick}
         {...$props}
     >
-        {children}
+        <div className={"flex gap-1"}>
+            <div>
+                {leftSection}
+            </div>
+            <div>
+                {children}
+            </div>
+        </div>
     </button>;
 };
