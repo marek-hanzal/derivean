@@ -1,22 +1,24 @@
 "use client";
 
 import {
+    BuildingComponents,
     BuildingConstructionRequirement,
     BuildingInline,
-    BuildingRequirement,
-    BuildingUI
-}                     from "@derivean/building";
+    BuildingRequirement
+}          from "@derivean/building";
 import {
     BuildingIcon,
     ConstructionIcon
-}                     from "@derivean/ui";
-import {t}            from "@use-pico/i18n";
-import {ButtonLink}   from "@use-pico/ui";
-import {HumanSeconds} from "@use-pico/ui-extra";
+}          from "@derivean/ui";
+import {
+    ButtonLink,
+    HumanTime
+}          from "@use-pico/client";
+import {t} from "@use-pico/translator";
 import {
     type ComponentProps,
     type FC
-}                     from "react";
+}          from "react";
 
 export namespace KingdomConstructionTable {
     export type Columns =
@@ -28,7 +30,7 @@ export namespace KingdomConstructionTable {
 
     export type Props =
         Omit<
-            ComponentProps<typeof BuildingUI.Table<Columns>>,
+            ComponentProps<typeof BuildingComponents.Table<Columns>>,
             "columns" | "name" | "icon" | "text"
         >
         & {
@@ -42,11 +44,10 @@ export const KingdomConstructionTable: FC<KingdomConstructionTable.Props> = (
         ...props
     },
 ) => {
-    return <BuildingUI.Table
+    return <BuildingComponents.Table
         text={{
             total: t()`Total count of buildings`,
         }}
-        name={"building"}
         icon={<ConstructionIcon/>}
         columns={{
             name:         {
@@ -60,8 +61,9 @@ export const KingdomConstructionTable: FC<KingdomConstructionTable.Props> = (
                             buildingId: item.id,
                         },
                     }}
-                    label={<BuildingInline entity={item}/>}
-                />,
+                >
+                    <BuildingInline entity={item}/>
+                </ButtonLink>,
             },
             construction: {
                 title:  t()`Building construction requirement (label)`,
@@ -71,7 +73,7 @@ export const KingdomConstructionTable: FC<KingdomConstructionTable.Props> = (
             },
             time:         {
                 title:  t()`Building construction time (label)`,
-                render: ({item}) => <HumanSeconds seconds={item.construction}/>,
+                render: ({item}) => <HumanTime seconds={item.construction}/>,
                 width:  10,
             },
             requirements: {

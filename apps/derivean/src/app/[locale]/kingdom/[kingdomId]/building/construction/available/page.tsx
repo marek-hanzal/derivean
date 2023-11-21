@@ -1,6 +1,9 @@
 import {BuildingQueryProvider} from "@derivean/building";
 import {ConstructionMenu}      from "@derivean/game";
-import {withKingdomRepository} from "@derivean/kingdom";
+import {
+    KingdomConstructionTable,
+    withKingdomRepository
+}                              from "@derivean/kingdom";
 import {container}             from "@derivean/server";
 import {IconHammer}            from "@tabler/icons-react";
 import {
@@ -46,9 +49,9 @@ export default async function Available({params: {kingdomId}}: List.Props) {
         <BuildingQueryProvider
             values={{}}
         >
-            {/*    <KingdomConstructionTable*/}
-            {/*        kingdomId={kingdom.id}*/}
-            {/*    />*/}
+            <KingdomConstructionTable
+                kingdomId={kingdom.id}
+            />
         </BuildingQueryProvider>
     </Page>;
 }

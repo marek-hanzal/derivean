@@ -4,6 +4,7 @@
 // export * from "./BuildingSelect";
 // export * from "./BuildingSelectionStore";
 export * from "./BuildingCollection";
+export * from "./BuildingComponents";
 export * from "./BuildingConstructionRequirement";
 export * from "./BuildingConstructionRequirementQueryStore";
 export * from "./BuildingFetch";
