@@ -1,8 +1,10 @@
-import {EventIcon}              from "@derivean/ui";
-import {IconTimelineEventMinus} from "@tabler/icons-react";
-import {Menu}                   from "@use-pico/client";
-import {t}                      from "@use-pico/translator";
-import {type FC}                from "react";
+import {EventIcon} from "@derivean/ui";
+import {
+    Icon,
+    Menu
+}                  from "@use-pico/client";
+import {t}         from "@use-pico/translator";
+import {type FC}   from "react";
 
 export namespace EventMenu {
     export interface Props extends Menu.PropsEx {
@@ -28,7 +30,7 @@ export const EventMenu: FC<EventMenu.Props> = (
             {
                 type:  "link",
                 label: t`Past events (label)`,
-                icon:  <IconTimelineEventMinus/>,
+                icon: <Icon icon={"i-tabler-timeline-event-minus"}/>,
                 href:  `/kingdom/[kingdomId]/events/past`,
                 query: {kingdomId},
             },

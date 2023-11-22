@@ -1,15 +1,12 @@
 import {
     BuildingIcon,
     EventIcon,
+    GameIcon,
     ItemIcon,
     ProducerIcon
 }                from "@derivean/ui";
 import {
-    IconCrown,
-    IconGraph,
-    IconLanguage
-}                from "@tabler/icons-react";
-import {
+    Icon,
     ListIcon,
     MainMenu
 }                from "@use-pico/client";
@@ -64,7 +61,7 @@ export const ManagerMenu: FC<ManagerMenu.Props> = props => {
                         type:  "link",
                         href:  "/manager/producer/overview",
                         label: t`Producer overview`,
-                        icon:  <IconGraph/>,
+                        icon: <Icon icon={"i-tabler-graph"}/>,
                     },
                 ],
             },
@@ -78,13 +75,13 @@ export const ManagerMenu: FC<ManagerMenu.Props> = props => {
                 type:  "link",
                 href:  "/manager/translation/list",
                 label: t`Translations`,
-                icon:  <IconLanguage/>,
+                icon: <Icon icon={"i-tabler-language"}/>,
             },
             {
                 type:  "link",
                 href:  "/game",
                 label: t`Hra`,
-                icon:  <IconCrown/>,
+                icon: <GameIcon/>,
             },
         ]}
         {...props}
