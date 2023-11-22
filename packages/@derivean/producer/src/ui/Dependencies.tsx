@@ -1,10 +1,7 @@
 "use client";
 
 import {ProducerIcon}              from "@derivean/ui";
-import {
-    IconAlertTriangle,
-    IconArrowRight
-}                                  from "@tabler/icons-react";
+import {IconAlertTriangle}         from "@tabler/icons-react";
 import {
     Alert,
     ButtonLink,
@@ -95,10 +92,8 @@ export const Dependencies: FC<Dependencies.Props> = (
                                     label={producer.name}
                                 />
                                 <ProducerInput producerId={producer.id}/>
-                                <Icon
-                                    size={"xs"}
-                                    Icon={IconArrowRight}
-                                    color={"gray"}
+                            <div
+                                className={"i-tabler-arrow-narrow-right text-zinc-400"}
                                 />
                                 <ProducerOutput producerId={producer.id}/>
                             </div>

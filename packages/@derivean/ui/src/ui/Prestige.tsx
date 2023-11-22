@@ -1,15 +1,11 @@
 import {
-    IconStar,
-    IconStarFilled
-}                from "@tabler/icons-react";
-import {
-    type CommonProps,
-    Icon,
+    css,
     Rating
 }                from "@use-pico/client";
+import {cn}      from "@use-pico/utils";
 import {type FC} from "react";
 
-const colors: Record<number, CommonProps.Color> = {
+const colors: Record<number, css.Color> = {
     1: "green",
     2: "blue",
     3: "yellow",
@@ -33,8 +29,14 @@ export const Prestige: FC<Prestige.Props> = (
         defaultValue={prestige}
         readOnly
         size={"md"}
-        emptySymbol={value => <Icon color={colors[value] ?? "green"} Icon={IconStar}/>}
-        fullSymbol={value => <Icon color={colors[value] ?? "green"} Icon={IconStarFilled}/>}
+        emptySymbol={value => <div className={cn(
+            colors[value] ?? "green",
+            "i-tabler-star",
+        )}/>}
+        fullSymbol={value => <div className={cn(
+            colors[value] ?? "green",
+            "i-tabler-star-filled",
+        )}/>}
         count={6}
     />;
 };
