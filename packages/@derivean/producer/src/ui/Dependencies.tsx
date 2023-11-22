@@ -1,7 +1,6 @@
 "use client";
 
 import {ProducerIcon}              from "@derivean/ui";
-import {IconAlertTriangle}         from "@tabler/icons-react";
 import {
     Alert,
     ButtonLink,
@@ -72,7 +71,7 @@ export const Dependencies: FC<Dependencies.Props> = (
                 </Alert>;
             } else if (isSchema(entity, DependencyCycleSchema)) {
                 return <Alert
-                    icon={<IconAlertTriangle/>}
+                    icon={<div className={"i-tabler-alert-triangle"}/>}
                     color={"red"}
                     title={t`Producer has cyclic dependencies`}
                 >

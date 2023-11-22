@@ -1,6 +1,5 @@
 "use client";
 
-import {IconLogin}       from "@tabler/icons-react";
 import {t}               from "@use-pico/translator";
 import {
     signIn,
@@ -26,7 +25,7 @@ export const SignInButton: FC<SignInButton.Props> = (
     const router = useLocaleRouter();
 
     return <Button
-        leftSection={<IconLogin/>}
+        leftSection={<div className={"i-tabler-login"}/>}
         onClick={() => loginUrl ? router.push({
             href: loginUrl,
         }) : signIn(undefined, signInOptions)}
