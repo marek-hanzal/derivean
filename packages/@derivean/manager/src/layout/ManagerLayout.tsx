@@ -25,7 +25,7 @@ export const ManagerLayout: FC<ManagerLayout.Props> = (
             {...props}
         />
         <Footer
-            mb={"xl"}
+            className={"mb-24"}
         />
     </>;
 };

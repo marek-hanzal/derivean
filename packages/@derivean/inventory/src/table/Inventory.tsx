@@ -46,10 +46,10 @@ export const Inventory: FC<Inventory.Props> = (
         icon={<InventoryItemIcon/>}
         columns={{
             item:   {
-                title: t`Item`,
+                title:  t`Item`,
                 render: ({item}) => <ItemFetch
                     override={item.itemId}
-                    loader={<Loader size={"xs"} type={"dots"}/>}
+                    loader={<Loader size={"xs"}/>}
                     WithSuccess={({entity}) => <ItemInline entity={entity}/>}
                 />,
             },

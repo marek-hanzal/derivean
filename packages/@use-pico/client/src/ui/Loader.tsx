@@ -17,6 +17,7 @@ export namespace Loader {
     export interface Props {
         /**
          * Loader icon class name
+         * https://icones.js.org/
          */
         icon?: string;
         size?: keyof cssSize;

@@ -23,7 +23,7 @@ export const GameLayout: FC<GameLayout.Props> = (
             {...props}
         />
         <Footer
-            mb={"xl"}
+            className={"mb-24"}
         />
     </>;
 };
