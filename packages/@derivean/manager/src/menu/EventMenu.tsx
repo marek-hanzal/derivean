@@ -3,8 +3,10 @@ import {
     HeroIcon,
     InventoryIcon
 }                         from "@derivean/ui";
-import {IconSearch}       from "@tabler/icons-react";
-import {Menu}             from "@use-pico/client";
+import {
+    Icon,
+    Menu
+}                         from "@use-pico/client";
 import {type Infer}       from "@use-pico/extras";
 import {t}                from "@use-pico/translator";
 import {type FC}          from "react";
@@ -28,7 +30,7 @@ export const EventMenu: FC<EventMenu.Props> = (
             {
                 type:  "link",
                 href:  "/manager/event/[id]",
-                icon:  <IconSearch/>,
+                icon: <Icon icon={"i-tabler-search"}/>,
                 query,
                 label: t`Detail`,
             },
