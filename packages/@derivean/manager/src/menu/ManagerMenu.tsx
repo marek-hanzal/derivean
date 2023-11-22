@@ -61,7 +61,7 @@ export const ManagerMenu: FC<ManagerMenu.Props> = props => {
                         type:  "link",
                         href:  "/manager/producer/overview",
                         label: t`Producer overview`,
-                        icon: <Icon icon={"i-tabler-graph"}/>,
+                        icon: <Icon icon={"i-tabler:graph"}/>,
                     },
                 ],
             },
@@ -75,7 +75,7 @@ export const ManagerMenu: FC<ManagerMenu.Props> = props => {
                 type:  "link",
                 href:  "/manager/translation/list",
                 label: t`Translations`,
-                icon: <Icon icon={"i-tabler-language"}/>,
+                icon: <Icon icon={"i-tabler:language"}/>,
             },
             {
                 type:  "link",

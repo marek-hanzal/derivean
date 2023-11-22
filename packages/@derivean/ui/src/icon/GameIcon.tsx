@@ -1,3 +1,3 @@
 import {withIcon} from "@use-pico/client";
 
-export const GameIcon = withIcon({icon: "i-tabler-tower"});
+export const GameIcon = withIcon({icon: "i-tabler:tower"});

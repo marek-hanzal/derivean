@@ -28,7 +28,7 @@ export const Pipeline: FC<Pipeline.Props> = (
         </ProducerInputQueryStore.Provider>
 
         <div className={"my-24"}>
-            <div className={"i-tabler-arrow-narrow-down text-zinc-400 h-xl w-xl"}/>
+            <div className={"i-tabler:arrow-narrow-down text-zinc-400 h-xl w-xl"}/>
         </div>
 
         <ProducerOutputQueryStore.Provider

@@ -25,7 +25,7 @@ export const SignInButton: FC<SignInButton.Props> = (
     const router = useLocaleRouter();
 
     return <Button
-        leftSection={<div className={"i-tabler-login"}/>}
+        leftSection={<div className={"i-tabler:login"}/>}
         onClick={() => loginUrl ? router.push({
             href: loginUrl,
         }) : signIn(undefined, signInOptions)}

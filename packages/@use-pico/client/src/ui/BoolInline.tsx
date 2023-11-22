@@ -12,9 +12,9 @@ export namespace BoolInline {
 export const BoolInline: FC<BoolInline.Props> = (
     {
         bool,
-        checkIcon = "i-tabler-square-rounded-check",
-        unCheckIcon = "i-tabler-square-rounded-x",
-        undefinedIcon = "i-tabler-square-rounded",
+        checkIcon = "i-tabler:square-rounded-check",
+        unCheckIcon = "i-tabler:square-rounded-x",
+        undefinedIcon = "i-tabler:square-rounded",
     }) => {
     return <div
         className={bool !== undefined && bool !== null ? (bool ? checkIcon : unCheckIcon) : undefinedIcon}

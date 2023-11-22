@@ -30,7 +30,7 @@ export const EventMenu: FC<EventMenu.Props> = (
             {
                 type:  "link",
                 label: t`Past events (label)`,
-                icon: <Icon icon={"i-tabler-timeline-event-minus"}/>,
+                icon: <Icon icon={"i-tabler:timeline-event-minus"}/>,
                 href:  `/kingdom/[kingdomId]/events/past`,
                 query: {kingdomId},
             },

@@ -23,6 +23,6 @@ export const SignOutButton: FC<SignOutButton.Props> = props => {
         })}
         {...props}
     >
-        <div className={"i-tabler-logout"}/>
+        <div className={"i-tabler:logout"}/>
     </ActionIcon>;
 };

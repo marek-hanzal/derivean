@@ -62,7 +62,7 @@ export const Dependencies: FC<Dependencies.Props> = (
                                 />
                                 <ProducerInput producerId={producer.id}/>
                                 <div
-                                    className={"i-tabler-arrow-narrow-right text-zinc-400"}
+                                    className={"i-tabler:arrow-narrow-right text-zinc-400"}
                                 />
                                 <ProducerOutput producerId={producer.id}/>
                             </div>
@@ -71,7 +71,7 @@ export const Dependencies: FC<Dependencies.Props> = (
                 </Alert>;
             } else if (isSchema(entity, DependencyCycleSchema)) {
                 return <Alert
-                    icon={<div className={"i-tabler-alert-triangle"}/>}
+                    icon={<div className={"i-tabler:alert-triangle"}/>}
                     color={"red"}
                     title={t`Producer has cyclic dependencies`}
                 >
@@ -92,7 +92,7 @@ export const Dependencies: FC<Dependencies.Props> = (
                                 />
                                 <ProducerInput producerId={producer.id}/>
                             <div
-                                className={"i-tabler-arrow-narrow-right text-zinc-400"}
+                                className={"i-tabler:arrow-narrow-right text-zinc-400"}
                                 />
                                 <ProducerOutput producerId={producer.id}/>
                             </div>

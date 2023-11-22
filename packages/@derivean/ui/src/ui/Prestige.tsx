@@ -31,11 +31,11 @@ export const Prestige: FC<Prestige.Props> = (
         size={"md"}
         emptySymbol={value => <div className={cn(
             colors[value] ?? "green",
-            "i-tabler-star",
+            "i-tabler:star",
         )}/>}
         fullSymbol={value => <div className={cn(
             colors[value] ?? "green",
-            "i-tabler-star-filled",
+            "i-tabler:star-filled",
         )}/>}
         count={6}
     />;

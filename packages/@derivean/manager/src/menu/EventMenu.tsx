@@ -30,7 +30,7 @@ export const EventMenu: FC<EventMenu.Props> = (
             {
                 type:  "link",
                 href:  "/manager/event/[id]",
-                icon: <Icon icon={"i-tabler-search"}/>,
+                icon: <Icon icon={"i-tabler:search"}/>,
                 query,
                 label: t`Detail`,
             },

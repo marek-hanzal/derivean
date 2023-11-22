@@ -43,7 +43,7 @@ export default async function Layout(
                                 "mr-1",
                             ]}
                         >
-                            <Icon icon={"i-tabler-arrow-left"}/>
+                            <Icon icon={"i-tabler:arrow-left"}/>
                         </ButtonLink>
                         <Title
                             c={"text-zinc-600"}

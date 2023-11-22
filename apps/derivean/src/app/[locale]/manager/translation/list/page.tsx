@@ -6,7 +6,7 @@ import {t} from "@use-pico/translator";
 
 export default function List() {
     return <Page
-        icon={<Icon icon={"i-tabler-language"}/>}
+        icon={<Icon icon={"i-tabler:language"}/>}
         text={{
             header: t`Translation list`,
         }}

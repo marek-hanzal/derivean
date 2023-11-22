@@ -6,7 +6,7 @@ import {t} from "@use-pico/translator";
 
 export default function Index() {
     return <Page
-        icon={<Icon icon={"i-tabler-subtask"}/>}
+        icon={<Icon icon={"i-tabler:subtask"}/>}
         text={{
             header: t`Game management`,
         }}
