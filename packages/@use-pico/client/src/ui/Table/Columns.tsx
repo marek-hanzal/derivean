@@ -1,6 +1,6 @@
 import {type Schema}         from "@use-pico/extras";
 import {type HTMLAttributes} from "react";
-import {tailwindify}         from "../../tools/tailwindify";
+import {css}                 from "../../tools/css";
 import {type Table}          from "./Table";
 
 export namespace Columns {
@@ -24,7 +24,7 @@ export const Columns = <
     const {
         cn,
         $props
-    } = tailwindify(props);
+    } = css(props);
 
     return <div
         className={cn([
@@ -38,7 +38,7 @@ export const Columns = <
                 const {
                     cn,
                     $props
-                } = tailwindify({});
+                } = css({});
                 return <div
                     key={key}
                     className={cn([

@@ -16,7 +16,7 @@ export const LoadingOverlay: FC<LoadingOverlay.Props> = (
         className={"fixed inset-0 bg-gradient-to-r from-gray-50 to-gray-100 opacity-75 transition-opacity flex justify-center"}
     >
         <Loader
-            size={64}
+            size={"xl"}
             sx={{
                 root: {
                     className: "animate-bounce self-center",

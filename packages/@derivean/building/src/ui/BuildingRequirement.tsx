@@ -3,7 +3,6 @@ import {
     ItemInline
 }                                      from "@derivean/item";
 import {
-    Group,
     Nav,
     Text
 }                                      from "@use-pico/client";
@@ -37,10 +36,10 @@ export const BuildingRequirement: FC<BuildingRequirement.Props> = (
                     component: <ItemFetch
                                    key={requirement.id}
                                    override={requirement.itemId}
-                                   WithSuccess={({entity}) => <Group gap={"gap-4"}>
+                                   WithSuccess={({entity}) => <div className={"flex items-center"}>
                                        <ItemInline entity={entity}/>
                                        <Text fw={500}>x{requirement.amount}</Text>
-                                   </Group>}
+                                   </div>}
                                />,
                 }))}
             /> : <Text c={"dimmed"}>({t`Building without requirements`})</Text>;

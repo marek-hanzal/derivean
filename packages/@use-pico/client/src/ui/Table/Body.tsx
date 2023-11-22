@@ -5,7 +5,7 @@ import {
 import {type HTMLAttributes}   from "react";
 import {type IQueryStore}      from "../../api/IQueryStore";
 import {type IWithSourceQuery} from "../../api/IWithSourceQuery";
-import {tailwindify}           from "../../tools/tailwindify";
+import {css}                   from "../../tools/css";
 import {Rows}                  from "./Rows";
 import {type Table}            from "./Table";
 
@@ -39,7 +39,7 @@ export const Body = <
     const {
         cn,
         $props
-    } = tailwindify(props);
+    } = css(props);
 
     return <div
         className={cn([

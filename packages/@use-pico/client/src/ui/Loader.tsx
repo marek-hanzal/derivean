@@ -1,44 +1,49 @@
-import {IconWhirl}           from "@tabler/icons-react";
-import {type HTMLAttributes} from "react";
-import {tailwindify}         from "../tools/tailwindify";
-import {Icon}                from "./Icon";
+import {
+    type FC,
+    type HTMLAttributes
+}            from "react";
+import {css} from "../tools/css";
+
+const cssSize = {
+    "xs": "w-3 h-3",
+    "sm": "w-3 h-3",
+    "md": "w-3 h-3",
+    "lg": "w-8 h-8",
+    "xl": "w-16 h-16",
+};
+type cssSize = typeof cssSize;
 
 export namespace Loader {
-    export type Props<
-        TIconProps extends Icon.IconProps,
-    > =
-        Partial<Icon.Props<TIconProps>>
-        & {
-            sx?: {
-                root?: HTMLAttributes<HTMLDivElement>;
-            };
-        }
+    export interface Props {
+        /**
+         * Loader icon class name
+         */
+        icon?: string;
+        size?: keyof cssSize;
+        /**
+         * Style extensions of the inner elements
+         */
+        sx?: {
+            root?: HTMLAttributes<HTMLDivElement>;
+        };
+    }
 }
 
-export const Loader = <
-    TIconProps extends Icon.IconProps,
->(
+export const Loader: FC<Loader.Props> = (
     {
+        icon = "i-svg-spinners-3-dots-scale",
+        size = "md",
         sx,
-        Icon: $Icon,
-        ...   props
-    }: Loader.Props<TIconProps>,
+    }
 ) => {
-    const root = tailwindify(sx?.root || {});
+    const root = css(sx?.root || {});
 
     return <div
         className={root.cn([
-            "self-center opacity-100",
+            "self-center opacity-100 text-sky-500",
+            size,
+            icon,
         ])}
         {...root.$props}
-    >
-        <Icon
-            size={"sm"}
-            cn={[
-                "text-primary-500 animate-spin",
-            ]}
-            Icon={$Icon || IconWhirl as Icon.Props<any>}
-            {...props}
-        />
-    </div>;
+    />;
 };

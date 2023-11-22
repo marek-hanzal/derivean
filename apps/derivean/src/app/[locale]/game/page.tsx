@@ -3,10 +3,7 @@ import {
     KingdomTable
 }                 from "@derivean/kingdom";
 import {GameIcon} from "@derivean/ui";
-import {
-    Container,
-    Page
-}                 from "@use-pico/client";
+import {Page}     from "@use-pico/client";
 import {t}        from "@use-pico/translator";
 
 export default function Index() {
@@ -16,7 +13,7 @@ export default function Index() {
             header: t`Game overview`,
         }}
     >
-        <Container>
+        <div className={"container mx-auto"}>
             <KingdomQueryProvider
                 values={{}}
             >
@@ -24,6 +21,6 @@ export default function Index() {
                     compact
                 />
             </KingdomQueryProvider>
-        </Container>
+        </div>
     </Page>;
 }

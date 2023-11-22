@@ -6,7 +6,6 @@ import {EventMenu} from "@derivean/manager";
 import {container} from "@derivean/server";
 import {EventIcon} from "@derivean/ui";
 import {
-    Container,
     HomeIcon,
     ListIcon,
     Nav,
@@ -58,11 +57,9 @@ export default async function Index({params: {id}}: Index.Props) {
             active={["/manager/event/[id]/type/EventHero"]}
         />}
     >
-        <Container>
-            {/*<EventHeroUpsertForm*/}
-            {/*    entity={eventHero}*/}
-            {/*    refresh*/}
-            {/*/>*/}
-        </Container>
+        {/*<EventHeroUpsertForm*/}
+        {/*    entity={eventHero}*/}
+        {/*    refresh*/}
+        {/*/>*/}
     </Page>;
 }

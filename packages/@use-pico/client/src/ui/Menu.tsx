@@ -2,15 +2,14 @@ import {
     type FC,
     type HTMLAttributes,
     type ReactNode
-}                         from "react";
-import {type CommonProps} from "../api/CommonProps";
-import {type ILink}       from "../api/ILink";
-import {isHrefProps}      from "../tools/isHrefProps";
-import {tailwindify}      from "../tools/tailwindify";
-import {ButtonLink}       from "./ButtonLink";
+}                    from "react";
+import {type ILink}  from "../api/ILink";
+import {css}         from "../tools/css";
+import {isHrefProps} from "../tools/isHrefProps";
+import {ButtonLink}  from "./ButtonLink";
 
 export namespace Menu {
-    export interface Props extends HTMLAttributes<HTMLDivElement>, CommonProps {
+    export interface Props extends HTMLAttributes<HTMLDivElement>, css.Style {
         items: Items;
         active?: string[];
         linkProps?: Partial<ButtonLink.Props>;
@@ -53,7 +52,7 @@ export const Menu: FC<Menu.Props> = (
     const {
         cn,
         $props
-    } = tailwindify(props);
+    } = css(props);
 
     return <div
         className={cn([

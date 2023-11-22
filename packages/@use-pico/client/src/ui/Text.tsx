@@ -1,9 +1,8 @@
 import {
     type FC,
     type HTMLAttributes
-}                         from "react";
-import {type CommonProps} from "../api/CommonProps";
-import {tailwindify}      from "../tools/tailwindify";
+}            from "react";
+import {css} from "../tools/css";
 
 const twFw = {
     500: "font-medium",
@@ -14,7 +13,7 @@ type twFw = typeof twFw;
 export namespace Text {
     export type Props =
         HTMLAttributes<HTMLSpanElement>
-        & CommonProps
+        & css.Style
         & {
             c?: string;
             fw?: Fw;
@@ -31,7 +30,10 @@ export const Text: FC<Text.Props> = (
         ...props
     }
 ) => {
-    const {cn, $props} = tailwindify(props);
+    const {
+        cn,
+        $props
+    } = css(props);
 
     return <span
         className={cn([

@@ -3,7 +3,7 @@ import {
     type Schema
 }                            from "@use-pico/extras";
 import {type HTMLAttributes} from "react";
-import {tailwindify}         from "../../tools/tailwindify";
+import {css}                 from "../../tools/css";
 import {Table}               from "./Table";
 
 export namespace Row {
@@ -31,7 +31,7 @@ export const Row = <
             const {
                 cn,
                 $props
-            } = tailwindify(props);
+            } = css(props);
 
             return <div
                 key={key}

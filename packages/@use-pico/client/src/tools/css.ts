@@ -1,10 +1,9 @@
-import {type Prettify}    from "@use-pico/utils";
-import {twMerge}          from "tailwind-merge";
-import {type CommonProps} from "../api/CommonProps";
-import {twMargin}         from "./tailwindify/twMargin";
-import {twPadding}        from "./tailwindify/twPadding";
+import {type Prettify} from "@use-pico/utils";
+import {twMerge}       from "tailwind-merge";
+import {twMargin}      from "./tailwindify/twMargin";
+import {twPadding}     from "./tailwindify/twPadding";
 
-const cleanup: (keyof CommonProps)[] = [
+const cleanup: (keyof css.Style)[] = [
     "cn",
     "className",
     "px",
@@ -19,9 +18,9 @@ const cleanup: (keyof CommonProps)[] = [
     "m",
 ];
 
-export namespace tailwindify {
+export namespace css {
     export interface Result<
-        TProps extends CommonProps,
+        TProps extends Style,
     > {
         /**
          * Pure (unmodified) list of tailwind classes.
@@ -33,7 +32,7 @@ export namespace tailwindify {
          * Dollar name, because you would usually have "props" on input, so this will be out
          * of collision, when you destructure it.
          */
-        $props: Prettify<Omit<TProps, keyof CommonProps>>;
+        $props: Prettify<Omit<TProps, keyof Style>>;
 
         /**
          * Prepare classes to be used directly in the component. Ensures TailwindCSS classes
@@ -41,13 +40,58 @@ export namespace tailwindify {
          */
         cn(classes?: (string | undefined)[]): string;
     }
+
+    export interface Style {
+        /**
+         * Any classes you want to pass to the component.
+         *
+         * They've a precedence over the `cn` class list.
+         */
+        className?: string | undefined;
+        /**
+         * Classes to be passed to the component.
+         */
+        cn?: (string | undefined | false)[];
+
+        px?: keyof twPadding["x"];
+        py?: keyof twPadding["y"];
+        pt?: keyof twPadding["t"];
+        pb?: keyof twPadding["b"];
+        p?: keyof twPadding["p"];
+
+        mx?: keyof twMargin["x"];
+        my?: keyof twMargin["y"];
+        mt?: keyof twMargin["t"];
+        mb?: keyof twMargin["b"];
+        m?: keyof twMargin["m"];
+    }
+
+    export type Variant =
+        | "subtle";
+
+    /**
+     * If some component supports size, this is a default list of sizes.
+     */
+    export type Size =
+        | "xs"
+        | "sm"
+        | "md"
+        | "lg"
+        | "xl"
+        | "xl2"
+
+    /**
+     * TailwindCSS/UnoCSS color string.
+     * https://tailwindcss.com/docs/customizing-colors
+     */
+    export type Color = string;
 }
 
-export const tailwindify = <
-    TProps extends CommonProps,
+export const css = <
+    TProps extends css.Style,
 >(
     props: TProps
-): tailwindify.Result<TProps> => {
+): css.Result<TProps> => {
     const classes: string[] = [];
 
     const $props = {...props};

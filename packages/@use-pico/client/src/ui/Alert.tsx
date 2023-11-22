@@ -2,13 +2,13 @@ import {
     type FC,
     type PropsWithChildren,
     type ReactNode
-}                         from "react";
-import {type CommonProps} from "../api/CommonProps";
+}            from "react";
+import {css} from "../tools/css";
 
 export namespace Alert {
-    export type Props = PropsWithChildren<CommonProps & {
+    export type Props = PropsWithChildren<css.Style & {
         icon?: ReactNode;
-        color?: CommonProps.Color;
+        color?: css.Color;
         title?: ReactNode;
     }>;
 }

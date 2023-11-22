@@ -3,9 +3,9 @@ import {
     type HTMLAttributes,
     type PropsWithChildren,
     type ReactNode
-}                    from "react";
-import {tailwindify} from "../tools/tailwindify";
-import {Title}       from "./Title";
+}              from "react";
+import {css}   from "../tools/css";
+import {Title} from "./Title";
 
 export namespace Page {
     export type Props =
@@ -56,7 +56,7 @@ export const Page: FC<Page.Props> = (
     const {
         cn,
         $props
-    } = tailwindify(props);
+    } = css(props);
 
     return <div
         className={cn([])}

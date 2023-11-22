@@ -1,19 +1,18 @@
-import {generateId}       from "@use-pico/utils";
+import {generateId}      from "@use-pico/utils";
 import {
     type FC,
     type HTMLAttributes,
     type ReactNode
-}                         from "react";
-import {type CommonProps} from "../../api/CommonProps";
-import {type IHrefProps}  from "../../api/IHrefProps";
-import {tailwindify}      from "../../tools/tailwindify";
-import {ButtonLink}       from "../ButtonLink";
-import {Text}             from "../Text";
-import {isNavLabel}       from "./isNavLabel";
-import {isNavLink}        from "./isNavLink";
+}                        from "react";
+import {type IHrefProps} from "../../api/IHrefProps";
+import {css}             from "../../tools/css";
+import {ButtonLink}      from "../ButtonLink";
+import {Text}            from "../Text";
+import {isNavLabel}      from "./isNavLabel";
+import {isNavLink}       from "./isNavLink";
 
 export namespace Nav {
-    export interface Prop extends HTMLAttributes<HTMLDivElement>, CommonProps {
+    export interface Prop extends HTMLAttributes<HTMLDivElement>, css.Style {
         items: Item[];
         separator?: ReactNode;
         separatorMargin?: string;
@@ -64,7 +63,7 @@ export const Nav: FC<Nav.Prop> = (
     const {
         cn,
         $props
-    } = tailwindify(props);
+    } = css(props);
     const length = items.length;
     const $separator = <Text c={"text-zinc-400 font-bold"} className={separatorMargin}>{separator}</Text>;
 

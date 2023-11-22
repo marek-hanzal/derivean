@@ -8,8 +8,6 @@ import {
 import {
     Alert,
     ButtonLink,
-    Group,
-    Icon,
     QueryResult,
     Skeleton,
     useQueryEx
@@ -51,9 +49,10 @@ export const Dependencies: FC<Dependencies.Props> = (
                     color={"green"}
                     title={t`Producer has no cyclic dependencies`}
                 >
-                    {entity.producers.length > 0 && <Group>
-                        {entity.producers.map((producer) => <Group
+                    {entity.producers.length > 0 && <div className={"flex flex-row items-center"}>
+                        {entity.producers.map((producer) => <div
                                 key={producer.id}
+                                className={"flex flex-row gap-2 items-center"}
                             >
                                 <ButtonLink
                                     icon={<ProducerIcon/>}
@@ -66,15 +65,13 @@ export const Dependencies: FC<Dependencies.Props> = (
                                     label={<ProducerInline entity={producer}/>}
                                 />
                                 <ProducerInput producerId={producer.id}/>
-                            <Icon
-                                    size={"xs"}
-                                    Icon={IconArrowRight}
-                                    color={"gray"}
+                                <div
+                                    className={"i-tabler-arrow-narrow-right text-zinc-400"}
                                 />
                                 <ProducerOutput producerId={producer.id}/>
-                            </Group>
+                            </div>
                         )}
-                    </Group>}
+                    </div>}
                 </Alert>;
             } else if (isSchema(entity, DependencyCycleSchema)) {
                 return <Alert
@@ -82,10 +79,10 @@ export const Dependencies: FC<Dependencies.Props> = (
                     color={"red"}
                     title={t`Producer has cyclic dependencies`}
                 >
-                    {entity.cycle.length > 0 && <Group>
-                        {entity.cycle.map((producer) => <Group
+                    {entity.cycle.length > 0 && <div className={"flex flex-row items-center"}>
+                        {entity.cycle.map((producer) => <div
                                 key={producer.id}
-                                gap={"gap-2"}
+                                className={"flex flex-row gap-2 items-center"}
                             >
                                 <ButtonLink
                                     icon={<ProducerIcon/>}
@@ -98,15 +95,15 @@ export const Dependencies: FC<Dependencies.Props> = (
                                     label={producer.name}
                                 />
                                 <ProducerInput producerId={producer.id}/>
-                            <Icon
+                                <Icon
                                     size={"xs"}
                                     Icon={IconArrowRight}
                                     color={"gray"}
                                 />
                                 <ProducerOutput producerId={producer.id}/>
-                            </Group>
+                            </div>
                         )}
-                    </Group>}
+                    </div>}
                 </Alert>;
             }
             return null;

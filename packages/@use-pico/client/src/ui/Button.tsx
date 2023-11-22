@@ -4,11 +4,10 @@ import {
     type ButtonHTMLAttributes,
     type FC,
     type ReactNode
-}                         from "react";
-import {type CommonProps} from "../api/CommonProps";
-import {tailwindify}      from "../tools/tailwindify";
+}            from "react";
+import {css} from "../tools/css";
 
-const twSize = {
+const cssSize = {
     "xs":         "text-xs px-3 py-2 font-medium",
     "compact-xs": "text-xs px-3 py-1 font-medium",
 
@@ -24,9 +23,9 @@ const twSize = {
     "xl":         "text-xl px-6 py-3 font-medium",
     "compact-xl": "text-xl px-5 py-2 font-medium",
 } as const;
-type twSize = typeof twSize;
+type cssSize = typeof cssSize;
 
-const twVariant = {
+const cssVariant = {
     "primary": `
         transition ease-in-out delay-50 duration-150
         bg-primary-600
@@ -40,12 +39,12 @@ const twVariant = {
         hover:shadow-zinc-300 hover:shadow-md
     `,
 } as const;
-type twVariant = typeof twVariant;
+type cssVariant = typeof cssVariant;
 
 export namespace Button {
     export type Props =
         ButtonHTMLAttributes<HTMLButtonElement>
-        & CommonProps
+        & css.Style
         &
         {
             leftSection?: ReactNode;
@@ -53,8 +52,8 @@ export namespace Button {
             variant?: Variant;
         };
 
-    export type Size = keyof twSize;
-    export type Variant = keyof twVariant;
+    export type Size = keyof cssSize;
+    export type Variant = keyof cssVariant;
 }
 
 export const Button: FC<Button.Props> = (
@@ -70,7 +69,7 @@ export const Button: FC<Button.Props> = (
     const {
         cn,
         $props
-    } = tailwindify(props);
+    } = css(props);
 
     return <button
         type={"button"}
@@ -88,8 +87,8 @@ export const Button: FC<Button.Props> = (
                 disabled:hover:shadow-none
                 disabled:cursor-not-allowed
             `,
-            size ? twSize[size] : undefined,
-            variant ? twVariant[variant] : undefined,
+            size ? cssSize[size] : undefined,
+            variant ? cssVariant[variant] : undefined,
         ])}
         onClick={onClick}
         {...$props}

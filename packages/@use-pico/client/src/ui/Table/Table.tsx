@@ -8,10 +8,9 @@ import {
     type FC,
     type ReactNode
 }                              from "react";
-import {type CommonProps}      from "../../api/CommonProps";
 import {type IQueryStore}      from "../../api/IQueryStore";
 import {type IWithSourceQuery} from "../../api/IWithSourceQuery";
-import {tailwindify}           from "../../tools/tailwindify";
+import {css}                   from "../../tools/css";
 import {Body}                  from "./Body";
 import {Columns}               from "./Columns";
 
@@ -19,7 +18,7 @@ export namespace Table {
     export interface Props<
         TColumns extends string,
         TSchema extends Schema<any, any, any, any>,
-    > extends CommonProps {
+    > extends css.Style {
         columns: Columns<TColumns, TSchema>;
         withQueryStore: IQueryStore.Store<
             Infer.QuerySchema<TSchema>
@@ -81,7 +80,7 @@ export const Table = <
     const {
         cn,
         $props
-    } = tailwindify(props);
+    } = css(props);
 
     return <div
         className={cn([

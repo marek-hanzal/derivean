@@ -1,17 +1,16 @@
-import Image              from "next/image";
+import Image             from "next/image";
 import {
     type ComponentProps,
     type FC,
     type HtmlHTMLAttributes,
     type ReactNode
-}                         from "react";
-import {type CommonProps} from "../api/CommonProps";
-import {type IHrefProps}  from "../api/IHrefProps";
-import {tailwindify}      from "../tools/tailwindify";
-import {LocaleLink}       from "./LocaleLink";
+}                        from "react";
+import {type IHrefProps} from "../api/IHrefProps";
+import {css}             from "../tools/css";
+import {LocaleLink}      from "./LocaleLink";
 
 export namespace Header {
-    export interface Props extends HtmlHTMLAttributes<HTMLDivElement>, CommonProps {
+    export interface Props extends HtmlHTMLAttributes<HTMLDivElement>, css.Style {
         /**
          * Optional logo on the left side
          */
@@ -40,7 +39,7 @@ export const Header: FC<Header.Props> = (
     const {
         cn,
         $props
-    } = tailwindify(props);
+    } = css(props);
 
     return <div
         className={cn([

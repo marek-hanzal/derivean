@@ -6,8 +6,6 @@ import {BuildingMenu} from "@derivean/manager";
 import {container}    from "@derivean/server";
 import {BuildingIcon} from "@derivean/ui";
 import {
-    Grid,
-    GridCol,
     HomeIcon,
     ListIcon,
     Nav,
@@ -54,12 +52,8 @@ export default async function Index({params: {id}}: Index.Props) {
             active={["/manager/building/[id]"]}
         />}
     >
-        <Grid pb={"md"}>
-            <GridCol span={6}>
-                <BuildingPreview
-                    building={building}
-                />
-            </GridCol>
-        </Grid>
+        <BuildingPreview
+            building={building}
+        />
     </Page>;
 }

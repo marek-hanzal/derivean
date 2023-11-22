@@ -6,10 +6,6 @@ import {
     type ReactNode
 }                            from "react";
 import {BlockLoadingOverlay} from "../ui/BlockLoadingOverlay";
-import {Flex}                from "../ui/Flex/Flex";
-import {FlexItem}            from "../ui/Flex/FlexItem";
-import {Group}               from "../ui/Group/Group";
-import {GroupCol}            from "../ui/Group/GroupCol";
 import {LocaleLink}          from "../ui/LocaleLink";
 import {Unblock}             from "../utils/Unblock";
 import {SignInButton}        from "./PublicLayout/SignInButton";
@@ -52,47 +48,37 @@ export const PublicLayout: FC<PublicLayout.Props> = (
     return <>
         <Unblock/>
         <BlockLoadingOverlay/>
-        <Flex
-            align={"center"}
-            px={"sm"}
-            pt={"sm"}
+        <div
+            className={"flex flex-row items-center px-4 pt-4"}
         >
-            <FlexItem span={"content"}>
-                <LocaleLink
-                    href={home}
-                    style={{
-                        display: "block",
-                    }}
-                >
-                    <Image
-                        priority={true}
-                        height={32}
-                        alt={"logo"}
-                        src={logo}
-                    />
-                </LocaleLink>
-            </FlexItem>
-            <FlexItem span={"auto"}>
+            <LocaleLink
+                href={home}
+                style={{
+                    display: "block",
+                }}
+            >
+                <Image
+                    priority={true}
+                    height={32}
+                    alt={"logo"}
+                    src={logo}
+                />
+            </LocaleLink>
+            <div className={"grow"}>
                 {center}
-            </FlexItem>
-            <FlexItem span={"content"}>
-                <Group gap={"xs"}>
-                    <GroupCol>
-                        {right}
-                    </GroupCol>
-                    <GroupCol>
-                        {!withoutLogin && <Group>
-                            <GroupCol>
-                                <SignInButton
-                                    loginUrl={loginUrl}
-                                    signInOptions={signInOptions}
-                                />
-                            </GroupCol>
-                        </Group>}
-                    </GroupCol>
-                </Group>
-            </FlexItem>
-        </Flex>
+            </div>
+            <div className={"shrink flex items-center"}>
+                <div className={"shrink"}>
+                    {right}
+                </div>
+                <div className={"shrink"}>
+                    {!withoutLogin && <SignInButton
+                        loginUrl={loginUrl}
+                        signInOptions={signInOptions}
+                    />}
+                </div>
+            </div>
+        </div>
         {children}
     </>;
 };

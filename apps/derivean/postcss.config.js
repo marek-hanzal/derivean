@@ -1,11 +1,11 @@
 module.exports = {
     plugins: {
-        // 'postcss-preset-mantine': {},
-        // 'postcss-simple-vars':    {
-        //     variables: {},
-        // },
-        // 'tailwindcss/nesting':    {},
-        tailwindcss:  {},
-        autoprefixer: {},
+        '@unocss/postcss': {
+            content: [
+                './src/*.{html,js,ts,jsx,tsx}',
+                // '../../packages/**/*.{js,ts,jsx,tsx,mdx}',
+            ],
+        },
+        autoprefixer:      {},
     },
 };
