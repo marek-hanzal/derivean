@@ -15,8 +15,7 @@
 	},
 	"dependencies": {
 		"@derivean/ui": "^0.5.0",
-		"@faker-js/faker": "^8.3.1",
-		"@tabler/icons-react": "^2.28.0"
+		"@faker-js/faker": "^8.3.1"
 	},
 	"devDependencies": {
 		"@use-pico/esbuild": "^2.0.0",

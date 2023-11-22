@@ -14,7 +14,6 @@
 		"cleanup": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
 	"dependencies": {
-		"@tabler/icons-react": "^2.39.0",
 		"next-auth": "^4.24.3"
 	},
 	"devDependencies": {

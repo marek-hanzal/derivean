@@ -19,7 +19,6 @@
 	"peerDependencies": {
 		"@derivean/inventory": "^0.5.0",
 		"@derivean/item": "^0.5.0",
-		"@tabler/icons-react": "^2.40.0",
 		"@use-pico/translator": "^3.0.0"
 	},
 	"devDependencies": {

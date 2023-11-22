@@ -13,9 +13,6 @@
 	"scripts": {
 		"cleanup": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
-	"dependencies": {
-		"@tabler/icons-react": "^2.28.0"
-	},
 	"devDependencies": {
 		"@use-pico/esbuild": "^2.0.0",
 		"@use-pico/eslint-config-eslint": "^2.0.0",
