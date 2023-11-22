@@ -20,6 +20,7 @@ export * from "./IWithSourceQuery";
 export * from "./Icon";
 export * from "./LinkLockStore";
 export * from "./List";
+export * from "./ListIcon";
 export * from "./Loader";
 export * from "./LoadingOverlay";
 export * from "./LocaleLink";

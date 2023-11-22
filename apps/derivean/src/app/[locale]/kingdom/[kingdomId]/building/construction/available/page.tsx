@@ -5,7 +5,7 @@ import {
     withKingdomRepository
 }                              from "@derivean/kingdom";
 import {container}             from "@derivean/server";
-import {IconHammer}            from "@tabler/icons-react";
+import {BuildIcon}             from "@derivean/ui";
 import {
     HomeIcon,
     Nav,
@@ -25,7 +25,7 @@ export default async function Available({params: {kingdomId}}: List.Props) {
     const kingdom = await withKingdomRepository.use(container).getOrThrow(kingdomId);
 
     return <Page
-        icon={<IconHammer/>}
+        icon={<BuildIcon/>}
         text={{
             header: t`Kingdom building construction (label)`,
         }}

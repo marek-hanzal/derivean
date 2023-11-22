@@ -1,10 +1,12 @@
-import {IconLanguage} from "@tabler/icons-react";
-import {Page}         from "@use-pico/client";
-import {t}            from "@use-pico/translator";
+import {
+    Icon,
+    Page
+}          from "@use-pico/client";
+import {t} from "@use-pico/translator";
 
 export default function List() {
     return <Page
-        icon={<IconLanguage/>}
+        icon={<Icon icon={"i-tabler-language"}/>}
         text={{
             header: t`Translation list`,
         }}

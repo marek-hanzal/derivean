@@ -4,9 +4,9 @@ import {
     withKingdomRepository
 }                               from "@derivean/kingdom";
 import {container}              from "@derivean/server";
-import {IconArrowLeft}          from "@tabler/icons-react";
 import {
     ButtonLink,
+    Icon,
     Title
 }                               from "@use-pico/client";
 import {tv}                     from "@use-pico/translator";
@@ -43,7 +43,7 @@ export default async function Layout(
                                 "mr-1",
                             ]}
                         >
-                            <IconArrowLeft/>
+                            <Icon icon={"i-tabler-arrow-left"}/>
                         </ButtonLink>
                         <Title
                             c={"text-zinc-600"}

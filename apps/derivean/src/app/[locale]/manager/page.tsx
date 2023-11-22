@@ -1,10 +1,12 @@
-import {IconSubtask} from "@tabler/icons-react";
-import {Page}        from "@use-pico/client";
-import {t}           from "@use-pico/translator";
+import {
+    Icon,
+    Page
+}          from "@use-pico/client";
+import {t} from "@use-pico/translator";
 
 export default function Index() {
     return <Page
-        icon={<IconSubtask/>}
+        icon={<Icon icon={"i-tabler-subtask"}/>}
         text={{
             header: t`Game management`,
         }}
