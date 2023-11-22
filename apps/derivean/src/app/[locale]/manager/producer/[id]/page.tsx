@@ -8,9 +8,6 @@ import {
 import {container}    from "@derivean/server";
 import {ProducerIcon} from "@derivean/ui";
 import {
-    Box,
-    Grid,
-    GridCol,
     HomeIcon,
     ListIcon,
     Nav,
@@ -61,22 +58,22 @@ export default async function Index({params: {id}}: Index.Props) {
             active={["/manager/producer/[id]"]}
         />}
     >
-        <Box mb={"xs"}>
+        <div className={"mb-4"}>
             <Dependencies
                 producerId={producer.id}
             />
-        </Box>
-        <Grid pb={"md"}>
-            <GridCol span={6}>
+        </div>
+        <div className={"flex flex-row mb-4"}>
+            <div className={"grow"}>
                 <ProducerPreview
                     entity={producer}
                 />
-            </GridCol>
-            <GridCol span={6}>
+            </div>
+            <div className={"grow"}>
                 <ProducerGraph
                     producerId={producer.id}
                 />
-            </GridCol>
-        </Grid>
+            </div>
+        </div>
     </Page>;
 }
