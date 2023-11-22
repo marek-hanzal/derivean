@@ -1,1 +1,3 @@
-export {IconBuildingWarehouse as InventoryIcon} from "@tabler/icons-react";
+import {withIcon} from "@use-pico/client";
+
+export const InventoryIcon = withIcon({icon: "i-tabler-building-warehouse"});

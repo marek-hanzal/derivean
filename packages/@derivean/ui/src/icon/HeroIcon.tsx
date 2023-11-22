@@ -1,1 +1,3 @@
-export {IconSword as HeroIcon} from "@tabler/icons-react";
+import {withIcon} from "@use-pico/client";
+
+export const HeroIcon = withIcon({icon: "i-tabler-sword"});

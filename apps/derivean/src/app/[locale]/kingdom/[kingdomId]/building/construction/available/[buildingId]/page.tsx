@@ -1,8 +1,10 @@
 import {withBuildingRepository} from "@derivean/building";
 import {withKingdomRepository}  from "@derivean/kingdom";
 import {container}              from "@derivean/server";
-import {BuildingIcon}           from "@derivean/ui";
-import {IconHammer}             from "@tabler/icons-react";
+import {
+    BuildIcon,
+    BuildingIcon
+}                               from "@derivean/ui";
 import {
     HomeIcon,
     Nav,
@@ -51,7 +53,7 @@ export default async function Available(
                 {
                     type:  "link",
                     label: t`Kingdom building construction (label)`,
-                    icon:  <IconHammer/>,
+                    icon: <BuildIcon/>,
                     href:  {
                         href:  "/kingdom/[kingdomId]/building/construction/available",
                         query: {kingdomId: kingdom.id},

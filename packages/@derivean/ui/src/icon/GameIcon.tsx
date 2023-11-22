@@ -1,1 +1,3 @@
-export {IconTower as GameIcon} from "@tabler/icons-react";
+import {withIcon} from "@use-pico/client";
+
+export const GameIcon = withIcon({icon: "i-tabler-tower"});

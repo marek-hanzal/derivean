@@ -1,1 +1,3 @@
-export {IconCrown as KingdomIcon} from "@tabler/icons-react";
+import {withIcon} from "@use-pico/client";
+
+export const KingdomIcon = withIcon({icon: "i-tabler-crown"});

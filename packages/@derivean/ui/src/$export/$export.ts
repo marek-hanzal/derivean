@@ -1,3 +1,4 @@
+export * from "./BuildIcon";
 export * from "./BuildingIcon";
 export * from "./ConstructionIcon";
 export * from "./EventIcon";

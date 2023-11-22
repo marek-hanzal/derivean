@@ -1,1 +1,3 @@
-export {IconBuildingCottage as BuildingIcon} from "@tabler/icons-react";
+import {withIcon} from "@use-pico/client";
+
+export const BuildingIcon = withIcon({icon: "i-tabler-building-cottage"});
