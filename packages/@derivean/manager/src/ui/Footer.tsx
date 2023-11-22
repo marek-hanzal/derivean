@@ -1,17 +1,18 @@
+import {VersionStamp} from "@use-pico/client";
 import {
-    Center,
-    VersionStamp
-}                from "@use-pico/client";
-import {type FC} from "react";
+    type FC,
+    type HTMLAttributes
+}                     from "react";
 
 export namespace Footer {
-    export type Props = Center.Props;
+    export type Props = HTMLAttributes<HTMLDivElement>;
 }
 
 export const Footer: FC<Footer.Props> = props => {
-    return <Center
+    return <div
+        className={"flex justify-center items-center"}
         {...props}
     >
         <VersionStamp/>
-    </Center>;
+    </div>;
 };

@@ -1,5 +1,4 @@
 import {
-    Group,
     HumanTime,
     Preview,
     Text,
@@ -28,12 +27,12 @@ export const ProducerPreview: FC<ProducerPreview.Props> = (
         items={[
             {
                 label: t`Producer name`,
-                value: <Group gap={"xs"}>
+                value: <div className={"flex gap-4"}>
                            <ProducerInline entity={entity}/>
                            <Text c={"dimmed"}>
                                ({entity.name})
                            </Text>
-                       </Group>,
+                       </div>,
             },
             {
                 label: t`Production time`,

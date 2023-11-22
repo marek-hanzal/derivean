@@ -1,7 +1,4 @@
-import {
-    AppLayout,
-    Divider
-}                      from "@use-pico/client";
+import {AppLayout}     from "@use-pico/client";
 import {type FC}       from "react";
 import {ManagerMenu}   from "../menu/ManagerMenu";
 import {Footer}        from "../ui/Footer";
@@ -27,7 +24,6 @@ export const ManagerLayout: FC<ManagerLayout.Props> = (
             }}
             {...props}
         />
-        <Divider variant={"dotted"} m={"lg"}/>
         <Footer
             mb={"xl"}
         />
