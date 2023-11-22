@@ -1,7 +1,4 @@
-import {
-    AppLayout,
-    Divider
-}                      from "@use-pico/client";
+import {AppLayout}     from "@use-pico/client";
 import {type FC}       from "react";
 import {Footer}        from "../ui/Footer";
 import {SignOutButton} from "./GameLayout/SignOutButton";
@@ -25,7 +22,6 @@ export const GameLayout: FC<GameLayout.Props> = (
             }}
             {...props}
         />
-        <Divider variant={"dotted"} my={"md"} mt={"xs"}/>
         <Footer
             mb={"xl"}
         />

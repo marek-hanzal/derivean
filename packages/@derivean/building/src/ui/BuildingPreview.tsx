@@ -1,5 +1,4 @@
 import {
-    Group,
     Preview,
     Text
 }                            from "@use-pico/client";
@@ -25,12 +24,12 @@ export const BuildingPreview: FC<BuildingPreview.Props> = (
         items={[
             {
                 label: t`Building name`,
-                value: <Group gap={"xs"}>
+                value: <div className={"flex gap-4"}>
                            <BuildingInline entity={building}/>
                            <Text c={"dimmed"}>
                                ({building.name})
                            </Text>
-                       </Group>,
+                       </div>,
             },
             {
                 label: t`Building requirement (label)`,

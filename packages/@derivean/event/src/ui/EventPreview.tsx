@@ -1,7 +1,6 @@
 import {
     BoolInline,
     DateInline,
-    Group,
     Preview,
     Text,
     type WithEntity
@@ -30,12 +29,12 @@ export const EventPreview: FC<EventPreview.Props> = (
         items={[
             {
                 label: t`Event name`,
-                value: <Group gap={"xs"}>
+                value: <div className={"flex gap-4"}>
                            <EventInline entity={entity}/>
                            <Text c={"dimmed"}>
                                ({entity.name})
                            </Text>
-                       </Group>,
+                       </div>,
             },
             {
                 label: t`Event type`,
