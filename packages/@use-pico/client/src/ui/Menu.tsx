@@ -50,12 +50,12 @@ export const Menu: FC<Menu.Props> = (
     }
 ) => {
     const {
-        cn,
+        cx,
         $props
     } = css(props);
 
     return <div
-        className={cn([
+        className={cx([
             "flex flex-row gap-2",
         ])}
         {...$props}

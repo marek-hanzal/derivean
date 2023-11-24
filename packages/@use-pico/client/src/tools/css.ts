@@ -38,7 +38,7 @@ export namespace css {
          * Prepare classes to be used directly in the component. Ensures TailwindCSS classes
          * are properly merged.
          */
-        cn(classes?: (string | undefined)[]): string;
+        cx(classes?: (string | undefined)[]): string;
     }
 
     export interface Style {
@@ -116,7 +116,7 @@ export const css = <
     return {
         tw: classes,
         $props,
-        cn: input => twMerge(
+        cx: input => twMerge(
             ...classes,
             ...input?.filter(Boolean) || [],
             /**

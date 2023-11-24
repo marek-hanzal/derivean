@@ -17,11 +17,9 @@ export const LoadingOverlay: FC<LoadingOverlay.Props> = (
     >
         <Loader
             size={"xl"}
-            sx={{
-                root: {
-                    className: "animate-bounce self-center",
-                },
-            }}
+            cn={[
+                "animate-bounce self-center",
+            ]}
         />
     </div> : null;
 };

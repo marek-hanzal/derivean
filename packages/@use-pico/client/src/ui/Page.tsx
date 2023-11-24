@@ -1,3 +1,4 @@
+import {cn}    from "@use-pico/utils";
 import {
     type FC,
     type HTMLAttributes,
@@ -54,22 +55,24 @@ export const Page: FC<Page.Props> = (
     }
 ) => {
     const {
-        cn,
+        cx,
         $props
     } = css(props);
 
     return <div
-        className={cn([])}
+        className={cx([
+            //
+        ])}
         {...$props}
     >
         <div
-            className={`
-                flex flex-row items-center
-                shadow-sm shadow-zinc-200 
-                px-3 py-3
-                h-14
-                gap-4
-            `}
+            className={cn(
+                "flex flex-row items-center",
+                "shadow-sm shadow-zinc-200",
+                "px-3 py-3",
+                "h-14",
+                "gap-4",
+            )}
         >
             {nav && <div className={"shrink"}>
                 {nav}
@@ -94,7 +97,10 @@ export const Page: FC<Page.Props> = (
             {menu}
         </div>}
         <div
-            className={"mt-4 px-12"}
+            className={cn(
+                "mt-4 px-12",
+                "animate-fade-in animate-duration-200",
+            )}
         >
             {children}
         </div>

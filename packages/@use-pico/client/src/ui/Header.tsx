@@ -37,12 +37,12 @@ export const Header: FC<Header.Props> = (
     }
 ) => {
     const {
-        cn,
+        cx,
         $props
     } = css(props);
 
     return <div
-        className={cn([
+        className={cx([
             "px-3 py-2",
             "bg-zinc-50",
             "shadow-md shadow-zinc-300",

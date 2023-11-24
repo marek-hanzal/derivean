@@ -78,12 +78,12 @@ export const Table = <
     }: Table.Props<TColumns, TSchema>,
 ) => {
     const {
-        cn,
+        cx,
         $props
     } = css(props);
 
     return <div
-        className={cn([
+        className={cx([
             "table w-full",
             "border border-zinc-300",
             "divide-solid divide-y divide-zinc-300",

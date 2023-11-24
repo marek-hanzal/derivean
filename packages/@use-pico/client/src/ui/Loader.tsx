@@ -14,37 +14,34 @@ const cssSize = {
 type cssSize = typeof cssSize;
 
 export namespace Loader {
-    export interface Props {
+    export interface Props extends HTMLAttributes<HTMLDivElement>, css.Style {
         /**
          * Loader icon class name
          * https://icones.js.org/
          */
-        icon?: string;
+        loader?: string;
         size?: keyof cssSize;
-        /**
-         * Style extensions of the inner elements
-         */
-        sx?: {
-            root?: HTMLAttributes<HTMLDivElement>;
-        };
     }
 }
 
 export const Loader: FC<Loader.Props> = (
     {
-        icon = "i-svg-spinners-3-dots-scale",
+        loader = "i-svg-spinners:3-dots-scale",
         size = "md",
-        sx,
+        ...props
     }
 ) => {
-    const root = css(sx?.root || {});
+    const {
+        cx,
+        $props
+    } = css(props);
 
     return <div
-        className={root.cn([
-            "self-center opacity-100 text-sky-500",
+        className={cx([
+            "opacity-100 text-sky-500",
             size,
-            icon,
+            loader,
         ])}
-        {...root.$props}
+        {...$props}
     />;
 };

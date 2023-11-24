@@ -14,12 +14,12 @@ export const Main: FC<Main.Props> = (
     }
 ) => {
     const {
-        cn,
+        cx,
         $props
     } = css(props);
 
     return <main
-        className={cn([
+        className={cx([
             "min-h-screen",
         ])}
         {...$props}

@@ -5,8 +5,9 @@ import {
 import {type HTMLAttributes}   from "react";
 import {type IQueryStore}      from "../../api/IQueryStore";
 import {type IWithSourceQuery} from "../../api/IWithSourceQuery";
+import {useSourceQuery}        from "../../hook/useSourceQuery";
 import {css}                   from "../../tools/css";
-import {Rows}                  from "./Rows";
+import {Loader}                from "./Loader";
 import {type Table}            from "./Table";
 
 export namespace Body {
@@ -37,20 +38,27 @@ export const Body = <
     }: Body.Props<TColumns, TSchema>
 ) => {
     const {
-        cn,
+        cx,
         $props
     } = css(props);
 
+    const result = useSourceQuery({
+        withSourceQuery,
+        store: withQueryStore,
+    });
+
     return <div
-        className={cn([
+        className={cx([
             "table-row-group",
         ])}
         {...$props}
     >
-        <Rows
-            columns={columns}
-            withQueryStore={withQueryStore}
-            withSourceQuery={withSourceQuery}
-        />
+        {/*{result.isLoading && <Loader/>}*/}
+        <Loader/>
+        {/*<Rows*/}
+        {/*    columns={columns}*/}
+        {/*    withQueryStore={withQueryStore}*/}
+        {/*    withSourceQuery={withSourceQuery}*/}
+        {/*/>*/}
     </div>;
 };

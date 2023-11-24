@@ -67,13 +67,13 @@ export const Button: FC<Button.Props> = (
     }
 ) => {
     const {
-        cn,
+        cx,
         $props
     } = css(props);
 
     return <button
         type={"button"}
-        className={cn([
+        className={cx([
             `
                 border-1
                 rounded-md

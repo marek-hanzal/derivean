@@ -17,12 +17,12 @@ export const Icon: FC<Icon.Props> = (
     }
 ) => {
     const {
-        cn,
+        cx,
         $props
     } = css(props);
 
     return <div
-        className={cn([
+        className={cx([
             icon,
         ])}
         {...$props}

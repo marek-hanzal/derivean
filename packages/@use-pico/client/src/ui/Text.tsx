@@ -31,12 +31,12 @@ export const Text: FC<Text.Props> = (
     }
 ) => {
     const {
-        cn,
+        cx,
         $props
     } = css(props);
 
     return <span
-        className={cn([
+        className={cx([
             c === "dimmed" ? "text-secondary-500 font-light" : c,
             fw && twFw[fw],
         ])}

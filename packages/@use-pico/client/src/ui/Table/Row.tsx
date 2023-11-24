@@ -29,13 +29,13 @@ export const Row = <
     return <div className={"table-row"}>
         {Object.entries<Table.Column<TSchema>>(columns).map(([key, column]) => {
             const {
-                cn,
+                cx,
                 $props
             } = css(props);
 
             return <div
                 key={key}
-                className={cn([
+                className={cx([
                     "table-cell",
                     "font-bold",
                     "py-2 px-4",

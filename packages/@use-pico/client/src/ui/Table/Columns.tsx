@@ -22,12 +22,12 @@ export const Columns = <
     }: Columns.Props<TColumns, TSchema>
 ) => {
     const {
-        cn,
+        cx,
         $props
     } = css(props);
 
     return <div
-        className={cn([
+        className={cx([
             "table-header-group",
             "shadow-md shadow-zinc-200",
         ])}
@@ -36,12 +36,12 @@ export const Columns = <
         <div className={"table-row"}>
             {Object.entries<Table.Column<TSchema>>(columns).map(([key, column]) => {
                 const {
-                    cn,
+                    cx,
                     $props
                 } = css({});
                 return <div
                     key={key}
-                    className={cn([
+                    className={cx([
                         "table-cell",
                         "font-bold",
                         "py-2 px-4",

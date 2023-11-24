@@ -61,14 +61,14 @@ export const Nav: FC<Nav.Prop> = (
     }
 ) => {
     const {
-        cn,
+        cx,
         $props
     } = css(props);
     const length = items.length;
     const $separator = <Text c={"text-zinc-400 font-bold"} className={separatorMargin}>{separator}</Text>;
 
     return <div
-        className={cn([
+        className={cx([
             "flex flex-row items-center",
         ])}
         {...$props}
