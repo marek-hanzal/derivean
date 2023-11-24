@@ -31,7 +31,9 @@ export const Row = <
         className={cn([
             "table-row",
             "divide-solid divide-x divide-zinc-200",
-            // "hover:(shadow-lg shadow-zinc-200)",
+            "shadow-sm shadow-zinc-300",
+            "even:bg-zinc-100",
+            "hover:(shadow-md relative)",
         ])}
     >
         {Object.entries<Table.Column<TSchema>>(columns).map(([key, column]) => {
