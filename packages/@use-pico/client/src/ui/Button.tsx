@@ -28,16 +28,13 @@ type cssSize = typeof cssSize;
 const cssVariant = {
     "primary": `
         transition ease-in-out delay-50 duration-150
-        bg-primary-600
-        hover:shadow-slate-400 hover:shadow-md
+        bg-sky-600
+        hover:(shadow-slate-400 shadow-md)
     `,
     "subtle":  `
-        border-0
         text-slate-500
         transition ease-in-out delay-50 duration-150
-        hover:bg-secondary-50
-        hover:text-zinc-700
-        hover:shadow-zinc-300 hover:shadow-md
+        hover:(bg-zinc-50 text-zinc-700 shadow-zinc-300 shadow-md)
     `,
 } as const;
 type cssVariant = typeof cssVariant;
@@ -75,19 +72,9 @@ export const Button: FC<Button.Props> = (
     return <button
         type={"button"}
         className={cx([
-            `
-                border-1
-                rounded-md
-                text-white
-                
-                flex gap-1
-                
-                disabled:bg-secondary-200
-                disabled:text-slate-600
-                disabled:hover:bg-secondary-200
-                disabled:hover:shadow-none
-                disabled:cursor-not-allowed
-            `,
+            "text-white",
+            "flex gap-1",
+            "disabled:(bg-secondary-200 text-slate-600 cursor-not-allowed hover:(bg-secondary-200 shadow-none))",
             size ? cssSize[size] : undefined,
             variant ? cssVariant[variant] : undefined,
         ])}

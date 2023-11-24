@@ -9,6 +9,7 @@ export namespace ActionIcon {
 export const ActionIcon: FC<ActionIcon.Props> = (
     {
         children,
+        cn = [],
         ...props
     }
 ) => {
@@ -16,6 +17,7 @@ export const ActionIcon: FC<ActionIcon.Props> = (
         variant={"subtle"}
         cn={[
             "p-2",
+            ...cn,
         ]}
         {...props}
     >
