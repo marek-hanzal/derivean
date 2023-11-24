@@ -9,11 +9,10 @@ import {
 
 export default defineConfig({
     content:      {
-        pipeline: {
-            include: [
-                /\.(tsx?)($|\?)/,
-            ],
-        },
+        filesystem: [
+            "src/**/*.{ts,tsx}",
+            "../../packages/**/*.{ts,tsx}",
+        ],
     },
     presets:      [
         presetUno(),
@@ -22,7 +21,7 @@ export default defineConfig({
             fonts:    {
                 sans: "Roboto",
                 mono: ["Fire Code", "Fira Mono:400,700"],
-            }
+            },
         }),
         presetIcons(),
     ],
