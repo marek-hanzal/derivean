@@ -1,3 +1,7 @@
+import {
+    EventQueryProvider,
+    EventTable
+}                  from "@derivean/event";
 import {EventIcon} from "@derivean/ui";
 import {
     HomeIcon,
@@ -22,13 +26,12 @@ export default function Index() {
             ]}
         />}
     >
-        {/*<StoreProvider*/}
-        {/*    store={EventQueryStore}*/}
-        {/*    values={{*/}
-        {/*        filter: {},*/}
-        {/*    }}*/}
-        {/*>*/}
-        {/*    <EventTable/>*/}
-        {/*</StoreProvider>*/}
+        <EventQueryProvider
+            values={{
+                filter: {},
+            }}
+        >
+            <EventTable/>
+        </EventQueryProvider>
     </Page>;
 }

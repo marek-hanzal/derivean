@@ -1,15 +1,15 @@
 "use client";
 
-import {HeroIcon}    from "@derivean/ui";
-import {t}           from "@use-pico/translator";
+import {HeroIcon}            from "@derivean/ui";
+import {t}                   from "@use-pico/translator";
 import {
     type ComponentProps,
     type FC
-}                    from "react";
-import {EventHeroUI} from "../ui/EventHeroUI";
+}                            from "react";
+import {EventHeroComponents} from "../ui/EventHeroComponents";
 
 export namespace EventHeroUpsertForm {
-    export type Props = Omit<ComponentProps<EventHeroUI["MutationForm"]>, "inputs" | "defaultValues" | "Render">;
+    export type Props = Omit<ComponentProps<EventHeroComponents["MutationForm"]>, "inputs" | "defaultValues" | "Render">;
 }
 
 export const EventHeroUpsertForm: FC<EventHeroUpsertForm.Props> = (
@@ -18,7 +18,7 @@ export const EventHeroUpsertForm: FC<EventHeroUpsertForm.Props> = (
         ...props
     }
 ) => {
-    return <EventHeroUI.MutationForm
+    return <EventHeroComponents.MutationForm
         text={{
             submit:  entity ? t`Update event (label)` : t`Create event (label)`,
             success: {

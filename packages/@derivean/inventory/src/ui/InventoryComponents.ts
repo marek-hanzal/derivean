@@ -1,6 +1,6 @@
 import {withComponents}      from "@use-pico/extras";
-import {InventoryQueryStore} from "../query/InventoryQueryStore";
 import {InventoryRpc}        from "../rpc/InventoryRpc";
+import {InventoryQueryStore} from "../store/InventoryQueryStore";
 
 export const {
     Fetch:      InventoryFetch,

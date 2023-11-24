@@ -19,7 +19,11 @@ export const ManagerLayout: FC<ManagerLayout.Props> = (
             header={{
                 home:   "/manager",
                 right:  <SignOutButton/>,
-                center: <ManagerMenu/>,
+                center: <ManagerMenu
+                            cn={[
+                                "ml-4",
+                            ]}
+                        />,
                 ...header,
             }}
             {...props}

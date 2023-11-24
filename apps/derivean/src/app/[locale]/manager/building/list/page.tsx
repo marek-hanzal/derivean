@@ -1,3 +1,7 @@
+import {
+    BuildingQueryProvider,
+    BuildingTable
+}                     from "@derivean/building";
 import {BuildingIcon} from "@derivean/ui";
 import {
     HomeIcon,
@@ -22,13 +26,12 @@ export default function Index() {
             ]}
         />}
     >
-        {/*<StoreProvider*/}
-        {/*    store={BuildingQueryStore}*/}
-        {/*    values={{*/}
-        {/*        filter: {},*/}
-        {/*    }}*/}
-        {/*>*/}
-        {/*    <BuildingTable/>*/}
-        {/*</StoreProvider>*/}
+        <BuildingQueryProvider
+            values={{
+                filter: {},
+            }}
+        >
+            <BuildingTable/>
+        </BuildingQueryProvider>
     </Page>;
 }

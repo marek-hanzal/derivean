@@ -1,7 +1,11 @@
-import {type FC} from "react";
+import {
+    type FC,
+    type HTMLAttributes
+}            from "react";
+import {css} from "../tools/css";
 
 export namespace BoolInline {
-    export interface Props {
+    export interface Props extends HTMLAttributes<HTMLDivElement>, css.Style {
         bool?: boolean | null;
         checkIcon?: string;
         unCheckIcon?: string;
@@ -15,8 +19,16 @@ export const BoolInline: FC<BoolInline.Props> = (
         checkIcon = "i-tabler:square-rounded-check",
         unCheckIcon = "i-tabler:square-rounded-x",
         undefinedIcon = "i-tabler:square-rounded",
-    }) => {
+        ...props
+    }
+) => {
+    const {cx, $props} = css(props);
+
     return <div
-        className={bool !== undefined && bool !== null ? (bool ? checkIcon : unCheckIcon) : undefinedIcon}
+        className={cx([
+            bool !== undefined && bool !== null ? (bool ? `${checkIcon} text-green-500` : `${unCheckIcon} text-red-500`) : `${undefinedIcon} text-blue-500`,
+            "text-2xl",
+        ])}
+        {...$props}
     />;
 };

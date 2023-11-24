@@ -1,6 +1,6 @@
 import {type WithEntity}  from "@use-pico/client";
 import {type Infer}       from "@use-pico/extras";
-import {td}               from "@use-pico/translator";
+import {tdv}              from "@use-pico/translator";
 import {type FC}          from "react";
 import {type EventSchema} from "../schema/EventSchema";
 
@@ -14,5 +14,5 @@ export const EventInline: FC<EventInline.Props> = (
         entity,
     }
 ) => {
-    return td()(`Event [${entity.name}]`);
+    return tdv()(`Event [${entity.name}]`);
 };

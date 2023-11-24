@@ -4,7 +4,7 @@ import {
     type Infer
 }                                     from "@use-pico/extras";
 import {lazyOf}                       from "@use-pico/server";
-import {td}                           from "@use-pico/translator";
+import {tdv}                          from "@use-pico/translator";
 import {uniqueOf}                     from "@use-pico/utils";
 import {DateTime}                     from "luxon";
 import {type IProducerProcess}        from "../api/IProducerProcess";
@@ -184,7 +184,7 @@ export class ProducerService implements IProducerService {
                     edges.push({
                         to:    producer.id,
                         from:  output.producerId,
-                        label: `${td()(`Item [${output.name}]`)} (x${output.amount})`,
+                        label: `${tdv()(`Item [${output.name}]`)} (x${output.amount})`,
                     });
                 }
             }
@@ -193,7 +193,7 @@ export class ProducerService implements IProducerService {
         return {
             nodes: dependencies.map(producer => ({
                 id:    producer.id,
-                label: td()(`Producer [${producer.name}]`),
+                label: tdv()(`Producer [${producer.name}]`),
                 color: producer.id === producerId ? "#FFF" : "#DDD",
             })),
             edges,

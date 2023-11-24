@@ -7,8 +7,8 @@ import {
     useCallback
 }                                from "react";
 import {InventoryInline}         from "../inline/InventoryInline";
-import {InventoryQueryStore}     from "../query/InventoryQueryStore";
 import {InventoryRpc}            from "../rpc/InventoryRpc";
+import {InventoryQueryStore}     from "../store/InventoryQueryStore";
 import {InventorySelectionStore} from "../store/InventorySelectionStore";
 import {InventoryTable}          from "../table/InventoryTable";
 

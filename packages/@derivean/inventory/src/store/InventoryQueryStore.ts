@@ -8,3 +8,6 @@ export const InventoryQueryStore = createQueryStore({
     name:   "InventoryQueryStore",
     schema: InventorySchema.query,
 });
+export const {
+    Provider: InventoryQueryProvider,
+} = InventoryQueryStore;

@@ -7,3 +7,6 @@ export const EventQueryStore = createQueryStore({
     name: "EventQueryStore",
     schema: EventSchema.query,
 });
+export const {
+    Provider: EventQueryProvider,
+} = EventQueryStore;

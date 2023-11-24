@@ -7,6 +7,7 @@ export * from "./TranslationSchema";
 export * from "./TranslationsSchema";
 export * from "./t";
 export * from "./td";
+export * from "./tdv";
 export * from "./tv";
 export * from "./tx";
 export * from "./txv";

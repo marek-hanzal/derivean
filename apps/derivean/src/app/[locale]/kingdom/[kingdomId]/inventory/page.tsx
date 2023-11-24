@@ -1,3 +1,7 @@
+import {
+    Inventory,
+    InventoryItemQueryProvider
+}                              from "@derivean/inventory";
 import {withKingdomRepository} from "@derivean/kingdom";
 import {container}             from "@derivean/server";
 import {InventoryIcon}         from "@derivean/ui";
@@ -37,15 +41,14 @@ export default async function Index({params: {kingdomId}}: Index.Props) {
             ]}
         />}
     >
-        {/*<StoreProvider*/}
-        {/*    store={InventoryItemQueryStore}*/}
-        {/*    values={{*/}
-        {/*        where: {*/}
-        {/*            inventoryId: kingdom.inventoryId,*/}
-        {/*        },*/}
-        {/*    }}*/}
-        {/*>*/}
-        {/*    <Inventory/>*/}
-        {/*</StoreProvider>*/}
+        <InventoryItemQueryProvider
+            values={{
+                where: {
+                    inventoryId: kingdom.inventoryId,
+                },
+            }}
+        >
+            <Inventory/>
+        </InventoryItemQueryProvider>
     </Page>;
 }

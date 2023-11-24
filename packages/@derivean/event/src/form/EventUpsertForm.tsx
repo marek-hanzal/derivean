@@ -1,24 +1,24 @@
-import {EventIcon} from "@derivean/ui";
+import {EventIcon}       from "@derivean/ui";
 import {
     BoolInput,
     DateInput,
     NumberInput,
     SelectInput,
     TextInput
-}                  from "@use-pico/form";
+}                        from "@use-pico/form";
 import {
     t,
     tx
-}                  from "@use-pico/i18n";
-import {Fieldset}  from "@use-pico/ui";
+}                        from "@use-pico/i18n";
+import {Fieldset}        from "@use-pico/ui";
 import {
     type ComponentProps,
     type FC
-}                  from "react";
-import {EventUI}   from "../ui/EventUI";
+}                        from "react";
+import {EventComponents} from "../ui/EventComponents";
 
 export namespace EventUpsertForm {
-    export type Props = Omit<ComponentProps<EventUI["MutationForm"]>, "inputs" | "defaultValues" | "Render">;
+    export type Props = Omit<ComponentProps<EventComponents["MutationForm"]>, "inputs" | "defaultValues" | "Render">;
 }
 
 export const EventUpsertForm: FC<EventUpsertForm.Props> = (
@@ -27,7 +27,7 @@ export const EventUpsertForm: FC<EventUpsertForm.Props> = (
         ...props
     }
 ) => {
-    return <EventUI.MutationForm
+    return <EventComponents.MutationForm
         text={{
             submit:  entity ? t()`Update event (label)` : t()`Create event (label)`,
             success: {

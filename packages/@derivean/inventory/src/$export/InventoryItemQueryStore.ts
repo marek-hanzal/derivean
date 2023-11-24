@@ -1,1 +1,1 @@
-export {InventoryItemQueryStore} from "../query/InventoryItemQueryStore";
+export {InventoryItemQueryStore} from "../store/InventoryItemQueryStore";

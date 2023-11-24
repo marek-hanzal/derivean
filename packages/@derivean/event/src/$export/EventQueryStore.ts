@@ -1,1 +1,1 @@
-export {EventQueryStore} from "../query/EventQueryStore";
+export {EventQueryStore} from "../store/EventQueryStore";

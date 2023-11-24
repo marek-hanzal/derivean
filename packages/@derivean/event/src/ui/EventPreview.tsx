@@ -8,7 +8,7 @@ import {
 import {type Infer}    from "@use-pico/extras";
 import {
     t,
-    td
+    tdv
 }                      from "@use-pico/translator";
 import {type FC}       from "react";
 import {EventInline}   from "../inline/EventInline";
@@ -38,7 +38,7 @@ export const EventPreview: FC<EventPreview.Props> = (
             },
             {
                 label: t`Event type`,
-                value: td()(`Event type [${entity.type}]`),
+                value: tdv()(`Event type [${entity.type}]`),
             },
             {
                 label: t`Event instant`,

@@ -7,8 +7,8 @@ import {
     useCallback
 }                            from "react";
 import {EventInline}         from "../inline/EventInline";
-import {EventQueryStore}     from "../query/EventQueryStore";
 import {EventRpc}            from "../rpc/EventRpc";
+import {EventQueryStore}     from "../store/EventQueryStore";
 import {EventSelectionStore} from "../store/EventSelectionStore";
 import {EventTable}          from "../table/EventTable";
 
