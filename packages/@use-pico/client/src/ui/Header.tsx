@@ -72,7 +72,7 @@ export const Header: FC<Header.Props> = (
                 src={logo}
             />}
         </div>
-        <div className={"flex-auto"}>
+        <div className={"grow"}>
             {center}
         </div>
         <div className={"shrink"}>

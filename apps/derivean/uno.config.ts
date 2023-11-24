@@ -2,14 +2,19 @@ import {
     defineConfig,
     presetIcons,
     presetUno,
-    presetWind,
     transformerVariantGroup
 } from "unocss";
 
 export default defineConfig({
+    content: {
+        pipeline: {
+            include: [
+                "*.{js,ts,jsx,tsx}",
+            ],
+        },
+    },
     presets:      [
         presetUno(),
-        presetWind(),
         presetIcons(),
     ],
     transformers: [

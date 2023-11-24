@@ -94,7 +94,7 @@ export const Page: FC<Page.Props> = (
             {menu}
         </div>}
         <div
-            className={"mt-4 px-2"}
+            className={"mt-4 px-12"}
         >
             {children}
         </div>

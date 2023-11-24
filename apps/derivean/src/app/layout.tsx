@@ -1,6 +1,7 @@
+import "@unocss/reset/tailwind.css";
 import {type Metadata}          from "next";
 import {type PropsWithChildren} from "react";
-import "./global.css";
+import "uno.css";
 
 export const metadata: Metadata = {
     title: "The Legacy of DeRivean",
