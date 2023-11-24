@@ -43,7 +43,7 @@ export const Body = <
 
     return <div
         className={cx([
-            "table-row-group vertical-align-middle",
+            "table-row-group",
         ])}
         {...$props}
     >

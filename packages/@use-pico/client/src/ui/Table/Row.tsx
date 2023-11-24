@@ -37,6 +37,7 @@ export const Row = <
                 key={key}
                 className={cx([
                     "table-cell",
+                    "vertical-middle",
                     "font-bold",
                     "py-2 px-4",
                 ])}
