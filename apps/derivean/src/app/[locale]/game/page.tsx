@@ -21,6 +21,13 @@ export default function Index() {
                     compact
                 />
             </KingdomQueryProvider>
+
+            <div className={"m-24 text-amber"}>
+                foo
+            </div>
+            <div>
+                bar
+            </div>
         </div>
     </Page>;
 }
