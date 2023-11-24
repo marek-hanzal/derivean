@@ -17,7 +17,7 @@ export const HeroHealth: FC<HeroHealth.Props> = (
     }
 ) => {
     return <Progress
-        size={"xl"}
+        size={"md"}
         value={entity.health}
         color={entity.health > 95 ? "green.8" :
             entity.health > 85 ? "green.6" :

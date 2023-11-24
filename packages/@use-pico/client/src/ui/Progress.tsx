@@ -7,16 +7,16 @@ import {css} from "../tools/css";
 
 const cssSize = {
     "xs": [
-        "h-8",
+        "h-2",
     ],
     "sm": [
-        "h-8",
+        "h-4",
     ],
     "md": [
-        "h-8",
+        "h-5",
     ],
     "lg": [
-        "h-8",
+        "h-6",
     ],
     "xl": [
         "h-8",
@@ -54,7 +54,7 @@ export const Progress: FC<Progress.Props> = (
     >
         <div
             className={cn([
-                "h-full rounded-md bg-orange-500",
+                "h-full rounded-md bg-green-500",
                 animated && "animate-pulse",
             ])}
             style={{width: "50%"}}
