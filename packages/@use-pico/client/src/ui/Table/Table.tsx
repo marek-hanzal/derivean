@@ -98,7 +98,6 @@ export const Table = <
             className={cx([
                 "table w-full",
                 "border border-zinc-300",
-                "divide-solid divide-y divide-zinc-300",
             ])}
             {...$props}
         >

@@ -44,7 +44,6 @@ export const Body = <
     return <div
         className={cx([
             "table-row-group",
-            "divide-solid divide-y divide-zinc-400",
         ])}
         {...$props}
     >
