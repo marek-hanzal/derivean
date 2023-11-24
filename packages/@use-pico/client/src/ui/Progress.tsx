@@ -1,3 +1,4 @@
+import {cn}  from "@use-pico/utils";
 import {
     type FC,
     type HTMLAttributes
@@ -27,6 +28,7 @@ export namespace Progress {
     export interface Props extends HTMLAttributes<HTMLDivElement>, css.Style {
         value?: number;
         size?: keyof cssSize;
+        animated?: boolean;
     }
 }
 
@@ -34,6 +36,7 @@ export const Progress: FC<Progress.Props> = (
     {
         value,
         size = "md",
+        animated = false,
         ...props
     }
 ) => {
@@ -44,11 +47,17 @@ export const Progress: FC<Progress.Props> = (
 
     return <div
         className={cx([
-            "w-full bg-zinc-300",
+            "w-full bg-gray-200 rounded-md",
             ...cssSize[size],
         ])}
         {...$props}
     >
-        progress
+        <div
+            className={cn([
+                "h-full rounded-md bg-orange-500",
+                animated && "animate-pulse",
+            ])}
+            style={{width: "50%"}}
+        />
     </div>;
 };

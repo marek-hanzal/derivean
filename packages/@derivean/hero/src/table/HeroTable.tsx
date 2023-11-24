@@ -61,7 +61,7 @@ export const HeroTable: FC<HeroTable.Props> = (
             health:   {
                 title:  t`Hero health (label)`,
                 render: ({item}) => <HeroHealth entity={item}/>,
-                width:  "w-54",
+                width: "w-72",
             },
             level:    {
                 title: t`Hero level (label)`,
