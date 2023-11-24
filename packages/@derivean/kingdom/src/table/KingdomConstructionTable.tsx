@@ -70,22 +70,24 @@ export const KingdomConstructionTable: FC<KingdomConstructionTable.Props> = (
                 render: ({item}) => <BuildingConstructionRequirement
                     buildingId={item.id}
                 />,
+                width: "w-108",
             },
             time:         {
                 title: t`Building construction time (label)`,
                 render: ({item}) => <HumanTime seconds={item.construction}/>,
-                width: "w-10",
+                width: "w-42",
             },
             requirements: {
                 title: t`Building requirement (label)`,
                 render: ({item}) => <BuildingRequirement
                     buildingId={item.id}
                 />,
+                width: "w-86",
             },
             maximum:      {
                 title: t`Building construction limit (label)`,
                 render: ({item}) => item.maximum,
-                width: "w-10",
+                width: "w-42",
             },
         }}
         {...props}
