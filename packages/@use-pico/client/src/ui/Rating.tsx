@@ -1,19 +1,29 @@
 import {
     type FC,
+    type HTMLAttributes,
     type ReactNode
-} from "react";
+}            from "react";
+import {css} from "../tools/css";
 
 const twSize = {
-    "xs": "",
-    "sm": "",
-    "md": "",
-    "lg": "",
-    "xl": "",
+    "xs": [
+        "text-xs",
+    ],
+    "sm": [
+        "text-sm",
+    ],
+    "md": [],
+    "lg": [
+        "text-xl",
+    ],
+    "xl": [
+        "text-2xl",
+    ],
 };
 type twSize = typeof twSize;
 
 export namespace Rating {
-    export interface Props {
+    export interface Props extends HTMLAttributes<HTMLDivElement>, css.Style {
         defaultValue?: number;
         count?: number;
         readOnly?: boolean;
@@ -27,9 +37,27 @@ export namespace Rating {
 
 export const Rating: FC<Rating.Props> = (
     {
-        size = "md",
+        defaultValue = 0,
         count = 5,
+        readOnly = false,
+        size = "md",
+        emptySymbol,
+        fullSymbol,
+        ...props
     }
 ) => {
-    return "Rating";
+    const {
+        cx,
+        $props
+    } = css(props);
+
+    return <div
+        className={cx([
+            "flex items-center justify-center gap-1",
+            ...twSize[size],
+        ])}
+        {...$props}
+    >
+        {Array.from({length: count}).map((_, index) => index < defaultValue ? fullSymbol?.(index) : emptySymbol?.(index))}
+    </div>;
 };

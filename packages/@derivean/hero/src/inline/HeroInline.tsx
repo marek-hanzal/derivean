@@ -1,10 +1,10 @@
-import {withDullSchema}  from "@use-pico/dull-stuff";
-import {type WithEntity} from "@use-pico/types";
+import {type WithEntity} from "@use-pico/client";
+import {type Infer}      from "@use-pico/extras";
 import {type FC}         from "react";
 import {type HeroSchema} from "../schema/HeroSchema";
 
 export namespace HeroInline {
-    export interface Props extends WithEntity<withDullSchema.Infer.Entity<HeroSchema>> {
+    export interface Props extends WithEntity<Infer.Entity<HeroSchema>> {
     }
 }
 

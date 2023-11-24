@@ -6,12 +6,12 @@ import {cn}      from "@use-pico/utils";
 import {type FC} from "react";
 
 const colors: Record<number, css.Color> = {
-    1: "green",
-    2: "blue",
-    3: "yellow",
-    4: "orange",
-    5: "violet",
-    6: "grape",
+    0: "text-green",
+    1: "text-blue",
+    2: "text-yellow",
+    3: "text-orange",
+    4: "text-violet",
+    5: "text-fuchsia",
 } as const;
 
 export namespace Prestige {
@@ -28,13 +28,13 @@ export const Prestige: FC<Prestige.Props> = (
     return <Rating
         defaultValue={prestige}
         readOnly
-        size={"md"}
+        size={"xl"}
         emptySymbol={value => <div className={cn(
-            colors[value] ?? "green",
+            colors[value] ?? "text-green",
             "i-tabler:star",
         )}/>}
         fullSymbol={value => <div className={cn(
-            colors[value] ?? "green",
+            colors[value] ?? "text-green",
             "i-tabler:star-filled",
         )}/>}
         count={6}

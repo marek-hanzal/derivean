@@ -31,6 +31,7 @@ export * from "./Menu";
 export * from "./Nav";
 export * from "./Page";
 export * from "./Preview";
+export * from "./Progress";
 export * from "./Providers";
 export * from "./PublicLayout";
 export * from "./QueryClientProvider";

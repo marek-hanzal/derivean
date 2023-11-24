@@ -1,1 +1,1 @@
-export {HeroQueryStore} from "../query/HeroQueryStore";
+export {HeroQueryStore} from "../store/HeroQueryStore";

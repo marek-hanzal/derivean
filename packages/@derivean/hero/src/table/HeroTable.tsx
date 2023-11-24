@@ -3,16 +3,16 @@
 import {
     HeroIcon,
     Prestige
-}                   from "@derivean/ui";
-import {t}          from "@use-pico/i18n";
-import {ButtonLink} from "@use-pico/ui";
+}                       from "@derivean/ui";
+import {ButtonLink}     from "@use-pico/client";
+import {t}              from "@use-pico/translator";
 import {
     type ComponentProps,
     type FC
-}                   from "react";
-import {HeroInline} from "../inline/HeroInline";
-import {HeroHealth} from "../ui/HeroHealth";
-import {HeroUI}     from "../ui/HeroUI";
+}                       from "react";
+import {HeroInline}     from "../inline/HeroInline";
+import {HeroComponents} from "../ui/HeroComponents";
+import {HeroHealth}     from "../ui/HeroHealth";
 
 export namespace HeroTable {
     export type Columns =
@@ -23,7 +23,7 @@ export namespace HeroTable {
 
     export type Props =
         Omit<
-            ComponentProps<typeof HeroUI.Table<Columns>>,
+            ComponentProps<typeof HeroComponents.Table<Columns>>,
             "columns" | "name" | "icon" | "text"
         >
         & {
@@ -37,15 +37,14 @@ export const HeroTable: FC<HeroTable.Props> = (
         ...props
     }
 ) => {
-    return <HeroUI.Table
+    return <HeroComponents.Table
         text={{
-            total: t()`Total count of heroes`,
+            total: t`Total count of heroes`,
         }}
-        name={"building"}
         icon={<HeroIcon/>}
         columns={{
             name:     {
-                title:  t()`Hero name`,
+                title:  t`Hero name`,
                 render: ({item}) => <ButtonLink
                     icon={<HeroIcon/>}
                     href={{
@@ -55,23 +54,24 @@ export const HeroTable: FC<HeroTable.Props> = (
                             id: item.id,
                         },
                     }}
-                    label={<HeroInline entity={item}/>}
-                />,
+                >
+                    <HeroInline entity={item}/>
+                </ButtonLink>,
             },
             health:   {
-                title:  t()`Hero health (label)`,
-                render: ({item}) => <HeroHealth hero={item}/>,
-                width:  28,
+                title:  t`Hero health (label)`,
+                render: ({item}) => <HeroHealth entity={item}/>,
+                width:  "w-54",
             },
             level:    {
-                title:  t()`Hero level (label)`,
+                title: t`Hero level (label)`,
                 render: ({item}) => item.level,
-                width:  10,
+                width: "w-54",
             },
             prestige: {
-                title:  t()`Hero prestige (label)`,
+                title: t`Hero prestige (label)`,
                 render: ({item}) => <Prestige prestige={item.prestige}/>,
-                width:  10,
+                width: "w-54",
             },
         }}
         {...props}

@@ -1,3 +1,7 @@
+import {
+    HeroQueryProvider,
+    HeroTable
+}                              from "@derivean/hero";
 import {withKingdomRepository} from "@derivean/kingdom";
 import {container}             from "@derivean/server";
 import {HeroIcon}              from "@derivean/ui";
@@ -37,17 +41,16 @@ export default async function List({params: {kingdomId}}: List.Props) {
             ]}
         />}
     >
-        {/*<StoreProvider*/}
-        {/*    store={HeroQueryStore}*/}
-        {/*    values={{*/}
-        {/*        where: {*/}
-        {/*            kingdomId: kingdom.id,*/}
-        {/*        },*/}
-        {/*    }}*/}
-        {/*>*/}
-        {/*    <HeroTable*/}
-        {/*        kingdomId={kingdom.id}*/}
-        {/*    />*/}
-        {/*</StoreProvider>*/}
+        <HeroQueryProvider
+            values={{
+                where: {
+                    kingdomId: kingdom.id,
+                },
+            }}
+        >
+            <HeroTable
+                kingdomId={kingdom.id}
+            />
+        </HeroQueryProvider>
     </Page>;
 }

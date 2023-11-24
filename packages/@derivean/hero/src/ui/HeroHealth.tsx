@@ -1,28 +1,30 @@
-import {withDullSchema} from "@use-pico/dull-stuff";
-import {Progress}       from "@use-pico/ui";
-import {type FC}        from "react";
-import {HeroSchema}     from "../schema/HeroSchema";
+import {
+    Progress,
+    type WithEntity
+}                   from "@use-pico/client";
+import {type Infer} from "@use-pico/extras";
+import {type FC}    from "react";
+import {HeroSchema} from "../schema/HeroSchema";
 
 export namespace HeroHealth {
-    export interface Props {
-        hero: withDullSchema.Infer.Entity<HeroSchema>;
+    export interface Props extends WithEntity<Infer.Entity<HeroSchema>> {
     }
 }
 
 export const HeroHealth: FC<HeroHealth.Props> = (
     {
-        hero,
+        entity,
     }
 ) => {
     return <Progress
         size={"xl"}
-        value={hero.health}
-        color={hero.health > 95 ? "green.8" :
-            hero.health > 85 ? "green.6" :
-                hero.health > 75 ? "green.4" :
-                    hero.health > 65 ? "yellow" :
-                        hero.health > 50 ? "orange" :
-                            hero.health > 40 ? "red.4" : "red.8"
+        value={entity.health}
+        color={entity.health > 95 ? "green.8" :
+            entity.health > 85 ? "green.6" :
+                entity.health > 75 ? "green.4" :
+                    entity.health > 65 ? "yellow" :
+                        entity.health > 50 ? "orange" :
+                            entity.health > 40 ? "red.4" : "red.8"
         }
     />;
 };

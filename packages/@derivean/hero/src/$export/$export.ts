@@ -1,11 +1,7 @@
-// export * from "./HeroHealth";
-// export * from "./HeroInline";
-// export * from "./HeroQueryStore";
-// export * from "./HeroTable";
-// export * from "./HeroUI";
-export * from "./HeroRepository";
+export * from "./HeroQueryProvider";
 export * from "./HeroRpc";
 export * from "./HeroSchema";
+export * from "./HeroTable";
 export * from "./IHeroService";
 export * from "./withHeroContainer";
 export * from "./withHeroRepository";
