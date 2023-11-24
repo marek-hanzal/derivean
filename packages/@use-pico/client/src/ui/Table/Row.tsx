@@ -2,6 +2,7 @@ import {
     type Infer,
     type Schema
 }                            from "@use-pico/extras";
+import {cn}                  from "@use-pico/utils";
 import {type HTMLAttributes} from "react";
 import {css}                 from "../../tools/css";
 import {Table}               from "./Table";
@@ -26,7 +27,13 @@ export const Row = <
         ...props
     }: Row.Props<TColumns, TSchema>
 ) => {
-    return <div className={"table-row"}>
+    return <div
+        className={cn([
+            "table-row",
+            "divide-solid divide-x divide-zinc-200",
+            // "hover:(shadow-lg shadow-zinc-200)",
+        ])}
+    >
         {Object.entries<Table.Column<TSchema>>(columns).map(([key, column]) => {
             const {
                 cx,

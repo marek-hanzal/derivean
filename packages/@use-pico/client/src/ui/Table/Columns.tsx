@@ -1,4 +1,5 @@
 import {type Schema}         from "@use-pico/extras";
+import {cn}                  from "@use-pico/utils";
 import {type HTMLAttributes} from "react";
 import {css}                 from "../../tools/css";
 import {type Table}          from "./Table";
@@ -33,7 +34,10 @@ export const Columns = <
         ])}
         {...$props}
     >
-        <div className={"table-row"}>
+        <div className={cn([
+            "table-row",
+            "divide-solid divide-x divide-zinc-300",
+        ])}>
             {Object.entries<Table.Column<TSchema>>(columns).map(([key, column]) => {
                 const {
                     cx,
@@ -44,6 +48,7 @@ export const Columns = <
                     key={key}
                     className={cx([
                         "table-cell",
+                        "text-left",
                         "font-bold",
                         "py-2 px-4",
                         "bg-zinc-100",
