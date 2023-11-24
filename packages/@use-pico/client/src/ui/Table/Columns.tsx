@@ -30,7 +30,9 @@ export const Columns = <
     return <div
         className={cx([
             "table-header-group",
-            "shadow-md shadow-zinc-200",
+            "font-bold",
+            "relative",
+            "shadow-sm shadow-zinc-400",
         ])}
         {...$props}
     >
@@ -49,9 +51,7 @@ export const Columns = <
                     className={cx([
                         "table-cell",
                         "text-left",
-                        "font-bold",
                         "py-2 px-4",
-                        "bg-zinc-100",
                         column.width,
                     ])}
                     {...$props}
