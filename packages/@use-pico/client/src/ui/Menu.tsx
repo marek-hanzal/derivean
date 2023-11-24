@@ -70,6 +70,7 @@ export const Menu: FC<Menu.Props> = (
                         query: item.query,
                     }}
                     cn={[
+                        "border-0",
                         active?.includes(item.href) && "hover:cursor-default hover:shadow-none hover:bg-inherit",
                         !active?.includes(item.href) && "text-sky-500 hover:text-sky-600",
                         ...linkProps.cn ?? [],

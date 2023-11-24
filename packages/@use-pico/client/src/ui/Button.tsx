@@ -32,6 +32,7 @@ const cssVariant = {
         hover:shadow-slate-400 hover:shadow-md
     `,
     "subtle":  `
+        border-0
         text-slate-500
         transition ease-in-out delay-50 duration-150
         hover:bg-secondary-50
