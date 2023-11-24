@@ -74,7 +74,7 @@ export const KingdomConstructionTable: FC<KingdomConstructionTable.Props> = (
             time:         {
                 title: t`Building construction time (label)`,
                 render: ({item}) => <HumanTime seconds={item.construction}/>,
-                width:  10,
+                width: "w-10",
             },
             requirements: {
                 title: t`Building requirement (label)`,
@@ -85,7 +85,7 @@ export const KingdomConstructionTable: FC<KingdomConstructionTable.Props> = (
             maximum:      {
                 title: t`Building construction limit (label)`,
                 render: ({item}) => item.maximum,
-                width:  10,
+                width: "w-10",
             },
         }}
         {...props}

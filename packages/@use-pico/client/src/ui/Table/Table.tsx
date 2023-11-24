@@ -6,19 +6,22 @@ import {
 }                              from "@use-pico/extras";
 import {
     type FC,
+    HTMLAttributes,
     type ReactNode
 }                              from "react";
 import {type IQueryStore}      from "../../api/IQueryStore";
 import {type IWithSourceQuery} from "../../api/IWithSourceQuery";
+import {useSourceQuery}        from "../../hook/useSourceQuery";
 import {css}                   from "../../tools/css";
 import {Body}                  from "./Body";
 import {Columns}               from "./Columns";
+import {Loader}                from "./Loader";
 
 export namespace Table {
     export interface Props<
         TColumns extends string,
         TSchema extends Schema<any, any, any, any>,
-    > extends css.Style {
+    > extends HTMLAttributes<HTMLDivElement>, css.Style {
         columns: Columns<TColumns, TSchema>;
         withQueryStore: IQueryStore.Store<
             Infer.QuerySchema<TSchema>
@@ -51,7 +54,10 @@ export namespace Table {
     > {
         title?: ReactNode;
         render: FC<Column.RenderProps<TSchema>>;
-        width?: number;
+        /**
+         * css class name of column width
+         */
+        width?: string;
     }
 
     export namespace Column {
@@ -82,20 +88,29 @@ export const Table = <
         $props
     } = css(props);
 
-    return <div
-        className={cx([
-            "table w-full",
-            "border border-zinc-300",
-            "divide-solid divide-y divide-zinc-300",
-        ])}
-    >
-        <Columns
-            columns={columns}
-        />
-        <Body
-            columns={columns}
-            withQueryStore={withQueryStore}
-            withSourceQuery={withSourceQuery}
-        />
-    </div>;
+    const result = useSourceQuery({
+        withSourceQuery,
+        store: withQueryStore,
+    });
+
+    return <>
+        <div
+            className={cx([
+                "table w-full",
+                "border border-zinc-300",
+                "divide-solid divide-y divide-zinc-300",
+            ])}
+            {...$props}
+        >
+            <Columns
+                columns={columns}
+            />
+            <Body
+                columns={columns}
+                withQueryStore={withQueryStore}
+                withSourceQuery={withSourceQuery}
+            />
+        </div>
+        {result.isLoading && <Loader/>}
+    </>;
 };

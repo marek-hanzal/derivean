@@ -39,6 +39,7 @@ export const Columns = <
                     cx,
                     $props
                 } = css({});
+
                 return <div
                     key={key}
                     className={cx([
@@ -46,6 +47,7 @@ export const Columns = <
                         "font-bold",
                         "py-2 px-4",
                         "bg-zinc-100",
+                        column.width,
                     ])}
                     {...$props}
                 >

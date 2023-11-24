@@ -22,7 +22,8 @@ export const Loader: FC<Loader.Props> = (
 
     return <div
         className={cx([
-            "flex justify-center items-center m-14",
+            "flex justify-center items-center min-h-64",
+            "border border-zinc-300",
         ])}
         {...$props}
     >

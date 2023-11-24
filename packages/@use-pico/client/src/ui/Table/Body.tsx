@@ -5,9 +5,8 @@ import {
 import {type HTMLAttributes}   from "react";
 import {type IQueryStore}      from "../../api/IQueryStore";
 import {type IWithSourceQuery} from "../../api/IWithSourceQuery";
-import {useSourceQuery}        from "../../hook/useSourceQuery";
 import {css}                   from "../../tools/css";
-import {Loader}                from "./Loader";
+import {Rows}                  from "./Rows";
 import {type Table}            from "./Table";
 
 export namespace Body {
@@ -42,23 +41,16 @@ export const Body = <
         $props
     } = css(props);
 
-    const result = useSourceQuery({
-        withSourceQuery,
-        store: withQueryStore,
-    });
-
     return <div
         className={cx([
             "table-row-group",
         ])}
         {...$props}
     >
-        {/*{result.isLoading && <Loader/>}*/}
-        <Loader/>
-        {/*<Rows*/}
-        {/*    columns={columns}*/}
-        {/*    withQueryStore={withQueryStore}*/}
-        {/*    withSourceQuery={withSourceQuery}*/}
-        {/*/>*/}
+        <Rows
+            columns={columns}
+            withQueryStore={withQueryStore}
+            withSourceQuery={withSourceQuery}
+        />
     </div>;
 };

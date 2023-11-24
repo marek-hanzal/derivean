@@ -56,12 +56,12 @@ export const Inventory: FC<Inventory.Props> = (
             amount: {
                 title: t`Amount`,
                 render: ({item}) => item.amount,
-                width:  10,
+                width: "w-10",
             },
             limit:  {
                 title: t`Limit`,
                 render: ({item}) => item.limit,
-                width:  10,
+                width: "w-10",
             },
         }}
         {...props}
