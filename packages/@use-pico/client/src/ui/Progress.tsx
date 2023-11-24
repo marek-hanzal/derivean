@@ -5,11 +5,21 @@ import {
 import {css} from "../tools/css";
 
 const cssSize = {
-    "xs": [],
-    "sm": [],
-    "md": [],
-    "lg": [],
-    "xl": [],
+    "xs": [
+        "h-8",
+    ],
+    "sm": [
+        "h-8",
+    ],
+    "md": [
+        "h-8",
+    ],
+    "lg": [
+        "h-8",
+    ],
+    "xl": [
+        "h-8",
+    ],
 } as const;
 type cssSize = typeof cssSize;
 
@@ -34,6 +44,7 @@ export const Progress: FC<Progress.Props> = (
 
     return <div
         className={cx([
+            "w-full bg-zinc-300",
             ...cssSize[size],
         ])}
         {...$props}
