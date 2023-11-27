@@ -5,6 +5,7 @@ export * from "./cleanOf";
 export * from "./cn";
 export * from "./diffOf";
 export * from "./generateId";
+export * from "./hash";
 export * from "./hashOf";
 export * from "./isEmpty";
 export * from "./isObject";

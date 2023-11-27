@@ -33,6 +33,7 @@
 		"@types/is-empty": "^1.2.1",
 		"@types/is-object": "^1.0.2",
 		"@types/is-string": "^1.0.0",
+		"@types/object-hash": "^3.0.6",
 		"classnames": "^2.3.2",
 		"clsx": "^2.0.0",
 		"deepmerge": "^4.3.1",
@@ -46,6 +47,7 @@
 		"is-string": "^1.0.7",
 		"js-sha256": "^0.10.1",
 		"luxon": "^3.4.4",
+		"object-hash": "^3.0.0",
 		"timer-node": "^5.0.7"
 	},
 	"devDependencies": {

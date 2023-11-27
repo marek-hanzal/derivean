@@ -1,5 +1,6 @@
 "use client";
 
+import {hash}        from "@use-pico/utils";
 import {
     type PropsWithChildren,
     useEffect,
@@ -29,10 +30,9 @@ export const StoreProvider = <
     }: StoreProvider.Props<TStore>
 ) => {
     const memo = useMemo(() => store(values), []);
-    const key = Object.keys(values).map(key => `${key}${values[key]}`).join("");
     useEffect(() => {
         values && memo.setState(values);
-    }, [key]);
+    }, [hash(values)]);
     return <Context.Provider value={memo}>
         {children}
     </Context.Provider>;
