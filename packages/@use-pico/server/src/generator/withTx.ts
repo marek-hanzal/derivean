@@ -81,10 +81,12 @@ export const withTx = (
                 delete current[key];
             }
 
-            fs.writeFileSync(target, stringify({
-                ...translations,
-                ...current
-            }), {
+            fs.writeFileSync(target, stringify(
+                new Map(Object.entries({
+                    ...translations,
+                    ...current
+                }).sort())
+            ), {
                 encoding: "utf-8",
             });
         });
