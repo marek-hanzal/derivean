@@ -52,8 +52,20 @@ export default async function Index({params: {id}}: Index.Props) {
             active={["/manager/event/[id]"]}
         />}
     >
-        <EventPreview
-            entity={event}
-        />
+        <div
+            className={"flex flex-col gap-4"}
+        >
+            <div
+                className={"w-1/2 grow"}
+            >
+                <EventPreview
+                    entity={event}
+                />
+            </div>
+            <div
+                className={"w-1/2 grow"}
+            >
+            </div>
+        </div>
     </Page>;
 }

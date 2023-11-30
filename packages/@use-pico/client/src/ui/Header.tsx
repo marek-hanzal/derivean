@@ -44,7 +44,7 @@ export const Header: FC<Header.Props> = (
     return <div
         className={cx([
             "px-3 py-2",
-            "bg-zinc-400",
+            "bg-zinc-50",
             "shadow-sm shadow-zinc-300",
             "h-16",
             "flex flex-row items-center",
