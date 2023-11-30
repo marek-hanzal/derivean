@@ -32,7 +32,7 @@ export const Columns = <
             "table-header-group",
             "font-bold",
             "relative",
-            "shadow-sm shadow-zinc-400",
+            "shadow-sm shadow-zinc-300",
         ])}
         {...$props}
     >

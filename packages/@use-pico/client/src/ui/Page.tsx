@@ -68,7 +68,7 @@ export const Page: FC<Page.Props> = (
         <div
             className={cn(
                 "flex flex-row items-center",
-                "shadow-sm shadow-zinc-200",
+                "shadow-sm shadow-zinc-300",
                 "px-3 py-3",
                 "h-14",
                 "gap-4",

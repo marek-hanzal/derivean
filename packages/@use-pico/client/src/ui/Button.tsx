@@ -27,14 +27,14 @@ type cssSize = typeof cssSize;
 
 const cssVariant = {
     "primary": `
-        transition ease-in-out delay-50 duration-150
+        transition ease-in-out delay-50 duration-25
         bg-sky-600
-        hover:(shadow-slate-400 shadow-md)
+        hover:(shadow-sm shadow-zinc-400)
     `,
     "subtle":  `
         text-slate-500
-        transition ease-in-out delay-50 duration-150
-        hover:(bg-zinc-50 text-zinc-700 shadow-zinc-300 shadow-md)
+        transition ease-in-out delay-50 duration-25
+        hover:(bg-zinc-50 text-zinc-700 shadow-sm shadow-zinc-300)
     `,
 } as const;
 type cssVariant = typeof cssVariant;

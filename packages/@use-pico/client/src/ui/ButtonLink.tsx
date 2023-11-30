@@ -33,7 +33,7 @@ export const ButtonLink: FC<ButtonLink.Props> = (
     const buttonProps: Button.Props = {
         variant:     "subtle",
         cn:          [
-            "text-sky-500 hover:text-sky-600",
+            "text-sky-500 hover:(text-sky-600)",
         ],
         size:        "compact-md",
         leftSection: icon,

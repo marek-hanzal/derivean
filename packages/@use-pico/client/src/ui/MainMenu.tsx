@@ -11,7 +11,7 @@ export namespace MainMenu {
 export const MainMenu: FC<MainMenu.Props> = props => {
     return <Menu
         linkProps={{
-            size: "lg",
+            size: "md",
             cn:   [
                 "text-sky-500",
                 "hover:text-sky-600",
