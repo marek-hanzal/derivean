@@ -6,3 +6,4 @@ export const EventHeroComponents = withComponents({
     rpc:        EventHeroRpc,
     queryStore: EventHeroQueryStore,
 });
+export type EventHeroComponents = typeof EventHeroComponents;

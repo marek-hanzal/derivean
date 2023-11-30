@@ -1,4 +1,5 @@
 import {
+    Form,
     type IQueryStore,
     Table
 }                       from "@use-pico/client";
@@ -30,28 +31,19 @@ export const withComponents = <
     return {
         Fetch:      withFetch<TRpc["schema"]["query"], TRpc["schema"]["entity"]>({withQuery: rpc.query}),
         Collection: withCollection<TRpc["schema"]["query"], TRpc["schema"]["entity"]>({withSourceQuery: rpc.query}),
-        // MutationForm: (
-        //                   {
-        //                       entity,
-        //                       ...props
-        //                   }: Omit<
-        //                          Form.Props<
-        //                              typeof rpc.mutation,
-        //                              TRpc["schema"]["shape"],
-        //                              TRpc["mutation"]["schema"]["request"],
-        //                              TRpc["mutation"]["schema"]["response"]
-        //                          >,
-        //                          "withMutation" | "schema"
-        //                      >
-        //                      & WithEntity.Schema.$<TRpc["schema"]["entity"]>,
-        //               ) => {
-        //     return <Form
-        //         withMutation={rpc.mutation}
-        //         schema={rpc.schema.shape}
-        //         values={entity}
-        //         {...props}
-        //     />;
-        // },
+        Form:  {
+            Mutation: (
+                          props: Omit<
+                              Form.Props<TRpc["schema"]>,
+                              "schema"
+                          >,
+                      ) => <Form<TRpc["schema"]>
+                // withMutation={rpc.mutation}
+                schema={rpc.schema}
+                // values={entity}
+                {...props}
+            />
+        },
         Table: <
                    TColumns extends string,
                >(

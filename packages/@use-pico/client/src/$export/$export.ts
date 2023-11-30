@@ -10,6 +10,7 @@ export * from "./DateInline";
 export * from "./DetectLocale";
 export * from "./Diagram";
 export * from "./Fetch";
+export * from "./Form";
 export * from "./HomeIcon";
 export * from "./HumanTime";
 export * from "./IHrefProps";

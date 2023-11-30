@@ -9,50 +9,50 @@ import {
 import {EventHeroComponents} from "../ui/EventHeroComponents";
 
 export namespace EventHeroUpsertForm {
-    export type Props = Omit<ComponentProps<EventHeroComponents["MutationForm"]>, "inputs" | "defaultValues" | "Render">;
+    export type Props = Omit<ComponentProps<EventHeroComponents["Form"]["Mutation"]>, "inputs" | "defaultValues" | "Render">;
 }
 
 export const EventHeroUpsertForm: FC<EventHeroUpsertForm.Props> = (
     {
-        entity,
+        values,
         ...props
     }
 ) => {
-    return <EventHeroComponents.MutationForm
+    return <EventHeroComponents.Form.Mutation
         text={{
-            submit:  entity ? t`Update event (label)` : t`Create event (label)`,
+            submit:  values ? t`Update event (label)` : t`Create event (label)`,
             success: {
                 title:   t`Success`,
-                message: entity ? t`EventHero updated` : t`EventHero created`,
+                message: values ? t`EventHero updated` : t`EventHero created`,
             }
         }}
         icon={<HeroIcon/>}
-        inputs={{
-            amount: props => <NumberInput
-                label={t`EventHero amount`}
-                {...props}
-            />,
-        }}
-        values={entity}
-        toRequest={values => (entity ? {
-            update: {
-                update: values,
-                query:  {
-                    where: {
-                        id: entity.id,
-                    },
-                },
-            },
-        } : {
-            create: values,
-        })}
+        // inputs={{
+        //     amount: props => <NumberInput
+        //         label={t`EventHero amount`}
+        //         {...props}
+        //     />,
+        // }}
+        // values={entity}
+        // toRequest={values => (entity ? {
+        //     update: {
+        //         update: values,
+        //         query:  {
+        //             where: {
+        //                 id: entity.id,
+        //             },
+        //         },
+        //     },
+        // } : {
+        //     create: values,
+        // })}
         defaultValues={{
             amount:  1,
             eventId: "",
         }}
-        Render={({Input}) => <>
-            <Input name={"amount"}/>
-        </>}
+        // Render={({Input}) => <>
+        //     <Input name={"amount"}/>
+        // </>}
         {...props}
     />;
 };
