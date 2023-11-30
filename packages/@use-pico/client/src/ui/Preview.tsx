@@ -9,6 +9,7 @@ export namespace Preview {
     }
 
     export interface Item {
+        key: string;
         label: ReactNode;
         value: ReactNode;
     }

@@ -23,6 +23,7 @@ export const ProducerOverview: FC<ProducerOverview.Props> = () => {
             key={item.id}
             items={[
                 {
+                    key:   "pipeline",
                     label: <ButtonLink
                                icon={<ProducerIcon/>}
                                href={{
@@ -31,8 +32,9 @@ export const ProducerOverview: FC<ProducerOverview.Props> = () => {
                                        id: item.id,
                                    },
                                }}
-                               label={<ProducerInline entity={item}/>}
-                           />,
+                           >
+                               <ProducerInline entity={item}/>
+                           </ButtonLink>,
                     value: <ProducerGraph
                                border={false}
                                zoom={false}

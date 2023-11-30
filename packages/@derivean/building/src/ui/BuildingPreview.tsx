@@ -23,6 +23,7 @@ export const BuildingPreview: FC<BuildingPreview.Props> = (
     return <Preview
         items={[
             {
+                key: "name",
                 label: t`Building name`,
                 value: <div className={"flex gap-4"}>
                            <BuildingInline entity={building}/>
@@ -32,6 +33,7 @@ export const BuildingPreview: FC<BuildingPreview.Props> = (
                        </div>,
             },
             {
+                key: "requirement",
                 label: t`Building requirement (label)`,
                 value: <BuildingRequirement buildingId={building.id}/>
             },
