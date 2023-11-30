@@ -73,7 +73,7 @@ export const Button: FC<Button.Props> = (
         type={"button"}
         className={cx([
             "text-white",
-            "flex gap-1",
+            "flex items-center gap-1",
             "disabled:(bg-secondary-200 text-slate-600 cursor-not-allowed hover:(bg-secondary-200 shadow-none))",
             size ? cssSize[size] : undefined,
             variant ? cssVariant[variant] : undefined,
