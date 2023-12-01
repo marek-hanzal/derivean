@@ -4,6 +4,10 @@ import {
     withKingdomRepository
 }                               from "@derivean/kingdom";
 import {container}              from "@derivean/server";
+import {
+    ButtonLink,
+    Icon
+}                               from "@use-pico/client";
 import {type PropsWithChildren} from "react";
 import logo                     from "../../../../public/assets/logo/logo.svg";
 
@@ -30,16 +34,19 @@ export default async function Layout(
             center: <div
                         className={"flex flex-row items-center"}
                     >
-                        {/*<ButtonLink*/}
-                        {/*    href={"/game"}*/}
-                        {/*    size={"sm"}*/}
-                        {/*    cn={[*/}
-                        {/*        "ml-4",*/}
-                        {/*        "mr-1",*/}
-                        {/*    ]}*/}
-                        {/*>*/}
-                        {/*    <Icon icon={"i-tabler:arrow-left"}/>*/}
-                        {/*</ButtonLink>*/}
+                        <ButtonLink
+                            href={"/game"}
+                            size={"sm"}
+                            cn={[
+                                "ml-4",
+                                "mr-1",
+                            ]}
+                        >
+                            <Icon
+                                size={"xl"}
+                                icon={"i-tabler:arrow-left"}
+                            />
+                        </ButtonLink>
                         {/*<Title*/}
                         {/*    c={"text-zinc-600"}*/}
                         {/*    order={4}*/}
