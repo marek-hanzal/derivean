@@ -14,7 +14,7 @@ export const MainMenu: FC<MainMenu.Props> = props => {
             size: "md",
             cn:   [
                 "text-sky-500",
-                "hover:text-sky-600",
+                "hover:(text-sky-600)",
             ],
         }}
         {...props}

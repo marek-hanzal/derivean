@@ -40,13 +40,18 @@ export const Header: FC<Header.Props> = (
         cx,
         $props
     } = css(props);
+    const $logo = logo ? <Image
+        priority
+        height={24}
+        alt={"logo"}
+        src={logo}
+    /> : null;
 
     return <div
         className={cx([
             "px-3 py-2",
             "bg-zinc-50",
             "shadow-sm shadow-zinc-300",
-            "h-16",
             "flex flex-row items-center",
         ])}
         {...$props}
@@ -58,19 +63,9 @@ export const Header: FC<Header.Props> = (
                     display: "block",
                 }}
             >
-                <Image
-                    priority
-                    height={32}
-                    alt={"logo"}
-                    src={logo}
-                />
+                {$logo}
             </LocaleLink>}
-            {logo && !home && <Image
-                priority
-                height={32}
-                alt={"logo"}
-                src={logo}
-            />}
+            {!home && $logo}
         </div>
         <div className={"grow"}>
             {center}

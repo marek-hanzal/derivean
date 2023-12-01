@@ -23,7 +23,6 @@ export const Icon: FC<Icon.Props> = (
 
     return <div
         className={cx([
-            "text-2xl",
             icon,
         ])}
         {...$props}

@@ -17,10 +17,7 @@ export const SignOutButton: FC<SignOutButton.Props> = props => {
 
     return <ActionIcon
         variant={"subtle"}
-        size={"md"}
-        cn={[
-            "text-2xl",
-        ]}
+        size={"compact-md"}
         onClick={() => signOut({
             callbackUrl: linkTo("/public"),
         })}

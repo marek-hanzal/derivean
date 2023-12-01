@@ -8,14 +8,14 @@ import {
 import {css} from "../tools/css";
 
 const cssSize = {
-    "xs":         "text-xs px-3 py-2 font-medium",
-    "compact-xs": "text-xs px-3 py-1 font-medium",
+    "xs":         "text-xs",
+    "compact-xs": "text-xs",
 
-    "sm":         "text-sm px-3 py-2 font-medium",
-    "compact-sm": "text-sm px-3 py-1 font-medium",
+    "sm":         "text-sm",
+    "compact-sm": "text-sm",
 
-    "md":         "text-md px-4 py-2 font-medium",
-    "compact-md": "text-md px-3 py-1 font-medium",
+    "md":         "text-md px-1",
+    "compact-md": "text-md px-1",
 
     "lg":         "text-lg px-5 py-2 font-medium",
     "compact-lg": "text-lg px-4 py-1 font-medium",
@@ -29,12 +29,12 @@ const cssVariant = {
     "primary": `
         transition ease-in-out delay-50 duration-25
         bg-sky-600
-        hover:(shadow-sm shadow-zinc-400)
+        hover:(shadow-md shadow-zinc-500)
     `,
     "subtle":  `
         text-slate-500
         transition ease-in-out delay-50 duration-25
-        hover:(bg-zinc-50 text-zinc-700 shadow-sm shadow-zinc-300)
+        hover:(bg-zinc-50 text-zinc-700 shadow-sm shadow-zinc-400)
     `,
 } as const;
 type cssVariant = typeof cssVariant;
