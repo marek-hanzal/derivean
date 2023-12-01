@@ -15,13 +15,13 @@ const cssSize = {
     "compact-sm": "text-sm",
 
     "md":         "text-md px-1",
-    "compact-md": "text-md px-1",
+    "compact-md": "text-md",
 
     "lg":         "text-lg px-5 py-2 font-medium",
-    "compact-lg": "text-lg px-4 py-1 font-medium",
+    "compact-lg": "text-lg font-medium",
 
     "xl":         "text-xl px-6 py-3 font-medium",
-    "compact-xl": "text-xl px-5 py-2 font-medium",
+    "compact-xl": "text-xl font-medium",
 } as const;
 type cssSize = typeof cssSize;
 
@@ -34,7 +34,7 @@ const cssVariant = {
     "subtle":  `
         text-slate-500
         transition ease-in-out delay-50 duration-25
-        hover:(bg-zinc-50 text-zinc-700 shadow-sm shadow-zinc-400)
+        hover:(bg-zinc-50 text-zinc-700)
     `,
 } as const;
 type cssVariant = typeof cssVariant;

@@ -16,8 +16,7 @@ export const SignOutButton: FC<SignOutButton.Props> = props => {
     const linkTo = useLocaleLinkTo();
 
     return <ActionIcon
-        variant={"subtle"}
-        size={"compact-md"}
+        size={"compact-lg"}
         onClick={() => signOut({
             callbackUrl: linkTo("/public"),
         })}

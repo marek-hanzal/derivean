@@ -16,7 +16,6 @@ export const ActionIcon: FC<ActionIcon.Props> = (
     return <Button
         variant={"subtle"}
         cn={[
-            "p-1",
             ...cn,
         ]}
         {...props}
