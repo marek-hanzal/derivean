@@ -6,8 +6,10 @@ import {
 import {container}              from "@derivean/server";
 import {
     ButtonLink,
-    Icon
+    Icon,
+    Title
 }                               from "@use-pico/client";
+import {tv}                     from "@use-pico/translator";
 import {type PropsWithChildren} from "react";
 import logo                     from "../../../../public/assets/logo/logo.svg";
 
@@ -47,16 +49,16 @@ export default async function Layout(
                                 icon={"i-tabler:arrow-left"}
                             />
                         </ButtonLink>
-                        {/*<Title*/}
-                        {/*    c={"text-zinc-600"}*/}
-                        {/*    order={4}*/}
-                        {/*    cn={[*/}
-                        {/*        "text-md",*/}
-                        {/*        "font-bold",*/}
-                        {/*    ]}*/}
-                        {/*>*/}
-                        {/*    {tv(kingdom)`Selected kingdom`}*/}
-                        {/*</Title>*/}
+                        <Title
+                            c={"text-zinc-600"}
+                            order={4}
+                            cn={[
+                                "text-md",
+                                "font-semibold",
+                            ]}
+                        >
+                            {tv(kingdom)`Selected kingdom`}
+                        </Title>
                         <KingdomMenu
                             kingdomId={kingdom.id}
                             cn={[
