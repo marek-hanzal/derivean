@@ -43,14 +43,14 @@
 		"next-auth": "^4.24.5"
 	},
 	"devDependencies": {
-		"@use-pico/esbuild": "^2.0.5",
-		"@use-pico/eslint-config-eslint": "^2.0.4",
-		"@use-pico/tsconfig": "^2.0.4",
-		"@types/node": "^20.9.0",
-		"@types/react": "^18.2.33",
+		"@use-pico/esbuild": "^3.0.0",
+		"@use-pico/eslint-config-eslint": "^3.0.0",
+		"@use-pico/tsconfig": "^3.0.0",
+		"@types/node": "^20.10.1",
+		"@types/react": "^18.2.39",
 		"concurrently": "^8.2.1",
-		"del-cli": "^5.0.0",
-		"eslint": "^8.51.0",
+		"del-cli": "^5.1.0",
+		"eslint": "^8.54.0",
 		"typescript": "^5.3.2"
 	},
 	"bugs": {

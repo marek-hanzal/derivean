@@ -1,11 +1,11 @@
 {
 	"version": "3.0.0",
-	"name": "@use-pico/extras",
-	"description": "Here are a lot of things homeless otherwise. Like schema factories and other stuff.",
+	"name": "@use-pico/env",
+	"description": "Next.js env helper stuff.",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/use-pico/pico"
+		"url": "git://github.com/use-pico/pico.git"
 	},
 	"engines": {
 		"node": ">=16.0.0"
@@ -23,21 +23,20 @@
 		"build:esbuild": "node esbuild.mjs",
 		"build:types": "tsc --outDir lib",
 		"lint": "eslint src",
-		"cleanup": "concurrently npm:cleanup:*",
-		"cleanup:lib": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
+		"cleanup": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
 	},
-	"peerDependencies": {
-		"@use-pico/client": "^3.0.0",
-		"@use-pico/query": "^3.0.0"
+	"dependencies": {
+		"@use-pico/schema": "^3.0.0",
+		"@use-pico/utils": "^3.0.0"
 	},
 	"devDependencies": {
 		"@use-pico/esbuild": "^3.0.0",
 		"@use-pico/eslint-config-eslint": "^3.0.0",
 		"@use-pico/tsconfig": "^3.0.0",
-		"@types/node": "^20.9.0",
-		"concurrently": "^8.2.1",
-		"del-cli": "^5.0.0",
-		"eslint": "^8.45.0",
+		"@types/node": "^20.10.1",
+		"concurrently": "^8.2.0",
+		"del-cli": "^5.1.0",
+		"eslint": "^8.54.0",
 		"typescript": "^5.3.2"
 	},
 	"bugs": {

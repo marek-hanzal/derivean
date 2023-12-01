@@ -1,0 +1,47 @@
+{
+	"version": "3.0.0",
+	"name": "@use-pico/esbuild",
+	"description": "Esbuild helper stuff.",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/use-pico/pico.git"
+	},
+	"engines": {
+		"node": ">=16.0.0"
+	},
+	"sideEffects": false,
+	"type": "module",
+	"main": "lib/index.js",
+	"module": "lib/index.js",
+	"types": "lib/index.d.ts",
+	"files": [
+		"lib",
+		"src"
+	],
+	"scripts": {
+		"init": "concurrently npm:init:*",
+		"init:esbuild": "node esbuild.mjs",
+		"init:types": "tsc --outDir lib",
+		"lint": "eslint src",
+		"cleanup": "del-cli .turbo lib tsconfig.tsbuildinfo src/**/*.{d.ts,d.ts.map,js,js.map}"
+	},
+	"dependencies": {
+		"esbuild": "^0.19.8",
+		"glob": "^10.3.10"
+	},
+	"devDependencies": {
+		"@use-pico/eslint-config-eslint": "^3.0.0",
+		"@use-pico/tsconfig": "^3.0.0",
+		"@types/glob": "^8.1.0",
+		"@types/node": "^20.10.1",
+		"concurrently": "^8.2.2",
+		"del-cli": "^5.1.0",
+		"eslint": "^8.54.0",
+		"typescript": "^5.3.2"
+	},
+	"bugs": {
+		"url": "https://github.com/use-pico/pico/issues"
+	},
+	"homepage": "https://github.com/use-pico/pico#readme"
+}

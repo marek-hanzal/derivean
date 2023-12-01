@@ -42,6 +42,7 @@ export const Form = <
         text,
         icon,
         values,
+        defaultValues,
     }: Form.Props<TSchema>,
 ) => {
     return <div>

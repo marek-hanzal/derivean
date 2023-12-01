@@ -54,5 +54,7 @@ export const EventHeroUpsertForm: FC<EventHeroUpsertForm.Props> = (
         //     <Input name={"amount"}/>
         // </>}
         {...props}
-    />;
+    >
+        {/*<Input */}
+    </EventHeroComponents.Form.Mutation>
 };

@@ -42,7 +42,7 @@ export const withComponents = <
                 schema={rpc.schema}
                 // values={entity}
                 {...props}
-            />
+            />,
         },
         Table: <
                    TColumns extends string,
@@ -54,12 +54,10 @@ export const withComponents = <
                 >,
                 "withSourceQuery" | "withQueryStore"
             >
-        ) => {
-            return <Table
-                withSourceQuery={rpc.query}
-                withQueryStore={queryStore}
-                {...props}
-            />;
-        },
+        ) => <Table
+            withSourceQuery={rpc.query}
+            withQueryStore={queryStore}
+            {...props}
+        />,
     };
 };

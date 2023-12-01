@@ -22,9 +22,9 @@
 		"@use-pico/translator": "^3.0.0"
 	},
 	"devDependencies": {
-		"@use-pico/esbuild": "^2.0.0",
-		"@use-pico/eslint-config-eslint": "^2.0.0",
-		"@use-pico/tsconfig": "^2.0.0",
+		"@use-pico/esbuild": "^3.0.0",
+		"@use-pico/eslint-config-eslint": "^3.0.0",
+		"@use-pico/tsconfig": "^3.0.0",
 		"@types/node": "^20.4.2",
 		"@types/react": "^18.2.15",
 		"concurrently": "^8.2.2",
