@@ -1,0 +1,9 @@
+{
+	"$schema": "https://json.schemastore.org/web-manifest-combined.json",
+	"name": "DeRivean",
+	"short_name": "DeRivean",
+	"start_url": ".",
+	"display": "standalone",
+	"background_color": "#fff",
+	"description": "The Invisible Idle Game"
+}
