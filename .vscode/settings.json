@@ -1,19 +1,12 @@
 {
-    "cSpell.words": [
-        "borsh",
-        "dagre",
-        "dagrejs",
-        "derivean",
-        "drei",
-        "fflate",
-        "heightmap",
-        "iconify",
-        "modyfi",
-        "opfs",
-        "seedable",
-        "sqlocal",
-        "tauri",
-        "workerpool",
-        "xyflow"
-    ]
+	"files.watcherExclude": {
+		"**/_route.ts": true
+	},
+	"search.exclude": {
+		"**/_route.ts": true
+	},
+	"files.readonlyInclude": {
+		"**/_route.ts": true
+	},
+	"cSpell.words": ["borsh", "dagre", "dagrejs", "derivean", "drei", "fflate", "heightmap", "iconify", "modyfi", "opfs", "seedable", "sqlocal", "tauri", "workerpool", "xyflow"]
 }

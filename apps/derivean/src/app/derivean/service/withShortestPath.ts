@@ -10,12 +10,7 @@ export namespace withShortestPath {
 	}
 }
 
-export const withShortestPath = ({
-	graph,
-	from,
-	to,
-	mode,
-}: withShortestPath.Props) => {
+export const withShortestPath = ({ graph, from, to, mode }: withShortestPath.Props) => {
 	const path = dijkstra.bidirectional(graph, from, to, "weight");
 
 	if (!path) {
@@ -39,13 +34,11 @@ export const withShortestPath = ({
 			/**
 			 * Buildings can be connected only by buildings.
 			 */
-			return (
-					route.every((node) => {
-						return graph.getNodeAttribute(node, "type") === "route";
-					})
-				) ?
-					path
-				:	undefined;
+			return route.every((node) => {
+				return graph.getNodeAttribute(node, "type") === "route";
+			})
+				? path
+				: undefined;
 		}
 	}
 };
