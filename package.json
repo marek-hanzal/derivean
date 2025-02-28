@@ -1,33 +1,28 @@
 {
-	"name": "derivean",
+	"name": "@marek-hanzal/derivean",
 	"private": true,
+	"description": "A little experiment with Vite, React, and Three.js",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/marek-hanzal/derivean.git"
+	},
 	"scripts": {
-		"dev": "turbo run dev --parallel --no-daemon | roarr",
-		"generate": "turbo run init --no-daemon && turbo run generate --no-daemon",
-		"build": "turbo run build --no-daemon",
-		"build:force": "turbo run build --force --no-cache --no-daemon",
-		"start": "turbo run start --parallel --no-daemon",
-		"lint": "turbo run lint --no-daemon",
-		"test": "vitest",
-		"cleanup": "turbo run cleanup --parallel --no-daemon",
-		"cleanup-npm": "del-cli node_modules apps/derivean/.next",
-		"npkill": "npx npkill"
-	},
-	"dependencies": {
-		"turbo": "^1.10.16"
-	},
-	"devDependencies": {
-		"@roarr/cli": "^5.12.3",
-		"@testing-library/jest-dom": "^6.1.4",
-		"@testing-library/react": "^14.0.0",
-		"del-cli": "^5.1.0",
-		"happy-dom": "^12.9.1",
-		"typescript": "^5.2.2",
-		"vitest": "^0.34.6",
-		"vitest-github-actions-reporter": "^0.10.0"
+		"dev": "turbo run dev --parallel --no-daemon",
+		"lint": "turbo run lint --force --no-daemon",
+		"build": "turbo run build --force --no-daemon",
+		"typecheck": "turbo run typecheck --no-daemon",
+		"translations": "turbo run translations --no-daemon"
 	},
 	"workspaces": [
 		"apps/*",
 		"packages/**/*"
-	]
+	],
+	"devDependencies": {
+		"@types/node": "^22.13.5",
+		"prettier": "^3.5.2",
+		"turbo": "^2.4.4",
+		"typescript": "^5.8.2"
+	},
+	"packageManager": "bun@1.2.2"
 }

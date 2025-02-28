@@ -1,0 +1,34 @@
+{
+	"version": "0.5.0",
+	"name": "@derivean/utils",
+	"description": "DeRivean toolbox.",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/marek-hanzal/derivean"
+	},
+	"sideEffects": false,
+	"type": "module",
+	"main": "src/index.ts",
+	"module": "src/index.ts",
+	"types": "src/index.ts",
+	"files": [
+		"src"
+	],
+	"scripts": {
+		"lint": "eslint src",
+		"lint:fix": "eslint src --fix",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@use-pico/eslint-config-eslint": "^5.0.4",
+		"@use-pico/tsconfig": "^4.0.9",
+		"eslint": "^9.21.0",
+		"typescript": "^5.8.2"
+	},
+	"bugs": {
+		"url": "https://github.com/marek-hanzal/derivean/issues"
+	},
+	"homepage": "https://github.com/marek-hanzal/derivean#readme"
+}

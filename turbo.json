@@ -1,73 +1,33 @@
 {
 	"$schema": "https://turborepo.org/schema.json",
-	"globalDependencies": [
-		".env",
-		"tsconfig.json"
-	],
-	"pipeline": {
+	"globalDependencies": ["tsconfig.json"],
+	"tasks": {
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
 		"lint": {
-			"outputMode": "new-only",
+			"dependsOn": ["^lint"],
 			"outputs": [],
-			"inputs": [
-				"src/**"
-			]
-		},
-		"setup": {
+			"inputs": ["src/**"],
+			"outputLogs": "new-only",
 			"cache": false
 		},
-		"generate": {
+		"typecheck": {
+			"dependsOn": ["^typecheck"],
+			"outputs": [],
+			"inputs": ["src/**"],
+			"outputLogs": "new-only",
 			"cache": false
-		},
-		"init": {
-			"outputMode": "new-only",
-			"dependsOn": [
-				"setup",
-				"^init"
-			],
-			"outputs": [
-				"lib/**"
-			],
-			"inputs": [
-				"src/**"
-			]
 		},
 		"build": {
-			"outputMode": "new-only",
-			"dependsOn": [
-				"^build"
-			],
-			"outputs": [
-				"dist/**"
-			],
-			"inputs": [
-				"src/**",
-				"next.config.mjs",
-				"package.json",
-				"tsconfig.json"
-			],
-			"env": [
-				"NEXT_PUBLIC_CACHE",
-				"BUILD_ID",
-				"NEXT_PUBLIC_VERSION",
-				"NEXT_PUBLIC_BUILD",
-				"NODE_ENV",
-				"PORT"
-			]
-		},
-		"cleanup": {
-			"cache": false
-		},
-		"dev": {
-			"cache": false
-		},
-		"migration": {
-			"cache": false
-		},
-		"start": {
+			"dependsOn": ["^build"],
 			"cache": false,
-			"dependsOn": [
-				"^migration"
-			]
+			"persistent": true
+		},
+		"translations": {
+			"cache": false,
+			"persistent": true
 		}
 	}
 }

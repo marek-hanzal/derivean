@@ -1,5 +1,3 @@
-# DeRivean
+# Legacy of DeRivean
 
-This is legacy of the original idea of "some" game, just this time using modern web technologies.
-
-It's a text based game, just for fun to create it and to showcase my favourite techstack.
+This is a little attempt to create small, simple 2D strategy game using React and React Three Fiber.

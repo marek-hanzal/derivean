@@ -1,47 +1,33 @@
 {
 	"compilerOptions": {
-		"target": "ES2021",
-		"lib": [
-			"dom",
-			"dom.iterable",
-			"esnext"
-		],
-		"allowJs": true,
-		"skipLibCheck": true,
-		"strict": true,
-		"useDefineForClassFields": true,
-		"forceConsistentCasingInFileNames": true,
-		"disableSolutionSearching": true,
-		"checkJs": true,
-		"diagnostics": true,
-		"noEmit": true,
+		/* Base Options: */
 		"esModuleInterop": true,
-		"module": "ES2020",
-		"moduleResolution": "node",
+		"skipLibCheck": true,
+		"target": "es2022",
+		"declaration": false,
+		"allowJs": true,
 		"resolveJsonModule": true,
+		"moduleDetection": "force",
 		"isolatedModules": true,
+		/* Strictness */
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"checkJs": true,
+		"forceConsistentCasingInFileNames": true,
+		"sourceMap": true,
+		"module": "ESNext",
+		"noEmit": true,
+		"moduleResolution": "Bundler",
+		"lib": ["DOM", "DOM.Iterable", "ESNext"],
+		"types": ["vite/client"],
 		"jsx": "preserve",
-		"baseUrl": "src",
-		"paths": {
-			"@/derivean/*": [
-				"./*"
-			]
-		},
+		"jsxImportSource": "react",
 		"incremental": true,
-		"plugins": [
-			{
-				"name": "next"
-			}
-		]
+		"baseUrl": ".",
+		"paths": {
+			"~/*": ["./src/*"]
+		}
 	},
-	"include": [
-		"**/*.ts",
-		"**/*.tsx",
-		".next/types/**/*.ts",
-		"dist/types/**/*.ts"
-	],
-	"exclude": [
-		"node_modules",
-		"tmp"
-	]
+	"include": ["**/*.ts", "**/*.tsx", "**/*.cjs", "**/*.js"],
+	"exclude": ["node_modules", "dist"]
 }
