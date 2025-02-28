@@ -45,7 +45,8 @@
 		"sqlocal": "^0.14.0",
 		"three": "^0.174.0",
 		"use-debounce": "^10.0.4",
-		"workerpool": "^9.2.0"
+		"workerpool": "^9.2.0",
+		"zod": "^3.24.2"
 	},
 	"devDependencies": {
 		"@iconify/json": "^2.2.305",
