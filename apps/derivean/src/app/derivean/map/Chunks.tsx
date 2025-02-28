@@ -1,6 +1,6 @@
+import type { Chunk } from "@derivean/utils";
 import type { LRUCache } from "lru-cache";
 import { FC } from "react";
-import type { Chunk } from "~/app/derivean/type/Chunk";
 
 export namespace Chunks {
 	export interface Props {
@@ -32,8 +32,7 @@ export const Chunks: FC<Chunks.Props> = ({ chunks, opacity = 1 }) => {
 				key={`chunk-${chunk.id}`}
 				position={[chunk.x * 1.001, 0, chunk.z * 1.001]}
 				rotation={[-Math.PI / 2, 0, 0]}
-				receiveShadow
-			>
+				receiveShadow>
 				<planeGeometry args={[chunk.size, chunk.size]} />
 				<meshStandardMaterial
 					color={0xffffff}

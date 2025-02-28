@@ -1,8 +1,7 @@
+import { chunkIdOf, type Chunk } from "@derivean/utils";
 import { Timer, toHumanNumber } from "@use-pico/common";
 import pMap from "p-map";
 import { type Pool } from "workerpool";
-import { chunkIdOf } from "~/app/derivean/service/generator/chunk/chunkIdOf";
-import type { Chunk } from "~/app/derivean/type/Chunk";
 import { chunkOf } from "~/app/derivean/worker/chunkOf";
 
 export namespace generator {
@@ -24,22 +23,11 @@ export namespace generator {
 	}
 }
 
-export const generator = async ({
-	pool,
-	mapId,
-	level,
-	skip,
-	concurrency = Infinity,
-	onChunk,
-	onComplete,
-	abort: { signal } = new AbortController(),
-}: generator.Props) => {
+export const generator = async ({ pool, mapId, level, skip, concurrency = Infinity, onChunk, onComplete, abort: { signal } = new AbortController() }: generator.Props) => {
 	const timer = new Timer();
 	timer.start();
 
-	console.info(
-		`\t[generator] Started generator for [${level.count} chunks] ${level.hash}`,
-	);
+	console.info(`\t[generator] Started generator for [${level.count} chunks] ${level.hash}`);
 
 	return pMap(
 		chunkIdOf(level).filter(({ id }) => !skip.includes(id)),

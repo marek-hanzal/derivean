@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { GameConfig } from "~/app/derivean/GameConfig";
 import { createGameEventBus } from "~/app/derivean/createGameEventBus";
+import { gameConfig } from "~/app/derivean/gameConfig";
 import { Map } from "~/app/derivean/map/Map";
 
 const SearchSchema = z.object({
@@ -11,10 +11,7 @@ const SearchSchema = z.object({
 
 export const Route = createFileRoute("/$locale/apps/derivean/map/$mapId")({
 	validateSearch: zodValidator(SearchSchema),
-	async loader({
-		context: { queryClient, kysely, session },
-		params: { mapId },
-	}) {
+	async loader({ context: { queryClient, kysely, session }, params: { mapId } }) {
 		const user = await session();
 
 		return {
@@ -45,7 +42,7 @@ export const Route = createFileRoute("/$locale/apps/derivean/map/$mapId")({
 		return (
 			<Map
 				mapId={mapId}
-				gameConfig={GameConfig}
+				gameConfig={gameConfig}
 				gameEventBus={gameEventBus}
 				zoom={0.1}
 			/>

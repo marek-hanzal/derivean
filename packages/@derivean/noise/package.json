@@ -1,7 +1,7 @@
 {
 	"version": "0.5.0",
-	"name": "@derivean/utils",
-	"description": "DeRivean toolbox.",
+	"name": "@derivean/noise",
+	"description": "Noise generator stuff",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -21,10 +21,10 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@derivean/utils": "workspace:*",
 		"@use-pico/common": "^4.0.18",
-		"borsh": "^2.0.0",
-		"fflate": "^0.8.2",
-		"three": "^0.174.0"
+		"fp-ts": "^2.16.9",
+		"random-seedable": "^1.0.8"
 	},
 	"devDependencies": {
 		"@use-pico/eslint-config-eslint": "^5.0.4",

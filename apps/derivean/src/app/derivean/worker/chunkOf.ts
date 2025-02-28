@@ -1,10 +1,8 @@
+import { withGenerator } from "@derivean/terrain";
+import { compressChunk, decompressChunk, type Chunk } from "@derivean/utils";
 import { file, write } from "opfs-tools";
 import { worker } from "workerpool";
-import { GameConfig } from "~/app/derivean/GameConfig";
-import { compressChunk } from "~/app/derivean/service/generator/chunk/compressChunk";
-import { decompressChunk } from "~/app/derivean/service/generator/chunk/decompressChunk";
-import { withGenerator } from "~/app/derivean/service/generator/withGenerator";
-import type { Chunk } from "~/app/derivean/type/Chunk";
+import { gameConfig } from "~/app/derivean/gameConfig";
 
 export namespace chunkOf {
 	export interface Props {
@@ -21,15 +19,9 @@ export namespace chunkOf {
 	}
 }
 
-export async function chunkOf({
-	id,
-	mapId,
-	level,
-	x,
-	z,
-}: chunkOf.Props): Promise<chunkOf.Result> {
+export async function chunkOf({ id, mapId, level, x, z }: chunkOf.Props): Promise<chunkOf.Result> {
 	const generator = withGenerator({
-		gameConfig: GameConfig,
+		gameConfig,
 		seed: mapId,
 		level,
 	});
@@ -40,12 +32,14 @@ export async function chunkOf({
 		file(chunkFile)
 			.exists()
 			.then((exists) => {
-				(exists ?
-					// new Promise<boolean>((resolve) => {
-					// 	resolve(true);
-					// })
-					write(chunkFile, compressChunk(generator({ x, z }))).then(() => false)
-				:	write(chunkFile, compressChunk(generator({ x, z }))).then(() => false)
+				(exists
+					? /**
+                     * // new Promise<boolean>((resolve) => {
+						// 	resolve(true);
+						// })
+                     */
+						write(chunkFile, compressChunk(generator({ x, z }))).then(() => false)
+					: write(chunkFile, compressChunk(generator({ x, z }))).then(() => false)
 				).then((hit) => {
 					file(chunkFile)
 						.arrayBuffer()

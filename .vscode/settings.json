@@ -8,5 +8,22 @@
 	"files.readonlyInclude": {
 		"**/_route.ts": true
 	},
-	"cSpell.words": ["borsh", "dagre", "dagrejs", "derivean", "drei", "fflate", "heightmap", "iconify", "modyfi", "opfs", "seedable", "sqlocal", "tauri", "workerpool", "xyflow"]
+	"cSpell.words": [
+		"borsh",
+		"dagre",
+		"dagrejs",
+		"derivean",
+		"drei",
+		"fflate",
+		"heightmap",
+		"iconify",
+		"lacunarity",
+		"modyfi",
+		"opfs",
+		"seedable",
+		"sqlocal",
+		"tauri",
+		"workerpool",
+		"xyflow"
+	]
 }

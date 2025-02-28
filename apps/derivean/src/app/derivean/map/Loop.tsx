@@ -1,9 +1,9 @@
+import type { GameConfig } from "@derivean/utils";
 import { OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useEffect, type FC } from "react";
 import { MOUSE, TOUCH, type OrthographicCamera } from "three";
 import { useDebouncedCallback } from "use-debounce";
-import { GameConfig } from "~/app/derivean/GameConfig";
 import type { GameEventBus } from "~/app/derivean/createGameEventBus";
 import { ChunkManager } from "~/app/derivean/map/ChunkManager";
 
@@ -16,12 +16,7 @@ export namespace Loop {
 	}
 }
 
-export const Loop: FC<Loop.Props> = ({
-	mapId,
-	gameConfig,
-	gameEventBus,
-	zoom,
-}) => {
+export const Loop: FC<Loop.Props> = ({ mapId, gameConfig, gameEventBus, zoom }) => {
 	console.log("Loop re-render");
 
 	const camera = useThree(({ camera }) => camera) as OrthographicCamera;

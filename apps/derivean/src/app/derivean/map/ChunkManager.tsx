@@ -1,3 +1,4 @@
+import { chunkIdOf, useVisibleChunks, type Chunk, type GameConfig } from "@derivean/utils";
 import { useCursor } from "@react-three/drei";
 import { useEvent } from "@use-pico/client";
 import { Timer } from "@use-pico/common";
@@ -5,12 +6,8 @@ import { LRUCache } from "lru-cache";
 import { useEffect, useMemo, useState, type FC } from "react";
 import { DataTexture } from "three";
 import { pool } from "workerpool";
-import { GameConfig } from "~/app/derivean/GameConfig";
 import type { GameEventBus } from "~/app/derivean/createGameEventBus";
 import { Chunks } from "~/app/derivean/map/Chunks";
-import { useVisibleChunks } from "~/app/derivean/map/hook/useVisibleChunks";
-import { chunkIdOf } from "~/app/derivean/service/generator/chunk/chunkIdOf";
-import type { Chunk } from "~/app/derivean/type/Chunk";
 import { generator } from "~/app/derivean/worker/generator";
 import chunkOfUrl from "../worker/chunkOf?worker&url";
 
@@ -22,11 +19,7 @@ export namespace ChunkManager {
 	}
 }
 
-export const ChunkManager: FC<ChunkManager.Props> = ({
-	mapId,
-	gameConfig,
-	gameEventBus,
-}) => {
+export const ChunkManager: FC<ChunkManager.Props> = ({ mapId, gameConfig, gameEventBus }) => {
 	/**
 	 * Chunk generator worker pool.
 	 */
@@ -82,17 +75,11 @@ export const ChunkManager: FC<ChunkManager.Props> = ({
 				levels.map(
 					(level) =>
 						new Promise<Chunk.View.Level>((resolve) => {
-							console.info(
-								"[ChunkManager]\tProcessing level",
-								level,
-								props.zoom,
-							);
+							console.info("[ChunkManager]\tProcessing level", level, props.zoom);
 
 							const cache = chunkCache.get(level.layer.level);
 							if (!cache) {
-								console.warn(
-									`[ChunkManager]\t\tChunk cache for level ${level.layer.level} not found; that's quite strange. Doctor Strange.`,
-								);
+								console.warn(`[ChunkManager]\t\tChunk cache for level ${level.layer.level} not found; that's quite strange. Doctor Strange.`);
 								throw new Error("Chunk cache not found");
 							}
 
@@ -105,9 +92,7 @@ export const ChunkManager: FC<ChunkManager.Props> = ({
 
 							const timer = new Timer();
 							timer.start();
-							console.info(
-								`[ChunkManager]\tRequesting chunks [${level.count}] ${level.hash}`,
-							);
+							console.info(`[ChunkManager]\tRequesting chunks [${level.count}] ${level.hash}`);
 
 							generator({
 								pool: workerPool,
@@ -118,11 +103,7 @@ export const ChunkManager: FC<ChunkManager.Props> = ({
 									for (const {
 										chunk: { texture, ...chunk },
 									} of chunks) {
-										const txt = new DataTexture(
-											new Uint8Array(texture.data),
-											texture.size,
-											texture.size,
-										);
+										const txt = new DataTexture(new Uint8Array(texture.data), texture.size, texture.size);
 										txt.needsUpdate = true;
 
 										cache.set(chunk.id, {
