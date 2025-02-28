@@ -1,4 +1,4 @@
-import { RGBA, type Color } from "~/app/derivean/type/Color";
+import { RGBA, type Color } from "./Color";
 
 /**
  * Converts HSLA color values to RGBA
@@ -41,10 +41,5 @@ export const hslaToRgba = ({ color: [h, s, l, a] }: Color.HSLA): Color.RGBA => {
 		b = x;
 	}
 
-	return RGBA([
-		Math.round((r + m) * 255),
-		Math.round((g + m) * 255),
-		Math.round((b + m) * 255),
-		Math.round(a * 255),
-	]);
+	return RGBA([Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255), Math.round(a * 255)]);
 };

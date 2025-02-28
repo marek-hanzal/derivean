@@ -1,4 +1,4 @@
-import { HSLA } from "~/app/derivean/type/Color";
+import { HSLA } from "@derivean/utils";
 import type { TerrainLayer } from "~/app/derivean/type/TerrainLayer";
 
 /**

@@ -72,6 +72,9 @@
     "packages/@derivean/utils": {
       "name": "@derivean/utils",
       "version": "0.5.0",
+      "dependencies": {
+        "@use-pico/common": "^4.0.18",
+      },
       "devDependencies": {
         "@use-pico/eslint-config-eslint": "^5.0.4",
         "@use-pico/tsconfig": "^4.0.9",

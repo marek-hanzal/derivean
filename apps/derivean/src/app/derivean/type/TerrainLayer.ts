@@ -1,4 +1,4 @@
-import type { Color } from "~/app/derivean/type/Color";
+import type { Color } from "@derivean/utils";
 
 /**
  * Defines a single terrain layer for color map generation

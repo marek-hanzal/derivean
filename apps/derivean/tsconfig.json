@@ -28,6 +28,6 @@
 			"~/*": ["./src/*"]
 		}
 	},
-	"include": ["**/*.ts", "**/*.tsx", "**/*.cjs", "**/*.js"],
+	"include": ["**/*.ts", "**/*.tsx", "**/*.cjs", "**/*.js", "../../packages/@derivean/utils/src/type/XZ.ts", "../../packages/@derivean/utils/src/noise/Noise.ts", "../../packages/@derivean/utils/src/noise/NoiseFactory.ts", "../../packages/@derivean/utils/src/noise/NoiseType.ts", "../../packages/@derivean/utils/src/noise/NoiseSource.ts", "../../packages/@derivean/utils/src/noise/NoiseColorMap.ts"],
 	"exclude": ["node_modules", "dist"]
 }

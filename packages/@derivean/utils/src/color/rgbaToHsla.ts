@@ -1,4 +1,4 @@
-import { HSLA, type Color } from "~/app/derivean/type/Color";
+import { HSLA, type Color } from "./Color";
 
 export const rgbaToHsla = ({ color: [r, g, b, a] }: Color.RGBA): Color.HSLA => {
 	r /= 255;

@@ -1,4 +1,4 @@
-import type { NoiseColor } from "~/app/derivean/type/NoiseColor";
+import type { NoiseColor } from "./NoiseColor";
 
 /**
  * Defines structure of a color map used to generate chunk texture.

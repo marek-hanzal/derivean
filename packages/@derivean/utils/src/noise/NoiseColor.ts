@@ -1,4 +1,4 @@
-import type { Color } from "~/app/derivean/type/Color";
+import type { Color } from "../color/Color";
 
 /**
  * Defines noise input for a color output.

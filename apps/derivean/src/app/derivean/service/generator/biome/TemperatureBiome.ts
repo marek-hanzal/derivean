@@ -1,6 +1,6 @@
+import { HSLA } from "@derivean/utils";
 import { DefaultTerrainLayers } from "~/app/derivean/service/DefaultTerrainLayers";
 import type { Biome } from "~/app/derivean/type/Biome";
-import { HSLA } from "~/app/derivean/type/Color";
 
 export const TemperatureBiome: Biome = {
 	type: "Temperature",

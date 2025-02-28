@@ -1,4 +1,4 @@
-import type { Color } from "~/app/derivean/type/Color";
+import type { Color } from "@derivean/utils";
 import type { NoiseColor } from "~/app/derivean/type/NoiseColor";
 import type { NoiseType } from "~/app/derivean/type/NoiseType";
 
