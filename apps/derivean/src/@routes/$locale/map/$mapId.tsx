@@ -1,13 +1,13 @@
+/** @format */
+
+import { createGameEventBus } from "@derivean/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import { z } from "zod";
-import { createGameEventBus } from "~/app/createGameEventBus";
 import { gameConfig } from "~/app/gameConfig";
 import { Map } from "~/app/map/Map";
 
-const SearchSchema = z.object({
-	zoomToId: z.string().optional(),
-});
+const SearchSchema = z.object({ zoomToId: z.string().optional() });
 
 export const Route = createFileRoute("/$locale/map/$mapId")({
 	validateSearch: zodValidator(SearchSchema),

@@ -1,3 +1,5 @@
+/** @format */
+
 import { EventBus } from "@use-pico/common";
 
 export namespace GameEventBus {
@@ -36,7 +38,3 @@ export namespace GameEventBus {
 }
 
 export type GameEventBus = EventBus<GameEventBus.Event>;
-
-export const createGameEventBus = (): GameEventBus => {
-	return EventBus<GameEventBus.Event>();
-};

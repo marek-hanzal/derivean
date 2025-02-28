@@ -1,3 +1,5 @@
+/** @format */
+
 import { useMutation } from "@tanstack/react-query";
 import { ArrowDownIcon, ArrowUpIcon, Badge, Button, Icon, TrashIcon, Tx, useInvalidator } from "@use-pico/client";
 import { toHumanNumber, tvc } from "@use-pico/common";
@@ -73,7 +75,20 @@ export const Item: FC<Item.Props> = ({ mapId, userId, demand }) => {
 	});
 
 	return (
-		<div className={tvc(["flex", "flex-col", "gap-2", "items-center", "justify-between", "border", "p-4", "rounded-sm", "border-slate-200", demand.transport ? ["text-green-600", "bg-green-50", "border-green-400"] : undefined])}>
+		<div
+			className={tvc([
+				"flex",
+				"flex-col",
+				"gap-2",
+				"items-center",
+				"justify-between",
+				"border",
+				"p-4",
+				"rounded-sm",
+				"border-slate-200",
+				demand.transport ? ["text-green-600", "bg-green-50", "border-green-400"] : undefined,
+			])}
+		>
 			<div className={"flex flex-row gap-2 items-center justify-between w-full"}>
 				<div className={"flex flex-row gap-2 items-center"}>
 					{(demand.transport || 0) > 0 ? <Icon icon={DemandIcon} /> : <Icon icon={PackageIcon} />}
@@ -83,8 +98,11 @@ export const Item: FC<Item.Props> = ({ mapId, userId, demand }) => {
 				<div className={"flex flex-row gap-2 items-center"}>
 					<Badge
 						css={{
-							base: demand.transport ? ["bg-green-50", "border-green-400", "hover:bg-green-50", "hover:border-green-400"] : undefined,
-						}}>
+							base: demand.transport
+								? ["bg-green-50", "border-green-400", "hover:bg-green-50", "hover:border-green-400"]
+								: undefined,
+						}}
+					>
 						x{toHumanNumber({ number: demand.amount })}
 					</Badge>
 
@@ -106,22 +124,19 @@ export const Item: FC<Item.Props> = ({ mapId, userId, demand }) => {
 					loading={priorityUpMutation.isPending || priorityDownMutation.isPending}
 					onClick={() => {
 						priorityUpMutation.mutate({ demandId: demand.id });
-					}}>
+					}}
+				>
 					<Tx label={"Priority up (label)"} />
 				</Button>
-				<Badge
-					css={{
-						base: ["bg-purple-50", "border-purple-400", "text-purple-600"],
-					}}>
-					{demand.priority}
-				</Badge>
+				<Badge css={{ base: ["bg-purple-50", "border-purple-400", "text-purple-600"] }}>{demand.priority}</Badge>
 				<Button
 					iconEnabled={ArrowDownIcon}
 					variant={{ variant: "subtle" }}
 					loading={priorityUpMutation.isPending || priorityDownMutation.isPending}
 					onClick={() => {
 						priorityDownMutation.mutate({ demandId: demand.id });
-					}}>
+					}}
+				>
 					<Tx label={"Priority down (label)"} />
 				</Button>
 			</div>

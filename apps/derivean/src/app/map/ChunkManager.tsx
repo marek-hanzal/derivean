@@ -1,4 +1,6 @@
-import { chunkIdOf, useVisibleChunks, type Chunk, type GameConfig } from "@derivean/utils";
+/** @format */
+
+import { chunkIdOf, useVisibleChunks, type Chunk, type GameConfig, type GameEventBus } from "@derivean/utils";
 import { useCursor } from "@react-three/drei";
 import { useEvent } from "@use-pico/client";
 import { Timer } from "@use-pico/common";
@@ -6,7 +8,6 @@ import { LRUCache } from "lru-cache";
 import { useEffect, useMemo, useState, type FC } from "react";
 import { DataTexture } from "three";
 import { pool } from "workerpool";
-import type { GameEventBus } from "~/app/createGameEventBus";
 import { Chunks } from "~/app/map/Chunks";
 import { generator } from "~/app/worker/generator";
 import chunkOfUrl from "../worker/chunkOf?worker&url";
@@ -24,11 +25,7 @@ export const ChunkManager: FC<ChunkManager.Props> = ({ mapId, gameConfig, gameEv
 	 * Chunk generator worker pool.
 	 */
 	const workerPool = useMemo(() => {
-		return pool(chunkOfUrl, {
-			workerOpts: {
-				type: "module",
-			},
-		});
+		return pool(chunkOfUrl, { workerOpts: { type: "module" } });
 	}, []);
 
 	/**
@@ -37,13 +34,7 @@ export const ChunkManager: FC<ChunkManager.Props> = ({ mapId, gameConfig, gameEv
 	const chunkCache = useMemo(() => {
 		const map = new Map<Chunk.Level, LRUCache<string, Chunk.Runtime>>();
 		gameConfig.layers.forEach((layer) => {
-			map.set(
-				layer.level,
-				new LRUCache<string, Chunk.Runtime>({
-					max: gameConfig.chunkLimit,
-					ttl: 0,
-				}),
-			);
+			map.set(layer.level, new LRUCache<string, Chunk.Runtime>({ max: gameConfig.chunkLimit, ttl: 0 }));
 		});
 		return map;
 	}, []);
@@ -59,9 +50,7 @@ export const ChunkManager: FC<ChunkManager.Props> = ({ mapId, gameConfig, gameEv
 		};
 	}, []);
 
-	const visibleChunks = useVisibleChunks({
-		gameConfig,
-	});
+	const visibleChunks = useVisibleChunks({ gameConfig });
 	const [isLoading, setIsLoading] = useState(false);
 
 	useEvent({
@@ -79,7 +68,9 @@ export const ChunkManager: FC<ChunkManager.Props> = ({ mapId, gameConfig, gameEv
 
 							const cache = chunkCache.get(level.layer.level);
 							if (!cache) {
-								console.warn(`[ChunkManager]\t\tChunk cache for level ${level.layer.level} not found; that's quite strange. Doctor Strange.`);
+								console.warn(
+									`[ChunkManager]\t\tChunk cache for level ${level.layer.level} not found; that's quite strange. Doctor Strange.`,
+								);
 								throw new Error("Chunk cache not found");
 							}
 
@@ -106,13 +97,7 @@ export const ChunkManager: FC<ChunkManager.Props> = ({ mapId, gameConfig, gameEv
 										const txt = new DataTexture(new Uint8Array(texture.data), texture.size, texture.size);
 										txt.needsUpdate = true;
 
-										cache.set(chunk.id, {
-											...chunk,
-											texture: {
-												size: texture.size,
-												data: txt,
-											},
-										});
+										cache.set(chunk.id, { ...chunk, texture: { size: texture.size, data: txt } });
 									}
 
 									resolve(level);

@@ -1,3 +1,5 @@
+/** @format */
+
 import { useParams } from "@tanstack/react-router";
 import { BackIcon, Button, LinkTo } from "@use-pico/client";
 import type { FC } from "react";
@@ -14,9 +16,7 @@ export namespace MapToolbar {
 }
 
 export const MapToolbar: FC<MapToolbar.Props> = ({ userId, cycle }) => {
-	const { locale, mapId } = useParams({
-		from: "/$locale/map/$mapId",
-	});
+	const { locale, mapId } = useParams({ from: "/$locale/map/$mapId" });
 
 	return (
 		<div
@@ -24,11 +24,13 @@ export const MapToolbar: FC<MapToolbar.Props> = ({ userId, cycle }) => {
 			onDoubleClick={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
-			}}>
+			}}
+		>
 			<div className={"flex flex-row items-center"}>
 				<LinkTo
 					to={"/$locale/game"}
-					params={{ locale }}>
+					params={{ locale }}
+				>
 					<Button
 						iconEnabled={BackIcon}
 						variant={{ variant: "subtle" }}
@@ -36,7 +38,8 @@ export const MapToolbar: FC<MapToolbar.Props> = ({ userId, cycle }) => {
 				</LinkTo>
 				<LinkTo
 					to={"/$locale/map/$mapId/building/list"}
-					params={{ locale, mapId }}>
+					params={{ locale, mapId }}
+				>
 					<Button
 						iconEnabled={BuildingIcon}
 						variant={{ variant: "subtle" }}
@@ -44,7 +47,8 @@ export const MapToolbar: FC<MapToolbar.Props> = ({ userId, cycle }) => {
 				</LinkTo>
 				<LinkTo
 					to={"/$locale/map/$mapId/land/list"}
-					params={{ locale, mapId }}>
+					params={{ locale, mapId }}
+				>
 					<Button
 						iconEnabled={LandIcon}
 						variant={{ variant: "subtle" }}

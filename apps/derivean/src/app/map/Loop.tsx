@@ -1,10 +1,11 @@
-import type { GameConfig } from "@derivean/utils";
+/** @format */
+
+import type { GameConfig, GameEventBus } from "@derivean/utils";
 import { OrbitControls } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { useEffect, type FC } from "react";
 import { MOUSE, TOUCH, type OrthographicCamera } from "three";
 import { useDebouncedCallback } from "use-debounce";
-import type { GameEventBus } from "~/app/createGameEventBus";
 import { ChunkManager } from "~/app/map/ChunkManager";
 
 export namespace Loop {

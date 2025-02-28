@@ -1,7 +1,8 @@
-import type { GameConfig } from "@derivean/utils";
+/** @format */
+
+import type { GameConfig, GameEventBus } from "@derivean/utils";
 import { tvc } from "@use-pico/common";
 import { FC } from "react";
-import type { GameEventBus } from "~/app/createGameEventBus";
 import { Loop } from "~/app/map/Loop";
 import { MapCanvas } from "~/app/map/MapCanvas";
 

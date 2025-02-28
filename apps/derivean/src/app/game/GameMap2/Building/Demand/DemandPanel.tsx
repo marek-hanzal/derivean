@@ -1,3 +1,5 @@
+/** @format */
+
 import { useParams } from "@tanstack/react-router";
 import { BackIcon, LinkTo, Tx } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
@@ -30,9 +32,7 @@ export namespace DemandPanel {
 }
 
 export const DemandPanel: FC<DemandPanel.Props> = ({ userId, building, demand, ...props }) => {
-	const { mapId, locale } = useParams({
-		from: "/$locale/map/$mapId",
-	});
+	const { mapId, locale } = useParams({ from: "/$locale/map/$mapId" });
 
 	return (
 		<Panel
@@ -48,12 +48,14 @@ export const DemandPanel: FC<DemandPanel.Props> = ({ userId, building, demand, .
 					<LinkTo
 						to={"/$locale/map/$mapId/building/$buildingId/demand"}
 						params={{ locale, mapId, buildingId: building.id }}
-						search={{ zoomToId: building.id }}>
+						search={{ zoomToId: building.id }}
+					>
 						{building.name}
 					</LinkTo>
 				</>
 			}
-			{...props}>
+			{...props}
+		>
 			{demand.length > 0 ? (
 				demand.map((item) => {
 					return (
@@ -66,7 +68,19 @@ export const DemandPanel: FC<DemandPanel.Props> = ({ userId, building, demand, .
 					);
 				})
 			) : (
-				<div className={tvc(["flex", "items-center", "justify-center", "rounded-sm", "border", "border-green-400", "p-4", "bg-green-200", "font-bold"])}>
+				<div
+					className={tvc([
+						"flex",
+						"items-center",
+						"justify-center",
+						"rounded-sm",
+						"border",
+						"border-green-400",
+						"p-4",
+						"bg-green-200",
+						"font-bold",
+					])}
+				>
 					<Tx label={"This building does not demand anything. (label)"} />
 				</div>
 			)}

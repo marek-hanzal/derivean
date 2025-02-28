@@ -1,3 +1,5 @@
+/** @format */
+
 import { useParams } from "@tanstack/react-router";
 import { Menu, MenuLink, Tx } from "@use-pico/client";
 import type { FC } from "react";
@@ -17,7 +19,8 @@ export const GameMenu: FC<GameMenu.Props> = (props) => {
 			<MenuLink
 				icon={BlueprintIcon}
 				to={"/$locale/game/blueprint/list"}
-				params={{ locale }}>
+				params={{ locale }}
+			>
 				<Tx label={"Blueprint list (menu)"} />
 			</MenuLink>
 		</Menu>

@@ -1,3 +1,5 @@
+/** @format */
+
 import { translator } from "@use-pico/common";
 
 /**

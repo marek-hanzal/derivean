@@ -1,3 +1,5 @@
+/** @format */
+
 import { createFileRoute, redirect, useLoaderData, useParams } from "@tanstack/react-router";
 import { AppLayout, LinkTo, LogoutIcon, ls, withList } from "@use-pico/client";
 import { z } from "zod";
@@ -14,10 +16,7 @@ export const Route = createFileRoute("/$locale/root")({
 				try {
 					return SessionSchema.parse(ls.get("session"));
 				} catch (_) {
-					throw redirect({
-						to: `/$locale/public/login`,
-						params: { locale },
-					});
+					throw redirect({ to: `/$locale/public/login`, params: { locale } });
 				}
 			},
 		};
@@ -36,10 +35,7 @@ export const Route = createFileRoute("/$locale/root")({
 								.where("b.image", "is not", null)
 								.union(tx.selectFrom("Region as r").select(["r.id", "r.image"]).where("r.image", "is not", null))
 								.union(tx.selectFrom("Resource as r").select(["r.id", "r.image"]).where("r.image", "is not", null)),
-							output: z.object({
-								id: z.string().min(1),
-								image: z.string(),
-							}),
+							output: z.object({ id: z.string().min(1), image: z.string() }),
 						});
 					});
 				},
@@ -71,7 +67,8 @@ export const Route = createFileRoute("/$locale/root")({
 					logo={
 						<LinkTo
 							to={"/$locale/root"}
-							params={{ locale }}>
+							params={{ locale }}
+						>
 							<Logo />
 						</LinkTo>
 					}

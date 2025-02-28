@@ -13,6 +13,7 @@
 import { Route as rootRoute } from './@routes/__root'
 import { Route as LocaleImport } from './@routes/$locale'
 import { Route as IndexImport } from './@routes/index'
+import { Route as LocaleIndexImport } from './@routes/$locale/index'
 import { Route as LocaleRootImport } from './@routes/$locale/root'
 import { Route as LocaleMapImport } from './@routes/$locale/map'
 import { Route as LocaleGameImport } from './@routes/$locale/game'
@@ -91,6 +92,12 @@ const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const LocaleIndexRoute = LocaleIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LocaleRoute,
 } as any)
 
 const LocaleRootRoute = LocaleRootImport.update({
@@ -558,6 +565,13 @@ declare module '@tanstack/react-router' {
       path: '/root'
       fullPath: '/$locale/root'
       preLoaderRoute: typeof LocaleRootImport
+      parentRoute: typeof LocaleImport
+    }
+    '/$locale/': {
+      id: '/$locale/'
+      path: '/'
+      fullPath: '/$locale/'
+      preLoaderRoute: typeof LocaleIndexImport
       parentRoute: typeof LocaleImport
     }
     '/$locale/db/schema': {
@@ -1306,6 +1320,7 @@ interface LocaleRouteChildren {
   LocaleGameRoute: typeof LocaleGameRouteWithChildren
   LocaleMapRoute: typeof LocaleMapRouteWithChildren
   LocaleRootRoute: typeof LocaleRootRouteWithChildren
+  LocaleIndexRoute: typeof LocaleIndexRoute
   LocaleDbSchemaRoute: typeof LocaleDbSchemaRoute
   LocalePublicLoginRoute: typeof LocalePublicLoginRoute
   LocalePublicLogoutRoute: typeof LocalePublicLogoutRoute
@@ -1316,6 +1331,7 @@ const LocaleRouteChildren: LocaleRouteChildren = {
   LocaleGameRoute: LocaleGameRouteWithChildren,
   LocaleMapRoute: LocaleMapRouteWithChildren,
   LocaleRootRoute: LocaleRootRouteWithChildren,
+  LocaleIndexRoute: LocaleIndexRoute,
   LocaleDbSchemaRoute: LocaleDbSchemaRoute,
   LocalePublicLoginRoute: LocalePublicLoginRoute,
   LocalePublicLogoutRoute: LocalePublicLogoutRoute,
@@ -1331,6 +1347,7 @@ export interface FileRoutesByFullPath {
   '/$locale/game': typeof LocaleGameRouteWithChildren
   '/$locale/map': typeof LocaleMapRouteWithChildren
   '/$locale/root': typeof LocaleRootRouteWithChildren
+  '/$locale/': typeof LocaleIndexRoute
   '/$locale/db/schema': typeof LocaleDbSchemaRoute
   '/$locale/map/$mapId': typeof LocaleMapMapIdRouteWithChildren
   '/$locale/public/login': typeof LocalePublicLoginRoute
@@ -1397,8 +1414,8 @@ export interface FileRoutesByFullPath {
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/$locale': typeof LocaleRouteWithChildren
   '/$locale/map': typeof LocaleMapRouteWithChildren
+  '/$locale': typeof LocaleIndexRoute
   '/$locale/db/schema': typeof LocaleDbSchemaRoute
   '/$locale/map/$mapId': typeof LocaleMapMapIdRouteWithChildren
   '/$locale/public/login': typeof LocalePublicLoginRoute
@@ -1470,6 +1487,7 @@ export interface FileRoutesById {
   '/$locale/game': typeof LocaleGameRouteWithChildren
   '/$locale/map': typeof LocaleMapRouteWithChildren
   '/$locale/root': typeof LocaleRootRouteWithChildren
+  '/$locale/': typeof LocaleIndexRoute
   '/$locale/db/schema': typeof LocaleDbSchemaRoute
   '/$locale/map/$mapId': typeof LocaleMapMapIdRouteWithChildren
   '/$locale/public/login': typeof LocalePublicLoginRoute
@@ -1542,6 +1560,7 @@ export interface FileRouteTypes {
     | '/$locale/game'
     | '/$locale/map'
     | '/$locale/root'
+    | '/$locale/'
     | '/$locale/db/schema'
     | '/$locale/map/$mapId'
     | '/$locale/public/login'
@@ -1607,8 +1626,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/$locale'
     | '/$locale/map'
+    | '/$locale'
     | '/$locale/db/schema'
     | '/$locale/map/$mapId'
     | '/$locale/public/login'
@@ -1678,6 +1697,7 @@ export interface FileRouteTypes {
     | '/$locale/game'
     | '/$locale/map'
     | '/$locale/root'
+    | '/$locale/'
     | '/$locale/db/schema'
     | '/$locale/map/$mapId'
     | '/$locale/public/login'
@@ -1776,6 +1796,7 @@ export const routeTree = rootRoute
         "/$locale/game",
         "/$locale/map",
         "/$locale/root",
+        "/$locale/",
         "/$locale/db/schema",
         "/$locale/public/login",
         "/$locale/public/logout",
@@ -1816,6 +1837,10 @@ export const routeTree = rootRoute
         "/$locale/root/user/list",
         "/$locale/root/blueprint/production/$id"
       ]
+    },
+    "/$locale/": {
+      "filePath": "$locale/index.tsx",
+      "parent": "/$locale"
     },
     "/$locale/db/schema": {
       "filePath": "$locale/db/schema.tsx",

@@ -1,3 +1,5 @@
+/** @format */
+
 import { useParams } from "@tanstack/react-router";
 import { BackIcon, LinkTo, Tx } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
@@ -26,9 +28,7 @@ export namespace LinkPanel {
 }
 
 export const LinkPanel: FC<LinkPanel.Props> = ({ building, link, ...props }) => {
-	const { locale, mapId } = useParams({
-		from: "/$locale/map/$mapId",
-	});
+	const { locale, mapId } = useParams({ from: "/$locale/map/$mapId" });
 
 	return (
 		<Panel
@@ -44,12 +44,14 @@ export const LinkPanel: FC<LinkPanel.Props> = ({ building, link, ...props }) => 
 					<LinkTo
 						to={"/$locale/map/$mapId/building/$buildingId/link"}
 						params={{ locale, mapId, buildingId: building.id }}
-						search={{ zoomToId: building.id }}>
+						search={{ zoomToId: building.id }}
+					>
 						{building.name}
 					</LinkTo>
 				</>
 			}
-			{...props}>
+			{...props}
+		>
 			{link.length > 0 ? (
 				link.map((item) => {
 					return (
@@ -61,7 +63,19 @@ export const LinkPanel: FC<LinkPanel.Props> = ({ building, link, ...props }) => 
 					);
 				})
 			) : (
-				<div className={tvc(["flex", "items-center", "justify-center", "rounded-sm", "border", "border-amber-400", "p-4", "bg-amber-200", "font-bold"])}>
+				<div
+					className={tvc([
+						"flex",
+						"items-center",
+						"justify-center",
+						"rounded-sm",
+						"border",
+						"border-amber-400",
+						"p-4",
+						"bg-amber-200",
+						"font-bold",
+					])}
+				>
 					<Tx label={"No linked buildings. (label)"} />
 				</div>
 			)}

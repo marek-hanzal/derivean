@@ -1,3 +1,5 @@
+/** @format */
+
 export { type Chunk } from "./chunk/Chunk";
 export { chunkIdOf } from "./chunk/chunkIdOf";
 export { type ChunkLimit } from "./chunk/ChunkLimit";
@@ -12,6 +14,8 @@ export { hslaToRgba } from "./color/hslaToRgba";
 export { noiseToRGBA } from "./color/noiseToRGBA";
 export { rgbaToHsla } from "./color/rgbaToHsla";
 export { type GameConfig } from "./config/GameConfig";
+export { createGameEventBus } from "./event/createGameEventBus";
+export { type GameEventBus } from "./event/GameEventBus";
 export { fpClamp } from "./fp/fpClamp";
 export { fpCombineNoise } from "./fp/fpCombineNoise";
 export { fpInverse } from "./fp/fpInverse";

@@ -1,3 +1,5 @@
+/** @format */
+
 import { useParams } from "@tanstack/react-router";
 import { LinkTo, Table, Tx, useTable, withColumn } from "@use-pico/client";
 import { type IdentitySchema } from "@use-pico/common";
@@ -26,7 +28,8 @@ const columns = [
 				<LinkTo
 					icon={BlueprintIcon}
 					to={"/$locale/root/blueprint/$id/view"}
-					params={{ locale, id: data.blueprintId }}>
+					params={{ locale, id: data.blueprintId }}
+				>
 					{value}
 				</LinkTo>
 			);
@@ -41,13 +44,13 @@ export namespace BlueprintProductionDependencyTable {
 	}
 }
 
-export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependencyTable.Props> = ({ table, ...props }) => {
+export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependencyTable.Props> = ({
+	table,
+	...props
+}) => {
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			{...props}
 		/>
 	);
