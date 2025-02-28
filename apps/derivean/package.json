@@ -29,6 +29,7 @@
 		"@use-pico/server": "^4.0.15",
 		"@xyflow/react": "^12.4.4",
 		"dependency-graph": "^1.0.0",
+		"file-saver": "^2.0.5",
 		"fp-ts": "^2.16.9",
 		"graphology-shortest-path": "^2.1.0",
 		"graphology-traversal": "^0.3.1",
