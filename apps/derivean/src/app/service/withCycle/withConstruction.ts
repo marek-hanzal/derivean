@@ -1,5 +1,7 @@
+/** @format */
+
+import type { WithTransaction } from "@derivean/db";
 import { genId } from "@use-pico/common";
-import type { WithTransaction } from "~/app/db/WithTransaction";
 
 export namespace withConstruction {
 	export interface Props {
@@ -42,7 +44,14 @@ export const withConstruction = async ({ tx, userId, mapId }: withConstruction.P
 														eb
 															.selectFrom("Inventory as i")
 															.select(eb.lit(1).as("one"))
-															.where("i.id", "in", eb.selectFrom("Building_Inventory").select("inventoryId").whereRef("buildingId", "=", "b.id"))
+															.where(
+																"i.id",
+																"in",
+																eb
+																	.selectFrom("Building_Inventory")
+																	.select("inventoryId")
+																	.whereRef("buildingId", "=", "b.id"),
+															)
 															.where("i.type", "=", "construction")
 															.whereRef("i.resourceId", "=", "br.resourceId")
 															.whereRef("i.amount", ">=", "br.amount"),
@@ -77,20 +86,15 @@ export const withConstruction = async ({ tx, userId, mapId }: withConstruction.P
 		if (cycle >= cycles) {
 			await tx.deleteFrom("Construction").where("id", "=", id).execute();
 
-			const production = await tx.selectFrom("Blueprint_Production as bp").select(["bp.resourceId"]).where("bp.blueprintId", "=", blueprintId).execute();
+			const production = await tx
+				.selectFrom("Blueprint_Production as bp")
+				.select(["bp.resourceId"])
+				.where("bp.blueprintId", "=", blueprintId)
+				.execute();
 
 			for await (const { resourceId } of production) {
 				try {
-					await tx
-						.insertInto("Supply")
-						.values({
-							id: genId(),
-							mapId,
-							userId,
-							buildingId,
-							resourceId,
-						})
-						.execute();
+					await tx.insertInto("Supply").values({ id: genId(), mapId, userId, buildingId, resourceId }).execute();
 				} catch (_) {
 					//
 				}

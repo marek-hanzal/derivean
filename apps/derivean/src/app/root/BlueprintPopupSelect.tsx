@@ -1,9 +1,11 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { PopupSelect, Tx, withListCount } from "@use-pico/client";
 import { Kysely, withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import type { FC } from "react";
 import { z } from "zod";
-import { kysely } from "~/app/db/kysely";
 import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 import { BlueprintTable } from "~/app/root/BlueprintTable";
 import { BlueprintDependencySchema } from "~/app/schema/BlueprintDependencySchema";
@@ -23,10 +25,7 @@ export const BlueprintPopupSelect: FC<BlueprintPopupSelect.Props> = (props) => {
 			table={({ table, ...props }) => {
 				return (
 					<BlueprintTable
-						table={{
-							...table,
-							hidden: ["requirements", "dependencies"],
-						}}
+						table={{ ...table, hidden: ["requirements", "dependencies"] }}
 						{...props}
 					/>
 				);
@@ -36,7 +35,7 @@ export const BlueprintPopupSelect: FC<BlueprintPopupSelect.Props> = (props) => {
 			}}
 			queryKey={"Blueprint"}
 			query={async ({ filter, cursor }) => {
-				return kysely.transaction().execute(async (tx) => {
+				return transaction(async (tx) => {
 					return withListCount({
 						select: tx
 							.selectFrom("Blueprint as b")
@@ -51,10 +50,7 @@ export const BlueprintPopupSelect: FC<BlueprintPopupSelect.Props> = (props) => {
 										.selectFrom("Blueprint_Region as br")
 										.innerJoin("Region as r", "r.id", "br.regionId")
 										.select((eb) => {
-											return Kysely.jsonGroupArray({
-												id: eb.ref("r.id"),
-												name: eb.ref("r.name"),
-											}).as("regions");
+											return Kysely.jsonGroupArray({ id: eb.ref("r.id"), name: eb.ref("r.name") }).as("regions");
 										})
 										.whereRef("br.blueprintId", "=", "b.id")
 										.as("regions"),
@@ -113,25 +109,12 @@ export const BlueprintPopupSelect: FC<BlueprintPopupSelect.Props> = (props) => {
 							cycles: z.number().nonnegative(),
 							sort: z.number().nonnegative(),
 							limit: z.number().nonnegative(),
-							regions: withJsonOutputArraySchema(
-								z.object({
-									id: z.string().min(1),
-									name: z.string().min(1),
-								}),
-							),
+							regions: withJsonOutputArraySchema(z.object({ id: z.string().min(1), name: z.string().min(1) })),
 							requirements: withJsonOutputArraySchema(
-								BlueprintRequirementSchema.entity.merge(
-									z.object({
-										name: z.string().min(1),
-									}),
-								),
+								BlueprintRequirementSchema.entity.merge(z.object({ name: z.string().min(1) })),
 							),
 							dependencies: withJsonOutputArraySchema(
-								BlueprintDependencySchema.entity.merge(
-									z.object({
-										name: z.string().min(1),
-									}),
-								),
+								BlueprintDependencySchema.entity.merge(z.object({ name: z.string().min(1) })),
 							),
 						}),
 						filter,

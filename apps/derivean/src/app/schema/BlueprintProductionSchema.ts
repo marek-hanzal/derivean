@@ -1,19 +1,12 @@
+/** @format */
+
+import { withBlueprintProductionSchema } from "@derivean/sdk";
 import { FilterSchema, withFloatSchema, withIntSchema } from "@use-pico/common";
 import { z } from "zod";
-import { withBlueprintProductionSchema } from "~/app/db/sdk";
 
 export const BlueprintProductionSchema = withBlueprintProductionSchema({
-	shape: z.object({
-		resourceId: z.string().min(1),
-		amount: withFloatSchema(),
-		cycles: withIntSchema(),
-	}),
-	filter: FilterSchema.merge(
-		z.object({
-			blueprintId: z.string().optional(),
-			resourceId: z.string().optional(),
-		}),
-	),
+	shape: z.object({ resourceId: z.string().min(1), amount: withFloatSchema(), cycles: withIntSchema() }),
+	filter: FilterSchema.merge(z.object({ blueprintId: z.string().optional(), resourceId: z.string().optional() })),
 });
 
 export type BlueprintProductionSchema = typeof BlueprintProductionSchema;

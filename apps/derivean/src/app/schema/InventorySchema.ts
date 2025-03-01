@@ -1,6 +1,8 @@
+/** @format */
+
+import { withInventorySchema } from "@derivean/sdk";
 import { FilterSchema, withFloatSchema } from "@use-pico/common";
 import { z } from "zod";
-import { withInventorySchema } from "~/app/db/sdk";
 
 export const InventorySchema = withInventorySchema({
 	shape: z.object({
@@ -10,10 +12,7 @@ export const InventorySchema = withInventorySchema({
 		type: z.enum(["storage", "construction"]),
 	}),
 	filter: FilterSchema.merge(
-		z.object({
-			resourceId: z.string().optional(),
-			type: z.enum(["storage", "construction"]).optional(),
-		}),
+		z.object({ resourceId: z.string().optional(), type: z.enum(["storage", "construction"]).optional() }),
 	),
 });
 

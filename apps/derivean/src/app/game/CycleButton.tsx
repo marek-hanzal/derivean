@@ -1,7 +1,9 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { Button, useInvalidator } from "@use-pico/client";
 import { useCallback, type FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { withCycle } from "~/app/service/withCycle/withCycle";
 
 export namespace CycleButton {
@@ -17,7 +19,7 @@ export const CycleButton: FC<CycleButton.Props> = ({ userId, mapId, ...props }) 
 	const mutation = useMutation({
 		mutationKey: ["useCycleMutation"],
 		async mutationFn({ userId }: { userId: string }) {
-			return kysely.transaction().execute(async (tx) => {
+			return transaction(async (tx) => {
 				return withCycle({ tx, userId, mapId });
 			});
 		},

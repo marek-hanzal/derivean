@@ -1,9 +1,21 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import { ActionClick, ActionMenu, LinkTo, Table, TrashIcon, Tx, useInvalidator, useTable, withColumn } from "@use-pico/client";
+import {
+	ActionClick,
+	ActionMenu,
+	LinkTo,
+	Table,
+	TrashIcon,
+	Tx,
+	useInvalidator,
+	useTable,
+	withColumn,
+} from "@use-pico/client";
 import type { IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 
 export namespace UserTable {
 	export interface Data extends IdentitySchema.Type {
@@ -26,7 +38,8 @@ const columns = [
 			return (
 				<LinkTo
 					to={"/$locale/root/user/$id/view"}
-					params={{ locale, id: data.id }}>
+					params={{ locale, id: data.id }}
+				>
 					{value}
 				</LinkTo>
 			);
@@ -56,7 +69,7 @@ export const UserTable: FC<UserTable.Props> = ({ table, ...props }) => {
 
 	const resetGameMutation = useMutation({
 		async mutationFn({ userId }: { userId: string }) {
-			return kysely.transaction().execute(async (tx) => {
+			return transaction(async (tx) => {
 				await tx.deleteFrom("Map").where("userId", "=", userId).execute();
 				// await tx
 				// 	.deleteFrom("Production")
@@ -75,10 +88,7 @@ export const UserTable: FC<UserTable.Props> = ({ table, ...props }) => {
 
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			action={{
 				row({ data }) {
 					return (
@@ -86,10 +96,9 @@ export const UserTable: FC<UserTable.Props> = ({ table, ...props }) => {
 							<ActionClick
 								icon={TrashIcon}
 								onClick={() => {
-									resetGameMutation.mutateAsync({
-										userId: data.id,
-									});
-								}}>
+									resetGameMutation.mutateAsync({ userId: data.id });
+								}}
+							>
 								<Tx label={"Reset game (menu)"} />
 							</ActionClick>
 						</ActionMenu>

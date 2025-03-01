@@ -1,5 +1,7 @@
+/** @format */
+
+import type { WithTransaction } from "@derivean/db";
 import { genId } from "@use-pico/common";
-import type { WithTransaction } from "~/app/db/WithTransaction";
 import { withBuildingGraph } from "~/app/service/withBuildingGraph";
 import { withShortestPath } from "~/app/service/withShortestPath";
 
@@ -32,12 +34,7 @@ export const withTransportDemand = async ({ tx, userId, mapId }: withTransportDe
 	const { graph } = await withBuildingGraph({ tx, userId, mapId });
 
 	for await (const { id, amount, resourceId, resource, building, buildingId: targetId, type } of demands) {
-		console.info("\t\t-- Resolving demand", {
-			building,
-			resource,
-			amount,
-			type,
-		});
+		console.info("\t\t-- Resolving demand", { building, resource, amount, type });
 
 		const supplies = await tx
 			.selectFrom("Supply as s")
@@ -63,15 +60,7 @@ export const withTransportDemand = async ({ tx, userId, mapId }: withTransportDe
 
 		const suppliers = supplies
 			.map((supply) => {
-				return {
-					...supply,
-					path: withShortestPath({
-						mode: "full",
-						graph,
-						from: supply.buildingId,
-						to: targetId,
-					}),
-				};
+				return { ...supply, path: withShortestPath({ mode: "full", graph, from: supply.buildingId, to: targetId }) };
 			})
 			.sort((a, b) => {
 				if (!a.path || !b.path) {
@@ -91,11 +80,7 @@ export const withTransportDemand = async ({ tx, userId, mapId }: withTransportDe
 			});
 
 		for await (const { inventoryId, building, buildingId: sourceId, available, path } of suppliers) {
-			console.info("\t\t\t-- Resolving supply from", {
-				building,
-				available,
-				remaining,
-			});
+			console.info("\t\t\t-- Resolving supply from", { building, available, remaining });
 
 			if (remaining <= 0) {
 				console.info("\t\t\t\t-- Demand fulfilled");
@@ -125,24 +110,11 @@ export const withTransportDemand = async ({ tx, userId, mapId }: withTransportDe
 
 			remaining -= transfer;
 
-			console.info("\t\t\t\t-- Transporting", {
-				transfer,
-				remaining,
-			});
+			console.info("\t\t\t\t-- Transporting", { transfer, remaining });
 
 			await tx
 				.insertInto("Transport")
-				.values({
-					id: genId(),
-					userId,
-					mapId,
-					sourceId,
-					targetId,
-					resourceId,
-					amount: transfer,
-					type,
-					roadId,
-				})
+				.values({ id: genId(), userId, mapId, sourceId, targetId, resourceId, amount: transfer, type, roadId })
 				.execute();
 		}
 

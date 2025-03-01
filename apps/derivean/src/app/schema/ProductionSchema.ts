@@ -1,6 +1,8 @@
+/** @format */
+
+import { withProductionSchema } from "@derivean/sdk";
 import { FilterSchema } from "@use-pico/common";
 import { z } from "zod";
-import { withProductionSchema } from "~/app/db/sdk";
 
 export const ProductionSchema = withProductionSchema({
 	shape: z.object({

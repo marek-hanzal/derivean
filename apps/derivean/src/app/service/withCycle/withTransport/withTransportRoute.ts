@@ -1,4 +1,6 @@
-import type { WithTransaction } from "~/app/db/WithTransaction";
+/** @format */
+
+import type { WithTransaction } from "@derivean/db";
 import { withBuildingGraph } from "~/app/service/withBuildingGraph";
 import { withShortestPath } from "~/app/service/withShortestPath";
 
@@ -27,7 +29,18 @@ export const withTransportRoute = async ({ tx, userId, mapId }: withTransportRou
 		.innerJoin("Blueprint as blt", "blt.id", "bt.blueprintId")
 		.innerJoin("Building as bs", "bs.id", "t.sourceId")
 		.innerJoin("Blueprint as bls", "bls.id", "bs.blueprintId")
-		.select(["t.id", "t.roadId", "t.amount", "t.targetId", "blt.name as target", "bls.name as source", "t.resourceId", "t.type", "r.weight", "r.name as resource"])
+		.select([
+			"t.id",
+			"t.roadId",
+			"t.amount",
+			"t.targetId",
+			"blt.name as target",
+			"bls.name as source",
+			"t.resourceId",
+			"t.type",
+			"r.weight",
+			"r.name as resource",
+		])
 		.where("t.userId", "=", userId)
 		.where("t.mapId", "=", mapId)
 		.execute();
@@ -36,25 +49,23 @@ export const withTransportRoute = async ({ tx, userId, mapId }: withTransportRou
 		console.info("\t\t\t-- No current transports");
 	}
 
-	for await (const { id, roadId, targetId, resourceId, amount, type, resource, weight, source, target } of transportList) {
-		console.info("\t\t\t-- Resolving transport", {
-			roadId,
-			source,
-			target,
-			resource,
-			type,
-			amount,
-			weight,
-		});
+	for await (const {
+		id,
+		roadId,
+		targetId,
+		resourceId,
+		amount,
+		type,
+		resource,
+		weight,
+		source,
+		target,
+	} of transportList) {
+		console.info("\t\t\t-- Resolving transport", { roadId, source, target, resource, type, amount, weight });
 
 		const pathId = `${roadId}-${targetId}`;
 		if (!paths.has(pathId)) {
-			const path = withShortestPath({
-				mode: "full",
-				graph,
-				from: roadId,
-				to: targetId,
-			});
+			const path = withShortestPath({ mode: "full", graph, from: roadId, to: targetId });
 
 			if (!path) {
 				console.info("\t\t\t\t-- There is no available path (through waypoints)");
@@ -75,11 +86,7 @@ export const withTransportRoute = async ({ tx, userId, mapId }: withTransportRou
 
 		const length = graph.getEdgeAttribute(roadId, route.length ? route[0] : targetId, "length");
 
-		console.info("\t\t\t\t-- Resolved movement", {
-			roadId,
-			target: route.length ? route[0] : targetId,
-			length,
-		});
+		console.info("\t\t\t\t-- Resolved movement", { roadId, target: route.length ? route[0] : targetId, length });
 
 		/**
 		 * We're at the end, move the goods to target inventory.
@@ -93,29 +100,26 @@ export const withTransportRoute = async ({ tx, userId, mapId }: withTransportRou
 				.selectFrom("Inventory as i")
 				.select(["i.id", "i.amount", "i.limit"])
 				.where("i.resourceId", "=", resourceId)
-				.where("i.id", "in", tx.selectFrom("Building_Inventory as bi").select("bi.inventoryId").where("bi.buildingId", "=", targetId))
+				.where(
+					"i.id",
+					"in",
+					tx.selectFrom("Building_Inventory as bi").select("bi.inventoryId").where("bi.buildingId", "=", targetId),
+				)
 				.where("i.type", "=", type)
 				.executeTakeFirst();
 
 			if (!inventory) {
-				console.warn("Target building does not support this resource", {
-					targetId,
-					resourceId,
-				});
+				console.warn("Target building does not support this resource", { targetId, resourceId });
 				continue;
 			}
 
 			const transferableAmount = Math.min(amount, inventory.limit - inventory.amount);
 
-			console.info("\t\t\t\t-- Moving goods to target building", {
-				amount: transferableAmount,
-			});
+			console.info("\t\t\t\t-- Moving goods to target building", { amount: transferableAmount });
 
 			await tx
 				.updateTable("Inventory")
-				.set({
-					amount: inventory.amount + transferableAmount,
-				})
+				.set({ amount: inventory.amount + transferableAmount })
 				.where("id", "=", inventory.id)
 				.execute();
 
@@ -135,13 +139,7 @@ export const withTransportRoute = async ({ tx, userId, mapId }: withTransportRou
 		 * Move the goods to the next waypoint.
 		 */
 		console.info("\t\t\t\t-- Transport reached next waypoint");
-		await tx
-			.updateTable("Transport")
-			.set({
-				roadId: route[0],
-			})
-			.where("id", "=", id)
-			.execute();
+		await tx.updateTable("Transport").set({ roadId: route[0] }).where("id", "=", id).execute();
 	}
 
 	console.info("\t\t-- Done");

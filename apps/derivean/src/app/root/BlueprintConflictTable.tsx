@@ -1,9 +1,24 @@
+/** @format */
+
+import { kysely } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import { ActionMenu, ActionModal, DeleteControl, LinkTo, Table, toast, TrashIcon, Tx, useInvalidator, useTable, withColumn, withToastPromiseTx } from "@use-pico/client";
+import {
+	ActionMenu,
+	ActionModal,
+	DeleteControl,
+	LinkTo,
+	Table,
+	toast,
+	TrashIcon,
+	Tx,
+	useInvalidator,
+	useTable,
+	withColumn,
+	withToastPromiseTx,
+} from "@use-pico/client";
 import { genId, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 import { BlueprintConflictForm } from "~/app/root/BlueprintConflictForm";
 import { withBlueprintSort } from "~/app/service/withBlueprintSort";
@@ -31,7 +46,8 @@ const columns = [
 				<LinkTo
 					icon={BlueprintIcon}
 					to={"/$locale/root/blueprint/$id/conflicts"}
-					params={{ locale, id: data.conflictId }}>
+					params={{ locale, id: data.conflictId }}
+				>
 					{value}
 				</LinkTo>
 			);
@@ -51,10 +67,7 @@ export const BlueprintConflictTable: FC<BlueprintConflictTable.Props> = ({ bluep
 
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			action={{
 				table() {
 					return (
@@ -62,7 +75,8 @@ export const BlueprintConflictTable: FC<BlueprintConflictTable.Props> = ({ bluep
 							<ActionModal
 								label={<Tx label={"Create blueprint conflict (menu)"} />}
 								textTitle={<Tx label={"Create blueprint conflict (modal)"} />}
-								icon={BlueprintIcon}>
+								icon={BlueprintIcon}
+							>
 								{({ close }) => {
 									return (
 										<BlueprintConflictForm
@@ -72,17 +86,11 @@ export const BlueprintConflictTable: FC<BlueprintConflictTable.Props> = ({ bluep
 														kysely.transaction().execute(async (tx) => {
 															const entity = tx
 																.insertInto("Blueprint_Conflict")
-																.values({
-																	id: genId(),
-																	...values,
-																	blueprintId,
-																})
+																.values({ id: genId(), ...values, blueprintId })
 																.returningAll()
 																.executeTakeFirstOrThrow();
 
-															await withBlueprintSort({
-																tx,
-															});
+															await withBlueprintSort({ tx });
 
 															return entity;
 														}),
@@ -107,7 +115,8 @@ export const BlueprintConflictTable: FC<BlueprintConflictTable.Props> = ({ bluep
 							<ActionModal
 								label={<Tx label={"Edit (menu)"} />}
 								textTitle={<Tx label={"Edit blueprint conflict (modal)"} />}
-								icon={BlueprintIcon}>
+								icon={BlueprintIcon}
+							>
 								{({ close }) => {
 									return (
 										<BlueprintConflictForm
@@ -116,7 +125,12 @@ export const BlueprintConflictTable: FC<BlueprintConflictTable.Props> = ({ bluep
 												async mutationFn(values) {
 													return toast.promise(
 														kysely.transaction().execute(async (tx) => {
-															return tx.updateTable("Blueprint_Conflict").set(values).where("id", "=", data.id).returningAll().executeTakeFirstOrThrow();
+															return tx
+																.updateTable("Blueprint_Conflict")
+																.set(values)
+																.where("id", "=", data.id)
+																.returningAll()
+																.executeTakeFirstOrThrow();
 														}),
 														withToastPromiseTx("Update blueprint conflict"),
 													);
@@ -135,9 +149,8 @@ export const BlueprintConflictTable: FC<BlueprintConflictTable.Props> = ({ bluep
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete blueprint conflict (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
-								}}>
+								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+							>
 								<DeleteControl
 									callback={async () => {
 										return kysely.transaction().execute(async (tx) => {

@@ -1,9 +1,26 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import { ActionMenu, ActionModal, Badge, DeleteControl, LinkTo, Table, Tags, toast, TrashIcon, Tx, useInvalidator, useTable, withColumn, withToastPromiseTx } from "@use-pico/client";
+import {
+	ActionMenu,
+	ActionModal,
+	Badge,
+	DeleteControl,
+	LinkTo,
+	Table,
+	Tags,
+	toast,
+	TrashIcon,
+	Tx,
+	useInvalidator,
+	useTable,
+	withColumn,
+	withToastPromiseTx,
+} from "@use-pico/client";
 import { genId, toHumanNumber, tvc, type IdentitySchema, type TagSchema } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { ResourceIcon } from "~/app/icon/ResourceIcon";
 import { ResourceForm } from "~/app/root/ResourceForm";
 import { toWebp64 } from "~/app/utils/toWebp64";
@@ -32,9 +49,22 @@ const columns = [
 
 			return (
 				<LinkTo
-					icon={<div className={tvc(["border-2", "border-purple-400", "rounded-md", "w-[64px]", "h-[64px]", "bg-contain", `bg-${data.id}`])} />}
+					icon={
+						<div
+							className={tvc([
+								"border-2",
+								"border-purple-400",
+								"rounded-md",
+								"w-[64px]",
+								"h-[64px]",
+								"bg-contain",
+								`bg-${data.id}`,
+							])}
+						/>
+					}
 					to={"/$locale/root/resource/$id/view"}
-					params={{ locale, id: data.id }}>
+					params={{ locale, id: data.id }}
+				>
 					{value}
 				</LinkTo>
 			);
@@ -59,9 +89,8 @@ const columns = [
 		render({ value }) {
 			return (
 				<Badge
-					css={{
-						base: value !== undefined && value === 0 ? ["bg-red-100", "text-red-500", "border-red-600"] : [],
-					}}>
+					css={{ base: value !== undefined && value === 0 ? ["bg-red-100", "text-red-500", "border-red-600"] : [] }}
+				>
 					{toHumanNumber({ number: value })}
 				</Badge>
 			);
@@ -77,8 +106,12 @@ const columns = [
 			return (
 				<Badge
 					css={{
-						base: data.countRequirement === 0 && data.countProductionRequirement === 0 ? ["bg-red-100", "text-red-500", "border-red-600"] : [],
-					}}>
+						base:
+							data.countRequirement === 0 && data.countProductionRequirement === 0
+								? ["bg-red-100", "text-red-500", "border-red-600"]
+								: [],
+					}}
+				>
 					{toHumanNumber({ number: value })}
 				</Badge>
 			);
@@ -94,8 +127,12 @@ const columns = [
 			return (
 				<Badge
 					css={{
-						base: data.countRequirement === 0 && data.countProductionRequirement === 0 ? ["bg-red-100", "text-red-500", "border-red-600"] : [],
-					}}>
+						base:
+							data.countRequirement === 0 && data.countProductionRequirement === 0
+								? ["bg-red-100", "text-red-500", "border-red-600"]
+								: [],
+					}}
+				>
 					{toHumanNumber({ number: value })}
 				</Badge>
 			);
@@ -125,10 +162,7 @@ export const ResourceTable: FC<ResourceTable.Props> = ({ group, table, ...props 
 
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			action={{
 				table() {
 					return (
@@ -136,34 +170,25 @@ export const ResourceTable: FC<ResourceTable.Props> = ({ group, table, ...props 
 							<ActionModal
 								label={<Tx label={"Create resource (menu)"} />}
 								textTitle={<Tx label={"Create resource (modal)"} />}
-								icon={ResourceIcon}>
+								icon={ResourceIcon}
+							>
 								{({ close }) => {
 									return (
 										<ResourceForm
 											group={group}
 											mutation={useMutation({
 												async mutationFn({ image, tagIds = [], ...values }) {
-													return kysely.transaction().execute(async (tx) => {
+													return transaction(async (tx) => {
 														const entity = await tx
 															.insertInto("Resource")
-															.values({
-																id: genId(),
-																...values,
-																image: image ? await toWebp64(image) : null,
-															})
+															.values({ id: genId(), ...values, image: image ? await toWebp64(image) : null })
 															.returningAll()
 															.executeTakeFirstOrThrow();
 
 														if (tagIds.length) {
 															await tx
 																.insertInto("Resource_Tag")
-																.values(
-																	tagIds.map((tagId) => ({
-																		id: genId(),
-																		resourceId: entity.id,
-																		tagId,
-																	})),
-																)
+																.values(tagIds.map((tagId) => ({ id: genId(), resourceId: entity.id, tagId })))
 																.execute();
 														}
 
@@ -188,24 +213,19 @@ export const ResourceTable: FC<ResourceTable.Props> = ({ group, table, ...props 
 							<ActionModal
 								label={<Tx label={"Edit (menu)"} />}
 								textTitle={<Tx label={"Edit resource (modal)"} />}
-								icon={ResourceIcon}>
+								icon={ResourceIcon}
+							>
 								{({ close }) => {
 									return (
 										<ResourceForm
-											defaultValues={{
-												...data,
-												tagIds: data.tags.map(({ id }) => id),
-											}}
+											defaultValues={{ ...data, tagIds: data.tags.map(({ id }) => id) }}
 											mutation={useMutation({
 												async mutationFn({ image, tagIds, ...rest }) {
 													return toast.promise(
-														kysely.transaction().execute(async (tx) => {
+														transaction(async (tx) => {
 															const entity = await tx
 																.updateTable("Resource")
-																.set({
-																	...rest,
-																	image: image ? await toWebp64(image) : null,
-																})
+																.set({ ...rest, image: image ? await toWebp64(image) : null })
 																.where("id", "=", data.id)
 																.returningAll()
 																.executeTakeFirstOrThrow();
@@ -215,13 +235,7 @@ export const ResourceTable: FC<ResourceTable.Props> = ({ group, table, ...props 
 															if (tagIds?.length) {
 																await tx
 																	.insertInto("Resource_Tag")
-																	.values(
-																		tagIds.map((tagId) => ({
-																			id: genId(),
-																			resourceId: entity.id,
-																			tagId,
-																		})),
-																	)
+																	.values(tagIds.map((tagId) => ({ id: genId(), resourceId: entity.id, tagId })))
 																	.execute();
 															}
 
@@ -244,12 +258,11 @@ export const ResourceTable: FC<ResourceTable.Props> = ({ group, table, ...props 
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete resource (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
-								}}>
+								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+							>
 								<DeleteControl
 									callback={async () => {
-										return kysely.transaction().execute(async (tx) => {
+										return transaction(async (tx) => {
 											return tx.deleteFrom("Resource").where("id", "=", data.id).execute();
 										});
 									}}

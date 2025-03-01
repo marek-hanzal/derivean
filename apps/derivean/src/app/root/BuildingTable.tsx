@@ -1,9 +1,22 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import { ActionMenu, ActionModal, DeleteControl, LinkTo, Table, toast, TrashIcon, Tx, useInvalidator, useTable, withColumn, withToastPromiseTx } from "@use-pico/client";
+import {
+	ActionMenu,
+	ActionModal,
+	DeleteControl,
+	LinkTo,
+	Table,
+	TrashIcon,
+	Tx,
+	useInvalidator,
+	useTable,
+	withColumn
+} from "@use-pico/client";
 import { type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 import { BuildingIcon } from "~/app/icon/BuildingIcon";
 import { BuildingForm } from "~/app/root/BuildingForm";
@@ -53,10 +66,7 @@ export const BuildingTable: FC<BuildingTable.Props> = ({ table, ...props }) => {
 
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			action={{
 				row({ data }) {
 					return (
@@ -64,17 +74,20 @@ export const BuildingTable: FC<BuildingTable.Props> = ({ table, ...props }) => {
 							<ActionModal
 								label={<Tx label={"Edit (menu)"} />}
 								textTitle={<Tx label={"Edit building (modal)"} />}
-								icon={BuildingIcon}>
+								icon={BuildingIcon}
+							>
 								<BuildingForm
 									defaultValues={data}
 									mutation={useMutation({
 										async mutationFn(values) {
-											return toast.promise(
-												kysely.transaction().execute((tx) => {
-													return tx.updateTable("Building").set(values).where("id", "=", data.id).returningAll().executeTakeFirstOrThrow();
-												}),
-												withToastPromiseTx("Edit building"),
-											);
+											return transaction((tx) => {
+												return tx
+													.updateTable("Building")
+													.set(values)
+													.where("id", "=", data.id)
+													.returningAll()
+													.executeTakeFirstOrThrow();
+											});
 										},
 										async onSuccess() {
 											await invalidator();
@@ -87,12 +100,11 @@ export const BuildingTable: FC<BuildingTable.Props> = ({ table, ...props }) => {
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete building (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
-								}}>
+								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+							>
 								<DeleteControl
 									callback={async () => {
-										return kysely.transaction().execute(async (tx) => {
+										return transaction(async (tx) => {
 											return tx.deleteFrom("Building").where("id", "=", data.id).execute();
 										});
 									}}

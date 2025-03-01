@@ -1,5 +1,7 @@
+/** @format */
+
+import type { WithTransaction } from "@derivean/db";
 import Graph from "graphology";
-import type { WithTransaction } from "~/app/db/WithTransaction";
 
 export namespace withBuildingGraph {
 	export interface Node {
@@ -22,7 +24,13 @@ export namespace withBuildingGraph {
 }
 
 export const withBuildingGraph = async ({ tx, userId, mapId }: withBuildingGraph.Props) => {
-	const buildings = await tx.selectFrom("Building as b").select(["b.id"]).innerJoin("Land as l", "l.id", "b.landId").where("b.userId", "=", userId).where("l.mapId", "=", mapId).execute();
+	const buildings = await tx
+		.selectFrom("Building as b")
+		.select(["b.id"])
+		.innerJoin("Land as l", "l.id", "b.landId")
+		.where("b.userId", "=", userId)
+		.where("l.mapId", "=", mapId)
+		.execute();
 
 	const graph = new Graph<withBuildingGraph.Node, withBuildingGraph.Edge>({
 		allowSelfLoops: true,

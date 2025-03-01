@@ -1,5 +1,7 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { genId } from "@use-pico/common";
-import { kysely } from "~/app/db/kysely";
 
 export namespace withConstructionQueue {
 	export interface Props {
@@ -12,9 +14,20 @@ export namespace withConstructionQueue {
 	}
 }
 
-export const withConstructionQueue = async ({ userId, blueprintId, landId, plotId, plan, valid }: withConstructionQueue.Props) => {
-	return kysely.transaction().execute(async (tx) => {
-		const blueprint = await tx.selectFrom("Blueprint as b").select(["b.cycles"]).where("b.id", "=", blueprintId).executeTakeFirstOrThrow();
+export const withConstructionQueue = async ({
+	userId,
+	blueprintId,
+	landId,
+	plotId,
+	plan,
+	valid,
+}: withConstructionQueue.Props) => {
+	return transaction(async (tx) => {
+		const blueprint = await tx
+			.selectFrom("Blueprint as b")
+			.select(["b.cycles"])
+			.where("b.id", "=", blueprintId)
+			.executeTakeFirstOrThrow();
 
 		/**
 		 * TODO Check if a plot is free, so nothing else is built there (building/road/...)
@@ -30,13 +43,7 @@ export const withConstructionQueue = async ({ userId, blueprintId, landId, plotI
 				constructionId: (
 					await tx
 						.insertInto("Construction")
-						.values({
-							id: genId(),
-							userId,
-							cycle: 0,
-							cycles: blueprint.cycles,
-							plan,
-						})
+						.values({ id: genId(), userId, cycle: 0, cycles: blueprint.cycles, plan })
 						.returning("id")
 						.executeTakeFirstOrThrow()
 				).id,
@@ -49,7 +56,11 @@ export const withConstructionQueue = async ({ userId, blueprintId, landId, plotI
 		const inventory = await tx
 			.selectFrom("Inventory as i")
 			.select(["i.amount", "i.limit", "i.resourceId", "i.type"])
-			.where("i.id", "in", tx.selectFrom("Blueprint_Inventory as bi").select("bi.inventoryId").where("bi.blueprintId", "=", blueprintId))
+			.where(
+				"i.id",
+				"in",
+				tx.selectFrom("Blueprint_Inventory as bi").select("bi.inventoryId").where("bi.blueprintId", "=", blueprintId),
+			)
 			.execute();
 
 		for await (const { amount, limit, resourceId, type } of inventory) {
@@ -61,13 +72,7 @@ export const withConstructionQueue = async ({ userId, blueprintId, landId, plotI
 					inventoryId: (
 						await tx
 							.insertInto("Inventory")
-							.values({
-								id: genId(),
-								amount,
-								limit,
-								resourceId,
-								type,
-							})
+							.values({ id: genId(), amount, limit, resourceId, type })
 							.returning("id")
 							.executeTakeFirstOrThrow()
 					).id,

@@ -1,10 +1,22 @@
+/** @format */
+
+import { kysely, transaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Action, CloseIcon, Icon, LoaderIcon, Modal, Tx, useInvalidator } from "@use-pico/client";
 import { genId, tvc, withBase64 } from "@use-pico/common";
-import { Background, BackgroundVariant, BaseEdge, Controls, EdgeLabelRenderer, getBezierPath, MiniMap, ReactFlow, useReactFlow } from "@xyflow/react";
+import {
+	Background,
+	BackgroundVariant,
+	BaseEdge,
+	Controls,
+	EdgeLabelRenderer,
+	getBezierPath,
+	MiniMap,
+	ReactFlow,
+	useReactFlow,
+} from "@xyflow/react";
 import { useMemo, type FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 import { BlueprintForm } from "~/app/root/BlueprintForm";
 import { BlueprintNode } from "~/app/root/Editor/BlueprintNode";
@@ -28,14 +40,7 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 	const dependencyMutation = useMutation({
 		async mutationFn({ blueprintId, dependencyId }: { blueprintId: string; dependencyId: string }) {
 			return kysely.transaction().execute(async (tx) => {
-				return tx
-					.insertInto("Blueprint_Dependency")
-					.values({
-						id: genId(),
-						blueprintId,
-						dependencyId,
-					})
-					.execute();
+				return tx.insertInto("Blueprint_Dependency").values({ id: genId(), blueprintId, dependencyId }).execute();
 			});
 		},
 		async onSuccess() {
@@ -50,10 +55,7 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 					nodes={data.nodes}
 					edges={data.edges}
 					onConnect={(params) => {
-						dependencyMutation.mutate({
-							blueprintId: params.target,
-							dependencyId: params.source,
-						});
+						dependencyMutation.mutate({ blueprintId: params.target, dependencyId: params.source });
 					}}
 					fitView
 					snapGrid={[16, 16]}
@@ -68,7 +70,17 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 					)}
 					edgeTypes={useMemo(
 						() => ({
-							dependency({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, style = {}, markerEnd }) {
+							dependency({
+								id,
+								sourceX,
+								sourceY,
+								targetX,
+								targetY,
+								sourcePosition,
+								targetPosition,
+								style = {},
+								markerEnd,
+							}) {
 								const { setEdges } = useReactFlow();
 								const [edgePath, labelX, labelY] = getBezierPath({
 									sourceX,
@@ -124,7 +136,8 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 													pointerEvents: "all",
 													transformOrigin: "center",
 													transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-												}}>
+												}}
+											>
 												<Icon
 													icon={mutation.isPending ? LoaderIcon : CloseIcon}
 													onClick={() => {
@@ -138,12 +151,14 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 							},
 						}),
 						[],
-					)}>
+					)}
+				>
 					<ZoomToNode nodeId={zoomTo} />
 					<Controls
 						orientation={"horizontal"}
 						showInteractive={false}
-						showZoom={false}>
+						showZoom={false}
+					>
 						<Modal
 							target={
 								<Action
@@ -153,9 +168,8 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 							}
 							outside={false}
 							textTitle={<Tx label={"Create blueprint (modal)"} />}
-							css={{
-								modal: ["w-1/3"],
-							}}>
+							css={{ modal: ["w-1/3"] }}
+						>
 							{({ close }) => {
 								const invalidator = useInvalidator([["Editor"]]);
 								const { locale } = useParams({ from: "/$locale" });
@@ -165,14 +179,10 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 									<BlueprintForm
 										mutation={useMutation({
 											async mutationFn({ image, regionIds, ...values }) {
-												return kysely.transaction().execute(async (tx) => {
+												return transaction(async (tx) => {
 													const blueprint = await tx
 														.insertInto("Blueprint")
-														.values({
-															id: genId(),
-															...values,
-															image: image ? await withBase64(image) : null,
-														})
+														.values({ id: genId(), ...values, image: image ? await withBase64(image) : null })
 														.returningAll()
 														.executeTakeFirstOrThrow();
 
@@ -180,11 +190,7 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 														await tx
 															.insertInto("Blueprint_Region")
 															.values(
-																regionIds.map((regionId) => ({
-																	id: genId(),
-																	blueprintId: blueprint.id,
-																	regionId,
-																})),
+																regionIds.map((regionId) => ({ id: genId(), blueprintId: blueprint.id, regionId })),
 															)
 															.execute();
 													}
@@ -194,13 +200,7 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 											},
 											async onSuccess(data) {
 												await invalidator();
-												navigate({
-													to: "/$locale/root/editor",
-													params: { locale },
-													search: {
-														zoomTo: data.id,
-													},
-												});
+												navigate({ to: "/$locale/root/editor", params: { locale }, search: { zoomTo: data.id } });
 												close();
 											},
 										})}

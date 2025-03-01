@@ -1,4 +1,6 @@
-import type { WithTransaction } from "~/app/db/WithTransaction";
+/** @format */
+
+import type { WithTransaction } from "@derivean/db";
 import { withProductionQueue } from "~/app/service/withProductionQueue";
 
 export namespace withProductionPlan {
@@ -12,7 +14,12 @@ export namespace withProductionPlan {
 export const withProductionPlan = async ({ tx, userId, mapId }: withProductionPlan.Props) => {
 	console.info("\t=== Production Plan");
 
-	const productionPlanQueue = await tx.selectFrom("Building as b").select(["b.id as buildingId", "b.productionId"]).where("b.userId", "=", userId).where("b.productionId", "is not", null).execute();
+	const productionPlanQueue = await tx
+		.selectFrom("Building as b")
+		.select(["b.id as buildingId", "b.productionId"])
+		.where("b.userId", "=", userId)
+		.where("b.productionId", "is not", null)
+		.execute();
 
 	if (!productionPlanQueue.length) {
 		console.info("\t\t-- Production queue is empty");
@@ -47,7 +54,12 @@ export const withProductionPlan = async ({ tx, userId, mapId }: withProductionPl
 		}
 	}
 
-	const recurringProductionPlanQueue = await tx.selectFrom("Building as b").select(["b.id as buildingId", "b.recurringProductionId"]).where("b.userId", "=", userId).where("b.recurringProductionId", "is not", null).execute();
+	const recurringProductionPlanQueue = await tx
+		.selectFrom("Building as b")
+		.select(["b.id as buildingId", "b.recurringProductionId"])
+		.where("b.userId", "=", userId)
+		.where("b.recurringProductionId", "is not", null)
+		.execute();
 
 	if (!recurringProductionPlanQueue.length) {
 		console.info("\t\t-- Recurring production queue is empty");
@@ -65,13 +77,7 @@ export const withProductionPlan = async ({ tx, userId, mapId }: withProductionPl
 				continue;
 			}
 
-			await withProductionQueue({
-				tx,
-				userId,
-				mapId,
-				blueprintProductionId: recurringProductionId!,
-				buildingId,
-			});
+			await withProductionQueue({ tx, userId, mapId, blueprintProductionId: recurringProductionId!, buildingId });
 		} catch (e) {
 			console.error(e);
 			// Probably not enough resources or something like that.

@@ -1,6 +1,8 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { PopupMultiSelect, TagIcon, Tags, withListCount } from "@use-pico/client";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { TagTable } from "~/app/root/TagTable";
 import { TagSchema } from "~/app/schema/TagSchema";
 
@@ -25,7 +27,7 @@ export const TagPopupMultiSelect: FC<TagPopupMultiSelect.Props> = ({ group, ...p
 			}}
 			queryKey={"Tag"}
 			query={async ({ filter, cursor }) => {
-				return kysely.transaction().execute(async (tx) => {
+				return transaction(async (tx) => {
 					return withListCount({
 						select: tx.selectFrom("Tag as t").select(["t.id", "t.code", "t.label", "t.group", "t.sort"]),
 						output: TagSchema.entity,
@@ -44,7 +46,12 @@ export const TagPopupMultiSelect: FC<TagPopupMultiSelect.Props> = ({ group, ...p
 								const fulltext = `%${where.fulltext}%`.toLowerCase();
 
 								$select = $select.where((qb) => {
-									return qb.or([qb("t.code", "like", fulltext), qb("t.group", "like", fulltext), qb("t.label", "like", fulltext), qb("t.id", "like", fulltext)]);
+									return qb.or([
+										qb("t.code", "like", fulltext),
+										qb("t.group", "like", fulltext),
+										qb("t.label", "like", fulltext),
+										qb("t.id", "like", fulltext),
+									]);
 								});
 							}
 

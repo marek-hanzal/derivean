@@ -1,9 +1,23 @@
+/** @format */
+
+import { transaction, type WithTransaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
-import { ActionMenu, ActionModal, DeleteControl, Progress, Table, toast, TrashIcon, Tx, useInvalidator, useTable, withColumn, withToastPromiseTx } from "@use-pico/client";
+import {
+	ActionMenu,
+	ActionModal,
+	DeleteControl,
+	Progress,
+	Table,
+	toast,
+	TrashIcon,
+	Tx,
+	useInvalidator,
+	useTable,
+	withColumn,
+	withToastPromiseTx,
+} from "@use-pico/client";
 import { genId, toHumanNumber, type Entity, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
-import type { WithTransaction } from "~/app/db/WithTransaction";
 import { InventoryIcon } from "~/app/icon/InventoryIcon";
 import { InventoryTypeInline } from "~/app/inventory/InventoryTypeInline";
 import { InventoryForm } from "~/app/root/InventoryForm";
@@ -92,10 +106,7 @@ export const InventoryTable: FC<InventoryTable.Props> = ({ onCreate, table, ...p
 
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			action={{
 				table: onCreate
 					? () => {
@@ -104,18 +115,16 @@ export const InventoryTable: FC<InventoryTable.Props> = ({ onCreate, table, ...p
 									<ActionModal
 										label={<Tx label={"Create inventory item (menu)"} />}
 										textTitle={<Tx label={"Create inventory item (modal)"} />}
-										icon={InventoryIcon}>
+										icon={InventoryIcon}
+									>
 										<InventoryForm
 											mutation={useMutation({
 												async mutationFn(values) {
 													return toast.promise(
-														kysely.transaction().execute(async (tx) => {
+														transaction(async (tx) => {
 															const entity = await tx
 																.insertInto("Inventory")
-																.values({
-																	id: genId(),
-																	...values,
-																})
+																.values({ id: genId(), ...values })
 																.returningAll()
 																.executeTakeFirstOrThrow();
 
@@ -142,14 +151,20 @@ export const InventoryTable: FC<InventoryTable.Props> = ({ onCreate, table, ...p
 							<ActionModal
 								label={<Tx label={"Edit (menu)"} />}
 								textTitle={<Tx label={"Edit inventory item (modal)"} />}
-								icon={InventoryIcon}>
+								icon={InventoryIcon}
+							>
 								<InventoryForm
 									defaultValues={data}
 									mutation={useMutation({
 										async mutationFn(values) {
 											return toast.promise(
-												kysely.transaction().execute(async (tx) => {
-													return tx.updateTable("Inventory").set(values).where("id", "=", data.id).returningAll().executeTakeFirstOrThrow();
+												transaction(async (tx) => {
+													return tx
+														.updateTable("Inventory")
+														.set(values)
+														.where("id", "=", data.id)
+														.returningAll()
+														.executeTakeFirstOrThrow();
 												}),
 												withToastPromiseTx("Update inventory item"),
 											);
@@ -165,12 +180,11 @@ export const InventoryTable: FC<InventoryTable.Props> = ({ onCreate, table, ...p
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete inventory item (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
-								}}>
+								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+							>
 								<DeleteControl
 									callback={async () => {
-										return kysely.transaction().execute(async (tx) => {
+										return transaction(async (tx) => {
 											return tx.deleteFrom("Inventory").where("id", "=", data.id).execute();
 										});
 									}}

@@ -1,5 +1,7 @@
+/** @format */
+
+import type { WithTransaction } from "@derivean/db";
 import { genId } from "@use-pico/common";
-import type { WithTransaction } from "~/app/db/WithTransaction";
 
 export namespace withConstructionDemand {
 	export interface Props {
@@ -40,13 +42,29 @@ export const withConstructionDemand = async ({ tx, userId, mapId }: withConstruc
 				 * Ignore resources already on the way (because they're transported, they already
 				 * fulfilled original requirement).
 				 */
-				return eb.not(eb.exists(eb.selectFrom("Transport as t").select(["t.id"]).where("t.targetId", "=", id).whereRef("t.resourceId", "=", "br.resourceId")));
+				return eb.not(
+					eb.exists(
+						eb
+							.selectFrom("Transport as t")
+							.select(["t.id"])
+							.where("t.targetId", "=", id)
+							.whereRef("t.resourceId", "=", "br.resourceId"),
+					),
+				);
 			})
 			.where((eb) => {
 				/**
 				 * Ignore already demanded resources
 				 */
-				return eb.not(eb.exists(eb.selectFrom("Demand as d").select(["d.id"]).where("d.buildingId", "=", id).whereRef("d.resourceId", "=", "br.resourceId")));
+				return eb.not(
+					eb.exists(
+						eb
+							.selectFrom("Demand as d")
+							.select(["d.id"])
+							.where("d.buildingId", "=", id)
+							.whereRef("d.resourceId", "=", "br.resourceId"),
+					),
+				);
 			})
 			.where((eb) => {
 				return eb.not(
@@ -80,14 +98,13 @@ export const withConstructionDemand = async ({ tx, userId, mapId }: withConstruc
 				.executeTakeFirst();
 
 			if (!inventory) {
-				console.warn(`Wrong building [${name}] configuration: requested resource [${resourceName}] not found in the inventory`);
+				console.warn(
+					`Wrong building [${name}] configuration: requested resource [${resourceName}] not found in the inventory`,
+				);
 				continue;
 			}
 
-			console.log("\t\t\t\t-- Inventory", {
-				resource: inventory.name,
-				amount: inventory.amount,
-			});
+			console.log("\t\t\t\t-- Inventory", { resource: inventory.name, amount: inventory.amount });
 
 			if (inventory.amount < amount) {
 				console.info("\t\t\t\t\t-- Demanding resource", {
@@ -108,9 +125,9 @@ export const withConstructionDemand = async ({ tx, userId, mapId }: withConstruc
 						type: "construction",
 					})
 					.onConflict((oc) => {
-						return oc.columns(["buildingId", "resourceId"]).doUpdateSet({
-							amount: Math.max(0, amount - inventory.amount),
-						});
+						return oc
+							.columns(["buildingId", "resourceId"])
+							.doUpdateSet({ amount: Math.max(0, amount - inventory.amount) });
 					})
 					.execute();
 			}

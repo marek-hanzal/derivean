@@ -1,6 +1,8 @@
+/** @format */
+
+import { withBlueprintSchema } from "@derivean/sdk";
 import { FilterSchema, translator, withIntSchema } from "@use-pico/common";
 import { z } from "zod";
-import { withBlueprintSchema } from "~/app/db/sdk";
 
 export const BlueprintSchema = withBlueprintSchema({
 	shape: z.object({
@@ -19,9 +21,7 @@ export const BlueprintSchema = withBlueprintSchema({
 					}
 					return true;
 				},
-				{
-					message: translator.text("File size must be less than 5MB"),
-				},
+				{ message: translator.text("File size must be less than 5MB") },
 			)
 			.refine(
 				(file) => {
@@ -30,17 +30,11 @@ export const BlueprintSchema = withBlueprintSchema({
 					}
 					return true;
 				},
-				{
-					message: "Only PNG/JPEG/WEBP files are allowed.",
-				},
+				{ message: "Only PNG/JPEG/WEBP files are allowed." },
 			)
 			.optional(),
 	}),
-	filter: FilterSchema.merge(
-		z.object({
-			name: z.string().optional(),
-		}),
-	),
+	filter: FilterSchema.merge(z.object({ name: z.string().optional() })),
 });
 
 export type BlueprintSchema = typeof BlueprintSchema;

@@ -1,9 +1,23 @@
+/** @format */
+
+import { kysely } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import { ActionMenu, ActionModal, Badge, DeleteControl, LinkTo, Table, TrashIcon, Tx, useInvalidator, useTable, withColumn } from "@use-pico/client";
+import {
+	ActionMenu,
+	ActionModal,
+	Badge,
+	DeleteControl,
+	LinkTo,
+	Table,
+	TrashIcon,
+	Tx,
+	useInvalidator,
+	useTable,
+	withColumn,
+} from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { RegionIcon } from "~/app/icon/RegionIcon";
 import { RegionForm } from "~/app/root/RegionForm";
 import { toWebp64 } from "~/app/utils/toWebp64";
@@ -30,7 +44,8 @@ const columns = [
 			return (
 				<LinkTo
 					to={"/$locale/root/region/$id/view"}
-					params={{ locale, id: data.id }}>
+					params={{ locale, id: data.id }}
+				>
 					{value}
 				</LinkTo>
 			);
@@ -70,10 +85,7 @@ export const RegionTable: FC<RegionTable.Props> = ({ table, ...props }) => {
 
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			action={{
 				table() {
 					return (
@@ -81,7 +93,8 @@ export const RegionTable: FC<RegionTable.Props> = ({ table, ...props }) => {
 							<ActionModal
 								label={<Tx label={"Create region (menu)"} />}
 								textTitle={<Tx label={"Create region (modal)"} />}
-								icon={RegionIcon}>
+								icon={RegionIcon}
+							>
 								{({ close }) => {
 									return (
 										<RegionForm
@@ -90,11 +103,7 @@ export const RegionTable: FC<RegionTable.Props> = ({ table, ...props }) => {
 													return kysely.transaction().execute(async (tx) => {
 														return tx
 															.insertInto("Region")
-															.values({
-																id: genId(),
-																...values,
-																image: image ? await toWebp64(image) : null,
-															})
+															.values({ id: genId(), ...values, image: image ? await toWebp64(image) : null })
 															.execute();
 													});
 												},
@@ -116,7 +125,8 @@ export const RegionTable: FC<RegionTable.Props> = ({ table, ...props }) => {
 							<ActionModal
 								label={<Tx label={"Edit (menu)"} />}
 								textTitle={<Tx label={"Edit region (modal)"} />}
-								icon={RegionIcon}>
+								icon={RegionIcon}
+							>
 								{({ close }) => {
 									return (
 										<RegionForm
@@ -126,10 +136,7 @@ export const RegionTable: FC<RegionTable.Props> = ({ table, ...props }) => {
 													return kysely.transaction().execute(async (tx) => {
 														return tx
 															.updateTable("Region")
-															.set({
-																...values,
-																image: image ? await toWebp64(image) : null,
-															})
+															.set({ ...values, image: image ? await toWebp64(image) : null })
 															.where("id", "=", data.id)
 															.execute();
 													});
@@ -148,9 +155,8 @@ export const RegionTable: FC<RegionTable.Props> = ({ table, ...props }) => {
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete region (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
-								}}>
+								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+							>
 								<DeleteControl
 									callback={async () => {
 										return kysely.transaction().execute(async (tx) => {

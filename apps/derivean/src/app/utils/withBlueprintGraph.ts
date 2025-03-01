@@ -1,5 +1,7 @@
+/** @format */
+
+import type { WithTransaction } from "@derivean/db";
 import { DepGraph } from "dependency-graph";
-import type { WithTransaction } from "~/app/db/WithTransaction";
 
 export namespace withBlueprintGraph {
 	export type Result = DepGraph<string>;
@@ -16,7 +18,10 @@ export const withBlueprintGraph = async ({ tx }: withBlueprintGraph.Props): Prom
 		graph.addNode(id, name);
 	}
 
-	for await (const { blueprintId, dependencyId } of await tx.selectFrom("Blueprint_Dependency").select(["blueprintId", "dependencyId"]).execute()) {
+	for await (const { blueprintId, dependencyId } of await tx
+		.selectFrom("Blueprint_Dependency")
+		.select(["blueprintId", "dependencyId"])
+		.execute()) {
 		graph.addDependency(blueprintId, dependencyId);
 	}
 

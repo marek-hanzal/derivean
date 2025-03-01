@@ -1,8 +1,10 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowDownIcon, ArrowUpIcon, Badge, Button, Icon, Progress, Tx, useInvalidator } from "@use-pico/client";
 import { toHumanNumber, tvc } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import type { RequirementPanel } from "~/app/game/GameMap2/Construction/Requirement/RequirementPanel";
 import { DemandIcon } from "~/app/icon/DemandIcon";
 import { PackageIcon } from "~/app/icon/PackageIcon";
@@ -20,7 +22,7 @@ export const Item: FC<Item.Props> = ({ mapId, userId, requirement }) => {
 	const available = requirement.available || 0;
 	const priorityUpMutation = useMutation({
 		async mutationFn({ demandId }: { demandId: string }) {
-			return kysely.transaction().execute(async (tx) => {
+			return transaction(async (tx) => {
 				const { priority } = await tx
 					.selectFrom("Demand as d")
 					.select((eb) => eb.fn.max("d.priority").as("priority"))
@@ -42,7 +44,7 @@ export const Item: FC<Item.Props> = ({ mapId, userId, requirement }) => {
 	});
 	const priorityDownMutation = useMutation({
 		async mutationFn({ demandId }: { demandId: string }) {
-			return kysely.transaction().execute(async (tx) => {
+			return transaction(async (tx) => {
 				const { priority } = await tx
 					.selectFrom("Demand as d")
 					.select((eb) => eb.fn.min("d.priority").as("priority"))
@@ -75,12 +77,30 @@ export const Item: FC<Item.Props> = ({ mapId, userId, requirement }) => {
 				"p-2",
 				"cursor-default",
 				"hover:bg-slate-100",
-				requirement.supply ? ["bg-purple-50", "border-purple-400", "hover:bg-purple-50", "hover:border-purple-400"] : ["bg-red-50", "border-red-400", "hover:bg-red-50", "hover:border-red-400"],
-				requirement.transport || available >= requirement.amount ? ["bg-green-50", "border-green-400", "hover:bg-green-50", "hover:border-green-400"] : undefined,
-			])}>
+				requirement.supply
+					? ["bg-purple-50", "border-purple-400", "hover:bg-purple-50", "hover:border-purple-400"]
+					: ["bg-red-50", "border-red-400", "hover:bg-red-50", "hover:border-red-400"],
+				requirement.transport || available >= requirement.amount
+					? ["bg-green-50", "border-green-400", "hover:bg-green-50", "hover:border-green-400"]
+					: undefined,
+			])}
+		>
 			<div className={"flex flex-row items-center justify-between"}>
-				<div className={tvc(["flex", "flex-row", "gap-2", "items-center", requirement.supply ? ["text-purple-600"] : ["text-red-600"], requirement.transport || available >= requirement.amount ? ["text-green-600"] : undefined])}>
-					{requirement.supply || available >= requirement.amount ? <Icon icon={DemandIcon} /> : <Icon icon={PackageIcon} />}
+				<div
+					className={tvc([
+						"flex",
+						"flex-row",
+						"gap-2",
+						"items-center",
+						requirement.supply ? ["text-purple-600"] : ["text-red-600"],
+						requirement.transport || available >= requirement.amount ? ["text-green-600"] : undefined,
+					])}
+				>
+					{requirement.supply || available >= requirement.amount ? (
+						<Icon icon={DemandIcon} />
+					) : (
+						<Icon icon={PackageIcon} />
+					)}
 					<div className={"font-bold"}>{requirement.name}</div>
 				</div>
 
@@ -93,9 +113,7 @@ export const Item: FC<Item.Props> = ({ mapId, userId, requirement }) => {
 
 			<Progress
 				value={(100 * available) / requirement.amount}
-				css={{
-					progress: available >= requirement.amount ? ["bg-green-500"] : undefined,
-				}}
+				css={{ progress: available >= requirement.amount ? ["bg-green-500"] : undefined }}
 			/>
 
 			{requirement.demand ? (
@@ -106,13 +124,11 @@ export const Item: FC<Item.Props> = ({ mapId, userId, requirement }) => {
 						loading={priorityUpMutation.isPending || priorityDownMutation.isPending}
 						onClick={() => {
 							requirement.demand && priorityUpMutation.mutate({ demandId: requirement.demand.id });
-						}}>
+						}}
+					>
 						<Tx label={"Priority up (label)"} />
 					</Button>
-					<Badge
-						css={{
-							base: ["bg-purple-50", "border-purple-400", "text-purple-600"],
-						}}>
+					<Badge css={{ base: ["bg-purple-50", "border-purple-400", "text-purple-600"] }}>
 						{requirement.demand.priority}
 					</Badge>
 					<Button
@@ -120,11 +136,9 @@ export const Item: FC<Item.Props> = ({ mapId, userId, requirement }) => {
 						variant={{ variant: "subtle" }}
 						loading={priorityUpMutation.isPending || priorityDownMutation.isPending}
 						onClick={() => {
-							requirement.demand &&
-								priorityDownMutation.mutate({
-									demandId: requirement.demand.id,
-								});
-						}}>
+							requirement.demand && priorityDownMutation.mutate({ demandId: requirement.demand.id });
+						}}
+					>
 						<Tx label={"Priority down (label)"} />
 					</Button>
 				</div>

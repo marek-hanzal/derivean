@@ -1,8 +1,23 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
-import { ActionMenu, ActionModal, DeleteControl, Table, TagIcon, toast, TrashIcon, Tx, useInvalidator, useTable, withColumn, withToastPromiseTx } from "@use-pico/client";
+import {
+	ActionMenu,
+	ActionModal,
+	DeleteControl,
+	Table,
+	TagIcon,
+	toast,
+	TrashIcon,
+	Tx,
+	useInvalidator,
+	useTable,
+	withColumn,
+	withToastPromiseTx,
+} from "@use-pico/client";
 import { genId, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { TagForm } from "~/app/root/TagForm";
 
 export namespace TagTable {
@@ -66,10 +81,7 @@ export const TagTable: FC<TagTable.Props> = ({ group, table, ...props }) => {
 
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			action={{
 				table() {
 					return (
@@ -77,21 +89,17 @@ export const TagTable: FC<TagTable.Props> = ({ group, table, ...props }) => {
 							<ActionModal
 								label={<Tx label={"Create tag (menu)"} />}
 								textTitle={<Tx label={"Create tag (modal)"} />}
-								icon={TagIcon}>
+								icon={TagIcon}
+							>
 								<TagForm
-									defaultValues={{
-										group,
-									}}
+									defaultValues={{ group }}
 									mutation={useMutation({
 										async mutationFn(values) {
 											return toast.promise(
-												kysely.transaction().execute((tx) => {
+												transaction((tx) => {
 													return tx
 														.insertInto("Tag")
-														.values({
-															id: genId(),
-															...values,
-														})
+														.values({ id: genId(), ...values })
 														.returningAll()
 														.executeTakeFirstOrThrow();
 												}),
@@ -113,17 +121,20 @@ export const TagTable: FC<TagTable.Props> = ({ group, table, ...props }) => {
 							<ActionModal
 								label={<Tx label={"Edit (menu)"} />}
 								textTitle={<Tx label={"Edit tag (modal)"} />}
-								icon={TagIcon}>
+								icon={TagIcon}
+							>
 								<TagForm
-									defaultValues={{
-										group,
-										...data,
-									}}
+									defaultValues={{ group, ...data }}
 									mutation={useMutation({
 										async mutationFn(values) {
 											return toast.promise(
-												kysely.transaction().execute((tx) => {
-													return tx.updateTable("Tag").set(values).where("id", "=", data.id).returningAll().executeTakeFirstOrThrow();
+												transaction((tx) => {
+													return tx
+														.updateTable("Tag")
+														.set(values)
+														.where("id", "=", data.id)
+														.returningAll()
+														.executeTakeFirstOrThrow();
 												}),
 												withToastPromiseTx("Edit tag"),
 											);
@@ -139,12 +150,11 @@ export const TagTable: FC<TagTable.Props> = ({ group, table, ...props }) => {
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete tag (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
-								}}>
+								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+							>
 								<DeleteControl
 									callback={async () => {
-										await kysely.transaction().execute((tx) => {
+										await transaction((tx) => {
 											return tx.deleteFrom("Tag").where("id", "=", data.id).execute();
 										});
 									}}

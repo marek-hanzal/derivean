@@ -1,13 +1,28 @@
+/** @format */
+
+import { kysely } from "@derivean/db";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
-import { ArrowRightIcon, Button, FormCss, FormError, FormInput, LinkTo, onSubmit, TrashIcon, Tx, useInvalidator, withList, type Form } from "@use-pico/client";
+import {
+	ArrowRightIcon,
+	Button,
+	FormCss,
+	FormError,
+	FormInput,
+	LinkTo,
+	onSubmit,
+	TrashIcon,
+	Tx,
+	useInvalidator,
+	withList,
+	type Form,
+} from "@use-pico/client";
 import { genId, tvc } from "@use-pico/common";
 import { dir } from "opfs-tools";
 import type { FC } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { kysely } from "~/app/db/kysely";
 import { MapIcon } from "~/app/icon/MapIcon";
 import { MapSchema } from "~/app/schema/MapSchema";
 
@@ -20,10 +35,7 @@ namespace MapForm {
 const MapForm: FC<MapForm.Props> = ({ mutation, defaultValues, variant, tva = FormCss, css }) => {
 	const form = useForm<MapSchema["~shape"]>({
 		resolver: zodResolver(MapSchema.shape),
-		defaultValues: {
-			name: "",
-			...defaultValues,
-		},
+		defaultValues: { name: "", ...defaultValues },
 	});
 
 	const tv = tva({
@@ -36,10 +48,8 @@ const MapForm: FC<MapForm.Props> = ({ mutation, defaultValues, variant, tva = Fo
 	return (
 		<form
 			className={tv.base()}
-			onSubmit={onSubmit({
-				form,
-				mutation,
-			})}>
+			onSubmit={onSubmit({ form, mutation })}
+		>
 			<FormError
 				variant={{ highlight: true }}
 				error={form.formState.errors.root}
@@ -49,7 +59,8 @@ const MapForm: FC<MapForm.Props> = ({ mutation, defaultValues, variant, tva = Fo
 				formState={form.formState}
 				name={"name"}
 				label={<Tx label={"Map name (label)"} />}
-				required>
+				required
+			>
 				<input
 					type={"text"}
 					className={tv.input()}
@@ -60,7 +71,8 @@ const MapForm: FC<MapForm.Props> = ({ mutation, defaultValues, variant, tva = Fo
 			<div className={"flex flex-row justify-between gap-8"}>
 				<Button
 					iconEnabled={MapIcon}
-					type={"submit"}>
+					type={"submit"}
+				>
 					<Tx label={"Create map (submit)"} />
 				</Button>
 			</div>
@@ -80,10 +92,7 @@ export const Route = createFileRoute("/$locale/game/")({
 					return kysely.transaction().execute((tx) => {
 						return withList({
 							select: tx.selectFrom("Map as m").select(["m.id", "m.name"]).where("m.userId", "=", user.id),
-							output: z.object({
-								id: z.string().min(1),
-								name: z.string().min(1),
-							}),
+							output: z.object({ id: z.string().min(1), name: z.string().min(1) }),
 						});
 					});
 				},
@@ -101,7 +110,10 @@ export const Route = createFileRoute("/$locale/game/")({
 		const deleteMapMutation = useMutation({
 			async mutationFn({ id }: { id: string }) {
 				return kysely.transaction().execute(async (tx) => {
-					return Promise.all([tx.deleteFrom("Map").where("id", "=", id).where("userId", "=", user.id).execute(), dir(`/chunk/${id}`).remove()]);
+					return Promise.all([
+						tx.deleteFrom("Map").where("id", "=", id).where("userId", "=", user.id).execute(),
+						dir(`/chunk/${id}`).remove(),
+					]);
 				});
 			},
 			async onSuccess() {
@@ -110,10 +122,7 @@ export const Route = createFileRoute("/$locale/game/")({
 		});
 
 		return (
-			<div
-				className={tv.base({
-					css: ["w-1/2", "mx-auto", "mt-24", "flex", "flex-col", "gap-6"],
-				})}>
+			<div className={tv.base({ css: ["w-1/2", "mx-auto", "mt-24", "flex", "flex-col", "gap-6"] })}>
 				<div className={"font-bold text-lg border-b border-slate-300"}>
 					<Tx label={"Map list (label)"} />
 				</div>
@@ -122,11 +131,25 @@ export const Route = createFileRoute("/$locale/game/")({
 						return (
 							<div
 								key={map.id}
-								className={tvc(["flex", "flex-row", "gap-2", "items-center", "justify-between", "p-4", "border", "rounded-sm", "border-slate-200", "hover:border-slate-300", "hover:bg-slate-100"])}>
+								className={tvc([
+									"flex",
+									"flex-row",
+									"gap-2",
+									"items-center",
+									"justify-between",
+									"p-4",
+									"border",
+									"rounded-sm",
+									"border-slate-200",
+									"hover:border-slate-300",
+									"hover:bg-slate-100",
+								])}
+							>
 								<LinkTo
 									icon={ArrowRightIcon}
 									to={"/$locale/map/$mapId/view"}
-									params={{ locale, mapId: map.id }}>
+									params={{ locale, mapId: map.id }}
+								>
 									{map.name}
 								</LinkTo>
 
@@ -144,7 +167,19 @@ export const Route = createFileRoute("/$locale/game/")({
 						);
 					})
 				) : (
-					<div className={tvc(["flex", "items-center", "justify-center", "rounded-sm", "border", "border-amber-400", "p-4", "bg-amber-200", "font-bold"])}>
+					<div
+						className={tvc([
+							"flex",
+							"items-center",
+							"justify-center",
+							"rounded-sm",
+							"border",
+							"border-amber-400",
+							"p-4",
+							"bg-amber-200",
+							"font-bold",
+						])}
+					>
 						<Tx label={"There are no maps (label)"} />
 					</div>
 				)}
@@ -159,20 +194,13 @@ export const Route = createFileRoute("/$locale/game/")({
 								return kysely.transaction().execute((tx) => {
 									return tx
 										.insertInto("Map")
-										.values({
-											id: genId(),
-											userId: user.id,
-											...values,
-										})
+										.values({ id: genId(), userId: user.id, ...values })
 										.returning("id")
 										.executeTakeFirstOrThrow();
 								});
 							},
 							async onSuccess(map) {
-								navigate({
-									to: "/$locale/map/$mapId/view",
-									params: { locale, mapId: map.id },
-								});
+								navigate({ to: "/$locale/map/$mapId/view", params: { locale, mapId: map.id } });
 								await invalidator();
 							},
 						})}

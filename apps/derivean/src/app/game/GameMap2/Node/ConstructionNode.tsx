@@ -1,8 +1,10 @@
+/** @format */
+
+import { kysely } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { Button, CheckIcon, TrashIcon, useInvalidator } from "@use-pico/client";
 import type { Node, NodeProps } from "@xyflow/react";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 
 export namespace ConstructionNode {
 	export interface Data {
@@ -52,7 +54,9 @@ export const ConstructionNode: FC<ConstructionNode.Props> = ({ data }) => {
 				<div>{data.name}</div>
 			</div>
 
-			<div className={"hidden group-hover:flex absolute bottom-0 left-0 flex-row justify-between items-center w-full p-2"}>
+			<div
+				className={"hidden group-hover:flex absolute bottom-0 left-0 flex-row justify-between items-center w-full p-2"}
+			>
 				<Button
 					iconEnabled={TrashIcon}
 					loading={deleteMutation.isPending}

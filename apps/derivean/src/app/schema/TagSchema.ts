@@ -1,6 +1,8 @@
+/** @format */
+
+import { withTagSchema } from "@derivean/sdk";
 import { FilterSchema, withIntSchema } from "@use-pico/common";
 import { z } from "zod";
-import { withTagSchema } from "~/app/db/sdk";
 
 export const TagSchema = withTagSchema({
 	shape: z.object({
@@ -9,12 +11,7 @@ export const TagSchema = withTagSchema({
 		group: z.string().nullish(),
 		sort: withIntSchema(),
 	}),
-	filter: FilterSchema.merge(
-		z.object({
-			code: z.string().optional(),
-			group: z.string().optional(),
-		}),
-	),
+	filter: FilterSchema.merge(z.object({ code: z.string().optional(), group: z.string().optional() })),
 });
 
 export type TagSchema = typeof TagSchema;

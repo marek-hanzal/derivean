@@ -15,7 +15,11 @@
 	},
 	"dependencies": {
 		"@dagrejs/dagre": "^1.1.4",
+		"@derivean/db": "workspace:*",
+		"@derivean/game-ui": "workspace:*",
 		"@derivean/noise": "workspace:*",
+		"@derivean/root-ui": "workspace:*",
+		"@derivean/sdk": "workspace:*",
 		"@derivean/terrain": "workspace:*",
 		"@derivean/utils": "workspace:*",
 		"@hookform/resolvers": "^4.0.0",

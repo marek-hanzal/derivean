@@ -1,8 +1,21 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
-import { ActionMenu, ActionModal, BoolInline, DeleteControl, Table, TrashIcon, Tx, useInvalidator, useTable, withColumn } from "@use-pico/client";
+import {
+	ActionMenu,
+	ActionModal,
+	BoolInline,
+	DeleteControl,
+	Table,
+	TrashIcon,
+	Tx,
+	useInvalidator,
+	useTable,
+	withColumn,
+} from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { ResourceIcon } from "~/app/icon/ResourceIcon";
 import { BlueprintRequirementForm } from "~/app/root/BlueprintRequirementForm";
 
@@ -63,14 +76,16 @@ export namespace BlueprintRequirementTable {
 }
 
 export const BlueprintRequirementTable: FC<BlueprintRequirementTable.Props> = ({ blueprintId, table, ...props }) => {
-	const invalidator = useInvalidator([["Blueprint"], ["Blueprint_Requirement"], ["Blueprint_Resource_Requirement"], ["Resource"]]);
+	const invalidator = useInvalidator([
+		["Blueprint"],
+		["Blueprint_Requirement"],
+		["Blueprint_Resource_Requirement"],
+		["Resource"],
+	]);
 
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			action={{
 				table() {
 					return (
@@ -78,18 +93,15 @@ export const BlueprintRequirementTable: FC<BlueprintRequirementTable.Props> = ({
 							<ActionModal
 								label={<Tx label={"Create requirement item (menu)"} />}
 								textTitle={<Tx label={"Create requirement item (modal)"} />}
-								icon={ResourceIcon}>
+								icon={ResourceIcon}
+							>
 								<BlueprintRequirementForm
 									mutation={useMutation({
 										async mutationFn(values) {
-											return kysely.transaction().execute(async (tx) => {
+											return transaction(async (tx) => {
 												return tx
 													.insertInto("Blueprint_Requirement")
-													.values({
-														id: genId(),
-														...values,
-														blueprintId,
-													})
+													.values({ id: genId(), ...values, blueprintId })
 													.execute();
 											});
 										},
@@ -108,13 +120,19 @@ export const BlueprintRequirementTable: FC<BlueprintRequirementTable.Props> = ({
 							<ActionModal
 								label={<Tx label={"Edit (menu)"} />}
 								textTitle={<Tx label={"Edit requirement item (modal)"} />}
-								icon={ResourceIcon}>
+								icon={ResourceIcon}
+							>
 								<BlueprintRequirementForm
 									defaultValues={data}
 									mutation={useMutation({
 										async mutationFn(values) {
-											return kysely.transaction().execute(async (tx) => {
-												return tx.updateTable("Blueprint_Requirement").set(values).where("id", "=", data.id).returningAll().executeTakeFirstOrThrow();
+											return transaction(async (tx) => {
+												return tx
+													.updateTable("Blueprint_Requirement")
+													.set(values)
+													.where("id", "=", data.id)
+													.returningAll()
+													.executeTakeFirstOrThrow();
 											});
 										},
 										async onSuccess() {
@@ -128,12 +146,11 @@ export const BlueprintRequirementTable: FC<BlueprintRequirementTable.Props> = ({
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete requirement item (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
-								}}>
+								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+							>
 								<DeleteControl
 									callback={async () => {
-										return kysely.transaction().execute(async (tx) => {
+										return transaction(async (tx) => {
 											return tx.deleteFrom("Blueprint_Requirement").where("id", "=", data.id).execute();
 										});
 									}}

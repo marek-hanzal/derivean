@@ -1,10 +1,10 @@
 /** @format */
 
+import { transaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowDownIcon, ArrowUpIcon, Badge, Button, Icon, TrashIcon, Tx, useInvalidator } from "@use-pico/client";
 import { toHumanNumber, tvc } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import type { DemandPanel } from "~/app/game/GameMap2/Building/Demand/DemandPanel";
 import { DemandIcon } from "~/app/icon/DemandIcon";
 import { PackageIcon } from "~/app/icon/PackageIcon";
@@ -21,7 +21,7 @@ export const Item: FC<Item.Props> = ({ mapId, userId, demand }) => {
 	const invalidator = useInvalidator([["GameMap"]]);
 	const deleteDemandMutation = useMutation({
 		async mutationFn({ demandId }: { demandId: string }) {
-			return kysely.transaction().execute(async (tx) => {
+			return transaction(async (tx) => {
 				return tx.deleteFrom("Demand").where("id", "=", demandId).execute();
 			});
 		},
@@ -31,7 +31,7 @@ export const Item: FC<Item.Props> = ({ mapId, userId, demand }) => {
 	});
 	const priorityUpMutation = useMutation({
 		async mutationFn({ demandId }: { demandId: string }) {
-			return kysely.transaction().execute(async (tx) => {
+			return transaction(async (tx) => {
 				const { priority } = await tx
 					.selectFrom("Demand as d")
 					.select((eb) => eb.fn.max("d.priority").as("priority"))
@@ -53,7 +53,7 @@ export const Item: FC<Item.Props> = ({ mapId, userId, demand }) => {
 	});
 	const priorityDownMutation = useMutation({
 		async mutationFn({ demandId }: { demandId: string }) {
-			return kysely.transaction().execute(async (tx) => {
+			return transaction(async (tx) => {
 				const { priority } = await tx
 					.selectFrom("Demand as d")
 					.select((eb) => eb.fn.min("d.priority").as("priority"))

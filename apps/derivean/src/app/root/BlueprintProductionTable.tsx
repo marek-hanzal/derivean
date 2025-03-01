@@ -1,9 +1,23 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import { ActionMenu, ActionModal, DeleteControl, LinkTo, More, Table, TrashIcon, Tx, useInvalidator, useTable, withColumn } from "@use-pico/client";
+import {
+	ActionMenu,
+	ActionModal,
+	DeleteControl,
+	LinkTo,
+	More,
+	Table,
+	TrashIcon,
+	Tx,
+	useInvalidator,
+	useTable,
+	withColumn,
+} from "@use-pico/client";
 import { genId, toHumanNumber, tvc, type IdentitySchema } from "@use-pico/common";
 import { type FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { RequirementsInline } from "~/app/game/RequirementsInline";
 import { ProductionIcon } from "~/app/icon/ProductionIcon";
 import { ResourceIcon } from "~/app/icon/ResourceIcon";
@@ -19,15 +33,9 @@ export namespace BlueprintProductionTable {
 		resourceId: string;
 		amount: number;
 		cycles: number;
-		requirements: (BlueprintProductionRequirementSchema["~entity"] & {
-			name: string;
-		})[];
-		resources: (BlueprintProductionResourceSchema["~entity"] & {
-			name: string;
-		})[];
-		dependencies: (BlueprintProductionDependencySchema["~entity"] & {
-			name: string;
-		})[];
+		requirements: (BlueprintProductionRequirementSchema["~entity"] & { name: string })[];
+		resources: (BlueprintProductionResourceSchema["~entity"] & { name: string })[];
+		dependencies: (BlueprintProductionDependencySchema["~entity"] & { name: string })[];
 	}
 }
 
@@ -46,7 +54,8 @@ const columns = [
 				<LinkTo
 					icon={ProductionIcon}
 					to={"/$locale/root/blueprint/production/$id/requirements"}
-					params={{ locale, id: data.id }}>
+					params={{ locale, id: data.id }}
+				>
 					{value}
 				</LinkTo>
 			);
@@ -100,7 +109,20 @@ const columns = [
 					items={value}
 					render={({ entity }) => {
 						return (
-							<div className={tvc(["flex", "flex-row", "gap-2", "items-center", "bg-sky-100", "border", "rounded-sm", "border-sky-300", "py-1", "px-2"])}>
+							<div
+								className={tvc([
+									"flex",
+									"flex-row",
+									"gap-2",
+									"items-center",
+									"bg-sky-100",
+									"border",
+									"rounded-sm",
+									"border-sky-300",
+									"py-1",
+									"px-2",
+								])}
+							>
 								<div>{entity.name}</div>
 								<div className={"text-md font-bold text-slate-500"}>x{toHumanNumber({ number: entity.amount })}</div>
 							</div>
@@ -122,7 +144,20 @@ const columns = [
 					items={value}
 					render={({ entity }) => {
 						return (
-							<div className={tvc(["flex", "flex-row", "gap-2", "items-center", "bg-sky-100", "border", "rounded-sm", "border-sky-300", "py-1", "px-2"])}>
+							<div
+								className={tvc([
+									"flex",
+									"flex-row",
+									"gap-2",
+									"items-center",
+									"bg-sky-100",
+									"border",
+									"rounded-sm",
+									"border-sky-300",
+									"py-1",
+									"px-2",
+								])}
+							>
 								<div>{entity.name}</div>
 							</div>
 						);
@@ -141,14 +176,16 @@ export namespace BlueprintProductionTable {
 }
 
 export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({ blueprintId, table, ...props }) => {
-	const invalidator = useInvalidator([["Blueprint"], ["Blueprint_Production"], ["Blueprint_Production_Requirement"], ["Resource"]]);
+	const invalidator = useInvalidator([
+		["Blueprint"],
+		["Blueprint_Production"],
+		["Blueprint_Production_Requirement"],
+		["Resource"],
+	]);
 
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			action={{
 				table() {
 					return (
@@ -156,20 +193,17 @@ export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({ b
 							<ActionModal
 								label={<Tx label={"Create blueprint production (menu)"} />}
 								textTitle={<Tx label={"Create blueprint production (modal)"} />}
-								icon={ProductionIcon}>
+								icon={ProductionIcon}
+							>
 								{({ close }) => {
 									return (
 										<BlueprintProductionForm
 											mutation={useMutation({
 												async mutationFn(values) {
-													return kysely.transaction().execute(async (tx) => {
+													return transaction(async (tx) => {
 														const entity = await tx
 															.insertInto("Blueprint_Production")
-															.values({
-																id: genId(),
-																...values,
-																blueprintId,
-															})
+															.values({ id: genId(), ...values, blueprintId })
 															.returningAll()
 															.executeTakeFirstOrThrow();
 
@@ -194,13 +228,19 @@ export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({ b
 							<ActionModal
 								label={<Tx label={"Edit (menu)"} />}
 								textTitle={<Tx label={"Edit blueprint production (modal)"} />}
-								icon={ProductionIcon}>
+								icon={ProductionIcon}
+							>
 								<BlueprintProductionForm
 									defaultValues={data}
 									mutation={useMutation({
 										async mutationFn(values) {
-											return kysely.transaction().execute(async (tx) => {
-												return tx.updateTable("Blueprint_Production").set(values).where("id", "=", data.id).returningAll().executeTakeFirstOrThrow();
+											return transaction(async (tx) => {
+												return tx
+													.updateTable("Blueprint_Production")
+													.set(values)
+													.where("id", "=", data.id)
+													.returningAll()
+													.executeTakeFirstOrThrow();
 											});
 										},
 										async onSuccess() {
@@ -213,18 +253,17 @@ export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({ b
 							<ActionModal
 								label={<Tx label={"Move production to (menu)"} />}
 								textTitle={<Tx label={"Move production to (modal)"} />}
-								icon={ResourceIcon}>
+								icon={ResourceIcon}
+							>
 								{({ close }) => {
 									return (
 										<MoveProductionToForm
 											mutation={useMutation({
 												async mutationFn(values) {
-													return kysely.transaction().execute(async (tx) => {
+													return transaction(async (tx) => {
 														await tx
 															.updateTable("Blueprint_Production")
-															.set({
-																blueprintId: values.blueprintId,
-															})
+															.set({ blueprintId: values.blueprintId })
 															.where("id", "=", data.id)
 															.execute();
 													});
@@ -243,12 +282,11 @@ export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({ b
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete blueprint production (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
-								}}>
+								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+							>
 								<DeleteControl
 									callback={async () => {
-										return kysely.transaction().execute(async (tx) => {
+										return transaction(async (tx) => {
 											return tx.deleteFrom("Blueprint_Production").where("id", "=", data.id).execute();
 										});
 									}}

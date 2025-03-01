@@ -1,6 +1,8 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { genId, pwd } from "@use-pico/common";
-import { kysely } from "~/app/db/kysely";
 import type { RegisterSchema } from "~/app/schema/RegisterSchema";
 import { SessionSchema } from "~/app/schema/SessionSchema";
 
@@ -8,7 +10,7 @@ export const useRegisterMutation = () => {
 	return useMutation({
 		mutationKey: ["useRegisterMutation"],
 		async mutationFn({ login, name, password1 }: RegisterSchema.Type): Promise<SessionSchema.Type> {
-			return kysely.transaction().execute(async (tx) => {
+			return transaction(async (tx) => {
 				/**
 				 * Secondary SessionSchema parse is here to ensure only session related data
 				 * get out.
@@ -16,12 +18,7 @@ export const useRegisterMutation = () => {
 				const session = SessionSchema.parse(
 					await tx
 						.insertInto("User")
-						.values({
-							id: genId(),
-							name,
-							login,
-							password: pwd.hash(password1),
-						})
+						.values({ id: genId(), name, login, password: pwd.hash(password1) })
 						.returning(["User.id", "User.name", "User.login"])
 						.executeTakeFirstOrThrow(),
 				);

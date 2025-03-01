@@ -1,8 +1,10 @@
+/** @format */
+
+import { kysely } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { Button, TrashIcon, useInvalidator } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import type { SupplyPanel } from "~/app/game/GameMap2/Supply/SupplyPanel";
 
 export namespace Item {
@@ -25,7 +27,21 @@ export const Item: FC<Item.Props> = ({ supply }) => {
 	});
 
 	return (
-		<div className={tvc(["flex", "flex-row", "gap-2", "items-center", "justify-between", "border", "p-4", "rounded-sm", "border-slate-200", "hover:border-slate-300", "hover:bg-slate-100"])}>
+		<div
+			className={tvc([
+				"flex",
+				"flex-row",
+				"gap-2",
+				"items-center",
+				"justify-between",
+				"border",
+				"p-4",
+				"rounded-sm",
+				"border-slate-200",
+				"hover:border-slate-300",
+				"hover:bg-slate-100",
+			])}
+		>
 			<div className={"flex flex-row gap-2 items-center"}>{supply.name}</div>
 
 			<Button

@@ -1,7 +1,9 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { More, PopupMultiSelect, Tx, withListCount } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { RegionIcon } from "~/app/icon/RegionIcon";
 import { RegionTable } from "~/app/root/RegionTable";
 import { RegionSchema } from "~/app/schema/RegionSchema";
@@ -23,13 +25,15 @@ export const RegionPopupMultiSelect: FC<RegionPopupMultiSelect.Props> = (props) 
 					<More
 						items={entities}
 						css={{ base: ["flex", "flex-row", "gap-2"] }}
-						render={({ entity }) => <div className={tvc(["p-2", "border", "border-blue-300", "bg-blue-50", "rounded-sm"])}>{entity.name}</div>}
+						render={({ entity }) => (
+							<div className={tvc(["p-2", "border", "border-blue-300", "bg-blue-50", "rounded-sm"])}>{entity.name}</div>
+						)}
 					/>
 				);
 			}}
 			queryKey={"Region"}
 			query={async ({ filter, cursor }) => {
-				return kysely.transaction().execute(async (tx) => {
+				return transaction(async (tx) => {
 					return withListCount({
 						select: tx.selectFrom("Region as r").selectAll(),
 						output: RegionSchema.entity,

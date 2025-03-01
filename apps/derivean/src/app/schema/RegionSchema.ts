@@ -1,6 +1,8 @@
+/** @format */
+
+import { withRegionSchema } from "@derivean/sdk";
 import { FilterSchema, translator, withIntSchema } from "@use-pico/common";
 import { z } from "zod";
-import { withRegionSchema } from "~/app/db/sdk";
 
 export const RegionSchema = withRegionSchema({
 	shape: z.object({
@@ -17,9 +19,7 @@ export const RegionSchema = withRegionSchema({
 					}
 					return true;
 				},
-				{
-					message: translator.text("File size must be less than 5MB"),
-				},
+				{ message: translator.text("File size must be less than 5MB") },
 			)
 			.refine(
 				(file) => {
@@ -28,9 +28,7 @@ export const RegionSchema = withRegionSchema({
 					}
 					return true;
 				},
-				{
-					message: "Only PNG/JPEG/WEBP files are allowed.",
-				},
+				{ message: "Only PNG/JPEG/WEBP files are allowed." },
 			)
 			.optional(),
 	}),

@@ -1,5 +1,7 @@
+/** @format */
+
+import type { WithTransaction } from "@derivean/db";
 import { genId } from "@use-pico/common";
-import type { WithTransaction } from "~/app/db/WithTransaction";
 import { withBuildingGraph } from "~/app/service/withBuildingGraph";
 import { withPathOf } from "~/app/service/withPathOf";
 
@@ -18,12 +20,7 @@ export const withBuildingToBuilding = async ({ tx, userId, mapId }: withBuilding
 
 	const related = withPathOf(await withBuildingGraph({ tx, userId, mapId }));
 
-	const inserts = related.map((item) => ({
-		id: genId(),
-		mapId,
-		userId,
-		...item,
-	}));
+	const inserts = related.map((item) => ({ id: genId(), mapId, userId, ...item }));
 
 	const names = (
 		await tx
@@ -53,10 +50,7 @@ export const withBuildingToBuilding = async ({ tx, userId, mapId }: withBuilding
 	console.info(
 		"\t\t-- Related buildings",
 		related.map(({ buildingId, linkId }) => {
-			return {
-				building: names[buildingId],
-				link: names[linkId],
-			};
+			return { building: names[buildingId], link: names[linkId] };
 		}),
 	);
 

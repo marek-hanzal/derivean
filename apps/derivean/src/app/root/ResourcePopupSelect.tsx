@@ -1,9 +1,11 @@
+/** @format */
+
+import { kysely } from "@derivean/db";
 import { PopupSelect, Tx, withListCount } from "@use-pico/client";
 import { withIntSchema, withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import type { FC } from "react";
 import { z } from "zod";
-import { kysely } from "~/app/db/kysely";
 import { ResourceIcon } from "~/app/icon/ResourceIcon";
 import { ResourceTable } from "~/app/root/ResourceTable";
 import { TagSchema } from "~/app/schema/TagSchema";
@@ -51,7 +53,14 @@ export const ResourcePopupSelect: FC<ResourcePopupSelect.Props> = ({ group, ...p
                                                 'label', ${eb.ref("t.label")}
                                             ))`.as("tags");
 										})
-										.where("t.id", "in", tx.selectFrom("Resource_Tag as rt").select("rt.tagId").where("rt.resourceId", "=", eb.ref("r.id")))
+										.where(
+											"t.id",
+											"in",
+											tx
+												.selectFrom("Resource_Tag as rt")
+												.select("rt.tagId")
+												.where("rt.resourceId", "=", eb.ref("r.id")),
+										)
 										.as("tags"),
 								(eb) => {
 									return eb
@@ -98,7 +107,11 @@ export const ResourcePopupSelect: FC<ResourcePopupSelect.Props> = ({ group, ...p
 												.innerJoin("Tag as t", "t.id", "rt.tagId")
 												.select("rt.resourceId")
 												.where((eb) => {
-													return eb.or([eb("t.code", "like", fulltext), eb("t.label", "like", fulltext), eb("t.group", "like", fulltext)]);
+													return eb.or([
+														eb("t.code", "like", fulltext),
+														eb("t.label", "like", fulltext),
+														eb("t.group", "like", fulltext),
+													]);
 												}),
 										),
 									]);

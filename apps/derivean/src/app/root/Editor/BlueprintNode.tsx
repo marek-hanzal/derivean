@@ -1,17 +1,17 @@
+/** @format */
+
+import { kysely } from "@derivean/db";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Action, DeleteControl, EditIcon, LinkTo, Modal, TrashIcon, Tx, useInvalidator } from "@use-pico/client";
 import { type IdentitySchema } from "@use-pico/common";
 import { Handle, NodeProps, Position, type Node } from "@xyflow/react";
 import { type FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 import { ProductionIcon } from "~/app/icon/ProductionIcon";
 import { ResourceIcon } from "~/app/icon/ResourceIcon";
 
 export namespace BlueprintNode {
-	export type Data = IdentitySchema.Type & {
-		name: string;
-	};
+	export type Data = IdentitySchema.Type & { name: string };
 
 	export interface Props extends NodeProps<Node<Data, "blueprint">> {
 		//
@@ -26,18 +26,12 @@ export const BlueprintNode: FC<BlueprintNode.Props> = ({ id, data, isConnectable
 		<div
 			className={"min-w-[14rem]"}
 			onClick={() => {
-				navigate({
-					to: "/$locale/root/editor",
-					params: { locale },
-					search: { zoomTo: id },
-				});
+				navigate({ to: "/$locale/root/editor", params: { locale }, search: { zoomTo: id } });
 			}}
 			onDoubleClick={() => {
-				navigate({
-					to: "/$locale/root/blueprint/$id/view",
-					params: { locale, id },
-				});
-			}}>
+				navigate({ to: "/$locale/root/blueprint/$id/view", params: { locale, id } });
+			}}
+		>
 			<Handle
 				type={"target"}
 				position={Position.Left}
@@ -48,19 +42,24 @@ export const BlueprintNode: FC<BlueprintNode.Props> = ({ id, data, isConnectable
 					className={"flex flex-row items-center gap-2"}
 					onClick={(e) => e.stopPropagation()}
 					onDoubleClick={(e) => e.stopPropagation()}
-					onMouseDown={(e) => e.stopPropagation()}>
+					onMouseDown={(e) => e.stopPropagation()}
+				>
 					<LinkTo
 						icon={BlueprintIcon}
 						to={"/$locale/root/blueprint/$id/view"}
-						params={{ locale, id }}>
+						params={{ locale, id }}
+					>
 						{data.name}
 					</LinkTo>
 				</div>
 				<div
-					className={"flex flex-row items-center justify-between gap-2 border bg-slate-50 border-slate-200 rounded-sm w-full p-1"}
+					className={
+						"flex flex-row items-center justify-between gap-2 border bg-slate-50 border-slate-200 rounded-sm w-full p-1"
+					}
 					onClick={(e) => e.stopPropagation()}
 					onDoubleClick={(e) => e.stopPropagation()}
-					onMouseDown={(e) => e.stopPropagation()}>
+					onMouseDown={(e) => e.stopPropagation()}
+				>
 					<div className={"flex flex-row gap-2"}>
 						<LinkTo
 							icon={ResourceIcon}
@@ -88,9 +87,8 @@ export const BlueprintNode: FC<BlueprintNode.Props> = ({ id, data, isConnectable
 							}
 							outside={true}
 							textTitle={<Tx label={"Delete blueprint (modal)"} />}
-							css={{
-								modal: ["w-1/3"],
-							}}>
+							css={{ modal: ["w-1/3"] }}
+						>
 							{() => {
 								const invalidator = useInvalidator([["Editor"]]);
 

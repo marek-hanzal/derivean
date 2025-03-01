@@ -1,8 +1,24 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
-import { ActionClick, ActionMenu, ActionModal, DeleteControl, Progress, Table, toast, TrashIcon, Tx, useInvalidator, useTable, withColumn, withToastPromiseTx } from "@use-pico/client";
+import {
+	ActionClick,
+	ActionMenu,
+	ActionModal,
+	DeleteControl,
+	Progress,
+	Table,
+	toast,
+	TrashIcon,
+	Tx,
+	useInvalidator,
+	useTable,
+	withColumn,
+	withToastPromiseTx,
+} from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { InventoryIcon } from "~/app/icon/InventoryIcon";
 import { InventoryTypeInline } from "~/app/inventory/InventoryTypeInline";
 import { InventoryForm } from "~/app/root/InventoryForm";
@@ -91,7 +107,7 @@ export const BlueprintInventoryTable: FC<BlueprintInventoryTable.Props> = ({ blu
 	const invalidator = useInvalidator([["Blueprint_Inventory"]]);
 	const fillInventoryMutation = useMutation({
 		async mutationFn() {
-			return kysely.transaction().execute(async (tx) => {
+			return transaction(async (tx) => {
 				return withFillInventory({ tx, blueprintId });
 			});
 		},
@@ -105,10 +121,7 @@ export const BlueprintInventoryTable: FC<BlueprintInventoryTable.Props> = ({ blu
 
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			action={{
 				table() {
 					return (
@@ -116,12 +129,13 @@ export const BlueprintInventoryTable: FC<BlueprintInventoryTable.Props> = ({ blu
 							<ActionModal
 								label={<Tx label={"Create inventory item (menu)"} />}
 								textTitle={<Tx label={"Create inventory item (modal)"} />}
-								icon={InventoryIcon}>
+								icon={InventoryIcon}
+							>
 								<InventoryForm
 									mutation={useMutation({
 										async mutationFn(values) {
 											return toast.promise(
-												kysely.transaction().execute(async (tx) => {
+												transaction(async (tx) => {
 													return tx
 														.insertInto("Blueprint_Inventory")
 														.values({
@@ -130,10 +144,7 @@ export const BlueprintInventoryTable: FC<BlueprintInventoryTable.Props> = ({ blu
 															inventoryId: (
 																await tx
 																	.insertInto("Inventory")
-																	.values({
-																		id: genId(),
-																		...values,
-																	})
+																	.values({ id: genId(), ...values })
 																	.returningAll()
 																	.executeTakeFirstOrThrow()
 															).id,
@@ -154,7 +165,8 @@ export const BlueprintInventoryTable: FC<BlueprintInventoryTable.Props> = ({ blu
 								icon={InventoryIcon}
 								onClick={() => {
 									fillInventoryMutation.mutate();
-								}}>
+								}}
+							>
 								<Tx label={"Fill inventory (label)"} />
 							</ActionClick>
 						</ActionMenu>
@@ -166,14 +178,20 @@ export const BlueprintInventoryTable: FC<BlueprintInventoryTable.Props> = ({ blu
 							<ActionModal
 								label={<Tx label={"Edit (menu)"} />}
 								textTitle={<Tx label={"Edit inventory item (modal)"} />}
-								icon={InventoryIcon}>
+								icon={InventoryIcon}
+							>
 								<InventoryForm
 									defaultValues={data}
 									mutation={useMutation({
 										async mutationFn(values) {
 											return toast.promise(
-												kysely.transaction().execute(async (tx) => {
-													return tx.updateTable("Inventory").set(values).where("id", "=", data.inventoryId).returningAll().executeTakeFirstOrThrow();
+												transaction(async (tx) => {
+													return tx
+														.updateTable("Inventory")
+														.set(values)
+														.where("id", "=", data.inventoryId)
+														.returningAll()
+														.executeTakeFirstOrThrow();
 												}),
 												withToastPromiseTx("Update inventory item"),
 											);
@@ -189,12 +207,11 @@ export const BlueprintInventoryTable: FC<BlueprintInventoryTable.Props> = ({ blu
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete inventory item (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
-								}}>
+								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+							>
 								<DeleteControl
 									callback={async () => {
-										return kysely.transaction().execute(async (tx) => {
+										return transaction(async (tx) => {
 											return tx.deleteFrom("Inventory").where("id", "=", data.inventoryId).execute();
 										});
 									}}

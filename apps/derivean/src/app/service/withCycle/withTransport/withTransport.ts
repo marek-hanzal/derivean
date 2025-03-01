@@ -1,4 +1,6 @@
-import type { WithTransaction } from "~/app/db/WithTransaction";
+/** @format */
+
+import type { WithTransaction } from "@derivean/db";
 import { withTransportDemand } from "~/app/service/withCycle/withTransport/withTransportDemand";
 import { withTransportRoute } from "~/app/service/withCycle/withTransport/withTransportRoute";
 

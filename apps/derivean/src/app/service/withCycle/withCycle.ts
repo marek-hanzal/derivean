@@ -1,5 +1,7 @@
+/** @format */
+
+import type { WithTransaction } from "@derivean/db";
 import { DateTime, genId } from "@use-pico/common";
-import type { WithTransaction } from "~/app/db/WithTransaction";
 import { withBuildingToBuilding } from "~/app/service/withBuildingToBuilding";
 import { withConstruction } from "~/app/service/withCycle/withConstruction";
 import { withDemand } from "~/app/service/withCycle/withDemand/withDemand";
@@ -21,60 +23,31 @@ export const withCycle = async ({ tx, userId, mapId }: withCycle.Props) => {
 
 		await tx
 			.insertInto("Cycle")
-			.values({
-				id: genId(),
-				stamp: DateTime.now().toUTC().toSQLTime(),
-				userId,
-				mapId,
-			})
+			.values({ id: genId(), stamp: DateTime.now().toUTC().toSQLTime(), userId, mapId })
 			.execute();
 
 		/**
 		 * Ensure all paths are computed even it should be OK in this stage.
 		 */
-		await withBuildingToBuilding({
-			tx,
-			userId,
-			mapId,
-		});
+		await withBuildingToBuilding({ tx, userId, mapId });
 
 		/**
 		 * Resolve demand of buildings:
 		 * - check construction
 		 * - check production
 		 */
-		await withDemand({
-			tx,
-			userId,
-			mapId,
-		});
+		await withDemand({ tx, userId, mapId });
 
-		await withConstruction({
-			tx,
-			userId,
-			mapId,
-		});
+		await withConstruction({ tx, userId, mapId });
 
 		/**
 		 * Produce stuff
 		 */
-		await withProduction({
-			tx,
-			userId,
-			mapId,
-		});
+		await withProduction({ tx, userId, mapId });
 
-		await withProductionPlan({
-			tx,
-			userId,
-			mapId,
-		});
+		await withProductionPlan({ tx, userId, mapId });
 
-		await withTransport({
-			tx,
-			userId,
-			mapId,
-		});
+		await withTransport({ tx, userId, mapId });
 
 		/**
 		 * Cleanup fulfilled demands.

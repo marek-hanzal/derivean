@@ -1,5 +1,7 @@
+/** @format */
+
+import type { WithTransaction } from "@derivean/db";
 import { genId } from "@use-pico/common";
-import type { WithTransaction } from "~/app/db/WithTransaction";
 
 export namespace withProductionQueue {
 	export interface Props {
@@ -11,7 +13,13 @@ export namespace withProductionQueue {
 	}
 }
 
-export const withProductionQueue = async ({ tx, userId, mapId, buildingId, blueprintProductionId }: withProductionQueue.Props) => {
+export const withProductionQueue = async ({
+	tx,
+	userId,
+	mapId,
+	buildingId,
+	blueprintProductionId,
+}: withProductionQueue.Props) => {
 	const blueprintProduction = await tx
 		.selectFrom("Blueprint_Production as bp")
 		.innerJoin("Blueprint as b", "b.id", "bp.blueprintId")
@@ -52,10 +60,7 @@ export const withProductionQueue = async ({ tx, userId, mapId, buildingId, bluep
 			.where("i.type", "=", "storage")
 			.executeTakeFirstOrThrow();
 
-		console.info("\t\t-- Checking inventory", {
-			resource: inventory.name,
-			amount: inventory.amount,
-		});
+		console.info("\t\t-- Checking inventory", { resource: inventory.name, amount: inventory.amount });
 
 		if (inventory.amount < amount) {
 			console.info("\t\t\t-- Not enough resources in inventory, creating demand", {
@@ -90,9 +95,7 @@ export const withProductionQueue = async ({ tx, userId, mapId, buildingId, bluep
 					type: "storage",
 				})
 				.onConflict((oc) => {
-					return oc.columns(["buildingId", "resourceId"]).doUpdateSet({
-						amount: amount - inventory.amount,
-					});
+					return oc.columns(["buildingId", "resourceId"]).doUpdateSet({ amount: amount - inventory.amount });
 				})
 				.execute();
 
@@ -113,14 +116,7 @@ export const withProductionQueue = async ({ tx, userId, mapId, buildingId, bluep
 
 		await tx
 			.insertInto("Production")
-			.values({
-				id: genId(),
-				buildingId,
-				blueprintProductionId,
-				userId,
-				cycle: 0,
-				cycles: blueprintProduction.cycles,
-			})
+			.values({ id: genId(), buildingId, blueprintProductionId, userId, cycle: 0, cycles: blueprintProduction.cycles })
 			.execute();
 	} else {
 		console.info("\t\t-- Not enough resources to proceed");

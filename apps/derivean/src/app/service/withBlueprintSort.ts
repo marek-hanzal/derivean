@@ -1,4 +1,6 @@
-import type { WithTransaction } from "~/app/db/WithTransaction";
+/** @format */
+
+import type { WithTransaction } from "@derivean/db";
 import { withBlueprintGraph } from "~/app/utils/withBlueprintGraph";
 
 export namespace withBlueprintSort {
@@ -15,12 +17,6 @@ export const withBlueprintSort = async ({ tx }: withBlueprintSort.Props) => {
 	for await (const blueprint of blueprints) {
 		const deps = (await dependencies).dependenciesOf(blueprint.id);
 
-		await tx
-			.updateTable("Blueprint")
-			.set({
-				sort: deps.length,
-			})
-			.where("id", "=", blueprint.id)
-			.execute();
+		await tx.updateTable("Blueprint").set({ sort: deps.length }).where("id", "=", blueprint.id).execute();
 	}
 };

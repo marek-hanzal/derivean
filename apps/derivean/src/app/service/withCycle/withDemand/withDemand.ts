@@ -1,4 +1,6 @@
-import type { WithTransaction } from "~/app/db/WithTransaction";
+/** @format */
+
+import type { WithTransaction } from "@derivean/db";
 import { withConstructionDemand } from "~/app/service/withCycle/withDemand/withConstructionDemand";
 
 export namespace withDemand {

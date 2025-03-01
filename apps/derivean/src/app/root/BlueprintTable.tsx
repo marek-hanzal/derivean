@@ -1,9 +1,26 @@
+/** @format */
+
+import { transaction } from "@derivean/db";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
-import { ActionClick, ActionMenu, ActionModal, DeleteControl, Icon, LinkTo, Table, toast, TrashIcon, Tx, useInvalidator, useTable, withColumn, withToastPromiseTx } from "@use-pico/client";
+import {
+	ActionClick,
+	ActionMenu,
+	ActionModal,
+	DeleteControl,
+	Icon,
+	LinkTo,
+	Table,
+	toast,
+	TrashIcon,
+	Tx,
+	useInvalidator,
+	useTable,
+	withColumn,
+	withToastPromiseTx,
+} from "@use-pico/client";
 import { genId, toHumanNumber, tvc, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { kysely } from "~/app/db/kysely";
 import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 import { CycleIcon } from "~/app/icon/CycleIcon";
 import { InventoryIcon } from "~/app/icon/InventoryIcon";
@@ -23,16 +40,9 @@ export namespace BlueprintTable {
 		cycles: number;
 		sort: number;
 		limit: number;
-		regions: {
-			id: string;
-			name: string;
-		}[];
-		requirements: (BlueprintRequirementSchema["~entity"] & {
-			name: string;
-		})[];
-		dependencies: (BlueprintDependencySchema["~entity"] & {
-			name: string;
-		})[];
+		regions: { id: string; name: string }[];
+		requirements: (BlueprintRequirementSchema["~entity"] & { name: string })[];
+		dependencies: (BlueprintDependencySchema["~entity"] & { name: string })[];
 		graph?: string;
 	}
 
@@ -55,9 +65,22 @@ const columns = [
 			return (
 				<div className={"flex flex-row gap-2 items-center"}>
 					<LinkTo
-						icon={<div className={tvc(["border-2", "border-purple-400", "rounded-md", "w-[64px]", "h-[64px]", "bg-contain", `bg-${data.id}`])} />}
+						icon={
+							<div
+								className={tvc([
+									"border-2",
+									"border-purple-400",
+									"rounded-md",
+									"w-[64px]",
+									"h-[64px]",
+									"bg-contain",
+									`bg-${data.id}`,
+								])}
+							/>
+						}
 						to={"/$locale/root/blueprint/$id/view"}
-						params={{ locale, id: data.id }}>
+						params={{ locale, id: data.id }}
+					>
 						{value}
 					</LinkTo>
 					<LinkTo
@@ -145,7 +168,7 @@ export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, table, 
 
 	const fillInventoryMutation = useMutation({
 		async mutationFn() {
-			return kysely.transaction().execute(async (tx) => {
+			return transaction(async (tx) => {
 				const blueprints = await tx.selectFrom("Blueprint").select(["id"]).execute();
 
 				for await (const { id: blueprintId } of blueprints) {
@@ -163,13 +186,7 @@ export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, table, 
 
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-				context: {
-					dependencies,
-				},
-			})}
+			table={useTable({ ...table, columns, context: { dependencies } })}
 			action={{
 				table() {
 					return (
@@ -178,26 +195,24 @@ export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, table, 
 								icon={InventoryIcon}
 								onClick={() => {
 									toast.promise(fillInventoryMutation.mutateAsync(), withToastPromiseTx("Fill inventories"));
-								}}>
+								}}
+							>
 								<Tx label={"Fill inventories (label)"} />
 							</ActionClick>
 							<ActionModal
 								label={<Tx label={"Create blueprint (menu)"} />}
 								textTitle={<Tx label={"Create blueprint (modal)"} />}
-								icon={BlueprintIcon}>
+								icon={BlueprintIcon}
+							>
 								{({ close }) => {
 									return (
 										<BlueprintForm
 											mutation={useMutation({
 												async mutationFn({ image, regionIds, ...values }) {
-													kysely.transaction().execute(async (tx) => {
+													transaction(async (tx) => {
 														const entity = await tx
 															.insertInto("Blueprint")
-															.values({
-																id: genId(),
-																...values,
-																image: image ? await toWebp64(image) : null,
-															})
+															.values({ id: genId(), ...values, image: image ? await toWebp64(image) : null })
 															.returningAll()
 															.executeTakeFirstOrThrow();
 
@@ -205,18 +220,12 @@ export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, table, 
 															await tx
 																.insertInto("Blueprint_Region")
 																.values(
-																	regionIds.map((regionId) => ({
-																		id: genId(),
-																		blueprintId: entity.id,
-																		regionId,
-																	})),
+																	regionIds.map((regionId) => ({ id: genId(), blueprintId: entity.id, regionId })),
 																)
 																.execute();
 														}
 
-														await withBlueprintSort({
-															tx,
-														});
+														await withBlueprintSort({ tx });
 
 														return entity;
 													});
@@ -239,23 +248,18 @@ export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, table, 
 							<ActionModal
 								label={<Tx label={"Edit (menu)"} />}
 								textTitle={<Tx label={"Edit blueprint (modal)"} />}
-								icon={BlueprintIcon}>
+								icon={BlueprintIcon}
+							>
 								{({ close }) => {
 									return (
 										<BlueprintForm
-											defaultValues={{
-												...data,
-												regionIds: data.regions.map((region) => region.id),
-											}}
+											defaultValues={{ ...data, regionIds: data.regions.map((region) => region.id) }}
 											mutation={useMutation({
 												async mutationFn({ image, regionIds, ...values }) {
-													return kysely.transaction().execute(async (tx) => {
+													return transaction(async (tx) => {
 														const entity = await tx
 															.updateTable("Blueprint")
-															.set({
-																...values,
-																image: image ? await toWebp64(image) : null,
-															})
+															.set({ ...values, image: image ? await toWebp64(image) : null })
 															.where("id", "=", data.id)
 															.returningAll()
 															.executeTakeFirstOrThrow();
@@ -266,18 +270,12 @@ export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, table, 
 															await tx
 																.insertInto("Blueprint_Region")
 																.values(
-																	regionIds.map((regionId) => ({
-																		id: genId(),
-																		blueprintId: entity.id,
-																		regionId,
-																	})),
+																	regionIds.map((regionId) => ({ id: genId(), blueprintId: entity.id, regionId })),
 																)
 																.execute();
 														}
 
-														await withBlueprintSort({
-															tx,
-														});
+														await withBlueprintSort({ tx });
 
 														return entity;
 													});
@@ -296,12 +294,11 @@ export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, table, 
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete blueprint (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
-								}}>
+								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+							>
 								<DeleteControl
 									callback={async () => {
-										return kysely.transaction().execute(async (tx) => {
+										return transaction(async (tx) => {
 											return tx.deleteFrom("Blueprint").where("id", "=", data.id).execute();
 										});
 									}}
