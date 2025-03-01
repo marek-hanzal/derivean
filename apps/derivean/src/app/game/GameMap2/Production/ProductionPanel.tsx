@@ -1,5 +1,6 @@
 /** @format */
 
+import { ProductionIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { BackIcon, LinkTo, Tx } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
