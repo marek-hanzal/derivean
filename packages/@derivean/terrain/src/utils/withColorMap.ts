@@ -1,4 +1,13 @@
-import { hslaToRgba, RGBA, type Biome, type Color, type NoiseColorMap, type NoiseType } from "@derivean/utils";
+/** @format */
+
+import {
+	hslaToRgba,
+	RGBA,
+	type Biome,
+	type Color,
+	type NoiseColorMap,
+	type NoiseType,
+} from "@derivean/utils";
 
 export namespace withColorMap {
 	export interface Props {
@@ -30,25 +39,25 @@ export const withColorMap = ({ colorMap, biomes = [], source }: withColorMap.Pro
 		return RGBA([128, 128, 128, 255]);
 	}
 
-	let { color } = base;
-	const type: string[] = ["heightmap"];
+	const { color } = base;
+	// const type: string[] = ["heightmap"];
 
-	for (const biome of biomes) {
-		const resolved = biome.resolve({
-			type,
-			base,
-			color,
-			source,
-		});
+	// for (const biome of biomes) {
+	// 	const resolved = biome.resolve({
+	// 		type,
+	// 		base,
+	// 		color,
+	// 		source,
+	// 	});
 
-		if (resolved) {
-			({ color } = resolved);
-			type.push(biome.type);
-			if (resolved.exclusive) {
-				break;
-			}
-		}
-	}
+	// 	if (resolved) {
+	// 		({ color } = resolved);
+	// 		type.push(biome.type);
+	// 		if (resolved.exclusive) {
+	// 			break;
+	// 		}
+	// 	}
+	// }
 
 	return hslaToRgba(color);
 };

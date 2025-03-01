@@ -1,3 +1,5 @@
+/** @format */
+
 import { HSLA, type Color, type NoiseColorMap, type TerrainLayer } from "@derivean/utils";
 
 /**
@@ -28,7 +30,11 @@ function interpolateHSLA(startColor: Color.HSLA, endColor: Color.HSLA, t: number
 /**
  * Creates a variation of the base color for a step within a terrain layer
  */
-function createColorVariation(baseColor: Color.HSLA, stepIndex: number, totalSteps: number): Color.HSLA {
+function createColorVariation(
+	baseColor: Color.HSLA,
+	stepIndex: number,
+	totalSteps: number,
+): Color.HSLA {
 	const t = stepIndex / (totalSteps - 1);
 
 	// Create slightly darker colors for the first steps and lighter colors for later steps
@@ -36,7 +42,12 @@ function createColorVariation(baseColor: Color.HSLA, stepIndex: number, totalSte
 	const lightnessAdjustment = 10 * (t - 0.5);
 	const saturationAdjustment = 5 * (0.5 - t);
 
-	return HSLA([baseColor.color[0], Math.max(0, Math.min(100, baseColor.color[1] + saturationAdjustment)), Math.max(0, Math.min(100, baseColor.color[2] + lightnessAdjustment)), baseColor.color[3]]);
+	return HSLA([
+		baseColor.color[0],
+		Math.max(0, Math.min(100, baseColor.color[1] + saturationAdjustment)),
+		Math.max(0, Math.min(100, baseColor.color[2] + lightnessAdjustment)),
+		baseColor.color[3],
+	]);
 }
 
 /**
@@ -45,10 +56,7 @@ function createColorVariation(baseColor: Color.HSLA, stepIndex: number, totalSte
 function assignLevelsToLayers(layers: TerrainLayer[]): (TerrainLayer & { level: number })[] {
 	let currentLevel = -1;
 	return layers.map((layer) => {
-		const levelLayer = {
-			...layer,
-			level: currentLevel,
-		} as const;
+		const levelLayer = { ...layer, level: currentLevel } as const;
 		currentLevel += layer.length;
 		return levelLayer;
 	});
@@ -65,11 +73,15 @@ export function withLayerColors(layers: TerrainLayer[]): NoiseColorMap {
 	// Check total noise range coverage
 	const totalLength = layers.reduce((sum, layer) => sum + layer.length, 0);
 	if (totalLength < 2) {
-		console.warn(`Warning: Total layer coverage (${totalLength.toFixed(3)}) is less than the full range of 2 (-1 to 1). Some noise values will not be mapped.`);
+		console.warn(
+			`Warning: Total layer coverage (${totalLength.toFixed(3)}) is less than the full range of 2 (-1 to 1). Some noise values will not be mapped.`,
+		);
 	}
 
-	if (totalLength > 2) {
-		console.error(`Total layer coverage (${totalLength.toFixed(3)}) exceeds maximum range of 2 (-1 to 1).`);
+	if (totalLength > 2.001) {
+		console.error(
+			`Total layer coverage (${totalLength.toFixed(3)}) exceeds maximum range of 2 (-1 to 1).`,
+		);
 		return colorMap;
 	}
 
@@ -106,7 +118,11 @@ export function withLayerColors(layers: TerrainLayer[]): NoiseColorMap {
 			// The last color from this layer
 			const lastColor = createColorVariation(baseColor, layerSteps - 1, layerSteps);
 			// The first color from the next layer
-			const nextColor = createColorVariation(nextLayer.color, 0, Math.max(8, nextLayer.steps));
+			const nextColor = createColorVariation(
+				nextLayer.color,
+				0,
+				Math.max(8, nextLayer.steps),
+			);
 
 			// Create transition steps between the two layers
 			const segmentLength = (lastStepEnd - lastStepStart) / (transitionSteps + 1);
