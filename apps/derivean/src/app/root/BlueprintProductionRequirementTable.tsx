@@ -13,6 +13,7 @@ import {
 	useInvalidator,
 	useTable,
 	withColumn,
+	withEqualFilter,
 } from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
@@ -39,12 +40,7 @@ const columns = [
 		render({ value }) {
 			return value;
 		},
-		filter: {
-			path: "resourceId",
-			onFilter({ data, filter }) {
-				filter.shallow("resourceID", data.resourceId);
-			},
-		},
+		filter: withEqualFilter({ path: "resourceId" }),
 		size: 12,
 	}),
 	column({
@@ -80,7 +76,11 @@ export const BlueprintProductionRequirementTable: FC<BlueprintProductionRequirem
 	table,
 	...props
 }) => {
-	const invalidator = useInvalidator([["Blueprint_Production_Requirement"], ["Blueprint_Production"], ["Resource"]]);
+	const invalidator = useInvalidator([
+		["Blueprint_Production_Requirement"],
+		["Blueprint_Production"],
+		["Resource"],
+	]);
 
 	return (
 		<Table
@@ -99,13 +99,21 @@ export const BlueprintProductionRequirementTable: FC<BlueprintProductionRequirem
 										<BlueprintProductionRequirementForm
 											mutation={useMutation({
 												async mutationFn(values) {
-													return kysely.transaction().execute(async (tx) => {
-														return tx
-															.insertInto("Blueprint_Production_Requirement")
-															.values({ id: genId(), ...values, blueprintProductionId })
-															.returningAll()
-															.executeTakeFirstOrThrow();
-													});
+													return kysely
+														.transaction()
+														.execute(async (tx) => {
+															return tx
+																.insertInto(
+																	"Blueprint_Production_Requirement",
+																)
+																.values({
+																	id: genId(),
+																	...values,
+																	blueprintProductionId,
+																})
+																.returningAll()
+																.executeTakeFirstOrThrow();
+														});
 												},
 												async onSuccess() {
 													await invalidator();
@@ -133,14 +141,18 @@ export const BlueprintProductionRequirementTable: FC<BlueprintProductionRequirem
 											defaultValues={data}
 											mutation={useMutation({
 												async mutationFn(values) {
-													return kysely.transaction().execute(async (tx) => {
-														return tx
-															.updateTable("Blueprint_Production_Requirement")
-															.set(values)
-															.where("id", "=", data.id)
-															.returningAll()
-															.executeTakeFirstOrThrow();
-													});
+													return kysely
+														.transaction()
+														.execute(async (tx) => {
+															return tx
+																.updateTable(
+																	"Blueprint_Production_Requirement",
+																)
+																.set(values)
+																.where("id", "=", data.id)
+																.returningAll()
+																.executeTakeFirstOrThrow();
+														});
 												},
 												async onSuccess() {
 													await invalidator();
@@ -156,15 +168,22 @@ export const BlueprintProductionRequirementTable: FC<BlueprintProductionRequirem
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete production requirement (modal)"} />}
-								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+								css={{
+									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+								}}
 							>
 								<DeleteControl
 									callback={async () => {
 										return kysely.transaction().execute(async (tx) => {
-											return tx.deleteFrom("Blueprint_Production_Requirement").where("id", "=", data.id).execute();
+											return tx
+												.deleteFrom("Blueprint_Production_Requirement")
+												.where("id", "=", data.id)
+												.execute();
 										});
 									}}
-									textContent={<Tx label={"Delete production requirement (content)"} />}
+									textContent={
+										<Tx label={"Delete production requirement (content)"} />
+									}
 									textToast={"Delete production requirement item"}
 									invalidator={invalidator}
 								/>

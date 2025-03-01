@@ -14,6 +14,7 @@ import {
 	useInvalidator,
 	useTable,
 	withColumn,
+	withEqualFilter,
 	withToastPromiseTx,
 } from "@use-pico/client";
 import { genId, type IdentitySchema } from "@use-pico/common";
@@ -60,12 +61,7 @@ const columns = [
 		render({ value }) {
 			return value;
 		},
-		filter: {
-			path: "group",
-			onFilter({ data, filter }) {
-				filter.shallow("group", data.group);
-			},
-		},
+		filter: withEqualFilter({ path: "group" }),
 		size: 24,
 	}),
 ];
@@ -150,12 +146,17 @@ export const TagTable: FC<TagTable.Props> = ({ group, table, ...props }) => {
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete tag (modal)"} />}
-								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+								css={{
+									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+								}}
 							>
 								<DeleteControl
 									callback={async () => {
 										await transaction((tx) => {
-											return tx.deleteFrom("Tag").where("id", "=", data.id).execute();
+											return tx
+												.deleteFrom("Tag")
+												.where("id", "=", data.id)
+												.execute();
 										});
 									}}
 									textContent={<Tx label={"Tag delete (content)"} />}

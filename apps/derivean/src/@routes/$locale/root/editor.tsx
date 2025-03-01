@@ -1,3 +1,5 @@
+/** @format */
+
 import dagre from "@dagrejs/dagre";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
@@ -6,26 +8,19 @@ import { Editor } from "~/app/root/Editor";
 import { withLayout } from "~/app/utils/withLayout";
 
 export const Route = createFileRoute("/$locale/root/editor")({
-	validateSearch: zodValidator(
-		z.object({
-			zoomTo: z.string().optional(),
-		}),
-	),
+	validateSearch: zodValidator(z.object({ zoomTo: z.string().optional() })),
 	async loader({ context: { kysely } }) {
-		const blueprints = (await kysely.selectFrom("Blueprint").select(["id", "name", "cycles", "sort"]).execute()).map((data) => ({
-			id: data.id,
-			position: { x: 0, y: 0 },
-			data,
-			type: "blueprint",
-		}));
+		const blueprints = (
+			await kysely.selectFrom("Blueprint").select(["id", "name", "cycles", "sort"]).execute()
+		).map((data) => ({ id: data.id, position: { x: 0, y: 0 }, data, type: "blueprint" }));
 
-		const blueprintDependencies = (await kysely.selectFrom("Blueprint_Dependency").select(["id", "blueprintId", "dependencyId"]).execute()).map(({ id, blueprintId, dependencyId }) => {
-			return {
-				id,
-				source: dependencyId,
-				target: blueprintId,
-				type: "dependency",
-			};
+		const blueprintDependencies = (
+			await kysely
+				.selectFrom("Blueprint_Dependency")
+				.select(["id", "blueprintId", "dependencyId"])
+				.execute()
+		).map(({ id, blueprintId, dependencyId }) => {
+			return { id, source: dependencyId, target: blueprintId, type: "dependency" };
 		});
 
 		return withLayout({

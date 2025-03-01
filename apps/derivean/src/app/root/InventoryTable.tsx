@@ -14,6 +14,7 @@ import {
 	useInvalidator,
 	useTable,
 	withColumn,
+	withEqualFilter,
 	withToastPromiseTx,
 } from "@use-pico/client";
 import { genId, toHumanNumber, type Entity, type IdentitySchema } from "@use-pico/common";
@@ -44,12 +45,7 @@ const columns = [
 		render({ value }) {
 			return value;
 		},
-		filter: {
-			path: "resourceId",
-			onFilter({ data, filter }) {
-				filter.shallow("resourceId", data.resourceId);
-			},
-		},
+		filter: withEqualFilter({ path: "resourceId" }),
 		size: 18,
 	}),
 	column({
@@ -102,7 +98,11 @@ export namespace InventoryTable {
 }
 
 export const InventoryTable: FC<InventoryTable.Props> = ({ onCreate, table, ...props }) => {
-	const invalidator = useInvalidator([["Inventory"], ["User_Inventory"], ["Building_Base_Production"]]);
+	const invalidator = useInvalidator([
+		["Inventory"],
+		["User_Inventory"],
+		["Building_Base_Production"],
+	]);
 
 	return (
 		<Table
@@ -180,12 +180,17 @@ export const InventoryTable: FC<InventoryTable.Props> = ({ onCreate, table, ...p
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete inventory item (modal)"} />}
-								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+								css={{
+									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+								}}
 							>
 								<DeleteControl
 									callback={async () => {
 										return transaction(async (tx) => {
-											return tx.deleteFrom("Inventory").where("id", "=", data.id).execute();
+											return tx
+												.deleteFrom("Inventory")
+												.where("id", "=", data.id)
+												.execute();
 										});
 									}}
 									textContent={<Tx label={"Inventory item delete (content)"} />}

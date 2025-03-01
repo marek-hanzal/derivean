@@ -1,4 +1,6 @@
-import { Progress, Table, Tx, useTable, withColumn } from "@use-pico/client";
+/** @format */
+
+import { Progress, Table, Tx, useTable, withColumn, withEqualFilter } from "@use-pico/client";
 import { toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
 
@@ -23,12 +25,7 @@ const columns = [
 		render({ value }) {
 			return value;
 		},
-		filter: {
-			path: "resourceId",
-			onFilter({ data, filter }) {
-				filter.shallow("resourceId", data.resourceId);
-			},
-		},
+		filter: withEqualFilter({ path: "resourceId" }),
 		size: 18,
 	}),
 	column({
@@ -69,16 +66,10 @@ export namespace InventoryTable {
 	}
 }
 
-export const InventoryTable: FC<InventoryTable.Props> = ({
-	table,
-	...props
-}) => {
+export const InventoryTable: FC<InventoryTable.Props> = ({ table, ...props }) => {
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			{...props}
 		/>
 	);

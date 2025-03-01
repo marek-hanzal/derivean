@@ -15,6 +15,7 @@ import {
 	useInvalidator,
 	useTable,
 	withColumn,
+	withEqualFilter,
 	withToastPromiseTx,
 } from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
@@ -46,12 +47,7 @@ const columns = [
 		render({ value }) {
 			return value;
 		},
-		filter: {
-			path: "resourceId",
-			onFilter({ data, filter }) {
-				filter.shallow("resourceId", data.resourceId);
-			},
-		},
+		filter: withEqualFilter({ path: "resourceId" }),
 		size: 18,
 	}),
 	column({
@@ -62,12 +58,7 @@ const columns = [
 		render({ value }) {
 			return <InventoryTypeInline label={value} />;
 		},
-		filter: {
-			path: "type",
-			onFilter({ data, filter }) {
-				filter.shallow("type", data.type);
-			},
-		},
+		filter: withEqualFilter({ path: "type" }),
 		size: 12,
 	}),
 	column({
@@ -103,7 +94,11 @@ export namespace BlueprintInventoryTable {
 	}
 }
 
-export const BlueprintInventoryTable: FC<BlueprintInventoryTable.Props> = ({ blueprintId, table, ...props }) => {
+export const BlueprintInventoryTable: FC<BlueprintInventoryTable.Props> = ({
+	blueprintId,
+	table,
+	...props
+}) => {
 	const invalidator = useInvalidator([["Blueprint_Inventory"]]);
 	const fillInventoryMutation = useMutation({
 		async mutationFn() {
@@ -144,7 +139,10 @@ export const BlueprintInventoryTable: FC<BlueprintInventoryTable.Props> = ({ blu
 															inventoryId: (
 																await tx
 																	.insertInto("Inventory")
-																	.values({ id: genId(), ...values })
+																	.values({
+																		id: genId(),
+																		...values,
+																	})
 																	.returningAll()
 																	.executeTakeFirstOrThrow()
 															).id,
@@ -207,12 +205,17 @@ export const BlueprintInventoryTable: FC<BlueprintInventoryTable.Props> = ({ blu
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete inventory item (modal)"} />}
-								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+								css={{
+									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+								}}
 							>
 								<DeleteControl
 									callback={async () => {
 										return transaction(async (tx) => {
-											return tx.deleteFrom("Inventory").where("id", "=", data.inventoryId).execute();
+											return tx
+												.deleteFrom("Inventory")
+												.where("id", "=", data.inventoryId)
+												.execute();
 										});
 									}}
 									textContent={<Tx label={"Inventory item delete (content)"} />}

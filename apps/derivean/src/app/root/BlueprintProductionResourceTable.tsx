@@ -12,6 +12,7 @@ import {
 	useInvalidator,
 	useTable,
 	withColumn,
+	withEqualFilter,
 } from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
@@ -37,12 +38,7 @@ const columns = [
 		render({ value }) {
 			return value;
 		},
-		filter: {
-			path: "resourceId",
-			onFilter({ data, filter }) {
-				filter.shallow("resourceID", data.resourceId);
-			},
-		},
+		filter: withEqualFilter({ path: "resourceId" }),
 		size: 22,
 	}),
 	column({
@@ -68,7 +64,11 @@ export const BlueprintProductionResourceTable: FC<BlueprintProductionResourceTab
 	table,
 	...props
 }) => {
-	const invalidator = useInvalidator([["Blueprint_Production_Resource"], ["Blueprint_Production"], ["Resource"]]);
+	const invalidator = useInvalidator([
+		["Blueprint_Production_Resource"],
+		["Blueprint_Production"],
+		["Resource"],
+	]);
 
 	return (
 		<Table
@@ -78,8 +78,12 @@ export const BlueprintProductionResourceTable: FC<BlueprintProductionResourceTab
 					return (
 						<ActionMenu>
 							<ActionModal
-								label={<Tx label={"Create production resource requirement (menu)"} />}
-								textTitle={<Tx label={"Create production resource requirement (modal)"} />}
+								label={
+									<Tx label={"Create production resource requirement (menu)"} />
+								}
+								textTitle={
+									<Tx label={"Create production resource requirement (modal)"} />
+								}
 								icon={ResourceIcon}
 							>
 								{({ close }) => {
@@ -87,13 +91,21 @@ export const BlueprintProductionResourceTable: FC<BlueprintProductionResourceTab
 										<BlueprintProductionResourceForm
 											mutation={useMutation({
 												async mutationFn(values) {
-													return kysely.transaction().execute(async (tx) => {
-														return tx
-															.insertInto("Blueprint_Production_Resource")
-															.values({ id: genId(), ...values, blueprintProductionId })
-															.returningAll()
-															.executeTakeFirstOrThrow();
-													});
+													return kysely
+														.transaction()
+														.execute(async (tx) => {
+															return tx
+																.insertInto(
+																	"Blueprint_Production_Resource",
+																)
+																.values({
+																	id: genId(),
+																	...values,
+																	blueprintProductionId,
+																})
+																.returningAll()
+																.executeTakeFirstOrThrow();
+														});
 												},
 												async onSuccess() {
 													await invalidator();
@@ -112,7 +124,9 @@ export const BlueprintProductionResourceTable: FC<BlueprintProductionResourceTab
 						<ActionMenu>
 							<ActionModal
 								label={<Tx label={"Edit (menu)"} />}
-								textTitle={<Tx label={"Edit production resource requirement (modal)"} />}
+								textTitle={
+									<Tx label={"Edit production resource requirement (modal)"} />
+								}
 								icon={ResourceIcon}
 							>
 								{({ close }) => {
@@ -121,14 +135,18 @@ export const BlueprintProductionResourceTable: FC<BlueprintProductionResourceTab
 											defaultValues={data}
 											mutation={useMutation({
 												async mutationFn(values) {
-													return kysely.transaction().execute(async (tx) => {
-														return tx
-															.updateTable("Blueprint_Production_Resource")
-															.set(values)
-															.where("id", "=", data.id)
-															.returningAll()
-															.executeTakeFirstOrThrow();
-													});
+													return kysely
+														.transaction()
+														.execute(async (tx) => {
+															return tx
+																.updateTable(
+																	"Blueprint_Production_Resource",
+																)
+																.set(values)
+																.where("id", "=", data.id)
+																.returningAll()
+																.executeTakeFirstOrThrow();
+														});
 												},
 												async onSuccess() {
 													await invalidator();
@@ -143,16 +161,29 @@ export const BlueprintProductionResourceTable: FC<BlueprintProductionResourceTab
 							<ActionModal
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
-								textTitle={<Tx label={"Delete production resource requirement (modal)"} />}
-								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+								textTitle={
+									<Tx label={"Delete production resource requirement (modal)"} />
+								}
+								css={{
+									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+								}}
 							>
 								<DeleteControl
 									callback={async () => {
 										return kysely.transaction().execute(async (tx) => {
-											return tx.deleteFrom("Blueprint_Production_Resource").where("id", "=", data.id).execute();
+											return tx
+												.deleteFrom("Blueprint_Production_Resource")
+												.where("id", "=", data.id)
+												.execute();
 										});
 									}}
-									textContent={<Tx label={"Delete production resource requirement (content)"} />}
+									textContent={
+										<Tx
+											label={
+												"Delete production resource requirement (content)"
+											}
+										/>
+									}
 									textToast={"Delete production resource requirement item"}
 									invalidator={invalidator}
 								/>

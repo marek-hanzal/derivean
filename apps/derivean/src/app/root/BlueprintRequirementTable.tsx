@@ -14,6 +14,7 @@ import {
 	useInvalidator,
 	useTable,
 	withColumn,
+	withEqualFilter,
 } from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
@@ -39,12 +40,7 @@ const columns = [
 		render({ value }) {
 			return value;
 		},
-		filter: {
-			path: "resourceId",
-			onFilter({ data, filter }) {
-				filter.shallow("resourceID", data.resourceId);
-			},
-		},
+		filter: withEqualFilter({ path: "resourceId" }),
 		size: 22,
 	}),
 	column({
@@ -75,7 +71,11 @@ export namespace BlueprintRequirementTable {
 	}
 }
 
-export const BlueprintRequirementTable: FC<BlueprintRequirementTable.Props> = ({ blueprintId, table, ...props }) => {
+export const BlueprintRequirementTable: FC<BlueprintRequirementTable.Props> = ({
+	blueprintId,
+	table,
+	...props
+}) => {
 	const invalidator = useInvalidator([
 		["Blueprint"],
 		["Blueprint_Requirement"],
@@ -146,12 +146,17 @@ export const BlueprintRequirementTable: FC<BlueprintRequirementTable.Props> = ({
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete requirement item (modal)"} />}
-								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+								css={{
+									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+								}}
 							>
 								<DeleteControl
 									callback={async () => {
 										return transaction(async (tx) => {
-											return tx.deleteFrom("Blueprint_Requirement").where("id", "=", data.id).execute();
+											return tx
+												.deleteFrom("Blueprint_Requirement")
+												.where("id", "=", data.id)
+												.execute();
 										});
 									}}
 									textContent={<Tx label={"Delete requirement item (content)"} />}

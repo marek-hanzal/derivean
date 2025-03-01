@@ -1,10 +1,6 @@
-import {
-    BoolInline,
-    Table,
-    Tx,
-    useTable,
-    withColumn
-} from "@use-pico/client";
+/** @format */
+
+import { BoolInline, Table, Tx, useTable, withColumn, withEqualFilter } from "@use-pico/client";
 import { toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
 
@@ -28,12 +24,7 @@ const columns = [
 		render({ value }) {
 			return value;
 		},
-		filter: {
-			path: "resourceId",
-			onFilter({ data, filter }) {
-				filter.shallow("resourceID", data.resourceId);
-			},
-		},
+		filter: withEqualFilter({ path: "resourceId" }),
 		size: 12,
 	}),
 	column({
@@ -64,15 +55,13 @@ export namespace BlueprintProductionRequirementTable {
 	}
 }
 
-export const BlueprintProductionRequirementTable: FC<
-	BlueprintProductionRequirementTable.Props
-> = ({ table, ...props }) => {
+export const BlueprintProductionRequirementTable: FC<BlueprintProductionRequirementTable.Props> = ({
+	table,
+	...props
+}) => {
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			{...props}
 		/>
 	);
