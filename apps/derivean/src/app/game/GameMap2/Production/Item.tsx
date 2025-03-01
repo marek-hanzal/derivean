@@ -1,15 +1,13 @@
 /** @format */
 
 import { transaction } from "@derivean/db";
+import { CyclesInline, OrderIcon, RecurringIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { Badge, Button, LinkTo, useInvalidator } from "@use-pico/client";
 import { toHumanNumber, tvc } from "@use-pico/common";
 import type { FC } from "react";
 import type { ProductionPanel } from "~/app/game/GameMap2/Production/ProductionPanel";
-import { OrderIcon } from "~/app/icon/OrderIcon";
-import { RecurringIcon } from "~/app/icon/RecurringIcon";
-import { CyclesInline } from "~/app/ui/CyclesInline";
 
 export namespace Item {
 	export interface Props {

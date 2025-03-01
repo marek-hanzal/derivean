@@ -19,10 +19,10 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { InventoryIcon } from "~/app/icon/InventoryIcon";
 import { InventoryTypeInline } from "~/app/inventory/InventoryTypeInline";
 import { InventoryForm } from "~/app/root/InventoryForm";
 import { withFillInventory } from "~/app/service/withFillInventory";
+import { InventoryIcon } from "../../../../../packages/@derivean/ui/src/icon/InventoryIcon";
 
 export namespace BlueprintInventoryTable {
 	export interface Data extends IdentitySchema.Type {

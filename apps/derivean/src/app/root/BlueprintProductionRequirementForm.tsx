@@ -1,8 +1,10 @@
+/** @format */
+
+import { ResourceIcon } from "@derivean/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BoolInput, Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ResourceIcon } from "~/app/icon/ResourceIcon";
 import { ResourcePopupSelect } from "~/app/root/ResourcePopupSelect";
 import { BlueprintProductionRequirementSchema } from "~/app/schema/BlueprintProductionRequirementSchema";
 
@@ -12,14 +14,16 @@ export namespace BlueprintProductionRequirementForm {
 	}
 }
 
-export const BlueprintProductionRequirementForm: FC<BlueprintProductionRequirementForm.Props> = ({ mutation, defaultValues, variant, tva = FormCss, css }) => {
+export const BlueprintProductionRequirementForm: FC<BlueprintProductionRequirementForm.Props> = ({
+	mutation,
+	defaultValues,
+	variant,
+	tva = FormCss,
+	css,
+}) => {
 	const form = useForm<BlueprintProductionRequirementSchema["~shape"]>({
 		resolver: zodResolver(BlueprintProductionRequirementSchema.shape),
-		defaultValues: {
-			amount: 1,
-			passive: false,
-			...defaultValues,
-		},
+		defaultValues: { amount: 1, passive: false, ...defaultValues },
 	});
 
 	const tv = tva({
@@ -32,10 +36,8 @@ export const BlueprintProductionRequirementForm: FC<BlueprintProductionRequireme
 	return (
 		<form
 			className={tv.base()}
-			onSubmit={onSubmit({
-				form,
-				mutation,
-			})}>
+			onSubmit={onSubmit({ form, mutation })}
+		>
 			<FormError
 				variant={{ highlight: true }}
 				error={form.formState.errors.root}
@@ -44,7 +46,8 @@ export const BlueprintProductionRequirementForm: FC<BlueprintProductionRequireme
 			<FormInput
 				formState={form.formState}
 				name={"resourceId"}
-				label={<Tx label={"Requirement (label)"} />}>
+				label={<Tx label={"Requirement (label)"} />}
+			>
 				<Controller
 					control={form.control}
 					name={"resourceId"}
@@ -62,7 +65,8 @@ export const BlueprintProductionRequirementForm: FC<BlueprintProductionRequireme
 			<FormInput
 				formState={form.formState}
 				name={"amount"}
-				label={<Tx label={"Amount (label)"} />}>
+				label={<Tx label={"Amount (label)"} />}
+			>
 				<input
 					type={"number"}
 					className={tv.input()}
@@ -74,7 +78,8 @@ export const BlueprintProductionRequirementForm: FC<BlueprintProductionRequireme
 				formState={form.formState}
 				name={"passive"}
 				label={<Tx label={"Passive requirement (label)"} />}
-				hint={<Tx label={"Passive requirement (hint)"} />}>
+				hint={<Tx label={"Passive requirement (hint)"} />}
+			>
 				<Controller
 					control={form.control}
 					name={"passive"}
@@ -87,7 +92,8 @@ export const BlueprintProductionRequirementForm: FC<BlueprintProductionRequireme
 			<div className={"flex flex-row justify-between gap-8"}>
 				<Button
 					iconEnabled={ResourceIcon}
-					type={"submit"}>
+					type={"submit"}
+				>
 					<Tx label={"Save (submit)"} />
 				</Button>
 			</div>

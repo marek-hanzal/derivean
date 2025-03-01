@@ -2,7 +2,7 @@ import { useParams } from "@tanstack/react-router";
 import { Menu, MenuLink, Tx } from "@use-pico/client";
 import type { Entity, IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { ResourceIcon } from "~/app/icon/ResourceIcon";
+import { ResourceIcon } from "../../../../../packages/@derivean/ui/src/icon/ResourceIcon";
 
 export namespace ResourceIndexMenu {
 	export interface Props extends Menu.Props, Entity.Schema<IdentitySchema> {

@@ -1,12 +1,10 @@
 /** @format */
 
+import { BuildingIcon, CyclesInline, LandIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { BackIcon, Button, LinkTo } from "@use-pico/client";
 import type { FC } from "react";
 import { CycleButton } from "~/app/game/CycleButton";
-import { BuildingIcon } from "~/app/icon/BuildingIcon";
-import { LandIcon } from "~/app/icon/LandIcon";
-import { CyclesInline } from "~/app/ui/CyclesInline";
 
 export namespace MapToolbar {
 	export interface Props {

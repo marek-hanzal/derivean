@@ -1,12 +1,12 @@
 /** @format */
 
 import { transaction } from "@derivean/db";
+import { BlueprintIcon } from "@derivean/ui";
 import { PopupSelect, Tx, withListCount } from "@use-pico/client";
 import { Kysely, withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import type { FC } from "react";
 import { z } from "zod";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 import { BlueprintTable } from "~/app/root/BlueprintTable";
 import { BlueprintDependencySchema } from "~/app/schema/BlueprintDependencySchema";
 import { BlueprintRequirementSchema } from "~/app/schema/BlueprintRequirementSchema";

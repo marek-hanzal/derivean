@@ -1,8 +1,10 @@
+/** @format */
+
+import { BlueprintIcon } from "@derivean/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 import { BlueprintPopupSelect } from "~/app/root/BlueprintPopupSelect";
 import { BlueprintConflictSchema } from "~/app/schema/BlueprintConflictSchema";
 
@@ -12,7 +14,13 @@ export namespace BlueprintConflictForm {
 	}
 }
 
-export const BlueprintConflictForm: FC<BlueprintConflictForm.Props> = ({ mutation, defaultValues, variant, tva = FormCss, css }) => {
+export const BlueprintConflictForm: FC<BlueprintConflictForm.Props> = ({
+	mutation,
+	defaultValues,
+	variant,
+	tva = FormCss,
+	css,
+}) => {
 	const form = useForm<BlueprintConflictSchema["~shape"]>({
 		resolver: zodResolver(BlueprintConflictSchema.shape),
 		defaultValues,
@@ -28,10 +36,8 @@ export const BlueprintConflictForm: FC<BlueprintConflictForm.Props> = ({ mutatio
 	return (
 		<form
 			className={tv.base()}
-			onSubmit={onSubmit({
-				form,
-				mutation,
-			})}>
+			onSubmit={onSubmit({ form, mutation })}
+		>
 			<FormError
 				variant={{ highlight: true }}
 				error={form.formState.errors.root}
@@ -41,7 +47,8 @@ export const BlueprintConflictForm: FC<BlueprintConflictForm.Props> = ({ mutatio
 				formState={form.formState}
 				name={"conflictId"}
 				label={<Tx label={"Blueprint conflict (label)"} />}
-				hint={<Tx label={"Blueprint conflict (hint)"} />}>
+				hint={<Tx label={"Blueprint conflict (hint)"} />}
+			>
 				<Controller
 					control={form.control}
 					name={"conflictId"}
@@ -60,7 +67,8 @@ export const BlueprintConflictForm: FC<BlueprintConflictForm.Props> = ({ mutatio
 			<div className={"flex flex-row justify-between gap-8"}>
 				<Button
 					iconEnabled={BlueprintIcon}
-					type={"submit"}>
+					type={"submit"}
+				>
 					<Tx label={"Save (submit)"} />
 				</Button>
 			</div>

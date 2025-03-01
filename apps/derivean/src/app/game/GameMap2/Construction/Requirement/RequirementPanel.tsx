@@ -1,10 +1,12 @@
+/** @format */
+
+import { RequirementIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { LinkTo, Tx } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
 import type { FC } from "react";
 import { Item } from "~/app/game/GameMap2/Construction/Requirement/Item";
 import { Panel } from "~/app/game/GameMap2/Panel";
-import { RequirementIcon } from "~/app/icon/RequirementIcon";
 
 export namespace RequirementPanel {
 	export interface Building {
@@ -41,9 +43,7 @@ export namespace RequirementPanel {
 }
 
 export const RequirementPanel: FC<RequirementPanel.Props> = ({ userId, building, requirement, ...props }) => {
-	const { locale, mapId } = useParams({
-		from: "/$locale/map/$mapId",
-	});
+	const { locale, mapId } = useParams({ from: "/$locale/map/$mapId" });
 
 	return (
 		<Panel
@@ -53,11 +53,13 @@ export const RequirementPanel: FC<RequirementPanel.Props> = ({ userId, building,
 				<LinkTo
 					to={"/$locale/map/$mapId/building/$buildingId/view"}
 					params={{ locale, mapId, buildingId: building.id }}
-					search={{ zoomToId: building.id }}>
+					search={{ zoomToId: building.id }}
+				>
 					{building.name}
 				</LinkTo>
 			}
-			{...props}>
+			{...props}
+		>
 			{requirement.length > 0 ? (
 				requirement.map((item) => {
 					return (
@@ -70,7 +72,19 @@ export const RequirementPanel: FC<RequirementPanel.Props> = ({ userId, building,
 					);
 				})
 			) : (
-				<div className={tvc(["flex", "items-center", "justify-center", "rounded-sm", "border", "border-green-400", "p-4", "bg-green-200", "font-bold"])}>
+				<div
+					className={tvc([
+						"flex",
+						"items-center",
+						"justify-center",
+						"rounded-sm",
+						"border",
+						"border-green-400",
+						"p-4",
+						"bg-green-200",
+						"font-bold",
+					])}
+				>
 					<Tx label={"There are no construction requirements (label)"} />
 				</div>
 			)}

@@ -2,8 +2,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { useForm } from "react-hook-form";
-import { MapIcon } from "~/app/icon/MapIcon";
 import { RegionSchema } from "~/app/schema/RegionSchema";
+import { MapIcon } from "../../../../../packages/@derivean/ui/src/icon/MapIcon";
 
 export namespace RegionForm {
 	export interface Props extends Form.Props<RegionSchema["shape"]> {

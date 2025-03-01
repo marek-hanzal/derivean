@@ -21,9 +21,6 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, tvc, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
-import { CycleIcon } from "~/app/icon/CycleIcon";
-import { InventoryIcon } from "~/app/icon/InventoryIcon";
 import { BlueprintDependenciesInline } from "~/app/root/BlueprintDependenciesInline";
 import { BlueprintForm } from "~/app/root/BlueprintForm";
 import type { BlueprintDependencySchema } from "~/app/schema/BlueprintDependencySchema";
@@ -33,6 +30,9 @@ import { withFillInventory } from "~/app/service/withFillInventory";
 import { RequirementsInline } from "~/app/ui/RequirementsInline";
 import { toWebp64 } from "~/app/utils/toWebp64";
 import type { withBlueprintGraph } from "~/app/utils/withBlueprintGraph";
+import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
+import { CycleIcon } from "../../../../../packages/@derivean/ui/src/icon/CycleIcon";
+import { InventoryIcon } from "../../../../../packages/@derivean/ui/src/icon/InventoryIcon";
 
 export namespace BlueprintTable {
 	export interface Data extends IdentitySchema.Type {

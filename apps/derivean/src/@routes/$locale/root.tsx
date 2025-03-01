@@ -1,9 +1,9 @@
 /** @format */
 
+import { GameIcon } from "@derivean/ui";
 import { createFileRoute, redirect, useLoaderData, useParams } from "@tanstack/react-router";
 import { AppLayout, LinkTo, LogoutIcon, ls, withList } from "@use-pico/client";
 import { z } from "zod";
-import { GameIcon } from "~/app/icon/GameIcon";
 import { Logo } from "~/app/logo/Logo";
 import { RootMenu } from "~/app/root/RootMenu";
 import { SessionSchema } from "~/app/schema/SessionSchema";

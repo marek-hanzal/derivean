@@ -1,9 +1,11 @@
+/** @format */
+
+import { ProductionIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { LinkTo, More, Table, Tx, useTable, withColumn } from "@use-pico/client";
 import { toHumanNumber, tvc, type IdentitySchema } from "@use-pico/common";
 import { type FC } from "react";
 import { RequirementsInline } from "~/app/game/RequirementsInline";
-import { ProductionIcon } from "~/app/icon/ProductionIcon";
 import type { BlueprintProductionDependencySchema } from "~/app/schema/BlueprintProductionDependencySchema";
 import type { BlueprintProductionRequirementSchema } from "~/app/schema/BlueprintProductionRequirementSchema";
 import type { BlueprintProductionResourceSchema } from "~/app/schema/BlueprintProductionResourceSchema";
@@ -15,15 +17,9 @@ export namespace BlueprintProductionTable {
 		blueprintId: string;
 		amount: number;
 		cycles: number;
-		requirements: (BlueprintProductionRequirementSchema["~entity"] & {
-			name: string;
-		})[];
-		resources: (BlueprintProductionResourceSchema["~entity"] & {
-			name: string;
-		})[];
-		dependencies: (BlueprintProductionDependencySchema["~entity"] & {
-			name: string;
-		})[];
+		requirements: (BlueprintProductionRequirementSchema["~entity"] & { name: string })[];
+		resources: (BlueprintProductionResourceSchema["~entity"] & { name: string })[];
+		dependencies: (BlueprintProductionDependencySchema["~entity"] & { name: string })[];
 	}
 }
 
@@ -42,7 +38,8 @@ const columns = [
 				<LinkTo
 					icon={ProductionIcon}
 					to={"/$locale/game/blueprint/production/$id/requirements"}
-					params={{ locale, id: data.id }}>
+					params={{ locale, id: data.id }}
+				>
 					{value}
 				</LinkTo>
 			);
@@ -96,7 +93,20 @@ const columns = [
 					items={value}
 					render={({ entity }) => {
 						return (
-							<div className={tvc(["flex", "flex-row", "gap-2", "items-center", "bg-sky-100", "border", "rounded-sm", "border-sky-300", "py-1", "px-2"])}>
+							<div
+								className={tvc([
+									"flex",
+									"flex-row",
+									"gap-2",
+									"items-center",
+									"bg-sky-100",
+									"border",
+									"rounded-sm",
+									"border-sky-300",
+									"py-1",
+									"px-2",
+								])}
+							>
 								<div>{entity.name}</div>
 								<div className={"text-md font-bold text-slate-500"}>x{toHumanNumber({ number: entity.amount })}</div>
 							</div>
@@ -120,10 +130,24 @@ const columns = [
 					items={value}
 					render={({ entity }) => {
 						return (
-							<div className={tvc(["flex", "flex-row", "gap-2", "items-center", "bg-sky-100", "border", "rounded-sm", "border-sky-300", "py-1", "px-2"])}>
+							<div
+								className={tvc([
+									"flex",
+									"flex-row",
+									"gap-2",
+									"items-center",
+									"bg-sky-100",
+									"border",
+									"rounded-sm",
+									"border-sky-300",
+									"py-1",
+									"px-2",
+								])}
+							>
 								<LinkTo
 									to={"/$locale/game/blueprint/$id/requirements"}
-									params={{ locale, id: entity.blueprintId }}>
+									params={{ locale, id: entity.blueprintId }}
+								>
 									{entity.name}
 								</LinkTo>
 							</div>
@@ -145,10 +169,7 @@ export namespace BlueprintProductionTable {
 export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({ table, ...props }) => {
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			{...props}
 		/>
 	);

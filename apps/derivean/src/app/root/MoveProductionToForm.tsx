@@ -3,8 +3,8 @@ import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 import { BlueprintPopupSelect } from "~/app/root/BlueprintPopupSelect";
+import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
 
 const ShapeSchema = z.object({
 	blueprintId: z.string().min(1),

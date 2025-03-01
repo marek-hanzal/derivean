@@ -1,6 +1,7 @@
 /** @format */
 
 import { transaction } from "@derivean/db";
+import { ResourceIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import {
@@ -21,7 +22,6 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, tvc, type IdentitySchema, type TagSchema } from "@use-pico/common";
 import type { FC } from "react";
-import { ResourceIcon } from "~/app/icon/ResourceIcon";
 import { ResourceForm } from "~/app/root/ResourceForm";
 import { toWebp64 } from "~/app/utils/toWebp64";
 

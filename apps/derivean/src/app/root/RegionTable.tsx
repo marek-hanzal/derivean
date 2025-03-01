@@ -18,9 +18,9 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { RegionIcon } from "~/app/icon/RegionIcon";
 import { RegionForm } from "~/app/root/RegionForm";
 import { toWebp64 } from "~/app/utils/toWebp64";
+import { RegionIcon } from "../../../../../packages/@derivean/ui/src/icon/RegionIcon";
 
 export namespace RegionTable {
 	export interface Data extends IdentitySchema.Type {

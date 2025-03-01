@@ -1,16 +1,20 @@
+/** @format */
+
+import {
+	BuildingIcon,
+	DemandIcon,
+	InventoryIcon,
+	ProductionIcon,
+	QueueIcon,
+	SupplyIcon,
+	TransportIcon,
+} from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { LinkTo, Tx } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
 import type { FC } from "react";
 import { LinkCss } from "~/app/game/GameMap2/LinkCss";
 import { Panel } from "~/app/game/GameMap2/Panel";
-import { BuildingIcon } from "~/app/icon/BuildingIcon";
-import { DemandIcon } from "~/app/icon/DemandIcon";
-import { InventoryIcon } from "~/app/icon/InventoryIcon";
-import { ProductionIcon } from "~/app/icon/ProductionIcon";
-import { QueueIcon } from "~/app/icon/QueueIcon";
-import { SupplyIcon } from "~/app/icon/SupplyIcon";
-import { TransportIcon } from "~/app/icon/TransportIcon";
 
 export namespace BuildingPanel {
 	export interface Building {
@@ -26,9 +30,7 @@ export namespace BuildingPanel {
 }
 
 export const BuildingPanel: FC<BuildingPanel.Props> = ({ building }) => {
-	const { mapId, locale } = useParams({
-		from: "/$locale/map/$mapId",
-	});
+	const { mapId, locale } = useParams({ from: "/$locale/map/$mapId" });
 
 	return (
 		<Panel
@@ -37,16 +39,19 @@ export const BuildingPanel: FC<BuildingPanel.Props> = ({ building }) => {
 				<LinkTo
 					to={"/$locale/map/$mapId/building/$buildingId/view"}
 					params={{ locale, mapId, buildingId: building.id }}
-					search={{ zoomToId: building.id }}>
+					search={{ zoomToId: building.id }}
+				>
 					{building.name}
 				</LinkTo>
 			}
-			textSubTitle={building.land}>
+			textSubTitle={building.land}
+		>
 			<LinkTo
 				icon={ProductionIcon}
 				to={"/$locale/map/$mapId/building/$buildingId/production/list"}
 				params={{ locale, mapId, buildingId: building.id }}
-				css={{ base: LinkCss }}>
+				css={{ base: LinkCss }}
+			>
 				<Tx label={"Building production (label)"} />
 			</LinkTo>
 
@@ -54,7 +59,8 @@ export const BuildingPanel: FC<BuildingPanel.Props> = ({ building }) => {
 				icon={QueueIcon}
 				to={"/$locale/map/$mapId/building/$buildingId/production/queue"}
 				params={{ locale, mapId, buildingId: building.id }}
-				css={{ base: LinkCss }}>
+				css={{ base: LinkCss }}
+			>
 				<Tx label={"Production queue (label)"} />
 			</LinkTo>
 
@@ -62,7 +68,8 @@ export const BuildingPanel: FC<BuildingPanel.Props> = ({ building }) => {
 				icon={InventoryIcon}
 				to={"/$locale/map/$mapId/building/$buildingId/inventory"}
 				params={{ locale, mapId, buildingId: building.id }}
-				css={{ base: LinkCss }}>
+				css={{ base: LinkCss }}
+			>
 				<Tx label={"Building inventory (label)"} />
 			</LinkTo>
 
@@ -70,7 +77,8 @@ export const BuildingPanel: FC<BuildingPanel.Props> = ({ building }) => {
 				icon={SupplyIcon}
 				to={"/$locale/map/$mapId/building/$buildingId/supply"}
 				params={{ locale, mapId, buildingId: building.id }}
-				css={{ base: LinkCss }}>
+				css={{ base: LinkCss }}
+			>
 				<Tx label={"Supply list (label)"} />
 			</LinkTo>
 
@@ -78,7 +86,8 @@ export const BuildingPanel: FC<BuildingPanel.Props> = ({ building }) => {
 				icon={DemandIcon}
 				to={"/$locale/map/$mapId/building/$buildingId/demand"}
 				params={{ locale, mapId, buildingId: building.id }}
-				css={{ base: LinkCss }}>
+				css={{ base: LinkCss }}
+			>
 				<Tx label={"Demand list (label)"} />
 			</LinkTo>
 
@@ -86,7 +95,8 @@ export const BuildingPanel: FC<BuildingPanel.Props> = ({ building }) => {
 				icon={TransportIcon}
 				to={"/$locale/map/$mapId/building/$buildingId/transport"}
 				params={{ locale, mapId, buildingId: building.id }}
-				css={{ base: LinkCss }}>
+				css={{ base: LinkCss }}
+			>
 				<Tx label={"Transport list (label)"} />
 			</LinkTo>
 
@@ -94,7 +104,8 @@ export const BuildingPanel: FC<BuildingPanel.Props> = ({ building }) => {
 				icon={BuildingIcon}
 				to={"/$locale/map/$mapId/building/$buildingId/link"}
 				params={{ locale, mapId, buildingId: building.id }}
-				css={{ base: LinkCss }}>
+				css={{ base: LinkCss }}
+			>
 				<Tx label={"Building links (label)"} />
 			</LinkTo>
 

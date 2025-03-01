@@ -1,12 +1,11 @@
 /** @format */
 
+import { BuildingIcon, LandIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { LinkTo } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
 import type { FC } from "react";
 import type { LinkPanel } from "~/app/game/GameMap2/Building/Link/LinkPanel";
-import { BuildingIcon } from "~/app/icon/BuildingIcon";
-import { LandIcon } from "~/app/icon/LandIcon";
 
 export namespace Item {
 	export interface Props {

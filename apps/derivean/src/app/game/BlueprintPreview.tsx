@@ -1,8 +1,10 @@
+/** @format */
+
+import { BlueprintIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { LinkTo, ListIcon, Preview, TitlePreview, Tx } from "@use-pico/client";
 import type { IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 
 export namespace BlueprintPreview {
 	export interface Data extends IdentitySchema.Type {
@@ -31,7 +33,8 @@ export const BlueprintPreview: FC<BlueprintPreview.Props> = (props) => {
 						<LinkTo
 							icon={ListIcon}
 							to={"/$locale/game/blueprint/list"}
-							params={{ locale }}>
+							params={{ locale }}
+						>
 							<Tx label={"Blueprint list (label)"} />
 						</LinkTo>
 					</>

@@ -1,6 +1,7 @@
 /** @format */
 
 import { kysely } from "@derivean/db";
+import { DemandIcon, PackageIcon, SupplyIcon } from "@derivean/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -22,9 +23,6 @@ import type { FC } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import type { InventoryPanel } from "~/app/game/GameMap2/Inventory/InventoryPanel";
-import { DemandIcon } from "~/app/icon/DemandIcon";
-import { PackageIcon } from "~/app/icon/PackageIcon";
-import { SupplyIcon } from "~/app/icon/SupplyIcon";
 
 const DemandSchema = z.object({
 	buildingId: z.string().min(1),

@@ -1,14 +1,12 @@
 /** @format */
 
 import { kysely } from "@derivean/db";
+import { BlueprintIcon, ProductionIcon, ResourceIcon } from "@derivean/ui";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Action, DeleteControl, EditIcon, LinkTo, Modal, TrashIcon, Tx, useInvalidator } from "@use-pico/client";
 import { type IdentitySchema } from "@use-pico/common";
 import { Handle, NodeProps, Position, type Node } from "@xyflow/react";
 import { type FC } from "react";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
-import { ProductionIcon } from "~/app/icon/ProductionIcon";
-import { ResourceIcon } from "~/app/icon/ResourceIcon";
 
 export namespace BlueprintNode {
 	export type Data = IdentitySchema.Type & { name: string };

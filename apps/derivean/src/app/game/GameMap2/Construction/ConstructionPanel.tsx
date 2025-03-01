@@ -1,10 +1,12 @@
+/** @format */
+
+import { ConstructionIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { LinkTo, Tx } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
 import type { FC } from "react";
 import { Item } from "~/app/game/GameMap2/Construction/Item";
 import { Panel } from "~/app/game/GameMap2/Panel";
-import { ConstructionIcon } from "~/app/icon/ConstructionIcon";
 
 export namespace ConstructionPanel {
 	export interface Blueprint {
@@ -27,9 +29,7 @@ export namespace ConstructionPanel {
 }
 
 export const ConstructionPanel: FC<ConstructionPanel.Props> = ({ userId, land, blueprints, ...props }) => {
-	const { locale, mapId } = useParams({
-		from: "/$locale/map/$mapId",
-	});
+	const { locale, mapId } = useParams({ from: "/$locale/map/$mapId" });
 
 	return (
 		<Panel
@@ -38,12 +38,14 @@ export const ConstructionPanel: FC<ConstructionPanel.Props> = ({ userId, land, b
 				<LinkTo
 					to={"/$locale/map/$mapId/land/$landId/construction"}
 					params={{ locale, mapId, landId: land.id }}
-					search={{ zoomToId: land.id }}>
+					search={{ zoomToId: land.id }}
+				>
 					{land.name}
 				</LinkTo>
 			}
 			textSubTitle={<Tx label={"Construction (label)"} />}
-			{...props}>
+			{...props}
+		>
 			{blueprints.length > 0 ? (
 				blueprints.map((item) => {
 					return (
@@ -56,7 +58,19 @@ export const ConstructionPanel: FC<ConstructionPanel.Props> = ({ userId, land, b
 					);
 				})
 			) : (
-				<div className={tvc(["flex", "items-center", "justify-center", "rounded-sm", "border", "border-amber-400", "p-4", "bg-amber-200", "font-bold"])}>
+				<div
+					className={tvc([
+						"flex",
+						"items-center",
+						"justify-center",
+						"rounded-sm",
+						"border",
+						"border-amber-400",
+						"p-4",
+						"bg-amber-200",
+						"font-bold",
+					])}
+				>
 					<Tx label={"There are no available blueprints (label)"} />
 				</div>
 			)}

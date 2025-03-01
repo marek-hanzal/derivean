@@ -1,8 +1,10 @@
+/** @format */
+
+import { ResourceIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { LinkTo, ListIcon, Preview, TitlePreview, Tx } from "@use-pico/client";
 import type { IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { ResourceIcon } from "~/app/icon/ResourceIcon";
 
 export namespace ResourcePreview {
 	export interface Data extends IdentitySchema.Type {
@@ -30,7 +32,8 @@ export const ResourcePreview: FC<ResourcePreview.Props> = (props) => {
 					<LinkTo
 						icon={ListIcon}
 						to={"/$locale/root/resource/list"}
-						params={{ locale }}>
+						params={{ locale }}
+					>
 						<Tx label={"Resource list (label)"} />
 					</LinkTo>
 				</>

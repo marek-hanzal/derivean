@@ -4,9 +4,9 @@ import { transaction } from "@derivean/db";
 import { More, PopupMultiSelect, Tx, withListCount } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
 import type { FC } from "react";
-import { RegionIcon } from "~/app/icon/RegionIcon";
 import { RegionTable } from "~/app/root/RegionTable";
 import { RegionSchema } from "~/app/schema/RegionSchema";
+import { RegionIcon } from "../../../../../packages/@derivean/ui/src/icon/RegionIcon";
 
 export namespace RegionPopupMultiSelect {
 	export interface Props extends PopupMultiSelect.PropsEx<RegionTable.Data> {

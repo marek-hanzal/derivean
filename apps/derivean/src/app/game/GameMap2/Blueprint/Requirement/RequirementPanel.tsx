@@ -1,9 +1,11 @@
+/** @format */
+
+import { ResourceIcon } from "@derivean/ui";
 import { Tx } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
 import type { FC } from "react";
 import { Item } from "~/app/game/GameMap2/Blueprint/Requirement/Item";
 import { Panel } from "~/app/game/GameMap2/Panel";
-import { ResourceIcon } from "~/app/icon/ResourceIcon";
 
 export namespace RequirementPanel {
 	export interface Blueprint {
@@ -30,7 +32,8 @@ export const RequirementPanel: FC<RequirementPanel.Props> = ({ blueprint, requir
 			icon={ResourceIcon}
 			textTitle={<Tx label={"Building requirements (label)"} />}
 			textSubTitle={blueprint.name}
-			{...props}>
+			{...props}
+		>
 			{requirement.length > 0 ? (
 				requirement.map((item) => {
 					return (
@@ -41,7 +44,19 @@ export const RequirementPanel: FC<RequirementPanel.Props> = ({ blueprint, requir
 					);
 				})
 			) : (
-				<div className={tvc(["flex", "items-center", "justify-center", "rounded-sm", "border", "border-green-400", "p-4", "bg-green-200", "font-bold"])}>
+				<div
+					className={tvc([
+						"flex",
+						"items-center",
+						"justify-center",
+						"rounded-sm",
+						"border",
+						"border-green-400",
+						"p-4",
+						"bg-green-200",
+						"font-bold",
+					])}
+				>
 					<Tx label={"There are no requirements. (label)"} />
 				</div>
 			)}

@@ -1,8 +1,10 @@
+/** @format */
+
+import { ProductionIcon } from "@derivean/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ProductionIcon } from "~/app/icon/ProductionIcon";
 import { ResourcePopupSelect } from "~/app/root/ResourcePopupSelect";
 import { BlueprintProductionSchema } from "~/app/schema/BlueprintProductionSchema";
 
@@ -12,14 +14,16 @@ export namespace BlueprintProductionForm {
 	}
 }
 
-export const BlueprintProductionForm: FC<BlueprintProductionForm.Props> = ({ mutation, defaultValues, variant, tva = FormCss, css }) => {
+export const BlueprintProductionForm: FC<BlueprintProductionForm.Props> = ({
+	mutation,
+	defaultValues,
+	variant,
+	tva = FormCss,
+	css,
+}) => {
 	const form = useForm<BlueprintProductionSchema["~shape"]>({
 		resolver: zodResolver(BlueprintProductionSchema.shape),
-		defaultValues: {
-			amount: 1,
-			cycles: 1,
-			...defaultValues,
-		},
+		defaultValues: { amount: 1, cycles: 1, ...defaultValues },
 	});
 
 	const tv = tva({
@@ -32,10 +36,8 @@ export const BlueprintProductionForm: FC<BlueprintProductionForm.Props> = ({ mut
 	return (
 		<form
 			className={tv.base()}
-			onSubmit={onSubmit({
-				form,
-				mutation,
-			})}>
+			onSubmit={onSubmit({ form, mutation })}
+		>
 			<FormError
 				variant={{ highlight: true }}
 				error={form.formState.errors.root}
@@ -44,7 +46,8 @@ export const BlueprintProductionForm: FC<BlueprintProductionForm.Props> = ({ mut
 			<FormInput
 				formState={form.formState}
 				name={"resourceId"}
-				label={<Tx label={"Resource name (label)"} />}>
+				label={<Tx label={"Resource name (label)"} />}
+			>
 				<Controller
 					control={form.control}
 					name={"resourceId"}
@@ -63,7 +66,8 @@ export const BlueprintProductionForm: FC<BlueprintProductionForm.Props> = ({ mut
 			<FormInput
 				formState={form.formState}
 				name={"amount"}
-				label={<Tx label={"Amount (label)"} />}>
+				label={<Tx label={"Amount (label)"} />}
+			>
 				<input
 					type={"number"}
 					className={tv.input()}
@@ -75,7 +79,8 @@ export const BlueprintProductionForm: FC<BlueprintProductionForm.Props> = ({ mut
 				formState={form.formState}
 				name={"cycles"}
 				label={<Tx label={"Production cycles (label)"} />}
-				hint={<Tx label={"Production cycles (hint)"} />}>
+				hint={<Tx label={"Production cycles (hint)"} />}
+			>
 				<input
 					type={"number"}
 					className={tv.input()}
@@ -86,7 +91,8 @@ export const BlueprintProductionForm: FC<BlueprintProductionForm.Props> = ({ mut
 			<div className={"flex flex-row justify-between gap-8"}>
 				<Button
 					iconEnabled={ProductionIcon}
-					type={"submit"}>
+					type={"submit"}
+				>
 					<Tx label={"Save (submit)"} />
 				</Button>
 			</div>

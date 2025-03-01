@@ -19,9 +19,9 @@ import {
 } from "@use-pico/client";
 import { genId, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 import { BlueprintProductionDependencyForm } from "~/app/root/BlueprintProductionDependencyForm";
 import { withBlueprintSort } from "~/app/service/withBlueprintSort";
+import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
 
 export namespace BlueprintProductionDependencyTable {
 	export interface Data extends IdentitySchema.Type {

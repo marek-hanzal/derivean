@@ -1,8 +1,10 @@
+/** @format */
+
+import { BlueprintIcon } from "@derivean/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 import { BlueprintPopupSelect } from "~/app/root/BlueprintPopupSelect";
 import { BlueprintDependencySchema } from "~/app/schema/BlueprintDependencySchema";
 
@@ -12,7 +14,13 @@ export namespace BlueprintDependencyForm {
 	}
 }
 
-export const BlueprintDependencyForm: FC<BlueprintDependencyForm.Props> = ({ mutation, defaultValues, variant, tva = FormCss, css }) => {
+export const BlueprintDependencyForm: FC<BlueprintDependencyForm.Props> = ({
+	mutation,
+	defaultValues,
+	variant,
+	tva = FormCss,
+	css,
+}) => {
 	const form = useForm<BlueprintDependencySchema["~shape"]>({
 		resolver: zodResolver(BlueprintDependencySchema.shape),
 		defaultValues,
@@ -28,10 +36,8 @@ export const BlueprintDependencyForm: FC<BlueprintDependencyForm.Props> = ({ mut
 	return (
 		<form
 			className={tv.base()}
-			onSubmit={onSubmit({
-				form,
-				mutation,
-			})}>
+			onSubmit={onSubmit({ form, mutation })}
+		>
 			<FormError
 				variant={{ highlight: true }}
 				error={form.formState.errors.root}
@@ -40,7 +46,8 @@ export const BlueprintDependencyForm: FC<BlueprintDependencyForm.Props> = ({ mut
 			<FormInput
 				formState={form.formState}
 				name={"dependencyId"}
-				label={<Tx label={"Blueprint dependency (label)"} />}>
+				label={<Tx label={"Blueprint dependency (label)"} />}
+			>
 				<Controller
 					control={form.control}
 					name={"dependencyId"}
@@ -59,7 +66,8 @@ export const BlueprintDependencyForm: FC<BlueprintDependencyForm.Props> = ({ mut
 			<div className={"flex flex-row justify-between gap-8"}>
 				<Button
 					iconEnabled={BlueprintIcon}
-					type={"submit"}>
+					type={"submit"}
+				>
 					<Tx label={"Save (submit)"} />
 				</Button>
 			</div>

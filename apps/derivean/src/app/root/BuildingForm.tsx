@@ -2,9 +2,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { BuildingIcon } from "~/app/icon/BuildingIcon";
 import { BlueprintPopupSelect } from "~/app/root/BlueprintPopupSelect";
 import { BuildingSchema } from "~/app/schema/BuildingSchema";
+import { BuildingIcon } from "../../../../../packages/@derivean/ui/src/icon/BuildingIcon";
 
 export namespace BuildingForm {
 	export interface Props extends Form.Props<BuildingSchema["shape"]> {

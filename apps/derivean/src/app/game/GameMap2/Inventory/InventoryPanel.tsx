@@ -1,10 +1,12 @@
+/** @format */
+
+import { InventoryIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { BackIcon, Fulltext, LinkTo, Tx } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
 import type { FC } from "react";
 import { Item } from "~/app/game/GameMap2/Inventory/Item";
 import { Panel } from "~/app/game/GameMap2/Panel";
-import { InventoryIcon } from "~/app/icon/InventoryIcon";
 
 export namespace InventoryPanel {
 	export interface Building {
@@ -32,9 +34,7 @@ export namespace InventoryPanel {
 }
 
 export const InventoryPanel: FC<InventoryPanel.Props> = ({ building, userId, inventory, fulltextProps, ...props }) => {
-	const { locale, mapId } = useParams({
-		from: "/$locale/map/$mapId",
-	});
+	const { locale, mapId } = useParams({ from: "/$locale/map/$mapId" });
 
 	return (
 		<Panel
@@ -56,7 +56,8 @@ export const InventoryPanel: FC<InventoryPanel.Props> = ({ building, userId, inv
 					</LinkTo>
 				</>
 			}
-			{...props}>
+			{...props}
+		>
 			<Fulltext {...fulltextProps} />
 
 			<div>
@@ -77,7 +78,19 @@ export const InventoryPanel: FC<InventoryPanel.Props> = ({ building, userId, inv
 					);
 				})
 			) : (
-				<div className={tvc(["flex", "items-center", "justify-center", "rounded-sm", "border", "border-amber-400", "p-4", "bg-amber-200", "font-bold"])}>
+				<div
+					className={tvc([
+						"flex",
+						"items-center",
+						"justify-center",
+						"rounded-sm",
+						"border",
+						"border-amber-400",
+						"p-4",
+						"bg-amber-200",
+						"font-bold",
+					])}
+				>
 					<Tx label={"No inventory storage. (label)"} />
 				</div>
 			)}

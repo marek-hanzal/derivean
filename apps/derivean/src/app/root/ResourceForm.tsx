@@ -2,9 +2,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ResourceIcon } from "~/app/icon/ResourceIcon";
 import { TagPopupMultiSelect } from "~/app/root/TagPopupMultiSelect";
 import { ResourceSchema } from "~/app/schema/ResourceSchema";
+import { ResourceIcon } from "../../../../../packages/@derivean/ui/src/icon/ResourceIcon";
 
 export namespace ResourceForm {
 	export interface Props extends Form.Props<ResourceSchema["shape"]> {

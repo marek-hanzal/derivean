@@ -1,12 +1,13 @@
+/** @format */
+
+import { ConstructionIcon, CyclesInline } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Badge, Button, LinkTo, useInvalidator } from "@use-pico/client";
 import { type FC } from "react";
 import type { ConstructionPanel } from "~/app/game/GameMap2/Construction/ConstructionPanel";
 import { ItemCss } from "~/app/game/GameMap2/Construction/ItemCss";
-import { ConstructionIcon } from "~/app/icon/ConstructionIcon";
 import { withConstructionQueue } from "~/app/service/withConstructionQueue";
-import { CyclesInline } from "~/app/ui/CyclesInline";
 
 export namespace Item {
 	export interface Props extends ItemCss.Props {
@@ -17,22 +18,13 @@ export namespace Item {
 }
 
 export const Item: FC<Item.Props> = ({ blueprint, land, userId, variant, tva = ItemCss, css }) => {
-	const { mapId, locale } = useParams({
-		from: "/$locale/map/$mapId",
-	});
+	const { mapId, locale } = useParams({ from: "/$locale/map/$mapId" });
 	const navigate = useNavigate();
 	const invalidator = useInvalidator([["GameMap"]]);
 
 	const constructionMutation = useMutation({
 		async mutationFn({ blueprintId, landId, plotId }: { blueprintId: string; landId: string; plotId: string }) {
-			const building = await withConstructionQueue({
-				userId,
-				blueprintId,
-				landId,
-				plotId,
-				plan: true,
-				valid: false,
-			});
+			const building = await withConstructionQueue({ userId, blueprintId, landId, plotId, plan: true, valid: false });
 
 			navigate({
 				to: "/$locale/map/$mapId/land/$landId/construction",
@@ -57,7 +49,8 @@ export const Item: FC<Item.Props> = ({ blueprint, land, userId, variant, tva = I
 					<LinkTo
 						to={"/$locale/map/$mapId/blueprint/$blueprintId/requirements"}
 						params={{ locale, mapId, blueprintId: blueprint.id }}
-						css={{ base: ["font-bold"] }}>
+						css={{ base: ["font-bold"] }}
+					>
 						{blueprint.name}
 					</LinkTo>
 				</div>
@@ -68,11 +61,7 @@ export const Item: FC<Item.Props> = ({ blueprint, land, userId, variant, tva = I
 						iconDisabled={ConstructionIcon}
 						loading={constructionMutation.isPending}
 						onClick={() => {
-							constructionMutation.mutate({
-								blueprintId: blueprint.id,
-								landId: land.id,
-								plotId: "unknown`",
-							});
+							constructionMutation.mutate({ blueprintId: blueprint.id, landId: land.id, plotId: "unknown`" });
 						}}
 					/>
 				</div>

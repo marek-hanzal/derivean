@@ -1,12 +1,12 @@
 /** @format */
 
 import { kysely } from "@derivean/db";
+import { ResourceIcon } from "@derivean/ui";
 import { PopupSelect, Tx, withListCount } from "@use-pico/client";
 import { withIntSchema, withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import type { FC } from "react";
 import { z } from "zod";
-import { ResourceIcon } from "~/app/icon/ResourceIcon";
 import { ResourceTable } from "~/app/root/ResourceTable";
 import { TagSchema } from "~/app/schema/TagSchema";
 

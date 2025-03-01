@@ -3,9 +3,9 @@ import { Button, FormCss, FormError, FormInput, onSubmit, Select, Tx, type Form 
 import { translator } from "@use-pico/common";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { InventoryIcon } from "~/app/icon/InventoryIcon";
 import { ResourcePopupSelect } from "~/app/root/ResourcePopupSelect";
 import { InventorySchema } from "~/app/schema/InventorySchema";
+import { InventoryIcon } from "../../../../../packages/@derivean/ui/src/icon/InventoryIcon";
 
 export namespace InventoryForm {
 	export interface Props extends Form.Props<InventorySchema["shape"]> {

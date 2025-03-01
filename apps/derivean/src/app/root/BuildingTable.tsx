@@ -17,9 +17,9 @@ import {
 } from "@use-pico/client";
 import { type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
-import { BuildingIcon } from "~/app/icon/BuildingIcon";
 import { BuildingForm } from "~/app/root/BuildingForm";
+import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
+import { BuildingIcon } from "../../../../../packages/@derivean/ui/src/icon/BuildingIcon";
 
 export namespace BuildingTable {
 	export interface Data extends IdentitySchema.Type {

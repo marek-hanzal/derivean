@@ -2,11 +2,11 @@ import { useParams } from "@tanstack/react-router";
 import { EditIcon, Menu, MenuLink, Tx } from "@use-pico/client";
 import type { Entity, IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
-import { BuildingIcon } from "~/app/icon/BuildingIcon";
-import { InventoryIcon } from "~/app/icon/InventoryIcon";
-import { ProductionIcon } from "~/app/icon/ProductionIcon";
-import { ResourceIcon } from "~/app/icon/ResourceIcon";
+import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
+import { BuildingIcon } from "../../../../../packages/@derivean/ui/src/icon/BuildingIcon";
+import { InventoryIcon } from "../../../../../packages/@derivean/ui/src/icon/InventoryIcon";
+import { ProductionIcon } from "../../../../../packages/@derivean/ui/src/icon/ProductionIcon";
+import { ResourceIcon } from "../../../../../packages/@derivean/ui/src/icon/ResourceIcon";
 
 export namespace BlueprintIndexMenu {
 	export interface Props extends Menu.Props, Entity.Schema<IdentitySchema> {

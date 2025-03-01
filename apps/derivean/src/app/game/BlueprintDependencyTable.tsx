@@ -1,8 +1,10 @@
+/** @format */
+
+import { BlueprintIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { LinkTo, Table, Tx, useTable, withColumn } from "@use-pico/client";
 import { type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 
 export namespace BlueprintDependencyTable {
 	export interface Data extends IdentitySchema.Type {
@@ -27,7 +29,8 @@ const columns = [
 				<LinkTo
 					icon={BlueprintIcon}
 					to={"/$locale/game/blueprint/$id/view"}
-					params={{ locale, id: data.dependencyId }}>
+					params={{ locale, id: data.dependencyId }}
+				>
 					{value}
 				</LinkTo>
 			);
@@ -45,10 +48,7 @@ export namespace BlueprintDependencyTable {
 export const BlueprintDependencyTable: FC<BlueprintDependencyTable.Props> = ({ table, ...props }) => {
 	return (
 		<Table
-			table={useTable({
-				...table,
-				columns,
-			})}
+			table={useTable({ ...table, columns })}
 			{...props}
 		/>
 	);

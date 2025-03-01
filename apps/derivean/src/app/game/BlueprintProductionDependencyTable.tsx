@@ -1,10 +1,10 @@
 /** @format */
 
+import { BlueprintIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { LinkTo, Table, Tx, useTable, withColumn } from "@use-pico/client";
 import { type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 
 export namespace BlueprintProductionDependencyTable {
 	export interface Data extends IdentitySchema.Type {

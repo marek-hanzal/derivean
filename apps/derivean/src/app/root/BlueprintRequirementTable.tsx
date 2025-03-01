@@ -1,6 +1,7 @@
 /** @format */
 
 import { transaction } from "@derivean/db";
+import { ResourceIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import {
 	ActionMenu,
@@ -16,7 +17,6 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { ResourceIcon } from "~/app/icon/ResourceIcon";
 import { BlueprintRequirementForm } from "~/app/root/BlueprintRequirementForm";
 
 export namespace BlueprintRequirementTable {

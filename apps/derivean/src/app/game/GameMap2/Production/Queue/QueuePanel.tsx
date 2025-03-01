@@ -1,10 +1,12 @@
+/** @format */
+
+import { QueueIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { BackIcon, LinkTo, Tx } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
 import type { FC } from "react";
 import { Panel } from "~/app/game/GameMap2/Panel";
 import { Item } from "~/app/game/GameMap2/Production/Queue/Item";
-import { QueueIcon } from "~/app/icon/QueueIcon";
 
 export namespace QueuePanel {
 	export interface Building {
@@ -36,9 +38,7 @@ export namespace QueuePanel {
 }
 
 export const QueuePanel: FC<QueuePanel.Props> = ({ building, queue, inventory, ...props }) => {
-	const { mapId, locale } = useParams({
-		from: "/$locale/map/$mapId",
-	});
+	const { mapId, locale } = useParams({ from: "/$locale/map/$mapId" });
 
 	return (
 		<Panel
@@ -54,12 +54,14 @@ export const QueuePanel: FC<QueuePanel.Props> = ({ building, queue, inventory, .
 					<LinkTo
 						to={"/$locale/map/$mapId/building/$buildingId/view"}
 						params={{ locale, mapId, buildingId: building.id }}
-						search={{ zoomToId: building.id }}>
+						search={{ zoomToId: building.id }}
+					>
 						{building.name}
 					</LinkTo>
 				</>
 			}
-			{...props}>
+			{...props}
+		>
 			{queue.length > 0 ? (
 				queue.map((item) => {
 					return (
@@ -71,12 +73,26 @@ export const QueuePanel: FC<QueuePanel.Props> = ({ building, queue, inventory, .
 					);
 				})
 			) : (
-				<div className={tvc(["flex", "flex-col", "items-center", "justify-center", "rounded-sm", "border", "border-amber-400", "p-4", "bg-amber-200", "font-bold"])}>
+				<div
+					className={tvc([
+						"flex",
+						"flex-col",
+						"items-center",
+						"justify-center",
+						"rounded-sm",
+						"border",
+						"border-amber-400",
+						"p-4",
+						"bg-amber-200",
+						"font-bold",
+					])}
+				>
 					<Tx label={"Production queue is empty. (label)"} />
 					<LinkTo
 						icon={QueueIcon}
 						to={"/$locale/map/$mapId/building/$buildingId/production/list"}
-						params={{ locale, mapId, buildingId: building.id }}>
+						params={{ locale, mapId, buildingId: building.id }}
+					>
 						<Tx label={"Plan queue (label)"} />
 					</LinkTo>
 				</div>

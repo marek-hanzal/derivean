@@ -1,8 +1,10 @@
+/** @format */
+
+import { LandIcon } from "@derivean/ui";
 import { Tx } from "@use-pico/client";
 import type { FC } from "react";
 import { Item } from "~/app/game/GameMap2/Land/Item";
 import { Panel } from "~/app/game/GameMap2/Panel";
-import { LandIcon } from "~/app/icon/LandIcon";
 
 export namespace LandPanel {
 	export interface Land {
@@ -21,7 +23,8 @@ export const LandPanel: FC<LandPanel.Props> = ({ land, ...props }) => {
 		<Panel
 			icon={LandIcon}
 			textTitle={<Tx label={"Land list (label)"} />}
-			{...props}>
+			{...props}
+		>
 			{land.map((land) => (
 				<Item
 					key={land.id}

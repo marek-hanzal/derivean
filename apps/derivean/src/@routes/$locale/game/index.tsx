@@ -1,6 +1,7 @@
 /** @format */
 
 import { kysely } from "@derivean/db";
+import { MapIcon } from "@derivean/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useNavigate, useParams, useRouteContext } from "@tanstack/react-router";
@@ -23,7 +24,6 @@ import { dir } from "opfs-tools";
 import type { FC } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { MapIcon } from "~/app/icon/MapIcon";
 import { MapSchema } from "~/app/schema/MapSchema";
 
 namespace MapForm {

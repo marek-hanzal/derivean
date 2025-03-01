@@ -21,6 +21,7 @@
 		"@derivean/root-ui": "workspace:*",
 		"@derivean/sdk": "workspace:*",
 		"@derivean/terrain": "workspace:*",
+		"@derivean/ui": "workspace:*",
 		"@derivean/utils": "workspace:*",
 		"@hookform/resolvers": "^4.0.0",
 		"@react-three/drei": "^9.121.4",

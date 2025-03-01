@@ -2,12 +2,12 @@
 
 import { kysely, transaction } from "@derivean/db";
 import type { Database } from "@derivean/sdk";
+import { GameIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { Button, JustDropZone, toast, Tx, withToastPromiseTx } from "@use-pico/client";
 import FileSaver from "file-saver";
 import { sql } from "kysely";
-import { GameIcon } from "~/app/icon/GameIcon";
 
 const sources: (keyof Database)[] = [
 	"Tag",

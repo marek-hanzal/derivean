@@ -1,6 +1,7 @@
 /** @format */
 
 import { kysely } from "@derivean/db";
+import { BlueprintIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import {
@@ -19,7 +20,6 @@ import {
 } from "@use-pico/client";
 import { genId, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 import { BlueprintConflictForm } from "~/app/root/BlueprintConflictForm";
 import { withBlueprintSort } from "~/app/service/withBlueprintSort";
 

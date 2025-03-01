@@ -2,9 +2,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { BoolInput, Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ResourceIcon } from "~/app/icon/ResourceIcon";
 import { ResourcePopupSelect } from "~/app/root/ResourcePopupSelect";
 import { BlueprintRequirementSchema } from "~/app/schema/BlueprintRequirementSchema";
+import { ResourceIcon } from "../../../../../packages/@derivean/ui/src/icon/ResourceIcon";
 
 export namespace BlueprintRequirementForm {
 	export interface Props extends Form.Props<BlueprintRequirementSchema["shape"]> {

@@ -16,8 +16,8 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { ResourceIcon } from "~/app/icon/ResourceIcon";
 import { BlueprintProductionRequirementForm } from "~/app/root/BlueprintProductionRequirementForm";
+import { ResourceIcon } from "../../../../../packages/@derivean/ui/src/icon/ResourceIcon";
 
 export namespace BlueprintProductionRequirementTable {
 	export interface Data extends IdentitySchema.Type {

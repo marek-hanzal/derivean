@@ -2,7 +2,7 @@ import { useParams } from "@tanstack/react-router";
 import { LinkTo, ListIcon, Preview, TitlePreview, Tx } from "@use-pico/client";
 import type { IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
+import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
 
 export namespace BlueprintPreview {
 	export interface Data extends IdentitySchema.Type {

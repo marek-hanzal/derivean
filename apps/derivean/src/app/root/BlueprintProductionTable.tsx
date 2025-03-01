@@ -19,13 +19,13 @@ import {
 import { genId, toHumanNumber, tvc, type IdentitySchema } from "@use-pico/common";
 import { type FC } from "react";
 import { RequirementsInline } from "~/app/game/RequirementsInline";
-import { ProductionIcon } from "~/app/icon/ProductionIcon";
-import { ResourceIcon } from "~/app/icon/ResourceIcon";
 import { BlueprintProductionForm } from "~/app/root/BlueprintProductionForm";
 import { MoveProductionToForm } from "~/app/root/MoveProductionToForm";
 import type { BlueprintProductionDependencySchema } from "~/app/schema/BlueprintProductionDependencySchema";
 import type { BlueprintProductionRequirementSchema } from "~/app/schema/BlueprintProductionRequirementSchema";
 import type { BlueprintProductionResourceSchema } from "~/app/schema/BlueprintProductionResourceSchema";
+import { ProductionIcon } from "../../../../../packages/@derivean/ui/src/icon/ProductionIcon";
+import { ResourceIcon } from "../../../../../packages/@derivean/ui/src/icon/ResourceIcon";
 
 export namespace BlueprintProductionTable {
 	export interface Data extends IdentitySchema.Type {

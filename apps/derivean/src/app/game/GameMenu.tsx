@@ -1,9 +1,9 @@
 /** @format */
 
+import { BlueprintIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { Menu, MenuLink, Tx } from "@use-pico/client";
 import type { FC } from "react";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 
 export namespace GameMenu {
 	export interface Props extends Menu.Props {

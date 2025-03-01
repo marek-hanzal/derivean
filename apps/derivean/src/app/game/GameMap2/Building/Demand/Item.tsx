@@ -1,13 +1,12 @@
 /** @format */
 
 import { transaction } from "@derivean/db";
+import { DemandIcon, PackageIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowDownIcon, ArrowUpIcon, Badge, Button, Icon, TrashIcon, Tx, useInvalidator } from "@use-pico/client";
 import { toHumanNumber, tvc } from "@use-pico/common";
 import type { FC } from "react";
 import type { DemandPanel } from "~/app/game/GameMap2/Building/Demand/DemandPanel";
-import { DemandIcon } from "~/app/icon/DemandIcon";
-import { PackageIcon } from "~/app/icon/PackageIcon";
 
 export namespace Item {
 	export interface Props {

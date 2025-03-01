@@ -1,10 +1,11 @@
+/** @format */
+
+import { OrderIcon, RecurringIcon } from "@derivean/ui";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowRightIcon, Icon, Progress, Tx } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import type { FC } from "react";
-import { OrderIcon } from "~/app/icon/OrderIcon";
-import { RecurringIcon } from "~/app/icon/RecurringIcon";
 
 export namespace BuildingNode {
 	export interface Production {
@@ -35,32 +36,42 @@ export namespace BuildingNode {
 }
 
 export const BuildingNode: FC<BuildingNode.Props> = ({ id, data }) => {
-	const { mapId, locale } = useParams({
-		from: "/$locale/map/$mapId",
-	});
+	const { mapId, locale } = useParams({ from: "/$locale/map/$mapId" });
 	const navigate = useNavigate();
 
 	return (
 		<div
 			className={tvc(["flex", "flex-col", "gap-1", "w-full", "h-full", "justify-between", "items-start", "group"])}
 			onClick={() => {
-				navigate({
-					to: "/$locale/map/$mapId/building/$buildingId/view",
-					params: { locale, mapId, buildingId: id },
-				});
-			}}>
+				navigate({ to: "/$locale/map/$mapId/building/$buildingId/view", params: { locale, mapId, buildingId: id } });
+			}}
+		>
 			<div className={"hidden group-hover:flex justify-center w-full rounded-sm bg-slate-50 text-slate-600"}>
 				<div>{data.name}</div>
 			</div>
 
-			<div className={tvc([data.production ? "flex" : "hidden", "group-hover:flex", "flex-col", "items-center", "justify-between", "gap-2", "w-full", "bg-slate-50", "absolute", "bottom-0", "left-0", "rounded-sm", "p-2"])}>
+			<div
+				className={tvc([
+					data.production ? "flex" : "hidden",
+					"group-hover:flex",
+					"flex-col",
+					"items-center",
+					"justify-between",
+					"gap-2",
+					"w-full",
+					"bg-slate-50",
+					"absolute",
+					"bottom-0",
+					"left-0",
+					"rounded-sm",
+					"p-2",
+				])}
+			>
 				<div className={tvc(["flex", "flex-row", "justify-between", "items-center", "w-full"])}>
 					{!data.production && !data.productionName && !data.recurringProductionName ? (
 						<div className={"flex flex-row items-center justify-center w-full"}>
 							<Tx
-								css={{
-									base: ["text-bold", "text-xs"],
-								}}
+								css={{ base: ["text-bold", "text-xs"] }}
 								label={"This building does not have any planned production (label)"}
 							/>
 						</div>

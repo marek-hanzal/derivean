@@ -17,10 +17,10 @@ import {
 	useReactFlow,
 } from "@xyflow/react";
 import { useMemo, type FC } from "react";
-import { BlueprintIcon } from "~/app/icon/BlueprintIcon";
 import { BlueprintForm } from "~/app/root/BlueprintForm";
 import { BlueprintNode } from "~/app/root/Editor/BlueprintNode";
 import { ZoomToNode } from "~/app/ui/ZoomToNode";
+import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
 
 export namespace Editor {
 	export interface Data {

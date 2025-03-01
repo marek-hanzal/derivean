@@ -1,7 +1,9 @@
+/** @format */
+
 import { Icon } from "@use-pico/client";
 import { toHumanNumber, tvc } from "@use-pico/common";
 import { memo, type FC } from "react";
-import { CycleIcon } from "~/app/icon/CycleIcon";
+import { CycleIcon } from "../icon/CycleIcon";
 
 export namespace CyclesInline {
 	export interface Props {
