@@ -73,39 +73,52 @@ export const MoistureBiome: Biome = {
 
 		// Apply different color strategies based on terrain type
 		if (isWater) {
-			// Water terrain: blues with varying saturation
-			// Deep water is more blue (220-240), shallow water more cyan (180-220)
-			hue = isDeepWater ? 220 : 195;
+			// Water terrain: blues with clearer, lighter appearance
+			// Use a more uniform blue for all water (less variation between deep and shallow)
+			hue = isDeepWater ? 210 : 200;
 
-			// Adjust saturation based on moisture (more moisture = more intense blue)
-			saturation = 40 + normalizedMoisture * 30;
+			// Lower saturation for more natural water appearance
+			saturation = 30 + normalizedMoisture * 15;
 
-			// Slightly adjust hue based on moisture (wetter areas slightly more vivid blue)
-			hue += (normalizedMoisture - 0.5) * 10;
+			// Very subtle hue adjustment based on moisture
+			hue += (normalizedMoisture - 0.5) * 5;
 		} else if (isHighland) {
 			// Highlands: green to blue gradient for moisture
 			hue = 120 + normalizedMoisture * 60;
-			saturation = 25 + normalizedMoisture * 35;
+			saturation = 30 + normalizedMoisture * 40;
 		} else if (isMidland) {
 			// Midlands: yellow-green to green gradient
 			hue = 80 + normalizedMoisture * 40;
-			saturation = 30 + normalizedMoisture * 30;
+			saturation = 35 + normalizedMoisture * 35;
 		} else if (isDepression) {
 			// Depressions: often wetter, more saturated greens and teals
 			hue = 100 + normalizedMoisture * 50;
-			saturation = 40 + normalizedMoisture * 30;
+			saturation = 45 + normalizedMoisture * 35;
 		} else {
 			// Lowlands and other terrain: yellow to green gradient
 			hue = 60 + normalizedMoisture * 60;
-			saturation = 30 + normalizedMoisture * 25;
+			saturation = 35 + normalizedMoisture * 30;
 		}
 
 		// Preserve most of the original lightness to maintain heightmap information
 		// Apply a subtle lightness adjustment based on moisture (wetter = slightly darker)
 		const moistureLightnessAdjustment = (0.5 - normalizedMoisture) * 10;
+
+		// For water, significantly increase the lightness for a clearer, more visible appearance
+		const terrainLightnessMultiplier = isWater ? 1.1 : 0.85;
+
+		// For water, add a fixed lightness boost to make it uniformly lighter
+		const lightnessBoost = isWater ? 15 : 0;
+
+		// Calculate final lightness
 		const newLightness = Math.max(
-			5,
-			Math.min(95, lightness * 0.85 + moistureLightnessAdjustment),
+			15,
+			Math.min(
+				95,
+				lightness * terrainLightnessMultiplier +
+					moistureLightnessAdjustment +
+					lightnessBoost,
+			),
 		);
 
 		// Always return a color transformation
