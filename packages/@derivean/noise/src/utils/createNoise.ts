@@ -1,16 +1,16 @@
+/** @format */
+
 import type { Noise } from "@derivean/utils";
 import { FastNoiseLite, toSeed } from "@use-pico/common";
 import { XORWow } from "random-seedable";
+import { createNoiseCache } from "./createNoiseCache";
 
 export namespace createNoise {
 	export interface Props {
 		seed: string;
 		frequency?: number;
 		type?: FastNoiseLite.$NoiseType;
-		domain?: {
-			type: FastNoiseLite.$DomainWarpType;
-			amp?: number;
-		};
+		domain?: { type: FastNoiseLite.$DomainWarpType; amp?: number };
 		fractal?: {
 			type: FastNoiseLite.$FractalType;
 			octaves?: number;
@@ -29,7 +29,14 @@ export namespace createNoise {
 	}
 }
 
-export const createNoise = ({ seed, type = FastNoiseLite.NoiseType.Perlin, frequency = 1, domain, fractal, cellular }: createNoise.Props): Noise => {
+export const createNoise = ({
+	seed,
+	type = FastNoiseLite.NoiseType.Perlin,
+	frequency = 1,
+	domain,
+	fractal,
+	cellular,
+}: createNoise.Props): Noise => {
 	const rng = new XORWow(toSeed(seed));
 	const noise = new FastNoiseLite(rng.float());
 
@@ -45,8 +52,10 @@ export const createNoise = ({ seed, type = FastNoiseLite.NoiseType.Perlin, frequ
 		fractal.octaves !== undefined && noise.SetFractalOctaves(fractal.octaves);
 		fractal.gain !== undefined && noise.SetFractalGain(fractal.gain);
 		fractal.lacunarity !== undefined && noise.SetFractalLacunarity(fractal.lacunarity);
-		fractal.pingPongStrength !== undefined && noise.SetFractalPingPongStrength(fractal.pingPongStrength);
-		fractal.weightedStrength !== undefined && noise.SetFractalWeightedStrength(fractal.weightedStrength);
+		fractal.pingPongStrength !== undefined &&
+			noise.SetFractalPingPongStrength(fractal.pingPongStrength);
+		fractal.weightedStrength !== undefined &&
+			noise.SetFractalWeightedStrength(fractal.weightedStrength);
 	}
 	if (cellular) {
 		noise.SetNoiseType(FastNoiseLite.NoiseType.Cellular);
@@ -54,5 +63,5 @@ export const createNoise = ({ seed, type = FastNoiseLite.NoiseType.Perlin, frequ
 		cellular.returnType && noise.SetCellularReturnType(cellular.returnType);
 	}
 
-	return ([x, z]) => noise.GetNoise(x, z);
+	return createNoiseCache({ noise: ([x, z]) => noise.GetNoise(x, z) });
 };
