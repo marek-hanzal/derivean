@@ -39,25 +39,20 @@ export const withColorMap = ({ colorMap, biomes = [], source }: withColorMap.Pro
 		return RGBA([128, 128, 128, 255]);
 	}
 
-	const { color } = base;
-	// const type: string[] = ["heightmap"];
+	let { color } = base;
+	const type: string[] = ["heightmap"];
 
-	// for (const biome of biomes) {
-	// 	const resolved = biome.resolve({
-	// 		type,
-	// 		base,
-	// 		color,
-	// 		source,
-	// 	});
+	for (const biome of biomes) {
+		const resolved = biome.resolve({ type, base, color, source });
 
-	// 	if (resolved) {
-	// 		({ color } = resolved);
-	// 		type.push(biome.type);
-	// 		if (resolved.exclusive) {
-	// 			break;
-	// 		}
-	// 	}
-	// }
+		if (resolved) {
+			({ color } = resolved);
+			type.push(biome.type);
+			if (resolved.exclusive) {
+				break;
+			}
+		}
+	}
 
 	return hslaToRgba(color);
 };

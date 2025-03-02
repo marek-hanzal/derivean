@@ -1,3 +1,5 @@
+/** @format */
+
 import type { Color } from "../color/Color";
 
 /**
@@ -15,5 +17,5 @@ export interface NoiseColor {
 	/**
 	 * Type of noise color (e.g. deep ocean).
 	 */
-	type: string | string[];
+	type: string[];
 }
