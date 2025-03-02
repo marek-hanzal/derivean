@@ -1,7 +1,12 @@
 /** @format */
 
 import { DefaultNoiseSource } from "@derivean/noise";
-import { ComplexBiome, DefaultTerrainLayers, withLayerColors } from "@derivean/terrain";
+import {
+	DefaultTerrainLayers,
+	MoistureBiome,
+	TemperatureBiome,
+	withLayerColors
+} from "@derivean/terrain";
 import { type GameConfig } from "@derivean/utils";
 
 export const gameConfig: GameConfig = {
@@ -39,8 +44,8 @@ export const gameConfig: GameConfig = {
 		DefaultTerrainLayers.HighMountain,
 		DefaultTerrainLayers.MountainPeak,
 	]),
-	// biomes: [TemperatureBiome, MoistureBiome],
-	biomes: [ComplexBiome],
+	biomes: [TemperatureBiome, MoistureBiome],
+	// biomes: [ComplexBiome],
 	layers: [
 		{ min: 0.001, max: 0.0025, level: 64, offset: 4 },
 		{ min: 0.0025, max: 0.005, level: 16, offset: 4 },

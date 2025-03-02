@@ -10,6 +10,8 @@ export const ComplexBiome: Biome = {
 		const normalizedHeightmap = (source.heightmap + 1) / 2;
 		const normalizedTemperature = (source.temperature + 1) / 2;
 		const normalizedMoisture = (source.moisture + 1) / 2;
+		const normalizedBiome = (source.biome + 1) / 2;
+		const normalizedShade = (source.shade + 1) / 2;
 
 		// Destructure alpha from current color
 		const [, , , alpha] = color.color;
@@ -43,43 +45,39 @@ export const ComplexBiome: Biome = {
 		let hue: number, saturation: number, lightness: number;
 
 		if (isWater) {
-			// Water coloration
-			hue = 210; // Blue base
-			saturation = 30 + normalizedMoisture * 20;
-			lightness = 30 + normalizedMoisture * 10;
+			// Water coloration with more dynamic variations
+			hue = 200 + (normalizedBiome * 40 - 20); // Dynamic blue-green spectrum
+			saturation = 40 + normalizedMoisture * 30 + normalizedShade * 20;
+			lightness = 30 + normalizedMoisture * 20 - normalizedShade * 10;
 		} else if (isMountain) {
-			// Mountain coloration
-			// Combine temperature and moisture for rock/snow variations
+			// Mountain coloration with more nuanced variations
 			if (normalizedTemperature < 0.3) {
-				// Cold, snowy peaks
-				hue = 250; // Slight purple-gray
-				saturation = 5;
-				lightness = 90 - normalizedMoisture * 10;
+				// Cold, snowy peaks with subtle variations
+				hue = 240 + (normalizedBiome * 20 - 10); // Slight purple-blue variation
+				saturation = 5 + normalizedShade * 10;
+				lightness = 85 - normalizedMoisture * 15;
 			} else {
-				// Rocky mountains
-				// Use temperature and moisture to create variation
-				hue = 250 + (normalizedTemperature - 0.5) * 20; // Subtle hue variation
-				saturation = 10 + normalizedMoisture * 10;
-				lightness = 60 + normalizedTemperature * 15;
+				// Rocky mountains with temperature and noise-driven variations
+				hue = 250 + (normalizedTemperature * 30 - 15) + (normalizedBiome * 20 - 10);
+				saturation = 15 + normalizedMoisture * 15 + normalizedShade * 10;
+				lightness = 55 + normalizedTemperature * 20 - normalizedShade * 10;
 			}
 		} else if (isLowland) {
-			// Lowland coloration
-			// Use moisture and temperature to determine vegetation-like colors
-			hue = 120 - normalizedTemperature * 60; // Green to brown spectrum
-			saturation = 30 + normalizedMoisture * 40;
-			lightness = 40 + normalizedMoisture * 20;
+			// Lowland coloration with rich, dynamic variations
+			hue = 100 - normalizedTemperature * 50 + (normalizedBiome * 30 - 15); // Green to brown spectrum
+			saturation = 40 + normalizedMoisture * 40 + normalizedShade * 20;
+			lightness = 35 + normalizedMoisture * 25 - normalizedShade * 10;
 		} else {
-			// Default terrain coloration
-			hue = 30 + normalizedTemperature * 60; // Warm to cool spectrum
-			saturation = 20 + normalizedMoisture * 20;
-			lightness = 50 + normalizedHeightmap * 20;
+			// Default terrain coloration with complex noise interactions
+			hue = 30 + normalizedTemperature * 50 + (normalizedBiome * 30 - 15);
+			saturation = 25 + normalizedMoisture * 30 + normalizedShade * 20;
+			lightness = 45 + normalizedHeightmap * 25 - normalizedShade * 10;
 		}
 
-		// Apply some randomness and noise influence
-		const noiseInfluence = source.biome * 10;
-		hue += noiseInfluence;
-		saturation += Math.abs(source.biome) * 5;
-		lightness += source.shade * 5;
+		// Final noise-driven adjustments
+		hue += source.biome * 15;
+		saturation += Math.abs(source.biome) * 10;
+		lightness += source.shade * 8;
 
 		// Ensure values are within acceptable ranges
 		hue %= 360;
@@ -88,7 +86,7 @@ export const ComplexBiome: Biome = {
 
 		return {
 			color: HSLA([hue, saturation, lightness, alpha]),
-			// Make exclusive for mountain peaks to ensure crisp snow/rock appearance
+			// Make exclusive for mountain peaks to ensure crisp appearance
 			exclusive: base.type.includes(DefaultTerrainLayers.MountainPeak.name),
 		};
 	},

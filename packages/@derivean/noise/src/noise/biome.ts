@@ -1,15 +1,11 @@
-import { fpScaleXZ } from "@derivean/utils";
+/** @format */
+
+import { fpWeight } from "@derivean/utils";
 import { flow } from "fp-ts/lib/function";
 import { createNoise } from "../utils/createNoise";
 
 export const biome = (seed: string) =>
 	flow(
-		fpScaleXZ({ scale: 0.5 }),
-		flow(
-			createNoise({
-				seed: `${seed}-biome`,
-				frequency: 1,
-				type: "Cellular",
-			}),
-		),
+		createNoise({ seed: `${seed}-biome`, type: "ValueCubic", frequency: 0.025 }),
+		fpWeight({ weight: 2 }),
 	);
