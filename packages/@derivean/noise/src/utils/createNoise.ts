@@ -3,7 +3,6 @@
 import type { Noise } from "@derivean/utils";
 import { FastNoiseLite, toSeed } from "@use-pico/common";
 import { XORWow } from "random-seedable";
-import { createNoiseCache } from "./createNoiseCache";
 
 export namespace createNoise {
 	export interface Props {
@@ -63,5 +62,5 @@ export const createNoise = ({
 		cellular.returnType && noise.SetCellularReturnType(cellular.returnType);
 	}
 
-	return createNoiseCache({ noise: ([x, z]) => noise.GetNoise(x, z) });
+	return ([x, z]) => noise.GetNoise(x, z);
 };

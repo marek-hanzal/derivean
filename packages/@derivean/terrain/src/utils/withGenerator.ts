@@ -49,13 +49,22 @@ export const withGenerator = ({
 	const noise = gameConfig.source({ seed });
 
 	/**
+	 * Define chunk size based on a current level (LOD).
+	 */
+	const chunkSize = gameConfig.chunkSize * level.layer.level;
+	/**
+	 * Keep chunks on different levels properly aligned using this offset.
+	 */
+	const offset = (gameConfig.chunkSize * (level.layer.level - 1)) / 2;
+	/**
+	 * Defines overall chunk size (whole area).
+	 */
+	const size = gameConfig.plotCount ** 2;
+
+	/**
 	 * Returns prepared generator for generating chunk data at given position.
 	 */
 	return ({ x, z }) => {
-		/**
-		 * Defines overall chunk size (whole area).
-		 */
-		const size = gameConfig.plotCount ** 2;
 		/**
 		 * Texture buffer (RGBA) used to store chunk's texture.
 		 */
@@ -97,15 +106,6 @@ export const withGenerator = ({
 				((gameConfig.plotCount - 1 - tileZ) * gameConfig.plotCount + tileX) * 4,
 			);
 		}
-
-		/**
-		 * Define chunk size based on a current level (LOD).
-		 */
-		const chunkSize = gameConfig.chunkSize * level.layer.level;
-		/**
-		 * Keep chunks on different levels properly aligned using this offset.
-		 */
-		const offset = (gameConfig.chunkSize * (level.layer.level - 1)) / 2;
 
 		/**
 		 * So, we're done here, currently only texture is returned.
