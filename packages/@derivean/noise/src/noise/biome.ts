@@ -9,7 +9,7 @@ export const biome = (seed: string) =>
 			createNoise({
 				seed: `${seed}-biome`,
 				frequency: 1,
-				type: "OpenSimplex2S",
+				type: "Cellular",
 			}),
 		),
 	);
