@@ -83,20 +83,22 @@ export const MoistureBiome: Biome = {
 			// Very subtle hue adjustment based on moisture
 			hue += (normalizedMoisture - 0.5) * 5;
 		} else if (isHighland) {
-			// Highlands: green to blue gradient for moisture
-			hue = 120 + normalizedMoisture * 60;
+			// Highlands: yellow-green to green gradient (avoid blue)
+			// Limit the hue range to 60-120 (yellow to green)
+			hue = 60 + normalizedMoisture * 60;
 			saturation = 30 + normalizedMoisture * 40;
 		} else if (isMidland) {
-			// Midlands: yellow-green to green gradient
-			hue = 80 + normalizedMoisture * 40;
+			// Midlands: yellow-green gradient
+			hue = 70 + normalizedMoisture * 30;
 			saturation = 35 + normalizedMoisture * 35;
 		} else if (isDepression) {
-			// Depressions: often wetter, more saturated greens and teals
-			hue = 100 + normalizedMoisture * 50;
+			// Depressions: green to yellow-green gradient (avoid blue-green)
+			// Limit the hue range to 60-100 (yellow to green)
+			hue = 100 - normalizedMoisture * 40;
 			saturation = 45 + normalizedMoisture * 35;
 		} else {
-			// Lowlands and other terrain: yellow to green gradient
-			hue = 60 + normalizedMoisture * 60;
+			// Lowlands: yellow to green gradient
+			hue = 60 + normalizedMoisture * 40;
 			saturation = 35 + normalizedMoisture * 30;
 		}
 
