@@ -1,3 +1,5 @@
+/** @format */
+
 import type { Chunk, GameConfig, Noise } from "@derivean/utils";
 import { withColorMap } from "./withColorMap";
 
@@ -34,15 +36,17 @@ export namespace withGenerator {
 	}
 }
 
-export const withGenerator = ({ seed, gameConfig, level }: withGenerator.Props): withGenerator.Generator => {
+export const withGenerator = ({
+	seed,
+	gameConfig,
+	level,
+}: withGenerator.Props): withGenerator.Generator => {
 	/**
 	 * Define base scale for all noises.
 	 */
 	const baseScale = 1 / (gameConfig.plotCount * (1 / level.layer.level));
 
-	const noise = gameConfig.source({
-		seed,
-	});
+	const noise = gameConfig.source({ seed });
 
 	/**
 	 * Returns prepared generator for generating chunk data at given position.
@@ -70,10 +74,10 @@ export const withGenerator = ({ seed, gameConfig, level }: withGenerator.Props):
 			 * Compute world-wide chunk coordinates, so noise can be properly generated.
 			 */
 			const worldX = (x * gameConfig.plotCount + (i % gameConfig.plotCount)) * baseScale;
-			const worldZ = (z * gameConfig.plotCount + Math.floor(i / gameConfig.plotCount)) * baseScale;
+			const worldZ =
+				(z * gameConfig.plotCount + Math.floor(i / gameConfig.plotCount)) * baseScale;
 
 			const color = withColorMap({
-				colorMap: gameConfig.colorMap,
 				biomes: gameConfig.biomes,
 				source: {
 					heightmap: noise.heightmap([worldX, worldZ]),
@@ -88,7 +92,10 @@ export const withGenerator = ({ seed, gameConfig, level }: withGenerator.Props):
 			/**
 			 * Output the RGBA color to the final texture.
 			 */
-			buffer.set(color.color, ((gameConfig.plotCount - 1 - tileZ) * gameConfig.plotCount + tileX) * 4);
+			buffer.set(
+				color.color,
+				((gameConfig.plotCount - 1 - tileZ) * gameConfig.plotCount + tileX) * 4,
+			);
 		}
 
 		/**
@@ -109,10 +116,7 @@ export const withGenerator = ({ seed, gameConfig, level }: withGenerator.Props):
 			z: z * chunkSize + offset,
 			size: chunkSize,
 			level: level.layer.level,
-			texture: {
-				size: gameConfig.plotCount,
-				data: buffer,
-			},
+			texture: { size: gameConfig.plotCount, data: buffer },
 		} satisfies Chunk.Data;
 	};
 };

@@ -1,12 +1,7 @@
 /** @format */
 
 import { DefaultNoiseSource } from "@derivean/noise";
-import {
-	DefaultTerrainLayers,
-	MoistureBiome,
-	TemperatureBiome,
-	withLayerColors
-} from "@derivean/terrain";
+import { ComplexBiome } from "@derivean/terrain";
 import { type GameConfig } from "@derivean/utils";
 
 export const gameConfig: GameConfig = {
@@ -17,35 +12,7 @@ export const gameConfig: GameConfig = {
 	chunkSize: 16 * 256,
 	chunkLimit: 2048,
 	source: DefaultNoiseSource,
-	colorMap: withLayerColors([
-		DefaultTerrainLayers.DeepOcean,
-		DefaultTerrainLayers.Abyss,
-		DefaultTerrainLayers.TrenchZone,
-		DefaultTerrainLayers.Ocean,
-		DefaultTerrainLayers.ShallowWater,
-		DefaultTerrainLayers.Reef,
-		DefaultTerrainLayers.Coast,
-		DefaultTerrainLayers.Beach,
-		DefaultTerrainLayers.Lowland,
-		DefaultTerrainLayers.Grassland,
-		DefaultTerrainLayers.Savanna,
-		DefaultTerrainLayers.Valley,
-		DefaultTerrainLayers.Basin,
-		DefaultTerrainLayers.Wetland,
-		DefaultTerrainLayers.Midland,
-		DefaultTerrainLayers.Highland,
-		DefaultTerrainLayers.Plateau,
-		DefaultTerrainLayers.Canyon,
-		DefaultTerrainLayers.Ravine,
-		DefaultTerrainLayers.Foothills,
-		DefaultTerrainLayers.Mountain,
-		DefaultTerrainLayers.AlpineSlope,
-		DefaultTerrainLayers.Crater,
-		DefaultTerrainLayers.HighMountain,
-		DefaultTerrainLayers.MountainPeak,
-	]),
-	biomes: [TemperatureBiome, MoistureBiome],
-	// biomes: [ComplexBiome],
+	biomes: [ComplexBiome],
 	layers: [
 		{ min: 0.001, max: 0.0025, level: 64, offset: 4 },
 		{ min: 0.0025, max: 0.005, level: 16, offset: 4 },

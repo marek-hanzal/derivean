@@ -6,6 +6,11 @@ import { createNoise } from "../utils/createNoise";
 
 export const biome = (seed: string) =>
 	flow(
-		createNoise({ seed: `${seed}-biome`, type: "ValueCubic", frequency: 0.025 }),
+		createNoise({
+			seed: `${seed}-biome`,
+			type: "Cellular",
+			cellular: { distanceFunction: "EuclideanSq", returnType: "CellValue" },
+			frequency: 0.025,
+		}),
 		fpWeight({ weight: 2 }),
 	);

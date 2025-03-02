@@ -1,6 +1,9 @@
 /**
  * Colorspace definition, they're only to explicitly mark what kind of color is used.
+ *
+ * @format
  */
+
 export namespace Color {
 	/**
 	 * Standard RGB color.
@@ -10,6 +13,7 @@ export namespace Color {
 		type: "rgba";
 		color: [number, number, number, number];
 	}
+
 	/**
 	 * HSLA color.
 	 * HSLA (0-360, 0-100, 0-100, 0-1)
@@ -21,15 +25,9 @@ export namespace Color {
 }
 
 export const RGBA = (color: [number, number, number, number]): Color.RGBA => {
-	return {
-		type: "rgba",
-		color,
-	};
+	return { type: "rgba", color };
 };
 
 export const HSLA = (color: [number, number, number, number]): Color.HSLA => {
-	return {
-		type: "hsla",
-		color,
-	};
+	return { type: "hsla", color };
 };

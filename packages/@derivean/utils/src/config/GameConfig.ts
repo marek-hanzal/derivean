@@ -3,7 +3,6 @@
 import type { Chunk } from "../chunk/Chunk";
 import type { PlotCount } from "../chunk/PlotCount";
 import type { PlotSize } from "../chunk/PlotSize";
-import type { NoiseColorMap } from "../noise/NoiseColorMap";
 import type { NoiseSource } from "../noise/NoiseSource";
 import type { Biome } from "../terrain/Biome";
 
@@ -56,7 +55,6 @@ export interface GameConfig {
 	 * Source is a factory for all the noises needed to generate the world.
 	 */
 	source: NoiseSource;
-	colorMap: NoiseColorMap;
 	/**
 	 * Biomes used to colorize the world.
 	 *

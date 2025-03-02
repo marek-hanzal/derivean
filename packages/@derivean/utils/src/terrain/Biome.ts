@@ -1,18 +1,15 @@
+/** @format */
+
 import type { Color } from "../color/Color";
-import type { NoiseColor } from "../noise/NoiseColor";
 import type { NoiseType } from "../noise/NoiseType";
 
 export namespace Biome {
 	export namespace Resolve {
 		export interface Props {
 			/**
-			 * List of types contributed to this color.
+			 * List of biomes contributed to this color.
 			 */
 			type: string[];
-			/**
-			 * Access to a base color (from heightmap).
-			 */
-			base: NoiseColor;
 			/**
 			 * Access to a current color (may be already modified by previous biomes).
 			 */
