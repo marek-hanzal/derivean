@@ -91,7 +91,10 @@ export const Route = createFileRoute("/$locale/game/")({
 				async queryFn() {
 					return kysely.transaction().execute((tx) => {
 						return withList({
-							select: tx.selectFrom("Map as m").select(["m.id", "m.name"]).where("m.userId", "=", user.id),
+							select: tx
+								.selectFrom("Map as m")
+								.select(["m.id", "m.name"])
+								.where("m.userId", "=", user.id),
 							output: z.object({ id: z.string().min(1), name: z.string().min(1) }),
 						});
 					});
@@ -111,7 +114,11 @@ export const Route = createFileRoute("/$locale/game/")({
 			async mutationFn({ id }: { id: string }) {
 				return kysely.transaction().execute(async (tx) => {
 					return Promise.all([
-						tx.deleteFrom("Map").where("id", "=", id).where("userId", "=", user.id).execute(),
+						tx
+							.deleteFrom("Map")
+							.where("id", "=", id)
+							.where("userId", "=", user.id)
+							.execute(),
 						dir(`/chunk/${id}`).remove(),
 					]);
 				});
@@ -122,7 +129,11 @@ export const Route = createFileRoute("/$locale/game/")({
 		});
 
 		return (
-			<div className={tv.base({ css: ["w-1/2", "mx-auto", "mt-24", "flex", "flex-col", "gap-6"] })}>
+			<div
+				className={tv.base({
+					css: ["w-1/2", "mx-auto", "mt-24", "flex", "flex-col", "gap-6"],
+				})}
+			>
 				<div className={"font-bold text-lg border-b border-slate-300"}>
 					<Tx label={"Map list (label)"} />
 				</div>
@@ -200,7 +211,10 @@ export const Route = createFileRoute("/$locale/game/")({
 								});
 							},
 							async onSuccess(map) {
-								navigate({ to: "/$locale/map/$mapId/view", params: { locale, mapId: map.id } });
+								navigate({
+									to: "/$locale/map/$mapId/view",
+									params: { locale, mapId: map.id },
+								});
 								await invalidator();
 							},
 						})}

@@ -7,6 +7,11 @@ use wasm_bindgen::prelude::*;
 // ===== Basic noise generators =====
 
 #[wasm_bindgen]
+pub fn bello() -> u32 {
+    return 42;
+}
+
+#[wasm_bindgen]
 pub struct PerlinNoise {
     noise: Perlin,
 }
