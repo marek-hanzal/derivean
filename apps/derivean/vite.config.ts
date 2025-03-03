@@ -1,3 +1,5 @@
+/** @format */
+
 import ViteYaml from "@modyfi/vite-plugin-yaml";
 import tailwindcss from "@tailwindcss/vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
@@ -25,10 +27,7 @@ export default defineConfig({
 		wasm(),
 		tailwindcss(),
 	],
-	worker: {
-		format: "es",
-		plugins: () => [paths()],
-	},
+	worker: { format: "es", plugins: () => [paths()] },
 	envPrefix: ["VITE_", "TAURI_ENV_*"],
 	server: {
 		strictPort: true,
@@ -46,7 +45,5 @@ export default defineConfig({
 		// minify: process.env.TAURI_ENV_DEBUG ? false : "esbuild",
 		// sourcemap: Boolean(process.env.TAURI_ENV_DEBUG),
 	},
-	optimizeDeps: {
-		exclude: ["sqlocal"],
-	},
+	optimizeDeps: { exclude: ["sqlocal", "@derivean/noise-wasm", "@derivean/noise-wasm-build"] },
 });

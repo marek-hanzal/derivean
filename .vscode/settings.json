@@ -9,7 +9,10 @@
 		"**/_route.ts": true
 	},
 	"cSpell.words": [
+		"bindgen",
 		"borsh",
+		"cdylib",
+		"codegen",
 		"dagre",
 		"dagrejs",
 		"dependants",

@@ -1,0 +1,15 @@
+[package]
+name = "noise-wasm"
+version = "0.5.0"
+edition = "2024"
+description = "Noise stuff for DeRivean"
+authors = ["Marek Hanzal <marek.hanzal@icloud.com>"]
+license = "MIT"
+repository = "git://github.com/marek-hanzal/derivean.git"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "^0.2.100"
+noise = "^0.9.0"
