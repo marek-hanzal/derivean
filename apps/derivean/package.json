@@ -17,6 +17,7 @@
 		"@dagrejs/dagre": "^1.1.4",
 		"@derivean/db": "workspace:*",
 		"@derivean/game-ui": "workspace:*",
+		"@derivean/noise-wasm": "workspace:*",
 		"@derivean/noise": "workspace:*",
 		"@derivean/root-ui": "workspace:*",
 		"@derivean/sdk": "workspace:*",
