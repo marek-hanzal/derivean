@@ -1,19 +1,13 @@
 /** @format */
 
-import { fpWeight } from "@derivean/utils";
+import { PerlinNoise } from "@derivean/noise-wasm";
+import { fpWeight, type XZ } from "@derivean/utils";
 import { flow } from "fp-ts/lib/function";
-import { createNoise } from "../utils/createNoise";
-import { createNoiseCache } from "../utils/createNoiseCache";
 
-export const biome = (seed: string) =>
-	createNoiseCache({
-		noise: flow(
-			createNoise({
-				seed: `${seed}-biome`,
-				type: "Cellular",
-				cellular: { distanceFunction: "EuclideanSq", returnType: "CellValue" },
-				frequency: 0.025,
-			}),
-			fpWeight({ weight: 2 }),
-		),
-	});
+export const biome = (seed: string) => {
+	const perlin = new PerlinNoise(seed);
+	// perlin.set_frequency(1);
+	// perlin.set_octaves(1);
+
+	return flow(([x, z]: XZ) => perlin.get(x, z), fpWeight({ weight: 2 }));
+};

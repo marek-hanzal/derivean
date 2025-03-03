@@ -1,13 +1,17 @@
 /** @format */
 
+import { ValueNoise } from "@derivean/noise-wasm";
 import { fpClamp, fpCombineNoise, fpScaleXZ, fpWeight } from "@derivean/utils";
 import { flow } from "fp-ts/lib/function";
 import { blend } from "../utils/blend";
-import { createNoise } from "../utils/createNoise";
 import { createNoiseCache } from "../utils/createNoiseCache";
 
-export const heightmap = (seed: string) =>
-	createNoiseCache({
+export const heightmap = (seed: string) => {
+	const sourceNoise = new ValueNoise(`${seed}-source`);
+	const controlNoise = new ValueNoise(`${seed}-control`);
+	const noise2 = new ValueNoise(`${seed}-heightmap-3`);
+
+	return createNoiseCache({
 		noise: flow(
 			fpScaleXZ({ scale: 1 }),
 			flow(
@@ -16,49 +20,13 @@ export const heightmap = (seed: string) =>
 						noise: blend({
 							scale: [2, 5],
 							limit: [0.2, 0.8],
-							sourceNoise: createNoise({
-								seed: `${seed}-heightmap-1`,
-								frequency: 0.01,
-								type: "Value",
-								fractal: {
-									type: "FBm",
-									gain: 0.25,
-									lacunarity: 4,
-									octaves: 28,
-									weightedStrength: 2.5,
-								},
-							}),
-							controlNoise: createNoise({
-								seed: `${seed}-heightmap-2`,
-								frequency: 0.01,
-								type: "ValueCubic",
-								fractal: {
-									type: "FBm",
-									gain: 0.5,
-									lacunarity: 2.5,
-									octaves: 64,
-									weightedStrength: 0.5,
-								},
-							}),
+							sourceNoise: ([x, z]) => sourceNoise.get(x, z),
+							controlNoise: ([x, z]) => controlNoise.get(x, z),
 						}),
 						weight: 1,
 					},
 					noise2: {
-						noise: flow(
-							createNoise({
-								seed: `${seed}-heightmap-3`,
-								frequency: 0.005,
-								type: "ValueCubic",
-								fractal: {
-									type: "FBm",
-									gain: 0.75,
-									lacunarity: 2.5,
-									octaves: 32,
-									weightedStrength: 0.5,
-								},
-							}),
-							fpClamp({ min: -1, max: 0 }),
-						),
+						noise: flow(([x, z]) => noise2.get(x, z), fpClamp({ min: -1, max: 0 })),
 						weight: 1,
 					},
 				}),
@@ -67,3 +35,4 @@ export const heightmap = (seed: string) =>
 			fpClamp({ min: -1, max: 1 }),
 		),
 	});
+};

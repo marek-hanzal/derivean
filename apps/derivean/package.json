@@ -17,7 +17,6 @@
 		"@dagrejs/dagre": "^1.1.4",
 		"@derivean/db": "workspace:*",
 		"@derivean/game-ui": "workspace:*",
-		"@derivean/noise-wasm": "workspace:*",
 		"@derivean/noise": "workspace:*",
 		"@derivean/root-ui": "workspace:*",
 		"@derivean/sdk": "workspace:*",
@@ -55,7 +54,6 @@
 		"zod": "^3.24.2"
 	},
 	"devDependencies": {
-		"@derivean/noise-wasm-build": "workspace:*",
 		"@iconify/json": "^2.2.312",
 		"@iconify/tailwind": "^1.2.0",
 		"@modyfi/vite-plugin-yaml": "^1.1.1",

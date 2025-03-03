@@ -21,12 +21,14 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@derivean/noise-wasm": "workspace:*",
 		"@derivean/utils": "workspace:*",
 		"@use-pico/common": "^4.0.18",
 		"fp-ts": "^2.16.9",
 		"random-seedable": "^1.0.8"
 	},
 	"devDependencies": {
+		"@derivean/noise-wasm-build": "workspace:*",
 		"@use-pico/eslint-config-eslint": "^5.0.4",
 		"@use-pico/tsconfig": "^4.0.9",
 		"eslint": "^9.21.0",

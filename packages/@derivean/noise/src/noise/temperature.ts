@@ -1,14 +1,12 @@
 /** @format */
 
+import { ValueNoise } from "@derivean/noise-wasm";
 import { fpWeight } from "@derivean/utils";
 import { flow } from "fp-ts/lib/function";
-import { createNoise } from "../utils/createNoise";
 import { createNoiseCache } from "../utils/createNoiseCache";
 
-export const temperature = (seed: string) =>
-	createNoiseCache({
-		noise: flow(
-			createNoise({ seed: `${seed}-temperature`, type: "Value", frequency: 0.005 }),
-			fpWeight({ weight: 2 }),
-		),
-	});
+export const temperature = (seed: string) => {
+	const noise = new ValueNoise(`${seed}-temperature`);
+
+	return createNoiseCache({ noise: flow(([x, z]) => noise.get(x, z), fpWeight({ weight: 2 })) });
+};

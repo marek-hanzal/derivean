@@ -18,7 +18,6 @@
         "@derivean/db": "workspace:*",
         "@derivean/game-ui": "workspace:*",
         "@derivean/noise": "workspace:*",
-        "@derivean/noise-wasm": "workspace:*",
         "@derivean/root-ui": "workspace:*",
         "@derivean/sdk": "workspace:*",
         "@derivean/terrain": "workspace:*",
@@ -55,7 +54,6 @@
         "zod": "^3.24.2",
       },
       "devDependencies": {
-        "@derivean/noise-wasm-build": "workspace:*",
         "@iconify/json": "^2.2.312",
         "@iconify/tailwind": "^1.2.0",
         "@modyfi/vite-plugin-yaml": "^1.1.1",
@@ -115,12 +113,14 @@
       "name": "@derivean/noise",
       "version": "0.5.0",
       "dependencies": {
+        "@derivean/noise-wasm": "workspace:*",
         "@derivean/utils": "workspace:*",
         "@use-pico/common": "^4.0.18",
         "fp-ts": "^2.16.9",
         "random-seedable": "^1.0.8",
       },
       "devDependencies": {
+        "@derivean/noise-wasm-build": "workspace:*",
         "@use-pico/eslint-config-eslint": "^5.0.4",
         "@use-pico/tsconfig": "^4.0.9",
         "eslint": "^9.21.0",
@@ -589,7 +589,7 @@
 
     "@types/luxon": ["@types/luxon@3.4.2", "", {}, "sha512-TifLZlFudklWlMBfhubvgqTXRzLDI5pCbGa4P8a3wPyUQSW+1xQ5eDsreP9DWHX3tjq1ke96uYG/nwundroWcA=="],
 
-    "@types/node": ["@types/node@22.13.8", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-G3EfaZS+iOGYWLLRCEAXdWK9my08oHNZ+FHluRiggIYJPOXzhOiDgpVCUHaUvyIC5/fj7C/p637jdzC666AOKQ=="],
+    "@types/node": ["@types/node@22.13.9", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-acBjXdRJ3A6Pb3tqnw9HZmyR3Fiol3aGxRCK1x3d+6CDAMjl7I649wpSd+yNURCjbOUGu9tqtLKnTGxmK6CyGw=="],
 
     "@types/object-path": ["@types/object-path@0.11.4", "", {}, "sha512-4tgJ1Z3elF/tOMpA8JLVuR9spt9Ynsf7+JjqsQ2IqtiPJtcLoHoXcT6qU4E10cPFqyXX5HDm9QwIzZhBSkLxsw=="],
 
