@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["lib/noise-wasm"]
+members = ["lib/terrain-wasm"]
 
 [profile.release]
 opt-level = 3

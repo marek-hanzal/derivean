@@ -30,4 +30,5 @@ export { type Biome } from "./terrain/Biome";
 export { type UserType } from "./type/UserType";
 export { type XZ } from "./type/XZ";
 export { smoothstep } from "./utils/smoothstep";
+export { withUse } from "./utils/withUse";
 

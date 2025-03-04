@@ -1,8 +1,8 @@
 [package]
-name = "noise-wasm"
+name = "terrain-wasm"
 version = "0.5.0"
 edition = "2024"
-description = "Noise stuff for DeRivean"
+description = "Terrain generator for DeRivean"
 authors = ["Marek Hanzal <marek.hanzal@icloud.com>"]
 license = "MIT"
 repository = "git://github.com/marek-hanzal/derivean.git"
@@ -13,3 +13,4 @@ crate-type = ["cdylib"]
 [dependencies]
 wasm-bindgen = "^0.2.100"
 noise = "^0.9.0"
+console_error_panic_hook = "0.1.7"

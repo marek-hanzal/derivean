@@ -1,0 +1,6 @@
+{
+	"name": "@derivean/terrain-wasm-build",
+	"scripts": {
+		"lib": "wasm-pack build --scope derivean --out-dir ../../packages/@derivean/terrain-wasm"
+	}
+}

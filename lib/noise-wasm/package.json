@@ -1,6 +1,0 @@
-{
-	"name": "@derivean/noise-wasm-build",
-	"scripts": {
-		"lib": "wasm-pack build --scope derivean --out-dir ../../packages/@derivean/noise-wasm"
-	}
-}

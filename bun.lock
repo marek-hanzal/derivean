@@ -4,7 +4,7 @@
     "": {
       "name": "@marek-hanzal/derivean",
       "devDependencies": {
-        "@types/node": "^22.13.8",
+        "@types/node": "^22.13.9",
         "prettier": "^3.5.3",
         "turbo": "^2.4.4",
         "typescript": "^5.8.2",
@@ -17,10 +17,10 @@
         "@dagrejs/dagre": "^1.1.4",
         "@derivean/db": "workspace:*",
         "@derivean/game-ui": "workspace:*",
-        "@derivean/noise": "workspace:*",
         "@derivean/root-ui": "workspace:*",
         "@derivean/sdk": "workspace:*",
         "@derivean/terrain": "workspace:*",
+        "@derivean/terrain-wasm": "workspace:*",
         "@derivean/ui": "workspace:*",
         "@derivean/utils": "workspace:*",
         "@hookform/resolvers": "^4.1.2",
@@ -54,6 +54,7 @@
         "zod": "^3.24.2",
       },
       "devDependencies": {
+        "@derivean/terrain-wasm-build": "workspace:*",
         "@iconify/json": "^2.2.312",
         "@iconify/tailwind": "^1.2.0",
         "@modyfi/vite-plugin-yaml": "^1.1.1",
@@ -76,8 +77,8 @@
         "vite-tsconfig-paths": "^5.1.4",
       },
     },
-    "lib/noise-wasm": {
-      "name": "@derivean/noise-wasm-build",
+    "lib/terrain-wasm": {
+      "name": "@derivean/terrain-wasm-build",
     },
     "packages/@derivean/db": {
       "name": "@derivean/db",
@@ -108,28 +109,6 @@
         "eslint": "^9.21.0",
         "typescript": "^5.8.2",
       },
-    },
-    "packages/@derivean/noise": {
-      "name": "@derivean/noise",
-      "version": "0.5.0",
-      "dependencies": {
-        "@derivean/noise-wasm": "workspace:*",
-        "@derivean/utils": "workspace:*",
-        "@use-pico/common": "^4.0.18",
-        "fp-ts": "^2.16.9",
-        "random-seedable": "^1.0.8",
-      },
-      "devDependencies": {
-        "@derivean/noise-wasm-build": "workspace:*",
-        "@use-pico/eslint-config-eslint": "^5.0.4",
-        "@use-pico/tsconfig": "^4.0.9",
-        "eslint": "^9.21.0",
-        "typescript": "^5.8.2",
-      },
-    },
-    "packages/@derivean/noise-wasm": {
-      "name": "@derivean/noise-wasm",
-      "version": "0.5.0",
     },
     "packages/@derivean/root-ui": {
       "name": "@derivean/root-ui",
@@ -164,6 +143,10 @@
         "eslint": "^9.21.0",
         "typescript": "^5.8.2",
       },
+    },
+    "packages/@derivean/terrain-wasm": {
+      "name": "@derivean/terrain-wasm",
+      "version": "0.5.0",
     },
     "packages/@derivean/ui": {
       "name": "@derivean/ui",
@@ -247,17 +230,15 @@
 
     "@derivean/game-ui": ["@derivean/game-ui@workspace:packages/@derivean/game-ui"],
 
-    "@derivean/noise": ["@derivean/noise@workspace:packages/@derivean/noise"],
-
-    "@derivean/noise-wasm": ["@derivean/noise-wasm@workspace:packages/@derivean/noise-wasm"],
-
-    "@derivean/noise-wasm-build": ["@derivean/noise-wasm-build@workspace:lib/noise-wasm"],
-
     "@derivean/root-ui": ["@derivean/root-ui@workspace:packages/@derivean/root-ui"],
 
     "@derivean/sdk": ["@derivean/sdk@workspace:packages/@derivean/sdk"],
 
     "@derivean/terrain": ["@derivean/terrain@workspace:packages/@derivean/terrain"],
+
+    "@derivean/terrain-wasm": ["@derivean/terrain-wasm@workspace:packages/@derivean/terrain-wasm"],
+
+    "@derivean/terrain-wasm-build": ["@derivean/terrain-wasm-build@workspace:lib/terrain-wasm"],
 
     "@derivean/ui": ["@derivean/ui@workspace:packages/@derivean/ui"],
 
