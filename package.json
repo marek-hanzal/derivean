@@ -20,10 +20,13 @@
 		"packages/**/*"
 	],
 	"devDependencies": {
-		"@types/node": "^22.13.9",
-		"prettier": "^3.5.3",
-		"turbo": "^2.4.4",
-		"typescript": "^5.8.2"
+		"@types/node": "22.13.9",
+		"prettier": "3.5.3",
+		"turbo": "2.4.4",
+		"typescript": "5.8.2"
 	},
-	"packageManager": "bun@1.2.2"
+	"packageManager": "bun@1.2.4",
+	"trustedDependencies": [
+		"@swc/core"
+	]
 }

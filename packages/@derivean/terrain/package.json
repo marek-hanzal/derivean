@@ -22,13 +22,13 @@
 	},
 	"dependencies": {
 		"@derivean/utils": "workspace:*",
-		"@use-pico/common": "^4.0.18"
+		"@use-pico/common": "4.0.21"
 	},
 	"devDependencies": {
-		"@use-pico/eslint-config-eslint": "^5.0.4",
-		"@use-pico/tsconfig": "^4.0.9",
-		"eslint": "^9.21.0",
-		"typescript": "^5.8.2"
+		"@use-pico/eslint-config-eslint": "5.0.8",
+		"@use-pico/tsconfig": "4.0.10",
+		"eslint": "9.21.0",
+		"typescript": "5.8.2"
 	},
 	"bugs": {
 		"url": "https://github.com/marek-hanzal/derivean/issues"
