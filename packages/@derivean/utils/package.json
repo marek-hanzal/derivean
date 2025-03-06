@@ -21,16 +21,16 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@use-pico/common": "^4.0.18",
-		"borsh": "^2.0.0",
-		"fflate": "^0.8.2",
-		"three": "^0.174.0"
+		"@use-pico/common": "4.0.21",
+		"borsh": "2.0.0",
+		"fflate": "0.8.2",
+		"three": "0.174.0"
 	},
 	"devDependencies": {
-		"@use-pico/eslint-config-eslint": "^5.0.4",
-		"@use-pico/tsconfig": "^4.0.9",
-		"eslint": "^9.21.0",
-		"typescript": "^5.8.2"
+		"@use-pico/eslint-config-eslint": "5.0.8",
+		"@use-pico/tsconfig": "4.0.10",
+		"eslint": "9.21.0",
+		"typescript": "5.8.2"
 	},
 	"bugs": {
 		"url": "https://github.com/marek-hanzal/derivean/issues"
