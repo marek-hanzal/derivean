@@ -52,7 +52,7 @@ jobs:
               run: |
                   bun run typecheck
 
-    deploy:
+    build:
         runs-on: ubuntu-22.04
         needs:
             - typecheck
