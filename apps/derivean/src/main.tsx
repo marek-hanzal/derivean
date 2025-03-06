@@ -1,19 +1,20 @@
 /** @format */
 
 import { kysely } from "@derivean/db";
+import { SessionSchema } from "@derivean/utils";
 import { keepPreviousData, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import { LoadingOverlay, PageCss } from "@use-pico/client";
 import { withAxios } from "@use-pico/common";
+import "@xyflow/react/dist/style.css";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 import { routeTree } from "~/_route";
-import { SessionSchema } from "~/app/schema/SessionSchema";
-
-import "@xyflow/react/dist/style.css";
 import "~/assets/style.css";
 
-const queryClient = new QueryClient({ defaultOptions: { queries: { placeholderData: keepPreviousData } } });
+const queryClient = new QueryClient({
+	defaultOptions: { queries: { placeholderData: keepPreviousData } },
+});
 
 const router = createRouter({
 	routeTree,

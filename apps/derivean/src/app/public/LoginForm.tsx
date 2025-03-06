@@ -1,3 +1,6 @@
+/** @format */
+
+import { LoginSchema, SessionSchema } from "@derivean/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useParams } from "@tanstack/react-router";
 import { Button, FormCss, FormError, FormInput, LinkTo, Tx } from "@use-pico/client";
@@ -5,8 +8,6 @@ import { ErrorSchema, onAxiosSchemaError, withErrors } from "@use-pico/common";
 import type { FC } from "react";
 import { useForm } from "react-hook-form";
 import { useLoginMutation } from "~/app/public/useLoginMutation";
-import { LoginSchema } from "~/app/schema/LoginSchema";
-import type { SessionSchema } from "~/app/schema/SessionSchema";
 
 export namespace LoginForm {
 	export interface Props {
@@ -17,9 +18,7 @@ export namespace LoginForm {
 export const LoginForm: FC<LoginForm.Props> = ({ onSuccess }) => {
 	const { locale } = useParams({ from: "/$locale" });
 	const mutation = useLoginMutation();
-	const form = useForm<LoginSchema.Type>({
-		resolver: zodResolver(LoginSchema),
-	});
+	const form = useForm<LoginSchema.Type>({ resolver: zodResolver(LoginSchema) });
 
 	const tva = FormCss({
 		isLoading: form.formState.isLoading,
@@ -41,16 +40,12 @@ export const LoginForm: FC<LoginForm.Props> = ({ onSuccess }) => {
 										error,
 										schema: ErrorSchema,
 										onError: ({ data }) => {
-											form.setError("root", {
-												message: data.message,
-											});
+											form.setError("root", { message: data.message });
 										},
 									}),
 								],
 								onError: (error) => {
-									form.setError("root", {
-										message: error.message,
-									});
+									form.setError("root", { message: error.message });
 								},
 							});
 						},
@@ -58,7 +53,8 @@ export const LoginForm: FC<LoginForm.Props> = ({ onSuccess }) => {
 					.catch(() => {
 						//
 					});
-			})}>
+			})}
+		>
 			<FormError
 				variant={{ highlight: true }}
 				error={form.formState.errors.root}
@@ -67,7 +63,8 @@ export const LoginForm: FC<LoginForm.Props> = ({ onSuccess }) => {
 			<FormInput
 				formState={form.formState}
 				name={"login"}
-				label={<Tx label={"Login (label)"} />}>
+				label={<Tx label={"Login (label)"} />}
+			>
 				<input
 					type={"text"}
 					className={tva.input()}
@@ -78,7 +75,8 @@ export const LoginForm: FC<LoginForm.Props> = ({ onSuccess }) => {
 			<FormInput
 				formState={form.formState}
 				name={"password"}
-				label={<Tx label={"Password (label)"} />}>
+				label={<Tx label={"Password (label)"} />}
+			>
 				<input
 					type={"password"}
 					className={tva.input()}
@@ -90,14 +88,16 @@ export const LoginForm: FC<LoginForm.Props> = ({ onSuccess }) => {
 				<LinkTo
 					icon={"icon-[mdi--register-outline]"}
 					to={"/$locale/public/register"}
-					params={{ locale }}>
+					params={{ locale }}
+				>
 					<Tx label={"Register (link)"} />
 				</LinkTo>
 
 				<Button
 					iconEnabled={"icon-[uiw--login]"}
 					iconDisabled={"icon-[uiw--login]"}
-					type={"submit"}>
+					type={"submit"}
+				>
 					<Tx label={"Login (submit)"} />
 				</Button>
 			</div>

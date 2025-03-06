@@ -1,8 +1,16 @@
 /** @format */
 
-import { createFileRoute, useRouteContext } from "@tanstack/react-router";
+import { BlueprintProductionTable } from "@derivean/root-ui";
+import {
+	BlueprintProductionDependencySchema,
+	BlueprintProductionRequirementSchema,
+	BlueprintProductionResourceSchema,
+	BlueprintProductionSchema,
+} from "@derivean/utils";
+import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
+	LinkTo,
 	navigateOnCursor,
 	navigateOnFilter,
 	navigateOnFulltext,
@@ -14,11 +22,7 @@ import {
 import { withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import { z } from "zod";
-import { BlueprintProductionTable } from "~/app/root/BlueprintProductionTable";
-import { BlueprintProductionDependencySchema } from "~/app/schema/BlueprintProductionDependencySchema";
-import { BlueprintProductionRequirementSchema } from "~/app/schema/BlueprintProductionRequirementSchema";
-import { BlueprintProductionResourceSchema } from "~/app/schema/BlueprintProductionResourceSchema";
-import { BlueprintProductionSchema } from "~/app/schema/BlueprintProductionSchema";
+import { useRootTva } from "~/app/utils/useRootTva";
 
 export const Route = createFileRoute("/$locale/root/blueprint/$id/production")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintProductionSchema)),
@@ -125,7 +129,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/production")({
 		const { filter, cursor, selection } = Route.useSearch();
 		const { id } = Route.useParams();
 		const navigate = Route.useNavigate();
-		const { tva } = useRouteContext({ from: "__root__" });
+		const tva = useRootTva();
 		const tv = tva().slots;
 
 		return (
@@ -148,6 +152,9 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/production")({
 						textTotal: <Tx label={"Number of productions (label)"} />,
 						...navigateOnCursor(navigate),
 					}}
+					context={{ linkRequirements: LinkTo }}
+					blueprintTableContext={{ linkEditor: LinkTo, linkView: LinkTo }}
+					resourceTableContext={{ linkView: LinkTo }}
 				/>
 			</div>
 		);

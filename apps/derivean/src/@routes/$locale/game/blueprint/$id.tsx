@@ -1,9 +1,11 @@
+/** @format */
+
+import { serviceBlueprintGraph } from "@derivean/service";
 import { createFileRoute, Outlet, useRouteContext } from "@tanstack/react-router";
 import { withFetch } from "@use-pico/client";
 import { z } from "zod";
 import { BlueprintIndexMenu } from "~/app/game/BlueprintIndexMenu";
 import { BlueprintPreview } from "~/app/game/BlueprintPreview";
-import { withBlueprintGraph } from "~/app/utils/withBlueprintGraph";
 
 export const Route = createFileRoute("/$locale/game/blueprint/$id")({
 	async loader({ context: { queryClient, kysely }, params: { id } }) {
@@ -12,7 +14,11 @@ export const Route = createFileRoute("/$locale/game/blueprint/$id")({
 			async queryFn() {
 				return kysely.transaction().execute(async (tx) => {
 					return withFetch({
-						select: tx.selectFrom("Blueprint as bl").select(["bl.id", "bl.name", "bl.cycles"]).where("bl.id", "=", id).orderBy("bl.name", "asc"),
+						select: tx
+							.selectFrom("Blueprint as bl")
+							.select(["bl.id", "bl.name", "bl.cycles"])
+							.where("bl.id", "=", id)
+							.orderBy("bl.name", "asc"),
 						query({ select, where }) {
 							let $select = select;
 
@@ -38,7 +44,11 @@ export const Route = createFileRoute("/$locale/game/blueprint/$id")({
 											"in",
 											eb
 												.selectFrom("Blueprint_Dependency as bd")
-												.innerJoin("Blueprint as b", "b.id", "bd.dependencyId")
+												.innerJoin(
+													"Blueprint as b",
+													"b.id",
+													"bd.dependencyId",
+												)
 												.select("bd.blueprintId")
 												.where((eb) => {
 													return eb.or([eb("b.name", "like", fulltext)]);
@@ -63,7 +73,7 @@ export const Route = createFileRoute("/$locale/game/blueprint/$id")({
 		return {
 			entity,
 			graph: await kysely.transaction().execute(async (tx) => {
-				return withBlueprintGraph({ tx });
+				return serviceBlueprintGraph({ tx });
 			}),
 		};
 	},

@@ -21,10 +21,12 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@derivean/sdk": "workspace:*",
 		"@use-pico/common": "4.0.21",
 		"borsh": "2.0.0",
 		"fflate": "0.8.2",
-		"three": "0.174.0"
+		"three": "0.174.0",
+		"zod": "3.24.2"
 	},
 	"devDependencies": {
 		"@use-pico/eslint-config-eslint": "5.0.8",

@@ -1,19 +1,21 @@
+/** @format */
+
+import { UserPreview } from "@derivean/root-ui";
 import { createFileRoute, Outlet, useRouteContext } from "@tanstack/react-router";
 import { withFetch } from "@use-pico/client";
 import { z } from "zod";
 import { UserIndexMenu } from "~/app/root/UserIndexMenu";
-import { UserPreview } from "~/app/root/UserPreview";
 
 export const Route = createFileRoute("/$locale/root/user/$id")({
 	async loader({ context: { kysely }, params: { id } }) {
 		return kysely.transaction().execute(async (tx) => {
 			return {
 				entity: await withFetch({
-					select: tx.selectFrom("User as u").select(["u.id", "u.name"]).where("u.id", "=", id),
-					output: z.object({
-						id: z.string().min(1),
-						name: z.string().min(1),
-					}),
+					select: tx
+						.selectFrom("User as u")
+						.select(["u.id", "u.name"])
+						.where("u.id", "=", id),
+					output: z.object({ id: z.string().min(1), name: z.string().min(1) }),
 				}),
 			};
 		});

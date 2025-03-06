@@ -1,8 +1,8 @@
 /** @format */
 
+import { SessionSchema } from "@derivean/utils";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { ls } from "@use-pico/client";
-import { SessionSchema } from "~/app/schema/SessionSchema";
 
 export const Route = createFileRoute("/$locale/")({
 	async beforeLoad({ params: { locale } }) {

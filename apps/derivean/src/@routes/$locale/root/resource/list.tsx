@@ -1,8 +1,11 @@
 /** @format */
 
-import { createFileRoute, useRouteContext } from "@tanstack/react-router";
+import { ResourceTable } from "@derivean/root-ui";
+import { ResourceSchema, TagSchema } from "@derivean/utils";
+import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
+	LinkTo,
 	navigateOnCursor,
 	navigateOnFilter,
 	navigateOnFulltext,
@@ -14,9 +17,7 @@ import {
 import { withIntSchema, withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import { z } from "zod";
-import { ResourceTable } from "~/app/root/ResourceTable";
-import { ResourceSchema } from "~/app/schema/ResourceSchema";
-import { TagSchema } from "~/app/schema/TagSchema";
+import { useRootTva } from "~/app/utils/useRootTva";
 
 export const Route = createFileRoute("/$locale/root/resource/list")({
 	validateSearch: zodValidator(withSourceSearchSchema(ResourceSchema)),
@@ -130,7 +131,7 @@ export const Route = createFileRoute("/$locale/root/resource/list")({
 		const { data, count } = Route.useLoaderData();
 		const { filter, cursor, selection } = Route.useSearch();
 		const navigate = Route.useNavigate();
-		const { tva } = useRouteContext({ from: "__root__" });
+		const tva = useRootTva();
 		const tv = tva().slots;
 
 		return (
@@ -152,6 +153,7 @@ export const Route = createFileRoute("/$locale/root/resource/list")({
 						textTotal: <Tx label={"Number of items"} />,
 						...navigateOnCursor(navigate),
 					}}
+					context={{ linkView: LinkTo }}
 				/>
 			</div>
 		);

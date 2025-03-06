@@ -1,6 +1,7 @@
 /** @format */
 
 import { kysely, transaction } from "@derivean/db";
+import { BlueprintForm } from "@derivean/root-ui";
 import { BlueprintIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
@@ -18,7 +19,6 @@ import {
 	useReactFlow,
 } from "@xyflow/react";
 import { useMemo, type FC } from "react";
-import { BlueprintForm } from "~/app/root/BlueprintForm";
 import { BlueprintNode } from "~/app/root/Editor/BlueprintNode";
 import { ZoomToNode } from "~/app/ui/ZoomToNode";
 

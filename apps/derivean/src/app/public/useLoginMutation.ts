@@ -1,10 +1,9 @@
 /** @format */
 
 import { transaction } from "@derivean/db";
+import type { LoginSchema, SessionSchema } from "@derivean/utils";
 import { useMutation } from "@tanstack/react-query";
 import { pwd } from "@use-pico/common";
-import type { LoginSchema } from "~/app/schema/LoginSchema";
-import type { SessionSchema } from "~/app/schema/SessionSchema";
 
 export const useLoginMutation = () => {
 	return useMutation({

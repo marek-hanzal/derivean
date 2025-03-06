@@ -1,8 +1,11 @@
 /** @format */
 
-import { createFileRoute, useRouteContext } from "@tanstack/react-router";
+import { BlueprintInventoryTable } from "@derivean/root-ui";
+import { BlueprintInventorySchema } from "@derivean/utils";
+import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
+	LinkTo,
 	navigateOnCursor,
 	navigateOnFilter,
 	navigateOnFulltext,
@@ -12,8 +15,7 @@ import {
 	withSourceSearchSchema,
 } from "@use-pico/client";
 import { z } from "zod";
-import { BlueprintInventoryTable } from "~/app/root/BlueprintInventoryTable";
-import { BlueprintInventorySchema } from "~/app/schema/BlueprintInventorySchema";
+import { useRootTva } from "~/app/utils/useRootTva";
 
 export const Route = createFileRoute("/$locale/root/blueprint/$id/inventory")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintInventorySchema)),
@@ -104,7 +106,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/inventory")({
 		const { filter, cursor, selection } = Route.useSearch();
 		const { id } = Route.useParams();
 		const navigate = Route.useNavigate();
-		const { tva } = useRouteContext({ from: "__root__" });
+		const tva = useRootTva();
 		const tv = tva().slots;
 
 		return (
@@ -127,6 +129,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/inventory")({
 						textTotal: <Tx label={"Number of items"} />,
 						...navigateOnCursor(navigate),
 					}}
+					resourceTableContext={{ linkView: LinkTo }}
 				/>
 			</div>
 		);

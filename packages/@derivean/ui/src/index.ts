@@ -20,4 +20,5 @@ export { ResourceIcon } from "./icon/ResourceIcon";
 export { SupplyIcon } from "./icon/SupplyIcon";
 export { TransportIcon } from "./icon/TransportIcon";
 export { CyclesInline } from "./ui/CyclesInline";
-
+export { Dependencies } from "./ui/Dependencies";
+export { InventoryTypeInline } from "./ui/InventoryTypeInline";

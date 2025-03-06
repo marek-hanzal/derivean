@@ -1,8 +1,11 @@
-import { createFileRoute, Outlet, useRouteContext } from "@tanstack/react-router";
-import { withFetch } from "@use-pico/client";
+/** @format */
+
+import { BlueprintProductionPreview } from "@derivean/root-ui";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { LinkTo, withFetch } from "@use-pico/client";
 import { z } from "zod";
 import { BlueprintProductionIndexMenu } from "~/app/root/BlueprintProductionIndexMenu";
-import { BlueprintProductionPreview } from "~/app/root/BlueprintProductionPreview";
+import { useRootTva } from "~/app/utils/useRootTva";
 
 export const Route = createFileRoute("/$locale/root/blueprint/production/$id")({
 	async loader({ context: { queryClient, kysely }, params: { id } }) {
@@ -16,7 +19,14 @@ export const Route = createFileRoute("/$locale/root/blueprint/production/$id")({
 								.selectFrom("Blueprint_Production as bp")
 								.innerJoin("Resource as r", "r.id", "bp.resourceId")
 								.innerJoin("Blueprint as bl", "bl.id", "bp.blueprintId")
-								.select(["bp.id", "bp.amount", "bp.cycles", "r.name as resource", "bp.blueprintId", "bl.name as blueprint"])
+								.select([
+									"bp.id",
+									"bp.amount",
+									"bp.cycles",
+									"r.name as resource",
+									"bp.blueprintId",
+									"bl.name as blueprint",
+								])
 								.where("bp.id", "=", id),
 							output: z.object({
 								id: z.string().min(1),
@@ -34,12 +44,15 @@ export const Route = createFileRoute("/$locale/root/blueprint/production/$id")({
 	},
 	component() {
 		const { entity } = Route.useLoaderData();
-		const { tva } = useRouteContext({ from: "__root__" });
+		const tva = useRootTva();
 		const tv = tva().slots;
 
 		return (
 			<div className={tv.base()}>
-				<BlueprintProductionPreview entity={entity} />
+				<BlueprintProductionPreview
+					entity={entity}
+					linkProduction={LinkTo}
+				/>
 
 				<BlueprintProductionIndexMenu entity={entity} />
 

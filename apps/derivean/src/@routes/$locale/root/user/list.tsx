@@ -1,8 +1,11 @@
 /** @format */
 
+import { UserTable } from "@derivean/root-ui";
+import { UserSchema } from "@derivean/utils";
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
+	LinkTo,
 	navigateOnCursor,
 	navigateOnFilter,
 	navigateOnFulltext,
@@ -12,8 +15,6 @@ import {
 	withSourceSearchSchema,
 } from "@use-pico/client";
 import { z } from "zod";
-import { UserTable } from "~/app/root/UserTable";
-import { UserSchema } from "~/app/schema/UserSchema";
 
 export const Route = createFileRoute("/$locale/root/user/list")({
 	validateSearch: zodValidator(withSourceSearchSchema(UserSchema)),
@@ -65,6 +66,7 @@ export const Route = createFileRoute("/$locale/root/user/list")({
 						textTotal: <Tx label={"Number of users (label)"} />,
 						...navigateOnCursor(navigate),
 					}}
+					context={{ linkView: LinkTo }}
 				/>
 			</div>
 		);

@@ -1,5 +1,6 @@
 /** @format */
 
+import { BlueprintProductionRequirementSchema } from "@derivean/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
@@ -13,7 +14,6 @@ import {
 import { withBoolSchema } from "@use-pico/common";
 import { z } from "zod";
 import { BlueprintProductionRequirementTable } from "~/app/game/BlueprintProductionRequirementTable";
-import { BlueprintProductionRequirementSchema } from "~/app/schema/BlueprintProductionRequirementSchema";
 
 export const Route = createFileRoute("/$locale/game/blueprint/production/$id/requirements")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintProductionRequirementSchema)),

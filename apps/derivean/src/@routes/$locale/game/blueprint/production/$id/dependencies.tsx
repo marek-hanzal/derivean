@@ -1,6 +1,7 @@
 /** @format */
 
-import { createFileRoute, useRouteContext } from "@tanstack/react-router";
+import { BlueprintProductionDependencySchema } from "@derivean/utils";
+import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
 	navigateOnCursor,
@@ -12,7 +13,7 @@ import {
 } from "@use-pico/client";
 import { z } from "zod";
 import { BlueprintProductionDependencyTable } from "~/app/game/BlueprintProductionDependencyTable";
-import { BlueprintProductionDependencySchema } from "~/app/schema/BlueprintProductionDependencySchema";
+import { useRootTva } from "~/app/utils/useRootTva";
 
 export const Route = createFileRoute("/$locale/game/blueprint/production/$id/dependencies")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintProductionDependencySchema)),
@@ -59,7 +60,7 @@ export const Route = createFileRoute("/$locale/game/blueprint/production/$id/dep
 		const { data, count } = Route.useLoaderData();
 		const { filter, cursor } = Route.useSearch();
 		const navigate = Route.useNavigate();
-		const { tva } = useRouteContext({ from: "__root__" });
+		const tva = useRootTva();
 		const tv = tva().slots;
 
 		return (

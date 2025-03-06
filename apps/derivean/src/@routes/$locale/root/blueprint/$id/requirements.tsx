@@ -1,8 +1,11 @@
 /** @format */
 
-import { createFileRoute, useRouteContext } from "@tanstack/react-router";
+import { BlueprintRequirementTable } from "@derivean/root-ui";
+import { BlueprintRequirementSchema } from "@derivean/utils";
+import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
+	LinkTo,
 	navigateOnCursor,
 	navigateOnFilter,
 	navigateOnFulltext,
@@ -13,8 +16,7 @@ import {
 } from "@use-pico/client";
 import { withBoolSchema } from "@use-pico/common";
 import { z } from "zod";
-import { BlueprintRequirementTable } from "~/app/root/BlueprintRequirementTable";
-import { BlueprintRequirementSchema } from "~/app/schema/BlueprintRequirementSchema";
+import { useRootTva } from "~/app/utils/useRootTva";
 
 export const Route = createFileRoute("/$locale/root/blueprint/$id/requirements")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintRequirementSchema)),
@@ -68,7 +70,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/requirements")
 		const { filter, cursor, selection } = Route.useSearch();
 		const { id } = Route.useParams();
 		const navigate = Route.useNavigate();
-		const { tva } = useRouteContext({ from: "__root__" });
+		const tva = useRootTva();
 		const tv = tva().slots;
 
 		return (
@@ -91,6 +93,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/requirements")
 						textTotal: <Tx label={"Number of requirements (label)"} />,
 						...navigateOnCursor(navigate),
 					}}
+					resourceTableContext={{ linkView: LinkTo }}
 				/>
 			</div>
 		);

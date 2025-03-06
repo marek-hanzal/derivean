@@ -1,14 +1,16 @@
 /** @format */
 
 import { ProductionIcon } from "@derivean/ui";
+import type {
+	BlueprintProductionDependencySchema,
+	BlueprintProductionRequirementSchema,
+	BlueprintProductionResourceSchema,
+} from "@derivean/utils";
 import { useParams } from "@tanstack/react-router";
 import { LinkTo, More, Table, Tx, withColumn } from "@use-pico/client";
 import { toHumanNumber, tvc, type IdentitySchema } from "@use-pico/common";
 import { type FC } from "react";
 import { RequirementsInline } from "~/app/game/RequirementsInline";
-import type { BlueprintProductionDependencySchema } from "~/app/schema/BlueprintProductionDependencySchema";
-import type { BlueprintProductionRequirementSchema } from "~/app/schema/BlueprintProductionRequirementSchema";
-import type { BlueprintProductionResourceSchema } from "~/app/schema/BlueprintProductionResourceSchema";
 
 export namespace BlueprintProductionTable {
 	export interface Data extends IdentitySchema.Type {

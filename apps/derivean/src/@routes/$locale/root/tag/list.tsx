@@ -1,5 +1,7 @@
 /** @format */
 
+import { TagTable } from "@derivean/root-ui";
+import { TagSchema } from "@derivean/utils";
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
@@ -12,8 +14,6 @@ import {
 	withSourceSearchSchema,
 } from "@use-pico/client";
 import { z } from "zod";
-import { TagTable } from "~/app/root/TagTable";
-import { TagSchema } from "~/app/schema/TagSchema";
 
 export const Route = createFileRoute("/$locale/root/tag/list")({
 	validateSearch: zodValidator(withSourceSearchSchema(TagSchema)),

@@ -1,14 +1,13 @@
 /** @format */
 
+import { BlueprintPreview } from "@derivean/root-ui";
+import { serviceBlueprintGraph } from "@derivean/service";
+import { BlueprintDependencySchema, BlueprintRequirementSchema } from "@derivean/utils";
 import { createFileRoute, Outlet, useRouteContext } from "@tanstack/react-router";
-import { withFetch } from "@use-pico/client";
+import { LinkTo, withFetch } from "@use-pico/client";
 import { Kysely, withJsonOutputArraySchema } from "@use-pico/common";
 import { z } from "zod";
 import { BlueprintIndexMenu } from "~/app/root/BlueprintIndexMenu";
-import { BlueprintPreview } from "~/app/root/BlueprintPreview";
-import { BlueprintDependencySchema } from "~/app/schema/BlueprintDependencySchema";
-import { BlueprintRequirementSchema } from "~/app/schema/BlueprintRequirementSchema";
-import { withBlueprintGraph } from "~/app/utils/withBlueprintGraph";
 
 export const Route = createFileRoute("/$locale/root/blueprint/$id")({
 	async loader({ context: { queryClient, kysely }, params: { id } }) {
@@ -123,7 +122,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id")({
 		return {
 			entity,
 			graph: await kysely.transaction().execute(async (tx) => {
-				return withBlueprintGraph({ tx });
+				return serviceBlueprintGraph({ tx });
 			}),
 		};
 	},
@@ -134,7 +133,11 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id")({
 
 		return (
 			<div className={tv.base()}>
-				<BlueprintPreview entity={entity} />
+				<BlueprintPreview
+					entity={entity}
+					linkList={LinkTo}
+					linkEditor={LinkTo}
+				/>
 
 				<BlueprintIndexMenu entity={entity} />
 

@@ -1,8 +1,12 @@
 /** @format */
 
+import { BlueprintTable } from "@derivean/root-ui";
+import { serviceBlueprintGraph } from "@derivean/service";
+import { BlueprintDependencySchema, BlueprintRequirementSchema, BlueprintSchema } from "@derivean/utils";
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
+	LinkTo,
 	navigateOnCursor,
 	navigateOnFilter,
 	navigateOnFulltext,
@@ -14,11 +18,6 @@ import {
 import { withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import { z } from "zod";
-import { BlueprintTable } from "~/app/root/BlueprintTable";
-import { BlueprintDependencySchema } from "~/app/schema/BlueprintDependencySchema";
-import { BlueprintRequirementSchema } from "~/app/schema/BlueprintRequirementSchema";
-import { BlueprintSchema } from "~/app/schema/BlueprintSchema";
-import { withBlueprintGraph } from "~/app/utils/withBlueprintGraph";
 
 export const Route = createFileRoute("/$locale/root/blueprint/list")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintSchema)),
@@ -143,7 +142,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/list")({
 		return {
 			data,
 			dependencies: await kysely.transaction().execute(async (tx) => {
-				return withBlueprintGraph({ tx });
+				return serviceBlueprintGraph({ tx });
 			}),
 		};
 	},
@@ -160,7 +159,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/list")({
 		return (
 			<div className={tv.base()}>
 				<BlueprintTable
-					dependencies={dependencies}
+					context={{ linkEditor: LinkTo, linkView: LinkTo, dependencies }}
 					data={data}
 					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
 					selection={{

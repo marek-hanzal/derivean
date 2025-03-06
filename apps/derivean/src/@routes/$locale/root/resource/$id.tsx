@@ -1,8 +1,11 @@
-import { createFileRoute, Outlet, useRouteContext } from "@tanstack/react-router";
-import { withFetch } from "@use-pico/client";
+/** @format */
+
+import { ResourcePreview } from "@derivean/root-ui";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { LinkTo, withFetch } from "@use-pico/client";
 import { z } from "zod";
 import { ResourceIndexMenu } from "~/app/root/ResourceIndexMenu";
-import { ResourcePreview } from "~/app/root/ResourcePreview";
+import { useRootTva } from "~/app/utils/useRootTva";
 
 export const Route = createFileRoute("/$locale/root/resource/$id")({
 	async loader({ context: { queryClient, kysely }, params: { id } }) {
@@ -12,7 +15,10 @@ export const Route = createFileRoute("/$locale/root/resource/$id")({
 				return kysely.transaction().execute(async (tx) => {
 					return {
 						entity: await withFetch({
-							select: tx.selectFrom("Resource as r").select(["r.id", "r.name", "r.image"]).where("r.id", "=", id),
+							select: tx
+								.selectFrom("Resource as r")
+								.select(["r.id", "r.name", "r.image"])
+								.where("r.id", "=", id),
 							output: z.object({
 								id: z.string().min(1),
 								name: z.string().min(1),
@@ -25,14 +31,17 @@ export const Route = createFileRoute("/$locale/root/resource/$id")({
 		});
 	},
 	component() {
-		const { tva } = useRouteContext({ from: "__root__" });
+		const tva = useRootTva();
 		const { entity } = Route.useLoaderData();
 
 		const tv = tva().slots;
 
 		return (
 			<div className={tv.base()}>
-				<ResourcePreview entity={entity} />
+				<ResourcePreview
+					entity={entity}
+					linkList={LinkTo}
+				/>
 
 				<ResourceIndexMenu entity={entity} />
 

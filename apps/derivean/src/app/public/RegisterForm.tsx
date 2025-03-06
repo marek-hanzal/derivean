@@ -1,11 +1,12 @@
+/** @format */
+
+import { RegisterSchema, type SessionSchema } from "@derivean/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, Tx } from "@use-pico/client";
 import { ErrorSchema, onAxiosSchemaError, withErrors } from "@use-pico/common";
 import type { FC } from "react";
 import { useForm } from "react-hook-form";
 import { useRegisterMutation } from "~/app/public/useRegisterMutation";
-import { RegisterSchema } from "~/app/schema/RegisterSchema";
-import type { SessionSchema } from "~/app/schema/SessionSchema";
 
 export namespace RegisterForm {
 	export interface Props {
@@ -15,9 +16,7 @@ export namespace RegisterForm {
 
 export const RegisterForm: FC<RegisterForm.Props> = ({ onSuccess }) => {
 	const mutation = useRegisterMutation();
-	const form = useForm<RegisterSchema.Type>({
-		resolver: zodResolver(RegisterSchema),
-	});
+	const form = useForm<RegisterSchema.Type>({ resolver: zodResolver(RegisterSchema) });
 
 	const tva = FormCss({
 		isLoading: form.formState.isLoading,
@@ -39,16 +38,12 @@ export const RegisterForm: FC<RegisterForm.Props> = ({ onSuccess }) => {
 										error,
 										schema: ErrorSchema,
 										onError: ({ data }) => {
-											form.setError("root", {
-												message: data.message,
-											});
+											form.setError("root", { message: data.message });
 										},
 									}),
 								],
 								onError: (error) => {
-									form.setError("root", {
-										message: error.message,
-									});
+									form.setError("root", { message: error.message });
 								},
 							});
 						},
@@ -56,7 +51,8 @@ export const RegisterForm: FC<RegisterForm.Props> = ({ onSuccess }) => {
 					.catch(() => {
 						//
 					});
-			})}>
+			})}
+		>
 			<FormError
 				variant={{ highlight: true }}
 				error={form.formState.errors.root}
@@ -64,7 +60,8 @@ export const RegisterForm: FC<RegisterForm.Props> = ({ onSuccess }) => {
 			<FormInput
 				formState={form.formState}
 				name={"name"}
-				label={<Tx label={"Name (label)"} />}>
+				label={<Tx label={"Name (label)"} />}
+			>
 				<input
 					type={"text"}
 					className={tva.input()}
@@ -74,7 +71,8 @@ export const RegisterForm: FC<RegisterForm.Props> = ({ onSuccess }) => {
 			<FormInput
 				formState={form.formState}
 				name={"login"}
-				label={<Tx label={"Login (label)"} />}>
+				label={<Tx label={"Login (label)"} />}
+			>
 				<input
 					type={"text"}
 					className={tva.input()}
@@ -84,7 +82,8 @@ export const RegisterForm: FC<RegisterForm.Props> = ({ onSuccess }) => {
 			<FormInput
 				formState={form.formState}
 				name={"password1"}
-				label={<Tx label={"Password 1 (label)"} />}>
+				label={<Tx label={"Password 1 (label)"} />}
+			>
 				<input
 					type={"password"}
 					className={tva.input()}
@@ -94,7 +93,8 @@ export const RegisterForm: FC<RegisterForm.Props> = ({ onSuccess }) => {
 			<FormInput
 				formState={form.formState}
 				name={"password2"}
-				label={<Tx label={"Password 2 (label)"} />}>
+				label={<Tx label={"Password 2 (label)"} />}
+			>
 				<input
 					type={"password"}
 					className={tva.input()}
@@ -105,7 +105,8 @@ export const RegisterForm: FC<RegisterForm.Props> = ({ onSuccess }) => {
 			<Button
 				iconEnabled={"icon-[mdi--register-outline]"}
 				iconDisabled={"icon-[mdi--register-outline]"}
-				type={"submit"}>
+				type={"submit"}
+			>
 				<Tx label={"Register (submit)"} />
 			</Button>
 		</form>

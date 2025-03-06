@@ -1,11 +1,11 @@
 /** @format */
 
 import { transaction } from "@derivean/db";
+import { BlueprintForm } from "@derivean/root-ui";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { useInvalidator } from "@use-pico/client";
 import { withBase64 } from "@use-pico/common";
-import { BlueprintForm } from "~/app/root/BlueprintForm";
 
 export const Route = createFileRoute("/$locale/root/blueprint/$id/edit")({
 	component: () => {

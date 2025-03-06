@@ -1,8 +1,11 @@
 /** @format */
 
-import { createFileRoute, useRouteContext } from "@tanstack/react-router";
+import { BlueprintDependencyTable } from "@derivean/root-ui";
+import { BlueprintDependencySchema } from "@derivean/utils";
+import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
+	LinkTo,
 	navigateOnCursor,
 	navigateOnFilter,
 	navigateOnFulltext,
@@ -12,8 +15,7 @@ import {
 	withSourceSearchSchema,
 } from "@use-pico/client";
 import { z } from "zod";
-import { BlueprintDependencyTable } from "~/app/root/BlueprintDependencyTable";
-import { BlueprintDependencySchema } from "~/app/schema/BlueprintDependencySchema";
+import { useRootTva } from "~/app/utils/useRootTva";
 
 export const Route = createFileRoute("/$locale/root/blueprint/$id/dependencies")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintDependencySchema)),
@@ -70,7 +72,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/dependencies")
 		const { filter, cursor, selection } = Route.useSearch();
 		const { id } = Route.useParams();
 		const navigate = Route.useNavigate();
-		const { tva } = useRouteContext({ from: "__root__" });
+		const tva = useRootTva();
 		const tv = tva().slots;
 
 		return (
@@ -93,6 +95,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/dependencies")
 						textTotal: <Tx label={"Number of requirements (label)"} />,
 						...navigateOnCursor(navigate),
 					}}
+					blueprintTableContext={{ linkEditor: LinkTo, linkView: LinkTo }}
 				/>
 			</div>
 		);

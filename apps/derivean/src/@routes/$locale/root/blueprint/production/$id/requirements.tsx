@@ -1,8 +1,11 @@
 /** @format */
 
+import { BlueprintProductionRequirementTable } from "@derivean/root-ui";
+import { BlueprintProductionRequirementSchema } from "@derivean/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
+	LinkTo,
 	navigateOnCursor,
 	navigateOnFilter,
 	navigateOnFulltext,
@@ -13,8 +16,6 @@ import {
 } from "@use-pico/client";
 import { withBoolSchema } from "@use-pico/common";
 import { z } from "zod";
-import { BlueprintProductionRequirementTable } from "~/app/root/BlueprintProductionRequirementTable";
-import { BlueprintProductionRequirementSchema } from "~/app/schema/BlueprintProductionRequirementSchema";
 
 export const Route = createFileRoute("/$locale/root/blueprint/production/$id/requirements")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintProductionRequirementSchema)),
@@ -95,6 +96,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/production/$id/req
 						textTotal: <Tx label={"Number of production requirements (label)"} />,
 						...navigateOnCursor(navigate),
 					}}
+					resourceTableContext={{ linkView: LinkTo }}
 				/>
 			</>
 		);

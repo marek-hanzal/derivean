@@ -113,6 +113,26 @@
     "packages/@derivean/root-ui": {
       "name": "@derivean/root-ui",
       "version": "0.5.0",
+      "dependencies": {
+        "@derivean/service": "workspace:*",
+        "@derivean/utils": "workspace:*",
+        "@use-pico/client": "4.0.37",
+        "@use-pico/common": "4.0.21",
+      },
+      "devDependencies": {
+        "@types/react": "19.0.10",
+        "@use-pico/eslint-config-eslint": "5.0.8",
+        "@use-pico/tsconfig": "4.0.10",
+        "eslint": "9.21.0",
+        "typescript": "5.8.2",
+      },
+      "peerDependencies": {
+        "react": "19.0.0",
+      },
+    },
+    "packages/@derivean/sdk": {
+      "name": "@derivean/sdk",
+      "version": "0.5.0",
       "devDependencies": {
         "@use-pico/eslint-config-eslint": "5.0.8",
         "@use-pico/tsconfig": "4.0.10",
@@ -120,9 +140,13 @@
         "typescript": "5.8.2",
       },
     },
-    "packages/@derivean/sdk": {
-      "name": "@derivean/sdk",
+    "packages/@derivean/service": {
+      "name": "@derivean/service",
       "version": "0.5.0",
+      "dependencies": {
+        "@derivean/db": "workspace:*",
+        "dependency-graph": "1.0.0",
+      },
       "devDependencies": {
         "@use-pico/eslint-config-eslint": "5.0.8",
         "@use-pico/tsconfig": "4.0.10",
@@ -151,11 +175,21 @@
     "packages/@derivean/ui": {
       "name": "@derivean/ui",
       "version": "0.5.0",
+      "dependencies": {
+        "@derivean/service": "workspace:*",
+        "@use-pico/client": "4.0.37",
+        "@use-pico/common": "4.0.21",
+        "dependency-graph": "1.0.0",
+      },
       "devDependencies": {
+        "@types/react": "19.0.10",
         "@use-pico/eslint-config-eslint": "5.0.8",
         "@use-pico/tsconfig": "4.0.10",
         "eslint": "9.21.0",
         "typescript": "5.8.2",
+      },
+      "peerDependencies": {
+        "react": "19.0.0",
       },
     },
     "packages/@derivean/utils": {
@@ -236,6 +270,8 @@
     "@derivean/root-ui": ["@derivean/root-ui@workspace:packages/@derivean/root-ui"],
 
     "@derivean/sdk": ["@derivean/sdk@workspace:packages/@derivean/sdk"],
+
+    "@derivean/service": ["@derivean/service@workspace:packages/@derivean/service"],
 
     "@derivean/terrain": ["@derivean/terrain@workspace:packages/@derivean/terrain"],
 

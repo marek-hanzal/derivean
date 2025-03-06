@@ -1,8 +1,16 @@
+/** @format */
+
+import { SessionSchema } from "@derivean/utils";
 import { useMutationState } from "@tanstack/react-query";
-import { createFileRoute, Outlet, redirect, useLoaderData, useParams } from "@tanstack/react-router";
+import {
+	createFileRoute,
+	Outlet,
+	redirect,
+	useLoaderData,
+	useParams,
+} from "@tanstack/react-router";
 import { AppLayout, LinkTo, LogoutIcon, ls } from "@use-pico/client";
 import { Logo } from "~/app/logo/Logo";
-import { SessionSchema } from "~/app/schema/SessionSchema";
 
 export const Route = createFileRoute("/$locale/game")({
 	async beforeLoad({ context, params: { locale } }) {
@@ -12,10 +20,7 @@ export const Route = createFileRoute("/$locale/game")({
 				try {
 					return SessionSchema.parse(ls.get("session"));
 				} catch (_) {
-					throw redirect({
-						to: `/$locale/public/login`,
-						params: { locale },
-					});
+					throw redirect({ to: `/$locale/public/login`, params: { locale } });
 				}
 			},
 		};
@@ -43,15 +48,10 @@ export const Route = createFileRoute("/$locale/game")({
 	},
 	component() {
 		const { locale } = useParams({ from: "/$locale" });
-		const { session } = useLoaderData({
-			from: "/$locale/game",
-		});
+		const { session } = useLoaderData({ from: "/$locale/game" });
 
 		const mutation = useMutationState({
-			filters: {
-				status: "pending",
-				mutationKey: ["useCycleMutation"],
-			},
+			filters: { status: "pending", mutationKey: ["useCycleMutation"] },
 			select(mutation) {
 				return mutation.state.status;
 			},
@@ -62,7 +62,8 @@ export const Route = createFileRoute("/$locale/game")({
 				logo={
 					<LinkTo
 						to={"/$locale/game"}
-						params={{ locale }}>
+						params={{ locale }}
+					>
 						<Logo />
 					</LinkTo>
 				}
@@ -84,8 +85,11 @@ export const Route = createFileRoute("/$locale/game")({
 					</>
 				}
 				css={{
-					base: mutation.length ? ["select-none", "pointer-events-none", "opacity-50"] : undefined,
-				}}>
+					base: mutation.length
+						? ["select-none", "pointer-events-none", "opacity-50"]
+						: undefined,
+				}}
+			>
 				<Outlet />
 			</AppLayout>
 		);

@@ -1,8 +1,11 @@
 /** @format */
 
+import { BuildingTable } from "@derivean/root-ui";
+import { BuildingSchema } from "@derivean/utils";
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
+	LinkTo,
 	navigateOnCursor,
 	navigateOnFilter,
 	navigateOnFulltext,
@@ -12,8 +15,6 @@ import {
 	withSourceSearchSchema,
 } from "@use-pico/client";
 import { z } from "zod";
-import { BuildingTable } from "~/app/root/BuildingTable";
-import { BuildingSchema } from "~/app/schema/BuildingSchema";
 
 export const Route = createFileRoute("/$locale/root/user/$id/building/list")({
 	validateSearch: zodValidator(withSourceSearchSchema(BuildingSchema)),
@@ -69,6 +70,8 @@ export const Route = createFileRoute("/$locale/root/user/$id/building/list")({
 						textTotal: <Tx label={"Number of buildings (label)"} />,
 						...navigateOnCursor(navigate),
 					}}
+					context={{ linkView: LinkTo }}
+					blueprintTableContext={{ linkView: LinkTo, linkEditor: LinkTo }}
 				/>
 			</div>
 		);

@@ -1,5 +1,6 @@
 /** @format */
 
+import { BlueprintSchema } from "@derivean/utils";
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
@@ -12,7 +13,6 @@ import {
 } from "@use-pico/client";
 import { z } from "zod";
 import { BlueprintTable } from "~/app/game/BlueprintTable";
-import { BlueprintSchema } from "~/app/schema/BlueprintSchema";
 
 export const Route = createFileRoute("/$locale/game/blueprint/list")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintSchema)),

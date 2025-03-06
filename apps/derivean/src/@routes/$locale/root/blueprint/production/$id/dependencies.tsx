@@ -1,8 +1,11 @@
 /** @format */
 
+import { BlueprintProductionDependencyTable } from "@derivean/root-ui";
+import { BlueprintProductionDependencySchema } from "@derivean/utils";
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
+	LinkTo,
 	navigateOnCursor,
 	navigateOnFilter,
 	navigateOnFulltext,
@@ -12,8 +15,6 @@ import {
 	withSourceSearchSchema,
 } from "@use-pico/client";
 import { z } from "zod";
-import { BlueprintProductionDependencyTable } from "~/app/root/BlueprintProductionDependencyTable";
-import { BlueprintProductionDependencySchema } from "~/app/schema/BlueprintProductionDependencySchema";
 
 export const Route = createFileRoute("/$locale/root/blueprint/production/$id/dependencies")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintProductionDependencySchema)),
@@ -84,6 +85,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/production/$id/dep
 						textTotal: <Tx label={"Number of dependencies (label)"} />,
 						...navigateOnCursor(navigate),
 					}}
+					blueprintTableContext={{ linkEditor: LinkTo, linkView: LinkTo }}
 				/>
 			</div>
 		);

@@ -1,8 +1,11 @@
 /** @format */
 
+import { BlueprintProductionResourceTable } from "@derivean/root-ui";
+import { BlueprintProductionResourceSchema } from "@derivean/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
+	LinkTo,
 	navigateOnCursor,
 	navigateOnFilter,
 	navigateOnFulltext,
@@ -12,8 +15,6 @@ import {
 	withSourceSearchSchema,
 } from "@use-pico/client";
 import { z } from "zod";
-import { BlueprintProductionResourceTable } from "~/app/root/BlueprintProductionResourceTable";
-import { BlueprintProductionResourceSchema } from "~/app/schema/BlueprintProductionResourceSchema";
 
 export const Route = createFileRoute("/$locale/root/blueprint/production/$id/resources")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintProductionResourceSchema)),
@@ -89,6 +90,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/production/$id/res
 						),
 						...navigateOnCursor(navigate),
 					}}
+					resourceTableContext={{ linkView: LinkTo }}
 				/>
 			</>
 		);

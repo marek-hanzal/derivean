@@ -1,8 +1,11 @@
 /** @format */
 
+import { BlueprintConflictTable } from "@derivean/root-ui";
+import { BlueprintDependencySchema } from "@derivean/utils";
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
+	LinkTo,
 	navigateOnCursor,
 	navigateOnFilter,
 	navigateOnFulltext,
@@ -12,8 +15,6 @@ import {
 	withSourceSearchSchema,
 } from "@use-pico/client";
 import { z } from "zod";
-import { BlueprintConflictTable } from "~/app/root/BlueprintConflictTable";
-import { BlueprintDependencySchema } from "~/app/schema/BlueprintDependencySchema";
 
 export const Route = createFileRoute("/$locale/root/blueprint/$id/conflicts")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintDependencySchema)),
@@ -68,6 +69,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/conflicts")({
 		return (
 			<div className={tv.base()}>
 				<BlueprintConflictTable
+					blueprintTableContext={{ linkEditor: LinkTo, linkView: LinkTo }}
 					blueprintId={id}
 					data={data}
 					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
@@ -85,6 +87,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/conflicts")({
 						textTotal: <Tx label={"Number of conflicts (label)"} />,
 						...navigateOnCursor(navigate),
 					}}
+					context={{ linkConflict: LinkTo }}
 				/>
 			</div>
 		);

@@ -1,5 +1,11 @@
 /** @format */
 
+import {
+	BlueprintProductionDependencySchema,
+	BlueprintProductionRequirementSchema,
+	BlueprintProductionResourceSchema,
+	BlueprintProductionSchema,
+} from "@derivean/utils";
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
 import {
@@ -14,10 +20,6 @@ import { withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import { z } from "zod";
 import { BlueprintProductionTable } from "~/app/game/BlueprintProductionTable";
-import { BlueprintProductionDependencySchema } from "~/app/schema/BlueprintProductionDependencySchema";
-import { BlueprintProductionRequirementSchema } from "~/app/schema/BlueprintProductionRequirementSchema";
-import { BlueprintProductionResourceSchema } from "~/app/schema/BlueprintProductionResourceSchema";
-import { BlueprintProductionSchema } from "~/app/schema/BlueprintProductionSchema";
 
 export const Route = createFileRoute("/$locale/game/blueprint/$id/production")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintProductionSchema)),
