@@ -7,7 +7,6 @@ export namespace withConstructionQueue {
 	export interface Props {
 		userId: string;
 		blueprintId: string;
-		landId: string;
 		plotId: string;
 		plan: boolean;
 		valid: boolean;
@@ -17,7 +16,6 @@ export namespace withConstructionQueue {
 export const withConstructionQueue = async ({
 	userId,
 	blueprintId,
-	landId,
 	plotId,
 	plan,
 	valid,
@@ -39,7 +37,6 @@ export const withConstructionQueue = async ({
 				id: genId(),
 				userId,
 				blueprintId,
-				landId,
 				constructionId: (
 					await tx
 						.insertInto("Construction")
@@ -59,7 +56,10 @@ export const withConstructionQueue = async ({
 			.where(
 				"i.id",
 				"in",
-				tx.selectFrom("Blueprint_Inventory as bi").select("bi.inventoryId").where("bi.blueprintId", "=", blueprintId),
+				tx
+					.selectFrom("Blueprint_Inventory as bi")
+					.select("bi.inventoryId")
+					.where("bi.blueprintId", "=", blueprintId),
 			)
 			.execute();
 

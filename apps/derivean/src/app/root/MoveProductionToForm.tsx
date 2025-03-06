@@ -1,14 +1,14 @@
+/** @format */
+
+import { BlueprintIcon } from "@derivean/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { BlueprintPopupSelect } from "~/app/root/BlueprintPopupSelect";
-import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
 
-const ShapeSchema = z.object({
-	blueprintId: z.string().min(1),
-});
+const ShapeSchema = z.object({ blueprintId: z.string().min(1) });
 type ShapeSchema = typeof ShapeSchema;
 
 export namespace MoveProductionToForm {
@@ -17,7 +17,13 @@ export namespace MoveProductionToForm {
 	}
 }
 
-export const MoveProductionToForm: FC<MoveProductionToForm.Props> = ({ mutation, defaultValues, variant, tva = FormCss, css }) => {
+export const MoveProductionToForm: FC<MoveProductionToForm.Props> = ({
+	mutation,
+	defaultValues,
+	variant,
+	tva = FormCss,
+	css,
+}) => {
 	const form = useForm<z.infer<ShapeSchema>>({
 		resolver: zodResolver(ShapeSchema),
 		defaultValues,
@@ -33,10 +39,8 @@ export const MoveProductionToForm: FC<MoveProductionToForm.Props> = ({ mutation,
 	return (
 		<form
 			className={tv.base()}
-			onSubmit={onSubmit({
-				form,
-				mutation,
-			})}>
+			onSubmit={onSubmit({ form, mutation })}
+		>
 			<FormError
 				variant={{ highlight: true }}
 				error={form.formState.errors.root}
@@ -45,7 +49,8 @@ export const MoveProductionToForm: FC<MoveProductionToForm.Props> = ({ mutation,
 			<FormInput
 				formState={form.formState}
 				name={"blueprintId"}
-				label={<Tx label={"Target blueprint (label)"} />}>
+				label={<Tx label={"Target blueprint (label)"} />}
+			>
 				<Controller
 					control={form.control}
 					name={"blueprintId"}
@@ -63,7 +68,8 @@ export const MoveProductionToForm: FC<MoveProductionToForm.Props> = ({ mutation,
 			<div className={"flex flex-row justify-between gap-8"}>
 				<Button
 					iconEnabled={BlueprintIcon}
-					type={"submit"}>
+					type={"submit"}
+				>
 					<Tx label={"Save (submit)"} />
 				</Button>
 			</div>

@@ -1,6 +1,16 @@
+/** @format */
+
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { navigateOnCursor, navigateOnFilter, navigateOnFulltext, navigateOnSelection, Tx, withListCount, withSourceSearchSchema } from "@use-pico/client";
+import {
+	navigateOnCursor,
+	navigateOnFilter,
+	navigateOnFulltext,
+	navigateOnSelection,
+	Tx,
+	withListCount,
+	withSourceSearchSchema,
+} from "@use-pico/client";
 import { withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import { z } from "zod";
@@ -13,11 +23,7 @@ import { BlueprintProductionSchema } from "~/app/schema/BlueprintProductionSchem
 export const Route = createFileRoute("/$locale/root/blueprint/$id/production")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintProductionSchema)),
 	loaderDeps({ search: { filter, cursor, sort } }) {
-		return {
-			filter,
-			cursor,
-			sort,
-		};
+		return { filter, cursor, sort };
 	},
 	async loader({ context: { queryClient, kysely }, deps: { filter, cursor }, params: { id } }) {
 		return queryClient.ensureQueryData({
@@ -93,23 +99,17 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/production")({
 							cycles: z.number().nonnegative(),
 							requirements: withJsonOutputArraySchema(
 								BlueprintProductionRequirementSchema.entity.merge(
-									z.object({
-										name: z.string().min(1),
-									}),
+									z.object({ name: z.string().min(1) }),
 								),
 							),
 							resources: withJsonOutputArraySchema(
 								BlueprintProductionResourceSchema.entity.merge(
-									z.object({
-										name: z.string().min(1),
-									}),
+									z.object({ name: z.string().min(1) }),
 								),
 							),
 							dependencies: withJsonOutputArraySchema(
 								BlueprintProductionDependencySchema.entity.merge(
-									z.object({
-										name: z.string().min(1),
-									}),
+									z.object({ name: z.string().min(1) }),
 								),
 							),
 						}),
@@ -132,17 +132,11 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/production")({
 			<div className={tv.base()}>
 				<BlueprintProductionTable
 					blueprintId={id}
-					table={{
-						data,
-						filter: {
-							value: filter,
-							set: navigateOnFilter(navigate),
-						},
-						selection: {
-							type: "multi",
-							value: selection,
-							set: navigateOnSelection(navigate),
-						},
+					data={data}
+					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
+					selection={{
+						type: "multi",
+						state: { value: selection, set: navigateOnSelection(navigate) },
 					}}
 					fulltext={{
 						value: filter?.fulltext,

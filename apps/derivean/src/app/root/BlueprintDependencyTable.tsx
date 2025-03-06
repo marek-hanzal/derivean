@@ -1,6 +1,7 @@
 /** @format */
 
 import { kysely } from "@derivean/db";
+import { BlueprintIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import {
@@ -13,7 +14,6 @@ import {
 	TrashIcon,
 	Tx,
 	useInvalidator,
-	useTable,
 	withColumn,
 	withToastPromiseTx,
 } from "@use-pico/client";
@@ -21,7 +21,6 @@ import { genId, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
 import { BlueprintDependencyForm } from "~/app/root/BlueprintDependencyForm";
 import { withBlueprintSort } from "~/app/service/withBlueprintSort";
-import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
 
 export namespace BlueprintDependencyTable {
 	export interface Data extends IdentitySchema.Type {
@@ -62,12 +61,15 @@ export namespace BlueprintDependencyTable {
 	}
 }
 
-export const BlueprintDependencyTable: FC<BlueprintDependencyTable.Props> = ({ blueprintId, table, ...props }) => {
+export const BlueprintDependencyTable: FC<BlueprintDependencyTable.Props> = ({
+	blueprintId,
+	...props
+}) => {
 	const invalidator = useInvalidator([["Blueprint_Dependency"], ["Blueprint"]]);
 
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			action={{
 				table() {
 					return (
@@ -86,7 +88,11 @@ export const BlueprintDependencyTable: FC<BlueprintDependencyTable.Props> = ({ b
 														kysely.transaction().execute(async (tx) => {
 															const entity = tx
 																.insertInto("Blueprint_Dependency")
-																.values({ id: genId(), ...values, blueprintId })
+																.values({
+																	id: genId(),
+																	...values,
+																	blueprintId,
+																})
 																.returningAll()
 																.executeTakeFirstOrThrow();
 
@@ -94,7 +100,9 @@ export const BlueprintDependencyTable: FC<BlueprintDependencyTable.Props> = ({ b
 
 															return entity;
 														}),
-														withToastPromiseTx("Create blueprint dependency"),
+														withToastPromiseTx(
+															"Create blueprint dependency",
+														),
 													);
 												},
 												async onSuccess() {
@@ -132,7 +140,9 @@ export const BlueprintDependencyTable: FC<BlueprintDependencyTable.Props> = ({ b
 																.returningAll()
 																.executeTakeFirstOrThrow();
 														}),
-														withToastPromiseTx("Update blueprint dependency"),
+														withToastPromiseTx(
+															"Update blueprint dependency",
+														),
 													);
 												},
 												async onSuccess() {
@@ -149,15 +159,22 @@ export const BlueprintDependencyTable: FC<BlueprintDependencyTable.Props> = ({ b
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete blueprint dependency (modal)"} />}
-								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+								css={{
+									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+								}}
 							>
 								<DeleteControl
 									callback={async () => {
 										return kysely.transaction().execute(async (tx) => {
-											return tx.deleteFrom("Blueprint_Dependency").where("id", "=", data.id).execute();
+											return tx
+												.deleteFrom("Blueprint_Dependency")
+												.where("id", "=", data.id)
+												.execute();
 										});
 									}}
-									textContent={<Tx label={"Delete blueprint dependency (content)"} />}
+									textContent={
+										<Tx label={"Delete blueprint dependency (content)"} />
+									}
 									textToast={"Delete blueprint dependency"}
 									invalidator={invalidator}
 								/>

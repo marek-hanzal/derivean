@@ -30,8 +30,6 @@ import { Route as LocaleRootUserIdImport } from './@routes/$locale/root/user/$id
 import { Route as LocaleRootTagListImport } from './@routes/$locale/root/tag/list'
 import { Route as LocaleRootResourceListImport } from './@routes/$locale/root/resource/list'
 import { Route as LocaleRootResourceIdImport } from './@routes/$locale/root/resource/$id'
-import { Route as LocaleRootRegionListImport } from './@routes/$locale/root/region/list'
-import { Route as LocaleRootRegionIdImport } from './@routes/$locale/root/region/$id'
 import { Route as LocaleRootBlueprintListImport } from './@routes/$locale/root/blueprint/list'
 import { Route as LocaleRootBlueprintIdImport } from './@routes/$locale/root/blueprint/$id'
 import { Route as LocaleMapMapIdViewImport } from './@routes/$locale/map/$mapId/view'
@@ -39,7 +37,6 @@ import { Route as LocaleGameBlueprintListImport } from './@routes/$locale/game/b
 import { Route as LocaleGameBlueprintIdImport } from './@routes/$locale/game/blueprint/$id'
 import { Route as LocaleRootUserIdViewImport } from './@routes/$locale/root/user/$id/view'
 import { Route as LocaleRootResourceIdViewImport } from './@routes/$locale/root/resource/$id/view'
-import { Route as LocaleRootRegionIdViewImport } from './@routes/$locale/root/region/$id/view'
 import { Route as LocaleRootBlueprintProductionIdImport } from './@routes/$locale/root/blueprint/production/$id'
 import { Route as LocaleRootBlueprintIdViewImport } from './@routes/$locale/root/blueprint/$id/view'
 import { Route as LocaleRootBlueprintIdRequirementsImport } from './@routes/$locale/root/blueprint/$id/requirements'
@@ -48,8 +45,6 @@ import { Route as LocaleRootBlueprintIdInventoryImport } from './@routes/$locale
 import { Route as LocaleRootBlueprintIdEditImport } from './@routes/$locale/root/blueprint/$id/edit'
 import { Route as LocaleRootBlueprintIdDependenciesImport } from './@routes/$locale/root/blueprint/$id/dependencies'
 import { Route as LocaleRootBlueprintIdConflictsImport } from './@routes/$locale/root/blueprint/$id/conflicts'
-import { Route as LocaleMapMapIdLandListImport } from './@routes/$locale/map/$mapId/land/list'
-import { Route as LocaleMapMapIdLandLandIdImport } from './@routes/$locale/map/$mapId/land/$landId'
 import { Route as LocaleMapMapIdBuildingListImport } from './@routes/$locale/map/$mapId/building/list'
 import { Route as LocaleMapMapIdBuildingBuildingIdImport } from './@routes/$locale/map/$mapId/building/$buildingId'
 import { Route as LocaleMapMapIdBlueprintBlueprintIdImport } from './@routes/$locale/map/$mapId/blueprint/$blueprintId'
@@ -64,7 +59,6 @@ import { Route as LocaleRootBlueprintProductionIdResourcesImport } from './@rout
 import { Route as LocaleRootBlueprintProductionIdRequirementsImport } from './@routes/$locale/root/blueprint/production/$id/requirements'
 import { Route as LocaleRootBlueprintProductionIdDependenciesImport } from './@routes/$locale/root/blueprint/production/$id/dependencies'
 import { Route as LocaleMapMapIdRoadRoadIdViewImport } from './@routes/$locale/map/$mapId/road/$roadId/view'
-import { Route as LocaleMapMapIdLandLandIdConstructionImport } from './@routes/$locale/map/$mapId/land/$landId/construction'
 import { Route as LocaleMapMapIdBuildingBuildingIdViewImport } from './@routes/$locale/map/$mapId/building/$buildingId/view'
 import { Route as LocaleMapMapIdBuildingBuildingIdTransportImport } from './@routes/$locale/map/$mapId/building/$buildingId/transport'
 import { Route as LocaleMapMapIdBuildingBuildingIdSupplyImport } from './@routes/$locale/map/$mapId/building/$buildingId/supply'
@@ -196,18 +190,6 @@ const LocaleRootResourceIdRoute = LocaleRootResourceIdImport.update({
   getParentRoute: () => LocaleRootRoute,
 } as any)
 
-const LocaleRootRegionListRoute = LocaleRootRegionListImport.update({
-  id: '/region/list',
-  path: '/region/list',
-  getParentRoute: () => LocaleRootRoute,
-} as any)
-
-const LocaleRootRegionIdRoute = LocaleRootRegionIdImport.update({
-  id: '/region/$id',
-  path: '/region/$id',
-  getParentRoute: () => LocaleRootRoute,
-} as any)
-
 const LocaleRootBlueprintListRoute = LocaleRootBlueprintListImport.update({
   id: '/blueprint/list',
   path: '/blueprint/list',
@@ -248,12 +230,6 @@ const LocaleRootResourceIdViewRoute = LocaleRootResourceIdViewImport.update({
   id: '/view',
   path: '/view',
   getParentRoute: () => LocaleRootResourceIdRoute,
-} as any)
-
-const LocaleRootRegionIdViewRoute = LocaleRootRegionIdViewImport.update({
-  id: '/view',
-  path: '/view',
-  getParentRoute: () => LocaleRootRegionIdRoute,
 } as any)
 
 const LocaleRootBlueprintProductionIdRoute =
@@ -309,18 +285,6 @@ const LocaleRootBlueprintIdConflictsRoute =
     path: '/conflicts',
     getParentRoute: () => LocaleRootBlueprintIdRoute,
   } as any)
-
-const LocaleMapMapIdLandListRoute = LocaleMapMapIdLandListImport.update({
-  id: '/land/list',
-  path: '/land/list',
-  getParentRoute: () => LocaleMapMapIdRoute,
-} as any)
-
-const LocaleMapMapIdLandLandIdRoute = LocaleMapMapIdLandLandIdImport.update({
-  id: '/land/$landId',
-  path: '/land/$landId',
-  getParentRoute: () => LocaleMapMapIdRoute,
-} as any)
 
 const LocaleMapMapIdBuildingListRoute = LocaleMapMapIdBuildingListImport.update(
   {
@@ -418,13 +382,6 @@ const LocaleMapMapIdRoadRoadIdViewRoute =
     id: '/road/$roadId/view',
     path: '/road/$roadId/view',
     getParentRoute: () => LocaleMapMapIdRoute,
-  } as any)
-
-const LocaleMapMapIdLandLandIdConstructionRoute =
-  LocaleMapMapIdLandLandIdConstructionImport.update({
-    id: '/construction',
-    path: '/construction',
-    getParentRoute: () => LocaleMapMapIdLandLandIdRoute,
   } as any)
 
 const LocaleMapMapIdBuildingBuildingIdViewRoute =
@@ -665,20 +622,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleRootBlueprintListImport
       parentRoute: typeof LocaleRootImport
     }
-    '/$locale/root/region/$id': {
-      id: '/$locale/root/region/$id'
-      path: '/region/$id'
-      fullPath: '/$locale/root/region/$id'
-      preLoaderRoute: typeof LocaleRootRegionIdImport
-      parentRoute: typeof LocaleRootImport
-    }
-    '/$locale/root/region/list': {
-      id: '/$locale/root/region/list'
-      path: '/region/list'
-      fullPath: '/$locale/root/region/list'
-      preLoaderRoute: typeof LocaleRootRegionListImport
-      parentRoute: typeof LocaleRootImport
-    }
     '/$locale/root/resource/$id': {
       id: '/$locale/root/resource/$id'
       path: '/resource/$id'
@@ -777,20 +720,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleMapMapIdBuildingListImport
       parentRoute: typeof LocaleMapMapIdImport
     }
-    '/$locale/map/$mapId/land/$landId': {
-      id: '/$locale/map/$mapId/land/$landId'
-      path: '/land/$landId'
-      fullPath: '/$locale/map/$mapId/land/$landId'
-      preLoaderRoute: typeof LocaleMapMapIdLandLandIdImport
-      parentRoute: typeof LocaleMapMapIdImport
-    }
-    '/$locale/map/$mapId/land/list': {
-      id: '/$locale/map/$mapId/land/list'
-      path: '/land/list'
-      fullPath: '/$locale/map/$mapId/land/list'
-      preLoaderRoute: typeof LocaleMapMapIdLandListImport
-      parentRoute: typeof LocaleMapMapIdImport
-    }
     '/$locale/root/blueprint/$id/conflicts': {
       id: '/$locale/root/blueprint/$id/conflicts'
       path: '/conflicts'
@@ -846,13 +775,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/$locale/root/blueprint/production/$id'
       preLoaderRoute: typeof LocaleRootBlueprintProductionIdImport
       parentRoute: typeof LocaleRootImport
-    }
-    '/$locale/root/region/$id/view': {
-      id: '/$locale/root/region/$id/view'
-      path: '/view'
-      fullPath: '/$locale/root/region/$id/view'
-      preLoaderRoute: typeof LocaleRootRegionIdViewImport
-      parentRoute: typeof LocaleRootRegionIdImport
     }
     '/$locale/root/resource/$id/view': {
       id: '/$locale/root/resource/$id/view'
@@ -937,13 +859,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/$locale/map/$mapId/building/$buildingId/view'
       preLoaderRoute: typeof LocaleMapMapIdBuildingBuildingIdViewImport
       parentRoute: typeof LocaleMapMapIdBuildingBuildingIdImport
-    }
-    '/$locale/map/$mapId/land/$landId/construction': {
-      id: '/$locale/map/$mapId/land/$landId/construction'
-      path: '/construction'
-      fullPath: '/$locale/map/$mapId/land/$landId/construction'
-      preLoaderRoute: typeof LocaleMapMapIdLandLandIdConstructionImport
-      parentRoute: typeof LocaleMapMapIdLandLandIdImport
     }
     '/$locale/map/$mapId/road/$roadId/view': {
       id: '/$locale/map/$mapId/road/$roadId/view'
@@ -1145,28 +1060,11 @@ const LocaleMapMapIdBuildingBuildingIdRouteWithChildren =
     LocaleMapMapIdBuildingBuildingIdRouteChildren,
   )
 
-interface LocaleMapMapIdLandLandIdRouteChildren {
-  LocaleMapMapIdLandLandIdConstructionRoute: typeof LocaleMapMapIdLandLandIdConstructionRoute
-}
-
-const LocaleMapMapIdLandLandIdRouteChildren: LocaleMapMapIdLandLandIdRouteChildren =
-  {
-    LocaleMapMapIdLandLandIdConstructionRoute:
-      LocaleMapMapIdLandLandIdConstructionRoute,
-  }
-
-const LocaleMapMapIdLandLandIdRouteWithChildren =
-  LocaleMapMapIdLandLandIdRoute._addFileChildren(
-    LocaleMapMapIdLandLandIdRouteChildren,
-  )
-
 interface LocaleMapMapIdRouteChildren {
   LocaleMapMapIdViewRoute: typeof LocaleMapMapIdViewRoute
   LocaleMapMapIdBlueprintBlueprintIdRoute: typeof LocaleMapMapIdBlueprintBlueprintIdRouteWithChildren
   LocaleMapMapIdBuildingBuildingIdRoute: typeof LocaleMapMapIdBuildingBuildingIdRouteWithChildren
   LocaleMapMapIdBuildingListRoute: typeof LocaleMapMapIdBuildingListRoute
-  LocaleMapMapIdLandLandIdRoute: typeof LocaleMapMapIdLandLandIdRouteWithChildren
-  LocaleMapMapIdLandListRoute: typeof LocaleMapMapIdLandListRoute
   LocaleMapMapIdRoadRoadIdViewRoute: typeof LocaleMapMapIdRoadRoadIdViewRoute
 }
 
@@ -1177,8 +1075,6 @@ const LocaleMapMapIdRouteChildren: LocaleMapMapIdRouteChildren = {
   LocaleMapMapIdBuildingBuildingIdRoute:
     LocaleMapMapIdBuildingBuildingIdRouteWithChildren,
   LocaleMapMapIdBuildingListRoute: LocaleMapMapIdBuildingListRoute,
-  LocaleMapMapIdLandLandIdRoute: LocaleMapMapIdLandLandIdRouteWithChildren,
-  LocaleMapMapIdLandListRoute: LocaleMapMapIdLandListRoute,
   LocaleMapMapIdRoadRoadIdViewRoute: LocaleMapMapIdRoadRoadIdViewRoute,
 }
 
@@ -1224,17 +1120,6 @@ const LocaleRootBlueprintIdRouteWithChildren =
   LocaleRootBlueprintIdRoute._addFileChildren(
     LocaleRootBlueprintIdRouteChildren,
   )
-
-interface LocaleRootRegionIdRouteChildren {
-  LocaleRootRegionIdViewRoute: typeof LocaleRootRegionIdViewRoute
-}
-
-const LocaleRootRegionIdRouteChildren: LocaleRootRegionIdRouteChildren = {
-  LocaleRootRegionIdViewRoute: LocaleRootRegionIdViewRoute,
-}
-
-const LocaleRootRegionIdRouteWithChildren =
-  LocaleRootRegionIdRoute._addFileChildren(LocaleRootRegionIdRouteChildren)
 
 interface LocaleRootResourceIdRouteChildren {
   LocaleRootResourceIdViewRoute: typeof LocaleRootResourceIdViewRoute
@@ -1286,8 +1171,6 @@ interface LocaleRootRouteChildren {
   LocaleRootIndexRoute: typeof LocaleRootIndexRoute
   LocaleRootBlueprintIdRoute: typeof LocaleRootBlueprintIdRouteWithChildren
   LocaleRootBlueprintListRoute: typeof LocaleRootBlueprintListRoute
-  LocaleRootRegionIdRoute: typeof LocaleRootRegionIdRouteWithChildren
-  LocaleRootRegionListRoute: typeof LocaleRootRegionListRoute
   LocaleRootResourceIdRoute: typeof LocaleRootResourceIdRouteWithChildren
   LocaleRootResourceListRoute: typeof LocaleRootResourceListRoute
   LocaleRootTagListRoute: typeof LocaleRootTagListRoute
@@ -1301,8 +1184,6 @@ const LocaleRootRouteChildren: LocaleRootRouteChildren = {
   LocaleRootIndexRoute: LocaleRootIndexRoute,
   LocaleRootBlueprintIdRoute: LocaleRootBlueprintIdRouteWithChildren,
   LocaleRootBlueprintListRoute: LocaleRootBlueprintListRoute,
-  LocaleRootRegionIdRoute: LocaleRootRegionIdRouteWithChildren,
-  LocaleRootRegionListRoute: LocaleRootRegionListRoute,
   LocaleRootResourceIdRoute: LocaleRootResourceIdRouteWithChildren,
   LocaleRootResourceListRoute: LocaleRootResourceListRoute,
   LocaleRootTagListRoute: LocaleRootTagListRoute,
@@ -1361,8 +1242,6 @@ export interface FileRoutesByFullPath {
   '/$locale/map/$mapId/view': typeof LocaleMapMapIdViewRoute
   '/$locale/root/blueprint/$id': typeof LocaleRootBlueprintIdRouteWithChildren
   '/$locale/root/blueprint/list': typeof LocaleRootBlueprintListRoute
-  '/$locale/root/region/$id': typeof LocaleRootRegionIdRouteWithChildren
-  '/$locale/root/region/list': typeof LocaleRootRegionListRoute
   '/$locale/root/resource/$id': typeof LocaleRootResourceIdRouteWithChildren
   '/$locale/root/resource/list': typeof LocaleRootResourceListRoute
   '/$locale/root/tag/list': typeof LocaleRootTagListRoute
@@ -1377,8 +1256,6 @@ export interface FileRoutesByFullPath {
   '/$locale/map/$mapId/blueprint/$blueprintId': typeof LocaleMapMapIdBlueprintBlueprintIdRouteWithChildren
   '/$locale/map/$mapId/building/$buildingId': typeof LocaleMapMapIdBuildingBuildingIdRouteWithChildren
   '/$locale/map/$mapId/building/list': typeof LocaleMapMapIdBuildingListRoute
-  '/$locale/map/$mapId/land/$landId': typeof LocaleMapMapIdLandLandIdRouteWithChildren
-  '/$locale/map/$mapId/land/list': typeof LocaleMapMapIdLandListRoute
   '/$locale/root/blueprint/$id/conflicts': typeof LocaleRootBlueprintIdConflictsRoute
   '/$locale/root/blueprint/$id/dependencies': typeof LocaleRootBlueprintIdDependenciesRoute
   '/$locale/root/blueprint/$id/edit': typeof LocaleRootBlueprintIdEditRoute
@@ -1387,7 +1264,6 @@ export interface FileRoutesByFullPath {
   '/$locale/root/blueprint/$id/requirements': typeof LocaleRootBlueprintIdRequirementsRoute
   '/$locale/root/blueprint/$id/view': typeof LocaleRootBlueprintIdViewRoute
   '/$locale/root/blueprint/production/$id': typeof LocaleRootBlueprintProductionIdRouteWithChildren
-  '/$locale/root/region/$id/view': typeof LocaleRootRegionIdViewRoute
   '/$locale/root/resource/$id/view': typeof LocaleRootResourceIdViewRoute
   '/$locale/root/user/$id/view': typeof LocaleRootUserIdViewRoute
   '/$locale/game/blueprint/production/$id/dependencies': typeof LocaleGameBlueprintProductionIdDependenciesRoute
@@ -1400,7 +1276,6 @@ export interface FileRoutesByFullPath {
   '/$locale/map/$mapId/building/$buildingId/supply': typeof LocaleMapMapIdBuildingBuildingIdSupplyRoute
   '/$locale/map/$mapId/building/$buildingId/transport': typeof LocaleMapMapIdBuildingBuildingIdTransportRoute
   '/$locale/map/$mapId/building/$buildingId/view': typeof LocaleMapMapIdBuildingBuildingIdViewRoute
-  '/$locale/map/$mapId/land/$landId/construction': typeof LocaleMapMapIdLandLandIdConstructionRoute
   '/$locale/map/$mapId/road/$roadId/view': typeof LocaleMapMapIdRoadRoadIdViewRoute
   '/$locale/root/blueprint/production/$id/dependencies': typeof LocaleRootBlueprintProductionIdDependenciesRoute
   '/$locale/root/blueprint/production/$id/requirements': typeof LocaleRootBlueprintProductionIdRequirementsRoute
@@ -1429,8 +1304,6 @@ export interface FileRoutesByTo {
   '/$locale/map/$mapId/view': typeof LocaleMapMapIdViewRoute
   '/$locale/root/blueprint/$id': typeof LocaleRootBlueprintIdRouteWithChildren
   '/$locale/root/blueprint/list': typeof LocaleRootBlueprintListRoute
-  '/$locale/root/region/$id': typeof LocaleRootRegionIdRouteWithChildren
-  '/$locale/root/region/list': typeof LocaleRootRegionListRoute
   '/$locale/root/resource/$id': typeof LocaleRootResourceIdRouteWithChildren
   '/$locale/root/resource/list': typeof LocaleRootResourceListRoute
   '/$locale/root/tag/list': typeof LocaleRootTagListRoute
@@ -1445,8 +1318,6 @@ export interface FileRoutesByTo {
   '/$locale/map/$mapId/blueprint/$blueprintId': typeof LocaleMapMapIdBlueprintBlueprintIdRouteWithChildren
   '/$locale/map/$mapId/building/$buildingId': typeof LocaleMapMapIdBuildingBuildingIdRouteWithChildren
   '/$locale/map/$mapId/building/list': typeof LocaleMapMapIdBuildingListRoute
-  '/$locale/map/$mapId/land/$landId': typeof LocaleMapMapIdLandLandIdRouteWithChildren
-  '/$locale/map/$mapId/land/list': typeof LocaleMapMapIdLandListRoute
   '/$locale/root/blueprint/$id/conflicts': typeof LocaleRootBlueprintIdConflictsRoute
   '/$locale/root/blueprint/$id/dependencies': typeof LocaleRootBlueprintIdDependenciesRoute
   '/$locale/root/blueprint/$id/edit': typeof LocaleRootBlueprintIdEditRoute
@@ -1455,7 +1326,6 @@ export interface FileRoutesByTo {
   '/$locale/root/blueprint/$id/requirements': typeof LocaleRootBlueprintIdRequirementsRoute
   '/$locale/root/blueprint/$id/view': typeof LocaleRootBlueprintIdViewRoute
   '/$locale/root/blueprint/production/$id': typeof LocaleRootBlueprintProductionIdRouteWithChildren
-  '/$locale/root/region/$id/view': typeof LocaleRootRegionIdViewRoute
   '/$locale/root/resource/$id/view': typeof LocaleRootResourceIdViewRoute
   '/$locale/root/user/$id/view': typeof LocaleRootUserIdViewRoute
   '/$locale/game/blueprint/production/$id/dependencies': typeof LocaleGameBlueprintProductionIdDependenciesRoute
@@ -1468,7 +1338,6 @@ export interface FileRoutesByTo {
   '/$locale/map/$mapId/building/$buildingId/supply': typeof LocaleMapMapIdBuildingBuildingIdSupplyRoute
   '/$locale/map/$mapId/building/$buildingId/transport': typeof LocaleMapMapIdBuildingBuildingIdTransportRoute
   '/$locale/map/$mapId/building/$buildingId/view': typeof LocaleMapMapIdBuildingBuildingIdViewRoute
-  '/$locale/map/$mapId/land/$landId/construction': typeof LocaleMapMapIdLandLandIdConstructionRoute
   '/$locale/map/$mapId/road/$roadId/view': typeof LocaleMapMapIdRoadRoadIdViewRoute
   '/$locale/root/blueprint/production/$id/dependencies': typeof LocaleRootBlueprintProductionIdDependenciesRoute
   '/$locale/root/blueprint/production/$id/requirements': typeof LocaleRootBlueprintProductionIdRequirementsRoute
@@ -1501,8 +1370,6 @@ export interface FileRoutesById {
   '/$locale/map/$mapId/view': typeof LocaleMapMapIdViewRoute
   '/$locale/root/blueprint/$id': typeof LocaleRootBlueprintIdRouteWithChildren
   '/$locale/root/blueprint/list': typeof LocaleRootBlueprintListRoute
-  '/$locale/root/region/$id': typeof LocaleRootRegionIdRouteWithChildren
-  '/$locale/root/region/list': typeof LocaleRootRegionListRoute
   '/$locale/root/resource/$id': typeof LocaleRootResourceIdRouteWithChildren
   '/$locale/root/resource/list': typeof LocaleRootResourceListRoute
   '/$locale/root/tag/list': typeof LocaleRootTagListRoute
@@ -1517,8 +1384,6 @@ export interface FileRoutesById {
   '/$locale/map/$mapId/blueprint/$blueprintId': typeof LocaleMapMapIdBlueprintBlueprintIdRouteWithChildren
   '/$locale/map/$mapId/building/$buildingId': typeof LocaleMapMapIdBuildingBuildingIdRouteWithChildren
   '/$locale/map/$mapId/building/list': typeof LocaleMapMapIdBuildingListRoute
-  '/$locale/map/$mapId/land/$landId': typeof LocaleMapMapIdLandLandIdRouteWithChildren
-  '/$locale/map/$mapId/land/list': typeof LocaleMapMapIdLandListRoute
   '/$locale/root/blueprint/$id/conflicts': typeof LocaleRootBlueprintIdConflictsRoute
   '/$locale/root/blueprint/$id/dependencies': typeof LocaleRootBlueprintIdDependenciesRoute
   '/$locale/root/blueprint/$id/edit': typeof LocaleRootBlueprintIdEditRoute
@@ -1527,7 +1392,6 @@ export interface FileRoutesById {
   '/$locale/root/blueprint/$id/requirements': typeof LocaleRootBlueprintIdRequirementsRoute
   '/$locale/root/blueprint/$id/view': typeof LocaleRootBlueprintIdViewRoute
   '/$locale/root/blueprint/production/$id': typeof LocaleRootBlueprintProductionIdRouteWithChildren
-  '/$locale/root/region/$id/view': typeof LocaleRootRegionIdViewRoute
   '/$locale/root/resource/$id/view': typeof LocaleRootResourceIdViewRoute
   '/$locale/root/user/$id/view': typeof LocaleRootUserIdViewRoute
   '/$locale/game/blueprint/production/$id/dependencies': typeof LocaleGameBlueprintProductionIdDependenciesRoute
@@ -1540,7 +1404,6 @@ export interface FileRoutesById {
   '/$locale/map/$mapId/building/$buildingId/supply': typeof LocaleMapMapIdBuildingBuildingIdSupplyRoute
   '/$locale/map/$mapId/building/$buildingId/transport': typeof LocaleMapMapIdBuildingBuildingIdTransportRoute
   '/$locale/map/$mapId/building/$buildingId/view': typeof LocaleMapMapIdBuildingBuildingIdViewRoute
-  '/$locale/map/$mapId/land/$landId/construction': typeof LocaleMapMapIdLandLandIdConstructionRoute
   '/$locale/map/$mapId/road/$roadId/view': typeof LocaleMapMapIdRoadRoadIdViewRoute
   '/$locale/root/blueprint/production/$id/dependencies': typeof LocaleRootBlueprintProductionIdDependenciesRoute
   '/$locale/root/blueprint/production/$id/requirements': typeof LocaleRootBlueprintProductionIdRequirementsRoute
@@ -1574,8 +1437,6 @@ export interface FileRouteTypes {
     | '/$locale/map/$mapId/view'
     | '/$locale/root/blueprint/$id'
     | '/$locale/root/blueprint/list'
-    | '/$locale/root/region/$id'
-    | '/$locale/root/region/list'
     | '/$locale/root/resource/$id'
     | '/$locale/root/resource/list'
     | '/$locale/root/tag/list'
@@ -1590,8 +1451,6 @@ export interface FileRouteTypes {
     | '/$locale/map/$mapId/blueprint/$blueprintId'
     | '/$locale/map/$mapId/building/$buildingId'
     | '/$locale/map/$mapId/building/list'
-    | '/$locale/map/$mapId/land/$landId'
-    | '/$locale/map/$mapId/land/list'
     | '/$locale/root/blueprint/$id/conflicts'
     | '/$locale/root/blueprint/$id/dependencies'
     | '/$locale/root/blueprint/$id/edit'
@@ -1600,7 +1459,6 @@ export interface FileRouteTypes {
     | '/$locale/root/blueprint/$id/requirements'
     | '/$locale/root/blueprint/$id/view'
     | '/$locale/root/blueprint/production/$id'
-    | '/$locale/root/region/$id/view'
     | '/$locale/root/resource/$id/view'
     | '/$locale/root/user/$id/view'
     | '/$locale/game/blueprint/production/$id/dependencies'
@@ -1613,7 +1471,6 @@ export interface FileRouteTypes {
     | '/$locale/map/$mapId/building/$buildingId/supply'
     | '/$locale/map/$mapId/building/$buildingId/transport'
     | '/$locale/map/$mapId/building/$buildingId/view'
-    | '/$locale/map/$mapId/land/$landId/construction'
     | '/$locale/map/$mapId/road/$roadId/view'
     | '/$locale/root/blueprint/production/$id/dependencies'
     | '/$locale/root/blueprint/production/$id/requirements'
@@ -1641,8 +1498,6 @@ export interface FileRouteTypes {
     | '/$locale/map/$mapId/view'
     | '/$locale/root/blueprint/$id'
     | '/$locale/root/blueprint/list'
-    | '/$locale/root/region/$id'
-    | '/$locale/root/region/list'
     | '/$locale/root/resource/$id'
     | '/$locale/root/resource/list'
     | '/$locale/root/tag/list'
@@ -1657,8 +1512,6 @@ export interface FileRouteTypes {
     | '/$locale/map/$mapId/blueprint/$blueprintId'
     | '/$locale/map/$mapId/building/$buildingId'
     | '/$locale/map/$mapId/building/list'
-    | '/$locale/map/$mapId/land/$landId'
-    | '/$locale/map/$mapId/land/list'
     | '/$locale/root/blueprint/$id/conflicts'
     | '/$locale/root/blueprint/$id/dependencies'
     | '/$locale/root/blueprint/$id/edit'
@@ -1667,7 +1520,6 @@ export interface FileRouteTypes {
     | '/$locale/root/blueprint/$id/requirements'
     | '/$locale/root/blueprint/$id/view'
     | '/$locale/root/blueprint/production/$id'
-    | '/$locale/root/region/$id/view'
     | '/$locale/root/resource/$id/view'
     | '/$locale/root/user/$id/view'
     | '/$locale/game/blueprint/production/$id/dependencies'
@@ -1680,7 +1532,6 @@ export interface FileRouteTypes {
     | '/$locale/map/$mapId/building/$buildingId/supply'
     | '/$locale/map/$mapId/building/$buildingId/transport'
     | '/$locale/map/$mapId/building/$buildingId/view'
-    | '/$locale/map/$mapId/land/$landId/construction'
     | '/$locale/map/$mapId/road/$roadId/view'
     | '/$locale/root/blueprint/production/$id/dependencies'
     | '/$locale/root/blueprint/production/$id/requirements'
@@ -1711,8 +1562,6 @@ export interface FileRouteTypes {
     | '/$locale/map/$mapId/view'
     | '/$locale/root/blueprint/$id'
     | '/$locale/root/blueprint/list'
-    | '/$locale/root/region/$id'
-    | '/$locale/root/region/list'
     | '/$locale/root/resource/$id'
     | '/$locale/root/resource/list'
     | '/$locale/root/tag/list'
@@ -1727,8 +1576,6 @@ export interface FileRouteTypes {
     | '/$locale/map/$mapId/blueprint/$blueprintId'
     | '/$locale/map/$mapId/building/$buildingId'
     | '/$locale/map/$mapId/building/list'
-    | '/$locale/map/$mapId/land/$landId'
-    | '/$locale/map/$mapId/land/list'
     | '/$locale/root/blueprint/$id/conflicts'
     | '/$locale/root/blueprint/$id/dependencies'
     | '/$locale/root/blueprint/$id/edit'
@@ -1737,7 +1584,6 @@ export interface FileRouteTypes {
     | '/$locale/root/blueprint/$id/requirements'
     | '/$locale/root/blueprint/$id/view'
     | '/$locale/root/blueprint/production/$id'
-    | '/$locale/root/region/$id/view'
     | '/$locale/root/resource/$id/view'
     | '/$locale/root/user/$id/view'
     | '/$locale/game/blueprint/production/$id/dependencies'
@@ -1750,7 +1596,6 @@ export interface FileRouteTypes {
     | '/$locale/map/$mapId/building/$buildingId/supply'
     | '/$locale/map/$mapId/building/$buildingId/transport'
     | '/$locale/map/$mapId/building/$buildingId/view'
-    | '/$locale/map/$mapId/land/$landId/construction'
     | '/$locale/map/$mapId/road/$roadId/view'
     | '/$locale/root/blueprint/production/$id/dependencies'
     | '/$locale/root/blueprint/production/$id/requirements'
@@ -1828,8 +1673,6 @@ export const routeTree = rootRoute
         "/$locale/root/",
         "/$locale/root/blueprint/$id",
         "/$locale/root/blueprint/list",
-        "/$locale/root/region/$id",
-        "/$locale/root/region/list",
         "/$locale/root/resource/$id",
         "/$locale/root/resource/list",
         "/$locale/root/tag/list",
@@ -1854,8 +1697,6 @@ export const routeTree = rootRoute
         "/$locale/map/$mapId/blueprint/$blueprintId",
         "/$locale/map/$mapId/building/$buildingId",
         "/$locale/map/$mapId/building/list",
-        "/$locale/map/$mapId/land/$landId",
-        "/$locale/map/$mapId/land/list",
         "/$locale/map/$mapId/road/$roadId/view"
       ]
     },
@@ -1917,17 +1758,6 @@ export const routeTree = rootRoute
     },
     "/$locale/root/blueprint/list": {
       "filePath": "$locale/root/blueprint/list.tsx",
-      "parent": "/$locale/root"
-    },
-    "/$locale/root/region/$id": {
-      "filePath": "$locale/root/region/$id.tsx",
-      "parent": "/$locale/root",
-      "children": [
-        "/$locale/root/region/$id/view"
-      ]
-    },
-    "/$locale/root/region/list": {
-      "filePath": "$locale/root/region/list.tsx",
       "parent": "/$locale/root"
     },
     "/$locale/root/resource/$id": {
@@ -2012,17 +1842,6 @@ export const routeTree = rootRoute
       "filePath": "$locale/map/$mapId/building/list.tsx",
       "parent": "/$locale/map/$mapId"
     },
-    "/$locale/map/$mapId/land/$landId": {
-      "filePath": "$locale/map/$mapId/land/$landId.tsx",
-      "parent": "/$locale/map/$mapId",
-      "children": [
-        "/$locale/map/$mapId/land/$landId/construction"
-      ]
-    },
-    "/$locale/map/$mapId/land/list": {
-      "filePath": "$locale/map/$mapId/land/list.tsx",
-      "parent": "/$locale/map/$mapId"
-    },
     "/$locale/root/blueprint/$id/conflicts": {
       "filePath": "$locale/root/blueprint/$id/conflicts.tsx",
       "parent": "/$locale/root/blueprint/$id"
@@ -2059,10 +1878,6 @@ export const routeTree = rootRoute
         "/$locale/root/blueprint/production/$id/requirements",
         "/$locale/root/blueprint/production/$id/resources"
       ]
-    },
-    "/$locale/root/region/$id/view": {
-      "filePath": "$locale/root/region/$id/view.tsx",
-      "parent": "/$locale/root/region/$id"
     },
     "/$locale/root/resource/$id/view": {
       "filePath": "$locale/root/resource/$id/view.tsx",
@@ -2111,10 +1926,6 @@ export const routeTree = rootRoute
     "/$locale/map/$mapId/building/$buildingId/view": {
       "filePath": "$locale/map/$mapId/building/$buildingId/view.tsx",
       "parent": "/$locale/map/$mapId/building/$buildingId"
-    },
-    "/$locale/map/$mapId/land/$landId/construction": {
-      "filePath": "$locale/map/$mapId/land/$landId/construction.tsx",
-      "parent": "/$locale/map/$mapId/land/$landId"
     },
     "/$locale/map/$mapId/road/$roadId/view": {
       "filePath": "$locale/map/$mapId/road/$roadId/view.tsx",

@@ -1,6 +1,16 @@
+/** @format */
+
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { navigateOnCursor, navigateOnFilter, navigateOnFulltext, navigateOnSelection, Tx, withListCount, withSourceSearchSchema } from "@use-pico/client";
+import {
+	navigateOnCursor,
+	navigateOnFilter,
+	navigateOnFulltext,
+	navigateOnSelection,
+	Tx,
+	withListCount,
+	withSourceSearchSchema,
+} from "@use-pico/client";
 import { z } from "zod";
 import { UserTable } from "~/app/root/UserTable";
 import { UserSchema } from "~/app/schema/UserSchema";
@@ -8,10 +18,7 @@ import { UserSchema } from "~/app/schema/UserSchema";
 export const Route = createFileRoute("/$locale/root/user/list")({
 	validateSearch: zodValidator(withSourceSearchSchema(UserSchema)),
 	loaderDeps({ search: { filter, cursor } }) {
-		return {
-			filter,
-			cursor,
-		};
+		return { filter, cursor };
 	},
 	async loader({ context: { queryClient, kysely }, deps: { filter, cursor } }) {
 		return queryClient.ensureQueryData({
@@ -42,17 +49,11 @@ export const Route = createFileRoute("/$locale/root/user/list")({
 		return (
 			<div className={tv.base()}>
 				<UserTable
-					table={{
-						data,
-						filter: {
-							value: filter,
-							set: navigateOnFilter(navigate),
-						},
-						selection: {
-							type: "multi",
-							value: selection,
-							set: navigateOnSelection(navigate),
-						},
+					data={data}
+					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
+					selection={{
+						type: "multi",
+						state: { value: selection, set: navigateOnSelection(navigate) },
 					}}
 					fulltext={{
 						value: filter?.fulltext,

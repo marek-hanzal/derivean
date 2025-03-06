@@ -1,6 +1,15 @@
+/** @format */
+
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { navigateOnCursor, navigateOnFilter, navigateOnFulltext, Tx, withListCount, withSourceSearchSchema } from "@use-pico/client";
+import {
+	navigateOnCursor,
+	navigateOnFilter,
+	navigateOnFulltext,
+	Tx,
+	withListCount,
+	withSourceSearchSchema,
+} from "@use-pico/client";
 import { z } from "zod";
 import { BlueprintConflictTable } from "~/app/game/BlueprintConflictTable";
 import { BlueprintDependencySchema } from "~/app/schema/BlueprintDependencySchema";
@@ -8,11 +17,7 @@ import { BlueprintDependencySchema } from "~/app/schema/BlueprintDependencySchem
 export const Route = createFileRoute("/$locale/game/blueprint/$id/conflicts")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintDependencySchema)),
 	loaderDeps({ search: { filter, cursor, sort } }) {
-		return {
-			filter,
-			cursor,
-			sort,
-		};
+		return { filter, cursor, sort };
 	},
 	async loader({ context: { queryClient, kysely }, deps: { filter, cursor }, params: { id } }) {
 		return queryClient.ensureQueryData({
@@ -61,13 +66,8 @@ export const Route = createFileRoute("/$locale/game/blueprint/$id/conflicts")({
 		return (
 			<div className={tv.base()}>
 				<BlueprintConflictTable
-					table={{
-						data,
-						filter: {
-							value: filter,
-							set: navigateOnFilter(navigate),
-						},
-					}}
+					data={data}
+					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
 					fulltext={{
 						value: filter?.fulltext,
 						set: navigateOnFulltext(filter?.fulltext, navigate),

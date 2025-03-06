@@ -1,6 +1,6 @@
 /** @format */
 
-import { BoolInline, Table, Tx, useTable, withColumn, withEqualFilter } from "@use-pico/client";
+import { BoolInline, Table, Tx, withColumn, withEqualFilter } from "@use-pico/client";
 import { toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
 
@@ -55,13 +55,12 @@ export namespace BlueprintProductionRequirementTable {
 	}
 }
 
-export const BlueprintProductionRequirementTable: FC<BlueprintProductionRequirementTable.Props> = ({
-	table,
-	...props
-}) => {
+export const BlueprintProductionRequirementTable: FC<BlueprintProductionRequirementTable.Props> = (
+	props,
+) => {
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			{...props}
 		/>
 	);

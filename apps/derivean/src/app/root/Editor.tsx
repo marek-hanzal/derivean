@@ -1,6 +1,7 @@
 /** @format */
 
 import { kysely, transaction } from "@derivean/db";
+import { BlueprintIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Action, CloseIcon, Icon, LoaderIcon, Modal, Tx, useInvalidator } from "@use-pico/client";
@@ -20,7 +21,6 @@ import { useMemo, type FC } from "react";
 import { BlueprintForm } from "~/app/root/BlueprintForm";
 import { BlueprintNode } from "~/app/root/Editor/BlueprintNode";
 import { ZoomToNode } from "~/app/ui/ZoomToNode";
-import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
 
 export namespace Editor {
 	export interface Data {
@@ -38,13 +38,22 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 	const invalidator = useInvalidator([]);
 
 	const dependencyMutation = useMutation({
-		async mutationFn({ blueprintId, dependencyId }: { blueprintId: string; dependencyId: string }) {
+		async mutationFn({
+			blueprintId,
+			dependencyId,
+		}: {
+			blueprintId: string;
+			dependencyId: string;
+		}) {
 			return kysely.transaction().execute(async (tx) => {
-				return tx.insertInto("Blueprint_Dependency").values({ id: genId(), blueprintId, dependencyId }).execute();
+				return tx
+					.insertInto("Blueprint_Dependency")
+					.values({ id: genId(), blueprintId, dependencyId })
+					.execute();
 			});
 		},
 		async onSuccess() {
-			await invalidator();
+			await invalidator({});
 		},
 	});
 
@@ -55,7 +64,10 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 					nodes={data.nodes}
 					edges={data.edges}
 					onConnect={(params) => {
-						dependencyMutation.mutate({ blueprintId: params.target, dependencyId: params.source });
+						dependencyMutation.mutate({
+							blueprintId: params.target,
+							dependencyId: params.source,
+						});
 					}}
 					fitView
 					snapGrid={[16, 16]}
@@ -96,7 +108,10 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 								const mutation = useMutation({
 									async mutationFn({ id }: { id: string }) {
 										return kysely.transaction().execute(async (tx) => {
-											await tx.deleteFrom("Blueprint_Dependency").where("id", "=", id).execute();
+											await tx
+												.deleteFrom("Blueprint_Dependency")
+												.where("id", "=", id)
+												.execute();
 										});
 									},
 									async onSuccess() {
@@ -139,7 +154,9 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 												}}
 											>
 												<Icon
-													icon={mutation.isPending ? LoaderIcon : CloseIcon}
+													icon={
+														mutation.isPending ? LoaderIcon : CloseIcon
+													}
 													onClick={() => {
 														mutation.mutate({ id });
 													}}
@@ -178,29 +195,30 @@ export const Editor: FC<Editor.Props> = ({ data, zoomTo }) => {
 								return (
 									<BlueprintForm
 										mutation={useMutation({
-											async mutationFn({ image, regionIds, ...values }) {
+											async mutationFn({ image, ...values }) {
 												return transaction(async (tx) => {
 													const blueprint = await tx
 														.insertInto("Blueprint")
-														.values({ id: genId(), ...values, image: image ? await withBase64(image) : null })
+														.values({
+															id: genId(),
+															...values,
+															image: image
+																? await withBase64(image)
+																: null,
+														})
 														.returningAll()
 														.executeTakeFirstOrThrow();
-
-													if (regionIds?.length) {
-														await tx
-															.insertInto("Blueprint_Region")
-															.values(
-																regionIds.map((regionId) => ({ id: genId(), blueprintId: blueprint.id, regionId })),
-															)
-															.execute();
-													}
 
 													return blueprint;
 												});
 											},
 											async onSuccess(data) {
 												await invalidator();
-												navigate({ to: "/$locale/root/editor", params: { locale }, search: { zoomTo: data.id } });
+												navigate({
+													to: "/$locale/root/editor",
+													params: { locale },
+													search: { zoomTo: data.id },
+												});
 												close();
 											},
 										})}

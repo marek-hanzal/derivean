@@ -2,7 +2,7 @@
 
 import { ConstructionIcon, CyclesInline } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { Badge, Button, LinkTo, useInvalidator } from "@use-pico/client";
 import { type FC } from "react";
 import type { ConstructionPanel } from "~/app/game/GameMap2/Construction/ConstructionPanel";
@@ -12,25 +12,17 @@ import { withConstructionQueue } from "~/app/service/withConstructionQueue";
 export namespace Item {
 	export interface Props extends ItemCss.Props {
 		blueprint: ConstructionPanel.Blueprint;
-		land: ConstructionPanel.Land;
 		userId: string;
 	}
 }
 
-export const Item: FC<Item.Props> = ({ blueprint, land, userId, variant, tva = ItemCss, css }) => {
+export const Item: FC<Item.Props> = ({ blueprint, userId, variant, tva = ItemCss, css }) => {
 	const { mapId, locale } = useParams({ from: "/$locale/map/$mapId" });
-	const navigate = useNavigate();
 	const invalidator = useInvalidator([["GameMap"]]);
 
 	const constructionMutation = useMutation({
-		async mutationFn({ blueprintId, landId, plotId }: { blueprintId: string; landId: string; plotId: string }) {
-			const building = await withConstructionQueue({ userId, blueprintId, landId, plotId, plan: true, valid: false });
-
-			navigate({
-				to: "/$locale/map/$mapId/land/$landId/construction",
-				params: { locale, mapId, landId: land.id },
-				search: { zoomToId: building.id },
-			});
+		async mutationFn({ blueprintId, plotId }: { blueprintId: string; plotId: string }) {
+			return withConstructionQueue({ userId, blueprintId, plotId, plan: true, valid: false });
 		},
 		async onSuccess() {
 			await invalidator();
@@ -61,7 +53,10 @@ export const Item: FC<Item.Props> = ({ blueprint, land, userId, variant, tva = I
 						iconDisabled={ConstructionIcon}
 						loading={constructionMutation.isPending}
 						onClick={() => {
-							constructionMutation.mutate({ blueprintId: blueprint.id, landId: land.id, plotId: "unknown`" });
+							constructionMutation.mutate({
+								blueprintId: blueprint.id,
+								plotId: "unknown`",
+							});
 						}}
 					/>
 				</div>

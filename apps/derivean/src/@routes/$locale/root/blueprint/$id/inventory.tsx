@@ -1,6 +1,16 @@
+/** @format */
+
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { navigateOnCursor, navigateOnFilter, navigateOnFulltext, navigateOnSelection, Tx, withListCount, withSourceSearchSchema } from "@use-pico/client";
+import {
+	navigateOnCursor,
+	navigateOnFilter,
+	navigateOnFulltext,
+	navigateOnSelection,
+	Tx,
+	withListCount,
+	withSourceSearchSchema,
+} from "@use-pico/client";
 import { z } from "zod";
 import { BlueprintInventoryTable } from "~/app/root/BlueprintInventoryTable";
 import { BlueprintInventorySchema } from "~/app/schema/BlueprintInventorySchema";
@@ -8,11 +18,7 @@ import { BlueprintInventorySchema } from "~/app/schema/BlueprintInventorySchema"
 export const Route = createFileRoute("/$locale/root/blueprint/$id/inventory")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintInventorySchema)),
 	loaderDeps({ search: { filter, cursor, sort } }) {
-		return {
-			filter,
-			cursor,
-			sort,
-		};
+		return { filter, cursor, sort };
 	},
 	async loader({ context: { queryClient, kysely }, deps: { filter, cursor }, params: { id } }) {
 		return queryClient.ensureQueryData({
@@ -24,7 +30,16 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/inventory")({
 							.selectFrom("Blueprint_Inventory as bi")
 							.innerJoin("Inventory as i", "i.id", "bi.inventoryId")
 							.innerJoin("Resource as r", "r.id", "i.resourceId")
-							.select(["bi.id", "r.name", "i.amount", "i.limit", "i.type", "i.resourceId", "bi.blueprintId", "bi.inventoryId"])
+							.select([
+								"bi.id",
+								"r.name",
+								"i.amount",
+								"i.limit",
+								"i.type",
+								"i.resourceId",
+								"bi.blueprintId",
+								"bi.inventoryId",
+							])
 							.where("bi.blueprintId", "=", id)
 							.orderBy("i.type", "asc")
 							.orderBy("r.name", "asc"),
@@ -54,7 +69,11 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/inventory")({
 												.innerJoin("Tag as t", "t.id", "rt.tagId")
 												.select("rt.resourceId")
 												.where((eb) => {
-													return eb.or([eb("t.code", "like", fulltext), eb("t.label", "like", fulltext), eb("t.group", "like", fulltext)]);
+													return eb.or([
+														eb("t.code", "like", fulltext),
+														eb("t.label", "like", fulltext),
+														eb("t.group", "like", fulltext),
+													]);
 												}),
 										),
 									]);
@@ -92,17 +111,11 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/inventory")({
 			<div className={tv.base()}>
 				<BlueprintInventoryTable
 					blueprintId={id}
-					table={{
-						data,
-						filter: {
-							value: filter,
-							set: navigateOnFilter(navigate),
-						},
-						selection: {
-							type: "multi",
-							value: selection,
-							set: navigateOnSelection(navigate),
-						},
+					data={data}
+					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
+					selection={{
+						type: "multi",
+						state: { value: selection, set: navigateOnSelection(navigate) },
 					}}
 					fulltext={{
 						value: filter?.fulltext,

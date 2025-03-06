@@ -1,8 +1,7 @@
 /** @format */
 
 import { ConstructionIcon } from "@derivean/ui";
-import { useParams } from "@tanstack/react-router";
-import { LinkTo, Tx } from "@use-pico/client";
+import { Tx } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
 import type { FC } from "react";
 import { Item } from "~/app/game/GameMap2/Construction/Item";
@@ -16,34 +15,21 @@ export namespace ConstructionPanel {
 		cycles: number;
 	}
 
-	export interface Land {
-		id: string;
-		name: string;
-	}
-
 	export interface Props extends Panel.PropsEx {
 		userId: string;
-		land: Land;
 		blueprints: Blueprint[];
 	}
 }
 
-export const ConstructionPanel: FC<ConstructionPanel.Props> = ({ userId, land, blueprints, ...props }) => {
-	const { locale, mapId } = useParams({ from: "/$locale/map/$mapId" });
-
+export const ConstructionPanel: FC<ConstructionPanel.Props> = ({
+	userId,
+	blueprints,
+	...props
+}) => {
 	return (
 		<Panel
 			icon={ConstructionIcon}
-			textTitle={
-				<LinkTo
-					to={"/$locale/map/$mapId/land/$landId/construction"}
-					params={{ locale, mapId, landId: land.id }}
-					search={{ zoomToId: land.id }}
-				>
-					{land.name}
-				</LinkTo>
-			}
-			textSubTitle={<Tx label={"Construction (label)"} />}
+			textTitle={<Tx label={"Construction (label)"} />}
 			{...props}
 		>
 			{blueprints.length > 0 ? (
@@ -53,7 +39,6 @@ export const ConstructionPanel: FC<ConstructionPanel.Props> = ({ userId, land, b
 							key={item.id}
 							blueprint={item}
 							userId={userId}
-							land={land}
 						/>
 					);
 				})

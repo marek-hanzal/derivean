@@ -1,6 +1,16 @@
+/** @format */
+
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { navigateOnCursor, navigateOnFilter, navigateOnFulltext, navigateOnSelection, Tx, withListCount, withSourceSearchSchema } from "@use-pico/client";
+import {
+	navigateOnCursor,
+	navigateOnFilter,
+	navigateOnFulltext,
+	navigateOnSelection,
+	Tx,
+	withListCount,
+	withSourceSearchSchema,
+} from "@use-pico/client";
 import { z } from "zod";
 import { BlueprintProductionResourceTable } from "~/app/root/BlueprintProductionResourceTable";
 import { BlueprintProductionResourceSchema } from "~/app/schema/BlueprintProductionResourceSchema";
@@ -8,11 +18,7 @@ import { BlueprintProductionResourceSchema } from "~/app/schema/BlueprintProduct
 export const Route = createFileRoute("/$locale/root/blueprint/production/$id/resources")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintProductionResourceSchema)),
 	loaderDeps({ search: { filter, cursor, sort } }) {
-		return {
-			filter,
-			cursor,
-			sort,
-		};
+		return { filter, cursor, sort };
 	},
 	async loader({ context: { queryClient, kysely }, deps: { filter, cursor }, params: { id } }) {
 		return queryClient.ensureQueryData({
@@ -65,17 +71,11 @@ export const Route = createFileRoute("/$locale/root/blueprint/production/$id/res
 			<>
 				<BlueprintProductionResourceTable
 					blueprintProductionId={id}
-					table={{
-						data,
-						filter: {
-							value: filter,
-							set: navigateOnFilter(navigate),
-						},
-						selection: {
-							type: "multi",
-							value: selection,
-							set: navigateOnSelection(navigate),
-						},
+					data={data}
+					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
+					selection={{
+						type: "multi",
+						state: { value: selection, set: navigateOnSelection(navigate) },
 					}}
 					fulltext={{
 						value: filter?.fulltext,
@@ -84,7 +84,9 @@ export const Route = createFileRoute("/$locale/root/blueprint/production/$id/res
 					cursor={{
 						count,
 						cursor,
-						textTotal: <Tx label={"Number of production resource requirements (label)"} />,
+						textTotal: (
+							<Tx label={"Number of production resource requirements (label)"} />
+						),
 						...navigateOnCursor(navigate),
 					}}
 				/>

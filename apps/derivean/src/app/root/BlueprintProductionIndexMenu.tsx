@@ -1,10 +1,10 @@
+/** @format */
+
+import { BlueprintIcon, RequirementIcon, ResourceIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { Menu, MenuLink, Tx } from "@use-pico/client";
 import type { Entity, IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
-import { RequirementIcon } from "../../../../../packages/@derivean/ui/src/icon/RequirementIcon";
-import { ResourceIcon } from "../../../../../packages/@derivean/ui/src/icon/ResourceIcon";
 
 export namespace BlueprintProductionIndexMenu {
 	export interface Props extends Menu.Props, Entity.Schema<IdentitySchema> {
@@ -12,7 +12,10 @@ export namespace BlueprintProductionIndexMenu {
 	}
 }
 
-export const BlueprintProductionIndexMenu: FC<BlueprintProductionIndexMenu.Props> = ({ entity, ...props }) => {
+export const BlueprintProductionIndexMenu: FC<BlueprintProductionIndexMenu.Props> = ({
+	entity,
+	...props
+}) => {
 	const { locale } = useParams({ from: "/$locale" });
 
 	return (
@@ -20,21 +23,24 @@ export const BlueprintProductionIndexMenu: FC<BlueprintProductionIndexMenu.Props
 			<MenuLink
 				icon={RequirementIcon}
 				to={"/$locale/root/blueprint/production/$id/requirements"}
-				params={{ locale, id: entity.id }}>
+				params={{ locale, id: entity.id }}
+			>
 				<Tx label={"Production requirements (menu)"} />
 			</MenuLink>
 
 			<MenuLink
 				icon={ResourceIcon}
 				to={"/$locale/root/blueprint/production/$id/resources"}
-				params={{ locale, id: entity.id }}>
+				params={{ locale, id: entity.id }}
+			>
 				<Tx label={"Production resource requirements (menu)"} />
 			</MenuLink>
 
 			<MenuLink
 				icon={BlueprintIcon}
 				to={"/$locale/root/blueprint/production/$id/dependencies"}
-				params={{ locale, id: entity.id }}>
+				params={{ locale, id: entity.id }}
+			>
 				<Tx label={"Production resource dependencies (menu)"} />
 			</MenuLink>
 		</Menu>

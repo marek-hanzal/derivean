@@ -1,6 +1,6 @@
 /** @format */
 
-import { Progress, Table, Tx, useTable, withColumn, withEqualFilter } from "@use-pico/client";
+import { Progress, Table, Tx, withColumn, withEqualFilter } from "@use-pico/client";
 import { toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
 
@@ -66,10 +66,10 @@ export namespace InventoryTable {
 	}
 }
 
-export const InventoryTable: FC<InventoryTable.Props> = ({ table, ...props }) => {
+export const InventoryTable: FC<InventoryTable.Props> = (props) => {
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			{...props}
 		/>
 	);

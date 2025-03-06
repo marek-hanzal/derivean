@@ -1,6 +1,7 @@
 /** @format */
 
 import { transaction, type WithTransaction } from "@derivean/db";
+import { InventoryIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import {
 	ActionMenu,
@@ -12,7 +13,6 @@ import {
 	TrashIcon,
 	Tx,
 	useInvalidator,
-	useTable,
 	withColumn,
 	withEqualFilter,
 	withToastPromiseTx,
@@ -22,7 +22,6 @@ import type { FC } from "react";
 import { InventoryTypeInline } from "~/app/inventory/InventoryTypeInline";
 import { InventoryForm } from "~/app/root/InventoryForm";
 import type { InventorySchema } from "~/app/schema/InventorySchema";
-import { InventoryIcon } from "../../../../../packages/@derivean/ui/src/icon/InventoryIcon";
 
 export namespace InventoryTable {
 	export interface Data extends IdentitySchema.Type {
@@ -97,7 +96,7 @@ export namespace InventoryTable {
 	}
 }
 
-export const InventoryTable: FC<InventoryTable.Props> = ({ onCreate, table, ...props }) => {
+export const InventoryTable: FC<InventoryTable.Props> = ({ onCreate, ...props }) => {
 	const invalidator = useInvalidator([
 		["Inventory"],
 		["User_Inventory"],
@@ -106,7 +105,7 @@ export const InventoryTable: FC<InventoryTable.Props> = ({ onCreate, table, ...p
 
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			action={{
 				table: onCreate
 					? () => {

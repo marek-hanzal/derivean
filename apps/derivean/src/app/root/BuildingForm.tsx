@@ -1,10 +1,12 @@
+/** @format */
+
+import { BuildingIcon } from "@derivean/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { BlueprintPopupSelect } from "~/app/root/BlueprintPopupSelect";
 import { BuildingSchema } from "~/app/schema/BuildingSchema";
-import { BuildingIcon } from "../../../../../packages/@derivean/ui/src/icon/BuildingIcon";
 
 export namespace BuildingForm {
 	export interface Props extends Form.Props<BuildingSchema["shape"]> {
@@ -12,7 +14,13 @@ export namespace BuildingForm {
 	}
 }
 
-export const BuildingForm: FC<BuildingForm.Props> = ({ mutation, defaultValues, variant, tva = FormCss, css }) => {
+export const BuildingForm: FC<BuildingForm.Props> = ({
+	mutation,
+	defaultValues,
+	variant,
+	tva = FormCss,
+	css,
+}) => {
 	const form = useForm<BuildingSchema["~shape"]>({
 		resolver: zodResolver(BuildingSchema.shape),
 		defaultValues,
@@ -28,10 +36,8 @@ export const BuildingForm: FC<BuildingForm.Props> = ({ mutation, defaultValues, 
 	return (
 		<form
 			className={tv.base()}
-			onSubmit={onSubmit({
-				form,
-				mutation,
-			})}>
+			onSubmit={onSubmit({ form, mutation })}
+		>
 			<FormError
 				variant={{ highlight: true }}
 				error={form.formState.errors.root}
@@ -40,7 +46,8 @@ export const BuildingForm: FC<BuildingForm.Props> = ({ mutation, defaultValues, 
 			<FormInput
 				formState={form.formState}
 				name={"blueprintId"}
-				label={<Tx label={"Select blueprint (label)"} />}>
+				label={<Tx label={"Select blueprint (label)"} />}
+			>
 				<Controller
 					control={form.control}
 					name={"blueprintId"}
@@ -58,7 +65,8 @@ export const BuildingForm: FC<BuildingForm.Props> = ({ mutation, defaultValues, 
 			<div className={"flex flex-row justify-between gap-8"}>
 				<Button
 					iconEnabled={BuildingIcon}
-					type={"submit"}>
+					type={"submit"}
+				>
 					<Tx label={"Save (submit)"} />
 				</Button>
 			</div>

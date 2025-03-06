@@ -1,3 +1,5 @@
+/** @format */
+
 import { createFileRoute, Outlet, useRouteContext } from "@tanstack/react-router";
 import { withFetch } from "@use-pico/client";
 import { Kysely, withJsonOutputArraySchema } from "@use-pico/common";
@@ -22,18 +24,6 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id")({
 								"bl.name",
 								"bl.sort",
 								"bl.cycles",
-								(eb) =>
-									eb
-										.selectFrom("Blueprint_Region as br")
-										.innerJoin("Region as r", "r.id", "br.regionId")
-										.select((eb) => {
-											return Kysely.jsonGroupArray({
-												id: eb.ref("r.id"),
-												name: eb.ref("r.name"),
-											}).as("regions");
-										})
-										.whereRef("br.blueprintId", "=", "bl.id")
-										.as("regions"),
 								(eb) =>
 									eb
 										.selectFrom("Blueprint_Requirement as br")
@@ -93,7 +83,11 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id")({
 											"in",
 											eb
 												.selectFrom("Blueprint_Dependency as bd")
-												.innerJoin("Blueprint as b", "b.id", "bd.dependencyId")
+												.innerJoin(
+													"Blueprint as b",
+													"b.id",
+													"bd.dependencyId",
+												)
 												.select("bd.blueprintId")
 												.where((eb) => {
 													return eb.or([eb("b.name", "like", fulltext)]);
@@ -110,24 +104,14 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id")({
 							name: z.string().min(1),
 							cycles: z.number().nonnegative(),
 							sort: z.number().nonnegative(),
-							regions: withJsonOutputArraySchema(
-								z.object({
-									id: z.string().min(1),
-									name: z.string().min(1),
-								}),
-							),
 							requirements: withJsonOutputArraySchema(
 								BlueprintRequirementSchema.entity.merge(
-									z.object({
-										name: z.string().min(1),
-									}),
+									z.object({ name: z.string().min(1) }),
 								),
 							),
 							dependencies: withJsonOutputArraySchema(
 								BlueprintDependencySchema.entity.merge(
-									z.object({
-										name: z.string().min(1),
-									}),
+									z.object({ name: z.string().min(1) }),
 								),
 							),
 						}),

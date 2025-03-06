@@ -1,9 +1,10 @@
+/** @format */
+
+import { BlueprintIcon, ProductionIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { LinkTo, Preview, TitlePreview, Tx } from "@use-pico/client";
 import type { IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
-import { ProductionIcon } from "../../../../../packages/@derivean/ui/src/icon/ProductionIcon";
 
 export namespace BlueprintProductionPreview {
 	export interface Data extends IdentitySchema.Type {
@@ -34,7 +35,8 @@ export const BlueprintProductionPreview: FC<BlueprintProductionPreview.Props> = 
 					<LinkTo
 						icon={BlueprintIcon}
 						to={"/$locale/root/blueprint/$id/production"}
-						params={{ locale, id: entity.blueprintId }}>
+						params={{ locale, id: entity.blueprintId }}
+					>
 						<Tx label={"Building base detail (label)"} />
 					</LinkTo>
 				</>

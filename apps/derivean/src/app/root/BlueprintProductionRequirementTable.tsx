@@ -1,6 +1,7 @@
 /** @format */
 
 import { kysely } from "@derivean/db";
+import { ResourceIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import {
 	ActionMenu,
@@ -11,14 +12,12 @@ import {
 	TrashIcon,
 	Tx,
 	useInvalidator,
-	useTable,
 	withColumn,
 	withEqualFilter,
 } from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
 import { BlueprintProductionRequirementForm } from "~/app/root/BlueprintProductionRequirementForm";
-import { ResourceIcon } from "../../../../../packages/@derivean/ui/src/icon/ResourceIcon";
 
 export namespace BlueprintProductionRequirementTable {
 	export interface Data extends IdentitySchema.Type {
@@ -73,7 +72,6 @@ export namespace BlueprintProductionRequirementTable {
 
 export const BlueprintProductionRequirementTable: FC<BlueprintProductionRequirementTable.Props> = ({
 	blueprintProductionId,
-	table,
 	...props
 }) => {
 	const invalidator = useInvalidator([
@@ -84,7 +82,7 @@ export const BlueprintProductionRequirementTable: FC<BlueprintProductionRequirem
 
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			action={{
 				table() {
 					return (

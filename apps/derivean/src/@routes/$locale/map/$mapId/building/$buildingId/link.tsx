@@ -1,3 +1,5 @@
+/** @format */
+
 import { createFileRoute, useLoaderData } from "@tanstack/react-router";
 import { withList } from "@use-pico/client";
 import { z } from "zod";
@@ -14,18 +16,11 @@ export const Route = createFileRoute("/$locale/map/$mapId/building/$buildingId/l
 							select: tx
 								.selectFrom("Building_To_Building as btb")
 								.innerJoin("Building as b", "b.id", "btb.linkId")
-								.innerJoin("Land as l", "l.id", "b.landId")
-								.innerJoin("Region as r", "r.id", "l.regionId")
 								.innerJoin("Blueprint as bp", "bp.id", "b.blueprintId")
-								.select(["btb.id", "bp.name", "b.landId", "r.name as land"])
+								.select(["btb.id", "bp.name"])
 								.where("btb.buildingId", "=", buildingId)
 								.orderBy("bp.name"),
-							output: z.object({
-								id: z.string().min(1),
-								name: z.string().min(1),
-								landId: z.string().min(1),
-								land: z.string().min(1),
-							}),
+							output: z.object({ id: z.string().min(1), name: z.string().min(1) }),
 						});
 					});
 				},
@@ -33,9 +28,7 @@ export const Route = createFileRoute("/$locale/map/$mapId/building/$buildingId/l
 		};
 	},
 	component() {
-		const { building } = useLoaderData({
-			from: "/$locale/map/$mapId/building/$buildingId",
-		});
+		const { building } = useLoaderData({ from: "/$locale/map/$mapId/building/$buildingId" });
 		const { link } = Route.useLoaderData();
 
 		return (

@@ -1,6 +1,15 @@
+/** @format */
+
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { navigateOnCursor, navigateOnFilter, navigateOnFulltext, Tx, withListCount, withSourceSearchSchema } from "@use-pico/client";
+import {
+	navigateOnCursor,
+	navigateOnFilter,
+	navigateOnFulltext,
+	Tx,
+	withListCount,
+	withSourceSearchSchema,
+} from "@use-pico/client";
 import { z } from "zod";
 import { BlueprintProductionDependencyTable } from "~/app/game/BlueprintProductionDependencyTable";
 import { BlueprintProductionDependencySchema } from "~/app/schema/BlueprintProductionDependencySchema";
@@ -8,11 +17,7 @@ import { BlueprintProductionDependencySchema } from "~/app/schema/BlueprintProdu
 export const Route = createFileRoute("/$locale/game/blueprint/production/$id/dependencies")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintProductionDependencySchema)),
 	loaderDeps({ search: { filter, cursor, sort } }) {
-		return {
-			filter,
-			cursor,
-			sort,
-		};
+		return { filter, cursor, sort };
 	},
 	async loader({ context: { queryClient, kysely }, deps: { filter, cursor }, params: { id } }) {
 		return queryClient.ensureQueryData({
@@ -60,13 +65,8 @@ export const Route = createFileRoute("/$locale/game/blueprint/production/$id/dep
 		return (
 			<div className={tv.base()}>
 				<BlueprintProductionDependencyTable
-					table={{
-						data,
-						filter: {
-							value: filter,
-							set: navigateOnFilter(navigate),
-						},
-					}}
+					data={data}
+					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
 					fulltext={{
 						value: filter?.fulltext,
 						set: navigateOnFulltext(filter?.fulltext, navigate),

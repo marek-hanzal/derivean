@@ -1,6 +1,7 @@
 /** @format */
 
 import { transaction } from "@derivean/db";
+import { BlueprintIcon, BuildingIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import {
@@ -12,14 +13,11 @@ import {
 	TrashIcon,
 	Tx,
 	useInvalidator,
-	useTable,
-	withColumn
+	withColumn,
 } from "@use-pico/client";
 import { type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
 import { BuildingForm } from "~/app/root/BuildingForm";
-import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
-import { BuildingIcon } from "../../../../../packages/@derivean/ui/src/icon/BuildingIcon";
 
 export namespace BuildingTable {
 	export interface Data extends IdentitySchema.Type {
@@ -61,12 +59,12 @@ export namespace BuildingTable {
 	}
 }
 
-export const BuildingTable: FC<BuildingTable.Props> = ({ table, ...props }) => {
+export const BuildingTable: FC<BuildingTable.Props> = (props) => {
 	const invalidator = useInvalidator([["Building"]]);
 
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			action={{
 				row({ data }) {
 					return (
@@ -100,12 +98,17 @@ export const BuildingTable: FC<BuildingTable.Props> = ({ table, ...props }) => {
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete building (modal)"} />}
-								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+								css={{
+									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+								}}
 							>
 								<DeleteControl
 									callback={async () => {
 										return transaction(async (tx) => {
-											return tx.deleteFrom("Building").where("id", "=", data.id).execute();
+											return tx
+												.deleteFrom("Building")
+												.where("id", "=", data.id)
+												.execute();
 										});
 									}}
 									textContent={<Tx label={"Building delete (content)"} />}

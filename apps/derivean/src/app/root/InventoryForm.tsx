@@ -1,11 +1,22 @@
+/** @format */
+
+import { InventoryIcon } from "@derivean/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, FormCss, FormError, FormInput, onSubmit, Select, Tx, type Form } from "@use-pico/client";
+import {
+	Button,
+	FormCss,
+	FormError,
+	FormInput,
+	onSubmit,
+	Select,
+	Tx,
+	type Form,
+} from "@use-pico/client";
 import { translator } from "@use-pico/common";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ResourcePopupSelect } from "~/app/root/ResourcePopupSelect";
 import { InventorySchema } from "~/app/schema/InventorySchema";
-import { InventoryIcon } from "../../../../../packages/@derivean/ui/src/icon/InventoryIcon";
 
 export namespace InventoryForm {
 	export interface Props extends Form.Props<InventorySchema["shape"]> {
@@ -13,15 +24,16 @@ export namespace InventoryForm {
 	}
 }
 
-export const InventoryForm: FC<InventoryForm.Props> = ({ mutation, defaultValues, variant, tva = FormCss, css }) => {
+export const InventoryForm: FC<InventoryForm.Props> = ({
+	mutation,
+	defaultValues,
+	variant,
+	tva = FormCss,
+	css,
+}) => {
 	const form = useForm<InventorySchema["~shape"]>({
 		resolver: zodResolver(InventorySchema.shape),
-		defaultValues: {
-			amount: 0,
-			limit: 0,
-			type: "storage",
-			...defaultValues,
-		},
+		defaultValues: { amount: 0, limit: 0, type: "storage", ...defaultValues },
 	});
 
 	const tv = tva({
@@ -34,10 +46,8 @@ export const InventoryForm: FC<InventoryForm.Props> = ({ mutation, defaultValues
 	return (
 		<form
 			className={tv.base()}
-			onSubmit={onSubmit({
-				form,
-				mutation,
-			})}>
+			onSubmit={onSubmit({ form, mutation })}
+		>
 			<FormError
 				variant={{ highlight: true }}
 				error={form.formState.errors.root}
@@ -46,7 +56,8 @@ export const InventoryForm: FC<InventoryForm.Props> = ({ mutation, defaultValues
 			<FormInput
 				formState={form.formState}
 				name={"resourceId"}
-				label={<Tx label={"Resource name (label)"} />}>
+				label={<Tx label={"Resource name (label)"} />}
+			>
 				<Controller
 					control={form.control}
 					name={"resourceId"}
@@ -65,7 +76,8 @@ export const InventoryForm: FC<InventoryForm.Props> = ({ mutation, defaultValues
 			<FormInput
 				formState={form.formState}
 				name={"type"}
-				label={<Tx label={"Inventory type (label)"} />}>
+				label={<Tx label={"Inventory type (label)"} />}
+			>
 				<Controller
 					control={form.control}
 					name={"type"}
@@ -93,7 +105,8 @@ export const InventoryForm: FC<InventoryForm.Props> = ({ mutation, defaultValues
 			<FormInput
 				formState={form.formState}
 				name={"amount"}
-				label={<Tx label={"Amount (label)"} />}>
+				label={<Tx label={"Amount (label)"} />}
+			>
 				<input
 					type={"number"}
 					className={tv.input()}
@@ -104,7 +117,8 @@ export const InventoryForm: FC<InventoryForm.Props> = ({ mutation, defaultValues
 			<FormInput
 				formState={form.formState}
 				name={"limit"}
-				label={<Tx label={"Inventory limit (label)"} />}>
+				label={<Tx label={"Inventory limit (label)"} />}
+			>
 				<input
 					type={"number"}
 					className={tv.input()}
@@ -115,7 +129,8 @@ export const InventoryForm: FC<InventoryForm.Props> = ({ mutation, defaultValues
 			<div className={"flex flex-row justify-between gap-8"}>
 				<Button
 					iconEnabled={InventoryIcon}
-					type={"submit"}>
+					type={"submit"}
+				>
 					<Tx label={"Save (submit)"} />
 				</Button>
 			</div>

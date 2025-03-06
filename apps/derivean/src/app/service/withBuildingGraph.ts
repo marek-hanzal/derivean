@@ -26,10 +26,10 @@ export namespace withBuildingGraph {
 export const withBuildingGraph = async ({ tx, userId, mapId }: withBuildingGraph.Props) => {
 	const buildings = await tx
 		.selectFrom("Building as b")
+		.innerJoin("Plot as p", "p.id", "b.plotId")
 		.select(["b.id"])
-		.innerJoin("Land as l", "l.id", "b.landId")
 		.where("b.userId", "=", userId)
-		.where("l.mapId", "=", mapId)
+		.where("p.mapId", "=", mapId)
 		.execute();
 
 	const graph = new Graph<withBuildingGraph.Node, withBuildingGraph.Edge>({

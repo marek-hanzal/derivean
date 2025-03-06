@@ -3,7 +3,7 @@
 import { transaction } from "@derivean/db";
 import { BlueprintIcon } from "@derivean/ui";
 import { PopupSelect, Tx, withListCount } from "@use-pico/client";
-import { Kysely, withJsonOutputArraySchema } from "@use-pico/common";
+import { withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import type { FC } from "react";
 import { z } from "zod";
@@ -22,10 +22,10 @@ export const BlueprintPopupSelect: FC<BlueprintPopupSelect.Props> = (props) => {
 		<PopupSelect<BlueprintTable.Data>
 			icon={BlueprintIcon}
 			textTitle={<Tx label={"Select blueprint (title)"} />}
-			table={({ table, ...props }) => {
+			table={(props) => {
 				return (
 					<BlueprintTable
-						table={{ ...table, hidden: ["requirements", "dependencies"] }}
+						hidden={["requirements", "dependencies"]}
 						{...props}
 					/>
 				);
@@ -45,15 +45,6 @@ export const BlueprintPopupSelect: FC<BlueprintPopupSelect.Props> = (props) => {
 								"b.sort",
 								"b.cycles",
 								"b.limit",
-								(eb) =>
-									eb
-										.selectFrom("Blueprint_Region as br")
-										.innerJoin("Region as r", "r.id", "br.regionId")
-										.select((eb) => {
-											return Kysely.jsonGroupArray({ id: eb.ref("r.id"), name: eb.ref("r.name") }).as("regions");
-										})
-										.whereRef("br.blueprintId", "=", "b.id")
-										.as("regions"),
 								(eb) =>
 									eb
 										.selectFrom("Blueprint_Requirement as br")
@@ -97,7 +88,10 @@ export const BlueprintPopupSelect: FC<BlueprintPopupSelect.Props> = (props) => {
 								const fulltext = `%${where.fulltext}%`.toLowerCase();
 
 								$select = $select.where((eb) => {
-									return eb.or([eb("b.id", "like", fulltext), eb("b.name", "like", fulltext)]);
+									return eb.or([
+										eb("b.id", "like", fulltext),
+										eb("b.name", "like", fulltext),
+									]);
 								});
 							}
 
@@ -109,12 +103,15 @@ export const BlueprintPopupSelect: FC<BlueprintPopupSelect.Props> = (props) => {
 							cycles: z.number().nonnegative(),
 							sort: z.number().nonnegative(),
 							limit: z.number().nonnegative(),
-							regions: withJsonOutputArraySchema(z.object({ id: z.string().min(1), name: z.string().min(1) })),
 							requirements: withJsonOutputArraySchema(
-								BlueprintRequirementSchema.entity.merge(z.object({ name: z.string().min(1) })),
+								BlueprintRequirementSchema.entity.merge(
+									z.object({ name: z.string().min(1) }),
+								),
 							),
 							dependencies: withJsonOutputArraySchema(
-								BlueprintDependencySchema.entity.merge(z.object({ name: z.string().min(1) })),
+								BlueprintDependencySchema.entity.merge(
+									z.object({ name: z.string().min(1) }),
+								),
 							),
 						}),
 						filter,

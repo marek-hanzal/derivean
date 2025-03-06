@@ -33,8 +33,12 @@ export const Route = createFileRoute("/$locale/root")({
 								.selectFrom("Blueprint as b")
 								.select(["b.id", "b.image"])
 								.where("b.image", "is not", null)
-								.union(tx.selectFrom("Region as r").select(["r.id", "r.image"]).where("r.image", "is not", null))
-								.union(tx.selectFrom("Resource as r").select(["r.id", "r.image"]).where("r.image", "is not", null)),
+								.union(
+									tx
+										.selectFrom("Resource as r")
+										.select(["r.id", "r.image"])
+										.where("r.image", "is not", null),
+								),
 							output: z.object({ id: z.string().min(1), image: z.string() }),
 						});
 					});

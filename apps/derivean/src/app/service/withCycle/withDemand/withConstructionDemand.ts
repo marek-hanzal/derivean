@@ -11,15 +11,19 @@ export namespace withConstructionDemand {
 	}
 }
 
-export const withConstructionDemand = async ({ tx, userId, mapId }: withConstructionDemand.Props) => {
+export const withConstructionDemand = async ({
+	tx,
+	userId,
+	mapId,
+}: withConstructionDemand.Props) => {
 	console.info("\t\t=== Construction demand");
 
 	const construction = await tx
 		.selectFrom("Building as b")
 		.innerJoin("Blueprint as bl", "bl.id", "b.blueprintId")
-		.innerJoin("Land as l", "l.id", "b.landId")
+		.innerJoin("Plot as p", "p.id", "b.plotId")
 		.where("b.userId", "=", userId)
-		.where("l.mapId", "=", mapId)
+		.where("p.mapId", "=", mapId)
 		.where("b.constructionId", "is not", null)
 		.where("b.valid", "=", true)
 		.select(["b.id", "b.blueprintId", "bl.name"])
@@ -73,7 +77,9 @@ export const withConstructionDemand = async ({ tx, userId, mapId }: withConstruc
 							.selectFrom("Inventory as i")
 							.select(["i.id"])
 							.innerJoin("Building_Inventory as bi", (eb) => {
-								return eb.on("bi.buildingId", "=", id).onRef("bi.inventoryId", "=", "i.id");
+								return eb
+									.on("bi.buildingId", "=", id)
+									.onRef("bi.inventoryId", "=", "i.id");
 							})
 							.whereRef("i.resourceId", "=", "br.resourceId")
 							.whereRef("i.amount", ">=", "br.amount")
@@ -84,7 +90,9 @@ export const withConstructionDemand = async ({ tx, userId, mapId }: withConstruc
 			.execute();
 
 		if (!requirements.length) {
-			console.info("\t\t\t\t-- No required resources or resources already demanded/on the way.");
+			console.info(
+				"\t\t\t\t-- No required resources or resources already demanded/on the way.",
+			);
 		}
 
 		for await (const { resourceId, name: resourceName, amount } of requirements) {
@@ -92,7 +100,14 @@ export const withConstructionDemand = async ({ tx, userId, mapId }: withConstruc
 				.selectFrom("Inventory as i")
 				.innerJoin("Resource as r", "r.id", "i.resourceId")
 				.select(["i.resourceId", "i.amount", "r.name"])
-				.where("i.id", "in", tx.selectFrom("Building_Inventory").select("inventoryId").where("buildingId", "=", id))
+				.where(
+					"i.id",
+					"in",
+					tx
+						.selectFrom("Building_Inventory")
+						.select("inventoryId")
+						.where("buildingId", "=", id),
+				)
 				.where("i.resourceId", "=", resourceId)
 				.where("i.type", "=", "construction")
 				.executeTakeFirst();
@@ -104,7 +119,10 @@ export const withConstructionDemand = async ({ tx, userId, mapId }: withConstruc
 				continue;
 			}
 
-			console.log("\t\t\t\t-- Inventory", { resource: inventory.name, amount: inventory.amount });
+			console.log("\t\t\t\t-- Inventory", {
+				resource: inventory.name,
+				amount: inventory.amount,
+			});
 
 			if (inventory.amount < amount) {
 				console.info("\t\t\t\t\t-- Demanding resource", {

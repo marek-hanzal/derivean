@@ -1,6 +1,7 @@
 /** @format */
 
 import { transaction } from "@derivean/db";
+import { BlueprintIcon, CyclesInline, InventoryIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import {
@@ -8,14 +9,12 @@ import {
 	ActionMenu,
 	ActionModal,
 	DeleteControl,
-	Icon,
 	LinkTo,
 	Table,
 	toast,
 	TrashIcon,
 	Tx,
 	useInvalidator,
-	useTable,
 	withColumn,
 	withToastPromiseTx,
 } from "@use-pico/client";
@@ -30,9 +29,6 @@ import { withFillInventory } from "~/app/service/withFillInventory";
 import { RequirementsInline } from "~/app/ui/RequirementsInline";
 import { toWebp64 } from "~/app/utils/toWebp64";
 import type { withBlueprintGraph } from "~/app/utils/withBlueprintGraph";
-import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
-import { CycleIcon } from "../../../../../packages/@derivean/ui/src/icon/CycleIcon";
-import { InventoryIcon } from "../../../../../packages/@derivean/ui/src/icon/InventoryIcon";
 
 export namespace BlueprintTable {
 	export interface Data extends IdentitySchema.Type {
@@ -40,7 +36,6 @@ export namespace BlueprintTable {
 		cycles: number;
 		sort: number;
 		limit: number;
-		regions: { id: string; name: string }[];
 		requirements: (BlueprintRequirementSchema["~entity"] & { name: string })[];
 		dependencies: (BlueprintDependencySchema["~entity"] & { name: string })[];
 		graph?: string;
@@ -136,12 +131,7 @@ const columns = [
 			return <Tx label={"Construction cycles (label)"} />;
 		},
 		render({ value }) {
-			return (
-				<div className={"flex flex-row items-center gap-2"}>
-					<Icon icon={CycleIcon} />
-					{toHumanNumber({ number: value })}
-				</div>
-			);
+			return <CyclesInline cycles={value} />;
 		},
 		size: 8,
 	}),
@@ -163,7 +153,7 @@ export namespace BlueprintTable {
 	}
 }
 
-export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, table, ...props }) => {
+export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, ...props }) => {
 	const invalidator = useInvalidator([["Blueprint_Inventory"], ["Blueprint"], ["Inventory"]]);
 
 	const fillInventoryMutation = useMutation({
@@ -186,7 +176,8 @@ export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, table, 
 
 	return (
 		<Table
-			table={useTable({ ...table, columns, context: { dependencies } })}
+			columns={columns}
+			context={{ dependencies }}
 			action={{
 				table() {
 					return (
@@ -194,7 +185,10 @@ export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, table, 
 							<ActionClick
 								icon={InventoryIcon}
 								onClick={() => {
-									toast.promise(fillInventoryMutation.mutateAsync(), withToastPromiseTx("Fill inventories"));
+									toast.promise(
+										fillInventoryMutation.mutateAsync(),
+										withToastPromiseTx("Fill inventories"),
+									);
 								}}
 							>
 								<Tx label={"Fill inventories (label)"} />
@@ -208,22 +202,19 @@ export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, table, 
 									return (
 										<BlueprintForm
 											mutation={useMutation({
-												async mutationFn({ image, regionIds, ...values }) {
+												async mutationFn({ image, ...values }) {
 													transaction(async (tx) => {
 														const entity = await tx
 															.insertInto("Blueprint")
-															.values({ id: genId(), ...values, image: image ? await toWebp64(image) : null })
+															.values({
+																id: genId(),
+																...values,
+																image: image
+																	? await toWebp64(image)
+																	: null,
+															})
 															.returningAll()
 															.executeTakeFirstOrThrow();
-
-														if (regionIds?.length) {
-															await tx
-																.insertInto("Blueprint_Region")
-																.values(
-																	regionIds.map((regionId) => ({ id: genId(), blueprintId: entity.id, regionId })),
-																)
-																.execute();
-														}
 
 														await withBlueprintSort({ tx });
 
@@ -253,27 +244,21 @@ export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, table, 
 								{({ close }) => {
 									return (
 										<BlueprintForm
-											defaultValues={{ ...data, regionIds: data.regions.map((region) => region.id) }}
+											defaultValues={data}
 											mutation={useMutation({
-												async mutationFn({ image, regionIds, ...values }) {
+												async mutationFn({ image, ...values }) {
 													return transaction(async (tx) => {
 														const entity = await tx
 															.updateTable("Blueprint")
-															.set({ ...values, image: image ? await toWebp64(image) : null })
+															.set({
+																...values,
+																image: image
+																	? await toWebp64(image)
+																	: null,
+															})
 															.where("id", "=", data.id)
 															.returningAll()
 															.executeTakeFirstOrThrow();
-
-														await tx.deleteFrom("Blueprint_Region").where("blueprintId", "=", entity.id).execute();
-
-														if (regionIds?.length) {
-															await tx
-																.insertInto("Blueprint_Region")
-																.values(
-																	regionIds.map((regionId) => ({ id: genId(), blueprintId: entity.id, regionId })),
-																)
-																.execute();
-														}
 
 														await withBlueprintSort({ tx });
 
@@ -294,12 +279,17 @@ export const BlueprintTable: FC<BlueprintTable.Props> = ({ dependencies, table, 
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete blueprint (modal)"} />}
-								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+								css={{
+									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+								}}
 							>
 								<DeleteControl
 									callback={async () => {
 										return transaction(async (tx) => {
-											return tx.deleteFrom("Blueprint").where("id", "=", data.id).execute();
+											return tx
+												.deleteFrom("Blueprint")
+												.where("id", "=", data.id)
+												.execute();
 										});
 									}}
 									textContent={<Tx label={"Delete blueprint (content)"} />}

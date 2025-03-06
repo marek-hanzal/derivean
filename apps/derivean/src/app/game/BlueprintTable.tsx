@@ -2,7 +2,7 @@
 
 import { CyclesInline } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
-import { LinkTo, Table, Tx, useTable, withColumn } from "@use-pico/client";
+import { LinkTo, Table, Tx, withColumn } from "@use-pico/client";
 import { tvc, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
 
@@ -75,10 +75,10 @@ export namespace BlueprintTable {
 	}
 }
 
-export const BlueprintTable: FC<BlueprintTable.Props> = ({ table, ...props }) => {
+export const BlueprintTable: FC<BlueprintTable.Props> = (props) => {
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			{...props}
 		/>
 	);

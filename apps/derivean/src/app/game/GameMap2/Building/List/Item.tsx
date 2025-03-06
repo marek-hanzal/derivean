@@ -1,6 +1,6 @@
 /** @format */
 
-import { BuildingIcon, LandIcon } from "@derivean/ui";
+import { BuildingIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { LinkTo } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
@@ -37,15 +37,6 @@ export const Item: FC<Item.Props> = ({ building }) => {
 					params={{ locale, mapId, buildingId: building.id }}
 				>
 					{building.name}
-				</LinkTo>
-
-				<LinkTo
-					icon={LandIcon}
-					to={"/$locale/map/$mapId/building/list"}
-					params={{ locale, mapId }}
-					search={{ zoomToId: building.landId }}
-				>
-					{building.land}
 				</LinkTo>
 			</div>
 		</div>

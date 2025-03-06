@@ -11,7 +11,6 @@ import {
 	TrashIcon,
 	Tx,
 	useInvalidator,
-	useTable,
 	withColumn,
 } from "@use-pico/client";
 import type { IdentitySchema } from "@use-pico/common";
@@ -64,7 +63,7 @@ export namespace UserTable {
 	}
 }
 
-export const UserTable: FC<UserTable.Props> = ({ table, ...props }) => {
+export const UserTable: FC<UserTable.Props> = (props) => {
 	const invalidator = useInvalidator([["GameMap"], ["Management"], ["User_Inventory"]]);
 
 	const resetGameMutation = useMutation({
@@ -88,7 +87,7 @@ export const UserTable: FC<UserTable.Props> = ({ table, ...props }) => {
 
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			action={{
 				row({ data }) {
 					return (

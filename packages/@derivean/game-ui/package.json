@@ -21,7 +21,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@use-pico/client": "4.0.36",
+		"@use-pico/client": "4.0.37",
 		"@use-pico/common": "4.0.21",
 		"react": "19.0.0"
 	},

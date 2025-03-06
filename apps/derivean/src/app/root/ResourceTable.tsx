@@ -16,7 +16,6 @@ import {
 	TrashIcon,
 	Tx,
 	useInvalidator,
-	useTable,
 	withColumn,
 	withToastPromiseTx,
 } from "@use-pico/client";
@@ -89,7 +88,12 @@ const columns = [
 		render({ value }) {
 			return (
 				<Badge
-					css={{ base: value !== undefined && value === 0 ? ["bg-red-100", "text-red-500", "border-red-600"] : [] }}
+					css={{
+						base:
+							value !== undefined && value === 0
+								? ["bg-red-100", "text-red-500", "border-red-600"]
+								: [],
+					}}
 				>
 					{toHumanNumber({ number: value })}
 				</Badge>
@@ -157,12 +161,12 @@ export namespace ResourceTable {
 	}
 }
 
-export const ResourceTable: FC<ResourceTable.Props> = ({ group, table, ...props }) => {
+export const ResourceTable: FC<ResourceTable.Props> = ({ group, ...props }) => {
 	const invalidator = useInvalidator([["Resource"], ["Resource_Tag"]]);
 
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			action={{
 				table() {
 					return (
@@ -177,18 +181,34 @@ export const ResourceTable: FC<ResourceTable.Props> = ({ group, table, ...props 
 										<ResourceForm
 											group={group}
 											mutation={useMutation({
-												async mutationFn({ image, tagIds = [], ...values }) {
+												async mutationFn({
+													image,
+													tagIds = [],
+													...values
+												}) {
 													return transaction(async (tx) => {
 														const entity = await tx
 															.insertInto("Resource")
-															.values({ id: genId(), ...values, image: image ? await toWebp64(image) : null })
+															.values({
+																id: genId(),
+																...values,
+																image: image
+																	? await toWebp64(image)
+																	: null,
+															})
 															.returningAll()
 															.executeTakeFirstOrThrow();
 
 														if (tagIds.length) {
 															await tx
 																.insertInto("Resource_Tag")
-																.values(tagIds.map((tagId) => ({ id: genId(), resourceId: entity.id, tagId })))
+																.values(
+																	tagIds.map((tagId) => ({
+																		id: genId(),
+																		resourceId: entity.id,
+																		tagId,
+																	})),
+																)
 																.execute();
 														}
 
@@ -218,24 +238,41 @@ export const ResourceTable: FC<ResourceTable.Props> = ({ group, table, ...props 
 								{({ close }) => {
 									return (
 										<ResourceForm
-											defaultValues={{ ...data, tagIds: data.tags.map(({ id }) => id) }}
+											defaultValues={{
+												...data,
+												tagIds: data.tags.map(({ id }) => id),
+											}}
 											mutation={useMutation({
 												async mutationFn({ image, tagIds, ...rest }) {
 													return toast.promise(
 														transaction(async (tx) => {
 															const entity = await tx
 																.updateTable("Resource")
-																.set({ ...rest, image: image ? await toWebp64(image) : null })
+																.set({
+																	...rest,
+																	image: image
+																		? await toWebp64(image)
+																		: null,
+																})
 																.where("id", "=", data.id)
 																.returningAll()
 																.executeTakeFirstOrThrow();
 
-															await tx.deleteFrom("Resource_Tag").where("resourceId", "=", entity.id).execute();
+															await tx
+																.deleteFrom("Resource_Tag")
+																.where("resourceId", "=", entity.id)
+																.execute();
 
 															if (tagIds?.length) {
 																await tx
 																	.insertInto("Resource_Tag")
-																	.values(tagIds.map((tagId) => ({ id: genId(), resourceId: entity.id, tagId })))
+																	.values(
+																		tagIds.map((tagId) => ({
+																			id: genId(),
+																			resourceId: entity.id,
+																			tagId,
+																		})),
+																	)
 																	.execute();
 															}
 
@@ -258,12 +295,17 @@ export const ResourceTable: FC<ResourceTable.Props> = ({ group, table, ...props 
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete resource (modal)"} />}
-								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+								css={{
+									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+								}}
 							>
 								<DeleteControl
 									callback={async () => {
 										return transaction(async (tx) => {
-											return tx.deleteFrom("Resource").where("id", "=", data.id).execute();
+											return tx
+												.deleteFrom("Resource")
+												.where("id", "=", data.id)
+												.execute();
 										});
 									}}
 									textContent={<Tx label={"Resource delete (content)"} />}

@@ -2,7 +2,7 @@
 
 import { ProductionIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
-import { LinkTo, More, Table, Tx, useTable, withColumn } from "@use-pico/client";
+import { LinkTo, More, Table, Tx, withColumn } from "@use-pico/client";
 import { toHumanNumber, tvc, type IdentitySchema } from "@use-pico/common";
 import { type FC } from "react";
 import { RequirementsInline } from "~/app/game/RequirementsInline";
@@ -108,7 +108,9 @@ const columns = [
 								])}
 							>
 								<div>{entity.name}</div>
-								<div className={"text-md font-bold text-slate-500"}>x{toHumanNumber({ number: entity.amount })}</div>
+								<div className={"text-md font-bold text-slate-500"}>
+									x{toHumanNumber({ number: entity.amount })}
+								</div>
 							</div>
 						);
 					}}
@@ -166,10 +168,10 @@ export namespace BlueprintProductionTable {
 	}
 }
 
-export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({ table, ...props }) => {
+export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = (props) => {
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			{...props}
 		/>
 	);

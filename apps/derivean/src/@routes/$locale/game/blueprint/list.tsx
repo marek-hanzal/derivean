@@ -1,6 +1,15 @@
+/** @format */
+
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { navigateOnCursor, navigateOnFilter, navigateOnFulltext, Tx, withListCount, withSourceSearchSchema } from "@use-pico/client";
+import {
+	navigateOnCursor,
+	navigateOnFilter,
+	navigateOnFulltext,
+	Tx,
+	withListCount,
+	withSourceSearchSchema,
+} from "@use-pico/client";
 import { z } from "zod";
 import { BlueprintTable } from "~/app/game/BlueprintTable";
 import { BlueprintSchema } from "~/app/schema/BlueprintSchema";
@@ -8,11 +17,7 @@ import { BlueprintSchema } from "~/app/schema/BlueprintSchema";
 export const Route = createFileRoute("/$locale/game/blueprint/list")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintSchema)),
 	loaderDeps({ search: { filter, cursor, sort } }) {
-		return {
-			filter,
-			cursor,
-			sort,
-		};
+		return { filter, cursor, sort };
 	},
 	async loader({ context: { queryClient, kysely, session }, deps: { filter, cursor } }) {
 		const user = await session();
@@ -25,7 +30,14 @@ export const Route = createFileRoute("/$locale/game/blueprint/list")({
 						select: tx
 							.selectFrom("Blueprint as bl")
 							.select(["bl.id", "bl.name", "bl.cycles"])
-							.where("bl.id", "in", tx.selectFrom("Building as bg").select("bg.blueprintId").where("bg.userId", "=", user.id))
+							.where(
+								"bl.id",
+								"in",
+								tx
+									.selectFrom("Building as bg")
+									.select("bg.blueprintId")
+									.where("bg.userId", "=", user.id),
+							)
 							.orderBy("bl.sort", "asc")
 							.orderBy("bl.name", "asc"),
 						query({ select, where }) {
@@ -81,9 +93,7 @@ export const Route = createFileRoute("/$locale/game/blueprint/list")({
 			},
 		});
 
-		return {
-			data,
-		};
+		return { data };
 	},
 	component() {
 		const {
@@ -97,13 +107,8 @@ export const Route = createFileRoute("/$locale/game/blueprint/list")({
 		return (
 			<div className={tv.base()}>
 				<BlueprintTable
-					table={{
-						data,
-						filter: {
-							value: filter,
-							set: navigateOnFilter(navigate),
-						},
-					}}
+					data={data}
+					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
 					fulltext={{
 						value: filter?.fulltext,
 						set: navigateOnFulltext(filter?.fulltext, navigate),

@@ -12,7 +12,6 @@ import {
 	TrashIcon,
 	Tx,
 	useInvalidator,
-	useTable,
 	withColumn,
 	withEqualFilter,
 	withToastPromiseTx,
@@ -72,12 +71,12 @@ export namespace TagTable {
 	}
 }
 
-export const TagTable: FC<TagTable.Props> = ({ group, table, ...props }) => {
+export const TagTable: FC<TagTable.Props> = ({ group, ...props }) => {
 	const invalidator = useInvalidator([["Tag"], ["Resource"]]);
 
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			action={{
 				table() {
 					return (

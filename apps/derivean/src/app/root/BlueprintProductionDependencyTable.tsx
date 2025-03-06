@@ -1,6 +1,7 @@
 /** @format */
 
 import { kysely } from "@derivean/db";
+import { BlueprintIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import {
@@ -13,7 +14,6 @@ import {
 	TrashIcon,
 	Tx,
 	useInvalidator,
-	useTable,
 	withColumn,
 	withToastPromiseTx,
 } from "@use-pico/client";
@@ -21,7 +21,6 @@ import { genId, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
 import { BlueprintProductionDependencyForm } from "~/app/root/BlueprintProductionDependencyForm";
 import { withBlueprintSort } from "~/app/service/withBlueprintSort";
-import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
 
 export namespace BlueprintProductionDependencyTable {
 	export interface Data extends IdentitySchema.Type {
@@ -63,21 +62,24 @@ export namespace BlueprintProductionDependencyTable {
 
 export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependencyTable.Props> = ({
 	blueprintProductionId,
-	table,
 	...props
 }) => {
 	const invalidator = useInvalidator([["Blueprint_Production_Dependency"], ["Blueprint"]]);
 
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			action={{
 				table() {
 					return (
 						<ActionMenu>
 							<ActionModal
-								label={<Tx label={"Create blueprint production dependency (menu)"} />}
-								textTitle={<Tx label={"Create blueprint production dependency (modal)"} />}
+								label={
+									<Tx label={"Create blueprint production dependency (menu)"} />
+								}
+								textTitle={
+									<Tx label={"Create blueprint production dependency (modal)"} />
+								}
 								icon={BlueprintIcon}
 							>
 								{({ close }) => {
@@ -88,8 +90,14 @@ export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependenc
 													return toast.promise(
 														kysely.transaction().execute(async (tx) => {
 															const entity = tx
-																.insertInto("Blueprint_Production_Dependency")
-																.values({ id: genId(), ...values, blueprintProductionId })
+																.insertInto(
+																	"Blueprint_Production_Dependency",
+																)
+																.values({
+																	id: genId(),
+																	...values,
+																	blueprintProductionId,
+																})
 																.returningAll()
 																.executeTakeFirstOrThrow();
 
@@ -97,7 +105,9 @@ export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependenc
 
 															return entity;
 														}),
-														withToastPromiseTx("Create blueprint production dependency"),
+														withToastPromiseTx(
+															"Create blueprint production dependency",
+														),
 													);
 												},
 												async onSuccess() {
@@ -117,7 +127,9 @@ export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependenc
 						<ActionMenu>
 							<ActionModal
 								label={<Tx label={"Edit (menu)"} />}
-								textTitle={<Tx label={"Edit blueprint production dependency (modal)"} />}
+								textTitle={
+									<Tx label={"Edit blueprint production dependency (modal)"} />
+								}
 								icon={BlueprintIcon}
 							>
 								{({ close }) => {
@@ -129,13 +141,17 @@ export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependenc
 													return toast.promise(
 														kysely.transaction().execute(async (tx) => {
 															return tx
-																.updateTable("Blueprint_Production_Dependency")
+																.updateTable(
+																	"Blueprint_Production_Dependency",
+																)
 																.set(values)
 																.where("id", "=", data.id)
 																.returningAll()
 																.executeTakeFirstOrThrow();
 														}),
-														withToastPromiseTx("Update blueprint production dependency"),
+														withToastPromiseTx(
+															"Update blueprint production dependency",
+														),
 													);
 												},
 												async onSuccess() {
@@ -151,16 +167,29 @@ export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependenc
 							<ActionModal
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
-								textTitle={<Tx label={"Delete blueprint production dependency (modal)"} />}
-								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+								textTitle={
+									<Tx label={"Delete blueprint production dependency (modal)"} />
+								}
+								css={{
+									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+								}}
 							>
 								<DeleteControl
 									callback={async () => {
 										return kysely.transaction().execute(async (tx) => {
-											return tx.deleteFrom("Blueprint_Production_Dependency").where("id", "=", data.id).execute();
+											return tx
+												.deleteFrom("Blueprint_Production_Dependency")
+												.where("id", "=", data.id)
+												.execute();
 										});
 									}}
-									textContent={<Tx label={"Delete blueprint production dependency (content)"} />}
+									textContent={
+										<Tx
+											label={
+												"Delete blueprint production dependency (content)"
+											}
+										/>
+									}
 									textToast={"Delete blueprint production dependency"}
 									invalidator={invalidator}
 								/>

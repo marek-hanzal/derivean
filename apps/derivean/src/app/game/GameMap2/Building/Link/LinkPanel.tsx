@@ -17,8 +17,6 @@ export namespace LinkPanel {
 	export interface Link {
 		id: string;
 		name: string;
-		land: string;
-		landId: string;
 	}
 
 	export interface Props extends Panel.PropsEx {
@@ -57,7 +55,6 @@ export const LinkPanel: FC<LinkPanel.Props> = ({ building, link, ...props }) => 
 					return (
 						<Item
 							key={item.id}
-							building={building}
 							link={item}
 						/>
 					);

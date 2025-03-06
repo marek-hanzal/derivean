@@ -1,6 +1,15 @@
+/** @format */
+
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { navigateOnCursor, navigateOnFilter, navigateOnFulltext, Tx, withListCount, withSourceSearchSchema } from "@use-pico/client";
+import {
+	navigateOnCursor,
+	navigateOnFilter,
+	navigateOnFulltext,
+	Tx,
+	withListCount,
+	withSourceSearchSchema,
+} from "@use-pico/client";
 import { z } from "zod";
 import { BlueprintProductionResourceTable } from "~/app/game/BlueprintProductionResourceTable";
 import { BlueprintProductionResourceSchema } from "~/app/schema/BlueprintProductionResourceSchema";
@@ -8,11 +17,7 @@ import { BlueprintProductionResourceSchema } from "~/app/schema/BlueprintProduct
 export const Route = createFileRoute("/$locale/game/blueprint/production/$id/resources")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintProductionResourceSchema)),
 	loaderDeps({ search: { filter, cursor, sort } }) {
-		return {
-			filter,
-			cursor,
-			sort,
-		};
+		return { filter, cursor, sort };
 	},
 	async loader({ context: { queryClient, kysely }, deps: { filter, cursor }, params: { id } }) {
 		return queryClient.ensureQueryData({
@@ -63,13 +68,8 @@ export const Route = createFileRoute("/$locale/game/blueprint/production/$id/res
 		return (
 			<>
 				<BlueprintProductionResourceTable
-					table={{
-						data,
-						filter: {
-							value: filter,
-							set: navigateOnFilter(navigate),
-						},
-					}}
+					data={data}
+					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
 					fulltext={{
 						value: filter?.fulltext,
 						set: navigateOnFulltext(filter?.fulltext, navigate),
@@ -77,7 +77,9 @@ export const Route = createFileRoute("/$locale/game/blueprint/production/$id/res
 					cursor={{
 						count,
 						cursor,
-						textTotal: <Tx label={"Number of production resource requirements (label)"} />,
+						textTotal: (
+							<Tx label={"Number of production resource requirements (label)"} />
+						),
 						...navigateOnCursor(navigate),
 					}}
 				/>

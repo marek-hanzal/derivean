@@ -1,6 +1,16 @@
+/** @format */
+
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { navigateOnCursor, navigateOnFilter, navigateOnFulltext, navigateOnSelection, Tx, withListCount, withSourceSearchSchema } from "@use-pico/client";
+import {
+	navigateOnCursor,
+	navigateOnFilter,
+	navigateOnFulltext,
+	navigateOnSelection,
+	Tx,
+	withListCount,
+	withSourceSearchSchema,
+} from "@use-pico/client";
 import { z } from "zod";
 import { TagTable } from "~/app/root/TagTable";
 import { TagSchema } from "~/app/schema/TagSchema";
@@ -8,11 +18,7 @@ import { TagSchema } from "~/app/schema/TagSchema";
 export const Route = createFileRoute("/$locale/root/tag/list")({
 	validateSearch: zodValidator(withSourceSearchSchema(TagSchema)),
 	loaderDeps({ search: { filter, cursor, sort } }) {
-		return {
-			filter,
-			cursor,
-			sort,
-		};
+		return { filter, cursor, sort };
 	},
 	async loader({ context: { queryClient, kysely }, deps: { filter, cursor } }) {
 		return queryClient.ensureQueryData({
@@ -20,7 +26,10 @@ export const Route = createFileRoute("/$locale/root/tag/list")({
 			async queryFn() {
 				return kysely.transaction().execute(async (tx) => {
 					return withListCount({
-						select: tx.selectFrom("Tag as t").select(["t.id", "t.code", "t.label", "t.group", "t.sort"]).orderBy("t.sort", "desc"),
+						select: tx
+							.selectFrom("Tag as t")
+							.select(["t.id", "t.code", "t.label", "t.group", "t.sort"])
+							.orderBy("t.sort", "desc"),
 						output: z.object({
 							id: z.string().min(1),
 							code: z.string().min(1),
@@ -45,17 +54,11 @@ export const Route = createFileRoute("/$locale/root/tag/list")({
 		return (
 			<div className={tv.base()}>
 				<TagTable
-					table={{
-						data,
-						filter: {
-							value: filter,
-							set: navigateOnFilter(navigate),
-						},
-						selection: {
-							type: "multi",
-							value: selection,
-							set: navigateOnSelection(navigate),
-						},
+					data={data}
+					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
+					selection={{
+						type: "multi",
+						state: { value: selection, set: navigateOnSelection(navigate) },
 					}}
 					fulltext={{
 						value: filter?.fulltext,

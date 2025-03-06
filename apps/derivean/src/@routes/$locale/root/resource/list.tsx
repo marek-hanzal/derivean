@@ -1,6 +1,16 @@
+/** @format */
+
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { navigateOnCursor, navigateOnFilter, navigateOnFulltext, navigateOnSelection, Tx, withListCount, withSourceSearchSchema } from "@use-pico/client";
+import {
+	navigateOnCursor,
+	navigateOnFilter,
+	navigateOnFulltext,
+	navigateOnSelection,
+	Tx,
+	withListCount,
+	withSourceSearchSchema,
+} from "@use-pico/client";
 import { withIntSchema, withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import { z } from "zod";
@@ -11,11 +21,7 @@ import { TagSchema } from "~/app/schema/TagSchema";
 export const Route = createFileRoute("/$locale/root/resource/list")({
 	validateSearch: zodValidator(withSourceSearchSchema(ResourceSchema)),
 	loaderDeps({ search: { filter, cursor, sort } }) {
-		return {
-			filter,
-			cursor,
-			sort,
-		};
+		return { filter, cursor, sort };
 	},
 	async loader({ context: { queryClient, kysely }, deps: { filter, cursor } }) {
 		return queryClient.ensureQueryData({
@@ -41,7 +47,14 @@ export const Route = createFileRoute("/$locale/root/resource/list")({
                                             'label', ${eb.ref("t.label")}
                                         ))`.as("tags");
 										})
-										.where("t.id", "in", eb.selectFrom("Resource_Tag as rt").select("rt.tagId").whereRef("rt.resourceId", "=", "r.id"))
+										.where(
+											"t.id",
+											"in",
+											eb
+												.selectFrom("Resource_Tag as rt")
+												.select("rt.tagId")
+												.whereRef("rt.resourceId", "=", "r.id"),
+										)
 										.as("tags"),
 								(eb) => {
 									return eb
@@ -84,7 +97,11 @@ export const Route = createFileRoute("/$locale/root/resource/list")({
 												.innerJoin("Tag as t", "t.id", "rt.tagId")
 												.select("rt.resourceId")
 												.where((eb) => {
-													return eb.or([eb("t.code", "like", fulltext), eb("t.label", "like", fulltext), eb("t.group", "like", fulltext)]);
+													return eb.or([
+														eb("t.code", "like", fulltext),
+														eb("t.label", "like", fulltext),
+														eb("t.group", "like", fulltext),
+													]);
 												}),
 										),
 									]);
@@ -119,17 +136,11 @@ export const Route = createFileRoute("/$locale/root/resource/list")({
 		return (
 			<div className={tv.base()}>
 				<ResourceTable
-					table={{
-						data,
-						filter: {
-							value: filter,
-							set: navigateOnFilter(navigate),
-						},
-						selection: {
-							type: "multi",
-							value: selection,
-							set: navigateOnSelection(navigate),
-						},
+					data={data}
+					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
+					selection={{
+						type: "multi",
+						state: { value: selection, set: navigateOnSelection(navigate) },
 					}}
 					fulltext={{
 						value: filter?.fulltext,

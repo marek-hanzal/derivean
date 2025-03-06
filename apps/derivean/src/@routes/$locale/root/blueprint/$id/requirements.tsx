@@ -1,6 +1,16 @@
+/** @format */
+
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { navigateOnCursor, navigateOnFilter, navigateOnFulltext, navigateOnSelection, Tx, withListCount, withSourceSearchSchema } from "@use-pico/client";
+import {
+	navigateOnCursor,
+	navigateOnFilter,
+	navigateOnFulltext,
+	navigateOnSelection,
+	Tx,
+	withListCount,
+	withSourceSearchSchema,
+} from "@use-pico/client";
 import { withBoolSchema } from "@use-pico/common";
 import { z } from "zod";
 import { BlueprintRequirementTable } from "~/app/root/BlueprintRequirementTable";
@@ -9,11 +19,7 @@ import { BlueprintRequirementSchema } from "~/app/schema/BlueprintRequirementSch
 export const Route = createFileRoute("/$locale/root/blueprint/$id/requirements")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintRequirementSchema)),
 	loaderDeps({ search: { filter, cursor, sort } }) {
-		return {
-			filter,
-			cursor,
-			sort,
-		};
+		return { filter, cursor, sort };
 	},
 	async loader({ context: { queryClient, kysely }, deps: { filter, cursor }, params: { id } }) {
 		return queryClient.ensureQueryData({
@@ -69,17 +75,11 @@ export const Route = createFileRoute("/$locale/root/blueprint/$id/requirements")
 			<div className={tv.base()}>
 				<BlueprintRequirementTable
 					blueprintId={id}
-					table={{
-						data,
-						filter: {
-							value: filter,
-							set: navigateOnFilter(navigate),
-						},
-						selection: {
-							type: "multi",
-							value: selection,
-							set: navigateOnSelection(navigate),
-						},
+					data={data}
+					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
+					selection={{
+						type: "multi",
+						state: { value: selection, set: navigateOnSelection(navigate) },
 					}}
 					fulltext={{
 						value: filter?.fulltext,

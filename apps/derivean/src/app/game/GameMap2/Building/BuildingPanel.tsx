@@ -20,7 +20,6 @@ export namespace BuildingPanel {
 	export interface Building {
 		id: string;
 		name: string;
-		land: string;
 		blueprintId: string;
 	}
 
@@ -44,7 +43,6 @@ export const BuildingPanel: FC<BuildingPanel.Props> = ({ building }) => {
 					{building.name}
 				</LinkTo>
 			}
-			textSubTitle={building.land}
 		>
 			<LinkTo
 				icon={ProductionIcon}
@@ -111,7 +109,15 @@ export const BuildingPanel: FC<BuildingPanel.Props> = ({ building }) => {
 
 			<div className={"border-b border-slate-300"} />
 
-			<div className={tvc(["w-full", "h-96", "bg-contain", "p-2", `bg-${building.blueprintId}`])} />
+			<div
+				className={tvc([
+					"w-full",
+					"h-96",
+					"bg-contain",
+					"p-2",
+					`bg-${building.blueprintId}`,
+				])}
+			/>
 		</Panel>
 	);
 };

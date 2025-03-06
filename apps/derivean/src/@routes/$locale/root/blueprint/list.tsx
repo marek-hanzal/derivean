@@ -1,7 +1,17 @@
+/** @format */
+
 import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { navigateOnCursor, navigateOnFilter, navigateOnFulltext, navigateOnSelection, Tx, withListCount, withSourceSearchSchema } from "@use-pico/client";
-import { Kysely, withJsonOutputArraySchema } from "@use-pico/common";
+import {
+	navigateOnCursor,
+	navigateOnFilter,
+	navigateOnFulltext,
+	navigateOnSelection,
+	Tx,
+	withListCount,
+	withSourceSearchSchema,
+} from "@use-pico/client";
+import { withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import { z } from "zod";
 import { BlueprintTable } from "~/app/root/BlueprintTable";
@@ -13,11 +23,7 @@ import { withBlueprintGraph } from "~/app/utils/withBlueprintGraph";
 export const Route = createFileRoute("/$locale/root/blueprint/list")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintSchema)),
 	loaderDeps({ search: { filter, cursor, sort } }) {
-		return {
-			filter,
-			cursor,
-			sort,
-		};
+		return { filter, cursor, sort };
 	},
 	async loader({ context: { queryClient, kysely }, deps: { filter, cursor } }) {
 		const data = await queryClient.ensureQueryData({
@@ -34,18 +40,6 @@ export const Route = createFileRoute("/$locale/root/blueprint/list")({
 								"bl.sort",
 								"bl.cycles",
 								"bl.limit",
-								(eb) =>
-									eb
-										.selectFrom("Blueprint_Region as br")
-										.innerJoin("Region as r", "r.id", "br.regionId")
-										.select((eb) => {
-											return Kysely.jsonGroupArray({
-												id: eb.ref("r.id"),
-												name: eb.ref("r.name"),
-											}).as("regions");
-										})
-										.whereRef("br.blueprintId", "=", "bl.id")
-										.as("regions"),
 								(eb) =>
 									eb
 										.selectFrom("Blueprint_Requirement as br")
@@ -128,24 +122,14 @@ export const Route = createFileRoute("/$locale/root/blueprint/list")({
 							cycles: z.number().nonnegative(),
 							sort: z.number().nonnegative(),
 							limit: z.number().nonnegative(),
-							regions: withJsonOutputArraySchema(
-								z.object({
-									id: z.string().min(1),
-									name: z.string().min(1),
-								}),
-							),
 							requirements: withJsonOutputArraySchema(
 								BlueprintRequirementSchema.entity.merge(
-									z.object({
-										name: z.string().min(1),
-									}),
+									z.object({ name: z.string().min(1) }),
 								),
 							),
 							dependencies: withJsonOutputArraySchema(
 								BlueprintDependencySchema.entity.merge(
-									z.object({
-										name: z.string().min(1),
-									}),
+									z.object({ name: z.string().min(1) }),
 								),
 							),
 						}),
@@ -177,17 +161,11 @@ export const Route = createFileRoute("/$locale/root/blueprint/list")({
 			<div className={tv.base()}>
 				<BlueprintTable
 					dependencies={dependencies}
-					table={{
-						data,
-						filter: {
-							value: filter,
-							set: navigateOnFilter(navigate),
-						},
-						selection: {
-							type: "multi",
-							value: selection,
-							set: navigateOnSelection(navigate),
-						},
+					data={data}
+					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
+					selection={{
+						type: "multi",
+						state: { value: selection, set: navigateOnSelection(navigate) },
 					}}
 					fulltext={{
 						value: filter?.fulltext,

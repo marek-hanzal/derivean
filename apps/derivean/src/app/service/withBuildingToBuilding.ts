@@ -13,7 +13,11 @@ export namespace withBuildingToBuilding {
 	}
 }
 
-export const withBuildingToBuilding = async ({ tx, userId, mapId }: withBuildingToBuilding.Props) => {
+export const withBuildingToBuilding = async ({
+	tx,
+	userId,
+	mapId,
+}: withBuildingToBuilding.Props) => {
 	console.info("\t=== Building To Building");
 
 	await tx.deleteFrom("Building_To_Building as btb").where("btb.userId", "=", userId).execute();
@@ -26,7 +30,6 @@ export const withBuildingToBuilding = async ({ tx, userId, mapId }: withBuilding
 		await tx
 			.selectFrom("Building as b")
 			.innerJoin("Blueprint as bl", "bl.id", "b.blueprintId")
-			.innerJoin("Land as l", "l.id", "b.landId")
 			.select(["b.id", "bl.name"])
 			.where(
 				"b.id",

@@ -1,4 +1,6 @@
-import { Card, More, Tx } from "@use-pico/client";
+/** @format */
+
+import { Card, Tx } from "@use-pico/client";
 import { toHumanNumber, tvc, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
 import { BlueprintDependenciesInline } from "~/app/root/BlueprintDependenciesInline";
@@ -12,16 +14,8 @@ export namespace BlueprintCard {
 	export interface Data extends IdentitySchema.Type {
 		name: string;
 		cycles: number;
-		regions: {
-			id: string;
-			name: string;
-		}[];
-		requirements: (BlueprintRequirementSchema["~entity"] & {
-			name: string;
-		})[];
-		dependencies: (BlueprintDependencySchema["~entity"] & {
-			name: string;
-		})[];
+		requirements: (BlueprintRequirementSchema["~entity"] & { name: string })[];
+		dependencies: (BlueprintDependencySchema["~entity"] & { name: string })[];
 	}
 
 	export interface Props extends Card.PropsEx<Data> {
@@ -45,20 +39,6 @@ export const BlueprintCard: FC<BlueprintCard.Props> = ({ dependencies, ...props 
 					label: <Tx label={"Construction cycles (label)"} />,
 					render({ entity }) {
 						return toHumanNumber({ number: entity.cycles });
-					},
-				},
-				{
-					id: "regions",
-					label: <Tx label={"Regions (label)"} />,
-					render({ entity }) {
-						return (
-							<More
-								items={entity.regions}
-								css={{ base: ["flex", "flex-row", "gap-2"] }}
-								textEmpty={<Tx label={"No regions (label)"} />}
-								render={({ entity }) => <div className={tvc(["p-2", "border", "border-blue-300", "bg-blue-50", "rounded-sm"])}>{entity.name}</div>}
-							/>
-						);
 					},
 				},
 				{
@@ -100,7 +80,20 @@ export const BlueprintCard: FC<BlueprintCard.Props> = ({ dependencies, ...props 
 				{
 					id: "preview",
 					render({ entity }) {
-						return <div className={tvc(["mx-auto", "border-2", "border-purple-400", "rounded-md", "w-[256px]", "h-[256px]", "bg-contain", `bg-${entity.id}`])} />;
+						return (
+							<div
+								className={tvc([
+									"mx-auto",
+									"border-2",
+									"border-purple-400",
+									"rounded-md",
+									"w-[256px]",
+									"h-[256px]",
+									"bg-contain",
+									`bg-${entity.id}`,
+								])}
+							/>
+						);
 					},
 				},
 			]}

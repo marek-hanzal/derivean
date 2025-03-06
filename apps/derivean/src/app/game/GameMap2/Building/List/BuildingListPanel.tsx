@@ -11,8 +11,6 @@ export namespace BuildingListPanel {
 	export interface Building {
 		id: string;
 		name: string;
-		landId: string;
-		land: string;
 	}
 
 	export interface Props extends Panel.PropsEx {

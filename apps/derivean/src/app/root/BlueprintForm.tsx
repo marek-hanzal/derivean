@@ -1,10 +1,11 @@
+/** @format */
+
+import { BlueprintIcon } from "@derivean/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
-import { Controller, useForm } from "react-hook-form";
-import { RegionPopupMultiSelect } from "~/app/root/RegionPopupMultiSelect";
+import { useForm } from "react-hook-form";
 import { BlueprintSchema } from "~/app/schema/BlueprintSchema";
-import { BlueprintIcon } from "../../../../../packages/@derivean/ui/src/icon/BlueprintIcon";
 
 export namespace BlueprintForm {
 	export interface Props extends Form.Props<BlueprintSchema["shape"]> {
@@ -12,16 +13,16 @@ export namespace BlueprintForm {
 	}
 }
 
-export const BlueprintForm: FC<BlueprintForm.Props> = ({ mutation, defaultValues, variant, tva = FormCss, css }) => {
+export const BlueprintForm: FC<BlueprintForm.Props> = ({
+	mutation,
+	defaultValues,
+	variant,
+	tva = FormCss,
+	css,
+}) => {
 	const form = useForm<BlueprintSchema["~shape"]>({
 		resolver: zodResolver(BlueprintSchema.shape),
-		defaultValues: {
-			cycles: 1,
-			sort: 0,
-			limit: 1,
-			regionIds: [],
-			...defaultValues,
-		},
+		defaultValues: { cycles: 1, sort: 0, limit: 1, ...defaultValues },
 	});
 
 	const tv = tva({
@@ -34,10 +35,8 @@ export const BlueprintForm: FC<BlueprintForm.Props> = ({ mutation, defaultValues
 	return (
 		<form
 			className={tv.base()}
-			onSubmit={onSubmit({
-				form,
-				mutation,
-			})}>
+			onSubmit={onSubmit({ form, mutation })}
+		>
 			<FormError
 				variant={{ highlight: true }}
 				error={form.formState.errors.root}
@@ -47,7 +46,8 @@ export const BlueprintForm: FC<BlueprintForm.Props> = ({ mutation, defaultValues
 				formState={form.formState}
 				name={"name"}
 				label={<Tx label={"Building name (label)"} />}
-				required>
+				required
+			>
 				<input
 					type={"text"}
 					className={tv.input()}
@@ -60,7 +60,8 @@ export const BlueprintForm: FC<BlueprintForm.Props> = ({ mutation, defaultValues
 				name={"cycles"}
 				label={<Tx label={"Construction cycles (label)"} />}
 				hint={<Tx label={"Amount of cycles to build this building (hint)"} />}
-				required>
+				required
+			>
 				<input
 					type={"number"}
 					className={tv.input()}
@@ -74,7 +75,8 @@ export const BlueprintForm: FC<BlueprintForm.Props> = ({ mutation, defaultValues
 				name={"limit"}
 				label={<Tx label={"Building limit (label)"} />}
 				hint={<Tx label={"Maximum number of building a player can build (hint)"} />}
-				required>
+				required
+			>
 				<input
 					type={"number"}
 					className={tv.input()}
@@ -88,7 +90,8 @@ export const BlueprintForm: FC<BlueprintForm.Props> = ({ mutation, defaultValues
 				name={"sort"}
 				label={<Tx label={"Blueprint sort (label)"} />}
 				hint={<Tx label={"Sort blueprints by this number (hint)"} />}
-				required>
+				required
+			>
 				<input
 					type={"number"}
 					className={tv.input()}
@@ -99,22 +102,10 @@ export const BlueprintForm: FC<BlueprintForm.Props> = ({ mutation, defaultValues
 
 			<FormInput
 				formState={form.formState}
-				name={"regionIds"}
-				label={<Tx label={"Regions (label)"} />}>
-				<Controller
-					control={form.control}
-					name={"regionIds"}
-					render={({ field: { ref: _, ...field } }) => {
-						return <RegionPopupMultiSelect {...field} />;
-					}}
-				/>
-			</FormInput>
-
-			<FormInput
-				formState={form.formState}
 				name={"image"}
 				label={<Tx label={"Building image (label)"} />}
-				hint={<Tx label={"Building image (hint)"} />}>
+				hint={<Tx label={"Building image (hint)"} />}
+			>
 				<input
 					type={"file"}
 					className={tv.input()}
@@ -125,7 +116,8 @@ export const BlueprintForm: FC<BlueprintForm.Props> = ({ mutation, defaultValues
 			<div className={"flex flex-row justify-between gap-8"}>
 				<Button
 					iconEnabled={BlueprintIcon}
-					type={"submit"}>
+					type={"submit"}
+				>
 					<Tx label={"Save (submit)"} />
 				</Button>
 			</div>

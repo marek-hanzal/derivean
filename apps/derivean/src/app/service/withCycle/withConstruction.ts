@@ -20,7 +20,7 @@ export const withConstruction = async ({ tx, userId, mapId }: withConstruction.P
 				.selectFrom("Building as b")
 				.innerJoin("Construction as c", "c.id", "b.constructionId")
 				.innerJoin("Blueprint as bl", "bl.id", "b.blueprintId")
-				.innerJoin("Land as l", "l.id", "b.landId")
+				.innerJoin("Plot as p", "p.id", "b.plotId")
 				.select([
 					"b.id as buildingId",
 					"c.id",
@@ -48,13 +48,27 @@ export const withConstruction = async ({ tx, userId, mapId }: withConstruction.P
 																"i.id",
 																"in",
 																eb
-																	.selectFrom("Building_Inventory")
+																	.selectFrom(
+																		"Building_Inventory",
+																	)
 																	.select("inventoryId")
-																	.whereRef("buildingId", "=", "b.id"),
+																	.whereRef(
+																		"buildingId",
+																		"=",
+																		"b.id",
+																	),
 															)
 															.where("i.type", "=", "construction")
-															.whereRef("i.resourceId", "=", "br.resourceId")
-															.whereRef("i.amount", ">=", "br.amount"),
+															.whereRef(
+																"i.resourceId",
+																"=",
+																"br.resourceId",
+															)
+															.whereRef(
+																"i.amount",
+																">=",
+																"br.amount",
+															),
 													),
 												),
 											),
@@ -68,7 +82,7 @@ export const withConstruction = async ({ tx, userId, mapId }: withConstruction.P
 					},
 				])
 				.where("b.userId", "=", userId)
-				.where("l.mapId", "=", mapId)
+				.where("p.mapId", "=", mapId)
 				.where("c.plan", "=", false)
 				.as("building"),
 		)
@@ -94,7 +108,10 @@ export const withConstruction = async ({ tx, userId, mapId }: withConstruction.P
 
 			for await (const { resourceId } of production) {
 				try {
-					await tx.insertInto("Supply").values({ id: genId(), mapId, userId, buildingId, resourceId }).execute();
+					await tx
+						.insertInto("Supply")
+						.values({ id: genId(), mapId, userId, buildingId, resourceId })
+						.execute();
 				} catch (_) {
 					//
 				}

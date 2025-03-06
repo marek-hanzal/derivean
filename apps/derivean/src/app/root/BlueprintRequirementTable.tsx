@@ -12,7 +12,6 @@ import {
 	TrashIcon,
 	Tx,
 	useInvalidator,
-	useTable,
 	withColumn,
 	withEqualFilter,
 } from "@use-pico/client";
@@ -73,7 +72,6 @@ export namespace BlueprintRequirementTable {
 
 export const BlueprintRequirementTable: FC<BlueprintRequirementTable.Props> = ({
 	blueprintId,
-	table,
 	...props
 }) => {
 	const invalidator = useInvalidator([
@@ -85,7 +83,7 @@ export const BlueprintRequirementTable: FC<BlueprintRequirementTable.Props> = ({
 
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			action={{
 				table() {
 					return (

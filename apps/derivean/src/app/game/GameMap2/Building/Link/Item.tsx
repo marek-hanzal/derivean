@@ -1,6 +1,6 @@
 /** @format */
 
-import { BuildingIcon, LandIcon } from "@derivean/ui";
+import { BuildingIcon } from "@derivean/ui";
 import { useParams } from "@tanstack/react-router";
 import { LinkTo } from "@use-pico/client";
 import { tvc } from "@use-pico/common";
@@ -9,12 +9,11 @@ import type { LinkPanel } from "~/app/game/GameMap2/Building/Link/LinkPanel";
 
 export namespace Item {
 	export interface Props {
-		building: LinkPanel.Building;
 		link: LinkPanel.Link;
 	}
 }
 
-export const Item: FC<Item.Props> = ({ building, link }) => {
+export const Item: FC<Item.Props> = ({ link }) => {
 	const { mapId, locale } = useParams({ from: "/$locale/map/$mapId" });
 
 	return (
@@ -39,15 +38,6 @@ export const Item: FC<Item.Props> = ({ building, link }) => {
 					search={{ zoomToId: link.id }}
 				>
 					{link.name}
-				</LinkTo>
-
-				<LinkTo
-					icon={LandIcon}
-					to={"/$locale/map/$mapId/building/$buildingId/link"}
-					params={{ locale, mapId, buildingId: building.id }}
-					search={{ zoomToId: link.landId }}
-				>
-					{link.land}
 				</LinkTo>
 			</div>
 		</div>

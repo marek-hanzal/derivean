@@ -10,7 +10,6 @@ export const BlueprintSchema = withBlueprintSchema({
 		cycles: withIntSchema(),
 		sort: withIntSchema(),
 		limit: withIntSchema(),
-		regionIds: z.array(z.string()).optional(),
 		image: z
 			.instanceof(FileList, { message: "You must upload a file." })
 			.transform((files) => files[0])

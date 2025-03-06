@@ -14,7 +14,6 @@ import {
 	TrashIcon,
 	Tx,
 	useInvalidator,
-	useTable,
 	withColumn,
 	withToastPromiseTx,
 } from "@use-pico/client";
@@ -62,12 +61,15 @@ export namespace BlueprintConflictTable {
 	}
 }
 
-export const BlueprintConflictTable: FC<BlueprintConflictTable.Props> = ({ blueprintId, table, ...props }) => {
+export const BlueprintConflictTable: FC<BlueprintConflictTable.Props> = ({
+	blueprintId,
+	...props
+}) => {
 	const invalidator = useInvalidator([["Blueprint_Conflict"], ["Blueprint"]]);
 
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			action={{
 				table() {
 					return (
@@ -86,7 +88,11 @@ export const BlueprintConflictTable: FC<BlueprintConflictTable.Props> = ({ bluep
 														kysely.transaction().execute(async (tx) => {
 															const entity = tx
 																.insertInto("Blueprint_Conflict")
-																.values({ id: genId(), ...values, blueprintId })
+																.values({
+																	id: genId(),
+																	...values,
+																	blueprintId,
+																})
 																.returningAll()
 																.executeTakeFirstOrThrow();
 
@@ -94,7 +100,9 @@ export const BlueprintConflictTable: FC<BlueprintConflictTable.Props> = ({ bluep
 
 															return entity;
 														}),
-														withToastPromiseTx("Create blueprint conflict"),
+														withToastPromiseTx(
+															"Create blueprint conflict",
+														),
 													);
 												},
 												async onSuccess() {
@@ -132,7 +140,9 @@ export const BlueprintConflictTable: FC<BlueprintConflictTable.Props> = ({ bluep
 																.returningAll()
 																.executeTakeFirstOrThrow();
 														}),
-														withToastPromiseTx("Update blueprint conflict"),
+														withToastPromiseTx(
+															"Update blueprint conflict",
+														),
 													);
 												},
 												async onSuccess() {
@@ -149,15 +159,22 @@ export const BlueprintConflictTable: FC<BlueprintConflictTable.Props> = ({ bluep
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete blueprint conflict (modal)"} />}
-								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+								css={{
+									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+								}}
 							>
 								<DeleteControl
 									callback={async () => {
 										return kysely.transaction().execute(async (tx) => {
-											return tx.deleteFrom("Blueprint_Conflict").where("id", "=", data.id).execute();
+											return tx
+												.deleteFrom("Blueprint_Conflict")
+												.where("id", "=", data.id)
+												.execute();
 										});
 									}}
-									textContent={<Tx label={"Delete blueprint conflict (content)"} />}
+									textContent={
+										<Tx label={"Delete blueprint conflict (content)"} />
+									}
 									textToast={"Delete blueprint conflict"}
 									invalidator={invalidator}
 								/>

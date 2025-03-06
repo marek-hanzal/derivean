@@ -1,6 +1,16 @@
+/** @format */
+
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { navigateOnCursor, navigateOnFilter, navigateOnFulltext, navigateOnSelection, Tx, withListCount, withSourceSearchSchema } from "@use-pico/client";
+import {
+	navigateOnCursor,
+	navigateOnFilter,
+	navigateOnFulltext,
+	navigateOnSelection,
+	Tx,
+	withListCount,
+	withSourceSearchSchema,
+} from "@use-pico/client";
 import { withBoolSchema } from "@use-pico/common";
 import { z } from "zod";
 import { BlueprintProductionRequirementTable } from "~/app/root/BlueprintProductionRequirementTable";
@@ -9,11 +19,7 @@ import { BlueprintProductionRequirementSchema } from "~/app/schema/BlueprintProd
 export const Route = createFileRoute("/$locale/root/blueprint/production/$id/requirements")({
 	validateSearch: zodValidator(withSourceSearchSchema(BlueprintProductionRequirementSchema)),
 	loaderDeps({ search: { filter, cursor, sort } }) {
-		return {
-			filter,
-			cursor,
-			sort,
-		};
+		return { filter, cursor, sort };
 	},
 	async loader({ context: { queryClient, kysely }, deps: { filter, cursor }, params: { id } }) {
 		return queryClient.ensureQueryData({
@@ -24,7 +30,13 @@ export const Route = createFileRoute("/$locale/root/blueprint/production/$id/req
 						select: tx
 							.selectFrom("Blueprint_Production_Requirement as bpr")
 							.innerJoin("Resource as r", "r.id", "bpr.resourceId")
-							.select(["bpr.id", "r.name", "bpr.resourceId", "bpr.amount", "bpr.passive"])
+							.select([
+								"bpr.id",
+								"r.name",
+								"bpr.resourceId",
+								"bpr.amount",
+								"bpr.passive",
+							])
 							.where("bpr.blueprintProductionId", "=", id)
 							.orderBy("r.name", "asc"),
 						query({ select, where }) {
@@ -67,17 +79,11 @@ export const Route = createFileRoute("/$locale/root/blueprint/production/$id/req
 			<>
 				<BlueprintProductionRequirementTable
 					blueprintProductionId={id}
-					table={{
-						data,
-						filter: {
-							value: filter,
-							set: navigateOnFilter(navigate),
-						},
-						selection: {
-							type: "multi",
-							value: selection,
-							set: navigateOnSelection(navigate),
-						},
+					data={data}
+					filter={{ state: { value: filter, set: navigateOnFilter(navigate) } }}
+					selection={{
+						type: "multi",
+						state: { value: selection, set: navigateOnSelection(navigate) },
 					}}
 					fulltext={{
 						value: filter?.fulltext,

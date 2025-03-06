@@ -1,6 +1,7 @@
 /** @format */
 
 import { transaction } from "@derivean/db";
+import { ProductionIcon, ResourceIcon } from "@derivean/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import {
@@ -13,7 +14,6 @@ import {
 	TrashIcon,
 	Tx,
 	useInvalidator,
-	useTable,
 	withColumn,
 } from "@use-pico/client";
 import { genId, toHumanNumber, tvc, type IdentitySchema } from "@use-pico/common";
@@ -24,8 +24,6 @@ import { MoveProductionToForm } from "~/app/root/MoveProductionToForm";
 import type { BlueprintProductionDependencySchema } from "~/app/schema/BlueprintProductionDependencySchema";
 import type { BlueprintProductionRequirementSchema } from "~/app/schema/BlueprintProductionRequirementSchema";
 import type { BlueprintProductionResourceSchema } from "~/app/schema/BlueprintProductionResourceSchema";
-import { ProductionIcon } from "../../../../../packages/@derivean/ui/src/icon/ProductionIcon";
-import { ResourceIcon } from "../../../../../packages/@derivean/ui/src/icon/ResourceIcon";
 
 export namespace BlueprintProductionTable {
 	export interface Data extends IdentitySchema.Type {
@@ -124,7 +122,9 @@ const columns = [
 								])}
 							>
 								<div>{entity.name}</div>
-								<div className={"text-md font-bold text-slate-500"}>x{toHumanNumber({ number: entity.amount })}</div>
+								<div className={"text-md font-bold text-slate-500"}>
+									x{toHumanNumber({ number: entity.amount })}
+								</div>
 							</div>
 						);
 					}}
@@ -175,7 +175,10 @@ export namespace BlueprintProductionTable {
 	}
 }
 
-export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({ blueprintId, table, ...props }) => {
+export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({
+	blueprintId,
+	...props
+}) => {
 	const invalidator = useInvalidator([
 		["Blueprint"],
 		["Blueprint_Production"],
@@ -185,7 +188,7 @@ export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({ b
 
 	return (
 		<Table
-			table={useTable({ ...table, columns })}
+			columns={columns}
 			action={{
 				table() {
 					return (
@@ -203,7 +206,11 @@ export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({ b
 													return transaction(async (tx) => {
 														const entity = await tx
 															.insertInto("Blueprint_Production")
-															.values({ id: genId(), ...values, blueprintId })
+															.values({
+																id: genId(),
+																...values,
+																blueprintId,
+															})
 															.returningAll()
 															.executeTakeFirstOrThrow();
 
@@ -244,7 +251,7 @@ export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({ b
 											});
 										},
 										async onSuccess() {
-											await invalidator();
+											await invalidator({});
 										},
 									})}
 								/>
@@ -263,7 +270,9 @@ export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({ b
 													return transaction(async (tx) => {
 														await tx
 															.updateTable("Blueprint_Production")
-															.set({ blueprintId: values.blueprintId })
+															.set({
+																blueprintId: values.blueprintId,
+															})
 															.where("id", "=", data.id)
 															.execute();
 													});
@@ -282,15 +291,22 @@ export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({ b
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
 								textTitle={<Tx label={"Delete blueprint production (modal)"} />}
-								css={{ base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"] }}
+								css={{
+									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+								}}
 							>
 								<DeleteControl
 									callback={async () => {
 										return transaction(async (tx) => {
-											return tx.deleteFrom("Blueprint_Production").where("id", "=", data.id).execute();
+											return tx
+												.deleteFrom("Blueprint_Production")
+												.where("id", "=", data.id)
+												.execute();
 										});
 									}}
-									textContent={<Tx label={"Delete blueprint production (content)"} />}
+									textContent={
+										<Tx label={"Delete blueprint production (content)"} />
+									}
 									textToast={"Delete blueprint production"}
 									invalidator={invalidator}
 								/>
