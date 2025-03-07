@@ -12,6 +12,11 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
+    #
+    # Install base packages needed to run library build (Rust stuff)
+    #
+    # Also ensure lib (Rust) stuff is compiled
+    #
     install:
         runs-on: ubuntu-22.04
         steps:
@@ -19,6 +24,11 @@ jobs:
             - uses: oven-sh/setup-bun@v2
               with:
                   bun-version: latest
+            - name: Setup Rust toolchain
+              uses: actions-rs/toolchain@v1
+              with:
+                  toolchain: stable
+                  override: true
             - name: cache
               uses: actions/cache@v4
               with:
@@ -29,6 +39,11 @@ jobs:
 
             - name: install
               run: |
+                  # Initial dependency installation
+                  bun install
+                  # Compile Rust stuff
+                  bun run lib
+                  # Ensure Rust libraries are installed
                   bun install
 
     typecheck:
