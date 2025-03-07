@@ -1,7 +1,7 @@
-mod engine;
-mod noise;
-mod utils;
+mod derivean;
 
+pub use derivean::Engine;
+pub use derivean::Tile;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(start)]

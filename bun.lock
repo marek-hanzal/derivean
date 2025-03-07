@@ -20,7 +20,6 @@
         "@derivean/root-ui": "workspace:*",
         "@derivean/sdk": "workspace:*",
         "@derivean/terrain": "workspace:*",
-        "@derivean/terrain-wasm": "workspace:*",
         "@derivean/ui": "workspace:*",
         "@derivean/utils": "workspace:*",
         "@hookform/resolvers": "4.1.3",
@@ -54,7 +53,7 @@
         "zod": "3.24.2",
       },
       "devDependencies": {
-        "@derivean/terrain-wasm-build": "workspace:*",
+        "@derivean/engine-build": "workspace:*",
         "@iconify/json": "2.2.314",
         "@iconify/tailwind": "1.2.0",
         "@modyfi/vite-plugin-yaml": "1.1.1",
@@ -76,9 +75,12 @@
         "vite-plugin-wasm": "3.4.1",
         "vite-tsconfig-paths": "5.1.4",
       },
+      "optionalDependencies": {
+        "@derivean/engine": "workspace:*",
+      },
     },
-    "lib/terrain-wasm": {
-      "name": "@derivean/terrain-wasm-build",
+    "lib/engine": {
+      "name": "@derivean/engine-build",
     },
     "packages/@derivean/db": {
       "name": "@derivean/db",
@@ -94,6 +96,10 @@
         "eslint": "9.21.0",
         "typescript": "5.8.2",
       },
+    },
+    "packages/@derivean/engine": {
+      "name": "@derivean/engine",
+      "version": "0.5.0",
     },
     "packages/@derivean/game-ui": {
       "name": "@derivean/game-ui",
@@ -173,10 +179,6 @@
         "eslint": "9.21.0",
         "typescript": "5.8.2",
       },
-    },
-    "packages/@derivean/terrain-wasm": {
-      "name": "@derivean/terrain-wasm",
-      "version": "0.5.0",
     },
     "packages/@derivean/ui": {
       "name": "@derivean/ui",
@@ -271,6 +273,10 @@
 
     "@derivean/db": ["@derivean/db@workspace:packages/@derivean/db"],
 
+    "@derivean/engine": ["@derivean/engine@workspace:packages/@derivean/engine"],
+
+    "@derivean/engine-build": ["@derivean/engine-build@workspace:lib/engine"],
+
     "@derivean/game": ["@derivean/game@workspace:apps/derivean"],
 
     "@derivean/game-ui": ["@derivean/game-ui@workspace:packages/@derivean/game-ui"],
@@ -282,10 +288,6 @@
     "@derivean/service": ["@derivean/service@workspace:packages/@derivean/service"],
 
     "@derivean/terrain": ["@derivean/terrain@workspace:packages/@derivean/terrain"],
-
-    "@derivean/terrain-wasm": ["@derivean/terrain-wasm@workspace:packages/@derivean/terrain-wasm"],
-
-    "@derivean/terrain-wasm-build": ["@derivean/terrain-wasm-build@workspace:lib/terrain-wasm"],
 
     "@derivean/ui": ["@derivean/ui@workspace:packages/@derivean/ui"],
 

@@ -27,7 +27,7 @@ export default defineConfig({
 		wasm(),
 		tailwindcss(),
 	],
-	worker: { format: "es", plugins: () => [paths()] },
+	worker: { format: "es", plugins: () => [paths(), wasm()] },
 	envPrefix: ["VITE_", "TAURI_ENV_*"],
 	server: {
 		strictPort: true,
@@ -38,12 +38,6 @@ export default defineConfig({
 			"Cross-Origin-Embedder-Policy": "require-corp",
 		},
 	},
-	build: {
-		target: "esnext",
-		// target:
-		// 	process.env.TAURI_ENV_PLATFORM === "windows" ? "chrome105" : "safari13",
-		// minify: process.env.TAURI_ENV_DEBUG ? false : "esbuild",
-		// sourcemap: Boolean(process.env.TAURI_ENV_DEBUG),
-	},
-	optimizeDeps: { exclude: ["sqlocal", "@derivean/noise-wasm", "@derivean/noise-wasm-build"] },
+	build: { target: "esnext" },
+	optimizeDeps: { exclude: ["sqlocal"] },
 });

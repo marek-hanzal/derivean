@@ -1,0 +1,6 @@
+{
+	"name": "@derivean/engine-build",
+	"scripts": {
+		"lib": "wasm-pack build --release --target bundler --scope derivean --out-dir ../../packages/@derivean/engine"
+	}
+}

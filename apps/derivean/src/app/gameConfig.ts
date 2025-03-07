@@ -1,7 +1,6 @@
 /** @format */
 
 import { ComplexBiome } from "@derivean/terrain";
-import { TerrainGenerator } from "@derivean/terrain-wasm";
 import { type GameConfig } from "@derivean/utils";
 
 export const gameConfig: GameConfig = {
@@ -11,18 +10,6 @@ export const gameConfig: GameConfig = {
 	plotCount: 256,
 	chunkSize: 16 * 256,
 	chunkLimit: 2048,
-	source({ seed }) {
-		const terrain = new TerrainGenerator(seed);
-
-		return {
-			coord([x, z]) {
-				return terrain.coord(x, z);
-			},
-			free() {
-				terrain.free();
-			},
-		};
-	},
 	biomes: [ComplexBiome],
 	layers: [
 		{ min: 0.001, max: 0.0025, level: 64, offset: 4 },

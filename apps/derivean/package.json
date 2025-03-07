@@ -19,7 +19,6 @@
 		"@derivean/game-ui": "workspace:*",
 		"@derivean/root-ui": "workspace:*",
 		"@derivean/sdk": "workspace:*",
-		"@derivean/terrain-wasm": "workspace:*",
 		"@derivean/terrain": "workspace:*",
 		"@derivean/ui": "workspace:*",
 		"@derivean/utils": "workspace:*",
@@ -53,8 +52,11 @@
 		"workerpool": "9.2.0",
 		"zod": "3.24.2"
 	},
+	"optionalDependencies": {
+		"@derivean/engine": "workspace:*"
+	},
 	"devDependencies": {
-		"@derivean/terrain-wasm-build": "workspace:*",
+		"@derivean/engine-build": "workspace:*",
 		"@iconify/json": "2.2.314",
 		"@iconify/tailwind": "1.2.0",
 		"@modyfi/vite-plugin-yaml": "1.1.1",
