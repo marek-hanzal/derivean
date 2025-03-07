@@ -20,7 +20,7 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, type Entity, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import type { ResourceTable } from "../resource/ResourceTable";
+import type { ResourceTable } from "../resource/Table";
 import { InventoryForm } from "./Form";
 
 export namespace InventoryTable {

@@ -16,8 +16,8 @@ import {
 import { translator } from "@use-pico/common";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ResourcePopupSelect } from "../resource/ResourcePopupSelect";
-import type { ResourceTable } from "../resource/ResourceTable";
+import { ResourcePopupSelect } from "../resource/PopupSelect";
+import type { ResourceTable } from "../resource/Table";
 
 export namespace InventoryForm {
 	export interface Props extends Form.Props<InventorySchema["shape"]> {

@@ -16,7 +16,7 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { ResourceTable as CoolResourceTable } from "../../../resource/ResourceTable";
+import { ResourceTable as CoolResourceTable } from "../../../resource/Table";
 import { ResourceForm } from "./ResourceForm";
 
 export namespace ResourceTable {

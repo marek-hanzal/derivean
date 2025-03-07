@@ -20,8 +20,8 @@ export { BlueprintRequirementTable } from "./blueprint/requirement/RequirementTa
 export { BlueprintTable } from "./blueprint/Table";
 export { BuildingForm } from "./building/Form";
 export { BuildingTable } from "./building/Table";
-export { ResourcePreview } from "./resource/ResourcePreview";
-export { ResourceTable } from "./resource/ResourceTable";
+export { ResourcePreview } from "./resource/Preview";
+export { ResourceTable } from "./resource/Table";
 export { TagForm } from "./tag/TagForm";
 export { TagPopupMultiSelect } from "./tag/TagPopupMultiSelect";
 export { TagTable } from "./tag/TagTable";

@@ -21,7 +21,7 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, tvc, type IdentitySchema, type TagSchema } from "@use-pico/common";
 import type { FC, ReactNode } from "react";
-import { ResourceForm } from "./ResourceForm";
+import { ResourceForm } from "./Form";
 
 export namespace ResourceTable {
 	export interface Data extends IdentitySchema.Type {

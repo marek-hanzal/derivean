@@ -6,8 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ResourcePopupSelect } from "../../../resource/ResourcePopupSelect";
-import type { ResourceTable } from "../../../resource/ResourceTable";
+import { ResourcePopupSelect } from "../../../resource/PopupSelect";
+import type { ResourceTable } from "../../../resource/Table";
 
 export namespace ResourceForm {
 	export interface Props extends Form.Props<BlueprintProductionResourceSchema["shape"]> {

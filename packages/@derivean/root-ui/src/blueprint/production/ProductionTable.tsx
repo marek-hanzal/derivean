@@ -23,7 +23,7 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, tvc, type IdentitySchema } from "@use-pico/common";
 import { type FC, type ReactNode } from "react";
-import type { ResourceTable as CoolResourceTable } from "../../resource/ResourceTable";
+import type { ResourceTable as CoolResourceTable } from "../../resource/Table";
 import { MoveProductionToForm } from "../MoveProductionToForm";
 import type { BlueprintTable } from "../Table";
 import { BlueprintProductionForm } from "./ProductionForm";

@@ -22,7 +22,7 @@ import {
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
 import { InventoryForm } from "../inventory/Form";
-import type { ResourceTable } from "../resource/ResourceTable";
+import type { ResourceTable } from "../resource/Table";
 
 export namespace BlueprintInventoryTable {
 	export interface Data extends IdentitySchema.Type {

@@ -8,7 +8,7 @@ import { withIntSchema, withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import type { FC } from "react";
 import { z } from "zod";
-import { ResourceTable } from "./ResourceTable";
+import { ResourceTable } from "./Table";
 
 export namespace ResourcePopupSelect {
 	export interface Props extends PopupSelect.PropsEx<ResourceTable.Data> {
