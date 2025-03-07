@@ -1,5 +1,5 @@
 /** @format */
 
-export { BlueprintCard } from "./blueprint/BlueprintCard";
-export { InventoryTable } from "./inventory/InventoryTable";
+export { BlueprintCard } from "./blueprint/Card";
+export { InventoryTable } from "./inventory/Table";
 
