@@ -39,10 +39,8 @@ jobs:
                   # Initial dependency installation
                   bun install
                   # Compile Rust stuff
-                  #bun run lib
-                  cd lib/engine
-                  wasm-pack build --release --target bundler --scope derivean --out-dir ../../packages/@derivean/engine
-                  cd ../..
+                  cargo fetch
+                  bun run lib
                   # Ensure Rust libraries are installed
                   bun install
 
