@@ -39,7 +39,8 @@ jobs:
                   # Initial dependency installation
                   bun install
                   # Compile Rust stuff
-                  cargo fetch
+                  cargo build --release
+                  wasm-pack --version
                   bun run lib
                   # Ensure Rust libraries are installed
                   bun install
