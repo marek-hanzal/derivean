@@ -9,7 +9,6 @@ import {
 	ActionMenu,
 	ActionModal,
 	DeleteControl,
-	LinkTo,
 	Table,
 	toast,
 	TrashIcon,
@@ -19,19 +18,28 @@ import {
 	withToastPromiseTx,
 } from "@use-pico/client";
 import { genId, type IdentitySchema } from "@use-pico/common";
-import type { FC } from "react";
-import { BlueprintDependencyForm } from "./BlueprintDependencyForm";
-import type { BlueprintTable } from "./BlueprintTable";
+import type { FC, ReactNode } from "react";
+import type { BlueprintTable } from "../Table";
+import { DependencyForm } from "./DependencyForm";
 
-export namespace BlueprintDependencyTable {
+export namespace DependencyTable {
 	export interface Data extends IdentitySchema.Type {
 		name: string;
 		blueprintId: string;
 		dependencyId: string;
 	}
+
+	export interface Context {
+		linkView: FC<{
+			icon: string;
+			to: "/$locale/root/blueprint/$id/view";
+			params: { locale: string; id: string };
+			children: ReactNode;
+		}>;
+	}
 }
 
-const column = withColumn<BlueprintDependencyTable.Data>();
+const column = withColumn<DependencyTable.Data, DependencyTable.Context>();
 
 const columns = [
 	column({
@@ -39,31 +47,31 @@ const columns = [
 		header() {
 			return <Tx label={"Required building (label)"} />;
 		},
-		render({ data, value }) {
+		render({ data, value, context: { linkView: LinkView } }) {
 			const { locale } = useParams({ from: "/$locale" });
 
 			return (
-				<LinkTo
+				<LinkView
 					icon={BlueprintIcon}
 					to={"/$locale/root/blueprint/$id/view"}
 					params={{ locale, id: data.dependencyId }}
 				>
 					{value}
-				</LinkTo>
+				</LinkView>
 			);
 		},
 		size: 22,
 	}),
 ];
 
-export namespace BlueprintDependencyTable {
-	export interface Props extends Table.PropsEx<Data> {
+export namespace DependencyTable {
+	export interface Props extends Table.PropsEx<Data, Context> {
 		blueprintTableContext: BlueprintTable.Context;
 		blueprintId: string;
 	}
 }
 
-export const BlueprintDependencyTable: FC<BlueprintDependencyTable.Props> = ({
+export const DependencyTable: FC<DependencyTable.Props> = ({
 	blueprintTableContext,
 	blueprintId,
 	...props
@@ -84,7 +92,7 @@ export const BlueprintDependencyTable: FC<BlueprintDependencyTable.Props> = ({
 							>
 								{({ close }) => {
 									return (
-										<BlueprintDependencyForm
+										<DependencyForm
 											blueprintTableContext={blueprintTableContext}
 											mutation={useMutation({
 												async mutationFn(values) {
@@ -131,7 +139,7 @@ export const BlueprintDependencyTable: FC<BlueprintDependencyTable.Props> = ({
 							>
 								{({ close }) => {
 									return (
-										<BlueprintDependencyForm
+										<DependencyForm
 											blueprintTableContext={blueprintTableContext}
 											defaultValues={data}
 											mutation={useMutation({
@@ -192,3 +200,5 @@ export const BlueprintDependencyTable: FC<BlueprintDependencyTable.Props> = ({
 		/>
 	);
 };
+
+export { DependencyTable as BlueprintDependencyTable };

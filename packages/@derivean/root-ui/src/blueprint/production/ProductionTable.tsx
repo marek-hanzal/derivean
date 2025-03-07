@@ -2,6 +2,7 @@
 
 import { transaction } from "@derivean/db";
 import { ProductionIcon, ResourceIcon } from "@derivean/ui";
+import { RequirementsInline } from "@derivean/ui/src/ui/RequirementsInline";
 import type {
 	BlueprintProductionDependencySchema,
 	BlueprintProductionRequirementSchema,
@@ -22,13 +23,12 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, tvc, type IdentitySchema } from "@use-pico/common";
 import { type FC, type ReactNode } from "react";
-import type { ResourceTable } from "../resource/ResourceTable";
-import { BlueprintProductionForm } from "./BlueprintProductionForm";
-import type { BlueprintTable } from "./BlueprintTable";
-import { MoveProductionToForm } from "./MoveProductionToForm";
-import { RequirementsInline } from "./RequirementsInline";
+import type { ResourceTable as CoolResourceTable } from "../../resource/ResourceTable";
+import { MoveProductionToForm } from "../MoveProductionToForm";
+import type { BlueprintTable } from "../Table";
+import { BlueprintProductionForm } from "./ProductionForm";
 
-export namespace BlueprintProductionTable {
+export namespace ProductionTable {
 	export interface Data extends IdentitySchema.Type {
 		name: string;
 		resourceId: string;
@@ -49,7 +49,7 @@ export namespace BlueprintProductionTable {
 	}
 }
 
-const column = withColumn<BlueprintProductionTable.Data, BlueprintProductionTable.Context>();
+const column = withColumn<ProductionTable.Data, ProductionTable.Context>();
 
 const columns = [
 	column({
@@ -115,7 +115,7 @@ const columns = [
 		},
 		render({ value }) {
 			return (
-				<More<BlueprintProductionTable.Data["resources"][number]>
+				<More<ProductionTable.Data["resources"][number]>
 					items={value}
 					render={({ entity }) => {
 						return (
@@ -152,7 +152,7 @@ const columns = [
 		},
 		render({ value }) {
 			return (
-				<More<BlueprintProductionTable.Data["dependencies"][number]>
+				<More<ProductionTable.Data["dependencies"][number]>
 					items={value}
 					render={({ entity }) => {
 						return (
@@ -181,16 +181,16 @@ const columns = [
 	}),
 ];
 
-export namespace BlueprintProductionTable {
+export namespace ProductionTable {
 	export interface Props extends Table.PropsEx<Data, Context> {
 		context: Context;
 		blueprintTableContext: BlueprintTable.Context;
-		resourceTableContext: ResourceTable.Context;
+		resourceTableContext: CoolResourceTable.Context;
 		blueprintId: string;
 	}
 }
 
-export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({
+export const ProductionTable: FC<ProductionTable.Props> = ({
 	blueprintTableContext,
 	resourceTableContext,
 	blueprintId,
@@ -339,3 +339,5 @@ export const BlueprintProductionTable: FC<BlueprintProductionTable.Props> = ({
 		/>
 	);
 };
+
+export { ProductionTable as BlueprintProductionTable };

@@ -3,7 +3,7 @@
 import { More } from "@use-pico/client";
 import { type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { BlueprintDependenciesInlineCss } from "./BlueprintDependenciesInlineCss";
+import { BlueprintDependenciesInlineCss } from "./DependenciesInlineCss";
 
 export namespace BlueprintDependenciesInline {
 	interface Data extends IdentitySchema.Type {

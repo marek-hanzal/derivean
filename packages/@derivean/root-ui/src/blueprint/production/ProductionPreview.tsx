@@ -6,7 +6,7 @@ import { Preview, TitlePreview, Tx } from "@use-pico/client";
 import type { IdentitySchema } from "@use-pico/common";
 import type { FC, ReactNode } from "react";
 
-export namespace BlueprintProductionPreview {
+export namespace ProductionPreview {
 	export interface Data extends IdentitySchema.Type {
 		resource: string;
 		blueprint: string;
@@ -23,7 +23,7 @@ export namespace BlueprintProductionPreview {
 	}
 }
 
-export const BlueprintProductionPreview: FC<BlueprintProductionPreview.Props> = ({
+export const ProductionPreview: FC<ProductionPreview.Props> = ({
 	linkProduction: LinkProduction,
 	...props
 }) => {
@@ -53,3 +53,5 @@ export const BlueprintProductionPreview: FC<BlueprintProductionPreview.Props> = 
 		/>
 	);
 };
+
+export { ProductionPreview as BlueprintProductionPreview };

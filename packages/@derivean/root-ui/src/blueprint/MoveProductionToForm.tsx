@@ -6,8 +6,8 @@ import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { BlueprintPopupSelect } from "./BlueprintPopupSelect";
-import type { BlueprintTable } from "./BlueprintTable";
+import { BlueprintPopupSelect } from "./PopupSelect";
+import type { BlueprintTable } from "./Table";
 
 const ShapeSchema = z.object({ blueprintId: z.string().min(1) });
 type ShapeSchema = typeof ShapeSchema;

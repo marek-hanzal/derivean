@@ -21,7 +21,7 @@ import {
 import { genId, toHumanNumber, type Entity, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
 import type { ResourceTable } from "../resource/ResourceTable";
-import { InventoryForm } from "./InventoryForm";
+import { InventoryForm } from "./Form";
 
 export namespace InventoryTable {
 	export interface Data extends IdentitySchema.Type {

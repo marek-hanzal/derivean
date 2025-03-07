@@ -15,16 +15,16 @@ import {
 } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ResourcePopupSelect } from "../resource/ResourcePopupSelect";
-import type { ResourceTable } from "../resource/ResourceTable";
+import { ResourcePopupSelect } from "../../resource/ResourcePopupSelect";
+import type { ResourceTable } from "../../resource/ResourceTable";
 
-export namespace BlueprintRequirementForm {
+export namespace RequirementForm {
 	export interface Props extends Form.Props<BlueprintRequirementSchema["shape"]> {
 		resourceTableContext: ResourceTable.Context;
 	}
 }
 
-export const BlueprintRequirementForm: FC<BlueprintRequirementForm.Props> = ({
+export const RequirementForm: FC<RequirementForm.Props> = ({
 	resourceTableContext,
 	mutation,
 	defaultValues,
@@ -112,3 +112,5 @@ export const BlueprintRequirementForm: FC<BlueprintRequirementForm.Props> = ({
 		</form>
 	);
 };
+
+export { RequirementForm as BlueprintRequirementForm };

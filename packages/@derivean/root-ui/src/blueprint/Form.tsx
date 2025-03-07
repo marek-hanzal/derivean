@@ -3,23 +3,25 @@
 import { BlueprintIcon } from "@derivean/ui";
 import { BlueprintSchema } from "@derivean/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
+import {
+	Button,
+	FormCss,
+	FormError,
+	FormInput,
+	onSubmit,
+	Tx,
+	type Form as CoolForm,
+} from "@use-pico/client";
 import { type FC } from "react";
 import { useForm } from "react-hook-form";
 
-export namespace BlueprintForm {
-	export interface Props extends Form.Props<BlueprintSchema["shape"]> {
+namespace Form {
+	export interface Props extends CoolForm.Props<BlueprintSchema["shape"]> {
 		//
 	}
 }
 
-export const BlueprintForm: FC<BlueprintForm.Props> = ({
-	mutation,
-	defaultValues,
-	variant,
-	tva = FormCss,
-	css,
-}) => {
+const Form: FC<Form.Props> = ({ mutation, defaultValues, variant, tva = FormCss, css }) => {
 	const form = useForm<BlueprintSchema["~shape"]>({
 		resolver: zodResolver(BlueprintSchema.shape),
 		defaultValues: { cycles: 1, sort: 0, limit: 1, ...defaultValues },
@@ -124,3 +126,5 @@ export const BlueprintForm: FC<BlueprintForm.Props> = ({
 		</form>
 	);
 };
+
+export { Form as BlueprintForm };

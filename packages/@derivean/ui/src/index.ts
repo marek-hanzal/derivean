@@ -22,3 +22,6 @@ export { TransportIcon } from "./icon/TransportIcon";
 export { CyclesInline } from "./ui/CyclesInline";
 export { Dependencies } from "./ui/Dependencies";
 export { InventoryTypeInline } from "./ui/InventoryTypeInline";
+export { RequirementsInline } from "./ui/RequirementsInline";
+export { RequirementsInlineCss } from "./ui/RequirementsInlineCss";
+

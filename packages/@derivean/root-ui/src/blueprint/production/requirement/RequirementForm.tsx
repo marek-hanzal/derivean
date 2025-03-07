@@ -1,21 +1,30 @@
 /** @format */
 
 import { ResourceIcon } from "@derivean/ui";
-import { BlueprintProductionResourceSchema } from "@derivean/utils";
+import { BlueprintProductionRequirementSchema } from "@derivean/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
+import {
+	BoolInput,
+	Button,
+	FormCss,
+	FormError,
+	FormInput,
+	onSubmit,
+	Tx,
+	type Form,
+} from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ResourcePopupSelect } from "../resource/ResourcePopupSelect";
-import type { ResourceTable } from "../resource/ResourceTable";
+import { ResourcePopupSelect } from "../../../resource/ResourcePopupSelect";
+import type { ResourceTable } from "../../../resource/ResourceTable";
 
-export namespace BlueprintProductionResourceForm {
-	export interface Props extends Form.Props<BlueprintProductionResourceSchema["shape"]> {
+export namespace RequirementForm {
+	export interface Props extends Form.Props<BlueprintProductionRequirementSchema["shape"]> {
 		resourceTableContext: ResourceTable.Context;
 	}
 }
 
-export const BlueprintProductionResourceForm: FC<BlueprintProductionResourceForm.Props> = ({
+export const RequirementForm: FC<RequirementForm.Props> = ({
 	resourceTableContext,
 	mutation,
 	defaultValues,
@@ -23,9 +32,9 @@ export const BlueprintProductionResourceForm: FC<BlueprintProductionResourceForm
 	tva = FormCss,
 	css,
 }) => {
-	const form = useForm<BlueprintProductionResourceSchema["~shape"]>({
-		resolver: zodResolver(BlueprintProductionResourceSchema.shape),
-		defaultValues: { amount: 1, ...defaultValues },
+	const form = useForm<BlueprintProductionRequirementSchema["~shape"]>({
+		resolver: zodResolver(BlueprintProductionRequirementSchema.shape),
+		defaultValues: { amount: 1, passive: false, ...defaultValues },
 	});
 
 	const tv = tva({
@@ -77,6 +86,21 @@ export const BlueprintProductionResourceForm: FC<BlueprintProductionResourceForm
 				/>
 			</FormInput>
 
+			<FormInput
+				formState={form.formState}
+				name={"passive"}
+				label={<Tx label={"Passive requirement (label)"} />}
+				hint={<Tx label={"Passive requirement (hint)"} />}
+			>
+				<Controller
+					control={form.control}
+					name={"passive"}
+					render={({ field: { ref: _, ...field } }) => {
+						return <BoolInput {...field} />;
+					}}
+				/>
+			</FormInput>
+
 			<div className={"flex flex-row justify-between gap-8"}>
 				<Button
 					iconEnabled={ResourceIcon}
@@ -88,3 +112,5 @@ export const BlueprintProductionResourceForm: FC<BlueprintProductionResourceForm
 		</form>
 	);
 };
+
+export { RequirementForm as BlueprintProductionRequirementForm };

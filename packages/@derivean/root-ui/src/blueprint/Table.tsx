@@ -7,6 +7,7 @@ import {
 	type serviceBlueprintGraph,
 } from "@derivean/service";
 import { BlueprintIcon, CyclesInline, InventoryIcon } from "@derivean/ui";
+import { RequirementsInline } from "@derivean/ui/src/ui/RequirementsInline";
 import {
 	toWebp64,
 	type BlueprintDependencySchema,
@@ -29,9 +30,8 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, tvc, type IdentitySchema } from "@use-pico/common";
 import type { FC, ReactNode } from "react";
-import { BlueprintDependenciesInline } from "./BlueprintDependenciesInline";
-import { RequirementsInline } from "./RequirementsInline";
-import { BlueprintForm } from "./BlueprintForm";
+import { BlueprintDependenciesInline } from "./DependenciesInline";
+import { BlueprintForm } from "./Form";
 
 export namespace BlueprintTable {
 	export interface Data extends IdentitySchema.Type {

@@ -86,6 +86,7 @@ export const Route = createFileRoute("/$locale/root/blueprint/production/$id/dep
 						...navigateOnCursor(navigate),
 					}}
 					blueprintTableContext={{ linkEditor: LinkTo, linkView: LinkTo }}
+					context={{ linkView: LinkTo }}
 				/>
 			</div>
 		);

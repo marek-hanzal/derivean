@@ -9,7 +9,6 @@ import {
 	ActionMenu,
 	ActionModal,
 	DeleteControl,
-	LinkTo,
 	Table,
 	toast,
 	TrashIcon,
@@ -19,55 +18,66 @@ import {
 	withToastPromiseTx,
 } from "@use-pico/client";
 import { genId, type IdentitySchema } from "@use-pico/common";
-import type { FC } from "react";
-import { BlueprintProductionDependencyForm } from "./BlueprintProductionDependencyForm";
-import type { BlueprintTable } from "./BlueprintTable";
+import type { FC, ReactNode } from "react";
+import type { BlueprintTable } from "../Table";
+import { ConflictForm } from "./ConflictForm";
 
-export namespace BlueprintProductionDependencyTable {
+export namespace ConflictTable {
 	export interface Data extends IdentitySchema.Type {
 		name: string;
 		blueprintId: string;
+		conflictId: string;
+	}
+
+	export interface Context {
+		linkConflict: FC<{
+			icon: string;
+			to: "/$locale/root/blueprint/$id/conflicts";
+			params: { locale: string; id: string };
+			children: ReactNode;
+		}>;
 	}
 }
 
-const column = withColumn<BlueprintProductionDependencyTable.Data>();
+const column = withColumn<ConflictTable.Data, ConflictTable.Context>();
 
 const columns = [
 	column({
 		name: "name",
 		header() {
-			return <Tx label={"Required building (label)"} />;
+			return <Tx label={"Conflict building (label)"} />;
 		},
-		render({ data, value }) {
+		render({ data, value, context: { linkConflict: LinkConflict } }) {
 			const { locale } = useParams({ from: "/$locale" });
 
 			return (
-				<LinkTo
+				<LinkConflict
 					icon={BlueprintIcon}
-					to={"/$locale/root/blueprint/$id/view"}
-					params={{ locale, id: data.blueprintId }}
+					to={"/$locale/root/blueprint/$id/conflicts"}
+					params={{ locale, id: data.conflictId }}
 				>
 					{value}
-				</LinkTo>
+				</LinkConflict>
 			);
 		},
 		size: 22,
 	}),
 ];
 
-export namespace BlueprintProductionDependencyTable {
-	export interface Props extends Table.PropsEx<Data> {
+export namespace ConflictTable {
+	export interface Props extends Table.PropsEx<Data, Context> {
 		blueprintTableContext: BlueprintTable.Context;
-		blueprintProductionId: string;
+		blueprintId: string;
+		context: Context;
 	}
 }
 
-export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependencyTable.Props> = ({
+export const ConflictTable: FC<ConflictTable.Props> = ({
 	blueprintTableContext,
-	blueprintProductionId,
+	blueprintId,
 	...props
 }) => {
-	const invalidator = useInvalidator([["Blueprint_Production_Dependency"], ["Blueprint"]]);
+	const invalidator = useInvalidator([["Blueprint_Conflict"], ["Blueprint"]]);
 
 	return (
 		<Table
@@ -77,30 +87,24 @@ export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependenc
 					return (
 						<ActionMenu>
 							<ActionModal
-								label={
-									<Tx label={"Create blueprint production dependency (menu)"} />
-								}
-								textTitle={
-									<Tx label={"Create blueprint production dependency (modal)"} />
-								}
+								label={<Tx label={"Create blueprint conflict (menu)"} />}
+								textTitle={<Tx label={"Create blueprint conflict (modal)"} />}
 								icon={BlueprintIcon}
 							>
 								{({ close }) => {
 									return (
-										<BlueprintProductionDependencyForm
+										<ConflictForm
 											blueprintTableContext={blueprintTableContext}
 											mutation={useMutation({
 												async mutationFn(values) {
 													return toast.promise(
 														kysely.transaction().execute(async (tx) => {
 															const entity = tx
-																.insertInto(
-																	"Blueprint_Production_Dependency",
-																)
+																.insertInto("Blueprint_Conflict")
 																.values({
 																	id: genId(),
 																	...values,
-																	blueprintProductionId,
+																	blueprintId,
 																})
 																.returningAll()
 																.executeTakeFirstOrThrow();
@@ -110,7 +114,7 @@ export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependenc
 															return entity;
 														}),
 														withToastPromiseTx(
-															"Create blueprint production dependency",
+															"Create blueprint conflict",
 														),
 													);
 												},
@@ -131,14 +135,12 @@ export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependenc
 						<ActionMenu>
 							<ActionModal
 								label={<Tx label={"Edit (menu)"} />}
-								textTitle={
-									<Tx label={"Edit blueprint production dependency (modal)"} />
-								}
+								textTitle={<Tx label={"Edit blueprint conflict (modal)"} />}
 								icon={BlueprintIcon}
 							>
 								{({ close }) => {
 									return (
-										<BlueprintProductionDependencyForm
+										<ConflictForm
 											blueprintTableContext={blueprintTableContext}
 											defaultValues={data}
 											mutation={useMutation({
@@ -146,16 +148,14 @@ export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependenc
 													return toast.promise(
 														kysely.transaction().execute(async (tx) => {
 															return tx
-																.updateTable(
-																	"Blueprint_Production_Dependency",
-																)
+																.updateTable("Blueprint_Conflict")
 																.set(values)
 																.where("id", "=", data.id)
 																.returningAll()
 																.executeTakeFirstOrThrow();
 														}),
 														withToastPromiseTx(
-															"Update blueprint production dependency",
+															"Update blueprint conflict",
 														),
 													);
 												},
@@ -172,9 +172,7 @@ export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependenc
 							<ActionModal
 								icon={TrashIcon}
 								label={<Tx label={"Delete (menu)"} />}
-								textTitle={
-									<Tx label={"Delete blueprint production dependency (modal)"} />
-								}
+								textTitle={<Tx label={"Delete blueprint conflict (modal)"} />}
 								css={{
 									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
 								}}
@@ -183,19 +181,15 @@ export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependenc
 									callback={async () => {
 										return kysely.transaction().execute(async (tx) => {
 											return tx
-												.deleteFrom("Blueprint_Production_Dependency")
+												.deleteFrom("Blueprint_Conflict")
 												.where("id", "=", data.id)
 												.execute();
 										});
 									}}
 									textContent={
-										<Tx
-											label={
-												"Delete blueprint production dependency (content)"
-											}
-										/>
+										<Tx label={"Delete blueprint conflict (content)"} />
 									}
-									textToast={"Delete blueprint production dependency"}
+									textToast={"Delete blueprint conflict"}
 									invalidator={invalidator}
 								/>
 							</ActionModal>
@@ -207,3 +201,5 @@ export const BlueprintProductionDependencyTable: FC<BlueprintProductionDependenc
 		/>
 	);
 };
+
+export { ConflictTable as BlueprintConflictTable };

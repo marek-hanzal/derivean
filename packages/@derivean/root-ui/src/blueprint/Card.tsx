@@ -2,14 +2,14 @@
 
 import type { serviceBlueprintGraph } from "@derivean/service";
 import { Dependencies } from "@derivean/ui";
+import { RequirementsInline } from "@derivean/ui/src/ui/RequirementsInline";
 import type { BlueprintDependencySchema, BlueprintRequirementSchema } from "@derivean/utils";
-import { Card, Tx } from "@use-pico/client";
+import { Card as CoolCard, Tx } from "@use-pico/client";
 import { toHumanNumber, tvc, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { BlueprintDependenciesInline } from "./BlueprintDependenciesInline";
-import { RequirementsInline } from "./RequirementsInline";
+import { BlueprintDependenciesInline } from "./DependenciesInline";
 
-export namespace BlueprintCard {
+namespace Card {
 	export interface Data extends IdentitySchema.Type {
 		name: string;
 		cycles: number;
@@ -17,14 +17,14 @@ export namespace BlueprintCard {
 		dependencies: (BlueprintDependencySchema["~entity"] & { name: string })[];
 	}
 
-	export interface Props extends Card.PropsEx<Data> {
+	export interface Props extends CoolCard.PropsEx<Data> {
 		dependencies: serviceBlueprintGraph.Result;
 	}
 }
 
-export const BlueprintCard: FC<BlueprintCard.Props> = ({ dependencies, ...props }) => {
+const Card: FC<Card.Props> = ({ dependencies, ...props }) => {
 	return (
-		<Card
+		<CoolCard
 			items={[
 				{
 					id: "name",
@@ -100,3 +100,5 @@ export const BlueprintCard: FC<BlueprintCard.Props> = ({ dependencies, ...props 
 		/>
 	);
 };
+
+export { Card as BlueprintCard };

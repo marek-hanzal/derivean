@@ -21,7 +21,7 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import { InventoryForm } from "../inventory/InventoryForm";
+import { InventoryForm } from "../inventory/Form";
 import type { ResourceTable } from "../resource/ResourceTable";
 
 export namespace BlueprintInventoryTable {

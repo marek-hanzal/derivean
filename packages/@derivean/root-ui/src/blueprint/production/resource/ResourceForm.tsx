@@ -1,21 +1,21 @@
 /** @format */
 
-import { ProductionIcon } from "@derivean/ui";
-import { BlueprintProductionSchema } from "@derivean/utils";
+import { ResourceIcon } from "@derivean/ui";
+import { BlueprintProductionResourceSchema } from "@derivean/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { ResourcePopupSelect } from "../resource/ResourcePopupSelect";
-import type { ResourceTable } from "../resource/ResourceTable";
+import { ResourcePopupSelect } from "../../../resource/ResourcePopupSelect";
+import type { ResourceTable } from "../../../resource/ResourceTable";
 
-export namespace BlueprintProductionForm {
-	export interface Props extends Form.Props<BlueprintProductionSchema["shape"]> {
+export namespace ResourceForm {
+	export interface Props extends Form.Props<BlueprintProductionResourceSchema["shape"]> {
 		resourceTableContext: ResourceTable.Context;
 	}
 }
 
-export const BlueprintProductionForm: FC<BlueprintProductionForm.Props> = ({
+export const ResourceForm: FC<ResourceForm.Props> = ({
 	resourceTableContext,
 	mutation,
 	defaultValues,
@@ -23,9 +23,9 @@ export const BlueprintProductionForm: FC<BlueprintProductionForm.Props> = ({
 	tva = FormCss,
 	css,
 }) => {
-	const form = useForm<BlueprintProductionSchema["~shape"]>({
-		resolver: zodResolver(BlueprintProductionSchema.shape),
-		defaultValues: { amount: 1, cycles: 1, ...defaultValues },
+	const form = useForm<BlueprintProductionResourceSchema["~shape"]>({
+		resolver: zodResolver(BlueprintProductionResourceSchema.shape),
+		defaultValues: { amount: 1, ...defaultValues },
 	});
 
 	const tv = tva({
@@ -48,7 +48,7 @@ export const BlueprintProductionForm: FC<BlueprintProductionForm.Props> = ({
 			<FormInput
 				formState={form.formState}
 				name={"resourceId"}
-				label={<Tx label={"Resource name (label)"} />}
+				label={<Tx label={"Requirement (label)"} />}
 			>
 				<Controller
 					control={form.control}
@@ -57,7 +57,6 @@ export const BlueprintProductionForm: FC<BlueprintProductionForm.Props> = ({
 						return (
 							<ResourcePopupSelect
 								context={resourceTableContext}
-								textTitle={<Tx label={"Select resource (title)"} />}
 								allowEmpty
 								{...field}
 							/>
@@ -78,22 +77,9 @@ export const BlueprintProductionForm: FC<BlueprintProductionForm.Props> = ({
 				/>
 			</FormInput>
 
-			<FormInput
-				formState={form.formState}
-				name={"cycles"}
-				label={<Tx label={"Production cycles (label)"} />}
-				hint={<Tx label={"Production cycles (hint)"} />}
-			>
-				<input
-					type={"number"}
-					className={tv.input()}
-					{...form.register("cycles")}
-				/>
-			</FormInput>
-
 			<div className={"flex flex-row justify-between gap-8"}>
 				<Button
-					iconEnabled={ProductionIcon}
+					iconEnabled={ResourceIcon}
 					type={"submit"}
 				>
 					<Tx label={"Save (submit)"} />
@@ -102,3 +88,5 @@ export const BlueprintProductionForm: FC<BlueprintProductionForm.Props> = ({
 		</form>
 	);
 };
+
+export { ResourceForm as BlueprintProductionResourceForm };

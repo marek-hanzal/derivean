@@ -16,10 +16,10 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import type { ResourceTable } from "../resource/ResourceTable";
-import { BlueprintProductionResourceForm } from "./BlueprintProductionResourceForm";
+import { ResourceTable as CoolResourceTable } from "../../../resource/ResourceTable";
+import { ResourceForm } from "./ResourceForm";
 
-export namespace BlueprintProductionResourceTable {
+export namespace ResourceTable {
 	export interface Data extends IdentitySchema.Type {
 		name: string;
 		resourceId: string;
@@ -27,7 +27,7 @@ export namespace BlueprintProductionResourceTable {
 	}
 }
 
-const column = withColumn<BlueprintProductionResourceTable.Data>();
+const column = withColumn<ResourceTable.Data>();
 
 const columns = [
 	column({
@@ -53,14 +53,14 @@ const columns = [
 	}),
 ];
 
-export namespace BlueprintProductionResourceTable {
+export namespace ResourceTable {
 	export interface Props extends Table.PropsEx<Data> {
-		resourceTableContext: ResourceTable.Context;
+		resourceTableContext: CoolResourceTable.Context;
 		blueprintProductionId: string;
 	}
 }
 
-export const BlueprintProductionResourceTable: FC<BlueprintProductionResourceTable.Props> = ({
+export const ResourceTable: FC<ResourceTable.Props> = ({
 	resourceTableContext,
 	blueprintProductionId,
 	...props
@@ -89,7 +89,7 @@ export const BlueprintProductionResourceTable: FC<BlueprintProductionResourceTab
 							>
 								{({ close }) => {
 									return (
-										<BlueprintProductionResourceForm
+										<ResourceForm
 											resourceTableContext={resourceTableContext}
 											mutation={useMutation({
 												async mutationFn(values) {
@@ -133,7 +133,7 @@ export const BlueprintProductionResourceTable: FC<BlueprintProductionResourceTab
 							>
 								{({ close }) => {
 									return (
-										<BlueprintProductionResourceForm
+										<ResourceForm
 											resourceTableContext={resourceTableContext}
 											defaultValues={data}
 											mutation={useMutation({
@@ -199,3 +199,5 @@ export const BlueprintProductionResourceTable: FC<BlueprintProductionResourceTab
 		/>
 	);
 };
+
+export { ResourceTable as BlueprintProductionResourceTable };

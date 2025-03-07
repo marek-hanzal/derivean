@@ -17,10 +17,10 @@ import {
 } from "@use-pico/client";
 import { genId, toHumanNumber, type IdentitySchema } from "@use-pico/common";
 import type { FC } from "react";
-import type { ResourceTable } from "../resource/ResourceTable";
-import { BlueprintRequirementForm } from "./BlueprintRequirementForm";
+import type { ResourceTable } from "../../resource/ResourceTable";
+import { RequirementForm } from "./RequirementForm";
 
-export namespace BlueprintRequirementTable {
+export namespace RequirementTable {
 	export interface Data extends IdentitySchema.Type {
 		name: string;
 		resourceId: string;
@@ -29,7 +29,7 @@ export namespace BlueprintRequirementTable {
 	}
 }
 
-const column = withColumn<BlueprintRequirementTable.Data>();
+const column = withColumn<RequirementTable.Data>();
 
 const columns = [
 	column({
@@ -65,14 +65,14 @@ const columns = [
 	}),
 ];
 
-export namespace BlueprintRequirementTable {
+export namespace RequirementTable {
 	export interface Props extends Table.PropsEx<Data> {
 		resourceTableContext: ResourceTable.Context;
 		blueprintId: string;
 	}
 }
 
-export const BlueprintRequirementTable: FC<BlueprintRequirementTable.Props> = ({
+export const RequirementTable: FC<RequirementTable.Props> = ({
 	resourceTableContext,
 	blueprintId,
 	...props
@@ -96,7 +96,7 @@ export const BlueprintRequirementTable: FC<BlueprintRequirementTable.Props> = ({
 								textTitle={<Tx label={"Create requirement item (modal)"} />}
 								icon={ResourceIcon}
 							>
-								<BlueprintRequirementForm
+								<RequirementForm
 									resourceTableContext={resourceTableContext}
 									mutation={useMutation({
 										async mutationFn(values) {
@@ -124,7 +124,7 @@ export const BlueprintRequirementTable: FC<BlueprintRequirementTable.Props> = ({
 								textTitle={<Tx label={"Edit requirement item (modal)"} />}
 								icon={ResourceIcon}
 							>
-								<BlueprintRequirementForm
+								<RequirementForm
 									resourceTableContext={resourceTableContext}
 									defaultValues={data}
 									mutation={useMutation({
@@ -175,3 +175,5 @@ export const BlueprintRequirementTable: FC<BlueprintRequirementTable.Props> = ({
 		/>
 	);
 };
+
+export { RequirementTable as BlueprintRequirementTable };

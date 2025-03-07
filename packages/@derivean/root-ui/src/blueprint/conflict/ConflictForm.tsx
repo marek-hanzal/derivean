@@ -6,16 +6,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { BlueprintPopupSelect } from "./BlueprintPopupSelect";
-import type { BlueprintTable } from "./BlueprintTable";
+import { BlueprintPopupSelect } from "../PopupSelect";
+import type { BlueprintTable } from "../Table";
 
-export namespace BlueprintConflictForm {
+export namespace ConflictForm {
 	export interface Props extends Form.Props<BlueprintConflictSchema["shape"]> {
 		blueprintTableContext: BlueprintTable.Context;
 	}
 }
 
-export const BlueprintConflictForm: FC<BlueprintConflictForm.Props> = ({
+export const ConflictForm: FC<ConflictForm.Props> = ({
 	blueprintTableContext,
 	mutation,
 	defaultValues,
@@ -78,3 +78,5 @@ export const BlueprintConflictForm: FC<BlueprintConflictForm.Props> = ({
 		</form>
 	);
 };
+
+export { ConflictForm as BlueprintConflictForm };

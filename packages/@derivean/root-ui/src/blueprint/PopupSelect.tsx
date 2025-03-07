@@ -3,22 +3,22 @@
 import { transaction } from "@derivean/db";
 import { BlueprintIcon } from "@derivean/ui";
 import { BlueprintDependencySchema, BlueprintRequirementSchema } from "@derivean/utils";
-import { PopupSelect, Tx, withListCount } from "@use-pico/client";
+import { PopupSelect as CoolPopupSelect, Tx, withListCount } from "@use-pico/client";
 import { withJsonOutputArraySchema } from "@use-pico/common";
 import { sql } from "kysely";
 import type { FC } from "react";
 import { z } from "zod";
-import { BlueprintTable } from "./BlueprintTable";
+import { BlueprintTable } from "./Table";
 
-export namespace BlueprintPopupSelect {
-	export interface Props extends PopupSelect.PropsEx<BlueprintTable.Data> {
+namespace PopupSelect {
+	export interface Props extends CoolPopupSelect.PropsEx<BlueprintTable.Data> {
 		context: BlueprintTable.Context;
 	}
 }
 
-export const BlueprintPopupSelect: FC<BlueprintPopupSelect.Props> = ({ context, ...props }) => {
+const PopupSelect: FC<PopupSelect.Props> = ({ context, ...props }) => {
 	return (
-		<PopupSelect<BlueprintTable.Data>
+		<CoolPopupSelect<BlueprintTable.Data>
 			icon={BlueprintIcon}
 			textTitle={<Tx label={"Select blueprint (title)"} />}
 			table={(props) => {
@@ -123,3 +123,5 @@ export const BlueprintPopupSelect: FC<BlueprintPopupSelect.Props> = ({ context, 
 		/>
 	);
 };
+
+export { PopupSelect as BlueprintPopupSelect };

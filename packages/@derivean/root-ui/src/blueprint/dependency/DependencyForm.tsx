@@ -6,16 +6,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, FormCss, FormError, FormInput, onSubmit, Tx, type Form } from "@use-pico/client";
 import { type FC } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { BlueprintPopupSelect } from "./BlueprintPopupSelect";
-import type { BlueprintTable } from "./BlueprintTable";
+import { BlueprintPopupSelect } from "../PopupSelect";
+import type { BlueprintTable } from "../Table";
 
-export namespace BlueprintDependencyForm {
+export namespace DependencyForm {
 	export interface Props extends Form.Props<BlueprintDependencySchema["shape"]> {
 		blueprintTableContext: BlueprintTable.Context;
 	}
 }
 
-export const BlueprintDependencyForm: FC<BlueprintDependencyForm.Props> = ({
+export const DependencyForm: FC<DependencyForm.Props> = ({
 	blueprintTableContext,
 	mutation,
 	defaultValues,
@@ -77,3 +77,5 @@ export const BlueprintDependencyForm: FC<BlueprintDependencyForm.Props> = ({
 		</form>
 	);
 };
+
+export { DependencyForm as BlueprintDependencyForm };
