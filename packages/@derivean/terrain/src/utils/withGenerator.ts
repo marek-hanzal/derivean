@@ -1,7 +1,6 @@
 /** @format */
 
 import { type Chunk, type GameConfig, type Noise, type XZ } from "@derivean/utils";
-import { withColorMap } from "./withColorMap";
 
 export namespace withGenerator {
 	export interface Layer {
@@ -36,12 +35,6 @@ export const withGenerator = ({
 	level,
 }: withGenerator.Props): withGenerator.Generator => {
 	const baseScale = 1 / (gameConfig.plotCount * (1 / level.layer.level));
-	/**
-	 * TODO Noise comes from wasm (rust), so here may be a memory leak
-	 *
-	 * When withGenerator ends, the noise object is not (probably) freed
-	 */
-	const noise = gameConfig.source({ seed });
 	const chunkSize = gameConfig.chunkSize * level.layer.level;
 	const offset = (gameConfig.chunkSize * (level.layer.level - 1)) / 2;
 	const { plotCount } = gameConfig;
@@ -70,10 +63,7 @@ export const withGenerator = ({
 
 			const wx: XZ = [worldXCoords[tileX], worldZCoords[tileZ]];
 
-			buffer.set(
-				withColorMap({ biomes: gameConfig.biomes, source: noise.coord(wx) }).color,
-				((plotCount - 1 - tileZ) * plotCount + tileX) * 4,
-			);
+			buffer.set([0, 0, 0, 255], ((plotCount - 1 - tileZ) * plotCount + tileX) * 4);
 		}
 
 		return {
