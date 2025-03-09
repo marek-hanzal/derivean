@@ -54,7 +54,7 @@ jobs:
               run: bun install
 
             - name: Type check
-              run: bun turbo run typecheck
+              run: bunx turbo run typecheck
 
             - name: Build application
-              run: bun turbo run build
+              run: bunx turbo run build
