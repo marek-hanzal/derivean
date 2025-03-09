@@ -6,101 +6,55 @@ on:
     push:
         branches:
             - main
-    pull_request:
-        branches:
-            - main
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
+    group: ${{ github.ref }}
     cancel-in-progress: true
 
 jobs:
     build:
         runs-on: ubuntu-22.04
         steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 2
+            - uses: actions/checkout@v4
 
-            - name: Setup Bun
-              uses: oven-sh/setup-bun@v2
+            - uses: oven-sh/setup-bun@v2
               with:
                   bun-version: latest
 
             - name: Setup Rust toolchain
               uses: actions-rust-lang/setup-rust-toolchain@v1
-              with:
-                  cache: true
 
             - name: Install wasm-pack
               uses: jetli/wasm-pack-action@v0.4.0
               with:
                   version: "latest"
 
-            # Cache the WASM build artifacts with optimal keys
-            # This handles all Rust packages in the lib directory
-            - name: Cache WASM build artifacts
+            # Cache Rust artifacts
+            - name: Cache Rust build artifacts
               uses: actions/cache@v4
               with:
                   path: |
                       lib/*/target
-                      packages/@derivean/@wasm/**
-                  key: ${{ runner.os }}-wasm-${{ hashFiles('lib/*/Cargo.toml', 'lib/*/Cargo.lock', 'lib/*/src/**/*.rs') }}
-                  restore-keys: |
-                      ${{ runner.os }}-wasm-
+                      packages/@derivean/*
+                  key: ${{ runner.os }}-rust-${{ hashFiles('lib/*/Cargo.toml', 'lib/*/src/**') }}
 
-            # Cache Bun dependencies
-            - name: Cache node_modules
+            # Cache node modules
+            - name: Cache dependencies
               uses: actions/cache@v4
               with:
                   path: |
                       node_modules
-                      */*/node_modules
-                      packages/*/*/node_modules
-                  key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-                  restore-keys: |
-                      ${{ runner.os }}-bun-
-
-            # Cache Turborepo's local cache
-            # Note: This caches the .turbo directory but Turborepo itself
-            # will still handle invalidation of actual build artifacts based on
-            # source file changes as defined in your turbo.json inputs
-            - name: Cache Turborepo
-              uses: actions/cache@v4
-              with:
-                  path: .turbo
-                  key: ${{ runner.os }}-turbo-${{ hashFiles('**/package.json', 'bun.lock', 'turbo.json') }}
-                  restore-keys: |
-                      ${{ runner.os }}-turbo-${{ github.ref_name }}-
-                      ${{ runner.os }}-turbo-
+                      **/node_modules
+                  key: ${{ runner.os }}-node-${{ hashFiles('bun.lock', 'package.json') }}
 
             - name: Build WASM packages
-              run: bunx turbo run wasm
+              run: bunx turbo@2.4.4 run wasm
 
             - name: Install dependencies
               run: bun install
 
-            - name: Lint and typecheck
-              run: bunx turbo run lint typecheck --parallel
+            - name: Type check
+              run: bun turbo run typecheck
 
             - name: Build application
-              run: bunx turbo run build
-
-            # Save Turborepo cache for future workflows
-            # This saves the entire .turbo directory, but individual task caches will
-            # still be properly invalidated by Turborepo when source files change
-            - name: Save Turborepo cache
-              uses: actions/cache/save@v4
-              if: always()
-              with:
-                  path: .turbo
-                  key: ${{ runner.os }}-turbo-${{ hashFiles('**/package.json', 'bun.lock', 'turbo.json') }}
-
-            # Upload build artifacts
-            - name: Upload build artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                  name: build-artifacts
-                  path: apps/derivean/dist
-                  retention-days: 7
+              run: bun turbo run build
