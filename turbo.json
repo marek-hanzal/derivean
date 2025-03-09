@@ -2,27 +2,50 @@
 	"$schema": "https://turborepo.org/schema.json",
 	"globalDependencies": ["tsconfig.json"],
 	"tasks": {
-		"wasm": { "dependsOn": [], "cache": false },
+		"wasm": {
+			"dependsOn": [],
+			"inputs": ["lib/engine/Cargo.toml", "lib/engine/Cargo.lock", "lib/engine/src/**/*.rs"],
+			"outputs": ["packages/@derivean/@wasm/engine/**"],
+			"cache": true
+		},
 		"dev": { "dependsOn": ["^wasm"], "cache": false, "persistent": true },
 		"lint": {
 			"dependsOn": ["^lint"],
+			"inputs": [
+				"src/**/*.ts",
+				"src/**/*.tsx",
+				".eslintrc.*",
+				".eslintignore",
+				"**/.eslintrc.*",
+				"**/.eslintignore"
+			],
 			"outputs": [],
-			"inputs": ["src/**"],
-			"outputLogs": "new-only",
-			"cache": false
+			"cache": true
 		},
 		"typecheck": {
 			"dependsOn": ["^wasm", "^typecheck"],
+			"inputs": ["src/**/*.ts", "src/**/*.tsx", "tsconfig.json", "**/tsconfig.json"],
 			"outputs": [],
-			"inputs": ["src/**"],
-			"outputLogs": "new-only",
-			"cache": false
+			"cache": true
 		},
 		"build": {
-			"dependsOn": ["^wasm", "^build", "typecheck"],
+			"dependsOn": ["^wasm", "^build", "lint", "typecheck"],
+			"inputs": [
+				"src/**/*.ts",
+				"src/**/*.tsx",
+				"public/**/*",
+				"vite.config.*",
+				"tailwind.config.*",
+				"postcss.config.*",
+				"*.html"
+			],
 			"outputs": ["dist/**", ".next/**", "build/**"],
-			"cache": false
+			"cache": true
 		},
-		"translations": { "cache": false }
+		"translations": {
+			"inputs": ["src/**/*.ts", "src/**/*.tsx"],
+			"outputs": ["translations/**"],
+			"cache": true
+		}
 	}
 }
