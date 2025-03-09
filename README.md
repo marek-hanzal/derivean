@@ -1,3 +1,5 @@
+<!-- @format -->
+
 # Legacy of DeRivean
 
 This is a little project that continues on the original dream to build a game, just changed
@@ -10,7 +12,7 @@ Key concept is simple: build buildings, produce goods, discover new buildings, n
 
 ## Dev Setup
 
-- `bunx turbo@2.4.4 wasm`
+- `bunx turbo@2.4.4 run wasm`
 
 ## Note to source code
 

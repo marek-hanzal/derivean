@@ -47,14 +47,14 @@ jobs:
                       **/node_modules
                   key: ${{ runner.os }}-node-${{ hashFiles('bun.lock', 'package.json') }}
 
-            # Now install JS dependencies
+            - name: Build WASM packages
+              run: bunx turbo@2.4.4 run wasm
+
             - name: Install dependencies
               run: bun install
 
-            # Run type checking
             - name: Type check
               run: bun turbo run typecheck
 
-            # Build the application
             - name: Build application
               run: bun turbo run build
