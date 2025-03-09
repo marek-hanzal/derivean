@@ -111,8 +111,8 @@ export const InventoryTable: FC<InventoryTable.Props> = ({
 	return (
 		<Table
 			columns={columns}
-			action={{
-				table: onCreate
+			actionTable={
+				onCreate
 					? () => {
 							return (
 								<ActionMenu>
@@ -149,64 +149,64 @@ export const InventoryTable: FC<InventoryTable.Props> = ({
 								</ActionMenu>
 							);
 						}
-					: undefined,
-				row({ data }) {
-					return (
-						<ActionMenu>
-							<ActionModal
-								label={<Tx label={"Edit (menu)"} />}
-								textTitle={<Tx label={"Edit inventory item (modal)"} />}
-								icon={InventoryIcon}
-							>
-								<InventoryForm
-									resourceTableContext={resourceTableContext}
-									defaultValues={data}
-									mutation={useMutation({
-										async mutationFn(values) {
-											return toast.promise(
-												transaction(async (tx) => {
-													return tx
-														.updateTable("Inventory")
-														.set(values)
-														.where("id", "=", data.id)
-														.returningAll()
-														.executeTakeFirstOrThrow();
-												}),
-												withToastPromiseTx("Update inventory item"),
-											);
-										},
-										async onSuccess() {
-											await invalidator();
-										},
-									})}
-								/>
-							</ActionModal>
+					: undefined
+			}
+			actionRow={({ data }) => {
+				return (
+					<ActionMenu>
+						<ActionModal
+							label={<Tx label={"Edit (menu)"} />}
+							textTitle={<Tx label={"Edit inventory item (modal)"} />}
+							icon={InventoryIcon}
+						>
+							<InventoryForm
+								resourceTableContext={resourceTableContext}
+								defaultValues={data}
+								mutation={useMutation({
+									async mutationFn(values) {
+										return toast.promise(
+											transaction(async (tx) => {
+												return tx
+													.updateTable("Inventory")
+													.set(values)
+													.where("id", "=", data.id)
+													.returningAll()
+													.executeTakeFirstOrThrow();
+											}),
+											withToastPromiseTx("Update inventory item"),
+										);
+									},
+									async onSuccess() {
+										await invalidator();
+									},
+								})}
+							/>
+						</ActionModal>
 
-							<ActionModal
-								icon={TrashIcon}
-								label={<Tx label={"Delete (menu)"} />}
-								textTitle={<Tx label={"Delete inventory item (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+						<ActionModal
+							icon={TrashIcon}
+							label={<Tx label={"Delete (menu)"} />}
+							textTitle={<Tx label={"Delete inventory item (modal)"} />}
+							css={{
+								base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+							}}
+						>
+							<DeleteControl
+								callback={async () => {
+									return transaction(async (tx) => {
+										return tx
+											.deleteFrom("Inventory")
+											.where("id", "=", data.id)
+											.execute();
+									});
 								}}
-							>
-								<DeleteControl
-									callback={async () => {
-										return transaction(async (tx) => {
-											return tx
-												.deleteFrom("Inventory")
-												.where("id", "=", data.id)
-												.execute();
-										});
-									}}
-									textContent={<Tx label={"Inventory item delete (content)"} />}
-									textToast={"Inventory item delete"}
-									invalidator={invalidator}
-								/>
-							</ActionModal>
-						</ActionMenu>
-					);
-				},
+								textContent={<Tx label={"Inventory item delete (content)"} />}
+								textToast={"Inventory item delete"}
+								invalidator={invalidator}
+							/>
+						</ActionModal>
+					</ActionMenu>
+				);
 			}}
 			{...props}
 		/>

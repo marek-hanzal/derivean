@@ -193,128 +193,126 @@ export const BlueprintTable: FC<BlueprintTable.Props> = (props) => {
 	return (
 		<Table
 			columns={columns}
-			action={{
-				table() {
-					return (
-						<ActionMenu>
-							<ActionClick
-								icon={InventoryIcon}
-								onClick={() => {
-									toast.promise(
-										fillInventoryMutation.mutateAsync(),
-										withToastPromiseTx("Fill inventories"),
-									);
+			actionTable={() => {
+				return (
+					<ActionMenu>
+						<ActionClick
+							icon={InventoryIcon}
+							onClick={() => {
+								toast.promise(
+									fillInventoryMutation.mutateAsync(),
+									withToastPromiseTx("Fill inventories"),
+								);
+							}}
+						>
+							<Tx label={"Fill inventories (label)"} />
+						</ActionClick>
+						<ActionModal
+							label={<Tx label={"Create blueprint (menu)"} />}
+							textTitle={<Tx label={"Create blueprint (modal)"} />}
+							icon={BlueprintIcon}
+						>
+							{({ close }) => {
+								return (
+									<BlueprintForm
+										mutation={useMutation({
+											async mutationFn({ image, ...values }) {
+												transaction(async (tx) => {
+													const entity = await tx
+														.insertInto("Blueprint")
+														.values({
+															id: genId(),
+															...values,
+															image: image
+																? await toWebp64(image)
+																: null,
+														})
+														.returningAll()
+														.executeTakeFirstOrThrow();
+
+													await serviceBlueprintSort({ tx });
+
+													return entity;
+												});
+											},
+											async onSuccess() {
+												await invalidator();
+												close();
+											},
+										})}
+									/>
+								);
+							}}
+						</ActionModal>
+					</ActionMenu>
+				);
+			}}
+			actionRow={({ data }) => {
+				return (
+					<ActionMenu>
+						<ActionModal
+							label={<Tx label={"Edit (menu)"} />}
+							textTitle={<Tx label={"Edit blueprint (modal)"} />}
+							icon={BlueprintIcon}
+						>
+							{({ close }) => {
+								return (
+									<BlueprintForm
+										defaultValues={data}
+										mutation={useMutation({
+											async mutationFn({ image, ...values }) {
+												return transaction(async (tx) => {
+													const entity = await tx
+														.updateTable("Blueprint")
+														.set({
+															...values,
+															image: image
+																? await toWebp64(image)
+																: null,
+														})
+														.where("id", "=", data.id)
+														.returningAll()
+														.executeTakeFirstOrThrow();
+
+													await serviceBlueprintSort({ tx });
+
+													return entity;
+												});
+											},
+											async onSuccess() {
+												await invalidator();
+												close();
+											},
+										})}
+									/>
+								);
+							}}
+						</ActionModal>
+
+						<ActionModal
+							icon={TrashIcon}
+							label={<Tx label={"Delete (menu)"} />}
+							textTitle={<Tx label={"Delete blueprint (modal)"} />}
+							css={{
+								base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+							}}
+						>
+							<DeleteControl
+								callback={async () => {
+									return transaction(async (tx) => {
+										return tx
+											.deleteFrom("Blueprint")
+											.where("id", "=", data.id)
+											.execute();
+									});
 								}}
-							>
-								<Tx label={"Fill inventories (label)"} />
-							</ActionClick>
-							<ActionModal
-								label={<Tx label={"Create blueprint (menu)"} />}
-								textTitle={<Tx label={"Create blueprint (modal)"} />}
-								icon={BlueprintIcon}
-							>
-								{({ close }) => {
-									return (
-										<BlueprintForm
-											mutation={useMutation({
-												async mutationFn({ image, ...values }) {
-													transaction(async (tx) => {
-														const entity = await tx
-															.insertInto("Blueprint")
-															.values({
-																id: genId(),
-																...values,
-																image: image
-																	? await toWebp64(image)
-																	: null,
-															})
-															.returningAll()
-															.executeTakeFirstOrThrow();
-
-														await serviceBlueprintSort({ tx });
-
-														return entity;
-													});
-												},
-												async onSuccess() {
-													await invalidator();
-													close();
-												},
-											})}
-										/>
-									);
-								}}
-							</ActionModal>
-						</ActionMenu>
-					);
-				},
-				row({ data }) {
-					return (
-						<ActionMenu>
-							<ActionModal
-								label={<Tx label={"Edit (menu)"} />}
-								textTitle={<Tx label={"Edit blueprint (modal)"} />}
-								icon={BlueprintIcon}
-							>
-								{({ close }) => {
-									return (
-										<BlueprintForm
-											defaultValues={data}
-											mutation={useMutation({
-												async mutationFn({ image, ...values }) {
-													return transaction(async (tx) => {
-														const entity = await tx
-															.updateTable("Blueprint")
-															.set({
-																...values,
-																image: image
-																	? await toWebp64(image)
-																	: null,
-															})
-															.where("id", "=", data.id)
-															.returningAll()
-															.executeTakeFirstOrThrow();
-
-														await serviceBlueprintSort({ tx });
-
-														return entity;
-													});
-												},
-												async onSuccess() {
-													await invalidator();
-													close();
-												},
-											})}
-										/>
-									);
-								}}
-							</ActionModal>
-
-							<ActionModal
-								icon={TrashIcon}
-								label={<Tx label={"Delete (menu)"} />}
-								textTitle={<Tx label={"Delete blueprint (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
-								}}
-							>
-								<DeleteControl
-									callback={async () => {
-										return transaction(async (tx) => {
-											return tx
-												.deleteFrom("Blueprint")
-												.where("id", "=", data.id)
-												.execute();
-										});
-									}}
-									textContent={<Tx label={"Delete blueprint (content)"} />}
-									textToast={"Delete blueprint"}
-									invalidator={invalidator}
-								/>
-							</ActionModal>
-						</ActionMenu>
-					);
-				},
+								textContent={<Tx label={"Delete blueprint (content)"} />}
+								textToast={"Delete blueprint"}
+								invalidator={invalidator}
+							/>
+						</ActionModal>
+					</ActionMenu>
+				);
 			}}
 			{...props}
 		/>

@@ -117,117 +117,112 @@ export const BlueprintInventoryTable: FC<BlueprintInventoryTable.Props> = ({
 	return (
 		<Table
 			columns={columns}
-			action={{
-				table() {
-					return (
-						<ActionMenu>
-							<ActionModal
-								label={<Tx label={"Create inventory item (menu)"} />}
-								textTitle={<Tx label={"Create inventory item (modal)"} />}
-								icon={InventoryIcon}
-							>
-								<InventoryForm
-									resourceTableContext={resourceTableContext}
-									mutation={useMutation({
-										async mutationFn(values) {
-											return toast.promise(
-												transaction(async (tx) => {
-													return tx
-														.insertInto("Blueprint_Inventory")
-														.values({
-															id: genId(),
-															blueprintId,
-															inventoryId: (
-																await tx
-																	.insertInto("Inventory")
-																	.values({
-																		id: genId(),
-																		...values,
-																	})
-																	.returningAll()
-																	.executeTakeFirstOrThrow()
-															).id,
-														})
-														.returningAll()
-														.executeTakeFirstOrThrow();
-												}),
-												withToastPromiseTx("Create inventory item"),
-											);
-										},
-										async onSuccess() {
-											await invalidator();
-										},
-									})}
-								/>
-							</ActionModal>
-							<ActionClick
-								icon={InventoryIcon}
-								onClick={() => {
-									fillInventoryMutation.mutate();
-								}}
-							>
-								<Tx label={"Fill inventory (label)"} />
-							</ActionClick>
-						</ActionMenu>
-					);
-				},
-				row({ data }) {
-					return (
-						<ActionMenu>
-							<ActionModal
-								label={<Tx label={"Edit (menu)"} />}
-								textTitle={<Tx label={"Edit inventory item (modal)"} />}
-								icon={InventoryIcon}
-							>
-								<InventoryForm
-									resourceTableContext={resourceTableContext}
-									defaultValues={data}
-									mutation={useMutation({
-										async mutationFn(values) {
-											return toast.promise(
-												transaction(async (tx) => {
-													return tx
-														.updateTable("Inventory")
-														.set(values)
-														.where("id", "=", data.inventoryId)
-														.returningAll()
-														.executeTakeFirstOrThrow();
-												}),
-												withToastPromiseTx("Update inventory item"),
-											);
-										},
-										async onSuccess() {
-											await invalidator();
-										},
-									})}
-								/>
-							</ActionModal>
+			actionTable={() => {
+				return (
+					<ActionMenu>
+						<ActionModal
+							label={<Tx label={"Create inventory item (menu)"} />}
+							textTitle={<Tx label={"Create inventory item (modal)"} />}
+							icon={InventoryIcon}
+						>
+							<InventoryForm
+								resourceTableContext={resourceTableContext}
+								mutation={useMutation({
+									async mutationFn(values) {
+										return toast.promise(
+											transaction(async (tx) => {
+												return tx
+													.insertInto("Blueprint_Inventory")
+													.values({
+														id: genId(),
+														blueprintId,
+														inventoryId: (
+															await tx
+																.insertInto("Inventory")
+																.values({ id: genId(), ...values })
+																.returningAll()
+																.executeTakeFirstOrThrow()
+														).id,
+													})
+													.returningAll()
+													.executeTakeFirstOrThrow();
+											}),
+											withToastPromiseTx("Create inventory item"),
+										);
+									},
+									async onSuccess() {
+										await invalidator();
+									},
+								})}
+							/>
+						</ActionModal>
+						<ActionClick
+							icon={InventoryIcon}
+							onClick={() => {
+								fillInventoryMutation.mutate();
+							}}
+						>
+							<Tx label={"Fill inventory (label)"} />
+						</ActionClick>
+					</ActionMenu>
+				);
+			}}
+			actionRow={({ data }) => {
+				return (
+					<ActionMenu>
+						<ActionModal
+							label={<Tx label={"Edit (menu)"} />}
+							textTitle={<Tx label={"Edit inventory item (modal)"} />}
+							icon={InventoryIcon}
+						>
+							<InventoryForm
+								resourceTableContext={resourceTableContext}
+								defaultValues={data}
+								mutation={useMutation({
+									async mutationFn(values) {
+										return toast.promise(
+											transaction(async (tx) => {
+												return tx
+													.updateTable("Inventory")
+													.set(values)
+													.where("id", "=", data.inventoryId)
+													.returningAll()
+													.executeTakeFirstOrThrow();
+											}),
+											withToastPromiseTx("Update inventory item"),
+										);
+									},
+									async onSuccess() {
+										await invalidator();
+									},
+								})}
+							/>
+						</ActionModal>
 
-							<ActionModal
-								icon={TrashIcon}
-								label={<Tx label={"Delete (menu)"} />}
-								textTitle={<Tx label={"Delete inventory item (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+						<ActionModal
+							icon={TrashIcon}
+							label={<Tx label={"Delete (menu)"} />}
+							textTitle={<Tx label={"Delete inventory item (modal)"} />}
+							css={{
+								base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+							}}
+						>
+							<DeleteControl
+								callback={async () => {
+									return transaction(async (tx) => {
+										return tx
+											.deleteFrom("Inventory")
+											.where("id", "=", data.inventoryId)
+											.execute();
+									});
 								}}
-							>
-								<DeleteControl
-									callback={async () => {
-										return transaction(async (tx) => {
-											return tx
-												.deleteFrom("Inventory")
-												.where("id", "=", data.inventoryId)
-												.execute();
-										});
-									}}
-									textContent={<Tx label={"Inventory item delete (content)"} />}
-									textToast={"Inventory item delete"}
-									invalidator={invalidator}
-								/>
-							</ActionModal>
-						</ActionMenu>
-					);
-				},
+								textContent={<Tx label={"Inventory item delete (content)"} />}
+								textToast={"Inventory item delete"}
+								invalidator={invalidator}
+							/>
+						</ActionModal>
+					</ActionMenu>
+				);
 			}}
 			{...props}
 		/>

@@ -176,39 +176,98 @@ export const ResourceTable: FC<ResourceTable.Props> = ({ group, ...props }) => {
 	return (
 		<Table
 			columns={columns}
-			action={{
-				table() {
-					return (
-						<ActionMenu>
-							<ActionModal
-								label={<Tx label={"Create resource (menu)"} />}
-								textTitle={<Tx label={"Create resource (modal)"} />}
-								icon={ResourceIcon}
-							>
-								{({ close }) => {
-									return (
-										<ResourceForm
-											group={group}
-											mutation={useMutation({
-												async mutationFn({
-													image,
-													tagIds = [],
-													...values
-												}) {
-													return transaction(async (tx) => {
+			actionTable={() => {
+				return (
+					<ActionMenu>
+						<ActionModal
+							label={<Tx label={"Create resource (menu)"} />}
+							textTitle={<Tx label={"Create resource (modal)"} />}
+							icon={ResourceIcon}
+						>
+							{({ close }) => {
+								return (
+									<ResourceForm
+										group={group}
+										mutation={useMutation({
+											async mutationFn({ image, tagIds = [], ...values }) {
+												return transaction(async (tx) => {
+													const entity = await tx
+														.insertInto("Resource")
+														.values({
+															id: genId(),
+															...values,
+															image: image
+																? await toWebp64(image)
+																: null,
+														})
+														.returningAll()
+														.executeTakeFirstOrThrow();
+
+													if (tagIds.length) {
+														await tx
+															.insertInto("Resource_Tag")
+															.values(
+																tagIds.map((tagId) => ({
+																	id: genId(),
+																	resourceId: entity.id,
+																	tagId,
+																})),
+															)
+															.execute();
+													}
+
+													return entity;
+												});
+											},
+											async onSuccess() {
+												await invalidator();
+												close();
+											},
+										})}
+									/>
+								);
+							}}
+						</ActionModal>
+					</ActionMenu>
+				);
+			}}
+			actionRow={({ data }) => {
+				return (
+					<ActionMenu>
+						<ActionModal
+							label={<Tx label={"Edit (menu)"} />}
+							textTitle={<Tx label={"Edit resource (modal)"} />}
+							icon={ResourceIcon}
+						>
+							{({ close }) => {
+								return (
+									<ResourceForm
+										defaultValues={{
+											...data,
+											tagIds: data.tags.map(({ id }) => id),
+										}}
+										mutation={useMutation({
+											async mutationFn({ image, tagIds, ...rest }) {
+												return toast.promise(
+													transaction(async (tx) => {
 														const entity = await tx
-															.insertInto("Resource")
-															.values({
-																id: genId(),
-																...values,
+															.updateTable("Resource")
+															.set({
+																...rest,
 																image: image
 																	? await toWebp64(image)
 																	: null,
 															})
+															.where("id", "=", data.id)
 															.returningAll()
 															.executeTakeFirstOrThrow();
 
-														if (tagIds.length) {
+														await tx
+															.deleteFrom("Resource_Tag")
+															.where("resourceId", "=", entity.id)
+															.execute();
+
+														if (tagIds?.length) {
 															await tx
 																.insertInto("Resource_Tag")
 																.values(
@@ -222,109 +281,44 @@ export const ResourceTable: FC<ResourceTable.Props> = ({ group, ...props }) => {
 														}
 
 														return entity;
-													});
-												},
-												async onSuccess() {
-													await invalidator();
-													close();
-												},
-											})}
-										/>
-									);
+													}),
+													withToastPromiseTx("Update resource"),
+												);
+											},
+											async onSuccess() {
+												await invalidator();
+												close();
+											},
+										})}
+									/>
+								);
+							}}
+						</ActionModal>
+
+						<ActionModal
+							icon={TrashIcon}
+							label={<Tx label={"Delete (menu)"} />}
+							textTitle={<Tx label={"Delete resource (modal)"} />}
+							css={{
+								base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+							}}
+						>
+							<DeleteControl
+								callback={async () => {
+									return transaction(async (tx) => {
+										return tx
+											.deleteFrom("Resource")
+											.where("id", "=", data.id)
+											.execute();
+									});
 								}}
-							</ActionModal>
-						</ActionMenu>
-					);
-				},
-				row({ data }) {
-					return (
-						<ActionMenu>
-							<ActionModal
-								label={<Tx label={"Edit (menu)"} />}
-								textTitle={<Tx label={"Edit resource (modal)"} />}
-								icon={ResourceIcon}
-							>
-								{({ close }) => {
-									return (
-										<ResourceForm
-											defaultValues={{
-												...data,
-												tagIds: data.tags.map(({ id }) => id),
-											}}
-											mutation={useMutation({
-												async mutationFn({ image, tagIds, ...rest }) {
-													return toast.promise(
-														transaction(async (tx) => {
-															const entity = await tx
-																.updateTable("Resource")
-																.set({
-																	...rest,
-																	image: image
-																		? await toWebp64(image)
-																		: null,
-																})
-																.where("id", "=", data.id)
-																.returningAll()
-																.executeTakeFirstOrThrow();
-
-															await tx
-																.deleteFrom("Resource_Tag")
-																.where("resourceId", "=", entity.id)
-																.execute();
-
-															if (tagIds?.length) {
-																await tx
-																	.insertInto("Resource_Tag")
-																	.values(
-																		tagIds.map((tagId) => ({
-																			id: genId(),
-																			resourceId: entity.id,
-																			tagId,
-																		})),
-																	)
-																	.execute();
-															}
-
-															return entity;
-														}),
-														withToastPromiseTx("Update resource"),
-													);
-												},
-												async onSuccess() {
-													await invalidator();
-													close();
-												},
-											})}
-										/>
-									);
-								}}
-							</ActionModal>
-
-							<ActionModal
-								icon={TrashIcon}
-								label={<Tx label={"Delete (menu)"} />}
-								textTitle={<Tx label={"Delete resource (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
-								}}
-							>
-								<DeleteControl
-									callback={async () => {
-										return transaction(async (tx) => {
-											return tx
-												.deleteFrom("Resource")
-												.where("id", "=", data.id)
-												.execute();
-										});
-									}}
-									textContent={<Tx label={"Resource delete (content)"} />}
-									textToast={"Resource delete"}
-									invalidator={invalidator}
-								/>
-							</ActionModal>
-						</ActionMenu>
-					);
-				},
+								textContent={<Tx label={"Resource delete (content)"} />}
+								textToast={"Resource delete"}
+								invalidator={invalidator}
+							/>
+						</ActionModal>
+					</ActionMenu>
+				);
 			}}
 			{...props}
 		/>

@@ -81,136 +81,130 @@ export const DependencyTable: FC<DependencyTable.Props> = ({
 	return (
 		<Table
 			columns={columns}
-			action={{
-				table() {
-					return (
-						<ActionMenu>
-							<ActionModal
-								label={
-									<Tx label={"Create blueprint production dependency (menu)"} />
-								}
-								textTitle={
-									<Tx label={"Create blueprint production dependency (modal)"} />
-								}
-								icon={BlueprintIcon}
-							>
-								{({ close }) => {
-									return (
-										<DependencyForm
-											blueprintTableContext={blueprintTableContext}
-											mutation={useMutation({
-												async mutationFn(values) {
-													return toast.promise(
-														kysely.transaction().execute(async (tx) => {
-															const entity = tx
-																.insertInto(
-																	"Blueprint_Production_Dependency",
-																)
-																.values({
-																	id: genId(),
-																	...values,
-																	blueprintProductionId,
-																})
-																.returningAll()
-																.executeTakeFirstOrThrow();
+			actionTable={() => {
+				return (
+					<ActionMenu>
+						<ActionModal
+							label={<Tx label={"Create blueprint production dependency (menu)"} />}
+							textTitle={
+								<Tx label={"Create blueprint production dependency (modal)"} />
+							}
+							icon={BlueprintIcon}
+						>
+							{({ close }) => {
+								return (
+									<DependencyForm
+										blueprintTableContext={blueprintTableContext}
+										mutation={useMutation({
+											async mutationFn(values) {
+												return toast.promise(
+													kysely.transaction().execute(async (tx) => {
+														const entity = tx
+															.insertInto(
+																"Blueprint_Production_Dependency",
+															)
+															.values({
+																id: genId(),
+																...values,
+																blueprintProductionId,
+															})
+															.returningAll()
+															.executeTakeFirstOrThrow();
 
-															await serviceBlueprintSort({ tx });
+														await serviceBlueprintSort({ tx });
 
-															return entity;
-														}),
-														withToastPromiseTx(
-															"Create blueprint production dependency",
-														),
-													);
-												},
-												async onSuccess() {
-													await invalidator();
-													close();
-												},
-											})}
-										/>
-									);
-								}}
-							</ActionModal>
-						</ActionMenu>
-					);
-				},
-				row({ data }) {
-					return (
-						<ActionMenu>
-							<ActionModal
-								label={<Tx label={"Edit (menu)"} />}
-								textTitle={
-									<Tx label={"Edit blueprint production dependency (modal)"} />
-								}
-								icon={BlueprintIcon}
-							>
-								{({ close }) => {
-									return (
-										<BlueprintProductionDependencyForm
-											blueprintTableContext={blueprintTableContext}
-											defaultValues={data}
-											mutation={useMutation({
-												async mutationFn(values) {
-													return toast.promise(
-														kysely.transaction().execute(async (tx) => {
-															return tx
-																.updateTable(
-																	"Blueprint_Production_Dependency",
-																)
-																.set(values)
-																.where("id", "=", data.id)
-																.returningAll()
-																.executeTakeFirstOrThrow();
-														}),
-														withToastPromiseTx(
-															"Update blueprint production dependency",
-														),
-													);
-												},
-												async onSuccess() {
-													await invalidator();
-													close();
-												},
-											})}
-										/>
-									);
-								}}
-							</ActionModal>
+														return entity;
+													}),
+													withToastPromiseTx(
+														"Create blueprint production dependency",
+													),
+												);
+											},
+											async onSuccess() {
+												await invalidator();
+												close();
+											},
+										})}
+									/>
+								);
+							}}
+						</ActionModal>
+					</ActionMenu>
+				);
+			}}
+			actionRow={({ data }) => {
+				return (
+					<ActionMenu>
+						<ActionModal
+							label={<Tx label={"Edit (menu)"} />}
+							textTitle={
+								<Tx label={"Edit blueprint production dependency (modal)"} />
+							}
+							icon={BlueprintIcon}
+						>
+							{({ close }) => {
+								return (
+									<BlueprintProductionDependencyForm
+										blueprintTableContext={blueprintTableContext}
+										defaultValues={data}
+										mutation={useMutation({
+											async mutationFn(values) {
+												return toast.promise(
+													kysely.transaction().execute(async (tx) => {
+														return tx
+															.updateTable(
+																"Blueprint_Production_Dependency",
+															)
+															.set(values)
+															.where("id", "=", data.id)
+															.returningAll()
+															.executeTakeFirstOrThrow();
+													}),
+													withToastPromiseTx(
+														"Update blueprint production dependency",
+													),
+												);
+											},
+											async onSuccess() {
+												await invalidator();
+												close();
+											},
+										})}
+									/>
+								);
+							}}
+						</ActionModal>
 
-							<ActionModal
-								icon={TrashIcon}
-								label={<Tx label={"Delete (menu)"} />}
-								textTitle={
-									<Tx label={"Delete blueprint production dependency (modal)"} />
-								}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+						<ActionModal
+							icon={TrashIcon}
+							label={<Tx label={"Delete (menu)"} />}
+							textTitle={
+								<Tx label={"Delete blueprint production dependency (modal)"} />
+							}
+							css={{
+								base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+							}}
+						>
+							<DeleteControl
+								callback={async () => {
+									return kysely.transaction().execute(async (tx) => {
+										return tx
+											.deleteFrom("Blueprint_Production_Dependency")
+											.where("id", "=", data.id)
+											.execute();
+									});
 								}}
-							>
-								<DeleteControl
-									callback={async () => {
-										return kysely.transaction().execute(async (tx) => {
-											return tx
-												.deleteFrom("Blueprint_Production_Dependency")
-												.where("id", "=", data.id)
-												.execute();
-										});
-									}}
-									textContent={
-										<Tx
-											label={
-												"Delete blueprint production dependency (content)"
-											}
-										/>
-									}
-									textToast={"Delete blueprint production dependency"}
-									invalidator={invalidator}
-								/>
-							</ActionModal>
-						</ActionMenu>
-					);
-				},
+								textContent={
+									<Tx
+										label={"Delete blueprint production dependency (content)"}
+									/>
+								}
+								textToast={"Delete blueprint production dependency"}
+								invalidator={invalidator}
+							/>
+						</ActionModal>
+					</ActionMenu>
+				);
 			}}
 			{...props}
 		/>

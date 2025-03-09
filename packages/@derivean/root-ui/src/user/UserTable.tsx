@@ -95,21 +95,19 @@ export const UserTable: FC<UserTable.Props> = (props) => {
 	return (
 		<Table
 			columns={columns}
-			action={{
-				row({ data }) {
-					return (
-						<ActionMenu>
-							<ActionClick
-								icon={TrashIcon}
-								onClick={() => {
-									resetGameMutation.mutateAsync({ userId: data.id });
-								}}
-							>
-								<Tx label={"Reset game (menu)"} />
-							</ActionClick>
-						</ActionMenu>
-					);
-				},
+			actionRow={({ data }) => {
+				return (
+					<ActionMenu>
+						<ActionClick
+							icon={TrashIcon}
+							onClick={() => {
+								resetGameMutation.mutateAsync({ userId: data.id });
+							}}
+						>
+							<Tx label={"Reset game (menu)"} />
+						</ActionClick>
+					</ActionMenu>
+				);
 			}}
 			{...props}
 		/>

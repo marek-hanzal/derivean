@@ -74,61 +74,59 @@ export const BuildingTable: FC<BuildingTable.Props> = ({ blueprintTableContext, 
 	return (
 		<Table
 			columns={columns}
-			action={{
-				row({ data }) {
-					return (
-						<ActionMenu>
-							<ActionModal
-								label={<Tx label={"Edit (menu)"} />}
-								textTitle={<Tx label={"Edit building (modal)"} />}
-								icon={BuildingIcon}
-							>
-								<BuildingForm
-									blueprintTableContext={blueprintTableContext}
-									defaultValues={data}
-									mutation={useMutation({
-										async mutationFn(values) {
-											return transaction((tx) => {
-												return tx
-													.updateTable("Building")
-													.set(values)
-													.where("id", "=", data.id)
-													.returningAll()
-													.executeTakeFirstOrThrow();
-											});
-										},
-										async onSuccess() {
-											await invalidator();
-										},
-									})}
-								/>
-							</ActionModal>
-
-							<ActionModal
-								icon={TrashIcon}
-								label={<Tx label={"Delete (menu)"} />}
-								textTitle={<Tx label={"Delete building (modal)"} />}
-								css={{
-									base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
-								}}
-							>
-								<DeleteControl
-									callback={async () => {
-										return transaction(async (tx) => {
+			actionRow={({ data }) => {
+				return (
+					<ActionMenu>
+						<ActionModal
+							label={<Tx label={"Edit (menu)"} />}
+							textTitle={<Tx label={"Edit building (modal)"} />}
+							icon={BuildingIcon}
+						>
+							<BuildingForm
+								blueprintTableContext={blueprintTableContext}
+								defaultValues={data}
+								mutation={useMutation({
+									async mutationFn(values) {
+										return transaction((tx) => {
 											return tx
-												.deleteFrom("Building")
+												.updateTable("Building")
+												.set(values)
 												.where("id", "=", data.id)
-												.execute();
+												.returningAll()
+												.executeTakeFirstOrThrow();
 										});
-									}}
-									textContent={<Tx label={"Building delete (content)"} />}
-									textToast={"Building delete"}
-									invalidator={invalidator}
-								/>
-							</ActionModal>
-						</ActionMenu>
-					);
-				},
+									},
+									async onSuccess() {
+										await invalidator();
+									},
+								})}
+							/>
+						</ActionModal>
+
+						<ActionModal
+							icon={TrashIcon}
+							label={<Tx label={"Delete (menu)"} />}
+							textTitle={<Tx label={"Delete building (modal)"} />}
+							css={{
+								base: ["text-red-500", "hover:text-red-600", "hover:bg-red-50"],
+							}}
+						>
+							<DeleteControl
+								callback={async () => {
+									return transaction(async (tx) => {
+										return tx
+											.deleteFrom("Building")
+											.where("id", "=", data.id)
+											.execute();
+									});
+								}}
+								textContent={<Tx label={"Building delete (content)"} />}
+								textToast={"Building delete"}
+								invalidator={invalidator}
+							/>
+						</ActionModal>
+					</ActionMenu>
+				);
 			}}
 			{...props}
 		/>
