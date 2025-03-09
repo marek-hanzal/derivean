@@ -2,7 +2,8 @@
 	"$schema": "https://turborepo.org/schema.json",
 	"globalDependencies": ["tsconfig.json"],
 	"tasks": {
-		"dev": { "cache": false, "persistent": true },
+		"wasm": { "dependsOn": [], "cache": false },
+		"dev": { "dependsOn": ["^wasm"], "cache": false, "persistent": true },
 		"lint": {
 			"dependsOn": ["^lint"],
 			"outputs": [],
@@ -11,14 +12,17 @@
 			"cache": false
 		},
 		"typecheck": {
-			"dependsOn": ["^typecheck"],
+			"dependsOn": ["^wasm", "^typecheck"],
 			"outputs": [],
 			"inputs": ["src/**"],
 			"outputLogs": "new-only",
 			"cache": false
 		},
-		"build": { "dependsOn": ["^lib", "^build"], "cache": false },
-		"lib": { "dependsOn": ["^lib"], "cache": false },
+		"build": {
+			"dependsOn": ["^wasm", "^build", "typecheck"],
+			"outputs": ["dist/**", ".next/**", "build/**"],
+			"cache": false
+		},
 		"translations": { "cache": false }
 	}
 }

@@ -35,5 +35,5 @@ export default defineConfig({
 		},
 	},
 	build: { target: "esnext" },
-	optimizeDeps: { exclude: ["sqlocal"] },
+	optimizeDeps: { exclude: ["sqlocal", "@derivean/engine"] },
 });

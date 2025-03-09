@@ -8,16 +8,17 @@
 		"url": "git://github.com/marek-hanzal/derivean.git"
 	},
 	"scripts": {
-		"dev": "turbo run dev --parallel --no-daemon",
-		"lint": "turbo run lint --force --no-daemon",
-		"lib": "turbo run lib --force --no-daemon",
-		"build": "turbo run build --force --no-daemon",
-		"typecheck": "turbo run typecheck --no-daemon",
-		"translations": "turbo run translations --no-daemon"
+		"preinstall": "bunx turbo@2.4.4 run wasm",
+		"wasm": "bun turbo run wasm",
+		"dev": "bun turbo run dev --parallel --no-daemon",
+		"lint": "bun turbo run lint",
+		"build": "bun turbo run build",
+		"typecheck": "bun turbo run typecheck",
+		"translations": "bun turbo run translations"
 	},
 	"workspaces": [
 		"apps/*",
-		"lib/**/*",
+		"lib/*",
 		"packages/**/*"
 	],
 	"devDependencies": {

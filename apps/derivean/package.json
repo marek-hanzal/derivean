@@ -16,6 +16,7 @@
 	"dependencies": {
 		"@dagrejs/dagre": "1.1.4",
 		"@derivean/db": "workspace:*",
+		"@derivean/engine": "workspace:*",
 		"@derivean/game-ui": "workspace:*",
 		"@derivean/root-ui": "workspace:*",
 		"@derivean/sdk": "workspace:*",
@@ -52,11 +53,7 @@
 		"workerpool": "9.2.0",
 		"zod": "3.24.2"
 	},
-	"optionalDependencies": {
-		"@derivean/engine": "workspace:*"
-	},
 	"devDependencies": {
-		"@derivean/engine-build": "workspace:*",
 		"@iconify/json": "2.2.314",
 		"@iconify/tailwind": "1.2.0",
 		"@modyfi/vite-plugin-yaml": "1.1.1",

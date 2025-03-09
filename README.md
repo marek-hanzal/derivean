@@ -8,6 +8,10 @@ In general it's a bit more an engine than a game (without configuration it does 
 
 Key concept is simple: build buildings, produce goods, discover new buildings, new goods.
 
+## Dev Setup
+
+- `bunx turbo@2.4.4 wasm`
+
 ## Note to source code
 
 I've decided to experiment with low-abstraction model, thus a lot of stuff is in "strange places", but it's intentional

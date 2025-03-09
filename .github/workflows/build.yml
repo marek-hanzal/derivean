@@ -12,79 +12,49 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-    #
-    # Install base packages needed to run library build (Rust stuff)
-    #
-    # Also ensure lib (Rust) stuff is compiled
-    #
-    install:
+    build:
         runs-on: ubuntu-22.04
         steps:
             - uses: actions/checkout@v4
+
             - uses: oven-sh/setup-bun@v2
               with:
                   bun-version: latest
+
             - name: Setup Rust toolchain
               uses: actions-rust-lang/setup-rust-toolchain@v1
+
             - name: Install wasm-pack
               uses: jetli/wasm-pack-action@v0.4.0
               with:
                   version: "latest"
-            - name: cache
+
+            # Cache Rust artifacts
+            - name: Cache Rust build artifacts
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      lib/*/target
+                      packages/@derivean/*
+                  key: ${{ runner.os }}-rust-${{ hashFiles('lib/*/Cargo.toml', 'lib/*/src/**') }}
+
+            # Cache node modules
+            - name: Cache dependencies
               uses: actions/cache@v4
               with:
                   path: |
                       node_modules
                       **/node_modules
-                  key: ${{ runner.os }}-install-${{ hashFiles('bun.lock', 'package.json') }}
+                  key: ${{ runner.os }}-node-${{ hashFiles('bun.lock', 'package.json') }}
 
-            - name: install
-              run: |
-                  # Initial dependency installation
-                  bun install
-                  # Compile Rust stuff
-                  bun run lib
-                  # Ensure Rust libraries are installed
-                  bun install
+            # Now install JS dependencies
+            - name: Install dependencies
+              run: bun install
 
-    typecheck:
-        runs-on: ubuntu-22.04
-        needs:
-            - install
-        steps:
-            - uses: actions/checkout@v4
-            - uses: oven-sh/setup-bun@v2
-              with:
-                  bun-version: latest
-            - name: cache
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      node_modules
-                      **/node_modules
-                  key: ${{ runner.os }}-install-${{ hashFiles('bun.lock', 'package.json') }}
+            # Run type checking
+            - name: Type check
+              run: bun turbo run typecheck
 
-            - name: typecheck
-              run: |
-                  bun run typecheck
-
-    build:
-        runs-on: ubuntu-22.04
-        needs:
-            - typecheck
-        steps:
-            - uses: actions/checkout@v4
-            - uses: oven-sh/setup-bun@v2
-              with:
-                  bun-version: latest
-            - name: cache
-              uses: actions/cache@v4
-              with:
-                  path: |
-                      node_modules
-                      **/node_modules
-                  key: ${{ runner.os }}-install-${{ hashFiles('bun.lock', 'package.json') }}
-
-            - name: build
-              run: |
-                  bun run build
+            # Build the application
+            - name: Build application
+              run: bun turbo run build
