@@ -12,7 +12,7 @@ Key concept is simple: build buildings, produce goods, discover new buildings, n
 
 ## Dev Setup
 
-- `bunx turbo@2.4.4 run wasm`
+- `bunx turbo run wasm`
 - `bun install`
 - `bun run dev`
 - `# Tadaa!`

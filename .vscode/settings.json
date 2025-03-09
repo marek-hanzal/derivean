@@ -35,9 +35,11 @@
 		"seedable",
 		"serde",
 		"sqlocal",
+		"Tadaa",
 		"tauri",
 		"Turborepo",
 		"workerpool",
-		"xyflow"
+		"xyflow",
+		"Yaaay"
 	]
 }
