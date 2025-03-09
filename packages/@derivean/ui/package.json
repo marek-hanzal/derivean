@@ -22,8 +22,8 @@
 	},
 	"dependencies": {
 		"@derivean/service": "workspace:*",
-		"@use-pico/client": "4.0.37",
-		"@use-pico/common": "4.0.21",
+		"@use-pico/client": "4.0.42",
+		"@use-pico/common": "4.0.23",
 		"dependency-graph": "1.0.0"
 	},
 	"peerDependencies": {
@@ -31,9 +31,9 @@
 	},
 	"devDependencies": {
 		"@types/react": "19.0.10",
-		"@use-pico/eslint-config-eslint": "5.0.8",
-		"@use-pico/tsconfig": "4.0.10",
-		"eslint": "9.21.0",
+		"@use-pico/eslint-config-eslint": "5.0.10",
+		"@use-pico/tsconfig": "4.0.11",
+		"eslint": "9.22.0",
 		"typescript": "5.8.2"
 	},
 	"bugs": {

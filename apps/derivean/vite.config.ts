@@ -10,8 +10,6 @@ import tla from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 import paths from "vite-tsconfig-paths";
 
-const host = process.env.TAURI_DEV_HOST;
-
 export default defineConfig({
 	clearScreen: false,
 	plugins: [
@@ -28,10 +26,8 @@ export default defineConfig({
 		tailwindcss(),
 	],
 	worker: { format: "es", plugins: () => [paths(), wasm()] },
-	envPrefix: ["VITE_", "TAURI_ENV_*"],
 	server: {
 		strictPort: true,
-		host: host || false,
 		port: 4040,
 		headers: {
 			"Cross-Origin-Opener-Policy": "same-origin",

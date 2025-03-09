@@ -22,12 +22,12 @@
 	},
 	"dependencies": {
 		"@derivean/utils": "workspace:*",
-		"@use-pico/common": "4.0.21"
+		"@use-pico/common": "4.0.23"
 	},
 	"devDependencies": {
-		"@use-pico/eslint-config-eslint": "5.0.8",
-		"@use-pico/tsconfig": "4.0.10",
-		"eslint": "9.21.0",
+		"@use-pico/eslint-config-eslint": "5.0.10",
+		"@use-pico/tsconfig": "4.0.11",
+		"eslint": "9.22.0",
 		"typescript": "5.8.2"
 	},
 	"bugs": {
