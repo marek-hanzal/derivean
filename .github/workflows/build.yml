@@ -6,55 +6,102 @@ on:
     push:
         branches:
             - main
+    pull_request:
+        branches:
+            - main
 
 concurrency:
-    group: ${{ github.ref }}
+    group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
 
 jobs:
     build:
         runs-on: ubuntu-22.04
         steps:
-            - uses: actions/checkout@v4
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 2
 
-            - uses: oven-sh/setup-bun@v2
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@v2
               with:
                   bun-version: latest
+                  cache: true
 
             - name: Setup Rust toolchain
               uses: actions-rust-lang/setup-rust-toolchain@v1
+              with:
+                  cache: true
 
             - name: Install wasm-pack
               uses: jetli/wasm-pack-action@v0.4.0
               with:
                   version: "latest"
 
-            # Cache Rust artifacts
-            - name: Cache Rust build artifacts
+            # Cache the WASM build artifacts with optimal keys
+            # This handles all Rust packages in the lib directory
+            - name: Cache WASM build artifacts
               uses: actions/cache@v4
               with:
                   path: |
                       lib/*/target
-                      packages/@derivean/*
-                  key: ${{ runner.os }}-rust-${{ hashFiles('lib/*/Cargo.toml', 'lib/*/src/**') }}
+                      packages/@derivean/@wasm/**
+                  key: ${{ runner.os }}-wasm-${{ hashFiles('lib/*/Cargo.toml', 'lib/*/Cargo.lock', 'lib/*/src/**/*.rs') }}
+                  restore-keys: |
+                      ${{ runner.os }}-wasm-
 
-            # Cache node modules
-            - name: Cache dependencies
+            # Cache Bun dependencies
+            - name: Cache node_modules
               uses: actions/cache@v4
               with:
                   path: |
                       node_modules
-                      **/node_modules
-                  key: ${{ runner.os }}-node-${{ hashFiles('bun.lock', 'package.json') }}
+                      */*/node_modules
+                      packages/*/*/node_modules
+                  key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-bun-
 
-            - name: Build WASM packages
-              run: bunx turbo@2.4.4 run wasm
+            # Cache Turborepo's local cache
+            # Note: This caches the .turbo directory but Turborepo itself
+            # will still handle invalidation of actual build artifacts based on
+            # source file changes as defined in your turbo.json inputs
+            - name: Cache Turborepo
+              uses: actions/cache@v4
+              with:
+                  path: .turbo
+                  key: ${{ runner.os }}-turbo-${{ hashFiles('**/package.json', 'bun.lock', 'turbo.json') }}
+                  restore-keys: |
+                      ${{ runner.os }}-turbo-${{ github.ref_name }}-
+                      ${{ runner.os }}-turbo-
 
             - name: Install dependencies
-              run: bun install
+              run: bun install --frozen-lockfile
 
-            - name: Type check
-              run: bun turbo run typecheck
+            - name: Build WASM packages
+              run: bunx turbo run wasm --cache-dir=.turbo
+
+            - name: Lint and typecheck
+              run: bunx turbo run lint typecheck --cache-dir=.turbo --parallel
 
             - name: Build application
-              run: bun turbo run build
+              run: bunx turbo run build --cache-dir=.turbo
+
+            # Save Turborepo cache for future workflows
+            # This saves the entire .turbo directory, but individual task caches will
+            # still be properly invalidated by Turborepo when source files change
+            - name: Save Turborepo cache
+              uses: actions/cache/save@v4
+              if: always()
+              with:
+                  path: .turbo
+                  key: ${{ runner.os }}-turbo-${{ hashFiles('**/package.json', 'bun.lock', 'turbo.json') }}
+
+            # Upload build artifacts
+            - name: Upload build artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: build-artifacts
+                  path: apps/derivean/dist
+                  retention-days: 7
