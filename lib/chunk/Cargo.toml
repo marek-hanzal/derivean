@@ -1,8 +1,8 @@
 [package]
-name = "engine"
+name = "chunk"
 version = "0.5.0"
 edition = "2024"
-description = "Low-level engine for DeRivean, the stuff that need to be fuckin' fast"
+description = "Chunk generator provider for DeRivean"
 authors = ["Marek Hanzal <marek.hanzal@icloud.com>"]
 license = "MIT"
 repository = "git://github.com/marek-hanzal/derivean.git"
@@ -12,8 +12,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wasm-bindgen = "0.2.100"
-wasm-bindgen-futures = "0.4.50"
-serde = { version = "1.0.218", features = ["derive"] }
-serde-wasm-bindgen = "0.6.5"
 console_error_panic_hook = "0.1.7"
 noise = "0.9.0"

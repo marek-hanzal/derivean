@@ -1,6 +1,0 @@
-{
-	"name": "@derivean/engine-wasm",
-	"scripts": {
-		"wasm": "wasm-pack build --release --weak-refs --reference-types --target bundler --scope derivean --out-dir ../../packages/@derivean/@wasm/engine"
-	}
-}

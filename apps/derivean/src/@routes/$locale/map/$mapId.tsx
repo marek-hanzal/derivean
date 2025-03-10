@@ -1,6 +1,5 @@
 /** @format */
 
-import { Engine } from "@derivean/engine";
 import { createGameEventBus } from "@derivean/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
@@ -39,10 +38,6 @@ export const Route = createFileRoute("/$locale/map/$mapId")({
 		 * Basic assumption is the whole page won't re-render, so it's (quite) safe to create the event bus here.
 		 */
 		const gameEventBus = createGameEventBus();
-		const engine = new Engine(mapId);
-		engine.foo();
-
-		//console.log(`WASM memory usage is ${wasm.memory.buffer.byteLength} bytes`);
 
 		return (
 			<Map

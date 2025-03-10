@@ -3,8 +3,25 @@
 	"tasks": [
 		{
 			"type": "npm",
+			"script": "wasm",
+			"problemMatcher": [],
+			"label": "wasm",
+			"detail": "Da Wasm!",
+			"runOptions": { "instanceLimit": 1 },
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "dedicated",
+				"showReuseMessage": true,
+				"clear": true
+			}
+		},
+		{
+			"type": "npm",
 			"script": "build",
 			"problemMatcher": [],
+			"dependsOn": ["wasm"],
 			"label": "build",
 			"detail": "Da build!",
 			"runOptions": { "instanceLimit": 1 },

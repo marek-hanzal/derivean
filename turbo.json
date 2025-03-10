@@ -5,8 +5,8 @@
 		"wasm": {
 			"dependsOn": [],
 			"inputs": ["lib/engine/Cargo.toml", "lib/engine/Cargo.lock", "lib/engine/src/**/*.rs"],
-			"outputs": ["packages/@derivean/@wasm/engine/**"],
-			"cache": true
+			"outputs": [],
+			"cache": false
 		},
 		"dev": { "dependsOn": ["^wasm"], "cache": false, "persistent": true },
 		"lint": {

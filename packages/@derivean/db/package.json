@@ -22,7 +22,7 @@
 	},
 	"dependencies": {
 		"@derivean/sdk": "workspace:*",
-		"@use-pico/client": "4.0.42",
+		"@use-pico/client": "4.0.43",
 		"kysely": "0.27.6"
 	},
 	"devDependencies": {

@@ -1,8 +1,10 @@
+mod generator;
+mod utils;
+
+use generator::{biome, height, moisture, shade, temp};
+use noise::NoiseFn;
+use utils::seed_of;
 use wasm_bindgen::prelude::wasm_bindgen;
-
-use super::seed_of;
-
-// https://github.com/Razaekel/noise-rs/blob/develop/examples/complexplanet.rs
 
 /**
  * Value of a generate tile with all it's information needed to
@@ -53,22 +55,36 @@ impl Tile {
 /**
  * Base noise generator used to generate a tile.
  */
-#[wasm_bindgen(getter_with_clone)]
-#[derive(Clone, Copy)]
-pub struct Noise {
-    pub seed: u32,
+#[wasm_bindgen]
+pub struct Chunk {
+    height: Box<dyn NoiseFn<f64, 2>>,
+    biome: Box<dyn NoiseFn<f64, 2>>,
+    temp: Box<dyn NoiseFn<f64, 2>>,
+    moisture: Box<dyn NoiseFn<f64, 2>>,
+    shade: Box<dyn NoiseFn<f64, 2>>,
 }
 
 #[wasm_bindgen]
-impl Noise {
+impl Chunk {
     #[wasm_bindgen(constructor)]
-    pub fn new(seed: String) -> Noise {
-        Noise {
-            seed: seed_of(&seed),
+    pub fn new(seed: String) -> Chunk {
+        let seed = seed_of(&seed);
+        Chunk {
+            height: Box::new(height(seed)),
+            biome: Box::new(biome(seed)),
+            temp: Box::new(temp(seed)),
+            moisture: Box::new(moisture(seed)),
+            shade: Box::new(shade(seed)),
         }
     }
 
-    pub fn value(&self) -> Tile {
-        Tile::new(1., 1., 1., 1., 1.)
+    pub fn tile(&self, x: f64, z: f64) -> Tile {
+        Tile::new(
+            self.height.get([x, z]),
+            self.biome.get([x, z]),
+            self.temp.get([x, z]),
+            self.moisture.get([x, z]),
+            self.shade.get([x, z]),
+        )
     }
 }

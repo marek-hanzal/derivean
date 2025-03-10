@@ -22,7 +22,7 @@
 	},
 	"dependencies": {
 		"@derivean/service": "workspace:*",
-		"@use-pico/client": "4.0.42",
+		"@use-pico/client": "4.0.43",
 		"@use-pico/common": "4.0.23",
 		"dependency-graph": "1.0.0"
 	},

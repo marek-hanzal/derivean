@@ -17,7 +17,7 @@
 	},
 	"workspaces": [
 		"apps/*",
-		"lib/*",
+		"lib/**/*",
 		"packages/**/*"
 	],
 	"devDependencies": {

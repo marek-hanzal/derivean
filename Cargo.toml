@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["lib/engine"]
+members = ["lib/chunk"]
 
 [profile.release]
 strip = true
