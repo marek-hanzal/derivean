@@ -22,12 +22,12 @@
 	},
 	"dependencies": {
 		"@derivean/sdk": "workspace:*",
-		"@use-pico/client": "4.0.43",
+		"@use-pico/client": "4.0.44",
 		"kysely": "0.27.6"
 	},
 	"devDependencies": {
-		"@use-pico/eslint-config-eslint": "5.0.10",
-		"@use-pico/tsconfig": "4.0.11",
+		"@use-pico/eslint-config-eslint": "5.0.11",
+		"@use-pico/tsconfig": "4.0.12",
 		"eslint": "9.22.0",
 		"typescript": "5.8.2"
 	},
