@@ -1,6 +1,3 @@
-export type NoiseType =
-	| "heightmap"
-	| "biome"
-	| "temperature"
-	| "moisture"
-	| "shade";
+/** @format */
+
+export type NoiseType = "height" | "biome" | "temp" | "moisture" | "shade";

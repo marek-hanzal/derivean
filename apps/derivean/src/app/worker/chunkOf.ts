@@ -1,3 +1,6 @@
+/** @format */
+
+import { Chunk as WasmChunk } from "@derivean/chunk";
 import { withGenerator } from "@derivean/terrain";
 import { compressChunk, decompressChunk, type Chunk } from "@derivean/utils";
 import { file, write } from "opfs-tools";
@@ -20,11 +23,7 @@ export namespace chunkOf {
 }
 
 export async function chunkOf({ id, mapId, level, x, z }: chunkOf.Props): Promise<chunkOf.Result> {
-	const generator = withGenerator({
-		gameConfig,
-		seed: mapId,
-		level,
-	});
+	const generator = withGenerator({ gameConfig, chunk: new WasmChunk(mapId), level });
 
 	const chunkFile = `/chunk/${mapId}/${id}.bin`;
 
@@ -44,16 +43,11 @@ export async function chunkOf({ id, mapId, level, x, z }: chunkOf.Props): Promis
 					file(chunkFile)
 						.arrayBuffer()
 						.then((buffer) => {
-							resolve({
-								hit,
-								chunk: decompressChunk(new Uint8Array(buffer)),
-							});
+							resolve({ hit, chunk: decompressChunk(new Uint8Array(buffer)) });
 						});
 				});
 			});
 	});
 }
 
-worker({
-	chunkOf,
-});
+worker({ chunkOf });

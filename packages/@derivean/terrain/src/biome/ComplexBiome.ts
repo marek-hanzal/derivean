@@ -18,7 +18,7 @@ export const ComplexBiome: Biome = {
 			case source.biome >= BIOME_GRASSLAND[0] && source.biome <= BIOME_GRASSLAND[1]:
 				output = HSLA([120, 100, 50, 1]);
 				// output.color[0] += Math.abs(source.biome) * 30;
-				output.color[2] += fpClamp({ min: -25, max: 30 })(source.heightmap * 50);
+				output.color[2] += fpClamp({ min: -25, max: 30 })(source.height * 50);
 				break;
 			// case source.biome >= BIOME_MOUNTAINS[0] && source.biome <= BIOME_MOUNTAINS[1]:
 			// 	output = HSLA([0, 100, 50, 1]);
