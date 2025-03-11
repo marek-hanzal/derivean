@@ -172,5 +172,14 @@ pub fn height(seed: u32) -> impl NoiseFn<f64, 2> {
         base_continent_def
     }
 
-    base_continent_def(seed)
+    // 1: [Coarse-turbulence module]: This turbulence module warps the output
+    // value from the base-continent-definition subgroup, adding some coarse
+    // detail to it.
+    let continentDef_tu0 = Turbulence::<_, Perlin>::new(base_continent_def(seed))
+        .set_seed(seed + 10)
+        .set_frequency(CONTINENT_FREQUENCY * 15.25)
+        .set_power(CONTINENT_FREQUENCY / 113.75)
+        .set_roughness(13);
+
+    continentDef_tu0
 }
