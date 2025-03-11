@@ -7,109 +7,18 @@ use noise::{
 pub fn height(seed: u32) -> impl NoiseFn<f64, 2> {
     /// Frequency of the planet's continents. Higher frequency produces
     /// smaller, more numerous continents. This value is measured in radians.
-    const CONTINENT_FREQUENCY: f64 = 1.0;
+    const CONTINENT_FREQUENCY: f64 = 0.125 / 8.;
 
     /// Lacunarity of the planet's continents. Changing this value produces
     /// slightly different continents. For the best results, this value should
     /// be random, but close to 2.0.
     const CONTINENT_LACUNARITY: f64 = 2.208984375;
 
-    /// Lacunarity of the planet's mountains. Changing the value produces
-    /// slightly different mountains. For the best results, this value should
-    /// be random, but close to 2.0.
-    const MOUNTAIN_LACUNARITY: f64 = 2.142578125;
-
-    /// Lacunarity of the planet's hills. Changing this value produces
-    /// slightly different hills. For the best results, this value should be
-    /// random, but close to 2.0.
-    const HILLS_LACUNARITY: f64 = 2.162109375;
-
-    /// Lacunarity of the planet's plains. Changing this value produces
-    /// slightly different plains. For the best results, this value should be
-    /// random, but close to 2.0.
-    const PLAINS_LACUNARITY: f64 = 2.314453125;
-
-    /// Lacunarity of the planet's badlands. Changing this value produces
-    /// slightly different badlands. For the best results, this value should
-    /// be random, but close to 2.0.
-    const BADLANDS_LACUNARITY: f64 = 2.212890625;
-
-    /// Specifies the "twistiness" of the mountains.
-    const MOUNTAINS_TWIST: f64 = 1.0;
-
-    /// Specifies the "twistiness" of the hills.
-    const HILLS_TWIST: f64 = 1.0;
-
-    /// Specifies the "twistiness" of the badlands.
-    const BADLANDS_TWIST: f64 = 1.0;
-
     /// Specifies the planet's sea level. This value must be between -1.0
     /// (minimum planet elevation) and +1.0 (maximum planet elevation).
     const SEA_LEVEL: f64 = 0.0;
 
-    /// Specifies the level on the planet in which continental shelves appear.
-    /// This value must be between -1.0 (minimum planet elevation) and +1.0
-    /// (maximum planet elevation), and must be less than `SEA_LEVEL`.
-    const SHELF_LEVEL: f64 = -0.375;
-
-    /// Determines the amount of mountainous terrain that appears on the
-    /// planet. Values range from 0.0 (no mountains) to 1.0 (all terrain is
-    /// covered in mountains). Mountains terrain will overlap hilly terrain.
-    /// Because the badlands terrain may overlap parts of the mountainous
-    /// terrain, setting `MOUNTAINS_AMOUNT` to 1.0 may not completely cover the
-    /// terrain in mountains.
-    const MOUNTAINS_AMOUNT: f64 = 0.5;
-
-    /// Determines the amount of hilly terrain that appears on the planet.
-    /// Values range from 0.0 (no hills) to 1.0 (all terrain is covered in
-    /// hills). This value must be less than `MOUNTAINS_AMOUNT`. Because the
-    /// mountains terrain will overlap parts of the hilly terrain, and the
-    /// badlands terrain may overlap parts of the hilly terrain, setting
-    /// `HILLS_AMOUNT` to 1.0 may not completely cover the terrain in hills.
-    const HILLS_AMOUNT: f64 = (1.0 + MOUNTAINS_AMOUNT) / 2.0;
-
-    /// Determines the amount of badlands terrain that covers the planet.
-    /// Values range from 0.0 (no badlands) to 1.0 (all terrain is covered in
-    /// badlands). Badlands terrain will overlap any other type of terrain.
-    const BADLANDS_AMOUNT: f64 = 0.3125;
-
-    /// Offset to apply to the terrain type definition. Low values (< 1.0)
-    /// cause the rough areas to appear only at high elevations. High values
-    /// (> 2.0) cause the rough areas to appear at any elevation. The
-    /// percentage of rough areas on the planet are independent of this value.
-    const TERRAIN_OFFSET: f64 = 1.0;
-
-    /// Specifies the amount of "glaciation" on the mountains. This value
-    /// should be close to 1.0 and greater than 1.0.
-    const MOUNTAIN_GLACIATION: f64 = 1.375;
-
-    /// Scaling to apply to the base continent elevations, in planetary
-    /// elevation units.
-    const CONTINENT_HEIGHT_SCALE: f64 = (1.0 - SEA_LEVEL) / 4.0;
-
-    /// Maximum depth of the rivers, in planetary elevation units.
-    const RIVER_DEPTH: f64 = 0.0234375;
-
-    // ////////////////////////////////////////////////////////////////////////
-    // Function group: continent definition
-    // ////////////////////////////////////////////////////////////////////////
-
-    // ////////////////////////////////////////////////////////////////////////
-    // Function subgroup: base continent definition (7 noise functions)
-    //
-    // This subgroup roughly defines the positions and base elevations of the
-    // planet's continents.
-    //
-    // The "base elevation" is the elevation of the terrain before any terrain
-    // features (mountains, hills, etc.) are placed on that terrain.
-    //
-    // -1.0 represents the lowest elevations and +1.0 represents the highest
-    // elevations.
-    //
     fn base_continent_def(seed: u32) -> impl NoiseFn<f64, 2> {
-        // 1: [Continent module]: This FBM module generates the continents. This
-        // noise function has a high number of octaves so that detail is visible at
-        // high zoom levels.
         let base_continent_def_fb0 = Fbm::<Perlin>::new(seed)
             .set_frequency(CONTINENT_FREQUENCY)
             .set_persistence(0.5)
@@ -172,24 +81,68 @@ pub fn height(seed: u32) -> impl NoiseFn<f64, 2> {
         base_continent_def
     }
 
-    // 1: [Coarse-turbulence module]: This turbulence module warps the output
-    // value from the base-continent-definition subgroup, adding some coarse
-    // detail to it.
-    let continentDef_tu0 = Turbulence::<_, Perlin>::new(base_continent_def(seed))
-        .set_seed(seed + 10)
-        .set_frequency(CONTINENT_FREQUENCY * 15.25)
-        .set_power(CONTINENT_FREQUENCY / 113.75)
-        .set_roughness(13);
+    fn continent_tu_def(
+        seed: u32,
+    ) -> Cache<
+        Select<
+            f64,
+            impl NoiseFn<f64, 2>,
+            Turbulence<Turbulence<Turbulence<impl NoiseFn<f64, 2>, Perlin>, Perlin>, Perlin>,
+            impl NoiseFn<f64, 2>,
+            2,
+        >,
+    > {
+        // 1: [Coarse-turbulence module]: This turbulence module warps the output
+        // value from the base-continent-definition subgroup, adding some coarse
+        // detail to it.
+        let continent_def_tu0 = Turbulence::<_, Perlin>::new(base_continent_def(seed))
+            .set_seed(seed + 10)
+            .set_frequency(CONTINENT_FREQUENCY * 15.25)
+            .set_power(CONTINENT_FREQUENCY / 113.75)
+            .set_roughness(13);
 
-    // 2: [Intermediate-turbulence module]: This turbulence module warps the
-    // output value from the coarse-turbulence module. This turbulence has a
-    // higher frequency, but lower power, than the coarse-turbulence module,
-    // adding some intermediate detail to it.
-    let continentDef_tu1 = Turbulence::<_, Perlin>::new(continentDef_tu0)
-        .set_seed(seed + 11)
-        .set_frequency(CONTINENT_FREQUENCY * 47.25)
-        .set_power(CONTINENT_FREQUENCY / 433.75)
-        .set_roughness(12);
+        // 2: [Intermediate-turbulence module]: This turbulence module warps the
+        // output value from the coarse-turbulence module. This turbulence has a
+        // higher frequency, but lower power, than the coarse-turbulence module,
+        // adding some intermediate detail to it.
+        let continent_def_tu1 = Turbulence::<_, Perlin>::new(continent_def_tu0)
+            .set_seed(seed + 11)
+            .set_frequency(CONTINENT_FREQUENCY * 47.25)
+            .set_power(CONTINENT_FREQUENCY / 433.75)
+            .set_roughness(12);
 
-    continentDef_tu1
+        // 3: [Warped-base-continent-definition module]: This turbulence module
+        // warps the output value from the intermediate-turbulence module. This
+        // turbulence has a higher frequency, but lower power, than the
+        // intermediate-turbulence module, adding some fine detail to it.
+        let continent_def_tu2 = Turbulence::<_, Perlin>::new(continent_def_tu1)
+            .set_seed(seed + 12)
+            .set_frequency(CONTINENT_FREQUENCY * 95.25)
+            .set_power(CONTINENT_FREQUENCY / 1019.75)
+            .set_roughness(11);
+
+        // 4: [Select-turbulence module]: At this stage, the turbulence is applied
+        // to the entire base-continent-definition subgroup, producing some very
+        // rugged, unrealistic coastlines.  This selector module selects the
+        // output values from the (unwarped) base-continent-definition subgroup
+        // and the warped-base-continent-definition module, based on the output
+        // value from the (unwarped) base-continent-definition subgroup.  The
+        // selection boundary is near sea level and has a relatively smooth
+        // transition.  In effect, only the higher areas of the base-continent-
+        // definition subgroup become warped; the underwater and coastal areas
+        // remain unaffected.
+        let continent_def_se = Select::new(
+            base_continent_def(seed),
+            continent_def_tu2,
+            base_continent_def(seed),
+        )
+        .set_bounds(SEA_LEVEL - 0.0375, SEA_LEVEL + 1000.0375)
+        .set_falloff(0.0625);
+
+        let continent_def = Cache::new(continent_def_se);
+
+        continent_def
+    }
+
+    continent_tu_def(seed)
 }

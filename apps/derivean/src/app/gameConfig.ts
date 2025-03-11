@@ -5,14 +5,14 @@ import { type GameConfig } from "@derivean/utils";
 
 export const gameConfig: GameConfig = {
 	maxZoom: 1,
-	minZoom: 0.001,
+	minZoom: 0.005,
 	plotSize: 16,
 	plotCount: 256,
 	chunkSize: 16 * 256,
 	chunkLimit: 2048,
 	biomes: [ComplexBiome],
 	layers: [
-		{ min: 0.001, max: 0.0025, level: 64, offset: 4 },
+		{ min: 0.005, max: 0.0025, level: 64, offset: 4 },
 		{ min: 0.0025, max: 0.005, level: 16, offset: 4 },
 		{ min: 0.005, max: 0.015, level: 8, offset: 4 },
 		{ min: 0.015, max: 0.025, level: 4, offset: 4 },

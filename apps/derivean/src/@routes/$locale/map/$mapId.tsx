@@ -44,7 +44,7 @@ export const Route = createFileRoute("/$locale/map/$mapId")({
 				mapId={mapId}
 				gameConfig={gameConfig}
 				gameEventBus={gameEventBus}
-				zoom={0.1}
+				zoom={gameConfig.minZoom}
 			/>
 		);
 	},
