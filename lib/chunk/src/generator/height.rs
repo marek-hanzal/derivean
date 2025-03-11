@@ -181,5 +181,15 @@ pub fn height(seed: u32) -> impl NoiseFn<f64, 2> {
         .set_power(CONTINENT_FREQUENCY / 113.75)
         .set_roughness(13);
 
-    continentDef_tu0
+    // 2: [Intermediate-turbulence module]: This turbulence module warps the
+    // output value from the coarse-turbulence module. This turbulence has a
+    // higher frequency, but lower power, than the coarse-turbulence module,
+    // adding some intermediate detail to it.
+    let continentDef_tu1 = Turbulence::<_, Perlin>::new(continentDef_tu0)
+        .set_seed(seed + 11)
+        .set_frequency(CONTINENT_FREQUENCY * 47.25)
+        .set_power(CONTINENT_FREQUENCY / 433.75)
+        .set_roughness(12);
+
+    continentDef_tu1
 }
