@@ -12,8 +12,8 @@ export const gameConfig: GameConfig = {
 	chunkLimit: 2048,
 	biomes: [ComplexBiome],
 	layers: [
-		{ min: 0.005, max: 0.0025, level: 64, offset: 4 },
-		{ min: 0.0025, max: 0.005, level: 16, offset: 4 },
+		{ min: 0.005, max: 0.0035, level: 64, offset: 4 },
+		{ min: 0.0035, max: 0.005, level: 16, offset: 4 },
 		{ min: 0.005, max: 0.015, level: 8, offset: 4 },
 		{ min: 0.015, max: 0.025, level: 4, offset: 4 },
 		{ min: 0.025, max: 0.04, level: 2, offset: 4 },

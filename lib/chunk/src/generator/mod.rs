@@ -17,6 +17,10 @@ pub struct Source {
      * terrain on a given tile, e.g. mountain, valley, plain, etc.
      */
     pub land: Land,
+    /**
+     * Individual biome noises used to generate biome-related noises. This should be used to compute
+     * the biome of a given tile, e.g. grassland, desert, etc.
+     */
     pub biome: Biome,
     /**
      * Noises used to generate environment-related noises. This should be used to compute the
@@ -35,12 +39,10 @@ impl Source {
     }
 
     pub fn generate(&self, x: f64, z: f64) -> tile::Tile {
-        let tile = tile::Tile {
+        tile::Tile {
             land: self.land.generate(x, z),
             biome: self.biome.generate(x, z),
             environment: self.environment.generate(x, z),
-        };
-
-        tile
+        }
     }
 }

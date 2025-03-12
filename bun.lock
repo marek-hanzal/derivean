@@ -165,6 +165,7 @@
       "name": "@derivean/terrain",
       "version": "0.5.0",
       "dependencies": {
+        "@derivean/chunk": "workspace:*",
         "@derivean/utils": "workspace:*",
         "@use-pico/common": "4.0.24",
       },
