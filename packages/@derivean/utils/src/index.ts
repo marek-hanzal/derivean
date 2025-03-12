@@ -46,6 +46,8 @@ export { TagSchema } from "./schema/tag/TagSchema";
 export { UserSchema } from "./schema/UserSchema";
 export { type UserType } from "./type/UserType";
 export { type XZ } from "./type/XZ";
+export { mapNoiseToColor } from "./utils/mapNoiseToColor";
+export { noiseToGrayscale } from "./utils/noiseToGrayscale";
 export { smoothstep } from "./utils/smoothstep";
 export { toWebp64 } from "./utils/toWebp64";
 export { withUse } from "./utils/withUse";
