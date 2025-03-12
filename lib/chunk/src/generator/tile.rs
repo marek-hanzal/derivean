@@ -12,6 +12,16 @@ pub struct Land {
 
 #[wasm_bindgen]
 #[derive(Clone, Copy)]
+pub struct Biome {
+    pub deep_ocean: f64,
+    pub ocean: f64,
+    pub grassland: f64,
+    pub desert: f64,
+    pub vulcanic: f64,
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Copy)]
 pub struct Environment {
     pub temp: f64,
     pub moisture: f64,
@@ -26,5 +36,6 @@ pub struct Environment {
 #[wasm_bindgen]
 pub struct Tile {
     pub land: Land,
+    pub biome: Biome,
     pub environment: Environment,
 }

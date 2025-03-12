@@ -1,7 +1,9 @@
+mod biome;
 mod environment;
 mod land;
 mod tile;
 
+use biome::Biome;
 use environment::Environment;
 use land::Land;
 pub use tile::Tile;
@@ -15,6 +17,7 @@ pub struct Source {
      * terrain on a given tile, e.g. mountain, valley, plain, etc.
      */
     pub land: Land,
+    pub biome: Biome,
     /**
      * Noises used to generate environment-related noises. This should be used to compute the
      * environment of a given tile, e.g. temperature, moisture, etc.
@@ -26,6 +29,7 @@ impl Source {
     pub fn new(seed: u32) -> Source {
         Source {
             land: Land::new(seed),
+            biome: Biome::new(seed),
             environment: Environment::new(seed),
         }
     }
@@ -33,6 +37,7 @@ impl Source {
     pub fn generate(&self, x: f64, z: f64) -> tile::Tile {
         let tile = tile::Tile {
             land: self.land.generate(x, z),
+            biome: self.biome.generate(x, z),
             environment: self.environment.generate(x, z),
         };
 
