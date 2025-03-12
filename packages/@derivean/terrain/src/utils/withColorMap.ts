@@ -16,7 +16,7 @@ export namespace withColorMap {
 export const withColorMap = ({ tile }: withColorMap.Props): Color.RGBA => {
 	const color = HSLA([0, 0, 0, 1]);
 
-	return noiseToGrayscale(tile.biome.deep_ocean);
+	return noiseToGrayscale(tile.lands.hill.height);
 
 	// return hslaToRgba(color);
 };
