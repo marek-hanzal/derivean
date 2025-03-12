@@ -1,7 +1,6 @@
 use noise::{
-    Abs, Add, Billow, Blend, Cache, Clamp, Constant, Curve, Displace, Exponent, Fbm, Max, Min,
-    MultiFractal, Multiply, NoiseFn, Perlin, RidgedMulti, ScaleBias, Seedable, Select, Terrace,
-    Turbulence, Worley, core::worley::ReturnType,
+    Cache, Clamp, Curve, Fbm, Min, MultiFractal, NoiseFn, Perlin, ScaleBias, Seedable, Select,
+    Turbulence,
 };
 
 pub fn height(seed: u32) -> impl NoiseFn<f64, 2> {
