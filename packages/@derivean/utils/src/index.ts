@@ -44,7 +44,6 @@ export { ResourceSchema } from "./schema/resource/ResourceSchema";
 export { SessionSchema } from "./schema/SessionSchema";
 export { TagSchema } from "./schema/tag/TagSchema";
 export { UserSchema } from "./schema/UserSchema";
-export { type Biome } from "./terrain/Biome";
 export { type UserType } from "./type/UserType";
 export { type XZ } from "./type/XZ";
 export { smoothstep } from "./utils/smoothstep";

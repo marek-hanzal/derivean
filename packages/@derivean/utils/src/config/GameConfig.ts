@@ -3,7 +3,6 @@
 import type { Chunk } from "../chunk/Chunk";
 import type { PlotCount } from "../chunk/PlotCount";
 import type { PlotSize } from "../chunk/PlotSize";
-import type { Biome } from "../terrain/Biome";
 
 /**
  * General game configuration used to setup all the internals of the game.
@@ -50,12 +49,6 @@ export interface GameConfig {
 	 * or even kill the browser tab.
 	 */
 	chunkLimit: number;
-	/**
-	 * Biomes used to colorize the world.
-	 *
-	 * Order of biomes is extremely important, so if you want to mess up with colors, be careful.
-	 */
-	biomes?: Biome[];
 	/**
 	 * Defines which layer is rendered in which zoom level.
 	 */
