@@ -1,7 +1,7 @@
 /** @format */
 
 import type { Tile } from "@derivean/chunk";
-import { HSLA, hslaToRgba, mapNoiseToColor, type Color } from "@derivean/utils";
+import { HSLA, noiseToGrayscale, type Color } from "@derivean/utils";
 
 export namespace withColorMap {
 	export interface Props {
@@ -16,12 +16,7 @@ export namespace withColorMap {
 export const withColorMap = ({ tile }: withColorMap.Props): Color.RGBA => {
 	const color = HSLA([0, 0, 0, 1]);
 
-	return hslaToRgba(
-		mapNoiseToColor(tile.biome.deep_ocean, {
-			min: HSLA([220, 100, 30, 1]),
-			max: HSLA([200, 80, 60, 1]),
-		}),
-	);
+	return noiseToGrayscale(tile.biome.deep_ocean);
 
 	// return hslaToRgba(color);
 };

@@ -1,16 +1,10 @@
 /** @format */
 
 import { type Chunk as WasmChunk } from "@derivean/chunk";
-import { type Chunk, type GameConfig, type Noise, type XZ } from "@derivean/utils";
+import { type Chunk, type GameConfig, type XZ } from "@derivean/utils";
 import { withColorMap } from "./withColorMap";
 
 export namespace withGenerator {
-	export interface Layer {
-		level: number;
-		noise: Noise;
-		biome: Noise;
-	}
-
 	export namespace Generator {
 		export interface Props {
 			x: number;
