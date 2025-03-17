@@ -1,41 +1,36 @@
 {
-	"version": "0.5.0",
-	"name": "@derivean/utils",
-	"description": "DeRivean toolbox.",
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "git://github.com/marek-hanzal/derivean"
-	},
-	"sideEffects": false,
-	"type": "module",
-	"main": "src/index.ts",
-	"module": "src/index.ts",
-	"types": "src/index.ts",
-	"files": [
-		"src"
-	],
-	"scripts": {
-		"lint": "eslint src",
-		"lint:fix": "eslint src --fix",
-		"typecheck": "tsc --noEmit"
-	},
-	"dependencies": {
-		"@derivean/sdk": "0.5.0",
-		"@use-pico/common": "4.0.24",
-		"borsh": "2.0.0",
-		"fflate": "0.8.2",
-		"three": "0.174.0",
-		"zod": "3.24.2"
-	},
-	"devDependencies": {
-		"@use-pico/eslint-config-eslint": "5.0.11",
-		"@use-pico/tsconfig": "4.0.12",
-		"eslint": "9.22.0",
-		"typescript": "5.8.2"
-	},
-	"bugs": {
-		"url": "https://github.com/marek-hanzal/derivean/issues"
-	},
-	"homepage": "https://github.com/marek-hanzal/derivean#readme"
+  "name": "@derivean/utils",
+  "description": "DeRivean toolbox.",
+  "version": "0.5.0",
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@derivean/sdk": "0.5.0",
+    "@use-pico/common": "4.0.24",
+    "borsh": "2.0.0",
+    "fflate": "0.8.2",
+    "three": "0.174.0",
+    "zod": "3.24.2"
+  },
+  "devDependencies": {
+    "@use-pico/eslint-config-eslint": "5.0.11",
+    "@use-pico/tsconfig": "4.0.12",
+    "eslint": "9.22.0",
+    "typescript": "5.8.2"
+  },
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src"
+  ],
+  "license": "MIT",
+  "repository": "marek-hanzal/derivean",
+  "homepage": "https://github.com/marek-hanzal/derivean#readme",
+  "bugs": "https://github.com/marek-hanzal/derivean/issues"
 }

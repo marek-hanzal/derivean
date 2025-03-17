@@ -4,12 +4,29 @@
 		"name",
 		"description",
 		"version",
-		"author"
+		"type",
+		"sideEffects",
+		"scripts",
+		"dependencies",
+		"peerDependencies",
+		"devDependencies",
+		"trustedDependencies",
+		"main",
+		"module",
+		"types",
+		"files",
+		"exports",
+		"author",
+		"license",
+		"repository",
+		"homepage",
+		"bugs"
 	],
 	"sortAz": [
 		"dependencies",
 		"devDependencies",
 		"peerDependencies",
+		"trustedDependencies",
 		"keywords"
 	],
 	"versionGroups": [

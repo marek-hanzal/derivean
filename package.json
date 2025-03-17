@@ -1,13 +1,7 @@
 {
 	"name": "@marek-hanzal/derivean",
-	"version": "0.5.0",
-	"private": true,
 	"description": "A little experiment with Vite, React, and Three.js",
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "git://github.com/marek-hanzal/derivean.git"
-	},
+	"version": "0.5.0",
 	"scripts": {
 		"wasm": "bunx turbo run wasm --cache-dir=.turbo",
 		"dev": "bunx turbo run dev --parallel --no-daemon",
@@ -15,20 +9,24 @@
 		"build": "bunx turbo run build --cache-dir=.turbo",
 		"typecheck": "bunx turbo run typecheck --cache-dir=.turbo",
 		"translations": "bunx turbo run translations",
-		"version:fix": "bunx syncpack fix-mismatches"
+		"sp:fix": "bunx syncpack fix-mismatches",
+		"sp:format": "bunx syncpack format"
 	},
-	"workspaces": [
-		"apps/*",
-		"packages/**/*",
-		"wasm/**/*"
-	],
 	"devDependencies": {
 		"@types/node": "22.13.10",
 		"prettier": "3.5.3",
 		"typescript": "5.8.2"
 	},
-	"packageManager": "bun@1.2.4",
 	"trustedDependencies": [
 		"@swc/core"
+	],
+	"license": "MIT",
+	"repository": "marek-hanzal/derivean.git",
+	"packageManager": "bun@1.2.4",
+	"private": true,
+	"workspaces": [
+		"apps/*",
+		"packages/**/*",
+		"wasm/**/*"
 	]
 }

@@ -1,38 +1,33 @@
 {
-	"version": "0.5.0",
-	"name": "@derivean/game-ui",
-	"description": "User-land game UI stuff",
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "git://github.com/marek-hanzal/derivean"
-	},
-	"sideEffects": false,
-	"type": "module",
-	"main": "src/index.ts",
-	"module": "src/index.ts",
-	"types": "src/index.ts",
-	"files": [
-		"src"
-	],
-	"scripts": {
-		"lint": "eslint src",
-		"lint:fix": "eslint src --fix",
-		"typecheck": "tsc --noEmit"
-	},
-	"dependencies": {
-		"@use-pico/client": "4.0.44",
-		"@use-pico/common": "4.0.24",
-		"react": "19.0.0"
-	},
-	"devDependencies": {
-		"@use-pico/eslint-config-eslint": "5.0.11",
-		"@use-pico/tsconfig": "4.0.12",
-		"eslint": "9.22.0",
-		"typescript": "5.8.2"
-	},
-	"bugs": {
-		"url": "https://github.com/marek-hanzal/derivean/issues"
-	},
-	"homepage": "https://github.com/marek-hanzal/derivean#readme"
+  "name": "@derivean/game-ui",
+  "description": "User-land game UI stuff",
+  "version": "0.5.0",
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@use-pico/client": "4.0.44",
+    "@use-pico/common": "4.0.24",
+    "react": "19.0.0"
+  },
+  "devDependencies": {
+    "@use-pico/eslint-config-eslint": "5.0.11",
+    "@use-pico/tsconfig": "4.0.12",
+    "eslint": "9.22.0",
+    "typescript": "5.8.2"
+  },
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "src"
+  ],
+  "license": "MIT",
+  "repository": "marek-hanzal/derivean",
+  "homepage": "https://github.com/marek-hanzal/derivean#readme",
+  "bugs": "https://github.com/marek-hanzal/derivean/issues"
 }
