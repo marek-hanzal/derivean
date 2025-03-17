@@ -1,0 +1,27 @@
+{
+	"sortPackages": true,
+	"sortFirst": [
+		"name",
+		"description",
+		"version",
+		"author"
+	],
+	"sortAz": [
+		"dependencies",
+		"devDependencies",
+		"peerDependencies",
+		"keywords"
+	],
+	"versionGroups": [
+		{
+			"dependencies": [
+				"@types/**"
+			],
+			"dependencyTypes": [
+				"!dev"
+			],
+			"isBanned": true,
+			"label": "@types packages should only be under devDependencies"
+		}
+	]
+}

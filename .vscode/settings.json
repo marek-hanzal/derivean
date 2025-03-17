@@ -37,6 +37,7 @@
 		"seedable",
 		"serde",
 		"sqlocal",
+		"syncpack",
 		"Tadaa",
 		"tauri",
 		"tsify",

@@ -21,7 +21,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@derivean/db": "workspace:*",
+		"@derivean/db": "0.5.0",
 		"dependency-graph": "1.0.0"
 	},
 	"devDependencies": {

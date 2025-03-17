@@ -21,7 +21,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@derivean/service": "workspace:*",
+		"@derivean/service": "0.5.0",
 		"@use-pico/client": "4.0.44",
 		"@use-pico/common": "4.0.24",
 		"dependency-graph": "1.0.0"
@@ -30,7 +30,7 @@
 		"react": "19.0.0"
 	},
 	"devDependencies": {
-		"@types/react": "19.0.10",
+		"@types/react": "19.0.11",
 		"@use-pico/eslint-config-eslint": "5.0.11",
 		"@use-pico/tsconfig": "4.0.12",
 		"eslint": "9.22.0",

@@ -21,8 +21,8 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@derivean/chunk": "workspace:*",
-		"@derivean/utils": "workspace:*",
+		"@derivean/chunk": "0.5.0",
+		"@derivean/utils": "0.5.0",
 		"@use-pico/common": "4.0.24"
 	},
 	"devDependencies": {
