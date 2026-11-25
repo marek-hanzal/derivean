@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeRivean</title>
+  </head>
+  <body>
+    <main id="game" data-mode="boot">
+      <canvas id="world" aria-label="DeRivean world"></canvas>
+      <div class="veil"></div>
+      <header class="masthead">
+        <div class="mark" aria-hidden="true"><i></i><i></i><i></i></div>
+        <span>DeRivean</span>
+      </header>
+      <section id="menu" data-ui="Launcher" class="launcher">
+        <div class="launcher-body">
+          <div class="launch-kicker"><i></i> VOXEL PHYSICS SANDBOX</div>
+          <h1>DeRivean<span aria-hidden="true">.</span></h1>
+          <p>Cut into the terrain and see what holds.</p>
+          <nav>
+            <button type="button" id="play" data-action="enter world" disabled><span id="play-label">Preparing world</span><span aria-hidden="true">↗</span></button>
+            <button type="button" id="quit" data-action="exit derivean">Exit game</button>
+          </nav>
+          <p id="message" class="message" role="status" hidden></p>
+        </div>
+        <div class="launch-footer"><span>THE STACKED CHANNELS</span><span id="voxel-scale"></span></div>
+      </section>
+      <section id="hud" data-ui="GameHud" hidden>
+        <div class="crosshair" data-target="false" aria-hidden="true"></div>
+        <div class="field-label"><i></i> THE STACKED CHANNELS</div>
+        <div class="terrain-label" id="material">—</div>
+        <div class="tools">
+          <div class="tool-info"><span>EXCAVATION BRUSH</span><strong id="brush-size"></strong></div>
+          <div class="brushes">
+            <div id="sphere" data-selected="true"><kbd>1</kbd><i class="sphere-icon"></i>Sphere</div>
+            <div id="cube" data-selected="false"><kbd>2</kbd><i class="cube-icon"></i>Cube</div>
+          </div>
+        </div>
+        <div class="controls">
+          <span><kbd>WASD</kbd> Move</span><span><kbd>SPACE</kbd> Jump</span><span><kbd>SHIFT</kbd> Sprint</span>
+          <span><kbd>LMB</kbd> Cut</span><span><kbd>RMB</kbd> Place <span id="stock"></span></span><span><kbd>WHEEL</kbd> Size</span><span><kbd>ESC</kbd> Menu</span><span><kbd>F3</kbd> Stats</span>
+        </div>
+        <output id="metrics" class="metrics" hidden></output>
+      </section>
+    </main>
+    <script type="module" src="./src/index.ts"></script>
+  </body>
+</html>

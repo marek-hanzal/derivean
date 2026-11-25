@@ -1,0 +1,31 @@
+[tools]
+node = "24.22.1"
+
+[tasks.setup]
+description = "Install the desktop and native build dependencies"
+run = [
+  "mise install",
+  "mise -C @napi install",
+  "mise -C @napi run setup",
+  "mise -C @game run setup",
+]
+
+[tasks.build]
+description = "Build the C++ addon and Electron renderer"
+run = [
+  "mise -C @napi run build",
+  "mise -C @game run build",
+]
+
+[tasks.play]
+description = "Build and launch Derivean"
+depends = ["build"]
+run = "mise -C @game run play"
+
+[tasks.check]
+description = "Build and verify the simulation and renderer"
+depends = ["build"]
+run = [
+  "mise -C @game run check",
+  "mise -C @napi run test",
+]

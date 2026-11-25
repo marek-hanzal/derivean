@@ -1,0 +1,11 @@
+[tasks.setup]
+run = "npm ci"
+
+[tasks.build]
+run = "npm run build"
+
+[tasks.check]
+run = "npm run check"
+
+[tasks.play]
+run = "npm start"

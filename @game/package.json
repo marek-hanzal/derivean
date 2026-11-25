@@ -1,0 +1,21 @@
+{
+  "name": "derivean",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "main/index.mjs",
+  "scripts": {
+    "build": "vite build",
+    "check": "tsc --noEmit",
+    "start": "electron ."
+  },
+  "dependencies": {
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "@types/three": "0.187.0",
+    "electron": "45.5.0",
+    "typescript": "5.9.3",
+    "vite": "8.3.8"
+  }
+}

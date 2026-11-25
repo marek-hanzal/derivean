@@ -1,0 +1,9 @@
+{
+  "name": "derivean-napi",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "node-addon-api": "8.9.2",
+    "node-api-headers": "1.7.0"
+  }
+}
