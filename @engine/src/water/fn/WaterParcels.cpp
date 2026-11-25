@@ -19,17 +19,28 @@ bool poolContact(const WaterState& state, Position at, double half) {
     return waterAt(state, cell) && at[1] <= surface;
 }
 
+void absorb(WaterState& state, WaterParcel& parcel, Cell target) {
+    const int amount = std::min(parcel.amount, WaterUnits - waterAt(state, target));
+    addWater(state, target, amount);
+    state.budget.airborne -= uint64_t(amount);
+    parcel.amount -= amount;
+}
+
 bool receive(WaterState& state, const VoxelWorld& world, WaterParcel& parcel, Position lastFree) {
-    Cell target = cellAt(lastFree);
-    if (materialAt(world, target) != Material::Air) return false;
-    const Cell lower = target + Cell{0, -1, 0};
-    if (materialAt(world, lower) == Material::Air && waterAt(state, lower) != WaterUnits)
-        target = lower;
-    for (int row = 0; row < 3 && parcel.amount && materialAt(world, target) == Material::Air; ++row, ++target.y) {
-        const int amount = std::min(parcel.amount, WaterUnits - waterAt(state, target));
-        addWater(state, target, amount);
-        state.budget.airborne -= uint64_t(amount);
-        parcel.amount -= amount;
+    const Cell contact = cellAt(lastFree);
+    const Cell below = contact + Cell{0, -1, 0};
+    const bool openBelow = materialAt(world, below) == Material::Air;
+    if (openBelow) absorb(state, parcel, below);
+    absorb(state, parcel, contact);
+
+    // Spill into adjacent capacity without filling a layer above the impact.
+    for (Cell direction : Neighbors) {
+        if (!parcel.amount) return true;
+        if (direction.y) continue;
+        if (openBelow && materialAt(world, below + direction) == Material::Air)
+            absorb(state, parcel, below + direction);
+        if (materialAt(world, contact + direction) == Material::Air)
+            absorb(state, parcel, contact + direction);
     }
     return parcel.amount == 0;
 }
@@ -61,15 +72,18 @@ bool advanceParcel(WaterState& state, const VoxelWorld& world, WaterParcel& parc
             return false;
         }
         const Position sample = interpolate(from, to, fraction);
-        if (poolContact(state, sample, half) || touchesTerrain(world, sample, half)) {
+        const bool solid = touchesTerrain(world, sample, half);
+        if (solid || poolContact(state, sample, half)) {
             if (receive(state, world, parcel, lastFree)) {
                 if (parcel.velocity[1] < -1.4 && state.foam.size() < 768)
                     state.foam.push_back({lastFree, 0.27});
                 return true;
             }
-            parcel.position = lastFree;
-            parcel.velocity = {0, std::max(0.14, -parcel.velocity[1] * 0.12), 0};
-            return false;
+            if (solid) {
+                parcel.position = lastFree;
+                parcel.velocity = {0, std::max(0.14, -parcel.velocity[1] * 0.12), 0};
+                return false;
+            }
         }
         lastFree = sample;
     }

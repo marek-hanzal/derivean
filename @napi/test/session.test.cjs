@@ -89,6 +89,37 @@ test("a player opens the upper channel into the lower one, then drains it into t
   assert.ok(frame.water.escaped > 100_000);
 });
 
+test("a one-voxel breach drains without building water above the upper reservoir", () => {
+  const session = new Session();
+  const step = (command = {}) => session.advance({ ...controls, radius: 1, ...command });
+  let frame = step();
+  for (let i = 0; i < 57; i++) frame = step({ x: -1 });
+  for (let i = 0; i < 59; i++) frame = step({ z: -1 });
+  for (let i = 0; i < 12; i++) frame = step();
+
+  const direction = aim(frame.eye, [-4.025, 2.27, -4.45]);
+  assert.equal(world.materials[step({ direction }).target?.material]?.name, "Clay");
+  for (let i = 0; i < 4; i++) step({ direction, dig: true });
+
+  let sawWaterBelowBreach = false;
+  for (let i = 0; i < 180; i++) {
+    frame = step();
+    balanced(frame);
+    assert.equal(frame.water.escaped, 0);
+    for (const { origin, faces } of frame.waterMeshes) {
+      for (let j = 0; j < faces.length; j += 8) {
+        const [axis, , plane, u, v, width, height] = faces.subarray(j, j + 7);
+        const top = axis === 1 ? plane : axis === 0 ? u + width : v + height;
+        assert.ok(origin[1] + top * world.voxelSize / world.waterUnitsPerVoxel <= 3,
+                  "Water rose above its original source");
+      }
+    }
+    for (let j = 0; j < frame.particles.length; j += 5)
+      sawWaterBelowBreach ||= frame.particles[j + 4] === 0 && frame.particles[j + 1] < 1;
+  }
+  assert.ok(sawWaterBelowBreach, "Water did not fall through the opening");
+});
+
 test("a released sand bank settles, including grains over freshly deposited cells", () => {
   const session = new Session();
   let frame;

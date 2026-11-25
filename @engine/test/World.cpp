@@ -1,4 +1,5 @@
 #include "granular/type/Sand.hpp"
+#include "particles/type/VoxelContact.hpp"
 #include "simulation/type/JoltRuntime.hpp"
 #include "voxel/type/Mesh.hpp"
 #include "water/type/Water.hpp"
@@ -147,6 +148,21 @@ void remoteCatch() {
     expect(below(water, -500) && !water.budget.escaped, "Water failed to find terrain far outside the local chunks");
 }
 
+void saturatedImpactSpreadsSideways() {
+    VoxelWorld world;
+    WaterState water;
+    fillBox(world, {{-2, -1, -2}, {3, 0, 3}}, Material::Basalt);
+    seedWater(water, world, {{0, 0, 0}, {1, 2, 1}});
+    constexpr int amount = WaterUnits / 4;
+    water.parcels.push_back({cellCenter({0, 1, 0}), {0, -1, 0}, amount});
+    water.budget.airborne += amount;
+    water.budget.initial += amount;
+
+    simulate(water, world, 1);
+    expect(water.parcels.empty(), "Airborne water stalled at a full impact column");
+    expect(below(water, 1) == WaterUnits + amount, "The excess did not flow sideways at the impact");
+}
+
 void weakBearingFails() {
     VoxelWorld world;
     fillBox(world, {{-40, 0, -2}, {41, 1, 3}}, Material::Basalt);
@@ -188,6 +204,7 @@ int main() {
     damAndDisplacement();
     roofedPipe();
     remoteCatch();
+    saturatedImpactSpreadsSideways();
     weakBearingFails();
     contactsAndSediment();
 }

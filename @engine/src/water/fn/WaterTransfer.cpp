@@ -1,4 +1,5 @@
 #include "water/type/WaterTransfer.hpp"
+#include "particles/type/VoxelContact.hpp"
 
 #include <utility>
 
@@ -24,8 +25,7 @@ void fall(WaterState& state, const VoxelWorld& world, Cell from, int units) {
     if (!waterAt(state, below) && !waterAt(state, below + Down) &&
         materialAt(world, below + Down) == Material::Air) {
         addWater(state, from, -units);
-        state.parcels.push_back({{(from.x + 0.5) * VoxelSize, from.y * VoxelSize, (from.z + 0.5) * VoxelSize},
-                                 {0, 0, 0}, units});
+        state.parcels.push_back({cellCenter(below), {0, 0, 0}, units});
         state.budget.airborne += uint64_t(units);
         return;
     }
