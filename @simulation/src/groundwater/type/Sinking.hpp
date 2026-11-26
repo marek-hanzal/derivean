@@ -18,8 +18,13 @@ struct SinkWork {
     std::vector<float> risen;      // m³/yr coming out at each cell this step: what sank in the step before
     std::vector<int32_t> body, members, outlet;   // scratch of the labelling
     std::vector<float> lake;                       // scratch: m³/yr a lake's floor took in the step before, at its outlet
-    std::vector<float> ponded;     // m³/yr an open hollow could not take this step: it leaves the step's surface water there
+    std::vector<float> ponded;     // m³/yr an open hollow could not take this step: it runs over the hollow's pass in the same step
     double total{};                // m³/yr gone down this step, over the domain
+    // Spilling over the passes of open hollows that could not take their water (groundwater/fn/Spill.hpp).
+    std::vector<float> extra;                   // scratch: m³/yr still to pass on from each cell
+    std::vector<int32_t> lakeOf, pour;          // scratch: the lake whose catchment holds a cell; the cell each lake runs over into (fn/Spill.cpp)
+    std::vector<std::vector<int32_t>> lakes;    // scratch: the cells of each lake's catchment
+    double spilled{}, overEdge{};               // m³/yr this step: run over passes (once per pass); left over the domain's edge or into a finished neighbour's cells
 
     bool active() const { return !rate.empty(); }
 };

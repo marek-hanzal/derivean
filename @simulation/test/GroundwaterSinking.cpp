@@ -1,6 +1,7 @@
 #include "GroundwaterFixture.hpp"
 
 #include "groundwater/fn/Sinking.hpp"
+#include "groundwater/fn/Spill.hpp"
 #include "groundwater/type/Sinking.hpp"
 #include "landscape/fn/Build.hpp"
 #include "landscape/fn/Process.hpp"
@@ -88,9 +89,76 @@ Plateau replayPlateau(Material rock) {
     return plateau;
 }
 
+// What a route did with the water of a domain on soluble rock: what entered (own runoff, inflow,
+// risen), what left over the rim or the sea, went down, ran over the edge or into a finished
+// neighbour, or soaked into a dry bed.
+struct Routed {
+    double entered{}, left{}, sunk{}, overEdge{}, seeped{}, spilled{};
+    size_t lakes{};
+    double residual() const { return (entered - left - sunk - overEdge - seeped) / entered; }
+};
+
+Routed routedOf(const Domain& d, const FlowScratch& scratch) {
+    Routed r;
+    const float area = float(d.cell * d.cell);
+    for (size_t i = 0; i < d.cells(); ++i) {
+        r.entered += double(d.runoff[i]) * area + d.sinking.risen[i] + d.inflow[i];
+        float passed = 0;
+        for (int k = 0; k < 8; ++k) passed += scratch.share[i * 8 + size_t(k)];
+        if (passed <= 0 && d.hold[i] != Free) r.left += d.discharge[i];
+        if (!d.seeped.empty()) r.seeped += d.seeped[i];
+    }
+    r.sunk = d.sinking.total, r.overEdge = d.sinking.overEdge, r.spilled = d.sinking.spilled, r.lakes = d.sinking.lakes.size();
+    return r;
+}
+
+// A 7 × 7 domain falling from every side into a hollow at its middle whose floor takes 1 m³/yr and
+// was offered 10 000; its lowest pass leads east to a cell that is `beyond`. With `walled` that cell
+// stands high, and the lowest way out is the domain's edge.
+Domain bowl(Hold beyond, bool walled) {
+    Domain d;
+    d.size = 7, d.cell = 10;
+    const size_t cells = 49, middle = 3 * 7 + 3, pass = 3 * 7 + 6;
+    d.surface.assign(cells, 0.0f), d.discharge.assign(cells, 0.0f), d.hold.assign(cells, Free), d.rank.assign(cells, 0);
+    for (int z = 0; z < 7; ++z)
+        for (int x = 0; x < 7; ++x) d.surface[size_t(z * 7 + x)] = 10.0f + 0.5f * float(std::abs(x - 3) + std::abs(z - 3));
+    d.surface[pass] = walled ? 20.0f : 9.0f, d.hold[pass] = beyond;
+    for (size_t i = 0; i < cells; ++i) d.rank[i] = 100 - int(d.surface[i] * 4);
+    SinkWork& w = d.sinking;
+    w.rate.assign(cells, 0.01f), w.received.assign(cells, -1.0f), w.sunk.assign(cells, 0.0f), w.ponded.assign(cells, 0.0f);
+    w.received[middle] = 1e4f, w.ponded[middle] = 1e4f - 1.0f;
+    return d;
+}
+
+std::vector<float> bowlShares() {
+    std::vector<float> share(49 * 8, 0.0f);
+    for (int z = 0; z < 7; ++z)
+        for (int x = 0; x < 7; ++x) {
+            if ((x == 3 && z == 3) || (x == 6 && z == 3)) continue;
+            const int dx = x < 3 ? 1 : x > 3 ? -1 : 0, dz = z < 3 ? 1 : z > 3 ? -1 : 0;
+            for (int k = 0; k < 8; ++k)
+                if (NeighborX[k] == dx && NeighborZ[k] == dz) share[size_t(z * 7 + x) * 8 + size_t(k)] = 1;
+        }
+    return share;
+}
+
+// Water a hollow cannot take runs over its lowest pass: on to the cell beyond, out of the domain
+// where that cell is a finished neighbour's, or over the domain's edge where that is lower.
+void testSpillByHand() {
+    const std::vector<float> share = bowlShares();
+    const size_t pass = 3 * 7 + 6;
+    Domain onward = bowl(Rim, false), finished = bowl(Settled, false), edge = bowl(Rim, true);
+    std::vector<float> gathered(49, 0.0f);
+    spillHollows(onward, share, &gathered), spillHollows(finished, share, nullptr), spillHollows(edge, share, nullptr);
+    expectWater(onward.sinking.spilled == 9999 && onward.discharge[pass] == 9999 && gathered[pass] == 9999 && onward.sinking.overEdge == 0, "a hollow's overflow does not reach the cell beyond its pass", onward.discharge[pass]);
+    expectWater(finished.sinking.overEdge == 9999 && finished.discharge[pass] == 0, "overflow into a finished neighbour's cell stays in the domain", finished.sinking.overEdge);
+    expectWater(edge.sinking.overEdge == 9999 && edge.discharge[pass] == 0, "a catchment whose lowest way out is the domain's edge does not run over it", edge.sinking.overEdge);
+}
+
 } // namespace
 
 void testGroundwaterSinking() {
+    testSpillByHand();
     const Plateau karst = replayPlateau(Material::Limestone), plain = replayPlateau(Material::Sandstone);
     const Domain& d = karst.domain;
     expectWater(d.sinking.active() && !plain.domain.sinking.active(), "only soluble rock takes in surface water");
@@ -123,9 +191,29 @@ void testGroundwaterSinking() {
         if (passed <= 0 && d.hold[i] != Free) left += d.discharge[i];
         ponded += work.ponded[i];
     }
-    expectWater(std::abs(entered - left - work.total - ponded) < 1e-3 * entered, "water of the plateau is lost or made", (entered - left - work.total - ponded) / entered);
+    // What open hollows could not take ran over their passes and left over the rim with the rest.
+    expectWater(std::abs(entered - left - work.total - work.overEdge) < 1e-3 * entered, "water of the plateau is lost or made", (entered - left - work.total - work.overEdge) / entered);
     expectWater(ponded < 0.01 * work.total, "open hollows are offered much more than their floors take", ponded / std::max(1.0, work.total));
     expectWater(atEdge > 0.9 * risen, "the water of the soluble rock does not come out where it meets the shale", atEdge / risen);
+    // Floors that take a tenth and a hundredth as much leave hollows overflowing: their water runs
+    // over the passes, lakes join, and none is lost or made. A route run again after the step, as
+    // the coast's replay does, books the same water once.
+    for (const float slower : {0.1f, 0.01f}) {
+        Domain slow = d;
+        for (float& rate : slow.sinking.rate) rate *= slower;
+        for (float& soak : slow.sinking.soak) soak *= slower;
+        FlowScratch scratch;
+        floodLevels(slow, scratch);
+        routeWater(slow, scratch);
+        const Routed once = routedOf(slow, scratch);
+        routeWater(slow, scratch);
+        const Routed again = routedOf(slow, scratch);
+        std::printf("ground water: floors taking %.2f of their rate: %.0f %% of the water runs over passes of %zu lakes, %.2g left unaccounted\n", double(slower), 100 * once.spilled / once.entered, once.lakes, once.residual());
+        expectWater(std::abs(once.residual()) < 1e-4, "water that runs over the passes is lost or made", once.residual());
+        expectWater(once.spilled > 0.005 * once.entered && once.lakes > 20, "overflowing hollows spill little", once.spilled / once.entered);
+        expectWater(std::abs(again.left - once.left) <= 1e-6 * once.entered && std::abs(again.sunk - once.sunk) <= 1e-6 * once.entered && again.overEdge == once.overEdge,
+                    "a route run twice books its water twice", (again.left - once.left) / once.entered);
+    }
     // No floor takes in more than it can: its rate over the cell, and the share of its own runoff
     // that soaks in where it falls. Over a replay what sinks then stays within what fell and rose.
     double over = 0, most = 0;
@@ -152,13 +240,15 @@ void testGroundwaterSinking() {
         const bool deepened = karst.closedAfter[i] > karst.closedBefore[i] + 0.1f, wet = d.level[i] > d.surface[i] + 1e-3f;
         std::printf("  hollow %d %d: closed %.1f m, after %.1f m on limestone (%s), %.1f m on sandstone\n", hollow[0], hollow[1], double(karst.closedBefore[i]),
                     double(karst.closedAfter[i]), reached ? "within the rising's reach" : drains ? "drains down" : "holds its water", double(plain.closedAfter[i]));
+        // A doline may deepen down into its rising's reach; it deepened all the same.
+        deeper += deepened;
         if (reached) continue;
-        open += drains, deeper += deepened, dry += !wet;
+        open += drains, dry += !wet;
         filled += plain.closedAfter[i] < karst.closedBefore[i];
     }
     expectWater(open >= 4, "the hollows dug in the soluble rock do not drain down", open);
     // A floor takes in no more than its rate, so how far a doline deepens in 40 steps varies with
-    // what reaches it (up to 8 m here); that it deepens, by more than float noise or moved cover,
+    // what reaches it (up to 13 m here); that it deepens, by more than float noise or moved cover,
     // where sandstone fills is the check.
     expectWater(deeper >= 4, "hollows on soluble rock do not deepen into dolines", deeper);
     expectWater(filled >= 4, "hollows on rock that water does not open do not fill in", filled);

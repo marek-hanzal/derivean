@@ -3,6 +3,7 @@
 #include "aeolian/fn/Wind.hpp"
 #include "core/fn/Hash.hpp"
 #include "groundwater/fn/Sinking.hpp"
+#include "groundwater/fn/Spill.hpp"
 #include "groundwater/type/Sinking.hpp"
 
 namespace derivean::sim {
@@ -40,6 +41,7 @@ void routeWater(Domain& domain, FlowScratch& scratch) {
     // Water that went down into soluble rock in the step before comes out at its rising; what
     // soaks into such rock where it falls goes down there.
     const std::vector<float>* risen = domain.sinking.active() ? &domain.sinking.risen : nullptr;
+    if (risen) startRoute(domain);
     for (size_t i = 0; i < cells; ++i) {
         const float own = domain.runoff[i] * area;
         domain.discharge[i] = own + domain.inflow[i] + (risen ? (*risen)[i] - (domain.hold[i] == Free ? soakAt(domain, i, own) : 0.0f) : 0.0f);
@@ -201,6 +203,8 @@ void routeWater(Domain& domain, FlowScratch& scratch) {
             if (!ground) travelled[other] += water * share[k] * (way + NeighborReach[k] * float(domain.cell));
         }
     }
+    // What an open hollow in soluble rock could not take runs over its pass in this step.
+    if (risen) spillHollows(domain, scratch.share, ground ? nullptr : &scratch.gathered);
 }
 
 } // namespace derivean::sim

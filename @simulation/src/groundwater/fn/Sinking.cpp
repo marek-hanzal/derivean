@@ -154,6 +154,14 @@ bool drainsDown(const Domain& domain, size_t cell) {
     return true;
 }
 
+void startRoute(Domain& domain) {
+    SinkWork& work = domain.sinking;
+    if (!work.active()) return;
+    std::fill(work.sunk.begin(), work.sunk.end(), 0.0f);
+    std::fill(work.ponded.begin(), work.ponded.end(), 0.0f);
+    work.total = 0;
+}
+
 float soakAt(Domain& domain, size_t cell, float own) {
     SinkWork& work = domain.sinking;
     if (!work.active() || work.soak[cell] <= 0 || own <= 0) return 0;
@@ -171,9 +179,9 @@ float sinkAt(Domain& domain, size_t cell, float water, bool standing, bool pit) 
     if (water <= 0) return 0;
     const float width = float(domain.cell);
     const float lost = pit || standing ? std::min(water, work.rate[cell] * width * width) : swallowed(work.rate[cell], water, width);
-    // What an open hollow cannot take leaves this step's surface water here (it would fill the
-    // hollow and spill; the flood holds the lake from the next step). Carried into the next step it
-    // runs on to the next open hollow and grows step by step.
+    // What an open hollow cannot take runs over its pass in this step (groundwater/fn/Spill.hpp);
+    // the flood holds the lake from the next. Carried into the next step instead, it would run on
+    // to the next open hollow and grow step by step.
     if (pit) work.received[cell] = water, work.ponded[cell] += water - lost;
     work.sunk[cell] += lost;
     work.total += lost;
