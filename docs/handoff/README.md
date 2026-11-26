@@ -80,6 +80,8 @@ A stream whose file is missing has not written it yet; its state is then only in
 
 From 26 Nov an independent Codex reviewer works through a shared mailbox outside the worktree: `/Users/marekhanzal/Project/marek-hanzal/derivean/.out/review-mailbox` (`PROTOCOL.txt`; Codex writes `from-codex/DREV-NNN-MM.txt`, lead answers in `from-claude/` under the same thread, written as `.tmp` then renamed; shared logs in `evidence/`). Lead reads it at every checkpoint and before handing over, routes each finding to its stream, and posts DONE with the commit, the exact command, the result and the log path. Codex can verify on Linux (Obsidian, GCC 13.3). Assigned on 26 Nov: DREV-001 relief, DREV-002 consistency, DREV-003 done (`c1521da`), DREV-004 and 005 renderer, DREV-006 (record only) and 007 engine.
 
+**Gravel wears away where it lies** (coast, 26 Nov; relief's, queued after DREV-001): `wearDebris` (`landscape/fn/Talus.cpp:152`) wears every Free cell's whole coarse layer at the bedrock regolith rate. It has no transport term, no under-water check and no burial decay, so 0.6 m of granite gravel is gone in about 40 kyr, under water too. On Earth, weathering rinds grow about 1 mm per 10⁴–10⁵ yr. Abrasion goes with transport distance.
+
 ## What to do next, in order
 
 1. Get `testLandscapePlane` green without touching the test; then finish Local and Site with the Region mechanics and steer drainage by the rock-mass field.
