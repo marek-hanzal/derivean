@@ -1,6 +1,7 @@
 #pragma once
 
 #include "atmosphere/type/SpherePoisson.hpp"
+#include "atmosphere/type/SphereStencil.hpp"
 
 #include <vector>
 
@@ -8,7 +9,7 @@ namespace derivean::sim {
 
 // With `multigrid`, CG is preconditioned by a V-cycle over the coarser levels; without, by the
 // diagonal (the two are compared in docs/handoff/atmosphere-sphere.md).
-SpherePoisson makeSpherePoisson(const SphereGrid& grid, bool multigrid = true);
+SpherePoisson makeSpherePoisson(const SphereGrid& grid, const SphereStencil& stencil, bool multigrid = true);
 
 // Solves Δ result = source for the result with zero area mean. The source's area mean is the part no
 // field on a closed sphere can have as a Laplacian; it is removed and reported. `result` on entry is

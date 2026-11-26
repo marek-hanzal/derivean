@@ -1,7 +1,7 @@
 #pragma once
 
 #include "atmosphere/type/EddyBand.hpp"
-#include "atmosphere/type/SphereGrid.hpp"
+#include "geometry/type/SphereGrid.hpp"
 
 #include <vector>
 

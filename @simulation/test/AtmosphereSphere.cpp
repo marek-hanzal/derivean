@@ -37,17 +37,19 @@ Vec3 midpointOf(const SphereGrid& grid, int e) {
 void checkGrid() {
     for (int level : {0, 3, 5}) {
         const SphereGrid grid = makeSphereGrid(level);
+        const SphereStencil stencil = makeSphereStencil(grid);
         const size_t n = size_t(grid.side) * size_t(grid.side);
         expect(grid.edge.size() == 12 * n && grid.vertex.size() == 6 * n + 2, "grid does not have 12 n² edges and 6 n² + 2 vertices", level);
         double areas = 0, diamonds = 0;
         for (double area : grid.area) areas += area;
-        for (const SphereEdge& edge : grid.edge) diamonds += edge.diamond;
+        for (const EdgeStencil& edge : stencil.edge) diamonds += edge.diamond;
         expect(std::abs(areas / Sphere - 1) < 1e-12, "cell areas do not tile the sphere", areas / Sphere - 1);
         expect(std::abs(diamonds / Sphere - 1) < 1e-12, "edge diamonds do not tile the sphere", diamonds / Sphere - 1);
         int corners = 0;
-        for (const SphereVertex& vertex : grid.vertex) {
+        for (size_t v = 0; v < grid.vertex.size(); ++v) {
+            const SphereVertex& vertex = grid.vertex[v];
             double sum = 0;
-            for (int k = 0; k < vertex.count; ++k) sum += vertex.weight[size_t(k)];
+            for (int k = 0; k < vertex.count; ++k) sum += stencil.weight[v][size_t(k)];
             expect(std::abs(sum - 1) < 1e-12, "vertex weights do not sum to one", sum);
             corners += vertex.count == 3;
         }
@@ -59,7 +61,8 @@ void checkGrid() {
 // degree-1 harmonic is the eigenvalue 2 / R².
 void checkStiffness() {
     const SphereGrid grid = makeSphereGrid(5);
-    const SphereMatrix k = makeLaplacian(grid);
+    const SphereStencil stencil = makeSphereStencil(grid);
+    const SphereMatrix k = makeLaplacian(grid, stencil);
     double largest = 0;
     for (int r = 0; r < grid.cells; ++r)
         for (int e = k.start[size_t(r)]; e < k.start[size_t(r) + 1]; ++e) {
@@ -95,6 +98,7 @@ void checkStiffness() {
 // the stream function's fluxes have no divergence in any cell, and a gradient has no curl.
 void checkFluxes() {
     const SphereGrid grid = makeSphereGrid(5);
+    const SphereStencil stencil = makeSphereStencil(grid);
     const std::vector<double> flux = noise(grid.edge.size(), 7);
     const std::vector<double> divergence = divergenceOf(grid, flux);
     double sum = 0, scale = 0;
@@ -103,8 +107,8 @@ void checkFluxes() {
     expect(std::abs(sum) < 1e-13 * scale, "area-weighted divergence does not sum to zero", sum / scale);
 
     const std::vector<double> stream = noise(size_t(grid.cells), 9);
-    const std::vector<double> still = divergenceOf(grid, streamFluxOf(grid, stream));
-    const std::vector<double> curl = curlOf(grid, gradientOf(grid, stream));
+    const std::vector<double> still = divergenceOf(grid, streamFluxOf(grid, stencil, stream));
+    const std::vector<double> curl = curlOf(grid, stencil, gradientOf(grid, stencil, stream));
     for (int c = 0; c < grid.cells; ++c) {
         expect(std::abs(still[size_t(c)] * grid.area[size_t(c)]) < 1e-14, "stream-function flux has divergence", still[size_t(c)]);
         expect(std::abs(curl[size_t(c)] * grid.area[size_t(c)]) < 1e-14, "gradient has curl", curl[size_t(c)]);
@@ -121,8 +125,9 @@ void checkTruncation() {
     double gradient[3][3] = {}, laplacian[2][3][3] = {};
     for (int step = 0; step < 3; ++step) {
         const SphereGrid grid = makeSphereGrid(5 + step);
-        const SphereMatrix k = makeLaplacian(grid);
-        const EdgeVectors g = gradientOf(grid, harmonicField(grid, 1, 0));
+        const SphereStencil stencil = makeSphereStencil(grid);
+        const SphereMatrix k = makeLaplacian(grid, stencil);
+        const EdgeVectors g = gradientOf(grid, stencil, harmonicField(grid, 1, 0));
         for (size_t e = 0; e < g.size(); ++e) {
             const SphereEdge& edge = grid.edge[e];
             const Vec3 m = midpointOf(grid, int(e));

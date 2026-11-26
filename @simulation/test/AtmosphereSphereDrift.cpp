@@ -41,7 +41,8 @@ namespace derivean::sim::atmosphere_sphere_test {
 // vertices' growth is × 1.10 (and +0.8 % enstrophy), so it falls with resolution.
 void checkDrift() {
     const SphereGrid grid = makeSphereGrid(4);
-    SpherePoisson poisson = makeSpherePoisson(grid);
+    const SphereStencil stencil = makeSphereStencil(grid);
+    SpherePoisson poisson = makeSpherePoisson(grid, stencil);
     SphereFlow flow = makeSphereFlow(grid, rotationRateAt(PresentAge));
     std::vector<double> noise(size_t(grid.cells));
     std::uint64_t state = 42;
@@ -49,12 +50,12 @@ void checkDrift() {
         state = state * 6364136223846793005ull + 1442695040888963407ull;
         value = (double(state >> 11) / double(1ull << 53) - 0.5) * 2e-5;
     }
-    setVorticity(flow, grid, poisson, noise);
+    setVorticity(flow, grid, stencil, poisson, noise);
     const Integrals start = integralsOf(grid, flow);
     const double absolute = areaMean(grid, flow.vorticity) + areaMean(grid, flow.coriolis);
     bool converged = true;
     for (int s = 0; s < 30 * 48; ++s) {
-        stepSphereFlow(flow, grid, poisson, 1800);
+        stepSphereFlow(flow, grid, stencil, poisson, 1800);
         converged = converged && flow.inversion.converged;
     }
     const Integrals end = integralsOf(grid, flow);

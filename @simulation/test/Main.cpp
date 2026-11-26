@@ -10,6 +10,7 @@ void testAeolian();
 void testClimate();
 void testAstronomy();
 void testAtmosphereSphere();
+void testGeometrySphere();
 void testClouds();
 void testAtmosphere();
 void testSnow();
@@ -62,6 +63,7 @@ constexpr Test Tests[] = {
     {"testClimate", testClimate},
     {"testAstronomy", testAstronomy},
     {"testAtmosphereSphere", testAtmosphereSphere},
+    {"testGeometrySphere", testGeometrySphere},
     {"testClouds", testClouds},
     {"testAtmosphere", testAtmosphere},
     {"testSnow", testSnow},

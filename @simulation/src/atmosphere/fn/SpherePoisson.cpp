@@ -20,12 +20,12 @@ void precondition(SpherePoisson& poisson, const std::vector<double>& r, std::vec
 
 } // namespace
 
-SpherePoisson makeSpherePoisson(const SphereGrid& grid, bool multigrid) {
+SpherePoisson makeSpherePoisson(const SphereGrid& grid, const SphereStencil& stencil, bool multigrid) {
     SpherePoisson poisson;
     PoissonLevel own;
     own.level = grid.level;
     own.side = grid.side;
-    own.stiffness = makeLaplacian(grid);
+    own.stiffness = makeLaplacian(grid, stencil);
     own.solution.assign(size_t(grid.cells), 0.0);
     own.source = own.solution;
     own.residual = own.solution;

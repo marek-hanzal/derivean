@@ -1,7 +1,8 @@
 #include "atmosphere/fn/SphereMultigrid.hpp"
 
-#include "atmosphere/fn/SphereGrid.hpp"
 #include "atmosphere/fn/SphereOperators.hpp"
+#include "atmosphere/fn/SphereStencil.hpp"
+#include "geometry/fn/SphereGrid.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -84,7 +85,7 @@ std::vector<PoissonLevel> coarserLevels(int finest) {
         PoissonLevel level;
         level.level = l;
         level.side = grid.side;
-        level.stiffness = makeLaplacian(grid);
+        level.stiffness = makeLaplacian(grid, makeSphereStencil(grid));
         level.solution.assign(size_t(grid.cells), 0.0);
         level.source = level.solution;
         level.residual = level.solution;

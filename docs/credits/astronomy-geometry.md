@@ -147,7 +147,7 @@ Putman, W. M., Lin, S.-J. (2007). Finite-volume transport on various cubed-spher
 Lin, S.-J. (2004). A "vertically Lagrangian" finite-volume dynamical core for global models. *Monthly Weather Review* 132(10), 2293–2307. doi:10.1175/1520-0493(2004)132<2293:AVLFDC>2.0.CO;2; GFDL FV3: https://www.gfdl.noaa.gov/fv3/
 - **Model:** great-circle cell edges and orthonormal vector components; the equiangular grid FV3 uses, which the atmosphere slice S4 will follow; the grid's non-orthogonality, why a flux crosses an edge along the edge's own normal rather than the centre-to-centre direction.
 - **Used in:** `@simulation/src/geometry/fn/Edge.hpp:7`; `docs/handoff/geometry.md:20`, `:52`, `:91`, `:99`, `:100`; `.out/lead/handover/PLANET.md:11`, `:371`.
-- **Used in (atmosphere on the sphere):** the dual-basis edge gradient, `@simulation/src/atmosphere/type/SphereGrid.hpp:31`; `docs/handoff/atmosphere-sphere.md:16`.
+- **Used in (atmosphere on the sphere):** the dual-basis edge gradient, `@simulation/src/atmosphere/type/SphereStencil.hpp:17`; `docs/handoff/atmosphere-sphere.md:16`.
 
 ### O'Neill and Laubscher 1976; PROJ: QSC (considered, not taken)
 O'Neill, E. M., Laubscher, R. E. (1976). *Extended studies of a quadrilateralized spherical cube Earth data base*. Naval Environmental Prediction Research Facility, Tech. Report NEPRF 3-76 (CSC). PROJ implementation: https://proj.org/en/stable/operations/projections/qsc.html
@@ -158,6 +158,7 @@ O'Neill, E. M., Laubscher, R. E. (1976). *Extended studies of a quadrilateralize
 van Oosterom, A., Strackee, J. (1983). The solid angle of a plane triangle. *IEEE Transactions on Biomedical Engineering* BME-30(2), 125–126. doi:10.1109/TBME.1983.325207
 - **Model:** the tan(E/2) formula for spherical excess; cell area as excess × R².
 - **Used in:** `@simulation/src/geometry/fn/Metric.hpp:10`, `@simulation/src/geometry/fn/Metric.cpp:35`.
+- **Used in (S3a):** the area of a polygon and of an overlap as the fan's excesses from plane coordinates, `@simulation/src/geometry/fn/Overlap.hpp:12`, `@simulation/src/geometry/fn/Overlap.cpp:88`.
 
 ### Rodrigues 1840; do Carmo 1976: rotation and holonomy
 Rodrigues, O. (1840). Des lois géométriques qui régissent les déplacements d'un système solide dans l'espace… *Journal de Mathématiques Pures et Appliquées* 5, 380–440. http://www.numdam.org/item/JMPA_1840_1_5__380_0/
@@ -166,6 +167,13 @@ do Carmo, M. P. (1976). *Differential Geometry of Curves and Surfaces*. Prentice
 - **Model:** the rotation about from × to that carries a vector along, in Rodrigues' unit-axis form beyond a right angle so it stays finite up to the antipode; parallel transport round a loop turns by area / R².
 - **Used in:** `@simulation/src/geometry/fn/Frame.hpp:33`, `:38`; `@simulation/src/geometry/fn/Frame.cpp:62`.
 - **Checked by:** `@simulation/test/GeometryFrame.cpp:77` (finite and reversible near and at the antipode), `:154` (holonomy against the enclosed solid angle).
+- **Used in (S3a):** a rotation as its Euler–Rodrigues parameters (cos θ/2, sin θ/2 · axis), the unit quaternion of `@simulation/src/geometry/type/Rotation.hpp:8`.
+
+### Hamilton 1844: quaternions
+Hamilton, W. R. (1844). On quaternions; or on a new system of imaginaries in algebra. *The London, Edinburgh, and Dublin Philosophical Magazine and Journal of Science* 25(163), 10–13. doi:10.1080/14786444408644923
+- **Model:** the quaternion product, which composes rotations; the conjugate as the inverse of a unit quaternion.
+- **Used in:** `@simulation/src/geometry/type/Rotation.hpp:7`; `@simulation/src/geometry/fn/Rotation.hpp:20`, `@simulation/src/geometry/fn/Rotation.cpp:23`.
+- **Checked by:** `@simulation/test/GeometrySphere.cpp:95`: composition order, inverse, matrix, 2π in 10³ and 10⁵ steps back to 1e-12, 10⁶ steps of 1e-9 rad equal to one of 1e-3 to 5e-14.
 
 ### Sinnott 1984: haversine distance
 Sinnott, R. W. (1984). Virtues of the haversine. *Sky and Telescope* 68(2), 159.
@@ -193,7 +201,20 @@ Williamson, D. L., Drake, J. B., Hack, J. J., Jakob, R., Swarztrauber, P. N. (19
 - **Used in:** planned, `docs/handoff/geometry.md:90`, `:109`.
 - **Checked by (atmosphere on the sphere):** case 1 (cosine bell) `@simulation/test/AtmosphereSphereFlow.cpp:25`, `:158`; case 6 (Rossby–Haurwitz wave) `:51`; cases 2 and 5 need the shallow-water equations (`docs/handoff/atmosphere-sphere.md:129`).
 
-### Jones 1999: conservative remapping (planned, S3)
+### Jones 1999: conservative remapping
 Jones, P. W. (1999). First- and second-order conservative remapping schemes for grids in spherical coordinates. *Monthly Weather Review* 127(9), 2204–2210. doi:10.1175/1520-0493(1999)127<2204:FASOCR>2.0.CO;2
 - **Model:** moving extensive stocks between grids by intersecting spherical areas.
 - **Used in:** planned, `.out/lead/handover/PLANET.md:207`.
+- **Used in (S3a):** the overlap of two convex geodesic polygons, the weight of a crust piece's footprint in a mantle cell, `@simulation/src/geometry/fn/Overlap.hpp:7`.
+- **Checked by:** `@simulation/test/GeometrySphereOverlap.cpp:57`, `:114`: a cell with itself, its parent and its neighbours; the overlaps over the candidates summing to the footprint's area to 1e-12 before any normalisation.
+
+### Lauritzen, Nair and Ullrich 2010: CSLAM, overlaps on the cubed sphere
+Lauritzen, P. H., Nair, R. D., Ullrich, P. A. (2010). A conservative semi-Lagrangian multi-tracer transport scheme (CSLAM) on the cubed-sphere grid. *Journal of Computational Physics* 229(5), 1401–1424. doi:10.1016/j.jcp.2009.10.036
+- **Model:** the overlaps of a moved cell with the grid's cells computed in gnomonic coordinates, where the cubed sphere's cell edges are straight lines.
+- **Used in:** `@simulation/src/geometry/fn/Overlap.hpp:8`.
+
+### Sutherland and Hodgman 1974: polygon clipping
+Sutherland, I. E., Hodgman, G. W. (1974). Reentrant polygon clipping. *Communications of the ACM* 17(1), 32–42. doi:10.1145/360767.360802
+- **Model:** clipping a polygon by each edge of a convex polygon in turn, here in the gnomonic tangent plane.
+- **Used in:** `@simulation/src/geometry/fn/Overlap.hpp:10`, `@simulation/src/geometry/fn/Overlap.cpp:60`, `:126`.
+- **Checked by:** `@simulation/test/GeometrySphereOverlap.cpp:57`.

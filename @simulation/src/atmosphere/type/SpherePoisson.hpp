@@ -1,6 +1,7 @@
 #pragma once
 
-#include "atmosphere/type/SphereGrid.hpp"
+#include "atmosphere/type/SphereMatrix.hpp"
+#include "geometry/type/SphereGrid.hpp"
 
 #include <vector>
 

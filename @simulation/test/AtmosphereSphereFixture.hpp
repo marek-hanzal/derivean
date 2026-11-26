@@ -1,6 +1,7 @@
 #pragma once
 
-#include "atmosphere/fn/SphereGrid.hpp"
+#include "atmosphere/fn/SphereStencil.hpp"
+#include "geometry/fn/SphereGrid.hpp"
 #include "atmosphere/fn/SphereHarmonics.hpp"
 #include "geometry/constant/Sphere.hpp"
 

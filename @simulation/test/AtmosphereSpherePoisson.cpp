@@ -39,7 +39,8 @@ void checkConvergence() {
     int iterations[3] = {};
     for (int step = 0; step < 3; ++step) {
         const SphereGrid grid = makeSphereGrid(5 + step);
-        SpherePoisson poisson = makeSpherePoisson(grid);
+        const SphereStencil stencil = makeSphereStencil(grid);
+        SpherePoisson poisson = makeSpherePoisson(grid, stencil);
         for (int d = 0; d < 2; ++d) {
             const Solved solved = d == 0 ? solveHarmonic(grid, poisson, 1, 0) : solveHarmonic(grid, poisson, 4, 2);
             expect(solved.report.converged, "Poisson solve did not converge", solved.report.residual);
@@ -63,7 +64,8 @@ void checkConvergence() {
 // solve that starts from its answer takes no step; a zero source gives zero.
 void checkNullMode() {
     const SphereGrid grid = makeSphereGrid(5);
-    SpherePoisson poisson = makeSpherePoisson(grid);
+    const SphereStencil stencil = makeSphereStencil(grid);
+    SpherePoisson poisson = makeSpherePoisson(grid, stencil);
     std::vector<double> source = harmonicField(grid, 3, 1), shifted = source, plain(size_t(grid.cells), 0.0), moved = plain;
     for (double& value : shifted) value += 3e-5;
     const PoissonReport a = solveSpherePoisson(poisson, grid, source, plain, 1e-12, 100);
@@ -88,8 +90,9 @@ void checkNullMode() {
 // and the iterate kept; the diagonal preconditioner on the same problem needs many more steps.
 void checkFailure() {
     const SphereGrid grid = makeSphereGrid(5);
-    SpherePoisson poisson = makeSpherePoisson(grid);
-    SpherePoisson diagonal = makeSpherePoisson(grid, false);
+    const SphereStencil stencil = makeSphereStencil(grid);
+    SpherePoisson poisson = makeSpherePoisson(grid, stencil);
+    SpherePoisson diagonal = makeSpherePoisson(grid, stencil, false);
     const std::vector<double> u = harmonicField(grid, 2, 1);
     std::vector<double> source = u, psi(size_t(grid.cells), 0.0);
     for (double& value : source) value *= laplacianEigenvalue(2);
@@ -116,7 +119,8 @@ void checkFailure() {
 // the V-cycle B on residual-like fields (zero sum).
 void checkPreconditioner() {
     const SphereGrid grid = makeSphereGrid(5);
-    SpherePoisson poisson = makeSpherePoisson(grid);
+    const SphereStencil stencil = makeSphereStencil(grid);
+    SpherePoisson poisson = makeSpherePoisson(grid, stencil);
     std::uint64_t state = 7;
     auto randomField = [&] {
         std::vector<double> field(size_t(grid.cells));

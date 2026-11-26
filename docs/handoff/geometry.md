@@ -1,6 +1,6 @@
-# Geometry of the sphere (planet slice S1)
+# Geometry of the sphere (planet slices S1 and S3a)
 
-Owns `@simulation/src/geometry/**` and `@simulation/test/Geometry{,Frame}.cpp`, `GeometryFixture.hpp`. It is the one owner of the sphere's topology and metric: S3 to S6 read neighbours, areas, lengths and frames from here and never step x/z or i/j by hand. It is additive: nothing consumes it yet. The plan and the S0 decisions are in `.out/lead/handover/PLANET.md` ("S0 review outcome" wins).
+Owns `@simulation/src/geometry/**` and `@simulation/test/Geometry{,Frame,Sphere,SphereOverlap}.cpp`, `GeometryFixture.hpp`, `GeometrySphereFixture.hpp`. It is the one owner of the sphere's topology and metric: S3 to S6 read neighbours, areas, lengths and frames from here and never step x/z or i/j by hand. It is additive: only the sphere atmosphere of S4a (itself not called by the game) reads its grid; S3a's rotations, overlaps and candidates are read by nothing yet (S3b). The plan and the S0 decisions are in `.out/lead/handover/PLANET.md` ("S0 review outcome" wins).
 
 ## State
 
@@ -91,6 +91,79 @@ Mutations of the neighbour table, the transport rotation, the area, the tangent 
 - Vector components are kept in the face grid frame (orthonormal, first axis along +u). A solver that wants covariant or contravariant components on the non-orthogonal u/v basis (FV3 style) derives them from `faceAxisU`/`faceAxisV` at the point; not provided yet.
 - Neighbours are given at one level; coverage across levels (`cover`/`parent` in DREV-008's terms) is the quadtree (`parentOf`, `childOf`), and neighbours of a different level are left to S5's tile owner.
 
+## S3a: the sphere grid, rotations, overlaps and candidates
+
+Brief: `.out/lead/takeover/S3a-brief.md`; design `.out/lead/handover/S3-design.md` §4, §10, §11; Codex DREV-CLAUDE-003-01 (V3, V10) and -02 (the counterexample). Built and tested (`simulation-tests geometrysphere geometry atmospheresphere` pass, also at -O0 with asserts), additive. Measurements and their programs are in `.out/s3a/` (`cost.txt`, `bench/`, `probe/`, `mutations.txt`).
+
+### The grid moved here (Codex V10, lead's L6)
+
+`type/SphereGrid.hpp`, `fn/SphereGrid.{hpp,cpp}` replace `atmosphere/{type,fn}/SphereGrid.*`. The atmosphere imports them directly; there is no forwarding header.
+
+- **Geometry holds:** `level`, `side`, `cells`; `area` (`areaOf`), `centre` (`centreOf`); per cell its four edges and four vertices in its own order; `SphereEdge` = left (lower index), right, from, to (vertices, left's counter-clockwise order), `length` and `normal` (`edgeOf` from left); `SphereVertex` = its three or four cells (clockwise from the cell that numbered it) and its `point` (that cell's `cornerOf`). Functions: `makeSphereGrid`, `indexOf`/`cellAt` (index `(face · side + j) · side + i`), `sphereCellCount`, `neighbourOf(grid, cell, k)`, `placeOf`/`SpherePlace` (inside, face edge, cube corner).
+- **Added for S3:** `reach` per cell, the largest chord from the centre to a corner (the candidates' envelope), and `vertex.point`, shared bit for bit by every cell at the vertex, so `polygonOf(grid, cell)` tiles the sphere without slivers at face edges.
+- **Stayed in the atmosphere** (`atmosphere/{type,fn}/SphereStencil`, `type/SphereMatrix`), because each is a choice of the weather's discretisation, not of the sphere: per edge `diamond` (the dual cell of its Laplacian), `across`/`along` (the dual basis of its edge gradient), `chord` (its circulation), `offset` (its edge value), `behindLeft`/`behindRight` (its limiter's upstream cells); per vertex the least-squares weights (its vertex values); the `SphereMatrix`. The atmosphere's `using SphereField = std::vector<double>` became `CellField`, because the name is now this domain's type below.
+- **Left out:** `latitudeSine` (it was `centre.z`; the weather's Coriolis reads `centre[c].z`, the same bits).
+- **Kept bit for bit:** `.out/s3a/probe/Probe.cpp` hashes every table, the Laplacian, vertex values, gradients, fluxes, divergence, curl, the Poisson solutions at three tolerances (iterations, residuals), twelve Rossby–Haurwitz steps, ten tracer steps and the eddy band at levels 1 to 8, built against the library before and after: identical. The stencil takes each edge's corners and midpoint by the same expressions `edgeOf` uses. S4a's bench (`.out/s3a/bench/pair2.txt`, before and after back to back, load 23 to 34): the same iterations and residuals, step and solve times within noise (L7 Poisson 1e-9 101.6 / 101.7 ms, barotropic step 85.1 / 81.4 ms). Building the grid costs more once per world, because two owners now walk it: 39 → 48 ms at L7 (geometry 26 ms, stencil 20 ms) and 147 → 181 ms at L8; memory 47 → 50 MB at L7 (`reach`, `point`).
+
+### Sphere fields
+
+`type/SphereField.hpp`: `SphereField<T>{level, value}`, one value per cell in the grid's order, so a field carries its level and cannot be sampled as a flat raster. Nothing more; S3b adds what it needs.
+
+### Rotations (`type/Rotation.hpp`, `fn/Rotation`)
+
+- `Rotation` is a unit quaternion (Hamilton 1844), w = cos(θ/2), (x, y, z) = sin(θ/2) · axis, the Euler–Rodrigues parameters (Rodrigues 1840); default identity; q and −q are the same rotation. `RotationMatrix` by rows.
+- `rotationAbout(axis, angle)`; `rotationOf(ω, t)` from an Euler vector (rad/s) and a time: the vector part is ω · t/2 · sinc(|ω| t/2), never ω/|ω|, so ω = 0 is the identity bit for bit and tiny angles keep full relative precision (1e-9 to 1e-20 rad to 1e-15 relative in the angle and the vector part).
+- `compose(later, first)` = the Hamilton product later · first: rotating by it is `first`, then `later`. A plate's step on a piece is `Q = renormalized(compose(rotationOf(ω, dt), Q))`. `inverse` (conjugate), `renormalized`, `angleOf` (2 atan2(|v|, |w|), in [0, π]), `rotate(q, v)`, `matrixOf`, `rotate(matrix, v)`.
+- Pure functions, no state: the same calls in the same order give the same bits on any thread.
+- Checked: composition order, inverse and matrix to a few ulp (worst of 10⁵ random pairs 3e-15); 2π in 10³ and 10⁵ steps back to the identity and every point within 1e-12; 10⁶ steps of 1e-9 rad equal to one rotation of 1e-3 within 5e-14 (rounding in the vector part, about N · ulp/2; over 100 axes median 1e-16, worst 1.1e-14); the move of an Euler vector is (ω × x) t. Costs: compose + renormalize 16 ns, `rotationOf` 9 ns, a rotated four-corner footprint 12 ns.
+
+### Overlaps (`type/SpherePolygon.hpp`, `fn/SpherePolygon`, `fn/Overlap`)
+
+- `SpherePolygon`: up to eight unit corners, counter-clockwise from outside, convex, great-circle edges. `polygonOf(cell)` (by `cornerOf`), `polygonOf(grid, cell)` (by the grid's shared vertex points), `rotated(polygon, q)`, `capOf` (normalized corner sum and the largest chord to a corner).
+- `overlapArea(a, b)` (m²) is the weight of Jones's (1999) first-order conservative coupling, computed as CSLAM does (Lauritzen, Nair & Ullrich 2010): both polygons projected gnomonically onto the plane tangent at a's cap centre (great circles are straight lines there), a clipped by each edge of b (Sutherland & Hodgman 1974), the area the sum of the fan's spherical excesses by van Oosterom & Strackee's tan(E/2) with the corners' plane coordinates (P = (x, y, 1); the triple product is the plane cross product of corner differences, so it keeps its relative precision on small polygons). `areaOf(polygon)` is the same fan. Polygons whose caps are farther apart than their reaches give 0 without clipping.
+- Limits: each polygon within a chord of 0.35 (about 20°) of its centre, so every corner of either lies well in front of the plane (asserted): cells of level 2 and finer (largest reach 0.285 at L2, 0.524 at L1) and their rotations. At most eight corners each; a clip adds at most one corner, so the sixteen-slot buffer is asserted.
+- Checked at levels 2, 5, 7 and 10 on corner, edge, centre and scattered cells of every face: a cell with itself and the polygon's area equal `areaOf(cell)` to 1e-12; neighbours across edges (face seams and cube vertices included) and across corners overlap by less than 1e-12 of a cell; cells two rows apart give exactly 0; a cell inside its parent gives its own area; an offset 2 × 2 block overlaps each parent it straddles in exactly its one child (1e-12); overlap(a, b) = overlap(b, a) to 1e-12.
+- Cost: 116 to 134 ns per overlap of a footprint with one candidate (L5 and L7, load 9 to 34).
+
+### Candidates by the footprint's envelope (Codex V3; `fn/Candidates`)
+
+- `candidateCells(grid, footprint, cells, work)` returns, in a deterministic flood order, every cell whose overlap with the footprint can be positive.
+- **Guarantee.** The footprint lies in its cap (centre m, chord ρ, from `capOf`), each cell in its own (centre c, chord `reach`), so a cell that meets the footprint has |m − c| ≤ ρ + reach (triangle inequality of chords; margin 1e-12 on the unit sphere). The flood starts at the cell holding m and crosses shared edges only from cells that pass the test; across face edges and round cube vertices an edge is an edge. It misses no cell that meets the footprint: between two such cells runs a geodesic inside the convex footprint, every cell it crosses passes the test, and where it crosses a vertex the vertex is in the footprint, so every cell round it passes too.
+- **Codex's fixture** (DREV-CLAUDE-003-02, L7): birth cell face 0, i = j = 127, corner (s, t) = (1, 127/128) at 63 577.254 m from the centre; the centre turned to (0.995, 0.5 − 1e-7), the corner pointing along the tangent towards +Z. The centre lands in (127, 63), the corner in (127, 65), two rows away; (127, 65) is a candidate with a positive overlap, and the candidates cover the footprint to 1e-12.
+- **Coverage before normalisation**: 6 000 footprints at each of L5 and L7, a third each inside faces, within 1.5 cells of a face edge and of a cube vertex, random birth cell and spin: Σ of exact overlaps over the candidates against `areaOf(birth)` worst 1.2e-14 (L5), 4.2e-14 (L7). On 90 L5 footprints every cell outside the candidates was clipped too: none overlaps by more than 1e-14 of the footprint.
+- Mutations that each fail the suite: candidates only the centre's ring, no cell reach, 0.7 of the envelope, the flood kept on one face; overlap dropping points on the clip line, the excess scaled by 1e-7, an eager apart test; w = 1, a wrong product sign, a wrong rotate sign, sinc = 1, no renormalization; reach from one corner (`.out/s3a/mutate.sh`, `mutations.txt`).
+
+| per footprint (20 000 each, one thread) | candidates mean / max | with positive overlap | candidates | one overlap | whole footprint |
+| --- | --- | --- | --- | --- | --- |
+| L5 inside a face | 7.0 / 10 | 4.5 | 285 ns | 119 ns | 1.12 µs |
+| L5 near a face edge | 8.2 / 12 | 5.0 | 346 ns | 122 ns | 1.36 µs |
+| L5 near a cube vertex | 9.2 / 12 | 4.8 | 351 ns | 118 ns | 1.45 µs |
+| L7 inside a face | 7.0 / 11 | 4.5 | 442 ns | 134 ns | 1.60 µs |
+| L7 near a face edge | 8.3 / 12 | 5.0 | 377 ns | 126 ns | 1.51 µs |
+| L7 near a cube vertex | 9.5 / 13 | 4.9 | 377 ns | 116 ns | 1.52 µs |
+
+"Whole footprint" is the candidates plus every exact overlap. Apple M3 Max under a load average of 9 to 34 (other streams building); `.out/s3a/cost.txt`, `bench/Cost.cpp`.
+
+### Contract for S3b
+
+- One `SphereGrid` per level per world, shared with the weather (whose `SphereStencil` must be made from that grid: asserted by size in the operators and the flow); fields as `SphereField<T>` in its order.
+- A piece's footprint is `rotated(polygonOf(grid, birth), Q)`; its area is `grid.area[birth]` (a rotation keeps it; the fan of the rotated corners agrees to about 4e-14 at L7).
+- Exact weights: `candidateCells` then `overlapArea(footprint, polygonOf(grid, c))` for each candidate, with the footprint first (one tangent plane for all its cells). Before any normalisation Σ_c w_ck = a_k to 1e-12 (measured 4e-14); a test of S3b that normalises must check this sum first (V3).
+- Budget: about 1.5 µs per footprint at L7, so 98 304 pieces cost 0.15 s per substep if all were exact; the boundary band is a fraction of that. `candidateCells` reuses its two vectors (no allocation in the loop) and keeps its visited list linear, which suits footprints of about one cell; a footprint many cells wide needs a set.
+- Rotations: `Q = renormalized(compose(rotationOf(ω, dt), Q))` per substep, deterministic per piece. The rounding of Q grows about linearly with the steps (2.4e-13 worst after 10⁵ steps), so a piece's lifetime Q stays within 1e-12 up to about 4 × 10⁵ substeps; a 4.6 Gyr history at L7 has about 1.3 × 10⁴.
+- **Vectors and normals across the map are not here** (Codex V7, S3e): a Jacobian J of a face map takes a velocity as J⁻¹v and a normal as Jᵀn, then normalised; S3a builds no Jacobian.
+
+### Verify
+
+Other streams edit the shared checkout, so the build is a private snapshot: HEAD's `@simulation` with only S3a's paths overlaid (`.out/s3a/snapshot.sh`; `build.sh` builds it in `.out/s3a/tree-build`; overlaid files get a fresh mtime, because xmake decides by mtime at one-second resolution and a copy with the old mtime leaves a stale object).
+
+```
+.out/s3a/build.sh
+.out/s3a/tree-build/macosx/arm64/release/simulation-tests geometrysphere geometry atmospheresphere
+```
+
+In a quiet checkout the usual private build works too (as above under S1, with `.out/s3a` paths). The probe: `clang++ -std=c++20 -O3 [-DAFTER] -I<src> .out/s3a/probe/Probe.cpp <lib>` before and after, then `diff`.
+
 ## Sources
 
 - **Google, S2 Geometry** (Eric Veach et al., 2005 onwards), C++ library, Apache-2.0, https://github.com/google/s2geometry, `src/s2/s2coords.h`; cell hierarchy: https://s2geometry.io/devguide/s2cell_hierarchy.html. Gives the face numbering and orientation (`FaceUVtoXYZ`, `GetFace` with ties to the higher axis), the ST/UV split and the face quadtree; its three projections (linear, tangent with a 2⁻⁵³ end correction, quadratic by default) are the ones compared. Our tangent mapping is exact at the face edges instead of corrected, so it is not bit-identical to `S2_TAN_PROJECTION`.
@@ -107,4 +180,8 @@ Mutations of the neighbour table, the transport rotation, the area, the tangent 
 - **H. Moritz** (2000), "Geodetic Reference System 1980", *Journal of Geodesy* 74, 128–133, doi:10.1007/s001900050278. Earth's mean radius R₁ = 6 371 008.8 m; the planet uses the rounded 6 371 000 m.
 - **National Imagery and Mapping Agency** (1997, amended 2000), *Department of Defense World Geodetic System 1984*, TR 8350.2, 3rd ed.; parameters at https://earth-info.nga.mil/GandG/wgs84/. The flattening 1/298.257223563 recorded as the known deviation.
 - **D. L. Williamson, J. B. Drake, J. J. Hack, R. Jakob, P. N. Swarztrauber** (1992), "A standard test set for numerical approximations to the shallow water equations in spherical geometry", *Journal of Computational Physics* 102(1), 211–224, doi:10.1016/S0021-9991(05)80016-6. The standard test cases S4's operator on this grid is to pass (Open).
+- **W. R. Hamilton** (1844), "On quaternions; or on a new system of imaginaries in algebra", *The London, Edinburgh, and Dublin Philosophical Magazine and Journal of Science* 25(163), 10–13, doi:10.1080/14786444408644923. The quaternion product of `fn/Rotation` (S3a); Rodrigues (1840) above gives the parameters.
+- **P. W. Jones** (1999), "First- and second-order conservative remapping schemes for grids in spherical coordinates", *Monthly Weather Review* 127(9), 2204–2210, doi:10.1175/1520-0493(1999)127<2204:FASOCR>2.0.CO;2. The overlap weights of `fn/Overlap` (S3a).
+- **P. H. Lauritzen, R. D. Nair, P. A. Ullrich** (2010), "A conservative semi-Lagrangian multi-tracer transport scheme (CSLAM) on the cubed-sphere grid", *Journal of Computational Physics* 229(5), 1401–1424, doi:10.1016/j.jcp.2009.10.036. Overlaps in gnomonic coordinates (S3a).
+- **I. E. Sutherland, G. W. Hodgman** (1974), "Reentrant polygon clipping", *Communications of the ACM* 17(1), 32–42, doi:10.1145/360767.360802. The clip of `fn/Overlap` (S3a).
 - **G. M. Morton** (1966), *A computer oriented geodetic data base and a new technique in file sequencing*, International Business Machines Co., Ottawa. The Z-order interleave of the cell key.

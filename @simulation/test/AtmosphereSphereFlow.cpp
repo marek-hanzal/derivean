@@ -31,11 +31,11 @@ std::vector<Vec3> vertexDirections(const SphereGrid& grid) {
     return at;
 }
 
-SphereFlow solidRotation(const SphereGrid& grid, SpherePoisson& poisson, double rotation) {
+SphereFlow solidRotation(const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson, double rotation) {
     SphereFlow flow = makeSphereFlow(grid, rotation);
     std::vector<double> vorticity(size_t(grid.cells));
     for (int c = 0; c < grid.cells; ++c) vorticity[size_t(c)] = 2 * Spin * dot(Axis, grid.centre[size_t(c)]);
-    setVorticity(flow, grid, poisson, vorticity);
+    setVorticity(flow, grid, stencil, poisson, vorticity);
     return flow;
 }
 
@@ -61,7 +61,8 @@ void checkWave() {
     double errors[3] = {}, enstrophies[3] = {};
     for (int level = 4; level <= 6; ++level) {
         const SphereGrid grid = makeSphereGrid(level);
-        SpherePoisson poisson = makeSpherePoisson(grid);
+        const SphereStencil stencil = makeSphereStencil(grid);
+        SpherePoisson poisson = makeSpherePoisson(grid, stencil);
         SphereFlow flow = makeSphereFlow(grid, rotation);
         auto wave = [&](double time) {
             std::vector<double> vorticity(size_t(grid.cells));
@@ -73,7 +74,7 @@ void checkWave() {
             }
             return vorticity;
         };
-        setVorticity(flow, grid, poisson, wave(0));
+        setVorticity(flow, grid, stencil, poisson, wave(0));
         auto integrals = [&](double& absolute, double& relative, double& enstrophy, double& scale) {
             absolute = relative = enstrophy = scale = 0;
             for (int c = 0; c < grid.cells; ++c) {
@@ -87,7 +88,7 @@ void checkWave() {
         double absolute0, relative0, enstrophy0, scale0;
         integrals(absolute0, relative0, enstrophy0, scale0);
         const int steps = int(std::ceil(Day / stepFor(grid, flow.flux, 0.4)));
-        for (int s = 0; s < steps; ++s) stepSphereFlow(flow, grid, poisson, Day / steps);
+        for (int s = 0; s < steps; ++s) stepSphereFlow(flow, grid, stencil, poisson, Day / steps);
         double absolute, relative, enstrophy, scale;
         integrals(absolute, relative, enstrophy, scale);
         const std::vector<double> exact = wave(Day), start = wave(0);
@@ -125,8 +126,9 @@ void checkFlow() {
     double fluxes[3][3] = {}, changes[3] = {};
     for (int level = 4; level <= 6; ++level) {
         const SphereGrid grid = makeSphereGrid(level);
-        SpherePoisson poisson = makeSpherePoisson(grid);
-        SphereFlow flow = solidRotation(grid, poisson, 0);
+        const SphereStencil stencil = makeSphereStencil(grid);
+        SpherePoisson poisson = makeSpherePoisson(grid, stencil);
+        SphereFlow flow = solidRotation(grid, stencil, poisson, 0);
         const std::vector<Vec3> at = vertexDirections(grid);
         double worst[3] = {};
         const double scale = largestFlux(flow.flux);
@@ -139,7 +141,7 @@ void checkFlow() {
         const std::vector<double> start = flow.vorticity;
         const double step = stepFor(grid, flow.flux, 0.4);
         const int steps = int(std::ceil(Day / step));
-        for (int s = 0; s < steps; ++s) stepSphereFlow(flow, grid, poisson, Day / steps);
+        for (int s = 0; s < steps; ++s) stepSphereFlow(flow, grid, stencil, poisson, Day / steps);
         double change = 0;
         for (int c = 0; c < grid.cells; ++c) change = std::max(change, std::abs(flow.vorticity[size_t(c)] - start[size_t(c)]) / (2 * Spin));
         for (int band = 0; band < 3; ++band) fluxes[level - 4][band] = worst[band];
@@ -164,8 +166,9 @@ void checkTracer() {
     double errors[3] = {};
     for (int level = 4; level <= 6; ++level) {
         const SphereGrid grid = makeSphereGrid(level);
-        SpherePoisson poisson = makeSpherePoisson(grid);
-        const SphereFlow flow = solidRotation(grid, poisson, 0);
+        const SphereStencil stencil = makeSphereStencil(grid);
+        SpherePoisson poisson = makeSpherePoisson(grid, stencil);
+        const SphereFlow flow = solidRotation(grid, stencil, poisson, 0);
         const Vec3 start = normalized({1, 1, 1});
         std::vector<double> bell(size_t(grid.cells)), work, uniform(size_t(grid.cells), 1.0);
         for (int c = 0; c < grid.cells; ++c) {
@@ -179,8 +182,8 @@ void checkTracer() {
         const double peak = *std::max_element(bell.begin(), bell.end());
         double lowest = 0, highest = 0;
         for (int s = 0; s < steps; ++s) {
-            advectTracer(grid, flow.flux, turn / steps, bell, work);
-            if (s < 10) advectTracer(grid, flow.flux, turn / steps, uniform, work);
+            advectTracer(grid, stencil, flow.flux, turn / steps, bell, work);
+            if (s < 10) advectTracer(grid, stencil, flow.flux, turn / steps, uniform, work);
             for (double value : bell) {
                 lowest = std::min(lowest, value);
                 highest = std::max(highest, value);

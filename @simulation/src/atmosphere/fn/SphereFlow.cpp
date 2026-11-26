@@ -5,6 +5,7 @@
 #include "atmosphere/fn/SpherePoisson.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <numbers>
 
@@ -17,25 +18,28 @@ namespace {
 constexpr double FilterStrength = 0.1;
 constexpr double FilterSplit = 0.53;
 
-void invert(SphereFlow& flow, const SphereGrid& grid, SpherePoisson& poisson) {
+void invert(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson) {
     flow.inversion = solveSpherePoisson(poisson, grid, flow.vorticity, flow.stream, flow.tolerance, flow.limit);
-    flow.flux = streamFluxOf(grid, flow.stream);
+    flow.flux = streamFluxOf(grid, stencil, flow.stream);
 }
 
 // −∇·(v q) per cell with the edge value of q the mean of its two cells moved to the edge's midpoint
-// by the edge gradient (SphereEdge::offset).
-void tendencyOf(SphereFlow& flow, const SphereGrid& grid, const std::vector<double>& vorticity, std::vector<double>& tendency) {
+// by the edge gradient (EdgeStencil::offset).
+void tendencyOf(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, const std::vector<double>& vorticity,
+                std::vector<double>& tendency) {
     std::vector<double>& absolute = flow.absolute;
     absolute.resize(size_t(grid.cells));
     for (size_t c = 0; c < absolute.size(); ++c) absolute[c] = vorticity[c] + flow.coriolis[c];
     std::vector<double>& at = flow.atVertex;
-    vertexValues(grid, absolute, at);
+    vertexValues(grid, stencil, absolute, at);
+    assert(stencil.edge.size() == grid.edge.size());
     tendency.assign(size_t(grid.cells), 0.0);
     for (size_t e = 0; e < grid.edge.size(); ++e) {
         const SphereEdge& edge = grid.edge[e];
+        const EdgeStencil& metric = stencil.edge[e];
         const size_t l = size_t(edge.left), r = size_t(edge.right);
-        const Vec3 gradient = edge.across * (absolute[r] - absolute[l]) + edge.along * (at[size_t(edge.to)] - at[size_t(edge.from)]);
-        const double carried = flow.flux[e] * (0.5 * (absolute[l] + absolute[r]) + dot(gradient, edge.offset));
+        const Vec3 gradient = metric.across * (absolute[r] - absolute[l]) + metric.along * (at[size_t(edge.to)] - at[size_t(edge.from)]);
+        const double carried = flow.flux[e] * (0.5 * (absolute[l] + absolute[r]) + dot(gradient, metric.offset));
         tendency[l] -= carried;
         tendency[r] += carried;
     }
@@ -57,7 +61,7 @@ SphereFlow makeSphereFlow(const SphereGrid& grid, double rotation) {
     SphereFlow flow;
     flow.rotation = rotation;
     flow.coriolis.resize(size_t(grid.cells));
-    for (int c = 0; c < grid.cells; ++c) flow.coriolis[size_t(c)] = 2 * rotation * grid.latitudeSine[size_t(c)];
+    for (int c = 0; c < grid.cells; ++c) flow.coriolis[size_t(c)] = 2 * rotation * grid.centre[size_t(c)].z;   // sin φ
     flow.vorticity.assign(size_t(grid.cells), 0.0);
     flow.before = flow.vorticity;
     flow.stream = flow.vorticity;
@@ -65,15 +69,15 @@ SphereFlow makeSphereFlow(const SphereGrid& grid, double rotation) {
     return flow;
 }
 
-void setVorticity(SphereFlow& flow, const SphereGrid& grid, SpherePoisson& poisson, const std::vector<double>& vorticity) {
+void setVorticity(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson, const std::vector<double>& vorticity) {
     flow.vorticity = vorticity;
     flow.before = vorticity;
     flow.started = false;
-    invert(flow, grid, poisson);
+    invert(flow, grid, stencil, poisson);
 }
 
-void stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, SpherePoisson& poisson, double step) {
-    tendencyOf(flow, grid, flow.vorticity, flow.tendency);
+void stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson, double step) {
+    tendencyOf(flow, grid, stencil, flow.vorticity, flow.tendency);
     flow.next.resize(size_t(grid.cells));
     if (!flow.started) {
         for (size_t c = 0; c < flow.next.size(); ++c) flow.next[c] = flow.vorticity[c] + step * flow.tendency[c];
@@ -88,7 +92,7 @@ void stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, SpherePoisson& poi
             flow.vorticity[c] = next - (1 - FilterSplit) * curve;
         }
     }
-    invert(flow, grid, poisson);
+    invert(flow, grid, stencil, poisson);
 }
 
 double outflowCourant(const SphereGrid& grid, const std::vector<double>& flux, double step) {
@@ -104,13 +108,15 @@ double outflowCourant(const SphereGrid& grid, const std::vector<double>& flux, d
     return worst;
 }
 
-void advectTracer(const SphereGrid& grid, const std::vector<double>& flux, double step, std::vector<double>& tracer, std::vector<double>& work) {
+void advectTracer(const SphereGrid& grid, const SphereStencil& stencil, const std::vector<double>& flux, double step, std::vector<double>& tracer,
+                  std::vector<double>& work) {
+    assert(stencil.edge.size() == grid.edge.size());
     work.assign(size_t(grid.cells), 0.0);
     for (size_t e = 0; e < flux.size(); ++e) {
         const SphereEdge& edge = grid.edge[e];
         const bool outOfLeft = flux[e] > 0;
         const int up = outOfLeft ? edge.left : edge.right, down = outOfLeft ? edge.right : edge.left;
-        const int behind = outOfLeft ? edge.behindLeft : edge.behindRight;
+        const int behind = outOfLeft ? stencil.edge[e].behindLeft : stencil.edge[e].behindRight;
         const double local = tracer[size_t(down)] - tracer[size_t(up)];
         const double upstream = tracer[size_t(up)] - tracer[size_t(behind)];
         const double courant = std::abs(flux[e]) * step / grid.area[size_t(up)];
