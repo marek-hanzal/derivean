@@ -71,6 +71,10 @@ struct SheetWork {
     std::vector<float> worn;             // m of rock ground off so far, per domain cell
     std::vector<float> now, lastMaximum; // m of grounded ice per domain cell, once the last sheet has left its record
     std::vector<float> rest;             // m each cell's crust has still to rise since the last sheet left
+    // m of each class of the parent's last-sheet deposits per domain cell, set aside from the seed
+    // and from the cells it follows, and laid back when the sheet leaves: dated at the window's end,
+    // they take no part in its settling.
+    std::vector<float> held[SedimentClasses];
     // Per domain cell while the last sheet leaves its record (the esker crossings already per
     // tile); the tile's cells are read off at the end.
     SheetRecord left;

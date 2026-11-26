@@ -14,6 +14,7 @@ void testPlume();
 void testIceSheet();
 void testIceSheetLocal();
 void testIceSheetSeam();
+void testIceSheetHold();
 void testLandscapeRegularity();
 void testLandscapePlane();
 void testLandscapeWorld();
@@ -60,6 +61,7 @@ constexpr Test Tests[] = {
     {"testIceSheet", testIceSheet},
     {"testIceSheetLocal", testIceSheetLocal},
     {"testIceSheetSeam", testIceSheetSeam},
+    {"testIceSheetHold", testIceSheetHold},
     {"testLandscapeRegularity", testLandscapeRegularity},
     {"testLandscapePlane", testLandscapePlane},
     {"testRelief", testRelief},

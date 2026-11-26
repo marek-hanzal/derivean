@@ -3,6 +3,7 @@
 #include "aeolian/fn/Wind.hpp"
 #include "coast/fn/Coast.hpp"
 #include "ground/fn/Stages.hpp"
+#include "icesheet/fn/Parent.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "volcanic/fn/Volcanic.hpp"
 
@@ -238,6 +239,9 @@ Domain buildDomain(const Setting& setting, TileKey key, const TileLookup& lookup
     beginVolcanic(domain, setting, lookup);
     if (key.level != Level::Ground) readStructure(domain, setting);
     if (key.level != Level::Region) levelHollows(domain);
+    // The parent's last sheet left its deposits at the end of the window: they take no part in the
+    // settling and are laid back when this domain's own last sheet leaves (icesheet/fn/Parent.cpp).
+    if (key.level == Level::Local || key.level == Level::Site) holdBackLastSheet(domain, lookup);
     if (key.level == Level::Ground) beginGround(domain, setting);
     return domain;
 }

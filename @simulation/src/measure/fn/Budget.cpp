@@ -1,5 +1,7 @@
 #include "measure/fn/Budget.hpp"
 
+#include "icesheet/type/Sheet.hpp"
+
 #include <cmath>
 
 namespace derivean::sim {
@@ -8,13 +10,16 @@ TileBudget budgetOf(const Setting& setting, const Tile& tile, const TileLookup& 
     TileBudget budget;
     budget.key = tile.key;
     const Domain start = buildDomain(setting, tile.key, lookup);
+    // The parent's last-sheet deposits are set aside while the tile settles (icesheet/fn/Parent.cpp).
+    const bool held = start.sheet && start.sheet->held[0].size() == start.cells();
     const double cells = double(TileCells) * TileCells;
     const double area = cells * start.cell * start.cell;
     double before = 0, after = 0, booked = 0, wetGain = 0;
     for (int z = 0; z < TileCells; ++z) {
         for (int x = 0; x < TileCells; ++x) {
             const size_t from = start.index(x + Halo, z + Halo), to = size_t(z) * TileCells + size_t(x);
-            const double was = double(start.ground.rock[from]) + start.sedimentAt(from);
+            double was = double(start.ground.rock[from]) + start.sedimentAt(from);
+            if (held) was += double(start.sheet->held[Coarse][from]) + start.sheet->held[Sand][from] + start.sheet->held[Fines][from];
             const double now = double(tile.now.rock[to]) + tile.now.sediment[0][to] + tile.now.sediment[1][to] + tile.now.sediment[2][to];
             const double moved = double(tile.uplifted[to]) - tile.eroded[to] + tile.deposited[to];
             before += was, after += now, booked += moved;

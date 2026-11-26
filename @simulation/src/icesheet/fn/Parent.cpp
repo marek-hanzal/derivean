@@ -36,6 +36,20 @@ struct Parents {
         return tiles[size_t(tz) * size_t(countX) + size_t(tx)];
     }
 
+    // The four parent cells the seed blends at domain cell (x, z), with their weights, exactly as
+    // landscape/fn/Seed.cpp reads the parent's cover.
+    template <class Each> void blend(const Domain& domain, int x, int z, Each&& each) const {
+        const Vec2 here = domain.center(x, z);
+        const double fx = here.x / cell - 0.5, fz = here.z / cell - 0.5;
+        const int64_t ix = int64_t(std::floor(fx)), iz = int64_t(std::floor(fz));
+        const float tx = float(fx - double(ix)), tz = float(fz - double(iz));
+        for (int k = 0; k < 4; ++k) {
+            size_t c = 0;
+            const Tile* tile = at(ix + (k & 1), iz + (k >> 1), c);
+            if (tile) each(*tile, c, ((k & 1) ? tx : 1 - tx) * ((k >> 1) ? tz : 1 - tz));
+        }
+    }
+
     bool anyRecord() const {
         for (const Tile* tile : tiles)
             if (tile && tile->sheet) return true;
@@ -59,24 +73,16 @@ ParentSheet readParentSheet(const Domain& domain, const std::function<const Tile
     constexpr int Fields = 8;
     for (int z = 0; z < domain.size; ++z) {
         for (int x = 0; x < domain.size; ++x) {
-            const Vec2 here = domain.center(x, z);
-            const double fx = here.x / parents.cell - 0.5, fz = here.z / parents.cell - 0.5;
-            const int64_t ix = int64_t(std::floor(fx)), iz = int64_t(std::floor(fz));
-            const float tx = float(fx - double(ix)), tz = float(fz - double(iz));
             float sum[Fields] = {};
-            for (int k = 0; k < 4; ++k) {
-                size_t c = 0;
-                const Tile* tile = parents.at(ix + (k & 1), iz + (k >> 1), c);
-                if (!tile) continue;
-                const float weight = ((k & 1) ? tx : 1 - tx) * ((k >> 1) ? tz : 1 - tz);
-                const float ground = groundOf(*tile, c);
-                const SheetRecord* record = tile->sheet.get();
+            parents.blend(domain, x, z, [&](const Tile& tile, size_t c, float weight) {
+                const float ground = groundOf(tile, c);
+                const SheetRecord* record = tile.sheet.get();
                 // A finer parent's own glaciers are in its iceAge; its record holds the sheet's alone.
-                const float then = record && !record->sheetThen.empty() ? record->sheetThen[c] : tile->key.level == Level::Region ? tile->iceAge[c] : 0.0f;
-                const float values[Fields] = {tile->ice[c], then, ground + tile->ice[c], ground + then, record ? record->slideX[c] : 0.0f,
+                const float then = record && !record->sheetThen.empty() ? record->sheetThen[c] : tile.key.level == Level::Region ? tile.iceAge[c] : 0.0f;
+                const float values[Fields] = {tile.ice[c], then, ground + tile.ice[c], ground + then, record ? record->slideX[c] : 0.0f,
                                               record ? record->slideZ[c] : 0.0f, record ? record->worn[c] : 0.0f, record ? record->esker[c] : 0.0f};
                 for (int f = 0; f < Fields; ++f) sum[f] += weight * values[f];
-            }
+            });
             const size_t i = domain.index(x, z);
             sheet.iceNow[i] = sum[0], sheet.iceThen[i] = sum[1], sheet.topNow[i] = sum[2], sheet.topThen[i] = sum[3];
             sheet.slideX[i] = sum[4], sheet.slideZ[i] = sum[5], sheet.worn[i] = sum[6], sheet.esker[i] = sum[7];
@@ -109,6 +115,63 @@ std::vector<Tunnel> parentTunnels(const Domain& domain, const std::function<cons
         }
     }
     return found;
+}
+
+void holdBackLastSheet(Domain& domain, const std::function<const Tile*(TileKey)>& tiles) {
+    const Parents parents(domain, tiles);
+    if (!parents.anyRecord()) return;
+    if (!domain.sheet) domain.sheet = std::make_shared<SheetWork>();
+    auto& held = domain.sheet->held;
+    for (auto& part : held) part.assign(domain.cells(), 0.0f);
+    const WindLabels& labels = domain.aeolian.labels;
+    const bool labelled = labels.lag.size() == domain.cells();
+    for (int z = 0; z < domain.size; ++z)
+        for (int x = 0; x < domain.size; ++x) {
+            float washed = 0, lodged = 0;   // tunnel fill and outwash are gravel and sand; till and moraine any class
+            parents.blend(domain, x, z, [&](const Tile& tile, size_t c, float weight) {
+                if (!tile.sheet) return;
+                const SheetRecord& record = *tile.sheet;
+                washed += weight * (record.esker[c] + record.outwash[c]), lodged += weight * (record.till[c] + record.moraine[c]);
+            });
+            const size_t i = domain.index(x, z);
+            // What the wind's labels say the wind laid stays: tidyLabels would clip them to a thinner cover.
+            const auto unlabelled = [&](const Ground& ground, int c) {
+                const float label = !labelled ? 0.0f : c == Coarse ? labels.lag[i] : c == Fines ? labels.salt[i] + labels.loess[i] : 0.0f;
+                return std::max(0.0f, ground.sediment[c][i] - label);
+            };
+            float free[SedimentClasses];
+            for (int c = 0; c < SedimentClasses; ++c) free[c] = unlabelled(domain.ground, c);
+            const float loose = free[Coarse] + free[Sand];
+            const float fromLoose = loose > 0 ? std::clamp(washed, 0.0f, loose) / loose : 0.0f;
+            for (const SedimentClass c : {Coarse, Sand}) held[c][i] = free[c] * fromLoose, free[c] -= held[c][i];
+            const float rest = free[Coarse] + free[Sand] + free[Fines];
+            const float fromRest = rest > 0 ? std::clamp(lodged, 0.0f, rest) / rest : 0.0f;
+            float all = 0;
+            for (int c = 0; c < SedimentClasses; ++c) {
+                // A cell that follows a finished neighbour (Settled, or a Rim cell inside it) moves to
+                // that neighbour's ground, which has them laid back; elsewhere settledTo is the seed.
+                held[c][i] = std::min(held[c][i] + free[c] * fromRest, unlabelled(domain.settledTo, c));
+                for (Ground* ground : {&domain.ground, &domain.settledFrom, &domain.settledTo}) ground->sediment[c][i] -= held[c][i];
+                all += held[c][i];
+            }
+            domain.trend[i] -= all;
+            if (!domain.lakeFloor.empty()) domain.lakeFloor[i] -= all;
+        }
+}
+
+void restoreLastSheet(Domain& domain) {
+    if (!domain.sheet || domain.sheet->held[0].size() != domain.cells()) return;
+    auto& held = domain.sheet->held;
+    for (size_t i = 0; i < domain.cells(); ++i) {
+        float all = 0;
+        for (int c = 0; c < SedimentClasses; ++c) {
+            for (Ground* ground : {&domain.ground, &domain.settledFrom, &domain.settledTo}) ground->sediment[c][i] += held[c][i];
+            all += held[c][i];
+        }
+        domain.trend[i] += all;
+        if (!domain.lakeFloor.empty()) domain.lakeFloor[i] += all;
+    }
+    for (auto& part : held) part.clear();
 }
 
 const SheetRecord* finishedSheet(const Domain& domain, int x, int z, size_t& at) {
