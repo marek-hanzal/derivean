@@ -100,7 +100,7 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
     const record = {
       name: current.name, eye: frame.eye, yaw: viewYaw(), pitch: current.pitch, flying: frame.flying,
       calendar: frame.calendar, sun: frame.sun, weather: frame.weather,
-      ground: frame.ground, waterLevel: frame.waterLevel, streamingReady: frame.streamingReady, ready: frame.ready,
+      ground: frame.ground, waterLevel: frame.waterLevel, streamingReady: frame.streamingReady, ready: frame.ready, tiles: frame.tiles,
       pending: frame.pending, generationMs: frame.generationMs, nativeMs: frame.nativeMs,
       visibleChunks: frame.visibleChunks, ...notes, ...extra,
     };

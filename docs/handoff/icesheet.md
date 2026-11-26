@@ -92,7 +92,34 @@ Catalogue targets are in `docs/reference-landscapes.md` (A2, A3, F1–F4, G1). R
 
 ## 3. In progress
 
-Nothing half-done. Ninth run (after 25fa428): drumlins on the rig only (section 8); no source change. Eighth run (after 346a3e1): the trace of the esker gravel, the hold-back (merged by the lead as 065b9e6) and the record chain to Site (section 2), each reviewed; the chain's review items done (Site imports no ice from an unreached record, the strip comes off the laid-back total, no record when nothing was laid back, the flag is `restored`). Seventh run (after 45a7c8c): esker material only from its source, the westward and books cases in `test/IceSheetSeam.cpp` (section 2); reviewed twice, no must-fix left. Sixth run: the esker seam fix, places from the Region record with counts on a real shield and margin, and the drumlin attempt (not kept, section 8). The rest of this section is from the fifth run. After the fifth run, a review of the supply ratio, `PlaceKind` and `printColumns` (one must-fix left open, section 2; the margin test now counts ice under `LeastSheet` as bare and treats a cell at sea level as sea; `Census.hpp` includes `<cstdint>`); both ice tests pass in the mirror after it. Fifth run (Opus, 26 Nov, on the lead's list after 8073c64), all built and tested in the private mirror (section 7); `test/IceSheetLocal.cpp` and `test/IceSheet.cpp` pass there. The full suite was not run.
+**Half-done: dead-ice melt-out, in the private mirror only** (scratch `mirror/sim`; nothing in the shared tree). Ninth run (after 25fa428): drumlins on the rig only, then parked (section 8).
+
+- **Dead ice (lead's item, 26 Nov), built and measured in the mirror, not promoted, no test yet, not reviewed.**
+  - What it does:
+    - New `type/DeadIce.hpp` and `fn/DeadIce.cpp`, a `DebrisShelter` constant in `Ice.hpp`, a `DeadIce&` argument to `lodgeTill`, and two calls in `leaveFiner`.
+    - `stillIce`: as the sheet thinned at the slope it kept, it slid with the square of its thickness (`SlideRate`·τ²). The share of the column below the thickness at which it slid `LeastSlide` stopped: √(LeastSlide / slide), or all of it where it never slid. That still ice stands up to the parent's lowered surface, so it lies thicker over the domain's hollows.
+    - `lodgeTill` keeps that share of what a cell lodges in the still ice.
+    - `meltOut`: the ice melts at DebrisShelter / (DebrisShelter + debris) of the bare rate (Østrem; 0.06 m from conduction against a degree-day factor). Debris steeper than till stands against its lowest Free neighbour slides half the excess. Each round melts at most a quarter of a repose step. What is left is laid as till, at rest, with crossings and deposits booked.
+    - Lab switch `ICE_FINER_OFF_DEAD` in the mirror's `Local.cpp`.
+  - Rig (`dead/deadprobe.cpp`, fast ice slowing across a hummocky plain): the still ice is about 100 m, but the debris in it only 0.3–0.8 m. Kettles change 4.8 → 3.8 per km² at 3 m cover and 1.9 → 2.9 at 20 m, and relief stays the same. Debris slides off the higher ground into hollows whose ice melts last, so the forms smooth rather than invert.
+  - Inland Local 2 × 2 (`7052800 13263360`, share about 0.1; `.out/icesheet/dead/inland-off.txt` and `inland-on.txt`):
+    - Lakes cover 4.8 → 5.4 % of the freed ground.
+    - Kettle-sized hollows in drift go 100 → 148, mean depth 1.1 → 1.4 m.
+    - Lakes number 855 → 897, single-cell lakes 358 → 402.
+    - The gain is mostly till kept out of the hollows (10 % of the lodging), not hummocks.
+  - Site 2 × 2 (`7042816 13263360`, 4 km², `site-off.txt` → `site-on.txt`): lakes cover 6.2 → 6.7 %, but in puddles: lakes 925 → 1 418, single 4 m cells 30 → 663, mean deepest point 0.1 m. Hollows in drift 57 → 134, 0.2 m deep, none of kettle size. At Site the melt-out adds grid speckle, not kettles.
+  - Earth's dead-ice country is mapped at:
+    - Kettle holes in north-east Germany under 1 ha, up to 40 per km².
+    - Missouri Coteau wetlands about 11 per km² on average, over 58 per km² locally.
+    - Masurian lake cover 5–10 %, over 20 % at most; lakes 15–35 m deep, kettles seldom over 10 m.
+    - Alberta hummocks up to 25 m high and 500 m across.
+  - The model does not reach that. Three parts of the record are missing:
+    - (1) Debris-rich ice at the margin. Our load lodges within about ten cells of where it is taken up (`LodgeCells`), so stagnating ice holds under a metre of debris, where hummocky moraine needs 5–30 m.
+    - (2) Broad thin, slow lobes, which need the soft-bed sliding law.
+    - (3) Outwash aggrading around ice blocks during the retreat (pitted outwash), since only the last maximum's margin washes out.
+  - **Decision (lead, 26 Nov): the dead-ice code stays in the mirror until the soft-bed law lands.** It needs 5–30 m of debris in the still ice and broad thin, slow lobes before it can make hummocks and kettles; measure again then. The mirror moves to `.out/icesheet/mirror/` after the move to the main repo.
+
+ Eighth run (after 346a3e1): the trace of the esker gravel, the hold-back (merged by the lead as 065b9e6) and the record chain to Site (section 2), each reviewed; the chain's review items done (Site imports no ice from an unreached record, the strip comes off the laid-back total, no record when nothing was laid back, the flag is `restored`). Seventh run (after 45a7c8c): esker material only from its source, the westward and books cases in `test/IceSheetSeam.cpp` (section 2); reviewed twice, no must-fix left. Sixth run: the esker seam fix, places from the Region record with counts on a real shield and margin, and the drumlin attempt (not kept, section 8). The rest of this section is from the fifth run. After the fifth run, a review of the supply ratio, `PlaceKind` and `printColumns` (one must-fix left open, section 2; the margin test now counts ice under `LeastSheet` as bare and treats a cell at sea level as sea; `Census.hpp` includes `<cstdint>`); both ice tests pass in the mirror after it. Fifth run (Opus, 26 Nov, on the lead's list after 8073c64), all built and tested in the private mirror (section 7); `test/IceSheetLocal.cpp` and `test/IceSheet.cpp` pass there. The full suite was not run.
 
 - **Columns at Site (lead, urgent): fixed.** `lodgeTill` let a cell with no lower neighbour on the parent's ice surface keep all the load passing over it. At Site tile 5474 9868 (`--x 5605504 --z 10105024`) that was till of 1 070 m, 605 m and 359 m on single cells. Now such a hollow keeps what till stands in and the meltwater takes the rest (section 5). With relief's `settleDebris` guard absent (the mirror has none), the same tile has no loose cell more than 20 m above its neighbours; the 48 cells that stand more than 20 m above all neighbours are bare rock, up to 61 m, and the tile without the pass has 50 such cells up to 76 m (`.out/icesheet/column/site.txt` before, `site-fixed.txt` after). Every Leave in the tests goes through `leaveChecked`; a bowl in the ice surface gave a 1 548 m column on the old rule.
 - **Eskers follow the domain's own head** (`EskerPath.cpp`, section 5). Coast, Local 2 × 2 at `--x 11582976 --z 4307456` (`eskerstat`):
@@ -129,7 +156,7 @@ Nothing half-done. Ninth run (after 25fa428): drumlins on the rig only (section 
 
 ## 4. Next steps
 
-1. The full suite on the shared tree with the hold-back and the record chain: every glaciated Local and Site tile changes. Not run here.
+1. The full suite on the shared tree with the hold-back and the record chain: every glaciated Local and Site tile changes. Running at hand-over on the shared tree as it stood (HEAD in `.out/icesheet/suite-head.txt`, output `.out/icesheet/suite.txt`).
 2. The record chain stops at Site: a Site whose Local parents were all unreached has no `parent.any`, so it writes no record of its own laid-back deposits. Nothing below Site reads them (Ground has no hold-back); add it if Ground ever does.
 3. When relief's glaciated Site fix lands: `testReliefGlaciatedSite` (`test/Relief.cpp:212`) on the shared tree with and without this run's esker rule (scratch `reliefab.sh tag`: the mirror library, and the same with 45a7c8c's `Esker.cpp` linked over it), both results to the lead. Not chased here: it is relief's known failure.
 4. **Drumlins: parked** (lead, 26 Nov; reasons in section 8). Nothing of them is in the source tree.
@@ -240,6 +267,8 @@ That scratch directory is session-local and may be gone. What it held, so it can
 - `seamprobe2.cpp x z`: all four seams of a 2 × 2 Local mosaic, (on − off) ground and till by row across each, and which way the ice slid across it.
 - `count.cpp`: tiles finished after `surveyAt` at the test world's focus, at each level, with and without the finer pass. Result 26 Nov: 3 tiles (one Region, one Local, one Site) either way. The finer pass reads only tiles in `dependencies(key)` through the atlas lookup, so it cannot start builds.
 - `eskerseam.cpp x z [tiles] [level] [png]`: `eskerstat` plus, for each seam and each tile's middle line, the ridge height on the two cells either side wherever a ridge over 1 m touches it, a picture of the ridges, and a profile of the columns crossing the horizontal seam. Link `EskerOld.cpp` (`git show 65f24a8:@simulation/src/icesheet/fn/Esker.cpp`) before the library for the old rule.
+- Dead ice: the mirror's sources and their diff against the shared tree are kept in `.out/icesheet/dead/src/` (`DeadIce.hpp`, `DeadIce.cpp`, `mirror.diff`), with the probes `deadprobe.cpp level ice slide cover bedAmp bedScale [seed] [png]` (still ice on and off on a hand-built plain) and `deadrig.cpp` (the melt-out alone), and `landforms.cpp`.
+- Drumlins: `.out/icesheet/drum/` holds `disp.cpp`, `rig.cpp`, `filt.cpp` and `drumfield.cpp x z [radius]`.
 - `drumrig.cpp [mounds] [slide]`: a plain with a field of round till mounds under ice sliding east, the drumlin attempt alone; hills before and after (extent along and across the flow) and `drum-before/after.png`.
 - `localprobe.cpp x z out [tiles] [exaggeration] [level]`: a square of finer tiles with `ICE_FINER_OFF` and without (same local patch, at the top of `sheetFiner`; about 3 min per pass for 2 × 2 Local); lakes, slope, till; `local-off/on/left/diff.png`.
 - Compile any of them: `c++ -std=c++20 -O2 -I@simulation/src <file> .out/simulation/build-ice/macosx/arm64/release/libderivean-simulation.a -o <name>` (rebuild the library first when a header changed).
