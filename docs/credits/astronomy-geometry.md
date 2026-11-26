@@ -1,6 +1,6 @@
 # Credits: astronomy and the geometry of the sphere
 
-Part of [Credits](../credits.md); the entry format is explained there. Both domains are new (planet slices S1 and S2, 26 Nov 2026) and still in progress; the entries follow the Sources sections of `docs/handoff/geometry.md` (S1, commit `cb87997`; its lines and the geometry source lines as of S1's follow-up to Codex's DREV-CLAUDE-002-03) and `docs/handoff/astronomy.md:167` (S2, commit `e3ed117`), with the bibliographic data checked again here. Line numbers are as of `e3ed117`.
+Part of [Credits](../credits.md); the entry format is explained there. Both domains are new (planet slices S1 and S2, 26 Nov 2026) and still in progress; the entries follow the Sources sections of `docs/handoff/geometry.md` (S1, commit `cb87997`; its lines and the geometry source lines as of S1's follow-up to Codex's DREV-CLAUDE-002-03) and `docs/handoff/astronomy.md:167` (S2, commit `e3ed117`), with the bibliographic data checked again here. Astronomy line numbers are as of `e3ed117`.
 
 ## The Sun, the Earth and the Moon today
 
@@ -130,7 +130,7 @@ Milankovitch, M. (1941). *Kanon der Erdbestrahlung und seine Anwendung auf das E
 Veach, E., et al. (2005 onwards). *S2 Geometry*, C++ library, Google, Apache-2.0. https://github.com/google/s2geometry; cell hierarchy: https://s2geometry.io/devguide/s2cell_hierarchy.html
 - **Model:** the face numbering and orientation, the tie rule between faces, the ST/UV split and the face quadtree. The library itself is not linked (`docs/handoff/geometry.md:56`).
 - **Used in:** `@simulation/src/geometry/constant/Sphere.hpp:15`, `:32`; `@simulation/src/geometry/fn/Projection.hpp:16`, `:20`; `@simulation/src/geometry/fn/Neighbour.hpp:12`.
-- **Checked by:** `@simulation/test/Geometry.cpp:135`, S2's face tie rule.
+- **Checked by:** `@simulation/test/Geometry.cpp:139`, S2's face tie rule.
 
 ### Sadourny 1972; Ronchi, Iacono and Paolucci 1996: the gnomonic and equiangular cubed sphere
 Sadourny, R. (1972). Conservative finite-difference approximations of the primitive equations on quasi-uniform spherical grids. *Monthly Weather Review* 100(2), 136–144. doi:10.1175/1520-0493(1972)100<0136:CFAOTP>2.3.CO;2
@@ -163,12 +163,12 @@ Rodrigues, O. (1840). Des lois géométriques qui régissent les déplacements d
 
 do Carmo, M. P. (1976). *Differential Geometry of Curves and Surfaces*. Prentice-Hall, §4-5 (Gauss–Bonnet).
 - **Model:** the rotation about from × to that carries a vector along, in Rodrigues' unit-axis form beyond a right angle so it stays finite up to the antipode; parallel transport round a loop turns by area / R².
-- **Used in:** `@simulation/src/geometry/fn/Frame.hpp:32`, `:37`; `@simulation/src/geometry/fn/Frame.cpp:61`.
-- **Checked by:** `@simulation/test/GeometryFrame.cpp:71` (finite and reversible near and at the antipode), `:101` (holonomy against the enclosed solid angle).
+- **Used in:** `@simulation/src/geometry/fn/Frame.hpp:32`, `:37`; `@simulation/src/geometry/fn/Frame.cpp:62`.
+- **Checked by:** `@simulation/test/GeometryFrame.cpp:77` (finite and reversible near and at the antipode), `:145` (holonomy against the enclosed solid angle).
 
 ### Sinnott 1984: haversine distance
 Sinnott, R. W. (1984). Virtues of the haversine. *Sky and Telescope* 68(2), 159.
-- **Checked by:** `@simulation/test/GeometryFrame.cpp:115`, the independent distance `distanceBetween` is compared with (`docs/handoff/geometry.md:105`).
+- **Checked by:** `@simulation/test/GeometryFrame.cpp:159`, the independent distance `distanceBetween` is compared with (`docs/handoff/geometry.md:105`).
 
 ### Karney 2013: ellipsoidal geodesics (for later)
 Karney, C. F. F. (2013). Algorithms for geodesics. *Journal of Geodesy* 87, 43–55. doi:10.1007/s00190-012-0578-z

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "geometry/type/Vec3.hpp"
+
 namespace derivean::sim {
 
 // One cell of a face quadtree: 0 <= i, j < 2^level. i grows along the face's u axis, j along v.
@@ -34,6 +36,19 @@ struct Neighbour {
 
 struct EdgeNeighbours {
     Neighbour across[4];
+};
+
+// One edge of a cell as a flux sees it. `from` and `to` are its corners k and k + 1 (unit directions),
+// `midpoint` the middle of its arc, `normal` the unit normal of its great-circle plane pointing out of
+// the cell: tangent to the sphere everywhere along the edge, so one vector serves the whole edge.
+// The neighbour's view of the same edge has, bit for bit, the corners swapped, the same midpoint and
+// length, and the opposite normal.
+struct CellEdge {
+    Vec3 from;
+    Vec3 to;
+    Vec3 midpoint;
+    Vec3 normal;
+    double length{};   // m
 };
 
 // Where one edge of a face leads: the neighbouring face, the shared edge in its numbering, and whether

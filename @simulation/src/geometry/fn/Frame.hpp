@@ -29,15 +29,18 @@ TangentVector tangentOf(Vec3 vector, const SurfaceFrame& frame);  // drops the c
 TangentVector reframe(TangentVector tangent, const SurfaceFrame& from, const SurfaceFrame& to);
 
 // Parallel transport of a tangent vector along the shorter great circle from one direction to another:
-// the rotation about from × to that takes from onto to (Rodrigues 1840). Undefined for antipodal
-// directions. Round a closed geodesic polygon the result turns by the polygon's enclosed solid angle in
-// the sense of travel, the holonomy of the sphere (Gauss–Bonnet; do Carmo 1976).
+// the rotation about from × to that takes from onto to (Rodrigues 1840). It is finite and reversible
+// (transport back returns the vector) to about 1e-14 for every pair, up to and including antipodes.
+// Only at the exact antipode (the unit directions sum to zero) is the great circle undefined; the axis
+// is then chosen deterministically, perpendicular to from − to and to the coordinate axis that vector
+// leans on least. Round a closed geodesic polygon the result turns by the polygon's enclosed solid
+// angle in the sense of travel, the holonomy of the sphere (Gauss–Bonnet; do Carmo 1976).
 Vec3 transport(Vec3 vector, Vec3 from, Vec3 to);
 
 // A vector held in one cell's frame, carried to another cell (across an edge or a corner, also onto
 // another face) along the geodesic between their centres and given in that cell's frame. Carrying it
 // back returns the original components. The turn is fixed per pair of cells, so a solver can keep its
-// FrameRotation per edge and apply it with `turned`. Undefined for antipodal cells.
+// FrameRotation per edge and apply it with `turned`. Antipodal cells follow transport's rule.
 FrameRotation carryRotation(const Cell& from, const Cell& to);
 TangentVector turned(TangentVector tangent, FrameRotation rotation);
 TangentVector carry(TangentVector tangent, const Cell& from, const Cell& to);

@@ -2,11 +2,13 @@
 // tangent budget are in GeometryFrame.cpp.
 #include "GeometryFixture.hpp"
 
+#include "geometry/fn/Edge.hpp"
 #include "geometry/fn/Frame.hpp"
 #include "geometry/fn/Metric.hpp"
 #include "geometry/fn/Neighbour.hpp"
 #include "geometry/fn/Projection.hpp"
 
+#include <algorithm>
 #include <numbers>
 
 using namespace derivean::sim;
@@ -92,6 +94,44 @@ void checkNeighbours() {
     expect(faceEdgeOf(0, 3).face == 4 && faceEdgeOf(0, 3).edge == 2 && faceEdgeOf(0, 3).reversed, "face edge table is not exposed");
 }
 
+// The two views of every shared edge cancel exactly: same corners swapped, same midpoint, opposite
+// normal bit for bit, the same length; the normal is tangent along the edge and points out of the
+// cell. Inner edges, face edges and the edges at cube vertices, on all cells of level 4 and the
+// samples; and the centre-to-centre direction is not the normal (Codex's 23° case).
+void checkEdges() {
+    std::vector<Cell> cells;
+    for (int face = 0; face < FaceCount; ++face)
+        for (int i = 0; i < 16; ++i)
+            for (int j = 0; j < 16; ++j) cells.push_back({face, 4, i, j});
+    for (int level : SampleLevels)
+        for (const Cell& cell : samplesAt(level)) cells.push_back(cell);
+    auto equal = [](Vec3 a, Vec3 b) { return a.x == b.x && a.y == b.y && a.z == b.z; };
+    int faceEdges = 0;
+    for (const Cell& cell : cells)
+        for (int edge = 0; edge < 4; ++edge) {
+            const Neighbour next = neighbourAcross(cell, edge);
+            const CellEdge ours = edgeOf(cell, edge), theirs = edgeOf(next.cell, next.edge);
+            faceEdges += next.cell.face != cell.face;
+            expect(equal(ours.from, theirs.to) && equal(ours.to, theirs.from) && equal(ours.midpoint, theirs.midpoint),
+                   "the two views of an edge do not share its corners and midpoint");
+            expect(equal(ours.normal, -theirs.normal), "the two views of an edge do not have exactly opposite normals");
+            expect(ours.length == theirs.length, "the two views of an edge differ in length");
+            expect(near(length(ours.normal), 1, 1e-15) && near(length(ours.midpoint), 1, 1e-15), "edge normal or midpoint is not a unit vector");
+            // The rounded corners are good to ~1e-16 rad each, about 1 nm on the ground.
+            const double arc = centralAngle(ours.from, ours.to) * PlanetRadius;
+            expect(near(ours.length, arc, 1e-14 * arc + 5e-9), "edge length is not the arc between its corners", ours.length - arc);
+            expect(std::abs(dot(ours.normal, ours.from)) < 1e-15 && std::abs(dot(ours.normal, ours.to)) < 1e-15 &&
+                   std::abs(dot(ours.normal, ours.midpoint)) < 1e-15, "edge normal is not tangent along the edge",
+                   std::max({std::abs(dot(ours.normal, ours.from)), std::abs(dot(ours.normal, ours.to)), std::abs(dot(ours.normal, ours.midpoint))}));
+            expect(dot(ours.normal, centreOf(cell)) < 0 && dot(ours.normal, centreOf(next.cell)) > 0, "edge normal does not point out of the cell");
+        }
+    expect(faceEdges > 0, "no face edge was checked");
+    const Cell corner{0, 5, 29, 29};
+    const CellEdge edge = edgeOf(corner, 1);
+    const Vec3 across = normalized(cross(normalized(cross(centreOf(corner), centreOf(neighbourAcross(corner, 1).cell))), edge.midpoint));
+    expect(near(std::acos(dot(across, edge.normal)) * 180 / Pi, 23.0, 0.1), "centre-to-centre direction is not 23° off the normal");
+}
+
 // Face point <-> ECEF <-> (face, level, i, j), heights, keys and the quadtree; S2's face tie rule.
 void checkRoundTrips() {
     for (double s : {0.0, 1e-9, 0.25, 0.5, 0.731, 1.0})
@@ -133,6 +173,7 @@ void checkRoundTrips() {
 void testGeometry() {
     checkLengths();
     checkNeighbours();
+    checkEdges();
     checkRoundTrips();
     checkFrames();
     checkAreas();

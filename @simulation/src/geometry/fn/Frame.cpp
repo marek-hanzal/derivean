@@ -4,6 +4,7 @@
 #include "geometry/fn/Cell.hpp"
 #include "geometry/fn/Projection.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 namespace derivean::sim {
@@ -44,12 +45,39 @@ TangentVector reframe(TangentVector tangent, const SurfaceFrame& from, const Sur
     return tangentOf(vectorOf(tangent, from), to);
 }
 
-// R v = v − ((a + b)·v / (1 + a·b)) (a + b) + 2 (a·v) b is the rotation about a × b taking a to b; it
-// needs no axis normalisation, so it stays exact for neighbouring cells a fraction of a metre apart.
+namespace {
+
+// A unit axis perpendicular to d and to the coordinate axis d leans on least (ties to the lower index):
+// it depends on |d| only, so d and −d give opposite axes.
+Vec3 axisAcross(Vec3 d) {
+    const double ax = std::abs(d.x), ay = std::abs(d.y), az = std::abs(d.z);
+    const Vec3 least = ax <= ay && ax <= az ? Vec3{1, 0, 0} : ay <= az ? Vec3{0, 1, 0} : Vec3{0, 0, 1};
+    return normalized(cross(d, least));
+}
+
+} // namespace
+
+// Up to a right angle, R v = v − ((a + b)·v / (1 + a·b)) (a + b) + 2 (a·v) b, the rotation about a × b
+// taking a to b with no axis normalisation, so it stays exact for neighbouring cells a fraction of a
+// metre apart (1 + a·b >= 1). Beyond it 1 + a·b goes to zero, so Rodrigues' form about the unit axis
+// takes over: v cos θ + (n × v) sin θ + n (n·v)(1 − cos θ), with cos θ = a·b. The axis is taken as
+// a × (a + b), equal to a × b: near the antipode a + b is a small vector of small absolute error, so
+// the axis keeps full relative precision where a × b would cancel to an error of 1e-16 / sin θ. The
+// axis is scaled by its largest component before its length is taken, which would otherwise
+// underflow below sin θ ≈ 1e-154.
 Vec3 transport(Vec3 vector, Vec3 from, Vec3 to) {
     const Vec3 a = normalized(from), b = normalized(to);
-    const Vec3 sum = a + b;
-    return vector - sum * (dot(sum, vector) / (1 + dot(a, b))) + b * (2 * dot(a, vector));
+    const double cosine = dot(a, b);
+    if (cosine >= 0) {
+        const Vec3 sum = a + b;
+        return vector - sum * (dot(sum, vector) / (1 + cosine)) + b * (2 * dot(a, vector));
+    }
+    const Vec3 normal = cross(a, a + b);
+    const double largest = std::max({std::abs(normal.x), std::abs(normal.y), std::abs(normal.z)});
+    const Vec3 scaled = largest > 0 ? normal * (1 / largest) : normal;
+    const double sine = largest > 0 ? length(scaled) * largest : 0;
+    const Vec3 axis = largest > 0 ? scaled * (1 / length(scaled)) : axisAcross(a - b);
+    return vector * cosine + cross(axis, vector) * sine + axis * (dot(axis, vector) * (1 - cosine));
 }
 
 // Transport preserves orientation and both frames are right-handed, so the carried first axis fixes the
