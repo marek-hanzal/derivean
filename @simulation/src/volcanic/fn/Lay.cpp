@@ -90,7 +90,7 @@ void emplace(Domain& domain, Emplacement& field, Laying& laying, int vent, const
         ledger.drifted += outburst.ash - laid;
     }
     if (outburst.founders > 0) {
-        const std::vector<float> drop = founder(field, site, outburst.founders);
+        const std::vector<float> drop = founder(field, site, outburst.founders, domain.volcanic.vents[size_t(vent)].magma);
         for (size_t i = 0; i < drop.size(); ++i) {
             if (drop[i] <= 0 || field.rest[i] != Rest::Open) continue;
             laying.drop[i] += drop[i];

@@ -4,11 +4,11 @@
 
 namespace derivean::sim {
 
-double calderaRadius(double volume) { return CalderaRadius * std::pow(volume / 1e9, 0.4); }
+double calderaRadius(double volume, Magma magma) { return std::sqrt(volume / (3.14159265358979323846 * CalderaDepth[size_t(magma)])); }
 
-std::vector<float> founder(const Emplacement& field, Vec2 centre, double volume) {
+std::vector<float> founder(const Emplacement& field, Vec2 centre, double volume, Magma magma) {
     std::vector<float> drop(field.cells(), 0.0f);
-    const double radius = calderaRadius(volume);
+    const double radius = calderaRadius(volume, magma);
     // The roof goes down as one block inside the ring fault; the wall between block and rim is as
     // narrow as the grid can draw it, and failure and weather take it from there.
     const double wall = std::max(0.5 * field.cell, 0.06 * radius);

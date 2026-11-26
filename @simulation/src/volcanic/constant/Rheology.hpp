@@ -48,9 +48,9 @@ inline constexpr double AshLength = 9000.0;      // m, e-folding distance of the
 inline constexpr double WindStretch = 8.0;       // m/s of wind that stretches the ash blanket to twice its length downwind
 
 // A single eruption that brings up more than this empties its chamber faster than the roof can
-// follow: the summit founders. The pit is as wide as the chamber was: radius = CalderaRadius ×
-// (km³)^0.4 kilometres, and as deep as the volume that left requires.
-inline constexpr double CalderaVolume[2] = {40e9, 12e9};   // m³, by Magma
-inline constexpr double CalderaRadius = 1000.0;            // m for one cubic kilometre
+// follow: the roof goes down as one block by `CalderaDepth`, over as wide a ring as the volume that
+// left requires. The walls it leaves are the business of slope failure afterwards.
+inline constexpr double CalderaVolume[2] = {2e9, 12e9};      // m³, by Magma
+inline constexpr double CalderaDepth[2] = {500.0, 1200.0};   // m
 
 } // namespace derivean::sim

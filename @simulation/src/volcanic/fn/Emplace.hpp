@@ -50,8 +50,8 @@ Fall coneFall(Vec2 vent, double volume);
 Fall ashFall(Vec2 vent, double volume, Vec2 wind);
 
 // Collapse.cpp — m by which each cell drops when `volume` m³ leave the chamber under `centre` at
-// once: a piston as wide as the chamber with a ring wall one cell wide.
-std::vector<float> founder(const Emplacement& field, Vec2 centre, double volume);
-double calderaRadius(double volume);
+// once: a block inside a ring fault, with a wall as narrow as the grid can draw.
+std::vector<float> founder(const Emplacement& field, Vec2 centre, double volume, Magma magma);
+double calderaRadius(double volume, Magma magma);
 
 } // namespace derivean::sim
