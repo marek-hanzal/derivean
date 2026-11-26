@@ -91,7 +91,12 @@ Each entry says how it is obtained: **evolved** means a numerical state stepped 
 | Joint slots, towers, arches | Form | Closed form along the planes of the rock mass; how wide and deep a slot has opened along its length is seeded ([`City.cpp`](../@simulation/src/relief/fn/City.cpp)) |
 | Veins around intrusions, pipes in shields | Form | Seeded fractures, conditioned on the simulated province, its melt and its plutons ([`Ore.cpp`](../@simulation/src/ore/fn/Ore.cpp)) |
 | Caves | Form | Voids the groundwater model reports, cut out of the rock; where one comes within 0.3 m of the rock surface the cover over it lies on its floor |
-| Regional ice sheets, wind erosion and dunes, placers (other than vein float carried as stones), stratiform ores, volcanic edifices, impact craters | — | Absent |
+| Wind regime (sand rose) | Region, Local, Site | Closed form from the climate's belt winds, their seasonal shift, gustiness and storm-track storminess ([`Regime.cpp`](../@simulation/src/aeolian/fn/Regime.cpp)) |
+| Sand budget: supply-limited entrainment, stone lag armour, moisture and frost, capture by water, rivers and shelter of relief | Region | Evolved each step as a steady flux along the resultant drift; wind-laid cover kept off the ground between steps except on water and channels ([`Budget.cpp`](../@simulation/src/aeolian/fn/Budget.cpp)) |
+| Dunes, slip faces, sand ramps | Local, Site | Evolved once at the end of settling: slab transport model (Werner 1995) in flux form, up to 500 rounds on the sand the parent hands down ([`Dunes.cpp`](../@simulation/src/aeolian/fn/Dunes.cpp), [`DuneField.cpp`](../@simulation/src/aeolian/fn/DuneField.cpp)) |
+| Dust and loess | Region | Evolved: raised by winnowing, sand impact and dry river bars; settles along the drift in two sizes ([`Dust.cpp`](../@simulation/src/aeolian/fn/Dust.cpp)) |
+| Salt pans | Region | Closed form each step from the water balance of closed basins ([`Basin.cpp`](../@simulation/src/aeolian/fn/Basin.cpp)) |
+| Regional ice sheets, dust from beyond a region, yardangs, old shorelines, placers (other than vein float carried as stones), stratiform ores, volcanic edifices, impact craters | — | Absent |
 | Stones that break, wear or move after they are laid; stones shaping the flow that carves the ground (they only dam the last routing); bank collapse and meander migration; debris flows; vegetation and everything it does to ground | — | Absent |
 
 ## Materials

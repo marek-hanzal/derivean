@@ -1,10 +1,10 @@
 import type { Frame, Point } from "../../../contract/GameBridge";
-import { DaySeconds } from "../../calendar/constant/rates";
 import type { WorldClock } from "../../calendar/service/WorldClock";
 import type { WeatherSought } from "../../clouds/fn/findWeather";
 import type { Pilot, Steering } from "../../control/type/Pilot";
 import { worldSettled } from "../../session/fn/worldSettled";
 import { SettleSeconds, StallSeconds, TimeoutSeconds } from "../constant/timing";
+import { until } from "../fn/until";
 import type { CaptureBridge, CapturePlan, CaptureShot } from "../type/CapturePlan";
 
 // Height from which the ground under a shot is looked up before standing on it.
@@ -33,26 +33,15 @@ export interface CaptureHost {
   survey(x: number, z: number): Promise<Record<string, number>>;
 }
 
-type Phase = "time" | "place" | "ground" | "settle" | "cruise" | "brush" | "save";
+type Phase = "time" | "place" | "ground" | "settle" | "cruise" | "brush" | "turn" | "save";
 
 // Calendar seconds behind the clock at which the weather counts as caught up.
 const Caught = 60;
-// Calendar seconds past a moment within which a shot asking for it is already there.
-const Reached = 900;
-
-// Seconds from a calendar moment to the next time the given day of the year and hour come round.
-function until(calendar: Frame["calendar"], day: number | undefined, hour: number | undefined) {
-  const days = day === undefined ? 0 : (((day - Math.floor(calendar.dayOfYear)) % 365) + 365) % 365;
-  let seconds = days * DaySeconds + (hour === undefined ? 0 : (hour - calendar.hour) * 3600);
-  // A moment just reached is that moment still, not the same hour a day or a year on.
-  if (seconds > -Reached && seconds <= 0) return 0;
-  if (seconds < 0) seconds += day === undefined ? DaySeconds : 365 * DaySeconds;
-  return seconds;
-}
 
 const surfaceOf = (frame: Frame, ground: number) => Math.max(ground, frame.waterLevel ?? -Infinity);
 
 // Steers the player through the plan's shots without pointer lock: teleport, wait for the surroundings, shoot.
+// About 250 lines, kept whole: it is one state machine over a shot's phases, and the phases share its state.
 // The engine applies a flight toggle in the frame that carries it, so each command can ask for one whenever the
 // last frame disagrees with the wanted state.
 export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, host: CaptureHost): Pilot {
@@ -74,6 +63,8 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
   let notes: Record<string, unknown> = {};
   let cruise: { from: Point; pendingChunks: number; pendingPatches: number; generationMs: number } | undefined;
   let strokes = 0;
+  // When the view of a turning shot began to turn.
+  let turning: number | undefined;
 
   const shot = (): CaptureShot | undefined => plan.shots[index];
 
@@ -108,6 +99,7 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
       await bridge.shot(current.name, { ...record, dataLevels });
       index++;
       notes = {};
+      turning = undefined;
       phase = "time";
       skipped = false;
       if (!shot()) await bridge.finish();
@@ -199,6 +191,9 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
         } else if (current.brush) {
           strokes = 0;
           enter("brush", time);
+        } else if (current.turn) {
+          turning = time;
+          enter("turn", time);
         } else {
           save(current, frame, host.measure(false));
         }
@@ -234,6 +229,8 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
       } else if (time - since >= seconds * 1000) {
         save(current, frame, { ...host.measure(false), brush: { strokes, place, radius, seconds } });
       }
+    } else if (phase === "turn" && current.turn && time - since >= current.turn.seconds * 1000) {
+      save(current, frame, { ...host.measure(false), turn: current.turn });
     }
     if (phase === "ground" || phase === "settle") next.fly = frame.flying !== wantFlight;
     lastHeight = frame.eye[1];
@@ -243,7 +240,12 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
   return {
     command,
     active: () => true,
-    get yaw() { return shot()?.yaw ?? 0; },
+    // A turning shot keeps turning until it is taken.
+    get yaw() {
+      const current = shot();
+      const turned = turning === undefined || !current?.turn ? 0 : (performance.now() - turning) / 1000 * current.turn.radiansPerSecond;
+      return (current?.yaw ?? 0) + turned;
+    },
     get pitch() { return shot()?.pitch ?? 0; },
     // The brush shown is the one the shot holds.
     get radius() { return shot()?.brush?.radius ?? 1; },

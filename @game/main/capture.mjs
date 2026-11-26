@@ -35,6 +35,9 @@ function checkShot(file, shot) {
   if (brush !== undefined && !(Number.isInteger(brush?.frames) && brush.frames > 0 && flag(brush.place)
     && (brush.radius === undefined || (Number.isInteger(brush.radius) && brush.radius > 0))
     && (brush.seconds === undefined || (finite(brush.seconds) && brush.seconds >= 0)) && cruise === undefined)) reject(file, `shot ${shot.name} has a malformed brush or one with a cruise`);
+  const { turn } = shot;
+  if (turn !== undefined && !(finite(turn?.seconds) && turn.seconds >= 0 && finite(turn.radiansPerSecond) && cruise === undefined
+    && brush === undefined)) reject(file, `shot ${shot.name} has a malformed turn or one with a cruise or brush`);
   if (shot.map !== undefined && !(finite(shot.map?.span) && shot.map.span > 0)) reject(file, `shot ${shot.name} has a malformed map`);
 }
 

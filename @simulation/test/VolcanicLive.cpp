@@ -59,7 +59,7 @@ void testVolcanicLive() {
     for (const Outbreak& outbreak : long_) brought += outbreak.volume, largest = std::max(largest, outbreak.volume);
     const double supply = vent.supply * span + vent.held;
     expect(brought <= supply * (1 + 1e-9) && brought >= supply - 2 * largest, "the eruptions do not bring up what the vent was supplied with", brought / supply);
-    const double perYear = double(long_.size()) / span, expected = vent.supply / meanEruption(vent.magma);
+    const double perYear = double(long_.size()) / span, expected = vent.supply / meanEruption(vent);
     expect(std::abs(perYear / expected - 1) < 0.25, "a vent erupts at another rate than its supply and mean eruption give", perYear / expected);
 
     // The unrest of the chamber names the eruption that comes next.

@@ -1,3 +1,7 @@
+// The whole contract between the native engine (through the preload) and the renderer, about 410 lines.
+// It stays one file because it is one boundary: every type here crosses it in the same structured clone, a
+// change to it is agreed between the engine and renderer streams as one change, and either side reads it
+// whole to know what the other promises. FarPatch and Frame.far (about 50 lines) go when the far patches do.
 export type Point = [number, number, number];
 export type BrushShape = "sphere" | "cube";
 

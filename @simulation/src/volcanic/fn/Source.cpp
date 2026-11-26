@@ -75,6 +75,11 @@ void schedule(uint64_t seed, Vent& vent, const Budget& budget, double share, con
     // turn comes within it. A great one has waited through steps that brought up little.
     std::vector<Episode> supplied;
     supplied.swap(vent.episodes);
+    // The chamber is sized by what the centre was supplied with over the window, dormant spells
+    // included: a property of the vent, so every eruption of its sequence is drawn on one chamber.
+    double fed = 0;
+    for (const Episode& filling : supplied) fed += filling.volume;
+    vent.chamber = chamberOf(fed / std::max(RegionStep, std::max(now, window.end) - window.start));
     double held = 0, next = eruptionVolume(seed, vent, 0);
     for (const Episode& filling : supplied) {
         Episode episode{filling.time, 0.0, 0.0, {}};

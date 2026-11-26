@@ -47,6 +47,7 @@ struct Vent {
     double supply{};     // m³/yr the centre still supplies at that end; 0 once the melt has stopped rising
     double erupted{};    // m³ over the region's window
     double held{};       // m³ in the chamber at `until`: supplied since the last eruption
+    double chamber{};    // m³ of eruptible magma the chamber stores (volcanic/fn/Chamber.cpp); 0 for one of typical size
     int64_t count{};     // eruptions so far: the number of the next one in the vent's sequence
     std::vector<Eruption> recent;    // the last few before `until`, oldest first
     std::vector<Episode> episodes;   // by time; steps without an eruption are left out

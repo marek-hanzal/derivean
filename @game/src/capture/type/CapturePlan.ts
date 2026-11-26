@@ -31,6 +31,9 @@ export interface CaptureShot {
   // setting basalt, `radius` voxels wide, and shoot `seconds` (2 when omitted) after the brush began: for
   // detached pieces, particles, voxel water and the brush on screen. Not with `cruise`.
   brush?: { frames: number; place?: boolean; radius?: number; seconds?: number };
+  // Once the view has settled, turn it at this rate (positive turns west, as yaw grows) for `seconds` and shoot while
+  // it still turns: for what the picture does in motion. Not with `cruise` or `brush`.
+  turn?: { seconds: number; radiansPerSecond: number };
   // Opens the map over the shot, centred on the player, with this many metres across the shorter side of the
   // window; the shot waits for its sharp chart and a cruise flies with the map open. Omitted closes the map.
   map?: { span: number };

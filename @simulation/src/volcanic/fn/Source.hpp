@@ -27,8 +27,10 @@ std::vector<Vent> ventsNear(const Setting& setting, Vec2 low, Vec2 high, double 
 // history, past the world's age too, follows from its supply and from nothing else.
 // m³ of the vent's eruption with this number.
 double eruptionVolume(uint64_t seed, const Vent& vent, int64_t number);
-// m³ a vent of this magma erupts at a time, in the mean.
-double meanEruption(Magma magma);
+// m³ a vent erupts at a time, in the mean.
+double meanEruption(const Vent& vent);
+// m³ of eruptible magma a chamber stores when its centre is supplied at `supply` m³/yr.
+double chamberOf(double supply);
 // The vent's eruptions after its recorded history and up to `until` (yr), in order: the first
 // comes when the chamber, at the vent's present supply, has gathered what it lacked at the end of
 // the record. None for a vent whose supply has stopped.

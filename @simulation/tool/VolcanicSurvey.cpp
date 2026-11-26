@@ -50,7 +50,7 @@ void sizeFrequency(uint64_t seed, const std::vector<Row>& rows, double landArea)
     for (const Row& row : rows) {
         const Vent& vent = *row.vent;
         if (!row.land || vent.supply <= 0) continue;
-        const double rate = vent.supply / meanEruption(vent.magma) / Draws;
+        const double rate = vent.supply / meanEruption(vent) / Draws;
         for (int k = 0; k < Draws; ++k) {
             const int64_t number = vent.count + k;
             const Outbreak outbreak = outbreakOf(seed, vent, number, vent.until, eruptionVolume(seed, vent, number));
@@ -172,7 +172,7 @@ int volcanicSurvey(const Arguments& arguments) {
     for (const Row& row : rows) {
         if (!row.land || row.next > 1e29) continue;
         wait.push_back(row.next), size.push_back(row.nextVolume / Km3);
-        perYear += row.vent->supply / meanEruption(row.vent->magma);
+        perYear += row.vent->supply / meanEruption(*row.vent);
         within[0] += row.next <= 10, within[1] += row.next <= 100, within[2] += row.next <= 1000, within[3] += row.next <= 10000;
     }
     std::printf("  next eruption of the supplied vents on land, yr from now: p10 %.0f  p50 %.0f  p90 %.0f | within 10 yr: %d, 100 yr: %d, 1 000 yr: %d, 10 000 yr: %d | its volume, km3: p50 %.3f p90 %.3f\n",
