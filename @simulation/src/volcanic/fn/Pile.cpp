@@ -2,6 +2,8 @@
 
 #include "core/fn/Hash.hpp"
 
+#include <array>
+
 namespace derivean::sim {
 namespace {
 
@@ -9,6 +11,7 @@ constexpr uint64_t BedStream = 0x50494c45;
 constexpr float Pitch[2] = {14.0f, 34.0f};   // m from the base of one flow to the base of the next, by Magma
 // A pitch thinner than `Welding` holds no welded bed: a basalt pile's never does, as basalt's rarely do.
 constexpr float PillowShare = 0.6f;   // of a flow that reached water, the pillows at its foot; glass breccia lies over them
+constexpr float Uneven = 0.15f;       // a pitch's lava share lies within this of the cell's
 
 Material lavaOf(const VolcanicTile* tile, const std::vector<Vent>& vents, uint16_t vent) {
     const std::vector<Vent>& list = tile ? tile->vents : vents;
@@ -26,7 +29,7 @@ PileBed bedIn(uint64_t seed, uint64_t ventId, Material lava, const PileShares& s
     const float pitch = Pitch[lava == Material::Andesite ? 1 : 0];
     const int64_t number = int64_t(std::floor(std::max(0.0f, height) / pitch));
     const uint64_t key = stream(seed, BedStream) ^ ventId;
-    const float uneven = 0.3f * (float(unit(key, number)) - 0.5f);
+    const float uneven = 2.0f * Uneven * (float(unit(key, number)) - 0.5f);
     const float share = shares.lava;
     const float cut = pitch * (share > 0.97f ? 1.0f : share < 0.03f ? 0.0f : std::clamp(share + uneven, 0.05f, 0.95f));
     const float base = float(number) * pitch;
@@ -42,6 +45,31 @@ PileBed bedIn(uint64_t seed, uint64_t ventId, Material lava, const PileShares& s
     if (pick < shares.flows && !wet && pitch - cut >= Welding) return {base + cut, base + pitch, Material::Ignimbrite, true};
     if (pick < shares.flows + shares.fall) return {base + cut, base + pitch, Material::LapilliTuff, false};
     return {base + cut, base + pitch, Material::Tuff, false};
+}
+
+// What a pile of these shares is made of, as the parts its pitches draw (`bedIn`) come to over
+// many pitches: for a reader that meets the whole pile at once, as a region's kilometre cell does.
+struct Member {
+    Material rock;
+    float part;
+};
+
+std::array<Member, 6> membersOf(Material lava, const PileShares& shares) {
+    const bool andesite = lava == Material::Andesite;
+    const float wet = std::clamp(shares.wet, 0.0f, 1.0f), dry = 1.0f - wet, flowing = shares.lava;
+    // A pitch's lava share is drawn ±`Uneven` about the cell's, so the share of pitches whose
+    // fragment part reaches `Welding` falls off over that range of lava share instead of at one value.
+    const float pitch = Pitch[andesite ? 1 : 0];
+    const float welds = pitch < Welding ? 0.0f : std::clamp((1.0f - Welding / pitch - flowing + Uneven) / (2.0f * Uneven), 0.0f, 1.0f);
+    const float welded = shares.flows * dry * welds;
+    return {{
+        {lava, flowing * dry},
+        {Material::PillowLava, andesite ? 0.0f : flowing * wet * PillowShare},
+        {Material::Hyaloclastite, flowing * wet * (andesite ? 1.0f : 1.0f - PillowShare)},
+        {Material::Ignimbrite, welded},
+        {Material::LapilliTuff, shares.fall + shares.flows - welded},
+        {Material::Tuff, std::max(0.0f, 1.0f - flowing - shares.flows - shares.fall)},
+    }};
 }
 
 } // namespace
@@ -97,15 +125,25 @@ bool volcanicUnit(Domain& domain, size_t i, uint64_t seed) {
         // As a finished tile keeps them, so that the bed the voxels draw is the one eroded here.
         const auto parts = [](float share) { return float(partsOf(share)) / 255.0f; };
         const PileShares laid = sharesAt(volcanic, i), shares{parts(laid.lava), parts(laid.flows), parts(laid.fall), parts(laid.wet)};
-        const float share = shares.lava;
         if (region) {
-            // A region cell is far thicker than a flow: it meets lava and ash together, in their shares.
-            const RockTraits& hard = traitsOf(lava);
-            const RockTraits& soft = traitsOf(Material::Tuff);
-            traits = share >= 0.5f ? hard : soft;
-            traits.erodibility = std::exp(share * std::log(hard.erodibility) + (1 - share) * std::log(soft.erodibility));
-            traits.weathering = share * hard.weathering + (1 - share) * soft.weathering;
-            traits.stableTan = share * hard.stableTan + (1 - share) * soft.stableTan;
+            // A region cell is far thicker than a flow: it meets all the pile's members together, in
+            // their parts, and is named for the largest. Rates mix as the members' parts of the face.
+            const std::array<Member, 6> members = membersOf(lava, shares);
+            const Member* most = &members[0];
+            double total = 0, erodibility = 0, weathering = 0, stable = 0, abrasion = 0;
+            for (const Member& member : members) {
+                if (member.part <= 0) continue;
+                const RockTraits& of = traitsOf(member.rock);
+                total += member.part;
+                erodibility += member.part * std::log(of.erodibility);
+                weathering += member.part * of.weathering, stable += member.part * of.stableTan, abrasion += member.part * of.abrasion;
+                if (member.part > most->part) most = &member;
+            }
+            traits = traitsOf(kind = most->rock);
+            if (total > 0) {
+                traits.erodibility = float(std::exp(erodibility / total));
+                traits.weathering = float(weathering / total), traits.stableTan = float(stable / total), traits.abrasion = float(abrasion / total);
+            }
             own = height;
         } else {
             const uint64_t id = volcanic.vent[i] < volcanic.vents.size() ? volcanic.vents[volcanic.vent[i]].id : 0;

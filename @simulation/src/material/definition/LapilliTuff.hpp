@@ -18,7 +18,7 @@ inline constexpr MaterialDefinition LapilliTuff{
     .slidingFriction = 0.75f,
     .loadCapacity = 140.0f,
     .stableSlope = 50.0f,
-    .erodibility = 1.2e-5f,
+    .erodibility = 9e-6f,   // Tuff's: weaker in the hand, but its clasts need more stream power than ash to carry
     .abrasion = 0.15f,
     .weathering = 70.0f,
     .bedding = 0.60f,
