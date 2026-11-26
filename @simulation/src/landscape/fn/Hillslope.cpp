@@ -39,8 +39,10 @@ void weather(Domain& domain) {
         const float mantle = domain.sedimentAt(i);
         // Under more than a few metres of cover the rock is out of reach of the weather.
         const float grown = mantle > 9.0f ? 0.0f : RegolithDepth * std::log(std::exp(mantle / RegolithDepth) + rock.weathering * wet * dt / RegolithDepth) - mantle;
-        const float dissolved = rock.solubility * domain.runoff[i] * dt + grown * rock.solute;
-        domain.ground.rock[i] -= grown + rock.solubility * domain.runoff[i] * dt;
+        // The water does not dissolve the rim of a lake the parent holds below that lake's water.
+        const float solved = std::min(rock.solubility * domain.runoff[i] * dt, rimAbove(domain, i, domain.ground.rock[i] + mantle));
+        const float dissolved = solved + grown * rock.solute;
+        domain.ground.rock[i] -= grown + solved;
         domain.ground.sediment[Coarse][i] += grown * rock.coarse;
         domain.ground.sediment[Sand][i] += grown * rock.sand;
         domain.ground.sediment[Fines][i] += grown * rock.fines;

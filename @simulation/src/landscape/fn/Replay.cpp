@@ -1,5 +1,6 @@
 #include "landscape/fn/Build.hpp"
 
+#include "aeolian/fn/Wind.hpp"
 #include "climate/type/Climate.hpp"
 #include "ground/fn/Stages.hpp"
 #include "groundwater/fn/Sinking.hpp"
@@ -59,11 +60,20 @@ std::shared_ptr<Tile> replayTile(const Setting& setting, TileKey key, const Tile
     // The blended edge goes back into the domain first, so the water described below stands on the
     // surface that is handed over.
     followNeighbours(domain, domain.endTime);
+    // Following the finished neighbours has just moved cover: the wind's labels, which say what of
+    // it the wind laid, are brought within what lies there before the seams are blended.
+    if (domain.aeolian.labels.blown.size() == domain.cells()) tidyLabels(domain);
     settleSeams(domain, *tile);
     // At the finer levels the last sheet's change is a layer of its own over the blended edge:
     // neighbours blend the ground they both settled, and the sheet carries on across the edge from
     // what the finished neighbour's sheet recorded.
     if (key.level != Level::Region) sheetIce(domain, scratch, setting, IceStage::Leave, &lookup);
+    // What the last sheet left rests at its angle of repose like any other loose cover: the tile
+    // keeps no column of it.
+    if (key.level != Level::Region && key.level != Level::Ground) {
+        settleDebris(domain, scratch);
+        if (domain.aeolian.labels.blown.size() == domain.cells()) tidyLabels(domain);
+    }
     readClimate(domain, setting);
     tile->volcanic = volcanicOf(domain);
     if (key.level == Level::Ground) {

@@ -99,6 +99,9 @@ void adoptNeighbours(Domain& domain, const TileLookup& lookup) {
             // The plate under this domain also carries what its finished neighbour lost and gained.
             domain.erosionRate[to] = tile->erosionRate[from];
             domain.depositionRate[to] = tile->depositionRate[from];
+            // What the neighbour rose over its window; `raise` never adds to a cell it holds. The later
+            // domain rises as it did where a block straddles the two (Uplift.cpp, followFinished).
+            domain.uplifted[to] = tile->uplifted[from];
             domain.hold[to] = Settled;
             domain.settledWay[to] = tile->flowTo[from];
         }
@@ -146,20 +149,46 @@ void openRim(Domain& domain) {
 }
 
 // Interpolating a parent whose valleys are one cell wide leaves a chain of hollows along every
-// diagonal reach, and a finer level that is held to that surface would keep them as lakes. Hollows
-// shallower than the level can tell from an artefact are levelled before the settling starts; a
-// deeper basin is a real feature of the parent and stays, and so does any basin under the parent's
-// standing water: a lake the parent holds is a lake here, whatever its depth.
+// diagonal reach, and a finer level that is held to that surface would keep them as lakes. A hollow
+// no deeper than the level can tell from an artefact is levelled whole before the settling starts;
+// a deeper basin is a real feature of the parent and keeps its full depth, and so does any basin
+// that holds some of the parent's standing water: a lake the parent holds is a lake here.
 void levelHollows(Domain& domain) {
     constexpr float Artefact[LevelCount] = {0, 0, 45.0f, 6.0f, 0.4f};
     FlowScratch scratch;
     floodLevels(domain, scratch);
     const float limit = Artefact[size_t(domain.key.level)];
-    for (size_t i = 0; i < domain.cells(); ++i) {
-        if (domain.hold[i] != Free || domain.surface[i] < domain.seaLevel || domain.standing[i] > domain.surface[i]) continue;
-        const float fill = std::min(limit, domain.level[i] - domain.surface[i]);
-        if (fill <= 0) continue;
-        domain.ground.rock[i] += fill;
+    // A hollow is judged by every cell its water stands over, the halo's included, so a basin is never
+    // filled in part; only the cells this domain evolves are raised.
+    const auto hollow = [&](size_t i) { return domain.level[i] > domain.surface[i] && domain.level[i] > domain.seaLevel; };
+    std::vector<uint8_t> seen(domain.cells(), 0);
+    std::vector<size_t> body, open;
+    for (size_t first = 0; first < domain.cells(); ++first) {
+        if (seen[first] || !hollow(first)) continue;
+        body.clear();
+        open.assign(1, first);
+        seen[first] = 1;
+        float deepest = 0;
+        bool kept = false;
+        while (!open.empty()) {
+            const size_t i = open.back();
+            open.pop_back();
+            body.push_back(i);
+            deepest = std::max(deepest, domain.level[i] - domain.surface[i]);
+            kept = kept || domain.surface[i] < domain.seaLevel || domain.standing[i] > domain.surface[i];
+            const int x = int(i % size_t(domain.size)), z = int(i / size_t(domain.size));
+            for (int k = 0; k < 8; ++k) {
+                const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
+                if (nx < 0 || nz < 0 || nx >= domain.size || nz >= domain.size) continue;
+                const size_t other = domain.index(nx, nz);
+                if (seen[other] || !hollow(other)) continue;
+                seen[other] = 1;
+                open.push_back(other);
+            }
+        }
+        if (kept || deepest > limit) continue;
+        for (const size_t i : body)
+            if (domain.hold[i] == Free) domain.ground.rock[i] += domain.level[i] - domain.surface[i];
     }
     for (size_t i = 0; i < domain.cells(); ++i) domain.trend[i] = domain.ground.rock[i] + domain.sedimentAt(i);
 }

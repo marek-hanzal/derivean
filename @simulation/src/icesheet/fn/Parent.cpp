@@ -103,6 +103,7 @@ std::vector<Tunnel> parentTunnels(const Domain& domain, const std::function<cons
             tunnel.from = parents.centre(gx, gz);
             tunnel.to = parents.centre(gx + NeighborX[to], gz + NeighborZ[to]);
             tunnel.fill = double(record.esker[c]) * parents.cell * parents.cell;
+            tunnel.supply = std::min(double(record.esker[c]), double(tile->now.sediment[Coarse][c] + tile->now.sediment[Sand][c])) * parents.cell * parents.cell;
             tunnel.discharge = record.meltwater[c];
             found.push_back(tunnel);
         }

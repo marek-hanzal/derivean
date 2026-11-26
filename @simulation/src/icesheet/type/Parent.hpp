@@ -24,6 +24,7 @@ struct ParentSheet {
 struct Tunnel {
     Vec2 from, to;                  // world position
     double fill{};                  // m³ of gravel and sand along the stretch
+    double supply{};                // m³ of it the parent cell's cover still holds
     float discharge{};              // m³/yr of water through it
 };
 

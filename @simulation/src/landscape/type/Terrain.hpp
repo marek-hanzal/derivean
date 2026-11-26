@@ -140,6 +140,7 @@ struct Domain {
     std::vector<float> settledFlow; // m³/yr a finished neighbour already carries through its cells
     std::vector<float> settledLoad; // m³/yr of sediment it carries with that water
     std::vector<float> standing;    // m, water surface the parent holds over the cell; far below the ground where it is dry; empty in a region
+    std::vector<float> lakeFloor;   // m, level a Free cell may not be cut below: the parent's water over its lakes and the cells around them; far below elsewhere; empty in a region
     // Neighbour 0..7 by which a finished neighbour's water leaves a cell into a cell this domain
     // evolves, 255 elsewhere. That water and its load enter there as `inflow`, wherever this
     // domain's own ground would send them: a finished cell does not erode, and a river that met it

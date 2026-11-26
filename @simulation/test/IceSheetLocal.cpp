@@ -9,7 +9,7 @@
 
 using namespace derivean::sim;
 
-// About 360 lines, one owner: the last sheet over one hand-built Local plain, varied case by case.
+// About 400 lines, one owner: the last sheet over one hand-built Local plain, varied case by case.
 // The last sheet over a settled Local domain, with its parent's record given by hand: a gentle
 // plain under a cover of till, ice sliding east, three knobs of rock, a fracture zone across the
 // flow and a stream under the ice along a line.
@@ -103,7 +103,7 @@ void testIceSheetLocal() {
     std::vector<Tunnel> tunnels;
     const double z = (Stream + 0.5) * domain.cell + domain.origin.z, stretch = Refinement * domain.cell;
     for (double x = domain.origin.x; x < domain.origin.x + domain.size * domain.cell; x += stretch)
-        tunnels.push_back({{x, z}, {x + stretch, z}, 10.0 * stretch * stretch, 1e9f});
+        tunnels.push_back({{x, z}, {x + stretch, z}, 10.0 * stretch * stretch, 10.0 * stretch * stretch, 1e9f});
     double before = 0;
     for (int z = Halo; z < Halo + TileCells; ++z)
         for (int x = Halo; x < Halo + TileCells; ++x) before += groundOf(domain, x, z);
@@ -246,7 +246,7 @@ void testIceSheetLocal() {
     // A smaller stream joining the trunk from the north-west leaves an esker that reaches the trunk's.
     std::vector<Tunnel> withTributary = tunnels;
     const double trunkX = 12 * stretch + domain.origin.x;
-    for (int k = 2; k >= 1; --k) withTributary.push_back({{trunkX - k * stretch, z - k * stretch}, {trunkX - (k - 1) * stretch, z - (k - 1) * stretch}, 10.0 * stretch * stretch, 1e8f});
+    for (int k = 2; k >= 1; --k) withTributary.push_back({{trunkX - k * stretch, z - k * stretch}, {trunkX - (k - 1) * stretch, z - (k - 1) * stretch}, 10.0 * stretch * stretch, 10.0 * stretch * stretch, 1e8f});
     Domain confluence = plain();
     ParentSheet fed = eastward(confluence);
     // The parent spread the tributary's fill along its line too.
@@ -339,9 +339,14 @@ void testIceSheetLocal() {
     // than the sea, and the ledger closes.
     Domain shore = plain();
     shore.seaLevel = 199;
-    // A thick cover for the ice to bring down to the shore.
-    for (size_t i = 0; i < shore.cells(); ++i)
-        for (int c = 0; c < SedimentClasses; ++c) shore.ground.sediment[c][i] = 10;
+    // A thick cover for the ice to bring down to the shore, and a valley that gathers all the
+    // meltwater into one narrow inlet of the sea.
+    for (int z = 0; z < shore.size; ++z)
+        for (int x = 0; x < shore.size; ++x) {
+            const size_t i = shore.index(x, z);
+            for (int c = 0; c < SedimentClasses; ++c) shore.ground.sediment[c][i] = 10;
+            shore.ground.rock[i] += float(0.05 * std::abs(z - Stream) * shore.cell);
+        }
     ParentSheet ashore = eastward(shore);
     for (int z = 0; z < shore.size; ++z)
         for (int x = End; x < shore.size; ++x) ashore.iceThen[shore.index(x, z)] = 0;

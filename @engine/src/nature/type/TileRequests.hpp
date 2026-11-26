@@ -14,9 +14,11 @@ struct Nature;
 // around the eye, and up to this clearance above the ground, above which nobody stands on the voxels soon.
 inline constexpr double GroundReach = 96.0, GroundCeiling = 150.0;   // m
 
-// Simulation tiles the engine asked for and is still waiting on. As many are in flight as the
-// simulation has workers and no more: a queued build cannot be cancelled, so what is queued must
-// still be worth having when its turn comes.
+// Simulation tiles the engine asked for and is still waiting on. Only tiles whose dependencies are
+// all finished are asked for, so each request is one build that starts when a worker is free, and
+// as many are in flight as the simulation has workers and no more: a queued build cannot be
+// cancelled, so what is queued must still be worth having when its turn comes. A request that no
+// wanted tile leads to any more is dropped from the list and finishes on its own.
 struct TileRequests {
     std::vector<sim::TileKey> flying;
     std::array<bool, sim::LevelCount> ready{};   // by sim::Level: every tile wanted at that level is finished

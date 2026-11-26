@@ -16,7 +16,8 @@ void allocateVolcanic(Domain& domain);
 
 // Lay.cpp — what the vents of one step laid, cell by cell, before it becomes ground.
 struct Laying {
-    std::vector<float> lava, fall, ash;   // m
+    std::vector<float> lava, fall, flows, ash;   // m
+    std::vector<float> wet;                      // m of all of them laid under standing water
     std::vector<float> drop;              // m the cell founders
     std::vector<uint16_t> vent;            // index of the vent the top of it came from
     bool any{};
@@ -41,17 +42,44 @@ void emplace(Domain& domain, Emplacement& field, Laying& laying, int vent, const
 // the load; a finer level takes the new surface as the one it is held to.
 void settleLaying(Domain& domain, const Laying& laying);
 
+// Caldera.cpp — a region records each caldera it cuts with the surface before the step, measures
+// its pit as the roof goes down and at the end of its window; a local level cuts the ring fault
+// again at its own cells as far as the region's pit is still there.
+Caldera calderaOf(const Domain& domain, const Vent& vent, const Episode& episode);
+void recordCalderas(Domain& domain, std::vector<Caldera>&& cut);
+std::vector<Caldera> finishCalderas(Domain& domain);
+void sharpenCalderas(Domain& domain, const TileLookup& lookup);
+
 // Pile.cpp — the traits of the rock a cell's surface lies in, where that is a pile or a conduit's
 // plug; false where it is the old layering. Called by refreshUnits before its own work.
 bool volcanicUnit(Domain& domain, size_t cell, uint64_t seed);
 // What a finished tile keeps; null where the tile holds nothing volcanic.
 // It first blends the pile along the edges of finished neighbours (Seams.cpp `blendPileSeams`), as
-// the surface over it was blended.
+// the surface over it was blended. A region's keeps the calderas whose site lies in it (Caldera.cpp).
 std::shared_ptr<const VolcanicTile> volcanicOf(Domain& domain);
 void blendPileSeams(Domain& domain);
-// 0..1, share of lava in what was laid into a cell's pile; 1 where nothing is recorded.
-inline float lavaShare(const VolcanicDomain& volcanic, size_t cell) {
-    return volcanic.allLaid[cell] > 0 ? std::clamp(volcanic.lavaLaid[cell] / volcanic.allLaid[cell], 0.0f, 1.0f) : 1.0f;
+// Shares of what was laid into a cell's pile; all lava, dry, where nothing is recorded.
+inline PileShares sharesAt(const VolcanicDomain& volcanic, size_t cell) {
+    const float all = volcanic.allLaid[cell];
+    if (all <= 0) return {};
+    const auto share = [&](const std::vector<float>& part) { return std::clamp(part[cell] / all, 0.0f, 1.0f); };
+    return {share(volcanic.lavaLaid), share(volcanic.flowLaid), share(volcanic.wetLaid)};
+}
+inline float lavaShare(const VolcanicDomain& volcanic, size_t cell) { return sharesAt(volcanic, cell).lava; }
+// A pile `pile` thick of these shares, as if it had all been laid at once.
+inline void setShares(VolcanicDomain& volcanic, size_t cell, float pile, const PileShares& shares) {
+    volcanic.allLaid[cell] = pile;
+    volcanic.lavaLaid[cell] = pile * shares.lava;
+    volcanic.flowLaid[cell] = pile * shares.flows;
+    volcanic.wetLaid[cell] = pile * shares.wet;
+}
+inline uint8_t partsOf(float share) { return uint8_t(std::lround(255.0f * std::clamp(share, 0.0f, 1.0f))); }
+// The same as a finished tile keeps them, at a cell of its own or, `wide`, of its record with the Apron.
+inline PileShares sharesOf(const VolcanicTile& tile, size_t cell, bool wide = false) {
+    const auto& lava = wide ? tile.wideLava : tile.lava;
+    const auto& flows = wide ? tile.wideFlows : tile.flows;
+    const auto& wet = wide ? tile.wideWet : tile.wet;
+    return {float(lava[cell]) / 255.0f, float(flows[cell]) / 255.0f, float(wet[cell]) / 255.0f};
 }
 // Readers of rock.
 PileColumn pileColumn(const Tile& tile, size_t cell);
@@ -60,6 +88,7 @@ PileBed pileBedAt(uint64_t seed, const VolcanicTile& volcanic, const PileColumn&
 // The same for a reader that crosses tile edges (the voxel column).
 PilePoint pilePoint(const Tile& tile, size_t cell);
 PileBed pileBed(uint64_t seed, const PilePoint& point, float height);
+// Columns.cpp — the joints of lava that cooled in place.
 // A sheet of lava cools from its top and its base, and shrinks as it cools: it cracks into upright
 // columns, the wider the thicker the sheet (the slower it cooled). In sound rock they stay shut;
 // within the weathered skin of an exposed face, `depth` metres deep, each column has weathered back
@@ -68,6 +97,16 @@ PileBed pileBed(uint64_t seed, const PilePoint& point, float height);
 // few points are not drawn, so they never alias into noise.
 bool columnOpen(uint64_t seed, const PilePoint& point, const PileBed& bed, double x, double z, float depth, float step);
 // The plug of a conduit: it cuts the pile and the old beds alike, at any depth. Air outside every conduit.
-Material neckAt(const VolcanicTile& volcanic, Vec2 position);
+struct Neck {
+    Material rock{Material::Air};
+    Vec2 site;           // m, the conduit's axis
+    float radius{};      // m
+    uint64_t vent{};
+};
+Neck neckOf(const VolcanicTile& volcanic, Vec2 position);
+// A plug cools from its wall and cracks into columns that lie across the conduit, the wider the
+// wider it is; at an exposed face of a neck they weather as a flow's do. True where a point of
+// the neck at height `y` and `depth` metres within its face is open air for that reason.
+bool neckOpen(uint64_t seed, const Neck& neck, double x, double y, double z, float depth, float step);
 
 } // namespace derivean::sim

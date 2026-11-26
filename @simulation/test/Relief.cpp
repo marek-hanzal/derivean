@@ -196,3 +196,31 @@ void testReliefCover() {
         expectLandscape(stand.thickest < 100, "a finished tile carries a column of loose cover", stand.thickest);
     }
 }
+
+// A Site tile of the present world under an Alpine range the glaciers went over: what the last ice
+// left rests at repose like other cover, and no cell of rock stands as a needle above all the
+// ground around it. Both are what an ice-sheet's Leave pass and one-cell fins used to leave. The
+// place is a trough wall on seed 42 (`terra view` from 5606144, 10107264 towards it).
+void testReliefGlaciatedSite() {
+    World world({42, 4.6e9, 0});
+    const Tile& tile = *world.atlas.require(tileAt(Level::Site, {5605504, 10105024}));
+    const double cell = specOf(Level::Site).cell;
+    float iceAge = 0;
+    for (const float ice : tile.iceAge) iceAge = std::max(iceAge, ice);
+    expectLandscape(iceAge > 50, "the glaciated Site tile saw no glacier", iceAge);
+    const LooseStand stand = looseStand(tile, cell);
+    expectLandscape(stand.unsupported < 4, "loose cover stands steeper than its repose on a glaciated Site tile", stand.unsupported);
+    expectLandscape(stand.thickest < 100, "a glaciated Site tile carries a column of loose cover", stand.thickest);
+    const auto top = [&](int x, int z) {
+        const size_t i = size_t(z) * TileCells + size_t(x);
+        return double(tile.now.rock[i]) + tile.now.sediment[0][i] + tile.now.sediment[1][i] + tile.now.sediment[2][i];
+    };
+    double needle = 0;
+    for (int z = 1; z < TileCells - 1; ++z)
+        for (int x = 1; x < TileCells - 1; ++x) {
+            double high = -1e30;
+            for (int k = 0; k < 8; ++k) high = std::max(high, top(x + NeighborX[k], z + NeighborZ[k]));
+            needle = std::max(needle, top(x, z) - high);
+        }
+    expectLandscape(needle < 6 * cell, "a cell of rock stands as a needle above all its neighbours", needle);
+}

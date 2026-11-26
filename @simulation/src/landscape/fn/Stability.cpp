@@ -1,3 +1,5 @@
+// About 260 lines: the one owner of rock-slope stability above ground level (faces that retreat,
+// fail and topple), which share the rock's soundness and the ordering by height.
 #include "landscape/fn/Process.hpp"
 
 #include "climate/fn/Seasons.hpp"
@@ -13,6 +15,7 @@ constexpr float RampTan = 0.75f;         // rise over run of the rock ramp a ret
 constexpr float FreeFace = 1.19f;        // rise over run (50°) above which debris does not rest on rock
 constexpr float CrushedLoss = 0.85f;     // share of its cohesion that fully crushed rock has lost
 constexpr float BrokenRetreat = 3.0f;    // gain of a face's retreat in fully broken rock
+constexpr float FinSlender = 3.0f;       // height over width up to which a fin or pillar of jointed rock stands above the rock either side (about 72°)
 constexpr float CoarseFlank = 0.45f;      // share of a face's stable drop that the mean surface of a kilometre-wide cell holds
 constexpr double NominalHalfRange = 10;  // °C; the frost a level sees is that of this seasonal swing at the cell's own mean
 
@@ -65,7 +68,8 @@ void retreatFaces(Domain& domain, FlowScratch& scratch) {
             scratch.retreated[i] += wet * dt * (bed.traits.weathering * own + domain.unit[foot].traits.weathering * (face - own)) / face;
             if (scratch.retreated[i] < run) continue;
             scratch.retreated[i] -= run;
-            const float lowered = face - RampTan * run;
+            // A face on the rim of a lake the parent holds does not retreat below that lake's water.
+            const float lowered = std::min(face - RampTan * run, rimAbove(domain, i, top));
             const RockTraits& rock = bed.traits;
             domain.ground.rock[i] -= lowered;
             domain.ground.sediment[Coarse][i] += lowered * rock.coarse;
@@ -173,6 +177,39 @@ void failFaces(Domain& domain, FlowScratch& scratch) {
     }
 }
 
+// A cell whose rock stands above the rock of both neighbours across it is a fin one cell wide (a
+// pinnacle where that holds both ways). The strength of a face, which leans on the ground behind
+// it, does not hold a fin up: jointed rock that stands more than `FinSlender` times higher than it
+// is wide topples, and lies on its cell as debris for settleDebris to move. It is judged against
+// the rock either side, not the cover: what stands above repose runs off within the step and leaves
+// the fin alone. It is judged after failFaces, lowest rock first, because a face that fails after
+// its neighbour was visited can leave that neighbour standing alone.
+void toppleFins(Domain& domain, FlowScratch& scratch) {
+    const int size = domain.size;
+    const float cell = float(domain.cell), area = cell * cell;
+    const bool delivers = !scratch.delivered[0].empty();
+    const std::vector<float>& rock = domain.ground.rock;
+    orderByHeight(rock, scratch.byHeight, scratch.spare);
+    for (const int32_t at : scratch.byHeight) {
+        const size_t i = size_t(at);
+        const int x = at % size, z = at / size;
+        if (domain.hold[i] != Free || x < 1 || z < 1 || x >= size - 1 || z >= size - 1) continue;
+        float fin = rock[i];
+        for (int k = 0; k < 4; ++k) {
+            const float one = rock[domain.index(x + NeighborX[k], z + NeighborZ[k])], other = rock[domain.index(x - NeighborX[k], z - NeighborZ[k])];
+            if (one < rock[i] && other < rock[i]) fin = std::min(fin, std::max(one, other) + FinSlender * NeighborReach[k] * cell);
+        }
+        const float fallen = rock[i] - fin;
+        if (fallen <= 0) continue;
+        const RockTraits& traits = domain.unit[i].traits;
+        const float broken[SedimentClasses] = {fallen * traits.coarse, fallen * traits.sand, fallen * (traits.fines + traits.solute)};
+        domain.ground.rock[i] -= fallen;
+        for (int c = 0; c < SedimentClasses; ++c) (delivers ? scratch.delivered[c][i] : domain.ground.sediment[c][i]) += broken[c];
+        scratch.broke[i] += fallen;
+        if (domain.owned(x, z)) domain.ledger.failed += double(fallen) * area;
+    }
+}
+
 } // namespace
 
 float frostShare(const Domain& domain, size_t i) {
@@ -220,6 +257,7 @@ void breakSlopes(Domain& domain, FlowScratch& scratch) {
     if (!region) retreatFaces(domain, scratch);
     orderByHeight(scratch.work, scratch.byHeight, scratch.spare);
     failFaces(domain, scratch);
+    toppleFins(domain, scratch);
     const float dt = float(domain.step);
     for (size_t i = 0; i < cells; ++i) domain.shed[i] += 0.4f * (scratch.broke[i] / dt - domain.shed[i]);
 }

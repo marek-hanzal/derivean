@@ -62,7 +62,7 @@ void writeMap(Domain domain, const std::string& path) {
     const VolcanicDomain& volcanic = domain.volcanic;
     for (size_t i = 0; i < domain.cells() && !volcanic.floor.empty(); ++i) {
         if (domain.ground.rock[i] <= domain.ground.datum[i] - volcanic.floor[i] || water.cells[i] > ground.cells[i]) continue;
-        const float lava = volcanic.allLaid[i] > 0 ? volcanic.lavaLaid[i] / volcanic.allLaid[i] : 1.0f;
+        const float lava = lavaShare(volcanic, i);
         image[i * 3] = uint8_t(image[i * 3] * (0.55f + 0.45f * (1 - lava)));
         image[i * 3 + 1] = uint8_t(image[i * 3 + 1] * (0.5f + 0.3f * (1 - lava)));
         image[i * 3 + 2] = uint8_t(image[i * 3 + 2] * 0.5f);

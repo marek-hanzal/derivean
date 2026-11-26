@@ -78,6 +78,43 @@ void overBlocks(std::vector<float>& field, const std::vector<uint8_t>& hold, int
     }
 }
 
+// A block that straddles a finished neighbour is averaged over different cells by the two tiles:
+// the earlier one over its own half and its halo, the later one over its own half alone. Each found
+// its own rate there, and the seam carried the difference as a step or a gutter (on the humid range
+// 30 against 45 m of rise across a Local x-edge). The later domain therefore rises along the seam
+// as the neighbour did: `followed` is the rate the neighbour's cell across the seam rose at over its
+// window, row by row, and `weight` the share of it a cell takes, all of it at the seam and none a
+// block's width in, where the cell's own block mean takes over. A cell near a corner between two
+// finished neighbours takes both in proportion to their weights.
+void followFinished(const Domain& domain, int span, std::vector<float>& followed, std::vector<float>& weight) {
+    const int size = domain.size, low = Halo - 1, high = Halo + TileCells;
+    const float window = float(domain.endTime - domain.startTime);
+    followed.assign(domain.cells(), 0.0f);
+    weight.assign(domain.cells(), 0.0f);
+    if (window <= 0) return;
+    std::vector<float> share(domain.cells(), 0.0f), open(domain.cells(), 1.0f);
+    const auto take = [&](size_t i, size_t across, int depth) {
+        if (domain.hold[i] != Free || domain.hold[across] != Settled || depth < 0 || depth >= span) return;
+        const float w = 1.0f - float(smoothstep(0.0, double(span), depth + 0.5));
+        followed[i] += w * (domain.uplifted[across] / window - domain.residual[across]);
+        share[i] += w;
+        open[i] *= 1.0f - w;
+    };
+    for (int z = 0; z < size; ++z)
+        for (int x = 0; x < size; ++x) {
+            const size_t i = domain.index(x, z);
+            take(i, domain.index(low, z), x - Halo);
+            take(i, domain.index(high, z), high - 1 - x);
+            take(i, domain.index(x, low), z - Halo);
+            take(i, domain.index(x, high), high - 1 - z);
+        }
+    for (size_t i = 0; i < followed.size(); ++i) {
+        if (share[i] <= 0) continue;
+        followed[i] /= share[i];
+        weight[i] = 1.0f - open[i];
+    }
+}
+
 } // namespace
 
 void readClimate(Domain& domain, const Setting& setting) {
@@ -141,7 +178,9 @@ void raise(Domain& domain, FlowScratch& scratch) {
             domain.tectonic[i] = std::max(floor, domain.tectonic[i]);
             domain.rebound[i] = std::max(floor - domain.tectonic[i], domain.rebound[i]);
         }
+        if (!ground) followFinished(domain, Refinement * HeldParents, scratch.blurA, scratch.blurB);
     }
+    const bool follows = !region && domain.key.level != Level::Ground;
     for (int z = 0; z < domain.size; ++z) {
         for (int x = 0; x < domain.size; ++x) {
             const size_t i = domain.index(x, z);
@@ -149,7 +188,8 @@ void raise(Domain& domain, FlowScratch& scratch) {
             const bool pinned = domain.hold[i] == Rim && domain.rimSlope[i] == 0;
             // A ground tile's rock does not sink to make room: what is laid on it stands above the
             // parent's surface until the water takes it on.
-            const float found = pinned ? 0.0f : domain.tectonic[i] + domain.rebound[i] + domain.residual[i];
+            float found = pinned ? 0.0f : domain.tectonic[i] + domain.rebound[i] + domain.residual[i];
+            if (follows && !pinned) found = float(mix(found, scratch.blurA[i] + domain.residual[i], scratch.blurB[i]));
             const float rate = domain.key.level == Level::Ground ? std::max(0.0f, found) : found;
             domain.uplift[i] = rate;
             domain.ground.rock[i] += rate * dt;

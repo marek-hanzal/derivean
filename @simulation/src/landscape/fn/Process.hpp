@@ -64,6 +64,12 @@ void breakSlopes(Domain& domain, FlowScratch& scratch);
 float frostShare(const Domain& domain, size_t i);
 // Cells in rising order of `height`, ties in index order.
 void orderByHeight(const std::vector<float>& height, std::vector<int32_t>& order, std::vector<int32_t>& spare);
+// m by which a cell whose surface stands at `surface` may still be lowered: down to the water of a
+// lake its parent holds there (Domain::lakeFloor), and without limit where there is none or the
+// ground is already below it.
+inline float rimAbove(const Domain& domain, size_t i, float surface) {
+    return domain.lakeFloor.empty() || surface <= domain.lakeFloor[i] ? 1e30f : surface - domain.lakeFloor[i];
+}
 
 // Talus.cpp — loose cover comes to rest at its angle of repose; coarse debris breaks down.
 void settleDebris(Domain& domain, FlowScratch& scratch);

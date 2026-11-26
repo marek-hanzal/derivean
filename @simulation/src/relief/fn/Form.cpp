@@ -60,7 +60,10 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     // Rock that eruptions laid on the layering fills the column from the pile's floor up; the plug
     // of a conduit cuts pile and layering alike (volcanic/type/Pile.hpp).
     const float pileFloor = ground.rock - ground.pile.thickness;
-    const Material plug = setting.volcanic ? neckAt(*setting.volcanic, {x, z}) : Material::Air;
+    const Neck neck = setting.volcanic ? neckOf(*setting.volcanic, {x, z}) : Neck{};
+    const Material plug = neck.rock;
+    // A neck is one body whatever it cuts: its weathered skin is read from the rock surface alone.
+    const float neckSlope = std::sqrt(1.0f + ground.slope * ground.slope);
 
     // A void that comes within a thin roof of the rock surface is open: the cover over it has
     // fallen in and lies on its floor, `fallen` thick from `floor` up.
@@ -178,11 +181,12 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
                 result = open && y >= floor && y < floor + fallen ? coverAt(ground, y - floor, floor + fallen - y) : Material::Air;
             } else if (solid && inPile) {
                 result = plug != Material::Air ? plug : member.rock;
-                // A thick flow parts into its columns within the skin of a bare face (volcanic/fn/Pile.cpp),
+                // A thick flow parts into its columns within the skin of a bare face (volcanic/fn/Columns.cpp),
                 // only where the flow itself forms that face: under a bed above it nothing weathers.
                 const float faceHere = base ? partingFace : face, skin = (faceHere - y) / std::sqrt(1.0f + ground.slope * ground.slope);
                 const bool exposed = pileFloor + member.top >= faceHere - float(step);
                 if (plug == Material::Air && bare > 0.5f && exposed && columnOpen(setting.seed, ground.pile, member, x, z, skin, float(step))) result = Material::Air;
+                if (plug != Material::Air && bare > 0.5f && neckOpen(setting.seed, neck, x, y, z, (ground.rock - y) / neckSlope, float(step))) result = Material::Air;
             } else if (solid) {
                 result = bed.rock;
                 if (seams) {
@@ -193,7 +197,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
                     const Material body = cuttingRock(setting.seed, setting.ore, material, depth, laidDown);
                     if (body != Material::Air) result = body;
                 }
-                if (plug != Material::Air) result = plug;
+                if (plug != Material::Air) result = bare > 0.5f && neckOpen(setting.seed, neck, x, y, z, (ground.rock - y) / neckSlope, float(step)) ? Material::Air : plug;
             } else if (sand) result = Material::Sand;
             else if (y + sunk < ground.ground && y + sunk >= ground.rock) result = coverAt(ground, y + sunk - ground.rock, ground.ground - y - sunk);
             else if (y + sunk < top && y + sunk >= ground.ground) result = ground.crustKind == Crust::Travertine ? Material::Travertine : Material::Sinter;

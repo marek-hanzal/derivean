@@ -1,8 +1,10 @@
+#include "landscape/fn/Build.hpp"
 #include "nature/service/Nature.hpp"
 #include "simulation/fn/Query.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <unordered_set>
 
 namespace derivean {
 namespace {
@@ -29,18 +31,21 @@ struct Wanted {
 
 bool finished(const sim::World& world, sim::TileKey key) { return world.atlas.find(key) != nullptr; }
 
-sim::Vec2 middle(sim::TileKey key) {
-    const double span = sim::tileSpan(key.level);
-    return {(key.x + 0.5) * span, (key.z + 0.5) * span};
-}
+using Keys = std::unordered_set<sim::TileKey, sim::TileKeyHash>;
 
-// A tile is integrated from its parents under its own cells, its halo and the margin beyond.
-bool parentsFinished(const sim::World& world, sim::TileKey key) {
-    if (key.level == sim::Level::Region) return true;
-    const sim::Level parent = sim::Level(int(key.level) - 1);
-    const double reach = 0.5 * sim::tileSpan(key.level) + sim::Halo * sim::specOf(key.level).cell
-                       + sim::parentMargin(key.level) * sim::specOf(parent).cell;
-    return sim::readyAround(world, middle(key), reach, parent);
+// The unfinished tiles `key` is built from, down to those whose own dependencies are all finished:
+// those go to `buildable`, deepest first. Asked for directly, a tile the atlas would otherwise
+// build with its whole chain inline: requests that share a chain then park every worker but one
+// waiting for the link it has claimed. `seen` holds every unfinished tile visited.
+void frontier(const sim::World& world, sim::TileKey key, Keys& seen, std::vector<sim::TileKey>& buildable) {
+    if (!seen.insert(key).second) return;
+    bool ready = true;
+    for (const sim::TileKey& other : sim::dependencies(key))
+        if (!finished(world, other)) {
+            ready = false;
+            frontier(world, other, seen, buildable);
+        }
+    if (ready) buildable.push_back(key);
 }
 
 } // namespace
@@ -85,12 +90,22 @@ void requestTiles(Nature& nature, Position eye, Position velocity, double cleara
             }
     }
     std::sort(missing.begin(), missing.end(), [](const Wanted& a, const Wanted& b) { return a.own != b.own ? a.own : a.gain > b.gain; });
+    // Each wanted tile in turn hands its rank to the tiles it waits for that can be built now.
+    Keys seen;
+    std::vector<Wanted> order;
+    for (const Wanted& wanted : missing) {
+        std::vector<sim::TileKey> buildable;
+        frontier(world, wanted.key, seen, buildable);
+        for (const sim::TileKey& key : buildable) order.push_back({wanted.gain, key, wanted.own});
+    }
+    // A request no wanted tile leads to any more, after a jump say, gives its place up: if it is
+    // building it finishes into the atlas, and the new place's tiles queue ahead of it.
+    std::erase_if(tiles.flying, [&](sim::TileKey key) { return !seen.contains(key); });
     const size_t capacity = world.workers.threads(), shared = capacity - std::max<size_t>(1, capacity / FreeShare);
     int priority = FirstPriority;
-    for (const Wanted& wanted : missing) {
+    for (const Wanted& wanted : order) {
         if (tiles.flying.size() >= (wanted.own ? capacity : shared)) break;
         if (std::find(tiles.flying.begin(), tiles.flying.end(), wanted.key) != tiles.flying.end()) continue;
-        if (!parentsFinished(world, wanted.key)) continue;
         // sim::requestAround ranks coarse levels first whatever is asked; the atlas takes the order worked out here.
         world.atlas.request(wanted.key, priority--);
         tiles.flying.push_back(wanted.key);

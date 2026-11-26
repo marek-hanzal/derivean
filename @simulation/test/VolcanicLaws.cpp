@@ -154,39 +154,45 @@ void testColumn() {
     }
 }
 
-// Thick lava parts into upright columns as wide as its thickness makes them, open only within the
-// weathered skin of a face; a thin sheet and ash beds do not, and nothing is drawn finer than its points.
-void testJoints() {
-    const PilePoint point{40.0f, 1.0f, Material::Andesite, 7};
-    const PileBed thick{0, 34, Material::Andesite, true}, thin{0, 2, Material::Andesite, true}, ash{0, 34, Material::Tuff, false};
-    constexpr int Samples = 4000;
-    constexpr double Run = 40.0;
-    constexpr float Voxel = 0.125f;
-    int open = 0, changes = 0, deep = 0, other = 0, coarse = 0;
-    bool was = false;
-    for (int k = 0; k < Samples; ++k) {
-        const double x = Run * k / Samples;
-        const bool in = columnOpen(42, point, thick, x, 3.3, 0.1f, Voxel);
-        open += in, changes += k > 0 && in != was, was = in;
-        deep += columnOpen(42, point, thick, x, 3.3, 5.0f, Voxel);
-        other += columnOpen(42, point, thin, x, 3.3, 0.1f, Voxel) + columnOpen(42, point, ash, x, 3.3, 0.1f, Voxel);
-        coarse += columnOpen(42, point, thick, x, 3.3, 0.1f, 1.0f);
+// What a pile is made of is recorded as it is laid: its lava, what the currents of ash laid, and
+// what came to lie under standing water.
+void testRecords() {
+    for (const bool sea : {false, true}) {
+        ProvingSpec spec;
+        spec.ground.level = Level::Region, spec.ground.slope = 0.002, spec.ground.rock = Material::Granite;
+        spec.magma = Magma::Andesite;
+        Domain domain = planeDomain(spec.ground);
+        domain.volcanic.vents = {provingVent(spec, domain)};
+        domain.seaLevel = sea ? 1e5 : -1e5;
+        Emplacement field = fieldOf(domain);
+        Laying laying;
+        for (auto* layer : {&laying.lava, &laying.fall, &laying.flows, &laying.ash, &laying.wet, &laying.drop}) layer->assign(domain.cells(), 0.0f);
+        laying.vent.assign(domain.cells(), NoVent);
+        Outburst outburst;
+        outburst.site = domain.volcanic.vents.front().centre;
+        outburst.fall = 0.2 * Km3, outburst.lava = 0.4 * Km3, outburst.flows = 0.2 * Km3, outburst.ash = 0.2 * Km3;
+        outburst.rheology = lavaOf(Magma::Andesite), outburst.current = BlockFlow, outburst.pulses = 4;
+        emplace(domain, field, laying, 0, outburst);
+        double laid = 0, wet = 0, flows = 0, recorded = 0, all = 0;
+        for (size_t i = 0; i < domain.cells(); ++i) laid += laying.lava[i] + laying.fall[i] + laying.flows[i] + laying.ash[i], wet += laying.wet[i];
+        settleLaying(domain, laying);
+        for (size_t i = 0; i < domain.cells(); ++i) flows += domain.volcanic.flowLaid[i], recorded += domain.volcanic.wetLaid[i], all += domain.volcanic.allLaid[i];
+        expect(flows > 0 && flows < all, "the currents of ash are not told apart in the pile", flows / std::max(all, 1e-9));
+        if (sea) expect(wet > 0.99 * laid && recorded > 0.9 * all, "what a vent under the sea laid is not recorded as laid under water", recorded / std::max(all, 1e-9));
+        else expect(wet == 0 && recorded == 0, "what a vent on dry land laid is recorded as laid under water", wet);
     }
-    expect(deep == 0 && other == 0, "columns open in sound rock, in a thin sheet or in ash", deep + other);
-    expect(coarse == 0, "columns narrower than two points are drawn", coarse);
-    expect(open > 0.1 * Samples && open < 0.8 * Samples, "the weathered face of a colonnade is not part open, part rock", double(open) / Samples);
-    // Along a line the face turns from rock to air and back about once a column.
-    const double width = 0.09 * std::sqrt(34.0), spacing = 2.0 * Run / std::max(1, changes);
-    expect(spacing > 0.5 * width && spacing < 3.0 * width, "columns are not as wide as the thickness of their sheet makes them", spacing);
 }
 
 } // namespace
+
+void testVolcanicJoints();
 
 // A vent on a plane of a region, through the level's own replay.
 void testVolcanicLaws() {
     testLaws();
     testColumn();
-    testJoints();
+    testVolcanicJoints();
+    testRecords();
 
     ProvingSpec spec;
     spec.ground.level = Level::Region;
@@ -225,6 +231,12 @@ void testVolcanicLaws() {
     // cells slope failure widens the ring wall into a funnel and part of the pit fills. The wall as
     // steep as rock holds is the local level's to draw.
     expect(pit.pit > 100 && pit.pitRadius >= 2000 && pit.pitRadius <= 10000, "a great eruption left no caldera", pit.pit);
+    // The region records the pit it cut, and at the end how much of it is left: a share of it,
+    // since erosion followed, but not none, since the pit is there.
+    expect(caldera.volcanic.calderas.size() == 1 && caldera.volcanic.calderas.front().cut > 100, "a region did not record the caldera it cut", caldera.volcanic.calderas.size());
+    Domain finished = caldera;
+    const std::vector<Caldera> kept = finishCalderas(finished);
+    expect(kept.size() == 1 && kept.front().kept > 0.2f && kept.front().kept <= 1.0f && kept.front().before.empty(), "a region's record of a caldera says no pit is left", kept.empty() ? -1 : kept.front().kept);
 
     // The pool only spreads what a replay may spread: the ground is the same to the last bit.
     spec.paroxysm = 0, spec.episodes = 2;

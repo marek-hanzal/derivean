@@ -18,6 +18,8 @@ double harvest(Emplacement& field, Laying& laying, std::vector<float>& into, int
             continue;
         }
         into[i] += field.laid[i];
+        // What filled standing water up to its level was laid under it.
+        laying.wet[i] += std::clamp(field.water[i] - (field.ground[i] - field.laid[i]), 0.0f, field.laid[i]);
         volume += field.laid[i];
         laying.vent[i] = uint16_t(vent);
         field.laid[i] = 0;
@@ -42,6 +44,7 @@ double layAsh(const Domain& domain, Emplacement& field, Laying& laying, const Fa
             const float thickness = float(fallThickness(fall, domain.center(x, z)));
             if (thickness < AshFloor || field.rest[i] != Rest::Open) continue;
             laying.ash[i] += thickness;
+            laying.wet[i] += std::clamp(field.water[i] - field.ground[i], 0.0f, thickness);
             field.ground[i] += thickness;
             if (laying.vent[i] == NoVent) laying.vent[i] = uint16_t(vent);
             laid += double(thickness) * domain.cell * domain.cell;
@@ -94,7 +97,7 @@ void emplace(Domain& domain, Emplacement& field, Laying& laying, int vent, const
         const float reach = Shortest + (1.0f - Shortest) * float((pulse * 5) % outburst.pulses + 1) / float(outburst.pulses);
         Rheology current = outburst.current, lava = outburst.rheology;
         current.coolLength *= reach, lava.coolLength *= reach;
-        pour(current, outburst.flows / outburst.pulses, laying.fall, ledger.cone);
+        pour(current, outburst.flows / outburst.pulses, laying.flows, ledger.cone);
         pour(lava, outburst.lava / outburst.pulses, laying.lava, ledger.lava);
     }
     if (outburst.ash > 0) {

@@ -8,6 +8,7 @@
 #include "icesheet/service/Glaciations.hpp"
 #include "icesheet/type/Sheet.hpp"
 
+#include <algorithm>
 #include <cstdio>
 
 using namespace derivean::sim;
@@ -44,9 +45,9 @@ void printPlanet(World& world, const ContinentalIce& ice, const std::string& out
     const std::string path = out + "/icesheet-planet.png";
     writePng(path, PlanetCells * Scale, PlanetCells * Scale, big);
     std::printf("  %s\n", path.c_str());
-    for (const bool coastal : {false, true}) {
-        std::printf("ground freed since the last maximum, %s:\n", coastal ? "with open sea beside it" : "inland");
-        for (const IcePlace& place : freedPlaces(planet, ice, coastal, 10))
+    for (const PlaceKind kind : {PlaceKind::Inland, PlaceKind::Coastal, PlaceKind::Margin}) {
+        std::printf("ground freed since the last maximum, %s:\n", kind == PlaceKind::Coastal ? "with open sea beside it" : kind == PlaceKind::Margin ? "under thin ice near its margin" : "inland");
+        for (const IcePlace& place : freedPlaces(planet, ice, kind, 10))
             std::printf("  --x %.0f --z %.0f   %.0f m above the sea, %.0f m of ice at the maximum (region tile of pass %d)\n", place.at.x, place.at.z, place.height, place.thickness,
                         passOf(tileAt(Level::Region, place.at)));
     }
@@ -61,6 +62,23 @@ void printCensus(const SheetCensus& c, double cell) {
                 c.wornMean, c.wornMost, c.slide, c.fastest);
     std::printf("  left by the last sheet, share of the square and mean depth: till %.1f %% %.1f m | end moraine %.2f %% %.1f m | outwash %.2f %% %.1f m | esker fill %.2f %% %.1f m\n", 100 * c.till,
                 c.tillDepth, 100 * c.moraine, c.moraineDepth, 100 * c.outwash, c.outwashDepth, 100 * c.esker, c.eskerDepth);
+}
+
+// Cells standing higher above all eight neighbours than the tallest esker: loose ones (their cover
+// alone stands that high) are what no pass may leave; rock ones come from the settled replay.
+void printColumns(const Mosaic& mosaic) {
+    int loose = 0, rock = 0;
+    float highest = 0;
+    for (int z = 1; z + 1 < mosaic.side(); ++z)
+        for (int x = 1; x + 1 < mosaic.side(); ++x) {
+            float around = -1e30f;
+            for (int k = 0; k < 8; ++k) around = std::max(around, mosaic.ground.at(x + NeighborX[k], z + NeighborZ[k]));
+            const float above = mosaic.ground.at(x, z) - around;
+            if (above <= EskerTallest) continue;
+            (mosaic.cover.at(x, z) > above - EskerTallest ? loose : rock) += 1;
+            highest = std::max(highest, above);
+        }
+    std::printf("  columns more than %.0f m above all neighbours: %d of loose cover, %d of rock; highest %.0f m\n", double(EskerTallest), loose, rock, highest);
 }
 
 // Relief with the ice of the last maximum tinted blue and the present ice white, and beside it what
@@ -126,6 +144,7 @@ int iceSheetCommand(const Arguments& arguments) {
     for (int dz = 0; dz < tiles; ++dz)
         for (int dx = 0; dx < tiles; ++dx) held.push_back(world.atlas.find({level, mosaic.first.x + dx, mosaic.first.z + dz})), read.push_back(held.back().get());
     printCensus(censusOf(read), mosaic.cell);
+    printColumns(mosaic);
     writeMaps(mosaic, world, out, "L" + std::to_string(int(level)));
     return 0;
 }

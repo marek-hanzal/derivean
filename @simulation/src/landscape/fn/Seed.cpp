@@ -134,6 +134,7 @@ void seedFromParent(Domain& domain, const Setting& setting, const TileLookup& lo
     const double parentCell = domain.cell * Refinement;
     const bool ground = domain.key.level == Level::Ground;
     domain.standing.assign(domain.cells(), -1e9f);
+    domain.lakeFloor.assign(domain.cells(), -1e9f);
     if (domain.key.level == Level::Site) traceIce(domain, parent, parentCell);
     for (int z = 0; z < domain.size; ++z) {
         for (int x = 0; x < domain.size; ++x) {
@@ -165,10 +166,22 @@ void seedFromParent(Domain& domain, const Setting& setting, const TileLookup& lo
                 // flood has barely filled is a hollow of its surface, not a lake.
                 const float least = ground ? 1e-3f : LeastLake;
                 const int64_t px = int64_t(std::floor(here.x / parentCell)), pz = int64_t(std::floor(here.z / parentCell));
-                domain.standing[i] = parent.at(px, pz, [least](const Tile& t, size_t c) {
+                const auto lake = [least](const Tile& t, size_t c) {
                     const float top = t.now.rock[c] + t.now.sediment[0][c] + t.now.sediment[1][c] + t.now.sediment[2][c];
                     return t.water[c] > top + least ? t.water[c] : -1e9f;
-                });
+                };
+                domain.standing[i] = parent.at(px, pz, lake);
+                // A lake the parent holds is held at the parent's level: a parent cell beside it whose
+                // ground stands at that water or above is its rim, one of them its outlet, and none is
+                // cut below the water. A cell lower than a lake beside it (the channel below an outlet,
+                // or a lower lake's shore) does not hold that lake. What fills the lake is this level's
+                // own water, so it may stand lower, never spill lower.
+                const float top = parent.at(px, pz, [](const Tile& t, size_t c) { return t.now.rock[c] + t.now.sediment[0][c] + t.now.sediment[1][c] + t.now.sediment[2][c]; });
+                domain.lakeFloor[i] = domain.standing[i];
+                for (int k = 0; k < 9; ++k) {
+                    const float beside = parent.at(px + k % 3 - 1, pz + k / 3 - 1, lake);
+                    if (beside <= top + least) domain.lakeFloor[i] = std::max(domain.lakeFloor[i], beside);
+                }
             }
             if (ground) {
                 // Ice is the parent's: a ground tile is too small to hold it by itself.

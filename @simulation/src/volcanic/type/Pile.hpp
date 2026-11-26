@@ -25,6 +25,22 @@ struct VolcanicLedger {
     double built{};       // of lava, cone and ash: on the tile's own cells
 };
 
+// A caldera a region cut, as the region tile that holds its site records it. That tile is the one
+// owner of how much of the pit is still there; a finer level cuts it again at its own cells from it.
+struct Caldera {
+    uint64_t vent{};
+    Vec2 site;
+    double volume{};     // m³ that left; sets the radius
+    Magma magma{Magma::Basalt};
+    double time{};       // yr the roof went down: the end of its step
+    float cut{};         // m, the pit as that step's eruptions left it (fn/Caldera.cpp)
+    float kept{};        // 0..1, the pit at the end of the region's window against `cut`
+    // While the region replays: the surface before the step the roof went down in, on the domain's
+    // cells of a square around the caldera from (x, z), `side` cells wide, which the pit is read against.
+    int x{}, z{}, side{};
+    std::vector<float> before;
+};
+
 inline constexpr uint16_t NoVent = 0xFFFF;   // a vent index naming no vent; a region lists one vent per centre and epoch, hundreds
 
 // What a finished tile keeps of it. Arrays have TileCells² entries, row-major.
@@ -32,12 +48,15 @@ struct VolcanicTile {
     std::vector<float> pile;     // m of volcanic rock under the rock surface: it fills (rock − pile, rock]
     std::vector<float> laid;     // yr before the tile's time that the top of the pile was laid
     std::vector<uint8_t> lava;   // share of lava in the pile in parts of 255; the rest is ash and scoria
+    std::vector<uint8_t> flows;  // share of it the currents of hot ash laid, in parts of 255
+    std::vector<uint8_t> wet;    // share of it laid under standing water, sea or lake, in parts of 255
     std::vector<uint16_t> vent;   // index into `vents` of the vent that laid the top; NoVent for none
     std::vector<Vent> vents;     // every vent whose products or conduits reach the tile
-    // Pile and lava share over the tile and the Apron cells beyond its edge, (TileCells + 2·Apron)²,
+    // Pile and its shares over the tile and the Apron cells beyond its edge, (TileCells + 2·Apron)²,
     // as its own replay left them: what a later neighbour blends its seam towards (fn/Seams.cpp).
     std::vector<float> wide;
-    std::vector<uint8_t> wideLava;
+    std::vector<uint8_t> wideLava, wideFlows, wideWet;
+    std::vector<Caldera> calderas;   // a region's: every caldera whose site lies in the tile
     VolcanicLedger ledger;
 };
 
@@ -47,12 +66,20 @@ struct VolcanicDomain {
     std::vector<Vent> vents;
     std::vector<float> floor;      // m below the datum of the pile's floor; there is a pile where the rock surface stands above it
     std::vector<float> lavaLaid;   // m of lava ever laid into the pile
+    std::vector<float> flowLaid;   // m of it the currents of hot ash laid
+    std::vector<float> wetLaid;    // m of it laid under standing water
     std::vector<float> allLaid;    // m of everything ever laid into it
     std::vector<float> laidAt;     // yr after the domain's start that the top was laid
     std::vector<uint16_t> vent;     // index into `vents`, NoVent for none
     std::vector<uint16_t> plug;     // 1 + index of the vent whose conduit comes up through the cell, 0 for none
     std::vector<uint8_t> inside;   // 1 while the cell's cached rock traits are the pile's or a plug's
+    std::vector<Caldera> calderas; // a region's: every caldera it cut, as it is cut
     VolcanicLedger ledger;
+};
+
+// What a pile is made of, as shares of all that was laid into it.
+struct PileShares {
+    float lava{1}, flows{}, wet{};
 };
 
 inline constexpr float NoPile = -1e9f;   // a floor that far above the datum: nothing stands on it

@@ -20,7 +20,10 @@ void line(double time, const Game& game, const Frame& frame) {
     std::printf("%6.1f s  ready site %d local %d region %d far %d streaming %d  tiles", time, frame.siteReady, frame.localReady, frame.regionReady,
                 frame.farReady, frame.streamingReady);
     for (size_t level = 1; level < sim::LevelCount; ++level) std::printf(" %u/%u", frame.tilesFinished[level], frame.tilesWanted[level]);   // region, local, site, ground
-    std::printf("  flying %zu  pending chunks %zu cubes %zu", game.nature.tiles.flying.size(), frame.pendingChunks, frame.pendingCubes);
+    std::array<int, sim::LevelCount> flying{};
+    for (const sim::TileKey& key : game.nature.tiles.flying) ++flying[size_t(key.level)];
+    std::printf("  flying %zu (%d %d %d %d)  pending chunks %zu cubes %zu", game.nature.tiles.flying.size(), flying[1], flying[2], flying[3], flying[4],
+                frame.pendingChunks, frame.pendingCubes);
     std::printf("  audit %zu seen %zu of %zu |", game.cubes.audit.size(), game.cubes.tilesSeen, game.nature.world.atlas.finished());
     for (const CubeLevelView& level : frame.cubeLevels) {
         if (level.wanted == level.settled) continue;

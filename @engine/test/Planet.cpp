@@ -92,6 +92,12 @@ void cubesMatchVoxels(PlanetSession& session) {
             const int voxel = int(materialAt(game.world, cell));
             agreed += voxel == face[7];
             if (voxel != face[7]) ++differ[{voxel, face[7]}];
+            if (voxel != face[7] && differ[{voxel, face[7]}] <= 3) {
+                const sim::SurfaceSample here = sim::surfaceAt(game.nature.world, {x, z}, sim::Level::Ground);
+                std::cout << "  at " << x << " " << z << " cube top " << top << " voxel top " << (cell.y + 1) * VoxelSize << " sample level "
+                          << int(here.level) << " ground " << here.ground << " rock " << here.rock << " cover " << here.sediment[0] << "/"
+                          << here.sediment[1] << "/" << here.sediment[2] << " water " << here.water << "\n";
+            }
         }
     }
     std::cout << "of " << compared << " finest cube tops over loaded voxels, " << agreed << " are of the top voxel's material\n";

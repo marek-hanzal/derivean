@@ -60,7 +60,8 @@ SheetCensus censusOf(const std::vector<const Tile*>& tiles) {
     return census;
 }
 
-std::vector<IcePlace> freedPlaces(const Planet& planet, const ContinentalIce& ice, bool coastal, int limit) {
+std::vector<IcePlace> freedPlaces(const Planet& planet, const ContinentalIce& ice, PlaceKind kind, int limit) {
+    const bool coastal = kind == PlaceKind::Coastal, margin = kind == PlaceKind::Margin;
     const Field<float>& now = ice.stages[IceNow].thickness;
     const Field<float>& then = ice.stages[IceLastMaximum].thickness;
     struct Found {
@@ -71,17 +72,18 @@ std::vector<IcePlace> freedPlaces(const Planet& planet, const ContinentalIce& ic
     const auto at = [](int index) { return wrapIndex(index, PlanetCells); };
     for (int z = 0; z < PlanetCells; ++z) {
         for (int x = 0; x < PlanetCells; ++x) {
-            if (then.at(x, z) < Thick || now.at(x, z) > 0 || planet.elevation.at(x, z) <= planet.seaLevel) continue;
+            if ((margin ? then.at(x, z) < LeastSheet || then.at(x, z) >= Thick : then.at(x, z) < Thick) || now.at(x, z) > 0 || planet.elevation.at(x, z) <= planet.seaLevel) continue;
             // Open sea beside the cell makes it coastal; any sea within two cells keeps it from counting as inland.
-            bool beside = false, near = false;
+            bool beside = false, near = false, beyond = false;
             for (int dz = -2; dz <= 2; ++dz)
                 for (int dx = -2; dx <= 2; ++dx) {
                     const int nx = at(x + dx), nz = at(z + dz);
-                    const bool sea = planet.elevation.at(nx, nz) < planet.seaLevel;
+                    const bool sea = planet.elevation.at(nx, nz) <= planet.seaLevel;
                     near = near || sea;
+                    beyond = beyond || (!sea && then.at(nx, nz) < LeastSheet);
                     beside = beside || (sea && then.at(nx, nz) <= 0 && std::abs(dx) <= 1 && std::abs(dz) <= 1);
                 }
-            if (coastal ? beside : !near) found.push_back({x, z, then.at(x, z), planet.elevation.at(x, z) - planet.seaLevel});
+            if (coastal ? beside : !near && (!margin || beyond)) found.push_back({x, z, then.at(x, z), planet.elevation.at(x, z) - planet.seaLevel});
         }
     }
     // Inland the lowest ground first: lowland is where a sheet lays what it carries. On the coast

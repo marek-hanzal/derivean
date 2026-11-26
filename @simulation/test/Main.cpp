@@ -15,6 +15,7 @@ void testLandscapeWorld();
 void testRelief();
 void testReliefBeds();
 void testReliefCover();
+void testReliefGlaciatedSite();
 void testInspect();
 void testChart();
 void testPlanetFuture();
@@ -51,6 +52,7 @@ int main() {
     testReliefBeds();
     testLandscapeWorld();
     testReliefCover();
+    testReliefGlaciatedSite();
     testInspect();
     testChart();
     testPlanetFuture();

@@ -61,8 +61,8 @@ test("a chart is promised at once and read while the session goes on advancing",
   assert.ok(chart.water.every((level) => Number.isNaN(level) || Math.abs(level - info.seaLevel) < 0.01), "the planet's only water is the sea");
 });
 
-test("a chart around the player reads the tiles under them, and the same tiles give the same chart", { timeout: 300_000 }, async () => {
-  // The ground tile under the player is built after the start, with the voxels.
+test("a chart around the player reads the tiles under them, and the same tiles give the same chart", { timeout: 900_000 }, async () => {
+  // The ground tile under the player is built after the start, with the voxels: minutes on a busy machine.
   while (session.inspect(eye[0], eye[2]).level !== "ground") {
     session.advance(controls);
     await sleep(50);

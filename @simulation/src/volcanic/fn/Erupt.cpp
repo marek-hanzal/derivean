@@ -14,7 +14,7 @@ constexpr double MostInflation = 5.0;   // times the usual thickness of a flow u
 Laying emptyLaying(const Domain& domain) {
     Laying laying;
     const size_t cells = domain.cells();
-    for (auto* layer : {&laying.lava, &laying.fall, &laying.ash, &laying.drop}) layer->assign(cells, 0.0f);
+    for (auto* layer : {&laying.lava, &laying.fall, &laying.flows, &laying.ash, &laying.wet, &laying.drop}) layer->assign(cells, 0.0f);
     laying.vent.assign(cells, NoVent);
     return laying;
 }
@@ -75,6 +75,7 @@ void erupt(Domain& domain, FlowScratch&, const Setting& setting) {
         if (!field.cells()) field = fieldOf(domain), laying = emptyLaying(domain);
     };
     std::vector<MinorEvent> minor;
+    std::vector<Caldera> emptied;
     for (size_t index = 0; index < volcanic.vents.size(); ++index) {
         const Vent& vent = volcanic.vents[index];
         if (!region) {
@@ -95,10 +96,13 @@ void erupt(Domain& domain, FlowScratch&, const Setting& setting) {
         for (const Episode& episode : vent.episodes) {
             if (std::abs(episode.time - domain.time) > 0.5 * domain.step || !within(domain, episode.site, AshReach)) continue;
             ready();
+            // Nothing this step laid is on the ground before settleLaying.
+            if (within(domain, episode.site, 0) && emptiesChamber(vent, episode.paroxysm)) emptied.push_back(calderaOf(domain, vent, episode));
             eruptEpisode(domain, field, laying, int(index), episode);
         }
     }
     if (field.cells()) settleLaying(domain, laying);
+    if (!emptied.empty()) recordCalderas(domain, std::move(emptied));
 }
 
 } // namespace derivean::sim

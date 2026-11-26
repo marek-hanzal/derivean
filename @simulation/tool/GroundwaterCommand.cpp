@@ -19,11 +19,13 @@ double percentile(std::vector<double>& values, double share) {
 }
 
 void printBudget(const WaterBudget& b, double area) {
-    const double in = b.recharge + b.sunk;
+    const double in = b.recharge + b.sunk + b.regional;
     const auto line = [&](const char* name, double value) { std::printf("  %-34s %10.3g m3/yr  %7.1f mm/yr  %5.1f %% of what enters\n", name, value, 1000 * value / area, in > 0 ? 100 * value / in : 0.0); };
     std::printf("budget over %.0f km2 (rain %.0f mm/yr, of it %.0f mm/yr left by evaporation)\n", area / 1e6, 1000 * b.rain / area, 1000 * b.runoff / area);
     line("recharge through the ground", b.recharge);
     line("streams sinking in soluble rock", b.sunk);
+    line("up from the regional flow", b.regional);
+    line("handed to the regional flow", b.handed);
     line("out at springs", b.springs);
     line("out as seepage", b.seepage);
     line("out as baseflow", b.baseflow);
@@ -153,7 +155,7 @@ int groundwaterCommand(const Arguments& arguments) {
             block.tiles.push_back(groundwaterAt(world, {Level::Local, first.x + x, first.z + z}));
             const GroundwaterTile& tile = *block.tiles.back();
             const WaterBudget& b = tile.budget;
-            budget.rain += b.rain, budget.runoff += b.runoff, budget.recharge += b.recharge, budget.sunk += b.sunk, budget.springs += b.springs, budget.seepage += b.seepage;
+            budget.rain += b.rain, budget.runoff += b.runoff, budget.recharge += b.recharge, budget.sunk += b.sunk, budget.regional += b.regional, budget.handed += b.handed, budget.springs += b.springs, budget.seepage += b.seepage;
             budget.baseflow += b.baseflow, budget.deep += b.deep, budget.underflow += b.underflow, budget.dissolved += b.dissolved;
             // Water that crosses between two tiles of the block is one tile's gain and the other's loss: per edge the same number on both sides, summed in another order.
             budget.lateralIn += b.lateralIn, budget.lateralOut += b.lateralOut;

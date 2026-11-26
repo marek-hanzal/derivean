@@ -3,6 +3,7 @@
 #include "icesheet/type/Continental.hpp"
 #include "landscape/type/Terrain.hpp"
 
+#include <cstdint>
 #include <vector>
 
 namespace derivean::sim {
@@ -34,9 +35,12 @@ struct IcePlace {
     double thickness{};   // m of ice over it at the last maximum
 };
 
-// Planet cells the last sheet covered with ice worth the name and the present one does not: where
-// fresh glacial country is to be looked for (`limit` of them, no two close together). Inland the
-// lowest ground first; `coastal` asks for cells with open sea beside them, the highest first.
-std::vector<IcePlace> freedPlaces(const Planet& planet, const ContinentalIce& ice, bool coastal, int limit);
+// Planet cells the present ice does not cover and the last sheet did: where fresh glacial country
+// is to be looked for (`limit` of them, no two close together). Inland: ice worth the name, no sea
+// near, the lowest ground first. Coastal: open sea beside, the highest first. Margin: inland, thin
+// ice (where it stagnated as it withdrew) with ground the sheet never reached within two cells,
+// the lowest first.
+enum class PlaceKind : uint8_t { Inland, Coastal, Margin };
+std::vector<IcePlace> freedPlaces(const Planet& planet, const ContinentalIce& ice, PlaceKind kind, int limit);
 
 } // namespace derivean::sim

@@ -37,6 +37,10 @@ void raise(Domain& domain, FlowScratch& scratch);
 // them (and written back into the domain), and the finished tile is read off the domain.
 void followNeighbours(Domain& domain, double time);
 void settleSeams(Domain& domain, Tile& tile);
+// Weight of a tile's own value `distance` cells in from an edge it blends with a finished
+// neighbour's (blendSeams). Labels blended along the seam fade with the same weight; where the
+// ground's courses take the blend back (keepCourses), they still follow the full blend.
+inline float seamWeight(int distance) { return float(smoothstep(0.0, 1.0, (distance + 0.5) / Apron)); }
 void extractTile(const Domain& domain, const FlowScratch& scratch, Tile& tile);
 
 // Replay.cpp — one step, and the whole window from build to the finished tile.

@@ -41,6 +41,8 @@ void allocateVolcanic(Domain& domain) {
     const size_t cells = domain.cells();
     volcanic.floor.assign(cells, NoPile);
     volcanic.lavaLaid.assign(cells, 0.0f);
+    volcanic.flowLaid.assign(cells, 0.0f);
+    volcanic.wetLaid.assign(cells, 0.0f);
     volcanic.allLaid.assign(cells, 0.0f);
     volcanic.laidAt.assign(cells, 0.0f);
     volcanic.vent.assign(cells, NoVent);
@@ -68,7 +70,8 @@ void settleLaying(Domain& domain, const Laying& laying) {
                 if (!region) domain.trend[i] -= laying.drop[i];
                 if (owned) volcanic.ledger.foundered += double(laying.drop[i]) * area;
             }
-            const float lava = laying.lava[i], fall = laying.fall[i], ash = laying.ash[i], added = lava + fall + ash;
+            // The currents leave ash and blocks as the fall does; only the pile tells them apart.
+            const float lava = laying.lava[i], fall = laying.fall[i] + laying.flows[i], ash = laying.ash[i], added = lava + fall + ash;
             if (added <= 0) continue;
             if (owned) volcanic.ledger.built += double(added) * area;
             if (region) load[i] = added;
@@ -82,7 +85,7 @@ void settleLaying(Domain& domain, const Laying& laying) {
             // A pile starts on the rock surface of the day; what lay loose on it is sealed in.
             if (ground.rock[i] <= ground.datum[i] - volcanic.floor[i]) {
                 volcanic.floor[i] = ground.datum[i] - ground.rock[i];
-                volcanic.lavaLaid[i] = volcanic.allLaid[i] = 0;
+                setShares(volcanic, i, 0.0f, {});
             }
             const float loose = domain.sedimentAt(i);
             for (auto& layer : ground.sediment) layer[i] = 0;
@@ -90,6 +93,8 @@ void settleLaying(Domain& domain, const Laying& laying) {
             ground.rock[i] += loose + added;
             volcanic.allLaid[i] += loose + added;
             volcanic.lavaLaid[i] += lava;
+            volcanic.flowLaid[i] += laying.flows[i];
+            volcanic.wetLaid[i] += laying.wet[i];
             volcanic.laidAt[i] = now;
             volcanic.vent[i] = laying.vent[i];
         }

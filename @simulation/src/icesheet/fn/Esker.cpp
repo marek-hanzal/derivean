@@ -27,9 +27,10 @@ EskerFill setAsideEskers(Domain& domain, const ParentSheet& parent, const std::v
     if (tunnels.empty()) return fill;
     // Each stretch holds as much of its fill as a ridge as wide as its tunnel takes, no steeper at
     // its foot than gravel stands; the rest stays spread in the cover. Its section is set by its own
-    // fill over its own length; narrower than a cell, it is drawn over the cells its path crosses
-    // with the same section. Where the cover holds less than the ridge, the ridge is lowered by a
-    // ratio of this domain's own cells, so two domains can differ there (an open item).
+    // fill over its own length, lowered by the share of that fill the parent's cover still holds,
+    // so every domain that holds the stretch draws the same ridge; narrower than a cell, it is drawn
+    // over the cells its path crosses with the same section. Only where this domain's own cover has
+    // less than its ridges take is the ridge lowered further, by this domain's own ratio.
     const size_t count = tunnels.size();
     std::vector<double> section(count, 0.0), drawn(count, 0.0), fits(count, 0.0);
     for (size_t s = 0; s < count; ++s) {
@@ -39,7 +40,7 @@ EskerFill setAsideEskers(Domain& domain, const ParentSheet& parent, const std::v
         const double half = std::clamp(EskerSpread * std::pow(std::max(0.0, double(tunnel.discharge)) / 1e8, 0.4), double(EskerNarrowest), double(EskerWidest));
         const double crest = std::min(double(EskerTallest), 0.5 * ReposeTan[Coarse] * half);
         const double volume = std::min(tunnel.fill, 4.0 / 3.0 * crest * half * reach);
-        section[s] = volume / reach, drawn[s] = std::max(half, domain.cell), fits[s] = volume / tunnel.fill;
+        section[s] = volume / reach * std::min(1.0, tunnel.supply / tunnel.fill), drawn[s] = std::max(half, domain.cell), fits[s] = volume / tunnel.fill;
     }
     // Each track's ridge over the cells within its width of an open step, the nearest step's
     // stretch setting its section; where tracks meet, the higher ridge.

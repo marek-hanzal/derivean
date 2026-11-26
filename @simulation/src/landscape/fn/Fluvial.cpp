@@ -163,6 +163,9 @@ void solveHeights(Sweep& sweep) {
         // A river is the parent's where it has gathered the water the parent needs to draw a channel.
         if (pinned && scratch.gathered[i] >= parentHead)
             scratch.next[i] = scratch.pool[i] = std::max(scratch.next[i], std::min(raised, domain.trend[i]));
+        // A lake the parent holds keeps the parent's level: nothing cuts its rim below that water.
+        // Ground already below it, a lake bed or the valley under a perched lake, is cut as any.
+        if (!domain.lakeFloor.empty() && raised > domain.lakeFloor[i]) scratch.next[i] = scratch.pool[i] = std::max(scratch.next[i], domain.lakeFloor[i]);
     }
 }
 

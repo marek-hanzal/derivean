@@ -3,6 +3,9 @@
 #include "aeolian/fn/Wind.hpp"
 #include "coast/fn/Coast.hpp"
 
+#include <algorithm>
+#include <limits>
+
 namespace derivean::sim {
 namespace {
 
@@ -26,15 +29,14 @@ void copyGround(const Domain& domain, Ground& into, int margin) {
 // ground, so they differ only in detail; fading from one to the other leaves no line on the map.
 void blendSeams(const Domain& domain, Ground& core) {
     Ground Tile::*wide = &Tile::nowWide;
-    const auto weight = [](int distance) { return float(smoothstep(0.0, 1.0, (distance + 0.5) / Apron)); };
     for (int z = 0; z < TileCells; ++z) {
         for (int x = 0; x < TileCells; ++x) {
             const int sideX = x < Apron ? -1 : x >= TileCells - Apron ? 1 : 0, sideZ = z < Apron ? -1 : z >= TileCells - Apron ? 1 : 0;
             const Tile* alongX = sideX ? domain.finished[4 + sideX] : nullptr;
             const Tile* alongZ = sideZ ? domain.finished[4 + 3 * sideZ] : nullptr;
             if (!alongX && !alongZ) continue;
-            const float wx = alongX ? weight(sideX < 0 ? x : TileCells - 1 - x) : 1.0f;
-            const float wz = alongZ ? weight(sideZ < 0 ? z : TileCells - 1 - z) : 1.0f;
+            const float wx = alongX ? seamWeight(sideX < 0 ? x : TileCells - 1 - x) : 1.0f;
+            const float wz = alongZ ? seamWeight(sideZ < 0 ? z : TileCells - 1 - z) : 1.0f;
             const Tile* diagonal = alongX && alongZ ? domain.finished[4 + sideX + 3 * sideZ] : nullptr;
             const size_t to = size_t(z) * TileCells + size_t(x);
             // This cell in the frame of a neighbour's wide square.
@@ -57,6 +59,83 @@ void blendSeams(const Domain& domain, Ground& core) {
     }
 }
 
+// Water decides first: the blend may neither dam a course that either side drains through nor dig a
+// hollow into one. Down the steepest way of the domain's own ground from each cell, and along every
+// river a finished neighbour hands on, a blended cell stays no higher than the cells draining into
+// it and no lower than the cell it drains to. Where the blend would break that, it is taken back
+// toward the tile's own ground until the course runs again.
+void keepCourses(const Domain& domain, Ground& core) {
+    const auto groundAt = [&](size_t i) {
+        float s = domain.ground.rock[i];
+        for (int c = 0; c < SedimentClasses; ++c) s += std::max(0.0f, domain.ground.sediment[c][i]);
+        return s;
+    };
+    const auto coreOf = [&](size_t i) {
+        const int x = int(i % size_t(domain.size)) - Halo, z = int(i / size_t(domain.size)) - Halo;
+        return x < 0 || z < 0 || x >= TileCells || z >= TileCells ? -1 : int64_t(z) * TileCells + x;
+    };
+    const auto receiver = [&](size_t i) -> int64_t {
+        const int x = int(i % size_t(domain.size)), z = int(i / size_t(domain.size));
+        if (domain.handsOnward(i)) return int64_t(domain.index(x + NeighborX[domain.settledWay[i]], z + NeighborZ[domain.settledWay[i]]));
+        const float here = groundAt(i);
+        float steepest = 0;
+        int64_t to = -1;
+        for (int k = 0; k < 8; ++k) {
+            const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
+            if (nx < 0 || nz < 0 || nx >= domain.size || nz >= domain.size) continue;
+            const size_t n = domain.index(nx, nz);
+            const float slope = (here - groundAt(n)) / NeighborReach[k];
+            if (slope > steepest) steepest = slope, to = int64_t(n);
+        }
+        return to;
+    };
+    const size_t cells = size_t(TileCells) * TileCells;
+    std::vector<float> was(cells), now(cells);
+    std::vector<size_t> moved;
+    for (size_t to = 0; to < cells; ++to) {
+        was[to] = groundAt(domain.index(int(to % TileCells) + Halo, int(to / TileCells) + Halo));
+        now[to] = core.rock[to];
+        for (int c = 0; c < SedimentClasses; ++c) now[to] += core.sediment[c][to];
+        if (now[to] != was[to]) moved.push_back(to);
+    }
+    const auto heightOf = [&](size_t i) { const int64_t c = coreOf(i); return c < 0 ? groundAt(i) : now[size_t(c)]; };
+    std::sort(moved.begin(), moved.end(), [&](size_t a, size_t b) { return was[a] < was[b] || (was[a] == was[b] && a < b); });
+    // Downstream first, a lowered cell is held at the cell it drains to.
+    for (const size_t to : moved) {
+        if (now[to] >= was[to]) continue;
+        const int64_t r = receiver(domain.index(int(to % TileCells) + Halo, int(to / TileCells) + Halo));
+        if (r >= 0) now[to] = std::max(now[to], std::min(was[to], heightOf(size_t(r))));
+    }
+    // Upstream first, a raised cell is held at the lowest cell that drains into it.
+    for (size_t at = moved.size(); at-- > 0;) {
+        const size_t to = moved[at];
+        if (now[to] <= was[to]) continue;
+        const int x = int(to % TileCells) + Halo, z = int(to / TileCells) + Halo;
+        const size_t i = domain.index(x, z);
+        float cap = std::numeric_limits<float>::max();
+        for (int k = 0; k < 8; ++k) {
+            const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
+            if (nx < 0 || nz < 0 || nx >= domain.size || nz >= domain.size) continue;
+            const size_t n = domain.index(nx, nz);
+            if (receiver(n) == int64_t(i)) cap = std::min(cap, heightOf(n));
+        }
+        now[to] = std::max(was[to], std::min(now[to], cap));
+    }
+    for (const size_t to : moved) {
+        float blended = core.rock[to];
+        for (int c = 0; c < SedimentClasses; ++c) blended += core.sediment[c][to];
+        if (blended == now[to]) continue;
+        const float keep = (now[to] - was[to]) / (blended - was[to]);
+        const size_t own = domain.index(int(to % TileCells) + Halo, int(to / TileCells) + Halo);
+        core.rock[to] = domain.ground.rock[own] + keep * (core.rock[to] - domain.ground.rock[own]);
+        core.datum[to] = domain.ground.datum[own] + keep * (core.datum[to] - domain.ground.datum[own]);
+        for (int c = 0; c < SedimentClasses; ++c) {
+            const float base = std::max(0.0f, domain.ground.sediment[c][own]);
+            core.sediment[c][to] = base + keep * (core.sediment[c][to] - base);
+        }
+    }
+}
+
 } // namespace
 
 void settleSeams(Domain& domain, Tile& tile) {
@@ -64,6 +143,7 @@ void settleSeams(Domain& domain, Tile& tile) {
     copyGround(domain, core, 0);
     copyGround(domain, tile.nowWide, Apron);
     blendSeams(domain, core);
+    keepCourses(domain, core);
     for (int z = 0; z < TileCells; ++z) {
         for (int x = 0; x < TileCells; ++x) {
             const size_t from = size_t(z) * TileCells + size_t(x), to = domain.index(x + Halo, z + Halo);
