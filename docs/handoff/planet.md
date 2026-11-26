@@ -24,6 +24,7 @@ Builds; `testOre`, `testRockMass` and `testPlanetFuture` pass when linked alone 
 - **Column** (`strata/fn/Column.cpp`): an unconformity at `StrataColumn::deformed` (strata laid down later share only the gentle warping); plutons cut every older unit as domes (`plutonRoof`); a belt quiet for 800 Myr reads as a shield; `Bed::thickness` is the bed's own thickness before clipping.
 - **Solute**: 7 % of eroded rock leaves in solution and precipitates as carbonate on shelves by the room their water leaves, warm ones first; platforms keep 70 m of water (`planet/fn/Surface.cpp`). `ledger.precipitated` is part of `ledger.deposited`.
 - **Melt record**: `CrustColumn::melt`, `meltTime`, `erupted`, `meltSource`; `PastMark::melt`, `erupted`; `Planet::meltHeat`. `planet/fn/Heat.hpp`: `geothermAt`, `centreNear` (magmatic centres 46 km apart in the frame of the crust).
+- **Magmatic centres live 1.5 Myr** (`CentreLife` in `planet/fn/Heat.cpp`): each epoch draws a new lattice; `centreNear(planet, position, time)` returns the epoch with the cell. One fixed centre fed for a whole window piled 4–13 km of volcanic rock.
 - **Rock mass** (`rockmass/`): one structural field for every level — two joint sets in three orders (each 7× wider apart), structural domains 22 km across bounded by faults, attitude of the layering, block size, mass cohesion and friction from the material's `massCohesion` / `massFriction`; `jointDistance`, `fractureShare`, `columnJointDistance`.
 - **Ore** (`ore/`): veins around intrusions, pipes in shields; `oreFieldAt`, `cuttingRock`, `nearCuttingRock`.
 - **Spawn**: `findVale` (a hospitable low cell under at least 1.5 km of mountains), `findLanding` (the shore in the region with the most country rising over it, then down to a dry site cell beside water), `findShore`.
@@ -54,7 +55,8 @@ Builds; `testOre`, `testRockMass` and `testPlanetFuture` pass when linked alone 
 ## Next steps
 
 1. Wire `rockMassAt` consumers: confirm the relief stream uses `fractureShare` to steer drainage; `ore/` should take its vein sets from `rockmass` instead of its own angles.
-2. A time-dependent factor on the magmatic term of `geothermAt` near a centre once the volcanic stream provides `ventUnrest`.
+2. A time-dependent factor on the magmatic term of `geothermAt` near a centre once the volcanic stream provides `ventUnrest` (exists now in `volcanic/fn/Unrest.*`).
+2a. Volcanic supply on land: with the chamber law the eruption count is Earth-like (31.5 a year on land against 20–28), but the volume reaching the surface is 0.082 km³/yr against roughly 0.2–0.37 (to be checked against White, Crisp & Spera 2006), mostly missing effusive basalt on land (plumes, continental rifts); that is also why VEI 5–7 are absent. Raise the plume and rift yield on continents, then retune `ArcYield` for sea level; never the eruption schedule.
 3. Land below 200 m is 38 % against Earth's 29 %: look at carbonate platforms that emerge at small sea-level falls.
 4. Crust beyond 4.6 Gyr grows without bound (sea level +1 km at 8 Gyr): needs a sink, e.g. sediment taken down with sinking plates in proportion to their cover.
 5. Coastline: 37 % of shore cells in axis-aligned runs of five or more (measured before the last changes); plate rotation or sub-cell motion would address the cause.
