@@ -23,7 +23,7 @@ These are binding and are not in the original briefs.
 
 ## State of the tree
 
-Last checkpoint commit: `08f5a7e` (work in progress, not a verified state). Later work is uncommitted unless a newer commit exists.
+Last checkpoint commit: `e60c5ef` (work in progress, not a verified state). Later work is uncommitted unless a newer commit exists.
 
 On 26 Nov at about 03:00 every running stream stopped mid-work on a model usage limit. Each was restarted by a fresh worker from its own file here and the checkpoint `c131234`; a stream's file can lag behind its code, so a successor first compares `git diff 54fdbd9 c131234` over the stream's directories and finishes or undoes half-done edits. The orphaned run `terra volcanic --x 13686236 --z 11027538 --level 2` (six hours of CPU without finishing) was stopped; the volcanic stream found and fixed its cause (oversized minor eruptions, millimetre relaxation of cones on steep ground).
 
@@ -52,6 +52,7 @@ Open investigation: thin vertical columns, one cell wide and up to hundreds of m
 | Wind and dry lands | [aeolian.md](aeolian.md) | `@simulation/src/aeolian/**` | Seen on real tiles: wind sand kept between Region steps, salt pans, Site dune ridges 5 m high 60 m apart (softer than real ergs); a trade-wind desert with no loose cover at all, loess only centimetres; supply, shelter rule, far dust and transmission losses next. Wind costs +1.4 / +2.3 / +2.2 s per Region / Local / Site tile |
 | Volcanism | [volcanic.md](volcanic.md) | `@simulation/src/volcanic/**`, the deposit edit in `@simulation/src/intervention/**`, voxel piles in `relief/fn/{Form,Ground}.cpp` and `simulation/fn/Query.cpp` | World tiles build (an arc Local tile with its parents in about 4 min); piles in the voxel answer; live eruption functions exist (`outbreaksBetween`, `airSourcesOf`, `layOutbreak`), nothing calls them yet; eruptions 4.1 a year on land, 5–6× below Earth, under analysis |
 | Ice sheets | [icesheet.md](icesheet.md) | `@simulation/src/icesheet/**` | Region sheets on real land; last sheet at Local and Site (basins, till tails, eskers, moraine) with tests; seam step at Local, speckle lakes and grid dashes open; Site not built yet |
+| Level consistency: lakes, rivers, seams | [consistency.md](consistency.md) | `@simulation/src/landscape/**` files the relief stream is not changing, `test/LevelConsistency.cpp` | Started: lakes the parent has must stay lakes at finer levels (the owner's lake with a sandy beach), rivers keep water and course across tile edges and levels, tile seams at the root |
 | Measurements, inspector, scouting | [measure.md](measure.md) | `@simulation/src/{measure,inspect}`, `tool/Measure*`, `tool/InspectCommand.cpp` | Finished a full pass; to be repeated |
 | Engine | [engine.md](engine.md) | `@engine/**`, `@napi/**`, `@game/main/engine*`, `@game/contract/GameBridge.ts`, `@game/preload/**` | In progress; long queue |
 | Renderer | [renderer.md](renderer.md) | `@game/src/**` except the map, `@game/main/{index,capture}.mjs`, `@game/capture/**` | WebGPU only: cubes at every distance, sun shadows, snow, clouds and cloud shadow ported, rain and snow written; next: clouds in motion and live, the clouds' GPU cost, low-sun captures of a range |
