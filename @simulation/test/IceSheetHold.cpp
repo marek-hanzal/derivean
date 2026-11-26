@@ -1,5 +1,5 @@
 #include "aeolian/type/Aeolian.hpp"
-#include "icesheet/fn/Parent.hpp"
+#include "icesheet/fn/Local.hpp"
 #include "measure/fn/Plane.hpp"
 
 #include <algorithm>
@@ -74,6 +74,53 @@ Domain seeded() {
 
 float cover(const Ground& ground, size_t i) { return ground.sediment[Coarse][i] + ground.sediment[Sand][i] + ground.sediment[Fines][i]; }
 
+// The domain's own sheet takes from the top, where the laid-back deposits lie: what it left of them
+// goes in its record, and a domain under that record holds them back by class as well.
+void expectKeptAndPassedOn(Domain domain, const std::shared_ptr<Tile>& region) {
+    {
+        // No ice reaches the domain: all of it is left, and the tile's record names only that.
+        Domain bare = domain;
+        ParentSheet still;
+        for (auto* field : {&still.iceNow, &still.iceThen, &still.topNow, &still.topThen, &still.slideX, &still.slideZ, &still.worn, &still.esker}) field->assign(bare.cells(), 0.0f);
+        still.any = true;
+        expect(!leaveFiner(bare, *bare.sheet, still, {}), "no ice, no sheet");
+        const auto record = presentFiner(bare, *bare.sheet, still);
+        expect(record && !record->reached && record->passing[0].empty(), "ground the sheet never reached records the deposits laid back on it");
+        const size_t at = size_t(8) * TileCells + 4, from = bare.index(Halo + 4, Halo + 8);
+        for (int c = 0; c < SedimentClasses; ++c)
+            expect(record->laidBack[c][at] == bare.sheet->held[c][from] && record->till[at] == 0, "all of it, by class", c);
+    }
+    Ground before, tunnelled;
+    const size_t taken = domain.index(Halo + 4, Halo + 8), whole = domain.index(Halo + 5, Halo + 8);   // ample cover, no labels
+    before.sediment[0] = domain.ground.sediment[0], before.sediment[1] = domain.ground.sediment[1], before.sediment[2] = domain.ground.sediment[2];
+    domain.ground.sediment[Sand][taken] -= 0.2f;
+    tunnelled = before, tunnelled.sediment[Sand][taken] -= 0.2f;
+    for (int c = 0; c < SedimentClasses; ++c) domain.ground.sediment[c][taken] -= 0.1f;
+    keepLaidBack(domain, *domain.sheet, &before, &tunnelled);
+    const auto& held = domain.sheet->held;
+    const auto& kept = domain.sheet->left.laidBack;
+    const float left[SedimentClasses] = {held[Coarse][taken], held[Sand][taken] - 0.2f, held[Fines][taken]}, total = left[0] + left[1] + left[2];
+    for (int c = 0; c < SedimentClasses; ++c)
+        expect(std::abs(kept[c][taken] - left[c] * (total - 0.3f) / total) < 1e-5f, "the tunnels took by class, the ice from the top", kept[c][taken]);
+    for (int c = 0; c < SedimentClasses; ++c) expect(kept[c][whole] == held[c][whole], "what it did not take stays theirs", c);
+    // A finer parent naming only deposits laid back: the same classes are held back again.
+    auto local = std::make_shared<Tile>(*region);
+    local->key.level = Level::Local;
+    auto record = std::make_shared<SheetRecord>(*region->sheet);
+    for (auto* field : {&record->till, &record->outwash}) std::fill(field->begin(), field->end(), 0.0f);
+    const float laid[SedimentClasses] = {0.3f, 0.6f, 0.2f};
+    for (int c = 0; c < SedimentClasses; ++c) record->laidBack[c].assign(size_t(TileCells) * TileCells, laid[c]);
+    record->reached = false;
+    local->sheet = record;
+    Domain site = seeded();
+    site.key.level = Level::Site, site.cell = specOf(Level::Site).cell;
+    site.origin = {(3 * TileCells - Halo) * site.cell, (5 * TileCells - Halo) * site.cell};
+    holdBackLastSheet(site, [&](TileKey) { return local.get(); });
+    const size_t i = site.index(Halo + 4, Halo + 12);   // ample cover, no labels
+    for (int c = 0; c < SedimentClasses; ++c) expect(std::abs(site.sheet->held[c][i] - laid[c]) < 1e-5f, "a finer parent's laid-back deposits are held back by class", c);
+    expect(!readParentSheet(site, [&](TileKey) { return local.get(); }).any, "a record of ground the sheet never reached brings no sheet");
+}
+
 } // namespace
 
 void testIceSheetHold() {
@@ -115,5 +162,8 @@ void testIceSheetHold() {
         worst = std::max({worst, double(std::abs(domain.trend[i] - seed.trend[i])), seed.lakeFloor[i] > 0 ? double(std::abs(domain.lakeFloor[i] - seed.lakeFloor[i])) : 0.0});
     }
     expect(worst < 1e-4, "laying back returns the seed", worst);
-    expect(domain.sheet->held[0].empty(), "nothing is laid back twice");
+    const Ground once = domain.ground;
+    restoreLastSheet(domain);
+    for (int c = 0; c < SedimentClasses; ++c) expect(domain.ground.sediment[c] == once.sediment[c], "nothing is laid back twice", c);
+    expectKeptAndPassedOn(domain, recorded);
 }

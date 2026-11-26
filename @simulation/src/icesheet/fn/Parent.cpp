@@ -50,9 +50,10 @@ struct Parents {
         }
     }
 
-    bool anyRecord() const {
+    // Any record at all, or only those of tiles the sheet reached.
+    bool anyRecord(bool reachedOnly) const {
         for (const Tile* tile : tiles)
-            if (tile && tile->sheet) return true;
+            if (tile && tile->sheet && (tile->sheet->reached || !reachedOnly)) return true;
         return false;
     }
 
@@ -66,7 +67,7 @@ float groundOf(const Tile& tile, size_t i) { return tile.now.rock[i] + tile.now.
 ParentSheet readParentSheet(const Domain& domain, const std::function<const Tile*(TileKey)>& tiles) {
     const Parents parents(domain, tiles);
     ParentSheet sheet;
-    sheet.any = parents.anyRecord();
+    sheet.any = parents.anyRecord(true);
     if (!sheet.any) return sheet;
     const size_t cells = domain.cells();
     for (auto* field : {&sheet.iceNow, &sheet.iceThen, &sheet.topNow, &sheet.topThen, &sheet.slideX, &sheet.slideZ, &sheet.worn, &sheet.esker}) field->assign(cells, 0.0f);
@@ -94,7 +95,7 @@ ParentSheet readParentSheet(const Domain& domain, const std::function<const Tile
 std::vector<Tunnel> parentTunnels(const Domain& domain, const std::function<const Tile*(TileKey)>& tiles) {
     const Parents parents(domain, tiles);
     std::vector<Tunnel> found;
-    if (!parents.anyRecord()) return found;
+    if (!parents.anyRecord(true)) return found;
     const double extent = domain.size * domain.cell;
     const int64_t lowX = int64_t(std::floor(domain.origin.x / parents.cell)), lowZ = int64_t(std::floor(domain.origin.z / parents.cell));
     const int64_t highX = int64_t(std::floor((domain.origin.x + extent) / parents.cell)), highZ = int64_t(std::floor((domain.origin.z + extent) / parents.cell));
@@ -119,7 +120,7 @@ std::vector<Tunnel> parentTunnels(const Domain& domain, const std::function<cons
 
 void holdBackLastSheet(Domain& domain, const std::function<const Tile*(TileKey)>& tiles) {
     const Parents parents(domain, tiles);
-    if (!parents.anyRecord()) return;
+    if (!parents.anyRecord(false)) return;
     if (!domain.sheet) domain.sheet = std::make_shared<SheetWork>();
     auto& held = domain.sheet->held;
     for (auto& part : held) part.assign(domain.cells(), 0.0f);
@@ -128,10 +129,13 @@ void holdBackLastSheet(Domain& domain, const std::function<const Tile*(TileKey)>
     for (int z = 0; z < domain.size; ++z)
         for (int x = 0; x < domain.size; ++x) {
             float washed = 0, lodged = 0;   // tunnel fill and outwash are gravel and sand; till and moraine any class
+            float kept[SedimentClasses] = {};   // a finer parent's laid-back deposits, by class
             parents.blend(domain, x, z, [&](const Tile& tile, size_t c, float weight) {
                 if (!tile.sheet) return;
                 const SheetRecord& record = *tile.sheet;
                 washed += weight * (record.esker[c] + record.outwash[c]), lodged += weight * (record.till[c] + record.moraine[c]);
+                if (!record.laidBack[0].empty())
+                    for (int k = 0; k < SedimentClasses; ++k) kept[k] += weight * record.laidBack[k][c];
             });
             const size_t i = domain.index(x, z);
             // What the wind's labels say the wind laid stays: tidyLabels would clip them to a thinner cover.
@@ -150,7 +154,8 @@ void holdBackLastSheet(Domain& domain, const std::function<const Tile*(TileKey)>
             for (int c = 0; c < SedimentClasses; ++c) {
                 // A cell that follows a finished neighbour (Settled, or a Rim cell inside it) moves to
                 // that neighbour's ground, which has them laid back; elsewhere settledTo is the seed.
-                held[c][i] = std::min(held[c][i] + free[c] * fromRest, unlabelled(domain.settledTo, c));
+                const float lodgedPart = free[c] * fromRest, spare = free[c] - lodgedPart;
+                held[c][i] = std::min(held[c][i] + lodgedPart + std::clamp(kept[c], 0.0f, spare), unlabelled(domain.settledTo, c));
                 for (Ground* ground : {&domain.ground, &domain.settledFrom, &domain.settledTo}) ground->sediment[c][i] -= held[c][i];
                 all += held[c][i];
             }
@@ -160,7 +165,8 @@ void holdBackLastSheet(Domain& domain, const std::function<const Tile*(TileKey)>
 }
 
 void restoreLastSheet(Domain& domain) {
-    if (!domain.sheet || domain.sheet->held[0].size() != domain.cells()) return;
+    if (!domain.sheet || domain.sheet->restored || domain.sheet->held[0].size() != domain.cells()) return;
+    domain.sheet->restored = true;
     auto& held = domain.sheet->held;
     for (size_t i = 0; i < domain.cells(); ++i) {
         float all = 0;
@@ -171,7 +177,22 @@ void restoreLastSheet(Domain& domain) {
         domain.trend[i] += all;
         if (!domain.lakeFloor.empty()) domain.lakeFloor[i] += all;
     }
-    for (auto& part : held) part.clear();
+}
+
+void keepLaidBack(const Domain& domain, SheetWork& work, const Ground* before, const Ground* eskers) {
+    if (!work.restored) return;
+    auto& kept = work.left.laidBack;
+    for (auto& part : kept) part.assign(domain.cells(), 0.0f);
+    for (size_t i = 0; i < domain.cells(); ++i) {
+        float left[SedimentClasses], total = 0, stripped = 0;
+        for (int c = 0; c < SedimentClasses; ++c) {
+            const float tunnels = before ? std::max(0.0f, before->sediment[c][i] - eskers->sediment[c][i]) : 0.0f;
+            left[c] = std::max(0.0f, work.held[c][i] - tunnels), total += left[c];
+            if (before) stripped += eskers->sediment[c][i] - domain.ground.sediment[c][i];
+        }
+        const float share = total > 0 ? std::max(0.0f, total - std::max(0.0f, stripped)) / total : 0.0f;
+        for (int c = 0; c < SedimentClasses; ++c) kept[c][i] = left[c] * share;
+    }
 }
 
 const SheetRecord* finishedSheet(const Domain& domain, int x, int z, size_t& at) {

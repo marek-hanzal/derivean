@@ -21,6 +21,10 @@ std::vector<Tunnel> parentTunnels(const Domain& domain, const std::function<cons
 // are held towards the parent's without them. All of it is laid back when its last sheet leaves.
 void holdBackLastSheet(Domain& domain, const std::function<const Tile*(TileKey)>& tiles);
 void restoreLastSheet(Domain& domain);
+// What of the laid-back deposits the domain's own sheet left in place (`left.laidBack`). The tunnels
+// took gravel and sand by class between `before` and `eskers`; the ice then stripped the cover from
+// the top, where they lie, down to the ground as it is. Null: the sheet took nothing.
+void keepLaidBack(const Domain& domain, SheetWork& work, const Ground* before, const Ground* eskers);
 
 // The sheet record of the finished neighbour that owns a halo cell, and the cell's index in it;
 // null where no finished neighbour with a record owns the cell.

@@ -40,12 +40,12 @@ SheetLoad takeUpBed(Domain& domain, SheetWork& work, const ParentSheet& parent);
 // arrives stays as moraine as steep as till stands; the meltwater takes the rest.
 void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, SheetLoad& carried);
 
-// Local.cpp — the stages of the hook at the finer levels. `leaveFiner` returns false, and does
-// nothing, where none of the domain lay under the last maximum's ice.
+// Local.cpp — the stages of the hook at the finer levels. `leaveFiner` returns false where none of
+// the domain lay under the last maximum's ice, and only notes the parent's deposits laid back.
 bool leaveFiner(Domain& domain, SheetWork& work, const ParentSheet& parent, const std::vector<Tunnel>& tunnels);
 // The parent's ice over the domain's own ground (valleys take more than the ridges beside them),
 // kept where it is thicker than what the domain's own glaciers hold; the tile's record, or null
-// where the last sheet never reached the domain.
+// where the last sheet never reached the domain and laid none of the parent's deposits back.
 std::shared_ptr<const SheetRecord> presentFiner(Domain& domain, const SheetWork& work, const ParentSheet& parent);
 
 } // namespace derivean::sim

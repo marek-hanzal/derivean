@@ -17,6 +17,7 @@ namespace derivean::sim {
 // TileCells² entries, row-major; a tile no sheet ever reached carries no record at all.
 // The thickness of the ice itself is in `Tile::ice` (now) and `Tile::iceAge` (last maximum).
 struct SheetRecord {
+    bool reached{true};                  // false: the sheet never reached the tile; the record names only `laidBack`
     std::vector<float> slideX, slideZ;   // m/yr the ice of the last maximum slid over the bed; zero where frozen or bare
     std::vector<float> worn;             // m of rock the sheets of the replayed window ground off
     // m of each deposit of the last sheet. All of it lies in `Tile::now.sediment`; this says what it is.
@@ -32,6 +33,9 @@ struct SheetRecord {
     // Finer levels only: m of the last maximum's sheet over each cell. `Tile::iceAge` there also
     // holds the level's own valley glaciers; the level below reads the sheet from here.
     std::vector<float> sheetThen;
+    // Finer levels only: m of each class of the parent's last-sheet deposits this level's sheet left
+    // where they lay. With till, moraine, outwash and esker, all of the last sheet in the cover.
+    std::vector<float> laidBack[SedimentClasses];
     // Finer levels only: of the ridges of stretches starting on an unfinished neighbour, what lies
     // on the tile, for that neighbour to take; of those starting on the tile, what it took for
     // each unfinished neighbour's part, for that neighbour to lay.
@@ -73,8 +77,9 @@ struct SheetWork {
     std::vector<float> rest;             // m each cell's crust has still to rise since the last sheet left
     // m of each class of the parent's last-sheet deposits per domain cell, set aside from the seed
     // and from the cells it follows, and laid back when the sheet leaves: dated at the window's end,
-    // they take no part in its settling.
+    // they take no part in its settling. What of it the sheet leaves in place is `left.laidBack`.
     std::vector<float> held[SedimentClasses];
+    bool restored{};
     // Per domain cell while the last sheet leaves its record (the esker crossings already per
     // tile); the tile's cells are read off at the end.
     SheetRecord left;
