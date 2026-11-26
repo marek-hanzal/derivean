@@ -22,7 +22,7 @@ struct Episode {
 };
 
 // A conduit that fed one edifice: the plug it leaves stands as a neck once the cone is gone.
-struct Conduit {
+struct Feeder {
     Vec2 site;
     float radius{};      // m
     double first{}, last{};   // yr it fed eruptions
@@ -37,10 +37,11 @@ struct Vent {
     Magma magma{Magma::Basalt};
     float vigor{};       // 0..1, share of its province's melt that gathers here
     double begin{};      // yr the history below starts at: the start of the region's window
-    double supply{};     // m³/yr the centre still supplies at the world's age; 0 once the melt has stopped rising
+    double until{};      // yr it is recorded to: the end of that window
+    double supply{};     // m³/yr the centre still supplies at that end; 0 once the melt has stopped rising
     double erupted{};    // m³ over the region's window
     std::vector<Episode> episodes;   // by time; steps without an eruption are left out
-    std::vector<Conduit> conduits;   // by time of first use
+    std::vector<Feeder> feeders;   // by time of first use
 };
 
 } // namespace derivean::sim

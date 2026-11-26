@@ -1,5 +1,7 @@
 #include "landscape/fn/Process.hpp"
 
+#include "volcanic/fn/Volcanic.hpp"
+
 namespace derivean::sim {
 
 StrataColumn Domain::strataAtCell(size_t i) const {
@@ -17,6 +19,7 @@ StrataColumn Domain::strataAtCell(size_t i) const {
 void refreshUnits(Domain& domain, uint64_t seed) {
     const bool beds = domain.key.level != Level::Region;
     for (size_t i = 0; i < domain.cells(); ++i) {
+        if (volcanicUnit(domain, i, seed)) continue;
         const float depth = std::max(0.0f, domain.ground.datum[i] - domain.ground.rock[i]);
         UnitCache& cache = domain.unit[i];
         if (depth >= cache.top && depth < cache.bottom) continue;

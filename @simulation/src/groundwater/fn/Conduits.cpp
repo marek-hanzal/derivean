@@ -56,8 +56,10 @@ struct Maker {
                 made.at = made.at + Vec2{-std::sin(fissures.strike[set]), std::cos(fissures.strike[set])} * double(std::clamp(offset, -FarOff, FarOff));
             made.order = uint8_t(grade == 2 ? 2 : std::abs(offset) <= PlaneReach ? 1 : 0), made.strike = fissures.strike[set];
         }
-        made.height = node & 1 ? std::clamp(field.level[size_t(node)] - made.radius - 0.5f, here.solubleBottom + made.radius, std::max(here.solubleBottom + made.radius, here.solubleTop - made.radius))
-                               : here.floor + 0.8f * made.radius;
+        // Just under the water table while that lies in the soluble rock; on its base where the water runs thin on it.
+        const float bottom = (node & 1 ? here.solubleBottom : here.floor) + 0.8f * made.radius;
+        const float top = (node & 1 ? here.solubleTop : here.floor + here.upperSoluble) - made.radius;
+        made.height = std::clamp(net.head[size_t(node)] - made.radius - 0.5f, bottom, std::max(bottom, top));
         return made;
     }
 
@@ -120,12 +122,10 @@ void growConduits(const WaterField& field, GroundwaterTile& tile) {
         const int x = int(cell % size_t(field.size)), z = int(cell / size_t(field.size));
         const size_t own = size_t(z - field.margin) * size_t(side) + size_t(x - field.margin);
         const AquiferColumn& column = field.column[cell];
-        if (net.outlet[size_t(out.node)] == Outlet::Underflow) {
-            tile.budget.underflow += out.flux;
-            continue;
-        }
         tile.emergence[own] += float(out.flux);
-        if (out.flux < LeastSpring) {
+        // Under a lake or the sea the water joins it unseen; a vent is water coming out on land.
+        const bool drowned = column.drain == Drain::Lake || column.drain == Drain::Sea;
+        if (drowned || out.flux < LeastSpring) {
             (column.drain != Drain::None ? tile.budget.baseflow : tile.budget.seepage) += out.flux;
             continue;
         }

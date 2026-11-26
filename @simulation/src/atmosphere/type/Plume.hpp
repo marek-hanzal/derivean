@@ -12,7 +12,7 @@ namespace derivean::sim {
 // Grain classes of what a source throws into the air, by how fast they fall: lapilli, sand-size
 // ash and fine dust.
 inline constexpr int AshClasses = 3;
-enum AshClass { Lapilli, Sand, Dust };
+enum AshClass { Lapilli, Grit, Dust };   // Grit is the sand-size ash
 inline constexpr std::array<double, AshClasses> AshSettling = {8.0, 1.0, 0.02};   // m/s
 
 // Levels the lasting material is kept at: the three bands of the weather, and the air above the

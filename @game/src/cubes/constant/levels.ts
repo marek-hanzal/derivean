@@ -6,5 +6,6 @@ export const LevelSlots = 16;
 // The level of faces that belong to no level: detached pieces, drawn wherever they are.
 export const FreeLevel = 15;
 
-// Share of the band of cubes a level's chunks reach beyond its box over which the level thins out.
-export const BandShare = 0.75;
+// Share of a cube by which a level is drawn beyond its box, over the coarser level that starts at the box: the
+// two meet without a crack between them.
+export const Overlap = 1 / 16;

@@ -7,7 +7,6 @@ namespace {
 
 constexpr Material CoverRock[SedimentClasses] = {Material::Gravel, Material::Sand, Material::Silt};
 constexpr float BareCatch = 0.35f;      // share of the rain on bare jointed rock that finds a joint before it has run off
-constexpr float SolutionGain = 30.0f;   // how much wider solution has opened the joints of soluble rock at the surface
 constexpr float OpenedDepth = 2.0f;     // m of bare rock whose pores and joints a storm can fill
 
 } // namespace
@@ -16,8 +15,8 @@ float infiltrationShare(const Soak& soak) {
     if (soak.rain <= 1e-4f || soak.ice > 1.0f) return 0;
     const float intensity = soak.rain / (WetShare * PerYear);
     const MaterialDefinition& rock = definitionOf(soak.rock);
-    const bool soluble = solubleRock(rock);
-    const float joints = jointConductivity(rock, 0, 1) * (soluble ? SolutionGain : 1.0f);
+    const bool soluble = fissuredBySolution(rock);
+    const float joints = jointConductivity(rock, 0, 1);
 
     // The topmost layer thick enough to count decides how fast water gets in.
     float entry = -1, store = 0;

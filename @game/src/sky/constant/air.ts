@@ -25,6 +25,10 @@ export const Exposure = 1.2;
 export const Adaptation = 0.6;
 export const ExposureRange = [0.9, 2.2] as const;
 
+// Share of the light falling on level ground that the ground sends back up at the faces above it, and its hue.
+export const GroundBounce = 0.28;
+export const GroundTint = "#8b6952";
+
 // Optical depth of clear air straight up for red, green and blue light. Slanted through more air near the
 // horizon, it is what turns the low sun and everything it lights orange.
 export const AirDepth = [0.07, 0.13, 0.27] as const;

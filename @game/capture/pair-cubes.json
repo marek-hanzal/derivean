@@ -1,0 +1,131 @@
+{
+  "world": {
+    "seed": 42,
+    "age": 4600000000.0,
+    "spawn": [
+      -2521902,
+      -4671906
+    ]
+  },
+  "out": ".out/playwright/look/pair-cubes",
+  "settleSeconds": 2,
+  "timeoutSeconds": 240,
+  "shots": [
+    {
+      "name": "ground-north",
+      "yaw": 0.0,
+      "pitch": -0.03,
+      "fly": false,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      },
+      "above": 0
+    },
+    {
+      "name": "ground-east",
+      "yaw": -1.5708,
+      "pitch": -0.03,
+      "fly": false,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      },
+      "above": 0
+    },
+    {
+      "name": "ground-south",
+      "yaw": 3.1416,
+      "pitch": -0.03,
+      "fly": false,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      },
+      "above": 0
+    },
+    {
+      "name": "ground-west",
+      "yaw": 1.5708,
+      "pitch": -0.03,
+      "fly": false,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      },
+      "above": 0
+    },
+    {
+      "name": "300m-north",
+      "yaw": 0.0,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      },
+      "above": 300
+    },
+    {
+      "name": "300m-north-plain",
+      "yaw": 0.0,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      },
+      "above": 300,
+      "plain": true
+    },
+    {
+      "name": "300m-south",
+      "yaw": 3.1416,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      },
+      "above": 300
+    },
+    {
+      "name": "2km-north",
+      "yaw": 0.0,
+      "pitch": -0.3,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      },
+      "above": 2000
+    },
+    {
+      "name": "8km-north",
+      "yaw": 0.0,
+      "pitch": -0.45,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      },
+      "above": 8000
+    },
+    {
+      "name": "boost-30s-clear",
+      "yaw": 0.0,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      },
+      "above": 300,
+      "clouds": false,
+      "cruise": {
+        "seconds": 30,
+        "boost": true
+      }
+    }
+  ]
+}

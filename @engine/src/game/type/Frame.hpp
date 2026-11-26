@@ -1,7 +1,7 @@
 #pragma once
 
 #include "physics/service/JoltRuntime.hpp"
-#include "atmosphere/type/Atmosphere.hpp"
+#include "nature/type/Air.hpp"
 #include "chronology/type/Calendar.hpp"
 #include "horizon/type/FarCubes.hpp"
 #include "horizon/type/Patch.hpp"

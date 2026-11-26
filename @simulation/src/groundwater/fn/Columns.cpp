@@ -112,13 +112,13 @@ void readColumns(const Setting& setting, TileKey key, const Tile* const around[9
                 walk = BedWalk{};
                 walkBeds(bed, walk);
 
-                column.ground = top[i];
+                column.ground = top[i], column.bedrock = bed.rockTop;
                 column.rain = tile.rain[from], column.warmth = tile.warmth[from];
                 column.stream = tile.discharge[from];
                 column.incision = std::max(0.0f, tile.erosionRate[from] - tile.depositionRate[from]);
                 column.flowTo = tile.flowTo[from];
                 const bool flooded = tile.water[from] > column.ground + 1e-3f;
-                const bool soluble = solubleRock(definitionOf(walk.top));
+                const bool soluble = fissuredBySolution(definitionOf(walk.top));
                 column.drain = flooded ? (tile.water[from] <= field.seaLevel + 0.5f ? Drain::Sea : Drain::Lake)
                              : column.stream >= (soluble ? SwallowLimit : StreamFlow) ? Drain::Stream : Drain::None;
                 column.stage = flooded ? tile.water[from] : column.ground;

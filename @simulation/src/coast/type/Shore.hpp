@@ -19,6 +19,7 @@ inline constexpr float NoWater = -1e30f;
 // The coast's working state of one replay. Per-cell arrays have Domain::cells() entries; the wave
 // arrays have WaveDirections values per cell.
 struct Shore {
+    std::vector<float> gale;      // m²/s², per train: square of the storm wind that drives it over a cell; fixed for a replay
     std::vector<float> beyond;    // m², per train: what arrives at a Rim cell from outside the domain; empty where none does
     std::vector<float> wave;      // m², per train: what leaves a cell
     std::vector<float> arrive;    // m², per train: what reaches a cell, before the cell's own depth acts on it

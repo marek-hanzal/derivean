@@ -3,6 +3,7 @@
 #include "landscape/type/Level.hpp"
 #include "ore/type/Ore.hpp"
 #include "strata/type/Column.hpp"
+#include "volcanic/type/Pile.hpp"
 
 #include <memory>
 #include <vector>
@@ -70,6 +71,7 @@ struct Tile {
     std::vector<IceSource> upIce;   // site tiles only: (TileCells / Refinement)² entries, row-major
     std::shared_ptr<const GroundDetail> detail;   // ground tiles only: stones, mineral crusts and what the cover is made of
     std::shared_ptr<const ShoreRecord> shore;     // waves at every cell and what they cut and laid (coast/type/Shore.hpp); null where no water stands
+    std::shared_ptr<const VolcanicTile> volcanic; // rock laid on top of the layering by eruptions, and the vents (volcanic/type/Pile.hpp); null where there is none
     TileLedger ledger;
 };
 
@@ -146,6 +148,7 @@ struct Domain {
     std::vector<IceSource> upIce;   // site level only: per parent cell under the tile
     TileLedger ledger;
     std::shared_ptr<Shore> shore;   // the coast's working state of this replay (coast/type/Shore.hpp); null until water stands in the domain
+    VolcanicDomain volcanic;        // vents and the pile they lay (volcanic/type/Pile.hpp); its arrays stay empty until something volcanic touches the domain
 
     // Ground level only.
     std::vector<Bed> bed;           // the bed each cell has cut into; `unit` then holds the parting inside it

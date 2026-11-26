@@ -37,6 +37,7 @@ struct Fissures {
 // out where the bed crops out. The lower one is everything below, down to where circulation ends.
 struct AquiferColumn {
     float ground{};          // m, top of the ground
+    float bedrock{};         // m, top of the solid rock under the loose cover
     float stage{};           // m, level of the surface water that drains the cell; read with `drain`
     float recharge{};        // m³/yr entering the ground
     float rain{};            // m/yr

@@ -81,7 +81,7 @@ void printCaves(const WaterBlock& block, double land) {
     double length[5] = {}, abandoned = 0, shafts = 0, volume = 0, karst = 0, thinnest = 1e9;
     size_t count = 0, swallows = 0;
     for (const auto& tile : block.tiles) {
-        for (const uint8_t state : tile->state) karst += state & (UpperKarst | LowerKarst) ? 4096.0 : 0.0, swallows += state & Swallows ? 1 : 0;
+        for (const uint8_t state : tile->state) karst += (state & (UpperKarst | LowerKarst)) && !(state & Drained) ? 4096.0 : 0.0, swallows += state & Swallows ? 1 : 0;
         for (size_t i = 0; i < tile->caves->conduits.size(); ++i) {
             const Conduit& c = tile->caves->conduits[i];
             const ConduitRecord& record = tile->passages[i];

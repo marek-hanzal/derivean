@@ -21,13 +21,14 @@ export interface CubeLook {
 }
 
 // How much of the sky's light a corner keeps with one, two and three of its neighbours solid.
-const Open = 0.78;
+const Open = 0.82;
 
 // The one look of ground at every cube size, voxels and far levels alike: the material's colour varied as ground
 // is, each cube a shade of its own with a seam round it and specks within, lit flat by sky and sun with its
 // corners darkened by the neighbours the engine counted there, and faded by the air. Nothing is smoothed: a face
-// is lit by its own normal. Faces are also drawn from behind, unlit: where a coarse level is cut at a finer one's
-// box and stands higher, its inside closes the step instead of opening onto the sky. That is a trick.
+// is lit by its own normal. Faces are also drawn from behind, as ground in shade: where a coarse level is cut at
+// a finer one's box and stands higher, its inside closes the step instead of opening onto the sky. That is a
+// trick.
 export function cubeSurface({ sky, levels, palette, anchor }: CubeLook) {
   const material = new MeshBasicNodeMaterial({ side: DoubleSide, fog: false });
   const face = faceNodes();
@@ -36,7 +37,7 @@ export function cubeSurface({ sky, levels, palette, anchor }: CubeLook) {
     const { row, edge } = levelRows(levels, face);
     const normal = face.normal.normalize();
     const inside = positionWorld.sub(normal.mul(edge.mul(0.01)));
-    levelClip(row, inside, 2, true);
+    levelClip(row, inside, 2);
 
     const fromEye = positionWorld.sub(cameraPosition);
     const range = length(fromEye);

@@ -36,6 +36,7 @@ inline constexpr float JointConductivity = 1.0e-6f;   // m/s of tight joints 3 m
 inline constexpr float JointReference = 3.0f;         // m
 inline constexpr float OpenJointGain = 10.0f;         // within RockMass::openDepth of the rock surface
 inline constexpr float JointDecay = 60.0f;            // m of depth over which joints lose 1/e of their conductivity
+inline constexpr float SolutionGain = 30.0f;          // how much more the joints of carbonate rock conduct for being widened by solution
 inline constexpr float FaultConductivity = 2.0e-6f;   // m/s along the crushed rock of a domain fault, at any depth it reaches
 inline constexpr float FaultDepth = 3000.0f;          // m a fault's crushed rock stays open to
 inline constexpr float DriveRatio = 6.0f;             // m of depth water is driven down a fault per metre its catchment stands above the vent
@@ -45,6 +46,7 @@ inline constexpr float WalkDepth = 160.0f;        // m below the rock surface th
 inline constexpr int WalkBeds = 28;
 inline constexpr float CirculationDepth = 220.0f; // m below the rock surface where ordinary circulation ends
 inline constexpr float PerchShare = 0.5f;         // a bed that passes less than this share of the recharge holds water up
+inline constexpr float LeastRecharge = 0.02f;     // m/yr against which a bed is judged where less than that soaks in
 // Share of its conductivity the rock under the base of circulation passes downwards: what a
 // regional flow system a kilometre thick and tens of kilometres long can carry away below it.
 inline constexpr float DeepGradient = 3.0e-5f;
@@ -59,6 +61,7 @@ inline constexpr float SwallowLimit = 6.0e7f;     // m³/yr; a stream larger tha
 
 // Vents.
 inline constexpr float LeastSpring = 950.0f;      // m³/yr (0.03 l/s) below which emerging water is a seep, not a vent
+inline constexpr float GatherShare = 3.0f;        // a vent yields at least this many times what its own cell soaks up: it gathers
 inline constexpr float LeastSeep = 30.0f;         // m³/yr below which a cell counts as dry
 inline constexpr float FaultShare = 0.4f;         // crush above which rising water is the fault's
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "atmosphere/type/Atmosphere.hpp"
+#include "nature/type/Air.hpp"
 #include "nature/type/Mailbox.hpp"
 
 #include <chrono>

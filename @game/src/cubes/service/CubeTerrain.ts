@@ -1,6 +1,6 @@
 import { type Group, type Material, type Vector3 } from "three/webgpu";
 import type { Frame, WorldInfo } from "../../../contract/GameBridge";
-import { BandShare, FreeLevel } from "../constant/levels";
+import { FreeLevel, Overlap } from "../constant/levels";
 import { type Box, Everywhere, Nowhere, column, setLevel } from "../fn/levelTable";
 import type { LevelTable } from "../type/LevelTable";
 import { createFaceBatch, type FaceBatch } from "./FaceBatch";
@@ -79,7 +79,7 @@ export function createCubeTerrain(content: Group, world: WorldInfo, levels: Leve
           setLevel(levels, level, origin, edge, 0, Nowhere, Nowhere, Nowhere);
           continue;
         }
-        setLevel(levels, level, origin, edge, (world.cubes?.band ?? 0) * edge * BandShare, box, finerGround, finerWater);
+        setLevel(levels, level, origin, edge, edge * Overlap, box, finerGround, finerWater);
         finerGround = finerWater = box;
       }
     },

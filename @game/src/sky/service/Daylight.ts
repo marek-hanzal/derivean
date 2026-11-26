@@ -1,7 +1,7 @@
 import { Color, Vector2, Vector3, Vector4 } from "three/webgpu";
 import { uniform } from "three/tsl";
 import type { Point } from "../../../contract/GameBridge";
-import { Adaptation, AirEnd, ExposedLight, Exposure, ExposureRange, ReliefSun } from "../constant/air";
+import { Adaptation, AirEnd, ExposedLight, Exposure, ExposureRange, GroundBounce, GroundTint, ReliefSun } from "../constant/air";
 import { createSkyLight, setSkyLight } from "../fn/skyLight";
 import type { SkyNodes } from "../type/SkyNodes";
 
@@ -56,7 +56,6 @@ export function createDaylight(viewDistance: number) {
     sky.r += light.sunLight.value.r * through;
     sky.g += light.sunLight.value.g * through;
     sky.b += light.sunLight.value.b * through;
-    nodes.groundLight.value.copy(light.groundAmbient.value).multiplyScalar(1 - 0.5 * veil);
     nodes.sunLight.value.copy(light.sunLight.value).multiplyScalar(1 - veil);
     // Below the horizon the sun lights nothing.
     if (light.skySun.value.y > 0.02) nodes.sunDirection.value.copy(light.skySun.value);
@@ -65,6 +64,10 @@ export function createDaylight(viewDistance: number) {
     nodes.airVeil.value.set(sky.r / Math.PI, sky.g / Math.PI, sky.b / Math.PI, veil);
     // The eye and the camera follow the light: what falls on level ground decides how bright the picture is.
     const fallen = luminance(sky) + luminance(light.sunLight.value) * height * (1 - veil);
+    // Half of the faces of a world of cubes are upright and see as much ground as sky: the ground's share of
+    // what falls on it lights them from below.
+    const ground = nodes.groundLight.value.set(GroundTint);
+    ground.multiplyScalar(fallen * GroundBounce / luminance(ground));
     exposure = Math.min(Math.max(Exposure * (ExposedLight / Math.max(fallen, 1e-3)) ** Adaptation, ExposureRange[0]), ExposureRange[1]);
   }
 

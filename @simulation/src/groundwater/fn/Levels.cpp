@@ -26,6 +26,9 @@ bool sameSheet(const AquiferColumn& a, const AquiferColumn& b) {
     return a.perched && b.perched && a.sheet == b.sheet && std::abs(a.sheetOffset - b.sheetOffset) < SameSheet;
 }
 
+// The tight bed is the top of the solid rock: whatever rock lay on it is gone and the bed crops out.
+bool stripped(const AquiferColumn& column) { return column.floor >= column.bedrock - 0.5f; }
+
 // Which way the upper storey's water leaves each cell.
 void findWays(WaterField& field) {
     const int size = field.size;
@@ -40,7 +43,11 @@ void findWays(WaterField& field) {
                     const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
                     if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
                     const AquiferColumn& other = field.column[field.index(nx, nz)];
-                    field.way[i * 8 + size_t(k)] = uint8_t(sameSheet(column, other) ? Way::Along : sheetToward(column, k) >= other.ground - 0.5f ? Way::Outcrop : Way::Under);
+                    // Water that leaves rock for a neighbour where the same bed lies bare has come out
+                    // at the bed's lip; water already moving in the cover on the bed moves on in it.
+                    const bool along = sameSheet(column, other) && (stripped(column) || !stripped(other));
+                    const bool daylight = sameSheet(column, other) || sheetToward(column, k) >= other.ground - 0.5f;
+                    field.way[i * 8 + size_t(k)] = uint8_t(along ? Way::Along : daylight ? Way::Outcrop : Way::Under);
                 }
             }
     });
@@ -57,10 +64,12 @@ void spreadLevels(WaterField& field) {
     for (size_t i = 0; i < cells; ++i) {
         const AquiferColumn& column = field.column[i];
         if (column.perched) {
-            if (column.drain != Drain::None) spill[i] = column.floor;
+            if (column.drain != Drain::None) spill[i] = std::max(column.floor, column.stage);
             for (int k = 0; k < 8; ++k) {
                 const Way way = Way(field.way[i * 8 + size_t(k)]);
-                if (way == Way::Outcrop || way == Way::Under) spill[i] = std::min(spill[i], std::max(column.floor, sheetToward(column, k)));
+                if (way != Way::Outcrop && way != Way::Under) continue;
+                const AquiferColumn& other = field.column[field.index(int(i % size_t(size)) + NeighborX[k], int(i / size_t(size)) + NeighborZ[k])];
+                spill[i] = std::min(spill[i], std::max(column.floor, std::min(sheetToward(column, k), other.ground)));
             }
         }
         field.level[i * 2 + Upper] = column.perched ? std::clamp(spill[i], column.floor, std::max(column.floor, column.ground)) : column.ground;
@@ -123,7 +132,7 @@ void findShares(WaterField& field) {
                             target = field.level[j * 2 + Upper], through = harmonic(column.upperT, other.upperT);
                         } else {
                             // Out over the lip of the bed, or on along it under the neighbour's ground.
-                            target = std::max(column.floor, sheetToward(column, k)) - Lip, through = column.upperT;
+                            target = std::max(column.floor, std::min(sheetToward(column, k), other.ground)) - Lip, through = column.upperT;
                         }
                         if (target >= here) continue;
                         const float conductance = Face[k] * through * 0.5f * (ease(column, k) + ease(other, k));

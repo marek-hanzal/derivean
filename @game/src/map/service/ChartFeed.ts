@@ -39,11 +39,13 @@ export function createChartFeed(bridge: Pick<GameBridge, "chart">, surface: Char
   let speed = 0;
   let fresh = false;
   let readMs = 0;
+  // Panes that have arrived and wait their turn to be handed on: one a frame, whatever arrived together.
+  const arrived: (() => void)[] = [];
   // Charts brought on screen so far, coarse and sharp, for the capture record.
   const shows = { preview: 0, sharp: 0 };
 
-  // Reads `count`² panes of `size` pixels over the square into the surface's next sheet. Each pane is handed
-  // on and measured as it arrives, so no frame carries more than one.
+  // Reads `count`² panes of `size` pixels over the square into the surface's next sheet. `want` lets one
+  // arrived pane through each frame to be handed on and measured, so no frame carries more than one.
   async function read(square: Square, count: number, size: number, mine: number) {
     const span = square.span / count;
     const measures: PaneMeasure[] = [];
@@ -52,6 +54,7 @@ export function createChartFeed(bridge: Pick<GameBridge, "chart">, surface: Char
       const column = index % count;
       const row = Math.floor(index / count);
       const pane = await bridge.chart({ x: square.x + (column - (count - 1) / 2) * span, z: square.z + (row - (count - 1) / 2) * span, span, size });
+      await new Promise<void>((turn) => arrived.push(turn));
       if (!pane || mine !== world) return null;
       surface.put(pane, column * size, row * size);
       measures.push(measurePane(pane));
@@ -99,6 +102,7 @@ export function createChartFeed(bridge: Pick<GameBridge, "chart">, surface: Char
       if (before && time > before.time) speed += (Math.hypot(square.x - before.x, square.z - before.z) / (time - before.time) - speed) * 0.2;
       before = { x: square.x, z: square.z, time };
       wanted = square;
+      arrived.shift()?.();
       if (busy) return;
       if (!shown || !serves(shown.square, square)) void round(square, "fresh");
       else if (!shown.sharp) {

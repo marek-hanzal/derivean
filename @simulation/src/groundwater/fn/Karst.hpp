@@ -6,29 +6,32 @@ namespace derivean::sim {
 
 enum class Outlet : uint8_t {
     None,
-    Rising,     // lower storey: where its water stands at the ground, or in a stream, lake or the sea
-    Lip,        // upper storey: where the tight bed it runs on comes to daylight
-    Underflow,  // no way to the surface inside the tile: the water goes on below, out of the model
+    Rising,   // the water stands at the ground of the cell, or in the stream, lake or sea that lies in it
+    Lip,      // upper storey: the tight bed the water runs on comes to daylight beside the cell
 };
 
-// How the soluble rock of a tile's own cells drains. Nodes are the tile's own nodes, two per own
-// cell (upper storey first), row-major; entries of nodes that are not karst stay at their defaults.
+// How the soluble rock of a tile's own cells drains. Entries are per node of the field, two per
+// cell with the upper storey first; nodes that are not karst keep their defaults.
 struct KarstNet {
-    std::vector<int32_t> parent;    // node the water of a node goes on to; -1 at an outlet and for nodes outside the net
+    std::vector<int32_t> parent;    // node the water of a node goes on to; -1 at an outlet and outside the net
     std::vector<uint8_t> toward;    // neighbour direction of that node; 255 where there is none
     std::vector<Outlet> outlet;
     std::vector<int32_t> root;      // outlet node a node drains to; -1 outside the net
-    std::vector<double> flux;       // m³/yr through each node, its own share included
+    std::vector<double> flux;       // m³/yr through each node, what it took in itself included
+    std::vector<float> head;        // m, level the water stands at in the node's conduit
     std::vector<float> run;         // m along the net from a node to its outlet
-    std::vector<int32_t> order;     // karst nodes, farthest from their outlets first
+    std::vector<int32_t> order;     // karst nodes, most steps from their outlet first: every node before the one it drains to
 };
 
-// Karst.cpp — a few rounds of path finding in which every used path becomes easier to follow in
-// proportion to the water it carried, so flow gathers into a few conduits and the largest draws
-// in its neighbours.
+// Karst.cpp — where the water of each karst node goes. Every node takes the way that lets its water
+// stand lowest: out at its own ground, at a lip or into open water where it has one, or on to a
+// neighbour at the cost of the head the step uses up. Unbroken rock uses much, a joint corridor
+// less, a joint zone least, and a step that carried water in the round before less again in
+// proportion to that water. Over a few rounds flow gathers into few conduits and the outlets that
+// drew most draw their neighbours' water too. The tile is closed: no step crosses its edge.
 KarstNet drainKarst(const WaterField& field);
 
-// Whether the step from an own cell towards neighbour k runs along a joint plane both cells lie on:
+// Whether the step from a cell towards neighbour k runs along a joint plane both cells lie on:
 // 2 for a zone, 1 for a corridor, 0 for neither. `set` receives the joint set.
 int planeAlong(const WaterField& field, size_t from, size_t to, int k, int& set);
 

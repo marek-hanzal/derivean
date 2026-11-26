@@ -2,6 +2,7 @@
 
 #include "ground/fn/Stages.hpp"
 #include "landscape/fn/Forcing.hpp"
+#include "volcanic/fn/Volcanic.hpp"
 
 namespace derivean::sim {
 namespace {
@@ -179,6 +180,7 @@ Domain buildDomain(const Setting& setting, TileKey key, const TileLookup& lookup
     domain.rainBase = domain.rain;
     adoptNeighbours(domain, lookup);
     openRim(domain);
+    beginVolcanic(domain, setting, lookup);
     if (key.level != Level::Ground) readStructure(domain, setting);
     if (key.level != Level::Region) levelHollows(domain);
     if (key.level == Level::Ground) beginGround(domain, setting);

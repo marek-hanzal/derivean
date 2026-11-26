@@ -142,7 +142,7 @@ void main() {
   color = mix(color, Snow, 0.9 * frozen);
   float glacier = smoothstep(0.5, 3.0, ice);
   color = mix(color, Ice, glacier);
-  color = shade < 1.0 ? mix(color, color * vec3(0.42, 0.40, 0.50), (1.0 - shade) / 0.5 * 0.8) : mix(color, vec3(1.0, 0.99, 0.94), (shade - 1.0) * 1.6);
+  color = shade < 1.0 ? mix(color, color * vec3(0.42, 0.40, 0.50), (1.0 - shade) / 0.5 * 0.7) : mix(color, vec3(1.0, 0.99, 0.94), (shade - 1.0) * 1.6);
 
   // Contour lines every uInterval metres above the sea, every fifth one heavier. Lines closer than a few
   // pixels would merge into a tone, so they fade out before that.

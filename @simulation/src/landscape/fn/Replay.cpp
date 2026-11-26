@@ -3,6 +3,7 @@
 #include "climate/type/Climate.hpp"
 #include "ground/fn/Stages.hpp"
 #include "landscape/fn/Forcing.hpp"
+#include "volcanic/fn/Volcanic.hpp"
 
 namespace derivean::sim {
 
@@ -12,6 +13,7 @@ void stepDomain(Domain& domain, FlowScratch& scratch, const Setting& setting) {
     followNeighbours(domain, domain.time + domain.step);
     readClimate(domain, setting);
     raise(domain, scratch);
+    erupt(domain, scratch, setting);
     if (ground) refreshPartings(domain, setting.seed);
     else refreshUnits(domain, setting.seed);
     // Slopes move first and rivers last: what a slope sheds into a valley within a step is met by
@@ -47,6 +49,7 @@ std::shared_ptr<Tile> replayTile(const Setting& setting, TileKey key, const Tile
     followNeighbours(domain, domain.endTime);
     settleSeams(domain, *tile);
     readClimate(domain, setting);
+    tile->volcanic = volcanicOf(domain);
     if (key.level == Level::Ground) {
         // What lives on the ground at its own scale is made last, and the tile read off after it.
         refreshPartings(domain, setting.seed);

@@ -41,7 +41,8 @@ void lipOf(const WaterField& field, int x, int z, Vec2& position, float& elevati
         const float part = field.share[(i * 2 + Upper) * 8 + size_t(k)];
         if (part <= 0) continue;
         const AquiferColumn& other = field.column[field.index(x + NeighborX[k], z + NeighborZ[k])];
-        const float above = std::max(0.0f, column.ground - column.floor), below = std::max(0.01f, sheetToward(column, k) - other.ground);
+        const float sheet = other.perched && other.sheet == column.sheet ? other.floor : sheetToward(column, k);
+        const float above = std::max(0.0f, column.ground - column.floor), below = std::max(0.01f, sheet - other.ground);
         const float along = std::clamp(above / (above + below), 0.05f, 0.49f);
         weight += part;
         offsetX += part * along * NeighborX[k] * LocalCell, offsetZ += part * along * NeighborZ[k] * LocalCell;
@@ -102,10 +103,13 @@ void findVents(const WaterField& field, GroundwaterTile& tile) {
             const AquiferColumn& column = field.column[i];
             const NodeFate &upper = field.fate[i * 2 + Upper], &lower = field.fate[i * 2 + Lower];
             const float emerging = upper.emerges + lower.emerges;
+            // A spring gathers the water of ground around it. What a cell gives back of its own
+            // recharge is a wet slope, not a vent.
+            const float least = std::max(LeastSpring, GatherShare * (column.recharge + column.sunk));
             tile.emergence[own] = emerging + upper.outcrop;
             if (column.drain != Drain::None || (emerging > 0 && gaining(field, fx, fz))) {
                 tile.budget.baseflow += emerging;
-            } else if (emerging >= LeastSpring) {
+            } else if (emerging >= least) {
                 const int storey = lower.emerges >= upper.emerges ? Lower : Upper;
                 VentWater water;
                 water.carried = field.carried[i * 2 + size_t(storey)];
@@ -119,7 +123,7 @@ void findVents(const WaterField& field, GroundwaterTile& tile) {
             } else {
                 tile.budget.seepage += emerging;
             }
-            if (upper.outcrop >= LeastSpring) {
+            if (upper.outcrop >= least) {
                 VentWater water;
                 water.kind = SpringKind::Contact;
                 lipOf(field, fx, fz, water.position, water.elevation);

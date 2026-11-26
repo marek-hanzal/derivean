@@ -41,6 +41,6 @@ export const BareCover: [number, number] = [0.15, 0.45];
 // Share of a chart's dry pixels that may lie on a drawn stream; smaller streams are left out.
 export const StreamShare = 0.035;
 // Slope, after exaggeration, that the root-mean-square slope of a chart is shaded as.
-export const TypicalShade = 0.25;
+export const TypicalShade = 0.2;
 // Metres above the surface a traveller is put down at; the engine settles them from there.
 export const TravelClearance = 2;

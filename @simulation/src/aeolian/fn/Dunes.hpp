@@ -5,12 +5,13 @@
 
 namespace derivean::sim {
 
-// Dunes.cpp — the transport model. Sand moves as slabs: a slab is lifted from a cell that has loose
-// sand and lies in the wind, travels a hop downwind and comes to rest or is passed on: always in
-// the calm lee of higher ground, more readily on sand than on a bare floor, and at the foot of a
-// step too steep to climb. Every move is followed by sliding wherever the sand then stands steeper
-// than it can rest. The winds of the rose take turns in proportion to the sand each can carry.
-// Dunes, their slip faces, their spacing and their kind are whatever this leaves; none is placed.
+// Dunes.cpp — the transport model, the slab model of Werner (1995) in flux form. In every round
+// each cell that has loose sand and lies in the wind gives up a slab; what is in the air travels a
+// hop downwind and comes to rest or is passed on: all of it in the calm lee of higher ground, more
+// of it on sand than on a bare floor, and none of it up a step too steep to climb. Then sand slides
+// wherever it stands steeper than it can rest. The winds of the rose take turns in proportion to
+// the sand each can carry. Dunes, their slip faces, their spacing and their kind are whatever this
+// leaves; none is placed.
 void blowBed(SandBed& bed, const WindRegime& regime, const DuneRun& run);
 
 // Rounds each sector of the rose blows in one year of `year` rounds, in sector order; sectors too
@@ -23,7 +24,10 @@ void castShadow(const SandBed& bed, Vec2 heading, std::vector<float>& line, std:
 
 // Avalanche.cpp — sand at and around `cell` slides until nothing loose stands steeper than repose.
 void slideSand(SandBed& bed, size_t cell, std::vector<int32_t>& stack);
-// The same for the whole bed: a bed handed over with steeper sand than can rest starts at rest.
+// One sweep over every pair of neighbours: enough to keep a bed near rest from round to round.
+// `turn` picks the corner the sweep starts from.
+void slidePairs(SandBed& bed, int turn);
+// To rest everywhere, however long the slides.
 void slideAll(SandBed& bed);
 
 } // namespace derivean::sim

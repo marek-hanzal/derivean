@@ -50,6 +50,7 @@ void saveGeology(const Planet& planet, const std::string& path) {
             if (!dry) continue;
             ++land;
             ++kind[size_t(column.basement)];
+            hot += geotherm.gradient > 0.06f, boiling += geotherm.gradient > 0.15f, veined += ore.veining > 0.15f, piped += pipe;
             // The bed just under the top of the record, and the one a valley 150 m deep cuts into.
             for (int cut = 0; cut < 2; ++cut) {
                 const float depth = cut ? 150.0f : 2.0f;

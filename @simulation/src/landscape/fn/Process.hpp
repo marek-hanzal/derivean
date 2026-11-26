@@ -70,6 +70,12 @@ void wearDebris(Domain& domain);
 // Glacial.cpp — ice from the snow balance of a sinusoidal year, its erosion and its moraines.
 void glaciate(Domain& domain, FlowScratch& scratch, float seasonalHalfRange, float cooling, bool erode);
 
+// coast/fn/Shore.cpp — waves on seas and lakes cut rock back at the waterline and sort and carry sand and gravel (coast/fn/Coast.hpp).
+void workShores(Domain& domain, FlowScratch& scratch);
+
+// volcanic/fn/Erupt.cpp — the vents of the domain lay the lava, fall and ash of this step and found what they emptied (volcanic/fn/Volcanic.hpp).
+void erupt(Domain& domain, FlowScratch& scratch, const struct Setting& setting);
+
 // Units.cpp — keeps the cached rock traits in step with how deep the surface has cut.
 void refreshUnits(Domain& domain, uint64_t seed);
 

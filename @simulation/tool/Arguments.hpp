@@ -47,5 +47,6 @@ int scoutCommand(const Arguments& arguments);
 int viewCommand(const Arguments& arguments);
 int reliefCommand(const Arguments& arguments);
 int blockCommand(const Arguments& arguments);
+int coastCommand(const Arguments& arguments);
 int groundwaterCommand(const Arguments& arguments);
 int interventionCommand(const std::string& scenario, const Arguments& arguments);

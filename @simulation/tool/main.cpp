@@ -20,6 +20,7 @@ int main(int count, char** words) {
     if (command == "view") return viewCommand(arguments);
     if (command == "relief") return reliefCommand(arguments);
     if (command == "block") return blockCommand(arguments);
+    if (command == "coast") return coastCommand(arguments);
     if (command == "groundwater") return groundwaterCommand(arguments);
     if (command == "measure") return measureCommand(count > 2 ? words[2] : "", Arguments(count - 1, words + 1));
     if (command == "intervention") return interventionCommand(count > 2 ? words[2] : "", Arguments(count - 1, words + 1));

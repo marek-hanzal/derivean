@@ -89,14 +89,14 @@ void testPlume() {
     Vec2 sandCentre{};
     for (const AshPatch& patch : once.plume.patches) {
         reach[patch.grain] += patch.mass * apart(patch.centre, vent), mass[patch.grain] += patch.mass;
-        if (patch.grain == Sand) sandCentre = patch.centre;
+        if (patch.grain == Grit) sandCentre = patch.centre;
     }
     for (int z = 0; z < AirCells; ++z)
         for (int x = 0; x < AirCells; ++x) reach[Dust] += once.plume.dustFallen.at(x, z) * apart({(x + 0.5) * AirCell, (z + 0.5) * AirCell}, vent), mass[Dust] += once.plume.dustFallen.at(x, z);
     for (int grain = 0; grain < AshClasses; ++grain) reach[grain] /= mass[grain];
-    expect(reach[Lapilli] > 1000 && reach[Lapilli] < 0.3 * reach[Sand] && reach[Sand] < 1.0e6 && reach[Dust] > 2 * reach[Sand], "coarse ash did not fall before fine", reach[Sand]);
+    expect(reach[Lapilli] > 1000 && reach[Lapilli] < 0.3 * reach[Grit] && reach[Grit] < 1.0e6 && reach[Dust] > 2 * reach[Grit], "coarse ash did not fall before fine", reach[Grit]);
     const Vec2 heading = normalized({wrapDelta(sandCentre.x - vent.x, PlanetSpan), wrapDelta(sandCentre.z - vent.z, PlanetSpan)});
-    const AshFall near = ashFallAt(once, vent + heading * reach[Lapilli]), further = ashFallAt(once, vent + heading * reach[Sand]), far = ashFallAt(once, vent + heading * (4 * reach[Sand]));
+    const AshFall near = ashFallAt(once, vent + heading * reach[Lapilli]), further = ashFallAt(once, vent + heading * reach[Grit]), far = ashFallAt(once, vent + heading * (4 * reach[Grit]));
     expect(near.mass > 3 * further.mass && further.mass > 3 * far.mass && far.mass >= 0, "the ash blanket does not thin downwind", further.mass);
     expect(near.source == 1 && near.since == eruption.start && near.mass > 1.0, "the blanket does not name its source", near.mass);
     const WeatherReport report = inspectWeather(once, vent + heading * reach[Lapilli], 150, onDay(20));

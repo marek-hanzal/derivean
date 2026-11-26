@@ -49,7 +49,7 @@ void emit(Atmosphere& atmosphere, const AirSource& source, double seconds) {
     const double speed = length(wind);
 
     // Lapilli and sand-size ash land where the wind at the source's height carries them while they fall.
-    for (int grain : {Lapilli, Sand}) {
+    for (int grain : {Lapilli, Grit}) {
         const double mass = source.ash[size_t(grain)] * seconds;
         if (mass <= 0) continue;
         const double reach = speed * above / AshSettling[size_t(grain)];

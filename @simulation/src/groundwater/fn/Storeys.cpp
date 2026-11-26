@@ -23,10 +23,11 @@ struct Run {
 void fillStoreys(AquiferColumn& column, const Layer* layers, int count) {
     // A bed holds water up when it passes less than a share of what arrives. Cover and basement
     // are not beds: one soaks, the other is the same rock all the way down.
-    const float rate = column.recharge / CellArea;
+    // Where nothing soaks in the same beds still hold up what arrives from the side.
+    const float rate = std::max(LeastRecharge, column.recharge / CellArea);
     int tight = -1;
     for (int i = 0; i < count && tight < 0; ++i)
-        if (layers[i].unit != 0 && rate > 0 && layers[i].through < PerchShare * rate && layers[i].top - layers[i].bottom >= 1.0f) tight = i;
+        if (layers[i].unit != 0 && layers[i].through < PerchShare * rate && layers[i].top - layers[i].bottom >= 1.0f) tight = i;
 
     column.perched = tight >= 0;
     column.roof = column.ground;
