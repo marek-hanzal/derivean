@@ -150,18 +150,22 @@ void spit() {
         }
     expect(sand > 100 && shoaled >= 20 && farthest >= 3, "oblique waves carried no sand into the mouth of the bay", sand);
     expect(emerged >= 1, "the sand in the mouth of the bay nowhere stands out of the water", emerged);
-    // The same waves square to the shore move less of it along: only their trains at half a right
-    // angle to either side, a quarter as strong, carry the western sand round the lip of the bay.
-    // Half the wind raises half the height over the same fetch, a quarter of the energy, so their
-    // capacity is (1/4)^1.25, a sixth, of the oblique train's. The fill is not a capacity ratio
-    // (0.35 with the breaker height's capacity); `away` below is the test of the direction of drift.
+    // With the prevailing wind square to the shore the bay still fills, by the storms of the two
+    // quarters at half a right angle to either side, each in its own time (Drift.cpp, StormShare):
+    // a symmetric wave climate drifts no sand net but moves it both ways, and sand that lies on one
+    // side only spreads round the lip (gross against net drift, Komar 1998; a shoreline under such
+    // a climate diffuses, Ashton and Murray 2006). Their storms blow at 0.61 of the oblique one
+    // (Waves.cpp, stormWind: 2.5·(7·½ + 2) against 2.5·(7 + 2) m/s), so a fetch-limited sea moves
+    // 0.61^2.5 ≈ 0.3 of its drift, and one of them drives from the sand into the bay. The oblique
+    // fill is held by the supply as much as by the waves, so the share is not exactly that ratio
+    // (0.35); `away` below is the test of the direction of drift.
     spec.windFrom = 0;
     const Domain square = worked(spec, spec.steps);
     double across = 0;
     for (int z = middle - 6; z < middle + 40; ++z)
         for (int x = middle - 34; x < middle + 34; ++x)
             if (start.ground.rock[start.index(x, z)] + start.sedimentAt(start.index(x, z)) <= -1.0f) across += square.ground.sediment[Sand][square.index(x, z)];
-    expect(across < 0.4 * sand, "waves square to a shore drift its sand along it", across / sand);
+    expect(across > 0.1 * sand && across < 0.4 * sand, "the storms of the side quarters do not fill a bay as their winds allow", across / sand);
     // Waves from the other side drift the same sand away from the bay: almost none of it gets there.
     spec.windFrom = 45;
     const Domain away = worked(spec, spec.steps);
