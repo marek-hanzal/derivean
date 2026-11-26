@@ -226,12 +226,16 @@ void testIceSheetLocal() {
     constexpr int Sill = 150;
     Domain sill = plain();
     for (int z = 0; z < sill.size; ++z)
-        for (int x = 0; x < sill.size; ++x) sill.ground.rock[sill.index(x, z)] += float(60 * std::exp(-(x - Sill) * (x - Sill) / 8.0));
+        for (int x = 0; x < sill.size; ++x) {
+            // Askew across the stream, so the head also falls along the sill.
+            const double off = x - Sill + 0.3 * (z - Stream);
+            sill.ground.rock[sill.index(x, z)] += float(60 * std::exp(-off * off / 8.0));
+        }
     SheetWork sillWork;
     leaveChecked(sill, sillWork, eastward(sill), tunnels);
     const auto across = [&](int x) {
         float most = 0;
-        for (int z = Stream - 3; z <= Stream + 3; ++z) most = std::max(most, sillWork.left.esker[sill.index(x, z)]);
+        for (int z = Stream - 8; z <= Stream + 8; ++z) most = std::max(most, sillWork.left.esker[sill.index(x, z)]);
         return most;
     };
     float beyond = 1e9f;
@@ -261,7 +265,10 @@ void testIceSheetLocal() {
         open.pop_back();
         if (reached[c] || confluenceWork.left.esker[c] <= 1) continue;
         reached[c] = true;
-        for (int k = 0; k < 8; ++k) open.push_back(confluence.index(int(c % size_t(confluence.size)) + NeighborX[k], int(c / size_t(confluence.size)) + NeighborZ[k]));
+        for (int k = 0; k < 8; ++k) {
+            const int nx = int(c % size_t(confluence.size)) + NeighborX[k], nz = int(c / size_t(confluence.size)) + NeighborZ[k];
+            if (nx >= 0 && nz >= 0 && nx < confluence.size && nz < confluence.size) open.push_back(confluence.index(nx, nz));
+        }
     }
     bool upstream = false;
     for (int dz = -8; dz <= 8; ++dz)
@@ -327,6 +334,30 @@ void testIceSheetLocal() {
     expect(std::abs(moved) < 1e-4 * ended.deposited, "the ground at the ice's end changed by other than its ledger", moved);
     expect(std::abs(ended.eroded + ended.sedimentIn - ended.deposited - ended.sedimentOut) < 1e-4 * ended.eroded, "what the ice left at its end does not add up",
            ended.eroded + ended.sedimentIn - ended.deposited - ended.sedimentOut);
+
+    // An ice margin on land beside the sea: what the meltwater brings fills the sea floor no higher
+    // than the sea, and the ledger closes.
+    Domain shore = plain();
+    shore.seaLevel = 199;
+    // A thick cover for the ice to bring down to the shore.
+    for (size_t i = 0; i < shore.cells(); ++i)
+        for (int c = 0; c < SedimentClasses; ++c) shore.ground.sediment[c][i] = 10;
+    ParentSheet ashore = eastward(shore);
+    for (int z = 0; z < shore.size; ++z)
+        for (int x = End; x < shore.size; ++x) ashore.iceThen[shore.index(x, z)] = 0;
+    std::vector<bool> sea(shore.cells());
+    for (size_t i = 0; i < shore.cells(); ++i) sea[i] = shore.ground.rock[i] + shore.sedimentAt(i) < float(shore.seaLevel);
+    SheetWork shoreWork;
+    leaveChecked(shore, shoreWork, ashore, {});
+    float aboveSea = -1e9f, laid = 0;
+    for (int z = Halo; z < Halo + TileCells; ++z)
+        for (int x = Halo; x < Halo + TileCells; ++x)
+            if (sea[shore.index(x, z)]) aboveSea = std::max(aboveSea, groundOf(shore, x, z) - float(shore.seaLevel)), laid += shoreWork.left.outwash[shore.index(x, z)];
+    expect(laid > 0, "no outwash reached the sea", laid);
+    expect(aboveSea < 0.5f, "outwash stands above the sea it was laid in", aboveSea);
+    const TileLedger& shored = shore.ledger;
+    expect(std::abs(shored.eroded + shored.sedimentIn - shored.deposited - shored.sedimentOut) < 1e-4 * shored.eroded, "what the ice left at the shore does not add up",
+           shored.eroded + shored.sedimentIn - shored.deposited - shored.sedimentOut);
 
     // A hollow under active ice fills with till; under thin ice that stagnated it stays open as a kettle.
     const auto hollow = [&](float thickness) {

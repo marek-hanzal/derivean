@@ -182,10 +182,12 @@ OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::
         }
         const int32_t back = reachedFrom[i];
         const bool flat = total <= 0 && back >= 0 && ground[size_t(back)] < 1e30f;
-        // The sea keeps everything that reaches it.
+        // The sea floor keeps what reaches it up to the sea's surface and passes the rest on down.
         const bool sunk = ground[i] < sea;
+        float room = std::max(0.0f, sea - ground[i]) * area;
         for (int c = 0; c < 2; ++c) {
-            const float settled = free ? load[c][i] * (sunk ? 1.0f : settling[c]) : 0.0f;
+            const float settled = !free ? 0.0f : sunk ? std::min(load[c][i], room) : load[c][i] * settling[c];
+            if (sunk) room -= settled;
             if (settled > 0) {
                 domain.ground.sediment[c][i] += settled / area;
                 domain.deposited[i] += settled / area;

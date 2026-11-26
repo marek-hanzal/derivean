@@ -185,13 +185,17 @@ std::vector<EskerTrack> traceEskers(const Domain& domain, const ParentSheet& par
         EskerTrack track;
         Vec2 p = start, nearest, ahead;
         // Past the target, or at the route's end, an aimed stream joins its target directly.
-        const double reachesTarget = std::min(aimed ? route.project(target, nearest, ahead) + cell : 1e30, route.at.back() - 0.5 * cell);
         double along = route.project(p, nearest, ahead);
+        // A target level with the start or behind it is no end to run to.
+        if (aimed && route.project(target, nearest, ahead) <= along) aimed = false;
+        const double reachesTarget = std::min(aimed ? route.project(target, nearest, ahead) + cell : 1e30, route.at.back() - 0.5 * cell);
+        along = route.project(p, nearest, ahead);
         track.points.push_back(p);
         std::vector<double> heads{headAt(p)};
         // A join longer than two cells is not a course the head gave: it is not drawn.
         std::vector<bool> traced;
-        for (int steps = 0; steps < 8 * domain.size; ++steps) {
+        const int most = int(std::ceil(route.at.back() / (Onward * step))) + 4 * domain.size;
+        for (int steps = 0; steps < most; ++steps) {
             const bool arrived = aimed ? length(target - p) < cell || along >= reachesTarget : along >= route.at.back() - 0.5 * cell;
             if (arrived) {
                 if (aimed) track.points.push_back(target), heads.push_back(headAt(target)), traced.push_back(length(target - p) <= 2 * cell);
