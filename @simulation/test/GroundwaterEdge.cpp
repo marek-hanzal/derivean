@@ -19,6 +19,8 @@ void testHooks() {
     expectWater(soak(Material::Sandstone, 0, 0.1f, 8, 0) > 0.8f, "bare sandstone sheds rain", soak(Material::Sandstone, 0, 0.1f, 8, 0));
     expectWater(soak(Material::Limestone, 0, 0.1f, 8, 0) > 0.7f, "bare limestone sheds rain", soak(Material::Limestone, 0, 0.1f, 8, 0));
     expectWater(soak(Material::Granite, 0.5f, 0.1f, 8, 0) > soak(Material::Granite, 0.5f, 1.2f, 8, 0), "steep ground soaks up as much as gentle ground");
+    expectWater(soak(Material::Shale, 0.3f, 0.1f, 8, 0) < 0.05f, "soil on shale recharges as if water could leave it", soak(Material::Shale, 0.3f, 0.1f, 8, 0));
+    expectWater(infiltrationShare({1.0f, 8, 0.1f, {0, 1.0f, 0}, 0, Material::Shale}) > 0.5f, "a sand cover on shale takes in no water", infiltrationShare({1.0f, 8, 0.1f, {0, 1.0f, 0}, 0, Material::Shale}));
     expectWater(soak(Material::Granite, 0.5f, 0.1f, -6, 0) == 0 && soak(Material::Granite, 0.5f, 0.1f, 8, 30) == 0, "frozen or ice-covered ground soaks up rain");
 
     const float bare = swallowRate({Material::Limestone, 0, 0, 10, 0}), plugged = swallowRate({Material::Limestone, 4, 0, 10, 0});
@@ -46,8 +48,8 @@ void testHooks() {
         }
     const float share = float(open) / float(total), expected = grikeShare(pavement, mass);
     expectWater(share > 0.4f * expected && share < 2.0f * expected && share < 0.4f, "the grikes of a pavement do not take the share of it they should", share);
-    std::printf("ground water: bare ground soaks up %.0f %% (shale), %.0f %% (granite under soil), %.0f %% (sandstone), %.0f %% (limestone) of what evaporation leaves; a pavement is %.0f %% grikes %.2f m wide and up to %.1f m deep\n",
-                100 * soak(Material::Shale, 0, 0.1f, 8, 0), 100 * soak(Material::Granite, 0.5f, 0.1f, 8, 0), 100 * soak(Material::Sandstone, 0, 0.1f, 8, 0), 100 * soak(Material::Limestone, 0, 0.1f, 8, 0),
+    std::printf("ground water: bare ground soaks up %.0f %% (shale), %.0f %% (granite under soil), %.0f %% (shale under soil), %.0f %% (sandstone), %.0f %% (limestone) of what evaporation leaves; a pavement is %.0f %% grikes %.2f m wide and up to %.1f m deep\n",
+                100 * soak(Material::Shale, 0, 0.1f, 8, 0), 100 * soak(Material::Granite, 0.5f, 0.1f, 8, 0), 100 * soak(Material::Shale, 0.3f, 0.1f, 8, 0), 100 * soak(Material::Sandstone, 0, 0.1f, 8, 0), 100 * soak(Material::Limestone, 0, 0.1f, 8, 0),
                 100 * share, 2 * pavement.halfWidth, deepest);
 }
 

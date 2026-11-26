@@ -20,7 +20,8 @@ struct Soak {
 //   - rain falls in storms; what the topmost layer cannot take in at storm intensity runs off;
 //   - a thin cover on tight rock fills in one storm and sheds the rest;
 //   - water runs off steep ground before it soaks in;
-//   - frozen ground and glacier ice let nothing through.
+//   - frozen ground and glacier ice let nothing through;
+//   - over the year no more gets in than leaves the cover, down into the rock or along the cover.
 float infiltrationShare(const Soak& soak);
 
 } // namespace derivean::sim

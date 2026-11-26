@@ -25,8 +25,11 @@ void prepareSinks(Domain& domain);
 bool drainsDown(const Domain& domain, size_t cell);
 // m³/yr of a cell's own runoff `own` that soaks in and goes down there.
 float soakAt(Domain& domain, size_t cell, float own);
-// m³/yr of `water` that goes down in `cell`: all of it in an open hollow (`pit`), what the floor of
-// the cell takes under standing water, what a stream's wetted strip takes elsewhere.
+// m³/yr of `water` that goes down in `cell`: what the floor of the cell takes in an open hollow
+// (`pit`) or under standing water, what a stream's wetted strip takes elsewhere; never more than
+// the floor's rate over the cell. Water an open hollow cannot take leaves the step's surface water
+// there (`SinkWork::ponded`), as at any dead end; in the next step the flood holds a lake in the
+// hollow (its `received` is all that reached it).
 float sinkAt(Domain& domain, size_t cell, float water, bool standing, bool pit);
 void dissolveSinks(Domain& domain);
 

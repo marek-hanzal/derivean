@@ -35,7 +35,7 @@ void addRegionalInflow(WaterField& field, const std::vector<const RegionalTile*>
                     const size_t i = field.index(x, z);
                     const AquiferColumn& column = field.column[i];
                     if (lowest == SIZE_MAX || column.ground < field.column[lowest].ground) lowest = i;
-                    if (column.drain != Drain::None) weight += std::max(column.stream, DrainingFlow);
+                    if (drainsLower(column)) weight += std::max(column.stream, DrainingFlow);
                 }
             if (field.upwelled.empty()) field.upwelled.assign(field.cells(), Borne{});
             if (weight <= 0) {
@@ -46,7 +46,7 @@ void addRegionalInflow(WaterField& field, const std::vector<const RegionalTile*>
                 for (int x = bx * PerRegion; x < (bx + 1) * PerRegion; ++x) {
                     const size_t i = field.index(x, z);
                     AquiferColumn& column = field.column[i];
-                    if (column.drain == Drain::None) continue;
+                    if (!drainsLower(column)) continue;
                     column.regional = float(double(up) * std::max(column.stream, DrainingFlow) / weight), field.upwelled[i] = borne;
                 }
         }

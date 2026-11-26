@@ -53,9 +53,9 @@ std::vector<float> closedDepth(const Domain& d) {
 
 struct Plateau {
     Domain domain;
-    FlowScratch scratch;   // of the last step: where each cell's water went
+    FlowScratch scratch; // of the last step: where each cell's water went
     std::vector<float> closedBefore, closedAfter;
-    double sunkBefore{};   // m³/yr gone down in the step before the last
+    double sunkBefore{}; // m³/yr gone down in the step before the last
 };
 
 Plateau replayPlateau(Material rock) {
@@ -113,17 +113,27 @@ void testGroundwaterSinking() {
     expectWater(work.total < runoff, "water that came out at the rising goes down again", work.total / runoff);
     expectWater(std::abs(risen - karst.sunkBefore) < 1e-3 * karst.sunkBefore, "water that went down does not all come out", (risen - karst.sunkBefore) / karst.sunkBefore);
     // Nothing evaporates here (rain exceeds what open water gives back), so the last step's water
-    // is all accounted for: the runoff and what rose either went down or left over a cell that
-    // passes nothing on.
-    double entered = 0, left = 0;
+    // is all accounted for: the runoff and what rose either went down, left over the rim, or
+    // reached an open hollow that could not take it and leaves the step's surface water there.
+    double entered = 0, left = 0, ponded = 0;
     for (size_t i = 0; i < d.cells(); ++i) {
         entered += double(d.runoff[i]) * area + work.risen[i];
         float passed = 0;
         for (int k = 0; k < 8; ++k) passed += karst.scratch.share[i * 8 + size_t(k)];
-        if (passed <= 0) left += d.discharge[i];
+        if (passed <= 0 && d.hold[i] != Free) left += d.discharge[i];
+        ponded += work.ponded[i];
     }
-    expectWater(std::abs(entered - left - work.total) < 1e-3 * entered, "water of the plateau is lost or made", (entered - left - work.total) / entered);
+    expectWater(std::abs(entered - left - work.total - ponded) < 1e-3 * entered, "water of the plateau is lost or made", (entered - left - work.total - ponded) / entered);
+    expectWater(ponded < 0.01 * work.total, "open hollows are offered much more than their floors take", ponded / std::max(1.0, work.total));
     expectWater(atEdge > 0.9 * risen, "the water of the soluble rock does not come out where it meets the shale", atEdge / risen);
+    // No floor takes in more than it can: its rate over the cell, and the share of its own runoff
+    // that soaks in where it falls. Over a replay what sinks then stays within what fell and rose.
+    double over = 0, most = 0;
+    for (size_t i = 0; i < d.cells(); ++i) {
+        const double can = double(work.rate[i]) * area + double(work.soak[i]) * d.runoff[i] * area;
+        over = std::max(over, double(work.sunk[i]) - can - 1e-3 * can), most = std::max(most, double(work.sunk[i]) / std::max(1.0, can));
+    }
+    expectWater(over <= 0, "a floor takes in more water than it can", most);
 
     // Closed hollows drain down instead of holding lakes, and the water they gather dissolves their
     // floors: they deepen where those on rock that water does not open fill in.
@@ -139,7 +149,7 @@ void testGroundwaterSinking() {
                 const size_t at = d.index(hollow[0] + dx, hollow[1] + dz);
                 drains = drains || (drainsDown(d, at) && work.sunk[at] > 0);
             }
-        const bool deepened = karst.closedAfter[i] > karst.closedBefore[i] + 1.0f, wet = d.level[i] > d.surface[i] + 1e-3f;
+        const bool deepened = karst.closedAfter[i] > karst.closedBefore[i] + 0.1f, wet = d.level[i] > d.surface[i] + 1e-3f;
         std::printf("  hollow %d %d: closed %.1f m, after %.1f m on limestone (%s), %.1f m on sandstone\n", hollow[0], hollow[1], double(karst.closedBefore[i]),
                     double(karst.closedAfter[i]), reached ? "within the rising's reach" : drains ? "drains down" : "holds its water", double(plain.closedAfter[i]));
         if (reached) continue;
@@ -147,12 +157,15 @@ void testGroundwaterSinking() {
         filled += plain.closedAfter[i] < karst.closedBefore[i];
     }
     expectWater(open >= 4, "the hollows dug in the soluble rock do not drain down", open);
+    // A floor takes in no more than its rate, so how far a doline deepens in 40 steps varies with
+    // what reaches it (up to 8 m here); that it deepens, by more than float noise or moved cover,
+    // where sandstone fills is the check.
     expectWater(deeper >= 4, "hollows on soluble rock do not deepen into dolines", deeper);
     expectWater(filled >= 4, "hollows on rock that water does not open do not fill in", filled);
     expectWater(dry >= 4, "hollows on soluble rock hold lakes", dry);
-    std::printf("ground water: limestone plateau after %d steps: %.0f %% of its runoff goes down, %.3g m3/yr come out at its edge; of the hollows dug %.1f m deep "
+    std::printf("ground water: limestone plateau after %d steps: %.0f %% of its runoff goes down, %.3g m3/yr come out at its edge, %.2g m3/yr ponded in open hollows; of the hollows dug %.1f m deep "
                 "%d drain down, %d are dolines deeper still and %d dry, %d on sandstone filled in\n",
-                Steps, 100 * work.total / runoff, atEdge, double(HollowDepth), open, deeper, dry, filled);
+                Steps, 100 * work.total / runoff, atEdge, ponded, double(HollowDepth), open, deeper, dry, filled);
 
     // Under a lake the parent holds, solution stops at the parent's floor: the last step's sinking
     // dissolved once more, with that floor a millimetre under every cell, and once with none.

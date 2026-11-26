@@ -2,6 +2,8 @@
 
 #include "landscape/fn/Process.hpp"
 
+#include <cmath>
+
 namespace derivean::sim {
 namespace {
 
@@ -32,6 +34,8 @@ double layColumn(Ground& solid, size_t cell, double wanted, SedimentClass layer)
     float& cover = solid.sediment[layer][cell];
     const float before = cover;
     cover = float(double(before) + std::max(0.0, wanted));
+    // Rounded to the stored float the cover may rise by more than was wanted; it lays no more than it was given.
+    if (double(cover) - double(before) > std::max(0.0, wanted)) cover = std::nextafter(cover, before);
     return double(cover) - double(before);
 }
 

@@ -32,7 +32,7 @@ void prepareSinks(Domain& domain) {
     for (size_t i = 0; i < cells && !any; ++i) any = fissuredBySolution(definitionOf(domain.unit[i].traits.dominant));
     if (!any && !work.active()) return;
     const bool fresh = !work.active();
-    if (fresh) work.received.assign(cells, -1.0f), work.sunk.assign(cells, 0.0f), work.rising.assign(cells, -1);
+    if (fresh) work.received.assign(cells, -1.0f), work.sunk.assign(cells, 0.0f), work.rising.assign(cells, -1), work.ponded.assign(cells, 0.0f);
     // The risings of the step before, until the water sunk then has been brought out.
     std::vector<int32_t>& before = work.outlet;
     before = work.rising;
@@ -115,16 +115,24 @@ void prepareSinks(Domain& domain) {
     std::vector<int32_t>& outlet = work.outlet;
     outlet.assign(cells, -1);
     for (const int32_t cell : domain.order) outlet[size_t(cell)] = domain.spill[size_t(cell)] >= 0 ? outlet[size_t(domain.spill[size_t(cell)])] : cell;
+    // What reached a lake: what it passed to its outlet and what its floor took in. A hollow opens
+    // only where one cell's floor takes all of that; judged by what the lake passed on alone, a
+    // lake whose floor takes nearly all would open, overflow its one cell, and close again.
+    std::vector<float>& lake = work.lake;
+    lake.assign(cells, 0.0f);
+    for (size_t i = 0; !fresh && i < cells; ++i)
+        if (domain.spill[i] >= 0 && outlet[i] >= 0) lake[size_t(outlet[i])] += work.sunk[i];
     const float area = float(domain.cell * domain.cell);
     for (size_t i = 0; i < cells; ++i) {
         float inflow = work.received[i] >= 0 ? work.received[i] : domain.discharge[i];
-        if (domain.spill[i] >= 0 && outlet[i] >= 0) inflow = domain.discharge[size_t(outlet[i])];
+        if (domain.spill[i] >= 0 && outlet[i] >= 0) inflow = domain.discharge[size_t(outlet[i])] + lake[size_t(outlet[i])];
         // Within the zone above the rising the water in the rock stands too near the ground for a
         // hollow to empty: there it holds a lake, which may run out over the rising.
         const bool above = work.rate[i] > 0 && domain.surface[i] >= domain.surface[size_t(work.rising[i])] + SinkRisingZone;
         work.received[i] = !fresh && above && work.rate[i] * area >= inflow ? inflow : -1.0f;
     }
     std::fill(work.sunk.begin(), work.sunk.end(), 0.0f);
+    std::fill(work.ponded.begin(), work.ponded.end(), 0.0f);
     work.total = 0;
 }
 
@@ -153,8 +161,11 @@ float sinkAt(Domain& domain, size_t cell, float water, bool standing, bool pit) 
     SinkWork& work = domain.sinking;
     if (!work.active() || work.rate[cell] <= 0 || water <= 0) return 0;
     const float width = float(domain.cell);
-    const float lost = pit ? water : standing ? std::min(water, work.rate[cell] * width * width) : swallowed(work.rate[cell], water, width);
-    if (pit) work.received[cell] = water;
+    const float lost = pit || standing ? std::min(water, work.rate[cell] * width * width) : swallowed(work.rate[cell], water, width);
+    // What an open hollow cannot take leaves this step's surface water here (it would fill the
+    // hollow and spill; the flood holds the lake from the next step). Carried into the next step it
+    // runs on to the next open hollow and grows step by step.
+    if (pit) work.received[cell] = water, work.ponded[cell] += water - lost;
     work.sunk[cell] += lost;
     work.total += lost;
     return lost;

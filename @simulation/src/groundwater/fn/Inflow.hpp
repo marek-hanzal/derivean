@@ -8,7 +8,7 @@
 namespace derivean::sim {
 
 // The Local end of the regional flow, explicitly. The upwelling of each region cell goes to the
-// 16 × 16 local cells under it: to those of them that drain (AquiferColumn::drain), by their
+// 16 × 16 local cells under it: to those of them its lower storey drains at (drainsLower), by their
 // stream (at least DrainingFlow each, so standing water counts), or else all to the lowest of
 // them, into the lower storey. Sets AquiferColumn::regional and WaterField::upwelled of every cell
 // of the field, its margin included. A field holds whole region cells, and what a cell gets
