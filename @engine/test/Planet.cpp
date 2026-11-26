@@ -33,11 +33,6 @@ void streamsWithoutBlocking(PlanetSession& session) {
     expect(waitFor(session, idle(), [](const Frame& frame) { return frame.streamingReady && frame.voxelBox; }), "Voxels never arrived at the spawn");
     expect(waitFor(session, idle(), [](const Frame& frame) { return frame.pendingChunks == 0; }), "The voxel region never completed");
     const Frame& frame = run(session, idle(), 120);
-    {
-        const sim::SurfaceSample fine = sim::surfaceAt(game.nature.world, {frame.eye[0], frame.eye[2]}, sim::Level::Ground), site = sim::surfaceAt(game.nature.world, {frame.eye[0], frame.eye[2]});
-        std::cout << "DIAG feet " << frame.eye[1] - PlayerEyeHeight << " frame.ground " << (frame.ground ? *frame.ground : -1e9) << " ground-level " << fine.ground << " (level " << int(fine.level)
-                  << ") site " << site.ground << " voxel top " << surfaceUnder(game, frame.eye[0], frame.eye[1], frame.eye[2]) << " held " << game.held << " water " << fine.water << " ready " << frame.streamingReady << "\n";
-    }
     expect(frame.ground && std::abs(frame.eye[1] - PlayerEyeHeight - *frame.ground) < 0.4, "The player must come to rest on the ground");
     expect(frame.voxelBox->min[0] < frame.eye[0] && frame.voxelBox->max[0] > frame.eye[0] && frame.voxelBox->min[2] < frame.eye[2] &&
            frame.voxelBox->max[2] > frame.eye[2] && frame.voxelBox->max[0] - frame.voxelBox->min[0] >= 80,

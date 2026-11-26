@@ -16,6 +16,7 @@ constexpr double Unevenness = 1.2;     // log-normal spread of what the steps of
 constexpr double FieldReach[2] = {10000.0, 6000.0};   // m around its centre within which a conduit may come up, by Magma
 constexpr double PlugRadius = 60.0;    // m for a conduit that brought up a cubic kilometre
 constexpr double SamplePitch = 16000.0;
+constexpr size_t Remembered = 8;       // single eruptions before the end of the record that a vent keeps for whoever asks what it did last
 
 // What one planet cell erupted between the marks of the region's window, in m³.
 struct Budget {
@@ -70,21 +71,38 @@ void schedule(uint64_t seed, Vent& vent, const Budget& budget, double share, con
     vent.supply = budget.quiet >= now - 1.0 ? lastRate : 0.0;
     for (double time = now; time < window.end - 1.0 && vent.supply > 0; time += RegionStep) vent.episodes.push_back({time, vent.supply * RegionStep, 0.0, {}});
 
-    double supplied = 0;
-    for (Episode& episode : vent.episodes) {
+    // The supply of each step fills the chamber; what comes out in a step are the eruptions whose
+    // turn comes within it. A great one has waited through steps that brought up little.
+    std::vector<Episode> supplied;
+    supplied.swap(vent.episodes);
+    double held = 0, next = eruptionVolume(seed, vent, 0);
+    for (const Episode& filling : supplied) {
+        Episode episode{filling.time, 0.0, 0.0, {}};
+        double filled = 0;
+        while (held + filling.volume - filled >= next) {
+            filled += next - held;
+            held = 0;
+            episode.volume += next;
+            episode.paroxysm = std::max(episode.paroxysm, next);
+            vent.recent.push_back({filling.time + RegionStep * filled / filling.volume, next});
+            if (vent.recent.size() > Remembered) vent.recent.erase(vent.recent.begin());
+            next = eruptionVolume(seed, vent, ++vent.count);
+        }
+        held += filling.volume - filled;
+        if (episode.volume <= 0) continue;
         const int64_t turn = (int64_t(std::llround(episode.time / RegionStep)) + shift) / cycle;
         const double reach = FieldReach[size_t(vent.magma)] * std::pow(unit(base, turn, 5), vent.magma == Magma::Basalt ? 1.5 : 2.0);
         const double bearing = 6.283185307179586 * unit(base, turn, 6);
         episode.site = vent.centre + Vec2{std::cos(bearing), std::sin(bearing)} * reach;
-        episode.paroxysm = largestEruption(seed, vent, supplied, supplied + episode.volume);
-        supplied += episode.volume;
         if (vent.feeders.empty() || length(vent.feeders.back().site - episode.site) > 1.0) vent.feeders.push_back({episode.site, 0.0f, episode.time, episode.time, 0.0});
         Feeder& feeder = vent.feeders.back();
         feeder.last = episode.time + RegionStep;
         feeder.volume += episode.volume;
         feeder.radius = float(std::clamp(PlugRadius * std::cbrt(feeder.volume / 1e9), 80.0, 600.0));
+        vent.erupted += episode.volume;
+        vent.episodes.push_back(episode);
     }
-    vent.erupted = supplied;
+    vent.held = held;
 }
 
 } // namespace

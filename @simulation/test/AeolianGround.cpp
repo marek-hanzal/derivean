@@ -114,19 +114,22 @@ void checkBasin() {
     for (int step = 0; step < spec.steps; ++step) stepDomain(domain, scratch, setting);
 
     const WindLabels& labels = domain.aeolian.labels;
-    float low = 1e9f, high = -1e9f, thickest = 0;
+    const auto top = [&](size_t i) { return domain.ground.rock[i] + domain.sedimentAt(i); };
+    float thickest = 0, step = 0;
     int pan = 0, astray = 0;
-    for (int z = 0; z < domain.size; ++z)
-        for (int x = 0; x < domain.size; ++x) {
+    for (int z = 1; z < domain.size - 1; ++z)
+        for (int x = 1; x < domain.size - 1; ++x) {
             const size_t i = domain.index(x, z);
             if (labels.salt[i] <= 0) continue;
-            const float top = domain.ground.rock[i] + domain.sedimentAt(i);
-            ++pan, low = std::min(low, top), high = std::max(high, top), thickest = std::max(thickest, labels.salt[i]);
+            ++pan, thickest = std::max(thickest, labels.salt[i]);
             astray += std::hypot(x - middle, z - middle) > 45.0;
+            // Salt cells that touch lie in one pool and share its floor.
+            for (const size_t next : {domain.index(x + 1, z), domain.index(x, z + 1)})
+                if (labels.salt[next] > 0) step = std::max(step, std::abs(top(next) - top(i)));
         }
     expect(pan >= 4 && astray == 0, "a drying basin left no salt on its floor, or left it outside", pan);
     expect(thickest > 0.01f, "the crust is a film", thickest);
-    expect(high - low < 0.5f, "the salt floor is not level", high - low);
+    expect(step < 0.01f, "the salt floor is not level", step);
     expect(domain.aeolian.ledger.salt > 0 && domain.aeolian.ledger.salt <= domain.ledger.dissolved * 1.0001 + 1.0, "more salt was laid than rock gave to solution", domain.aeolian.ledger.salt);
 }
 

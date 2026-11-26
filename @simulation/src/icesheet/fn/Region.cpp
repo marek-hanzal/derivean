@@ -5,6 +5,8 @@
 #include "icesheet/fn/Balance.hpp"
 #include "icesheet/fn/Flow.hpp"
 
+#include <functional>
+
 namespace derivean::sim {
 namespace {
 
@@ -128,55 +130,82 @@ SheetField readStage(const Domain& domain, const SheetWork& work, int stage, Wor
     SheetField field;
     for (auto* each : {&field.thickness, &field.top, &field.fallX, &field.fallZ, &field.slide, &field.melt}) each->assign(cells, 0.0f);
 
-    // The surface with the crust's sink left out, and its slope: both smooth across the coarse cells.
-    std::vector<float> top(grid.cells()), fallX(grid.cells()), fallZ(grid.cells());
+    // On the coarse cells: the surface with the crust's sink left out, its slope, and the ice a
+    // thawed bed would pass by sliding (m² a year through a metre of width).
+    std::vector<float> top(grid.cells()), fallX(grid.cells()), fallZ(grid.cells()), passing(grid.cells()), cubes(grid.cells(), 0.0f);
     for (size_t i = 0; i < grid.cells(); ++i) top[i] = grid.bed[i] + grid.thickness[i];
     for (int z = 0; z < n; ++z)
         for (int x = 0; x < n; ++x) {
+            const size_t i = grid.index(x, z);
             const int west = std::max(0, x - 1), east = std::min(n - 1, x + 1), north = std::max(0, z - 1), south = std::min(n - 1, z + 1);
-            fallX[grid.index(x, z)] = (top[grid.index(east, z)] - top[grid.index(west, z)]) / float((east - west) * grid.cell);
-            fallZ[grid.index(x, z)] = (top[grid.index(x, south)] - top[grid.index(x, north)]) / float((south - north) * grid.cell);
+            fallX[i] = (top[grid.index(east, z)] - top[grid.index(west, z)]) / float((east - west) * grid.cell);
+            fallZ[i] = (top[grid.index(x, south)] - top[grid.index(x, north)]) / float((south - north) * grid.cell);
+            const float stress = float(IceWeight) * grid.thickness[i] * std::min(SteepestSurface, std::sqrt(fallX[i] * fallX[i] + fallZ[i] * fallZ[i]));
+            passing[i] = float(SlideRate) * stress * stress * grid.thickness[i];
         }
 
     const float sea = float(domain.seaLevel);
-    const auto rows = [&](int begin, int end) {
+    struct Blend {
+        size_t corner[4];
+        float weight[4];
+        float of(const std::vector<float>& from) const {
+            return weight[0] * from[corner[0]] + weight[1] * from[corner[1]] + weight[2] * from[corner[2]] + weight[3] * from[corner[3]];
+        }
+    };
+    const auto blendAt = [&](int x, int z) {
+        const float gx = (x + 0.5f) / Fold - 0.5f, gz = (z + 0.5f) / Fold - 0.5f;
+        const int ix = std::clamp(int(std::floor(gx)), 0, n - 2), iz = std::clamp(int(std::floor(gz)), 0, n - 2);
+        const float tx = std::clamp(gx - float(ix), 0.0f, 1.0f), tz = std::clamp(gz - float(iz), 0.0f, 1.0f);
+        return Blend{{grid.index(ix, iz), grid.index(ix + 1, iz), grid.index(ix, iz + 1), grid.index(ix + 1, iz + 1)}, {(1 - tx) * (1 - tz), tx * (1 - tz), (1 - tx) * tz, tx * tz}};
+    };
+    const auto spread = [&](const std::function<void(int, int)>& rows) {
+        if (workers) workers->parallelFor(size, rows, LeastRows);
+        else rows(0, size);
+    };
+    spread([&](int begin, int end) {
         for (int z = begin; z < end; ++z) {
-            const float gz = (z + 0.5f) / Fold - 0.5f;
-            const int iz = std::clamp(int(std::floor(gz)), 0, n - 2);
-            const float tz = std::clamp(gz - float(iz), 0.0f, 1.0f);
             for (int x = 0; x < size; ++x) {
                 const size_t i = domain.index(x, z);
                 const float ground = groundOf(domain, i);
                 field.top[i] = std::max(ground, sea);
-                const float gx = (x + 0.5f) / Fold - 0.5f;
-                const int ix = std::clamp(int(std::floor(gx)), 0, n - 2);
-                const float tx = std::clamp(gx - float(ix), 0.0f, 1.0f);
-                const size_t corner[4] = {grid.index(ix, iz), grid.index(ix + 1, iz), grid.index(ix, iz + 1), grid.index(ix + 1, iz + 1)};
-                const float weight[4] = {(1 - tx) * (1 - tz), tx * (1 - tz), (1 - tx) * tz, tx * tz};
-                const auto blend = [&](const std::vector<float>& from) {
-                    return weight[0] * from[corner[0]] + weight[1] * from[corner[1]] + weight[2] * from[corner[2]] + weight[3] * from[corner[3]];
-                };
+                const Blend blend = blendAt(x, z);
                 // Ice stands on a cell only within reach of coarse cells that hold some: a valley
                 // far outside the sheet is below its neighbours' ground, not under their ice.
-                if (blend(grid.thickness) < SmallIce) continue;
-                const float surface = blend(top), thickness = surface - ground;
-                if (thickness < LeastSheet) continue;
-                const float sink = blend(grid.sink);
-                if (ground < sea && float(IceToWater) * thickness < sea - (ground - sink)) continue;
+                if (blend.of(grid.thickness) < SmallIce) continue;
+                const float surface = blend.of(top), thickness = surface - ground;
+                if (thickness < LeastSheet || (ground < sea && float(IceToWater) * thickness < sea - (ground - blend.of(grid.sink)))) continue;
                 field.thickness[i] = thickness;
                 field.top[i] = surface;
-                field.fallX[i] = blend(fallX), field.fallZ[i] = blend(fallZ);
-                const float slope = std::min(SteepestSurface, std::sqrt(field.fallX[i] * field.fallX[i] + field.fallZ[i] * field.fallZ[i]));
-                const double thaw = bedThaw(iceSurfaceWarmth(domain.warmth[i], grid.cooling, surface - sink - sea), thickness, blend(grid.balance), blend(grid.heat), slope);
-                const float stress = float(IceWeight) * thickness * slope;
-                field.slide[i] = std::min(FastestSlide, float(thaw) * float(SlideRate) * stress * stress);
-                // Summer melt drains to the bed through the ice; a thawed bed adds its own.
-                field.melt[i] = float(IceToWater) * std::max(0.0f, -blend(grid.balance)) + (thaw > 0.5 ? BasalMelt : 0.0f);
+                field.fallX[i] = blend.of(fallX), field.fallZ[i] = blend.of(fallZ);
             }
         }
-    };
-    if (workers) workers->parallelFor(size, rows, LeastRows);
-    else rows(0, size);
+    });
+    // Sliding grows with the square of the thickness, so of the ice a coarse cell passes, a valley
+    // under it takes more than its width: its share is its thickness cubed against the mean of
+    // the cubes. However deep a trough is cut, it carries no more ice than arrives, and slows as
+    // it deepens.
+    for (int z = 0; z < size; ++z)
+        for (int x = 0; x < size; ++x) {
+            const float thickness = field.thickness[domain.index(x, z)];
+            cubes[grid.index(x / Fold, z / Fold)] += thickness * thickness * thickness / float(Fold * Fold);
+        }
+    spread([&](int begin, int end) {
+        for (int z = begin; z < end; ++z) {
+            for (int x = 0; x < size; ++x) {
+                const size_t i = domain.index(x, z);
+                const float thickness = field.thickness[i];
+                if (thickness <= 0) continue;
+                const Blend blend = blendAt(x, z);
+                const float slope = std::min(SteepestSurface, std::sqrt(field.fallX[i] * field.fallX[i] + field.fallZ[i] * field.fallZ[i]));
+                const float balance = blend.of(grid.balance);
+                const double thaw = bedThaw(iceSurfaceWarmth(domain.warmth[i], grid.cooling, field.top[i] - blend.of(grid.sink) - sea), thickness, balance, blend.of(grid.heat), slope);
+                const float cube = blend.of(cubes);
+                if (cube > 0) field.slide[i] = std::min(FastestSlide, float(thaw) * blend.of(passing) * thickness * thickness / cube);
+                // Summer melt drains to the bed through the ice; a thawed bed adds its own.
+                field.melt[i] = float(IceToWater) * std::max(0.0f, -balance) + (thaw > 0.5 ? BasalMelt : 0.0f);
+            }
+        }
+    });
     return field;
 }
 

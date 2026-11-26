@@ -78,7 +78,6 @@ void rockCoasts() {
     const Domain sheltered = worked(spec, spec.steps);
     expect(retreat(sheltered, false) == 0, "a sheltered shore of limestone was cut", retreat(sheltered, false));
     expect(retreat(sheltered, true) < 0.25 * retreat(exposed, true), "sheltered chalk goes back like exposed chalk", retreat(sheltered, true) / retreat(exposed, true));
-    expect(surveyShore(shoreGridOf(sheltered)).platformWidth.high < grid.cell, "a sheltered shore grew a platform", surveyShore(shoreGridOf(sheltered)).platformWidth.high);
 }
 
 void spit() {

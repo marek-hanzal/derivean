@@ -21,6 +21,12 @@ struct Episode {
     Vec2 site;           // m, where the conduit reaches the surface
 };
 
+// One eruption of a vent's own sequence.
+struct Eruption {
+    double time{};       // yr
+    double volume{};     // m³
+};
+
 // A conduit that fed one edifice: the plug it leaves stands as a neck once the cone is gone.
 struct Feeder {
     Vec2 site;
@@ -40,6 +46,9 @@ struct Vent {
     double until{};      // yr it is recorded to: the end of that window
     double supply{};     // m³/yr the centre still supplies at that end; 0 once the melt has stopped rising
     double erupted{};    // m³ over the region's window
+    double held{};       // m³ in the chamber at `until`: supplied since the last eruption
+    int64_t count{};     // eruptions so far: the number of the next one in the vent's sequence
+    std::vector<Eruption> recent;    // the last few before `until`, oldest first
     std::vector<Episode> episodes;   // by time; steps without an eruption are left out
     std::vector<Feeder> feeders;   // by time of first use
 };

@@ -3,6 +3,7 @@
 #include "aeolian/constant/Wind.hpp"
 #include "aeolian/fn/Measure.hpp"
 #include "aeolian/fn/Regime.hpp"
+#include "climate/type/Climate.hpp"
 #include "diagnostics/fn/Png.hpp"
 #include "diagnostics/fn/Relief.hpp"
 #include "landscape/fn/Forcing.hpp"

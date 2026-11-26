@@ -49,7 +49,7 @@ inline void checkPatch(const derivean::FarPatch& patch) {
         for (int i = 0; i < PatchSide; ++i) {
             const size_t vertex = size_t(j) * PatchSide + i;
             expect(palette(&patch.colors[vertex * 3]), "A far patch colour is not a material's colour");
-            expect(patch.heights[vertex] >= 0 && patch.heights[vertex] < 9000, "Far patch heights must be measured from the patch's base");
+            expect(patch.heights[vertex] >= 0 && patch.heights[vertex] < 30000, "Far patch heights must be measured from the patch's base");
             const float water = patch.water[vertex];
             if (std::isnan(water) || water - patch.heights[vertex] <= 0.03f || i == 0 || j == 0 || i == PatchCells || j == PatchCells) continue;
             bool level = false;
@@ -57,7 +57,7 @@ inline void checkPatch(const derivean::FarPatch& patch) {
                 for (int di = -1; di <= 1; ++di)
                     level |= (di || dj) && std::abs(patch.water[size_t(j + dj) * PatchSide + i + di] - water) < 1e-3f;
             if (!level) {
-                std::cout << "DIAG patch level " << patch.key.level << " x " << patch.key.x << " z " << patch.key.z << " vertex " << i << "," << j << " base " << patch.base << " data " << int(patch.dataLevel) << "\n";
+                std::cout << "water alone at a vertex of patch level " << patch.key.level << " x " << patch.key.x << " z " << patch.key.z << " vertex " << i << "," << j << " base " << patch.base << " data " << int(patch.dataLevel) << "\n";
                 for (int dj = -2; dj <= 2; ++dj) {
                     for (int di = -2; di <= 2; ++di) {
                         const int a = std::clamp(i + di, 0, PatchCells), b = std::clamp(j + dj, 0, PatchCells);

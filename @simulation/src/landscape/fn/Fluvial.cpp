@@ -1,6 +1,6 @@
 #include "landscape/fn/Process.hpp"
 
-// About 300 lines: the erosion factor, the implicit solve and the carrying of the load are three
+// About 320 lines: the erosion factor, the implicit solve and the carrying of the load are three
 // sweeps over one flow order that share one working state and are only meaningful together.
 namespace derivean::sim {
 namespace {
@@ -19,46 +19,42 @@ struct Sweep {
     bool flooded(size_t i) const { return standing(i) && !scratch.drained[i]; }
 };
 
-// Implicit erosion factor of every cell: K·dt·(Q^m - Q0^m)/cell. At ground level it is zero where
-// water stands; the coarser levels keep it there for the case that the lake drains within the step.
+// Implicit erosion factors of every cell, K·dt·(Q^m - Q0^m)/cell: one for its rock and one for the
+// loose cover on it. At ground level they are zero where water stands; the coarser levels keep them
+// there for the case that the lake drains within the step.
 void measurePower(Sweep& sweep) {
     Domain& domain = sweep.domain;
     // `ground` here is every level that cuts with all the water of a cell (Process.hpp, gathersWater).
     const bool ground = !gathersWater(domain.key.level), drains = domain.key.level != Level::Ground;
     const float head = std::pow(channelHeadOf(domain.key.level), float(StreamExponent));
-    const float hidden = std::pow(HiddenStreams[size_t(domain.key.level)], float(StreamExponent));
+    const float hidden = HiddenStreams[size_t(domain.key.level)];
     // Within the width of a river every cell of the bed is worked by the whole river.
     const std::vector<float>& working = domain.stream.empty() ? domain.discharge : domain.stream;
     // Every cell by itself: rows may be worked side by side.
     forRows(domain, domain.size, [&](int begin, int end) {
     for (size_t i = size_t(begin) * size_t(domain.size); i < size_t(end) * size_t(domain.size); ++i) {
-        float power = 0;
+        float rock = 0, cover = 0;
         if (domain.hold[i] != Settled && (drains ? !(sweep.standing(i) && domain.hold[i] == Rim) : !sweep.flooded(i))) {
-            // The coarser levels cut with the water a cell has gathered, not with the sheet that any long slope carries.
-            const float flow = std::pow(ground ? working[i] : sweep.scratch.gathered[i], float(StreamExponent)), drive = flow - head;
             // Where a level cuts with all of a cell's water, it cuts once that is more than a channel
-            // head's worth. A Region cell that has gathered less still holds streams of its own inside
-            // it, the largest about `hidden`: its ground is lowered at the pace such a stream cuts on
-            // the cell's slope, loose cover and blocks included, and above that its own water takes over.
-            const float wash = ground ? std::max(0.0f, drive) : std::max(flow, hidden);
+            // head's worth. The coarser levels cut with the water a cell has gathered, not with the
+            // sheet that any long slope carries. A cell that has gathered less than a channel's worth
+            // still holds streams of its own inside it, the largest about `hidden` or all the water the
+            // cell has, where that is less: its ground is lowered at the pace such a stream cuts on the
+            // cell's slope. Ground without water is not lowered.
+            const float wash = ground ? std::max(0.0f, std::pow(working[i], float(StreamExponent)) - head)
+                                      : std::pow(std::max(sweep.scratch.gathered[i], std::min(hidden, domain.discharge[i])), float(StreamExponent));
             if (wash > 0) {
                 // What is about to settle here is as easy to pick up again as what already lies here.
                 // Storms count for loose cover only: rock is cut by what runs over it year in, year out.
-                const float storm = stormGainOf(domain.key.level, working[i]);
                 float loose = 0, soft = 0;
                 for (int c = 0; c < SedimentClasses; ++c) {
                     const float layer = domain.ground.sediment[c][i] + sweep.scratch.settle[c][i];
                     loose += layer;
-                    soft += SedimentErodibility[c] * layer * wash * storm;
+                    soft += SedimentErodibility[c] * layer;
                 }
-                float erodibility = domain.unit[i].traits.erodibility * domain.quality[i] * (1.0f + 2.5f * domain.weakness[i]) * wash * rockCutOf(domain.key.level);
-                if (loose > 0) {
-                    // Sediment shields the rock only as deep as one step can dig.
-                    const float cover = std::min(1.0f, loose / (domain.erosionRate[i] * sweep.dt + 0.3f));
-                    erodibility = cover * soft / loose + (1 - cover) * erodibility;
-                }
-                power = erodibility * sweep.dt / sweep.cell;
-                if (drains && power > 0) {
+                rock = domain.unit[i].traits.erodibility * domain.quality[i] * (1.0f + 2.5f * domain.weakness[i]) * wash * rockCutOf(domain.key.level) * sweep.dt / sweep.cell;
+                if (loose > 0) cover = soft / loose * wash * stormGainOf(domain.key.level, working[i]) * sweep.dt / sweep.cell;
+                if (drains) {
                     // Water wears a bed in proportion to its fall only while it runs on the bed. Down
                     // a face too steep for debris to lie on it falls free, and wears the rock no faster
                     // than it would at that limit: walls are the weather's and their own weight's.
@@ -67,13 +63,25 @@ void measurePower(Sweep& sweep) {
                     float fall = 0;
                     for (int k = 0; k < 8; ++k)
                         if (share[k] > 0) fall += share[k] * (domain.surface[i] - domain.surface[domain.index(x + NeighborX[k], z + NeighborZ[k])]) / NeighborReach[k];
-                    if (fall > FreeFall * sweep.cell) power *= FreeFall * sweep.cell / fall;
+                    if (fall > FreeFall * sweep.cell) rock *= FreeFall * sweep.cell / fall, cover *= FreeFall * sweep.cell / fall;
                 }
             }
         }
-        sweep.scratch.power[i] = power;
+        sweep.scratch.power[i] = rock;
+        sweep.scratch.coverPower[i] = cover;
     }
     });
+}
+
+// m a cell under `loose` m of cover is lowered in the step. `cutBy(power, below)` is what an erosion
+// factor takes off a surface that starts `below` m under the cell's top. The cover goes first, at
+// its own pace, and the rock is cut in what is left of the step: a mantle never lends the rock under
+// it its own erodibility.
+template<typename Cut>
+float lowering(float loose, float coverPower, float rockPower, Cut&& cutBy) {
+    if (loose <= 0) return cutBy(rockPower, 0.0f);
+    const float throughCover = cutBy(coverPower, 0.0f);
+    return throughCover <= loose ? throughCover : loose + cutBy(rockPower * (1 - loose / throughCover), loose);
 }
 
 // Outlets first: each cell is solved against the already updated heights of the cells it drains to.
@@ -92,8 +100,9 @@ void solveHeights(Sweep& sweep) {
         }
         if (domain.hold[i] == Rim) {
             // Only an outlet cuts down; the rest of the rim is a divide that rises with its rock.
+            const float fall = sweep.cell * domain.rimSlope[i];
             scratch.next[i] = !domain.outlet[i] ? before
-                : std::max(std::min(before, domain.rimFloor[i]), before - scratch.power[i] * sweep.cell * domain.rimSlope[i]);
+                : std::max(std::min(before, domain.rimFloor[i]), before - lowering(domain.sedimentAt(i), scratch.coverPower[i], scratch.power[i], [&](float power, float) { return power * fall; }));
             scratch.pool[i] = sweep.standing(i) ? domain.level[i] : scratch.next[i];
             continue;
         }
@@ -116,19 +125,22 @@ void solveHeights(Sweep& sweep) {
             scratch.drained[i] = 1;
         }
         const float raised = before + laid;
-        const float power = scratch.power[i];
-        if (power <= 0) {
+        if (scratch.power[i] <= 0 && scratch.coverPower[i] <= 0) {
             scratch.next[i] = scratch.pool[i] = raised;
             continue;
         }
         float pull = 0, weighted = 0;
         for (int k = 0; k < 8; ++k) {
             if (share[k] <= 0) continue;
-            const float factor = power * share[k] / NeighborReach[k];
-            pull += factor;
-            weighted += factor * scratch.next[domain.index(x + NeighborX[k], z + NeighborZ[k])];
+            pull += share[k] / NeighborReach[k];
+            weighted += share[k] / NeighborReach[k] * scratch.next[domain.index(x + NeighborX[k], z + NeighborZ[k])];
         }
-        scratch.next[i] = scratch.pool[i] = std::min(raised, (raised + weighted) / (1 + pull));
+        // The implicit step against the cells below, of a surface with that erosion factor.
+        const auto cutBy = [&](float power, float below) {
+            const float top = raised - below;
+            return std::max(0.0f, top - (top + power * weighted) / (1 + power * pull));
+        };
+        scratch.next[i] = scratch.pool[i] = raised - lowering(domain.sedimentAt(i) + laid, scratch.coverPower[i], scratch.power[i], cutBy);
     }
 }
 
@@ -266,6 +278,7 @@ void cutAndFill(Domain& domain, FlowScratch& scratch) {
     const size_t cells = domain.cells();
     scratch.next.resize(cells);
     scratch.power.resize(cells);
+    scratch.coverPower.resize(cells);
     scratch.drained.assign(cells, 0);
     scratch.pool.resize(cells);
     for (int c = 0; c < SedimentClasses; ++c) {

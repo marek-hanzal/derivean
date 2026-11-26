@@ -28,7 +28,7 @@ Last checkpoint commit: `625fdda` (work in progress, not a verified state). Late
 - `mise -C @simulation run build` builds when no stream is mid-save; streams share one working tree, so a failing build is usually someone's half-saved file — wait and retry before touching another owner's code.
 - `mise -C @simulation run test` stops at `testLandscapePlane` ("a site plane was cut into gullies"): a regression of the relief rework in progress. Tests registered after it do not run; streams run their own tests through small drivers linked against the library.
 - Root `mise run check` fails in `engine-tests` (`Planet.cpp:36`, the player must come to rest on the ground: the engine places the player on the Site surface while voxels come from the finer Ground level).
-- The game runs on WebGL with smooth far patches. Most recent look captures were taken on stand-in data because the fill did not keep up with the view; they are a baseline, not a result.
+- The game still defaults to WebGL with smooth far patches; `DERIVEAN_RENDERER=webgpu` draws the far cube levels with the near voxels' pipeline (first capture pair under `.out/playwright/look/pair-smooth` and `pair-cubes`, plans in `@game/capture/`). Every capture so far was taken as "stalled", i.e. before the data was final, because the engine has no truthful readiness signal yet; they are a baseline, not a result.
 
 ## Workstreams
 
@@ -46,7 +46,7 @@ Last checkpoint commit: `625fdda` (work in progress, not a verified state). Late
 | Ice sheets | [icesheet.md](icesheet.md) | `@simulation/src/icesheet/**` | Started |
 | Measurements, inspector, scouting | [measure.md](measure.md) | `@simulation/src/{measure,inspect}`, `tool/Measure*`, `tool/InspectCommand.cpp` | Finished a full pass; to be repeated |
 | Engine | [engine.md](engine.md) | `@engine/**`, `@napi/**`, `@game/main/engine*`, `@game/contract/GameBridge.ts`, `@game/preload/**` | In progress; long queue |
-| Renderer | [renderer.md](renderer.md) | `@game/src/**` except the map, `@game/main/{index,capture}.mjs`, `@game/capture/**` | Fresh run: cube pipeline and WebGPU port |
+| Renderer | [renderer.md](renderer.md) | `@game/src/**` except the map, `@game/main/{index,capture}.mjs`, `@game/capture/**` | Third run: cube levels draw on WebGPU beside the WebGL path (`DERIVEAN_RENDERER=webgpu`); sun shadows, snow, the flip and clouds are next |
 | Map | [map.md](map.md) | `@game/src/map/**`, `@simulation/src/chart/**` | `M` works in the game (own canvas, independent of the terrain renderer); final measurement pending |
 
 A stream whose file is missing has not written it yet; its state is then only in the code.
@@ -63,7 +63,7 @@ A stream whose file is missing has not written it yet; its state is then only in
 ## What to do next, in order
 
 1. Get `testLandscapePlane` green without touching the test; then finish Local and Site with the Region mechanics and steer drainage by the rock-mass field.
-2. Land the far-cube contract in the engine, draw one coarse cube level end to end, capture the same mountain view as smooth patches and as cubes.
+2. Cubes: sun shadows and snow on the WebGPU path, then the flip (WebGPU only, WebGL path deleted), then clouds and precipitation; in the engine, risers on gentle slopes carry the cover's material and readiness becomes truthful.
 3. Engine: crew size by cores with the frame protected by thread priority, truthful readiness per level, the player on the finest level, water levels as one surface per body, no absolute positions as 32-bit floats.
 4. Wire what is finished but not connected: interventions into the game, snow ladder into the frame and renderer, groundwater's real springs and caves into the voxel answer.
 5. Re-measure against Earth and re-scout the catalogue after the relief rework and after each new process lands.

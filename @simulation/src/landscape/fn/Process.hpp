@@ -14,7 +14,7 @@ struct FlowScratch {
     std::vector<float> flux[SedimentClasses];    // m³/yr of sediment passing through
     std::vector<float> settle[SedimentClasses];  // m laid down this step, by class
     std::vector<float> plume[SedimentClasses];   // m³ of sediment suspended in standing water
-    std::vector<float> power;                    // K·dt·(Q^m - threshold), the implicit erosion factor
+    std::vector<float> power, coverPower;        // K·dt·(Q^m - threshold)/cell, the implicit erosion factor of a cell's rock and of the loose cover on it
     std::vector<float> room;                     // m a bed can rise before it dams a cell upstream
     std::vector<int32_t> head, link, pit;        // bucket queue of the flood
     std::vector<uint8_t> visited;

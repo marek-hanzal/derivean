@@ -1,9 +1,5 @@
 #include "aeolian/fn/Wind.hpp"
 
-#include "aeolian/fn/Regime.hpp"
-
-#include <numeric>
-
 namespace derivean::sim {
 namespace {
 
@@ -11,14 +7,14 @@ namespace {
 // dissolved load. The routing does not carry solutes, so this is a fixed share of the water, and no
 // tile lays down more salt than its own rock gave to solution.
 constexpr float SoluteLoad = 1.4e-4f;
-constexpr float MostCrust = 2.0f;   // m of evaporite one step can leave on a cell
+constexpr double Freeboard = 0.05;   // m the salt floor stays below the rim
 
 } // namespace
 
 // The flood fills every hollow to its spill and the routing then takes evaporation off the water
 // as it crosses the hollow, so a basin whose water never reaches the spill is known by an outlet
-// that passes none. What flowed in has left as vapour over an area the inflow and the air's thirst
-// fix; that area is the lowest ground of the basin, the pan, and the salt the water carried is there.
+// that passes none. What flowed in has left as vapour, and the salt it carried lies on the lowest
+// ground of the basin.
 void dryBasins(Domain& domain, FlowScratch& scratch) {
     WindField& wind = domain.aeolian;
     const size_t cells = domain.cells();
@@ -63,33 +59,29 @@ void dryBasins(Domain& domain, FlowScratch& scratch) {
         const auto begin = members.begin() + first[id], end = members.begin() + first[id + 1];
         bool whole = true;
         int32_t outlet = *begin;
-        double thirst = 0;
         for (auto it = begin; it != end; ++it) {
             whole = whole && domain.hold[size_t(*it)] == Free;
             if (domain.rank[size_t(*it)] < domain.rank[size_t(outlet)]) outlet = *it;
-            thirst += std::max(0.05, evaporationDemand(domain.warmthNow[size_t(*it)]) - domain.rain[size_t(*it)]);
         }
         // A basin that spills, or one this domain sees only part of, keeps its salt in solution.
         if (!whole || domain.discharge[size_t(outlet)] > 0 || inflow[id] <= 0) continue;
-        thirst /= double(end - begin);
-        const size_t pan = std::clamp(size_t(std::ceil(inflow[id] / (thirst * area))), size_t(1), size_t(end - begin));
-        std::partial_sort(begin, begin + long(pan), end, [&](int32_t a, int32_t b) {
-            return ground(size_t(a)) != ground(size_t(b)) ? ground(size_t(a)) < ground(size_t(b)) : a < b;
-        });
-        // Brine stands level, so its salt builds a level floor: the lowest cells of the pan are raised to one surface.
+        // Brine stands level, so its salt builds a level floor from the lowest ground up: thin and
+        // wide rather than thick and narrow, and never above the rim the water would spill over.
+        std::sort(begin, end, [&](int32_t a, int32_t b) { return ground(size_t(a)) != ground(size_t(b)) ? ground(size_t(a)) < ground(size_t(b)) : a < b; });
         const double given = std::max(0.0, domain.ledger.dissolved - wind.ledger.salt);
         const double volume = std::min(given, double(SoluteLoad) * inflow[id] * dt) / area;   // m over one cell
+        const double rim = double(domain.level[size_t(outlet)]) - Freeboard;
         double floor = ground(size_t(*begin)), used = 0;
-        size_t under = 1;
-        for (; under < pan; ++under) {
-            const double step = (ground(size_t(begin[long(under)])) - floor) * double(under);
-            if (used + step > volume) break;
-            used += step, floor = ground(size_t(begin[long(under)]));
+        long under = 1;
+        for (; under < end - begin; ++under) {
+            const double step = (std::min(rim, double(ground(size_t(begin[under])))) - floor) * double(under);
+            if (used + step > volume || step < 0) break;
+            used += step, floor = std::min(rim, double(ground(size_t(begin[under]))));
         }
-        floor += (volume - used) / double(under);
-        for (auto it = begin; it != begin + long(under); ++it) {
+        floor = std::min(rim, floor + (volume - used) / double(under));
+        for (auto it = begin; it != begin + under; ++it) {
             const size_t i = size_t(*it);
-            const float crust = std::min(MostCrust, float(floor - ground(i)));
+            const float crust = float(floor - ground(i));
             if (crust <= 0) continue;
             domain.ground.sediment[Fines][i] += crust;
             wind.labels.salt[i] += crust;

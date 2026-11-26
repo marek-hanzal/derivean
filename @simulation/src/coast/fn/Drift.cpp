@@ -126,12 +126,12 @@ struct Sweep {
             moving[Sand] = given - moving[Coarse];
             shore.ledger.entered += double(given) * area;
         } else {
-            work(i, depth, capacity, moving);
+            work(i, straight, depth, capacity, moving);
         }
         pass(i, straight, depth, height, moving);
     }
 
-    void work(size_t i, float depth, float capacity, float moving[SedimentClasses]) {
+    void work(size_t i, size_t straight, float depth, float capacity, float moving[SedimentClasses]) {
         const float water = shore.still[i], total = moving[Coarse] + moving[Sand];
         if (total > capacity) {
             // Waves that can carry less than they bring drop the difference, gravel first: on the
@@ -161,8 +161,11 @@ struct Sweep {
                 shore.pending[kind][i] -= taken, moving[kind] += taken, want -= taken;
             }
             want = std::min({want, Lift * capacity, stir});
+            // A bed that already lies deeper under the cell ahead than sand holds is not dug
+            // further: the waves there work on the shore above it, which then feeds it.
+            const bool deep = straight != Outside && shore.top[straight] - shore.top[i] > holds(Sand, depth) * run;
             const float sand = domain.ground.sediment[Sand][i], gravel = GravelLift * domain.ground.sediment[Coarse][i];
-            if (want > 0 && sand + gravel > 0) {
+            if (want > 0 && sand + gravel > 0 && !deep) {
                 const float share = std::min(1.0f, want / (sand + gravel));
                 lay(i, Sand, -share * sand), moving[Sand] += share * sand;
                 lay(i, Coarse, -share * gravel), moving[Coarse] += share * gravel;

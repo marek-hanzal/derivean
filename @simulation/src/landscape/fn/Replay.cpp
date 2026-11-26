@@ -33,6 +33,7 @@ void stepDomain(Domain& domain, FlowScratch& scratch, const Setting& setting) {
         glaciate(domain, scratch, halfRange, deepest, true);
         for (size_t i = 0; i < domain.cells(); ++i) domain.iceAge[i] = std::max(domain.iceAge[i], domain.ice[i]);
     }
+    sheetIce(domain, scratch, setting, IceStage::Step);
     cutAndFill(domain, scratch);
     workShores(domain, scratch);
     blowLoose(domain, scratch);
@@ -46,6 +47,7 @@ std::shared_ptr<Tile> replayTile(const Setting& setting, TileKey key, const Tile
     auto tile = std::make_shared<Tile>();
     const Window window = windowAt(key.level, setting.age);
     for (int step = 0; step < window.steps; ++step) stepDomain(domain, scratch, setting);
+    sheetIce(domain, scratch, setting, IceStage::Leave, &lookup);
     // The blended edge goes back into the domain first, so the water described below stands on the
     // surface that is handed over.
     followNeighbours(domain, domain.endTime);
@@ -64,6 +66,7 @@ std::shared_ptr<Tile> replayTile(const Setting& setting, TileKey key, const Tile
     // Ice that the present climate still keeps.
     if (key.level != Level::Region)
         glaciate(domain, scratch, float(zonalClimate(setting.seed, domain.origin.z + 0.5 * domain.size * domain.cell, setting.age).seasonal), 0.0f, false);
+    tile->sheet = sheetIce(domain, scratch, setting, IceStage::Present, &lookup);
     extractTile(domain, scratch, *tile);
     return tile;
 }

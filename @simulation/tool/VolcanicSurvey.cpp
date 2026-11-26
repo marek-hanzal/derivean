@@ -78,19 +78,14 @@ int volcanicSurvey(const Arguments& arguments) {
     std::vector<Row> rows;
     double dealt = 0;
     int land = 0, active = 0, activeLand = 0, standing = 0, byMagma[2] = {};
-    std::vector<Eruption> coming;
     for (const Vent& vent : vents) {
         Row row;
         row.vent = &vent;
         row.land = samplePlanet(planet.elevation, planetPoint(setting.seed, vent.centre), Kernel::Linear) > planet.seaLevel;
         row.last = vent.until - (vent.episodes.back().time + RegionStep);
         dealt += vent.erupted;
-        if (vent.supply > 0) {
-            const double supplied = suppliedBy(vent, setting.age);
-            coming.clear();
-            eruptionsBetween(setting.seed, vent, supplied, supplied + 40 * meanEruption(vent.magma), coming);
-            if (!coming.empty()) row.next = dateOf(vent, coming.front().supplied) - setting.age, row.nextVolume = coming.front().volume;
-        }
+        Eruption coming;
+        if (nextEruption(setting.seed, vent, coming)) row.next = coming.time - vent.until, row.nextVolume = coming.volume;
         land += row.land, active += vent.supply > 0, activeLand += row.land && vent.supply > 0, standing += row.land && row.last <= Standing;
         if (row.land) ++byMagma[size_t(vent.magma)];
         rows.push_back(row);
