@@ -57,6 +57,37 @@ double retreat(const Domain& domain, bool east, int jointed = -1) {
     return sum;
 }
 
+// m, the height of the train travelling east that leaves cell `x` of the middle row of a flat
+// sea `depth` deep below its high water, under a storm wind of `storm` m/s from the west; the
+// last cell before the rim for a negative `x`.
+float flatSea(Level level, float depth, double storm, bool sand, int x) {
+    CoastSpec spec;
+    spec.level = level, spec.windFrom = 270, spec.swell = 0;
+    spec.wind = storm / StormGain - StormCalm;
+    Domain domain = coastDomain(spec);
+    for (size_t i = 0; i < domain.cells(); ++i) {
+        // Still water reaches the bed at high water: the sea's swing is part of the depth.
+        domain.ground.rock[i] = -depth + SeaSwing - (sand ? 1.0f : 0.0f);
+        for (int c = 0; c < SedimentClasses; ++c) domain.ground.sediment[c][i] = c == Sand && sand ? 1.0f : 0.0f;
+    }
+    FlowScratch scratch;
+    floodLevels(domain, scratch);
+    routeWater(domain, scratch);
+    Shore& shore = shoreOf(domain);
+    readStanding(domain, shore), spreadWater(domain, shore), raiseWaves(domain, shore);
+    return std::sqrt(shore.wave[domain.index(x < 0 ? domain.size - 2 : x, domain.size / 2) * WaveDirections + 0]);
+}
+
+// Wave growth against the fetch-limited forecasts of the Shore Protection Manual (1984): 100 km of
+// deep water under 15 m/s raise 2.4 m; a lake 3.2 m deep and 20 km long under 20 m/s about 0.85 m
+// (Lake Balaton, 3.2 m deep, has storm waves of up to about a metre).
+void waveGrowth() {
+    const float open = flatSea(Level::Region, 200, 15, false, 98);
+    expect(open > 2.2f && open < 2.7f, "100 km of deep sea under 15 m/s do not raise 2.4 m", open);
+    const float shallow = flatSea(Level::Local, 3.2f, 20, true, -1);
+    expect(shallow > 0.7f && shallow < 1.1f, "20 km of water 3.2 m deep under 20 m/s do not raise a metre", shallow);
+}
+
 void rockCoasts() {
     CoastSpec spec;
     spec.rock = Material::Limestone, spec.other = Material::Chalk;
@@ -166,6 +197,7 @@ void testCoastVoid();   // CoastVoid.cpp
 
 void testCoast() {
     testCoastVoid();
+    waveGrowth();
     rockCoasts();
     spit();
     lakeBeach();

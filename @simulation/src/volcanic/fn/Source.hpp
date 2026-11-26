@@ -31,6 +31,8 @@ double eruptionVolume(uint64_t seed, const Vent& vent, int64_t number);
 double meanEruption(const Vent& vent);
 // m³ of eruptible magma a chamber stores when its centre is supplied at `supply` m³/yr.
 double chamberOf(double supply);
+// A single eruption of this volume empties the vent's chamber faster than the roof can follow.
+bool emptiesChamber(const Vent& vent, double volume);
 // The vent's eruptions after its recorded history and up to `until` (yr), in order: the first
 // comes when the chamber, at the vent's present supply, has gathered what it lacked at the end of
 // the record. None for a vent whose supply has stopped.

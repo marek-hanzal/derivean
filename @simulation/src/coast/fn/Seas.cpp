@@ -91,13 +91,21 @@ void readSeas(Domain& domain, const Setting& setting, const TileLookup& lookup) 
 
 std::shared_ptr<const ShoreRecord> recordShore(const Domain& domain) {
     if (!domain.shore || domain.shore->top.size() != domain.cells()) return nullptr;
-    Shore& shore = *domain.shore;
-    if (!readStanding(domain, shore) || !spreadWater(domain, shore)) return nullptr;
-    raiseWaves(domain, shore);
+    const Shore& shore = *domain.shore;
+    // The waves over the finished ground are raised on a working copy: the domain is the caller's,
+    // and every copy of it shares its Shore.
+    const size_t cells = domain.cells(), trains = cells * WaveDirections;
+    Shore look;
+    look.gale = shore.gale, look.beyond = shore.beyond;
+    look.wave.resize(trains), look.arrive.resize(trains);
+    for (auto* field : {&look.top, &look.stood, &look.still, &look.load[0], &look.load[1], &look.load[2]}) field->resize(cells);
+    look.surf.resize(cells);
+    if (!readStanding(domain, look) || !spreadWater(domain, look)) return nullptr;
+    raiseWaves(domain, look);
     auto record = std::make_shared<ShoreRecord>();
-    const size_t cells = size_t(TileCells) * TileCells;
-    record->height.resize(cells * WaveDirections);
-    record->notch.resize(cells), record->cut.resize(cells), record->laid.resize(cells);
+    const size_t kept = size_t(TileCells) * TileCells;
+    record->height.resize(kept * WaveDirections);
+    record->notch.resize(kept), record->cut.resize(kept), record->laid.resize(kept);
     record->ledger = shore.ledger;
     for (int z = 0; z < TileCells; ++z) {
         for (int x = 0; x < TileCells; ++x) {
@@ -106,7 +114,7 @@ std::shared_ptr<const ShoreRecord> recordShore(const Domain& domain) {
             for (int k = 0; k < WaveDirections; ++k) {
                 const size_t at = from * WaveDirections + size_t(k);
                 // Water keeps the train that leaves it; land, which lets none through, the one that strikes it.
-                const float energy = shore.wave[at] > 0 ? shore.wave[at] : shore.arrive[at];
+                const float energy = look.wave[at] > 0 ? look.wave[at] : look.arrive[at];
                 record->height[to * WaveDirections + size_t(k)] = uint8_t(std::min(255.0f, std::sqrt(energy) / WaveQuantum + 0.5f));
             }
         }

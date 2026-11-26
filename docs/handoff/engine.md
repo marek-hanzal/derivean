@@ -8,39 +8,29 @@ The playable world on one simulated planet: voxels streamed from `@simulation` a
 
 ## 2. State now
 
-Written 2026-11-26 02:30 local.
+Written 2026-11-26 10:20 local.
 
 Works, last verified:
-- Native tests up to the far-patch checks: `engine-tests` ran green through `testWorld`, `testScenarios`, `testStreamedWorld`, `testWeather`, planet spawn (01:48 build).
-- Thread bench at age 2e9, far patches, 01:48 build (before own-place tile priority), quick mode. The machine's load average was about 30 during the first run and rose to 85 during the second, so the two are not a fair pair:
+- `engine-tests` passes end to end (10:07 build, exit 0, 14.5 min at load 15–45): world, scenarios, streamed world, weather, and every planet check in a world of cubes, including `testCubes` (occlusion, chunk fit, risers carry cover, levels follow the eye), `cubesMatchVoxels` (18 965 of 21 151 finest cube tops have the top voxel's material), `becomesReady` (every readiness signal true at rest, 10.8 s after the finest cubes settled; tiles region 12, local 42, site 49, ground 16), time, edits, flight (slowest advance 24 ms over 80 297 frames), determinism.
+- Readiness probe (`engine-bench 2e9 cubes 0 favoured ready`, load 45–65): the whole view final 229 s after the spawn with 42 local and 36 site tiles; before the reach change it was not final after 420 s and asked for 81 local and 49 site tiles.
+- Start at age 4.6e9, step by step (`engine-bench 4.6e9 start`, load 15–30): planet, backdrop and ocean 21 s; landing 118 s (51 tiles); the ground tile under it 77 s; first atmosphere 3 s. The start is the tiles, not the planet.
+- Spawn at seed 42, age 2e9: the simulation's landing lies under water at the ground level; the dry search puts the player 16 km away (x −354 989, z 311 651), the same place in two runs.
 
-  | | crew 5, frame thread plain | crew 12, frame thread favoured |
-  | --- | --- | --- |
-  | voxels to stand on after start | 18.1 s | 22.3 s |
-  | walking step mean / p95 / p99 / max | 0.43 / 1.52 / 5.81 / 16.9 ms | 0.34 / 1.35 / 4.08 / 6.6 ms |
-  | voxels whole after a 1.5 km teleport | 259.7 s | 615.3 s (load 85) |
-  | step while waiting there | 0.22 / 0.76 / 1.84 / 12.2 ms | 0.17 / 0.55 / 1.37 / 39.7 ms |
-  | boost flight of 103 km, step | 0.57 / 1.52 / 3.49 / 11.7 ms | 0.64 / 2.98 / 6.54 / 16.6 ms |
-
-  First far surface in the first frame and the far view whole after 1.5–1.9 s in both.
-
-Broken or unverified right now (03:00):
-- The whole tree compiles (02:48 build: engine, tests, bench, addon). `engine-tests` passes `testWorld`, `testScenarios`, `testStreamedWorld`, `testWeather` and then stops in the planet checks; **`testCubes` has never run to its end**, so the cube builder and the levels are covered only by the renderer drawing them and by clang.
-- The simulation's landing at seed 42, age 2e9 now lies on a lake 871 m deep (`sim::findLanding`; it was dry ground an hour earlier). Every planet check assumed dry land ("A player without voxels around must wait" failed). `standOnLand` in `@engine/test/Planet.cpp` now moves the player to the nearest dry ground first; the run with it is in flight. The bridge tests in `@napi/test/session.test.cjs` make the same assumption and have no such step yet.
-- "A far patch shows water that is not a level sheet" (patch path) fails in some runs and not in others, depending on which tiles are finished; `checkPatch` prints the neighbourhood when it does. The patch path is to be deleted, so this was not chased.
-- `farColoursMatchVoxels` (patch path) has not been reached since the cover rule was updated.
-- The simulation's headers collide: see `@engine/src/nature/type/Air.hpp`, which renames `Sand` of the ash classes with a macro so that the engine compiles. Delete the macro once `@simulation/src/atmosphere/type/Plume.hpp` scopes its enum.
-- Bridge tests and `mise run check` have not completed since the cube work started (`chart.test.cjs` passed at 02:40).
-- Not measured: the bench in a world of cubes (faces and milliseconds per level), and anything after the own-place tile priority and the wider tile reaches went in.
+Broken or unverified:
+- `chart.test.cjs` "a chart around the player…" fails: the inspector (`@engine/src/game/fn/Inspect.cpp`, ground level) and the chart (site level) disagree on the ground at the player, because the spawn's ground survey has built the ground tile there. The test's assumption, not a regression of this stream; the chart is the map stream's.
+- `session.test.cjs` and `cubes.test.cjs` have not completed since the cube work started.
+- The patch path still exists; its water-sheet check was flaky and is gone with the patch session.
+- The simulation's headers collide: `@engine/src/nature/type/Air.hpp` renames `Sand` of the ash classes with a macro. Delete the macro once `@simulation/src/atmosphere/type/Plume.hpp` scopes its enum.
+- Not measured: the bench in a world of cubes (faces and milliseconds per level, step percentiles in boost flight). The test's own far view gives per-chunk build times of 0.7–2.2 ms up to 256 m cubes, 10.5 ms at 512 m and 15.2 ms at 1024 m.
 
 ## 3. In progress
 
-Taken over 2026-11-26 08:50 by a new worker. Edits since (all compile, 09:30); an independent review was applied (its points 1–5 and the minor ones):
-- The planet checks run in a world of cubes: `@engine/test/PlanetSession.hpp` holds cube chunks (`Held`, `hold`, `checkBoxes`, shared with `Cubes.cpp`) instead of patches; `farColoursMatchVoxels` became `cubesMatchVoxels` (finest cube tops against the top voxel); `becomesReady` waits for every readiness signal at rest and checks that settled columns read what a build now would. `checkPatch` went (its water check failed at random on the patch path, which is to be deleted). `Cubes.cpp` gained `risersCarryCover`. `Main.cpp` unbuffers `std::cout` so a log shows progress.
-- `findSpawn` (`@engine/src/game/fn/Spawn.cpp`) puts a player without a wished place on the first dry ground round the simulation's landing when the landing lies under water: rings of eight doubling from 250 m, blocking surveys local → site (3 m margin) → ground, so the place is a function of the world. `standOnLand` in the test is gone.
-- Readiness (`@engine/src/horizon/fn/FarCubes.cpp`): a level's `wanted`/`held`/`settled` count only columns reaching into its box at full reach plus band (`sightOf`); the margin column is built but holds nothing back. `settled` needs `cubeFinal(detail)`: the four corners of the square a column reads are at its source level, so nothing in it is eased towards stand-in data. In a world of cubes `TileRequests::reach` and `::ceiling` come from `cubeDataReach`/`cubeCeiling` (default reach: region ≈ 321 km, local ≈ 45 km, site ≈ 2.8 km, ground 96 m; ceilings local 41 km, site 2.56 km, ground 150 m), so `ready.{region,local,site}` wait for exactly the tiles the levels read. The request square spans both the eye and the point ahead of it.
-- `engine-bench ... ready [seconds]` (`@engine/bench/Ready.{hpp,cpp}`) prints the readiness signals and what holds each of them.
-Running (09:30): `engine-tests` (`.../scratchpad/engine/tests4.log`), bridge tests (`node1.log`).
+Nothing half-edited (10:20); everything compiles. Taken over 2026-11-26 08:50; the changes of this run, reviewed once with all points applied, a second review of the fixes running:
+- The planet checks run in a world of cubes: `@engine/test/PlanetSession.hpp` holds cube chunks (`Held`, `hold`, `checkBoxes`, shared with `Cubes.cpp`) instead of patches; `cubesMatchVoxels`, `becomesReady`, `risersCarryCover` are new; `Main.cpp` unbuffers `std::cout`.
+- `findSpawn` (`@engine/src/game/fn/Spawn.cpp`): without a wished place and with the landing under water at the ground level, rings of eight places doubling from 250 m, each narrowed local → site → ground with the tiles of the whole ring queued together; dry means `ground > water`. A version with a 3 m margin at the site level rejected all dry land and searched every ring (25 minutes of start for whoever launched the game with the addon built 09:20–09:45).
+- Readiness (`@engine/src/horizon/fn/FarCubes.cpp`): `wanted`/`held`/`settled` count columns reaching into a level's box at full reach plus band (`sightOf`); `settled` needs `cubeFinal(detail)`. In a world of cubes `TileRequests::reach` and `::ceiling` come from `cubeDataReach`/`cubeCeiling`; the request square spans the eye and the point ahead.
+- Bench modes `ready [seconds]` and `start` (`@engine/bench/{Bench.hpp,Ready.cpp,Start.cpp}`).
+- `@game/contract/GameBridge.ts` documents at its top why it stays one file (406 lines).
 
 Half-done things that look odd:
 - Two far-terrain paths exist. `PlanetOptions::cubes` (bridge: `WorldOptions.cubes`) picks cubes (`Game::cubes`, `@engine/src/horizon/type/FarCubes.hpp`) or patches (`Game::horizon`). The patch path (`Patch.*`, `Horizon.*`, `Select.cpp`, shading raster, `farPatch` in `@napi/src/far.cpp`, `FarPatch` in the contract, `checkPatch`/`farColoursMatchVoxels` in the tests) is to be deleted once the renderer draws cubes over the whole view. Do not invest in it.
@@ -70,6 +60,8 @@ Half-done things that look odd:
 - **Standing water** (`StandingWater.cpp`): read at site level, a wet point needs a partner one data cell away at the same level, levels are carried at most five points over ground below them. `WaterRing = Shore + 1` is what makes two lattices agree on a shared point.
 - **Occlusion** in the mesher: a quad grows along an axis only if its corner values do not change along it. Chunks therefore need all 26 neighbours for a final mesh (`meshChunk`, `markTerrainChanged`, `TerrainStream.cpp submit`, `Column.cpp mesh`).
 - **Pools** (`Nature.hpp`): simulation pool (hardware − 1), crew = performance cores (`hw.perflevel0.physicalcpu`, else hardware − 2), air = 2. Two pools, not one: a pool task cannot be interrupted, so a chunk would wait behind a tile build of seconds. The thread that advances the game calls `favourCallingThread()` (macOS QoS user-interactive; nothing on Linux, unverified). Crew priorities: voxel columns and colliders 0, far cubes `level − 64`.
+- **Readiness is what can be seen.** A level wants the columns reaching into its box at full reach and band; the margin column built beyond is for motion and holds no readiness back. A column is final when the corners of the square it reads are at its source level (`cubeFinal`): the square is smaller than one tile of that level, so the corners touch every tile under it and nothing is eased. In a world of cubes the tiles asked for are what the levels read (`cubeDataReach`) and only while a level using them can be active (`cubeCeiling`): readiness then waits for nothing unread, and everything read is asked for. Rejected: keeping the patch reaches (64 km local, 81 tiles, against 45 km and 42 tiles) and the margin column in `wanted` (it reads site data 3.09 km out at level 7 against 3 km asked for, so `ready.far` stayed false for good at some places).
+- **Dry spawn in the engine.** The simulation's landing is checked on the shore at the site level, voxels come from the ground level, and at seed 42, 2 Gyr the two disagree by an 871 m deep lake. The engine moves a player without a wished place to the first dry ground of a ring search, built with blocking surveys so it depends on the world alone. The real fix is in `sim::findLanding` (lead's planet stream): check the ground level.
 - **Tile requests** (`TileRequests.cpp`): by gain (replaced cell size over distance); the player's own place (within 150 m, when lower than 150 m above ground) first and with every worker, the rest leaves a quarter of the workers free. Requests go to `atlas.request` directly because `sim::requestAround` ranks coarse levels first.
 - **Shutdown**: destroying a `Game` waits for every tile build in flight (the simulation destroys its atlas before joining its pool, so `~Nature` must quiesce it). `Session.abandon()` leaks the world for a process about to exit; `engine.mjs` loads the addon in the main thread too so it is not unloaded with the worker.
 - Traps: `sim::surfaceAt` locks the atlas per sample, use `SurfaceReader`; readers that call `readSurface` must call `overlayLive`; a `SurfaceReader` must not outlive its batch; the simulation tree is often mid-edit, retry builds.
@@ -98,10 +90,12 @@ All from the repository root; xmake comes through mise.
 - Native tests: `.out/xmake/build/macosx/arm64/release/engine-tests`; silent on success, exit 0. The planet takes 1–3 minutes to evolve, the whole run 5–10 minutes on a busy machine.
 - Bridge tests: `cd @napi && node --test test/*.test.cjs` (each file evolves its own planet).
 - Types: `mise -C @game run check`; everything: `mise run check`.
-- Bench: `.out/xmake/build/macosx/arm64/release/engine-bench [age] [patches|cubes] [crew threads, 0 = machine] [plain|favoured] [quick]`. It prints fill times, step percentiles for idle, walk, a 1.5 km teleport and a boost flight of 100 km, and per cube level chunks, faces and milliseconds.
+- Bench: `.out/xmake/build/macosx/arm64/release/engine-bench [age] [patches|cubes] [crew threads, 0 = machine] [plain|favoured] [quick | ready [seconds]]`; `engine-bench [age] start` times the start step by step (planet, landing, ground under it, atmosphere). `ready` prints the readiness signals every 5 s and on change, with tiles finished/wanted per level and the cube levels not yet settled. It prints fill times, step percentiles for idle, walk, a 1.5 km teleport and a boost flight of 100 km, and per cube level chunks, faces and milliseconds.
 - Capture (renderer's): `DERIVEAN_CAPTURE=<plan.json> mise run play` after `mise -C @game run build`.
 
 ## 8. Open questions
+
+- Start time (asked by the lead 10:00): at 4.6 Gyr the planet is 21 s of a start of about 220 s; the landing's tiles (118 s) and the ground tile under it (77 s) are the rest. A planet cache on disk keyed by (seed, age, planet code revision) under `.out/` saves only the 21 s. What would save the rest: (a) `sim::findLanding` queues the tiles of each level for all its candidates at once instead of surveying them one by one (planet stream); (b) the engine starts the player at the site surface and lets the voxel wait (`held`) bring the ground level in with every worker, instead of a blocking ground survey before "Enter world" (engine; costs the "spawn on surveyed ground" promise until voxels arrive, and still needs the ground level where the landing may be wet); (c) a tile cache on disk keyed by the simulation's code revision, worthless while the relief streams change it hourly. Proposed order: (b) and (a) first, the planet cache only if starts stay slow after them.
 
 - Is 128 cubes of reach the look the owner wants, or 192 at more than twice the faces?
 - May the finest far level start at 1 m instead of 0.5 m (the 0.5 m level is almost hidden by the voxel box of 52 m)?

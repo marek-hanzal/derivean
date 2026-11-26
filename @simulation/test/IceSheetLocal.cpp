@@ -144,6 +144,32 @@ void testIceSheetLocal() {
         for (int x = Halo; x < Halo + 6; ++x) near += laterWork.left.till[later.index(x, z)], alone += work.left.till[domain.index(x, z)];
     expect(std::abs(near / alone - 1) < 0.1, "till steps where a finished neighbour's ice enters the tile", near / alone);
 
+    const TileLedger& joined = later.ledger;
+    expect(std::abs(joined.eroded + joined.sedimentIn - joined.deposited - joined.sedimentOut) < 1e-4 * joined.eroded, "what the ice brought from the neighbour does not add up",
+           joined.eroded + joined.sedimentIn - joined.deposited - joined.sedimentOut);
+
+    // Where the ice ended, what it brought stands as moraine no steeper than till, and the meltwater
+    // spreads the rest beyond.
+    Domain margin = plain();
+    ParentSheet ending = eastward(margin);
+    constexpr int End = Halo + 180;
+    for (int z = 0; z < margin.size; ++z)
+        for (int x = End; x < margin.size; ++x) ending.iceThen[margin.index(x, z)] = 0;
+    SheetWork marginWork;
+    leaveFiner(margin, marginWork, ending, {});
+    float moraine = 0, steepest = 0, spread = 0;
+    for (int z = Halo + 20; z < Halo + 200; ++z) {
+        moraine = std::max(moraine, marginWork.left.moraine[margin.index(End, z)]);
+        steepest = std::max(steepest, (groundOf(margin, End, z) - groundOf(margin, End + 1, z)) / float(margin.cell));
+        for (int x = End + 2; x < End + 40; ++x) spread += marginWork.left.outwash[margin.index(x, z)];
+    }
+    expect(moraine > 1, "no moraine where the ice ended", moraine);
+    expect(steepest <= TillRepose * 1.01f, "the moraine stands steeper than till", steepest);
+    expect(spread > 0, "no outwash beyond the moraine", spread);
+    const TileLedger& ended = margin.ledger;
+    expect(std::abs(ended.eroded + ended.sedimentIn - ended.deposited - ended.sedimentOut) < 1e-4 * ended.eroded, "what the ice left at its end does not add up",
+           ended.eroded + ended.sedimentIn - ended.deposited - ended.sedimentOut);
+
     // Ground no sheet reached is left alone and carries no record.
     Domain bare = plain();
     ParentSheet none = eastward(bare);

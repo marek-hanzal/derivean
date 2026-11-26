@@ -1,7 +1,7 @@
 // Watches the readiness signals a capture waits for while the player stands still, and says what
 // keeps each of them false: which tiles are owed at which level, which cube levels are short of
 // their data, and whether the far view waits for tiles it has not looked at yet.
-#include "Ready.hpp"
+#include "Bench.hpp"
 
 #include <array>
 #include <chrono>

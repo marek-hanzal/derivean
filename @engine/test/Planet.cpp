@@ -96,11 +96,14 @@ void becomesReady(PlanetSession& session) {
            }), "The view never became final at rest");
     const Frame& frame = session.last;
     for (const CubeLevelView& level : frame.cubeLevels) expect(level.settled == level.wanted, "A ready view holds a level that is not final");
-    // What a settled column was cut from is what a build now would read.
+    // What a settled column was cut from is what a build now would read: every shown column not
+    // being rebuilt, while no tile has finished since the view was last compared with the tiles.
+    const FarCubes& far = *session.game.cubes;
+    if (far.tilesSeen != session.game.nature.world.atlas.finished()) return;
     size_t final = 0;
     for (int level = FinestCubes; level <= CoarsestCubes; ++level)
-        for (const auto& [square, slot] : session.game.cubes->levels[size_t(level - FinestCubes)].slots) {
-            if (slot.shown.empty() || !cubeFinal(level, slot.detail)) continue;
+        for (const auto& [square, slot] : far.levels[size_t(level - FinestCubes)].slots) {
+            if (slot.shown.empty() || slot.stale || slot.ticket || slot.built || !cubeFinal(level, slot.detail)) continue;
             ++final;
             expect(cubeDetail(session.game.nature.world, {level, square.x, square.z}) == slot.detail, "A ready view shows a column cut from data that has changed");
         }

@@ -4,6 +4,18 @@
 
 The owner: the world must not look like a height map. A massif is one body that valleys are cut into, with faces, shoulders, debris under walls and connected crests; ground has edges that come from mechanics (rock that stands until it fails, water that cuts where it gathers, beds that differ, debris at repose); scale and statistics match real ground ([reference-landscapes.md](../reference-landscapes.md)). Owned here: the behaviour of `Level::Region`, `Local`, `Site` in `@simulation/src/landscape`, plus the tools `terra view`, `terra relief`, `terra block`.
 
+Targets for an active humid range at Local (lead, 26 Nov, from real data; every attempt is measured against them with `terra relief` on the humid range and shown with the same views):
+
+| Measure | Target | Why |
+| --- | --- | --- |
+| Mean slope | 25–32° | threshold hillslopes limited by landsliding: Himalaya ~30°, Alps ~25–30° |
+| Ground above 60° | a few % where rock is strong and jointing wide, less in weak rock | rock faces as a long tail, from rock-mass strength |
+| Valley floors | broad only where ice or a big river made them | troughs and big-river plains; tributaries narrow |
+| Ice | sharpens: troughs with steep walls, cirques cut back into arêtes and horns, peaks little above the snow line | glacial buzzsaw (Alaska, Mont Blanc), not a snowfield on rounded ground |
+| Held plane at Local | gullies under rain at 22.5°, without grid heading bias | badlands and gullied slopes; the present test only asks that it stays a plane (section 5), to be restored once incision is right |
+
+The 26 Nov result (21.6°, 0.45 % above 60°) is rounded domes, which the owner rejects; the old one (37.7°, 18.7 %) was too steep and combed. Neither reads as a massif.
+
 ## 2. State now
 
 Verified (seed 42, 4.6 Gyr, on the planet as it was on 25–26 Nov; the planet has changed since, places move):

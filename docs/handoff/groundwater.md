@@ -20,18 +20,20 @@ Works and how it was checked:
   - Hottest spring of the hot site (karst rising in chalk, 99.8 °C, 10 % steam, 4.8 l/s, X 3542562 Z 1172640): the 48 m block's surface has sinter 1.0 %, travertine 0.2 %, altered clay 5 %, a pool 1.3 m deep at the vent. Its mouth shaft ended 6.9 m under the finer ground (site ground 7.3 m above the local level's); with `MouthRise` it now reaches daylight.
   - Karst spring with most passages there (115 l/s, 49 °C, 15 km of passage): 271 of 9 216 columns have air under rock, 1 091 void voxels, travertine 2.4 % of the surface; the mouth opens.
   - Karst country (X 3554336 Z 1730336, chalk lowland, 199 l/s, 31 km of passage): 143 roofed columns, 1 772 void voxels; the mouth rises from 20 m to 12 m above the ground and opens once.
-- `terra groundwater --at limestone` now finds carbonate the landscape actually has (section 5). Seed 42: chalk lowland at X 3530752 Z 1744896, 2 m above the sea, 500 km² of land in 2 416 km²: 94 % of the land drains by conduits, 21 307 cells where streams sink, 30 092 conduits, 1 900 km of passage (4 km over 2 m radius), 232 km of abandoned levels, 251 karst springs up to 140 l/s.
+- `terra groundwater --at limestone` now finds carbonate the landscape actually has (section 5). Seed 42, build of 09:30: chalk lowland at X 3530752 Z 1744896, 2 m above the sea, 500 km² of land in 2 416 km²: 94 % of the land drains by conduits, 21 307 cells where streams sink, 30 092 conduits, 1 900 km of passage (4 km over 2 m radius), 232 km of abandoned levels, 251 karst springs up to 140 l/s. With the landscape of 10:00 (other streams' edits) the same coast is drowned: 44 km² of land, 1 200 conduits, karst springs up to 2.7 l/s.
+- Final runs on the final build, `.out/groundwater/final/{hot,limestone,landing}.txt` and maps: hot site (266 K/km) underflow 17.8 % of what enters, 72 fault and 50 karst springs, hottest 74 °C, largest karst spring 113 l/s with 11 km of passage, 199 km of passage, 1.2 km of shafts; landing underflow 7.0 %, 61 fault springs; one Local tile's ground water 1.3–3.8 s on one thread and 0.3–0.45 s with the pool at load about 35 (reach 64 was 0.6–1.2 s and 0.1–0.3 s).
+- Voxel check repeated on the final build (`s2/voxel-hot4.txt`): hottest spring of the hot site now a 74 °C table spring in basalt with 3.8 % travertine on the block's surface; the 113 l/s karst rising has 202 roofed columns, 602 void voxels, both mouth passages open to the surface.
 
 Not verified:
 
-- The final runs on the final build (`.out/groundwater/final/{hot,limestone,landing}.txt`, `s2/tile4.txt`, `s2/voxel-{karst,hot}4.txt`) were started last; see section 3.
+- The place results move with every landscape change (the hot site's boiling spring of the morning is gone at 10:00; the chalk coast drowned). Numbers here are of builds of 26 Nov morning.
 - Timing of the real-tile test inside the suite; cost of reach 96 on an idle machine (at load 40: 0.35 → 0.50 s and 0.42 → 0.78 s a tile with the pool).
 - Nothing of the surface-karst hooks is called by the landscape, the ground level or the voxel forms: no dolines, pavement, poljes or towers anywhere.
 - That the finer ground at a vent stays within `MouthRise` (12 m) of the local level's: seen +2, +7.3 and −13 m at four vents.
 
 ## 3. In progress
 
-Nothing half-edited. A background run on the final build writes `scratchpad/groundwater/s2/{tile4.txt,voxel-karst4.txt,voxel-hot4.txt}` and `.out/groundwater/final/{hot,limestone,landing}.txt` plus maps; read them and fill the numbers in section 2 if this file still says "started last".
+Nothing. No edit is half-done and no run of this stream is going.
 
 Second independent review done after the takeover (findings and what was done: section 5).
 

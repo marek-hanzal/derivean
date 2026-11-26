@@ -78,14 +78,22 @@ void spreadOutwash(Domain& domain, const SheetField& field, const std::vector<fl
         domain.deposited[portal] -= taken;
     }
 
-    // Beyond the ice the water runs down the ground and divides over every lower neighbour, as a
-    // river with more gravel than it can carry does.
     std::vector<float> ground(cells);
     for (size_t i = 0; i < cells; ++i) ground[i] = field.thickness[i] > 0 ? 1e30f : groundOf(domain, i);
+    const OutwashTotals spread = washBeyond(domain, ground, load, left.outwash);
+    totals.dropped += spread.settled, totals.left += spread.carriedOff;
+}
+
+OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::vector<float> load[2], std::vector<float>& outwash) {
+    const int size = domain.size;
+    const float area = float(domain.cell * domain.cell);
+    OutwashTotals totals;
+    // Beyond the ice the water runs down the ground and divides over every lower neighbour, as a
+    // river with more gravel than it can carry does.
     const float settling[2] = {1.0f - std::exp(-float(domain.cell) / OutwashReach[Coarse]), 1.0f - std::exp(-float(domain.cell) / OutwashReach[Sand])};
     for (const int32_t cell : descending(ground)) {
         const size_t i = size_t(cell);
-        if (field.thickness[i] > 0 || load[Coarse][i] + load[Sand][i] <= 0) continue;
+        if (ground[i] >= 1e30f || load[Coarse][i] + load[Sand][i] <= 0) continue;
         const int x = cell % size, z = cell / size;
         float fall[8], total = 0;
         for (int k = 0; k < 8; ++k) {
@@ -103,20 +111,30 @@ void spreadOutwash(Domain& domain, const SheetField& field, const std::vector<fl
             if (settled > 0) {
                 domain.ground.sediment[c][i] += settled / area;
                 domain.deposited[i] += settled / area;
-                left.outwash[i] += settled / area;
+                outwash[i] += settled / area;
                 if (domain.owned(x, z)) domain.ledger.deposited += settled;
-                totals.dropped += settled;
+                totals.settled += settled;
             }
             const float onward = load[c][i] - settled;
             if (onward <= 0) continue;
             if (!free || total <= 0) {
-                totals.left += onward, domain.ledger.sedimentOut += onward;
+                totals.carriedOff += onward;
+                if (domain.owned(x, z)) domain.ledger.sedimentOut += onward;
                 continue;
             }
-            for (int k = 0; k < 8; ++k)
-                if (fall[k] > 0) load[c][domain.index(x + NeighborX[k], z + NeighborZ[k])] += onward * fall[k] / total;
+            for (int k = 0; k < 8; ++k) {
+                if (fall[k] <= 0) continue;
+                const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
+                const float share = onward * fall[k] / total;
+                load[c][domain.index(nx, nz)] += share;
+                // What crosses between the tile's cells and its halo crosses its edge.
+                const bool from = domain.owned(x, z), into = domain.owned(nx, nz);
+                if (from && !into) domain.ledger.sedimentOut += share;
+                if (!from && into) domain.ledger.sedimentIn += share;
+            }
         }
     }
+    return totals;
 }
 
 } // namespace derivean::sim

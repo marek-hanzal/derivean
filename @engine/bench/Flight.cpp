@@ -1,7 +1,7 @@
 // Measures what streaming a planet costs the game thread: a walk along the ground, then a minute of
 // fast flight into ground that was never loaded, both paced at 60 frames a second of real time so
 // that tile builds, voxel columns and far patches compete with the frames the way they do in play.
-#include "Ready.hpp"
+#include "Bench.hpp"
 #include "game/type/Game.hpp"
 #include "nature/type/TileRequests.hpp"
 #include "simulation/fn/Query.hpp"

@@ -45,7 +45,7 @@ Tile cliffTile(TileKey key) {
 void testCoastVoid() {
     const Setting& setting = testWorld().atlas.setting();
     const double cell = specOf(Level::Site).cell, span = tileSpan(Level::Site);
-    int caves = 0;
+    int caves = 0, inCave = 0;
     // Structural domains are some twenty kilometres across; a few of them hold joints a cave can follow.
     for (int place = 0; place < Places; ++place) {
         const TileKey key{Level::Site, place * 40, place * 23};
@@ -83,6 +83,33 @@ void testCoastVoid() {
         }
         expectLandscape(differing == 0, "a sea void depends on the rectangle or the lattice it is read through", differing);
         expectLandscape(open > 15, "the points of the void check reached no void", open);
+
+        // Points in and around every cave, each as one cube of a block whose size, edge and alignment
+        // are drawn anew, read as simulation/fn/Block.cpp reads them: the voids over the block's own
+        // rectangle, cut into its columns after the form of the ground.
+        for (const SeaVoid& v : whole.voids) {
+            if (v.kind != SeaVoidKind::Cave) continue;
+            for (int n = 0; n < 24; ++n) {
+                const uint64_t draw = hash(81, n, place);
+                const double along = 0.2 + 0.75 * unit(hash(82, n, place)), lift = (n % 3 == 2 ? 1.3 : 0.8) * (unit(hash(83, n, place)) * 2 - 1);
+                const double x = v.ax + (v.bx - v.ax) * along, z = v.az + (v.bz - v.az) * along, y = v.y + lift * v.high;
+                const double step = 0.125 * double(1 << (draw % 3));
+                const int count = 4 + int((draw >> 4) % 5);
+                const int ix = int((draw >> 8) % uint64_t(count)), iy = int((draw >> 16) % uint64_t(count)), iz = int((draw >> 24) % uint64_t(count));
+                const double originX = x - (ix + 0.5) * step, originY = y - (iy + 0.5) * step, originZ = z - (iz + 0.5) * step;
+                const SeaVoids block = seaVoidsOver(tiles, setting, originX, originZ, originX + count * step, originZ + count * step);
+                std::vector<Material> cubes(size_t(count) * size_t(count) * size_t(count), Material::Granite);
+                const size_t layer = size_t(count) * size_t(count);
+                for (int cz = 0; cz < count; ++cz)
+                    for (int cx = 0; cx < count; ++cx)
+                        cutSeaVoids(block, originX + (cx + 0.5) * step, originZ + (cz + 0.5) * step, originY, step, count, cubes.data() + size_t(cz) * size_t(count) + size_t(cx), layer);
+                const bool inside = inSeaVoid(whole, x, y, z);
+                inCave += inside;
+                differing += (cubes[size_t(iy) * layer + size_t(iz) * size_t(count) + size_t(ix)] == Material::Air) != inside;
+            }
+        }
+        expectLandscape(differing == 0, "a point in or by a sea cave reads differently through another block", differing);
     }
     expectLandscape(caves > 0, "no joint of five cliffs was opened into a cave", caves);
+    expectLandscape(inCave > 10, "the block check reached no point inside a sea cave", inCave);
 }

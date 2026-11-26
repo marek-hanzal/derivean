@@ -18,4 +18,14 @@ void routeMeltwater(const Domain& domain, const SheetField& field, std::vector<f
 // receives what settles.
 void spreadOutwash(Domain& domain, const SheetField& field, const std::vector<float>& flow, const std::vector<uint8_t>& to, SheetRecord& left, WearTotals& totals);
 
+struct OutwashTotals {
+    double settled{};      // m³ laid as outwash
+    double carriedOff{};   // m³ the water took past the domain's edge or into a cell it does not evolve
+};
+
+// Gravel and sand (`load`, m³ per cell by Coarse and Sand) run down `ground` (1e30 under ice) and
+// settle along the way, gravel first; a hollow, a lake floor or the sea keeps what reaches it.
+// What settles is added to `outwash` (m) and booked.
+OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::vector<float> load[2], std::vector<float>& outwash);
+
 } // namespace derivean::sim

@@ -1,6 +1,7 @@
 #include "volcanic/fn/Volcanic.hpp"
 
 #include "volcanic/fn/Minor.hpp"
+#include "volcanic/fn/Source.hpp"
 
 namespace derivean::sim {
 namespace {
@@ -27,7 +28,7 @@ bool within(const Domain& domain, Vec2 site, double reach) {
 // the chamber, the rest as the usual turn of fall and lava.
 void eruptEpisode(Domain& domain, Emplacement& field, Laying& laying, int index, const Episode& episode) {
     const Vent& vent = domain.volcanic.vents[size_t(index)];
-    const bool empties = episode.paroxysm >= CalderaVolume[size_t(vent.magma)];
+    const bool empties = emptiesChamber(vent, episode.paroxysm);
     const double volume = episode.volume - minorVolume(vent, episode) - (empties ? episode.paroxysm : 0.0);
     if (volume > 0) {
         const Style& style = styleOf(vent.magma);

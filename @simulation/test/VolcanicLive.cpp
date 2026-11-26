@@ -24,6 +24,7 @@ Vent supplied(Magma magma, double supply) {
     vent.until = 4.6e9;
     vent.supply = supply;
     vent.held = 0.3 * supply * 100;
+    vent.chamber = chamberOf(supply);
     vent.count = 500;
     vent.recent = {{vent.until - 900, 2e6}, {vent.until - 200, 5e6}};
     vent.feeders.push_back({{1000.0, 2000.0}, 150.0f, vent.until - 1e5, vent.until, 1e9});
@@ -39,9 +40,9 @@ void testVolcanicLive() {
 
     // The same eruptions whatever window asks, however it is cut.
     std::vector<Outbreak> whole, first, second;
-    outbreaksBetween(Seed, vent, vent.until - 1000, vent.until + 20000, whole);
-    outbreaksBetween(Seed, vent, vent.until - 1000, vent.until + 7300, first);
-    outbreaksBetween(Seed, vent, vent.until + 7300, vent.until + 20000, second);
+    outbreaksBetween(Seed, vent, vent.until - 1000, vent.until + 100000, whole);
+    outbreaksBetween(Seed, vent, vent.until - 1000, vent.until + 37300, first);
+    outbreaksBetween(Seed, vent, vent.until + 37300, vent.until + 100000, second);
     expect(whole.size() > 10 && whole.size() == first.size() + second.size(), "a window cut in two holds other eruptions", double(whole.size()));
     for (size_t k = 0; k < whole.size(); ++k) {
         const Outbreak& b = k < first.size() ? first[k] : second[k - first.size()];
@@ -77,11 +78,16 @@ void testVolcanicLive() {
     outbreaksBetween(Seed, spent, vent.until, vent.until + 1e6, none);
     expect(none.empty(), "a vent without supply erupts", double(none.size()));
 
-    // Into the air: the ash the column carries, and the gas of all the melt.
-    const Outbreak great = outbreakOf(Seed, vent, 3, vent.until + 10, 5e9);
+    // An eruption below the collapse of its chamber throws fragments, then pours lava.
     std::vector<AirSource> sources;
-    airSourcesOf(great, vent.until, 1500, sources);
+    airSourcesOf(outbreakOf(Seed, vent, 4, vent.until + 10, 1e9), vent.until, 1500, sources);
     expect(sources.size() == 2, "an eruption of fragments and lava is not two sources", double(sources.size()));
+    // Into the air: the ash the column carries, and the gas of all the melt. Pinatubo took most of
+    // a chamber of a few cubic kilometres and left a caldera: all of it fragments.
+    const Outbreak great = outbreakOf(Seed, vent, 3, vent.until + 10, 5e9);
+    sources.clear();
+    airSourcesOf(great, vent.until, 1500, sources);
+    expect(great.empties && sources.size() == 1, "a chamber-emptying eruption is not one column", double(sources.size()));
     double ash = 0, sulphur = 0;
     for (const AirSource& source : sources) {
         const double seconds = source.end - source.start;

@@ -14,8 +14,10 @@ import { CoverMass } from "../../snow/constant/cover";
 import { snowMass } from "../../snow/fn/snowMass";
 import type { SnowNodes } from "../../snow/type/SnowNodes";
 import { Face } from "../constant/layout";
+import type { LevelHeights } from "../service/LevelHeights";
 import type { LevelTable } from "../type/LevelTable";
 import { faceNodes } from "./faceNodes";
+import { landNormal } from "./landNormal";
 import { levelClip, levelRows } from "./levelClip";
 
 export interface CubeLook {
@@ -28,6 +30,9 @@ export interface CubeLook {
   shadow: ShadowNodes;
   // Absent in a world that has no snow to draw.
   snow?: SnowNodes;
+  // The far levels' ground heights (LevelHeights); absent where they cannot be read, and faces then take only
+  // their own light.
+  land?: LevelHeights["nodes"];
 }
 
 // How much of the sky's light a corner keeps with one, two and three of its neighbours solid.
@@ -40,12 +45,13 @@ const SnowMean = 1;
 // The one look of ground at every cube size, voxels and far levels alike: the material's colour varied as ground
 // is, each cube a shade of its own with a seam round it and specks within, lit flat by sky and sun with its
 // corners darkened by the neighbours the engine counted there, shadowed by the cubes between it and the sun, and
-// faded by the air. Nothing is smoothed: a face is lit by its own normal. The simulation's snow lies on the tops
+// faded by the air. Nothing is smoothed: a face is lit by its own normal and, on a coarse cube, partly by the slope
+// of the land the cube stands for (landNormal), one light for the whole face. The simulation's snow lies on the tops
 // of the cubes. Where it is thin, a small cube is whole or bare, and the share of such cubes it covers is its
 // share of the ground; the top of a cube a metre or more across stands for that much ground, so it takes the
 // mean of it, the snow's share of its colour. That is what the small cubes average to, and it does not scatter
 // the far view with white flecks.
-export function cubeSurface({ sky, levels, palette, anchor, shadow, snow }: CubeLook) {
+export function cubeSurface({ sky, levels, palette, anchor, shadow, snow, land }: CubeLook) {
   const material = new MeshBasicNodeMaterial({ fog: false });
   const face = faceNodes();
   material.positionNode = face.corner;
@@ -104,7 +110,10 @@ export function cubeSurface({ sky, levels, palette, anchor, shadow, snow }: Cube
     const corner = (index: number) => float(face.field(Face.occlusion).shiftRight(uint(index * 2)).bitAnd(uint(3)));
     const across = clamp(face.across, 0, 1);
     const open = float(Open).pow(mix(mix(corner(0), corner(1), across.x), mix(corner(2), corner(3), across.x), across.y));
-    const light = faceLight(sky, normal, open, sunlit(shadow, positionWorld.add(normal.mul(edge.mul(0.02)))));
+    const lit = sunlit(shadow, positionWorld.add(normal.mul(edge.mul(0.02))));
+    const own = faceLight(sky, normal, open, lit);
+    const stands = land && landNormal(land, face.field(Face.level), edge, inside);
+    const light = stands ? mix(own, faceLight(sky, stands.normal, open, lit), stands.share) : own;
     return vec4(airFade(sky, albedo.mul(light).div(PI), fromEye), 1);
   })();
   return material;

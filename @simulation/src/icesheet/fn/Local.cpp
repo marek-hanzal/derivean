@@ -41,7 +41,7 @@ std::shared_ptr<const SheetRecord> presentFiner(Domain& domain, const SheetWork&
             const size_t from = domain.index(x + Halo, z + Halo), to = size_t(z) * TileCells + size_t(x);
             record->slideX[to] = parent.slideX[from], record->slideZ[to] = parent.slideZ[from];
             record->worn[to] = work.worn[from];
-            record->till[to] = work.left.till[from], record->moraine[to] = work.left.moraine[from], record->esker[to] = work.left.esker[from];
+            record->till[to] = work.left.till[from], record->moraine[to] = work.left.moraine[from], record->esker[to] = work.left.esker[from], record->outwash[to] = work.left.outwash[from];
             record->passing[to] = work.left.passing[from];
         }
     return record;

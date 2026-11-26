@@ -2,6 +2,7 @@
 
 #include "core/fn/Hash.hpp"
 #include "landscape/type/Level.hpp"
+#include "volcanic/fn/Source.hpp"
 
 namespace derivean::sim {
 namespace {
@@ -24,7 +25,7 @@ constexpr float ShortCooling = 1700.0f;
 // emptying eruption is the region's whole; the share is of what the episode brings up besides it.
 double minorVolume(const Vent& vent, const Episode& episode) {
     if (vent.until - episode.time > specOf(Level::Local).span) return 0.0;
-    const double usual = episode.volume - (episode.paroxysm >= CalderaVolume[size_t(vent.magma)] ? episode.paroxysm : 0.0);
+    const double usual = episode.volume - (emptiesChamber(vent, episode.paroxysm) ? episode.paroxysm : 0.0);
     return usual > 0 ? std::min(Share * usual, Most * Typical[size_t(vent.magma)]) : 0.0;
 }
 

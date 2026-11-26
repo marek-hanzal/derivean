@@ -1,6 +1,10 @@
 #include "volcanic/fn/Source.hpp"
 
 #include "core/fn/Hash.hpp"
+#include "volcanic/constant/Rheology.hpp"
+
+#include <algorithm>
+#include <cmath>
 
 namespace derivean::sim {
 namespace {
@@ -22,25 +26,36 @@ constexpr double Spread[2] = {1.8, 2.2};
 constexpr double Residence = 1e4;   // yr
 constexpr double TypicalChamber = 6e8;   // m³, for a vent that does not say
 
-double medianOf(const Vent& vent) {
-    const double chamber = vent.chamber > 0 ? vent.chamber : TypicalChamber;
-    return chamber * Overpressure * Compressibility[size_t(vent.magma)];
-}
+// A roof goes down as one block once the eruption has taken this share of what the chamber held
+// (0.1 to 0.4 in analogue and numerical models of collapse, Roche and Druitt 2001, Geyer et al.
+// 2006), and only over a chamber large enough that the block is wide against its depth.
+constexpr double CollapseShare = 0.3;
+
+double chamberVolume(const Vent& vent) { return vent.chamber > 0 ? vent.chamber : TypicalChamber; }
+double medianOf(const Vent& vent) { return chamberVolume(vent) * Overpressure * Compressibility[size_t(vent.magma)]; }
+double normalBelow(double x) { return 0.5 * std::erfc(-x / std::sqrt(2.0)); }
 
 } // namespace
 
 double chamberOf(double supply) { return supply * Residence; }
 
+// The mean of the log-normal cut at the chamber: E[min(V, C)].
 double meanEruption(const Vent& vent) {
-    const double spread = Spread[size_t(vent.magma)];
-    return medianOf(vent) * std::exp(0.5 * spread * spread);
+    const double spread = Spread[size_t(vent.magma)], median = medianOf(vent), chamber = chamberVolume(vent);
+    const double cut = std::log(chamber / median) / spread;
+    return median * std::exp(0.5 * spread * spread) * normalBelow(cut - spread) + chamber * (1.0 - normalBelow(cut));
+}
+
+bool emptiesChamber(const Vent& vent, double volume) {
+    return volume >= std::max(CollapseShare * chamberVolume(vent), CalderaVolume[size_t(vent.magma)]);
 }
 
 double eruptionVolume(uint64_t seed, const Vent& vent, int64_t number) {
     const uint64_t base = stream(seed, SequenceStream) ^ vent.id;
     // A normal draw (Box and Muller) with its whole tail: the rare great eruption lives there.
     const double normal = std::sqrt(-2.0 * std::log(1.0 - unit(base, number, 1))) * std::cos(6.283185307179586 * unit(base, number, 2));
-    return medianOf(vent) * std::exp(Spread[size_t(vent.magma)] * normal);
+    // No eruption brings up more than the chamber holds.
+    return std::min(chamberVolume(vent), medianOf(vent) * std::exp(Spread[size_t(vent.magma)] * normal));
 }
 
 bool nextEruption(uint64_t seed, const Vent& vent, Eruption& next) {

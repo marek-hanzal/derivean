@@ -53,10 +53,12 @@ inline constexpr double VentShare = 0.4;         // radius of the jet over the v
 inline constexpr double AshLength = 9000.0;      // m, e-folding distance of the ash of a cubic kilometre
 inline constexpr double WindStretch = 8.0;       // m/s of wind that stretches the ash blanket to twice its length downwind
 
-// A single eruption that brings up more than this empties its chamber faster than the roof can
-// follow: the roof goes down as one block by `CalderaDepth`, over as wide a ring as the volume that
-// left requires. The walls it leaves are the business of slope failure afterwards.
-inline constexpr double CalderaVolume[2] = {4e9, 12e9};      // m³, by Magma
+// A single eruption that takes a large share of its chamber (volcanic/fn/Chamber.cpp), and at least
+// this much, empties it faster than the roof can follow: the roof goes down as one block by
+// `CalderaDepth`, over as wide a ring as the volume that left requires. Smaller chambers sag
+// instead (Pinatubo 1991, 5 km³ of dense rock, left a caldera 2.5 km wide; St Helens 1980, 0.25,
+// none). The walls it leaves are the business of slope failure afterwards.
+inline constexpr double CalderaVolume[2] = {1e9, 2e9};       // m³, by Magma
 inline constexpr double CalderaDepth[2] = {500.0, 1200.0};   // m
 
 } // namespace derivean::sim

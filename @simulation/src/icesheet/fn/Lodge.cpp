@@ -1,6 +1,7 @@
 #include "icesheet/fn/Local.hpp"
 
 #include "icesheet/constant/Ice.hpp"
+#include "icesheet/fn/Meltwater.hpp"
 #include "icesheet/fn/Region.hpp"
 
 #include <algorithm>
@@ -108,6 +109,8 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
     std::iota(order.begin(), order.end(), 0);
     std::sort(order.begin(), order.end(),
               [&](int32_t a, int32_t b) { return parent.topThen[size_t(a)] != parent.topThen[size_t(b)] ? parent.topThen[size_t(a)] > parent.topThen[size_t(b)] : a < b; });
+    std::vector<float> washed[2];
+    for (auto& part : washed) part.assign(cells, 0.0f);
     std::vector<int32_t> rank(cells);
     for (size_t k = 0; k < cells; ++k) rank[size_t(order[k])] = int32_t(k);
 
@@ -129,11 +132,13 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
         }
         room = std::max(0.0f, room);
         if (!iced) {
-            // Beyond the ice: what it brought stays as moraine as steep as till stands; the meltwater takes the rest.
+            // Beyond the ice: what it brought stays as moraine as steep as till stands; the meltwater
+            // spreads the gravel and sand of the rest beyond and takes the mud away.
             const float kept = std::min(1.0f, room / total);
             const float stays[SedimentClasses] = {load[0] * kept, load[1] * kept, load[2] * kept};
             lay(domain, i, stays, work.left.moraine);
-            if (owned) domain.ledger.sedimentOut += double(total * (1 - kept)) * area;
+            washed[0][i] += float(load[Coarse] * (1 - kept) * area), washed[1][i] += float(load[Sand] * (1 - kept) * area);
+            if (owned) domain.ledger.sedimentOut += double(load[Fines] * (1 - kept)) * area;
             continue;
         }
         const Vec2 flow = flowAt(domain, parent, x, z);
@@ -189,6 +194,9 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
             if (!owned && into) domain.ledger.sedimentIn += double(total * share) * area;
         }
     }
+    std::vector<float> beyond(cells);
+    for (size_t i = 0; i < cells; ++i) beyond[i] = parent.iceThen[i] >= LeastSheet ? 1e30f : groundOf(domain, i);
+    washBeyond(domain, beyond, washed, work.left.outwash);
 }
 
 } // namespace derivean::sim

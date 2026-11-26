@@ -54,7 +54,7 @@ Outbreak outbreakOf(uint64_t seed, const Vent& vent, int64_t number, double time
     const uint64_t base = stream(seed, OutbreakStream) ^ vent.id;
     const Vec2 conduit = vent.feeders.empty() ? vent.centre : vent.feeders.back().site;
     outbreak.site = conduit + Vec2{unit(base, number, 1) - 0.5, unit(base, number, 2) - 0.5} * CraterSpread;
-    outbreak.empties = volume >= CalderaVolume[magma];
+    outbreak.empties = emptiesChamber(vent, volume);
     // An eruption of the size the local level builds on its own is built as it builds them: a cone
     // of fragments and a short flow, with the ash a column of its magma carries off.
     outbreak.small = !outbreak.empties && volume <= minorSize(vent.magma);

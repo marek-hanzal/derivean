@@ -149,7 +149,7 @@ export interface CubeLevel {
   edge: number;
   // Squares of ground of this level (columns of chunks) the view wants: those reaching into the level's box at full
   // reach and its band, not the margin built beyond for an eye on the move. How many of them the renderer holds, and
-  // how many of those are final: cut from the data the level wants (dataLevel = wantedLevel) and not about to be
+  // how many of those are final: cut from the data the level wants (every tile its ground reads is of wantedLevel) and not about to be
   // swapped. The level is drawable where its box says, and final when settled equals wanted. A level rests,
   // wanting none, while the eye is too high above the ground or too fast for it.
   wanted: number;
