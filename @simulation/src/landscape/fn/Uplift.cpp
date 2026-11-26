@@ -1,6 +1,7 @@
 #include "landscape/fn/Build.hpp"
 
 #include "climate/type/Climate.hpp"
+#include "landscape/fn/Blur.hpp"
 #include "landscape/fn/Forcing.hpp"
 
 namespace derivean::sim {
@@ -16,31 +17,6 @@ constexpr float TrendLearn = 0.12f;     // share of it by which the sustained up
 // neighbourhood raises shoulders beside every cut, the shoulder turns the slope's water aside and
 // the next valley starts at its foot, so the level ribs itself at the width of its own average.
 constexpr int HeldParents = 4;
-
-// Two box passes: a cheap bell-shaped average with clamped edges.
-void blur(std::vector<float>& field, std::vector<float>& work, int size, int radius) {
-    const float scale = 1.0f / float(2 * radius + 1);
-    for (int pass = 0; pass < 2; ++pass) {
-        for (int z = 0; z < size; ++z) {
-            float sum = 0;
-            const auto at = [&](int x) { return field[size_t(z) * size_t(size) + size_t(std::clamp(x, 0, size - 1))]; };
-            for (int x = -radius; x <= radius; ++x) sum += at(x);
-            for (int x = 0; x < size; ++x) {
-                work[size_t(z) * size_t(size) + size_t(x)] = sum * scale;
-                sum += at(x + radius + 1) - at(x - radius);
-            }
-        }
-        for (int x = 0; x < size; ++x) {
-            float sum = 0;
-            const auto at = [&](int z) { return work[size_t(std::clamp(z, 0, size - 1)) * size_t(size) + size_t(x)]; };
-            for (int z = -radius; z <= radius; ++z) sum += at(z);
-            for (int z = 0; z < size; ++z) {
-                field[size_t(z) * size_t(size) + size_t(x)] = sum * scale;
-                sum += at(z + radius + 1) - at(z - radius);
-            }
-        }
-    }
-}
 
 // Replaces `field` by a smooth surface through its means over the evolving cells of blocks of
 // `span` cells laid from the domain's corner. Cells a finished neighbour holds and the rim do not

@@ -22,6 +22,7 @@ void testRelief();
 void testReliefBeds();
 void testReliefCover();
 void testReliefGlaciatedSite();
+void testReliefLedger();
 void testInspect();
 void testChart();
 void testPlanetFuture();
@@ -70,6 +71,7 @@ constexpr Test Tests[] = {
     {"testLandscapeWorld", testLandscapeWorld},
     {"testReliefCover", testReliefCover},
     {"testReliefGlaciatedSite", testReliefGlaciatedSite},
+    {"testReliefLedger", testReliefLedger},
     {"testInspect", testInspect},
     {"testChart", testChart},
     {"testPlanetFuture", testPlanetFuture},

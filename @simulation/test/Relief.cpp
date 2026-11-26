@@ -8,6 +8,7 @@
 #include "measure/fn/ReliefStats.hpp"
 
 #include <array>
+#include <cstdio>
 #include <utility>
 
 using namespace derivean::sim;
@@ -186,14 +187,17 @@ void testReliefBeds() {
 
 // Loose cover on finished tiles of an ordinary world rests at its angle of repose: no cell holds
 // more than a few metres of cover above what repose lets it lean on its lowest neighbour, and none
-// carries hundreds of metres of it.
+// carries hundreds of metres of it. What leaves a tile as sediment it eroded or took in.
 void testReliefCover() {
     World& world = testWorld();
     for (const Level level : {Level::Local, Level::Site}) {
         const double cell = specOf(level).cell;
-        const LooseStand stand = looseStand(*world.atlas.require(tileAt(level, testFocus())), cell);
+        const Tile& tile = *world.atlas.require(tileAt(level, testFocus()));
+        const LooseStand stand = looseStand(tile, cell);
         expectLandscape(stand.unsupported < std::max(4.0, 0.25 * cell), "loose cover stands steeper than its repose on a finished tile", stand.unsupported);
         expectLandscape(stand.thickest < 100, "a finished tile carries a column of loose cover", stand.thickest);
+        const TileLedger& ledger = tile.ledger;
+        expectLandscape(ledger.sedimentOut <= ledger.eroded + ledger.sedimentIn + 1, "a tile sends out more sediment than it eroded and took in", ledger.sedimentOut / (ledger.eroded + ledger.sedimentIn + 1));
     }
 }
 
@@ -223,4 +227,15 @@ void testReliefGlaciatedSite() {
             needle = std::max(needle, top(x, z) - high);
         }
     expectLandscape(needle < 6 * cell, "a cell of rock stands as a needle above all its neighbours", needle);
+}
+
+// A Local tile on a coast where rivers that cross finished neighbours reach the sea: what leaves it
+// as sediment it eroded or took in. The load a finished neighbour's record carries into its own sea
+// is that neighbour's, and the tile's plume must not take it again.
+void testReliefLedger() {
+    World world({42, 4.6e9, 0});
+    const TileLedger& ledger = world.atlas.require({Level::Local, 705, 261})->ledger;
+    std::printf("relief: coast tile 705 261 eroded %.3g m3, took in %.3g, sent out %.3g\n", ledger.eroded, ledger.sedimentIn, ledger.sedimentOut);
+    expectLandscape(ledger.eroded > 0 && ledger.sedimentOut > 0, "the coast tile neither eroded nor sent out sediment", ledger.eroded);
+    expectLandscape(ledger.sedimentOut <= ledger.eroded + ledger.sedimentIn + 1, "a coast tile sends out more sediment than it eroded and took in", ledger.sedimentOut / (ledger.eroded + ledger.sedimentIn + 1));
 }

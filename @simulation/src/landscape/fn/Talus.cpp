@@ -3,7 +3,10 @@
 namespace derivean::sim {
 namespace {
 
-constexpr int Rounds = 6;         // later rounds only meet what cones laid behind the pass; most steps need one or two
+// Rounds run until the cover rests; this only bounds them. Later rounds meet what cones laid behind
+// the pass: under the trough walls of a glaciated Site tile 16–39 are needed.
+constexpr int Rounds = 64;
+constexpr float Resting = 1.0f;   // m of cover shed over the whole domain in a round below which it rests
 constexpr float Least = 1e-4f;    // m of loose cover below which a cell has nothing to shed
 constexpr float Passing = 0.95f;  // share of the angle of repose from which a slope passes moving debris on
 
@@ -64,6 +67,7 @@ void settleDebris(Domain& domain, FlowScratch& scratch) {
         // cut have both changed it since it was last sorted.
         orderByHeight(height, scratch.byHeight, scratch.spare);
         bool any = false;
+        float shed = 0;
         for (const int32_t at : scratch.byHeight) {
             const size_t i = size_t(at);
             const int x = at % size, z = at / size;
@@ -83,6 +87,7 @@ void settleDebris(Domain& domain, FlowScratch& scratch) {
                 scratch.moved[c][i] += part;
             }
             height[i] -= sheds;
+            shed += sheds;
             any = true;
         }
         if (!any) break;
@@ -140,6 +145,8 @@ void settleDebris(Domain& domain, FlowScratch& scratch) {
             }
             heap(domain, height, x, z, moving, total, (ReposeTan[0] * moving[0] + ReposeTan[1] * moving[1] + ReposeTan[2] * moving[2]) / total * cell);
         }
+        // What was shed this round has come to rest; when that was next to nothing, so is the cover.
+        if (shed < Resting) break;
     }
 }
 

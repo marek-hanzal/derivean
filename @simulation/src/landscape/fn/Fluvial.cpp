@@ -2,7 +2,7 @@
 
 #include "aeolian/fn/Regime.hpp"
 
-// About 350 lines: the erosion factor, the implicit solve and the carrying of the load are three
+// About 365 lines: the erosion factor, the implicit solve and the carrying of the load are three
 // sweeps over one flow order that share one working state and are only meaningful together.
 namespace derivean::sim {
 namespace {
@@ -194,6 +194,7 @@ void carryLoad(Sweep& sweep, bool final) {
             load[Coarse] += 0.15f * domain.inflowLoad[i];
             load[Sand] += 0.45f * domain.inflowLoad[i];
             load[Fines] += 0.40f * domain.inflowLoad[i];
+            if (final && owned) domain.ledger.sedimentIn += double(domain.inflowLoad[i]) * sweep.dt;
         }
         if (domain.hold[i] == Settled && (domain.key.level != Level::Ground || load[0] + load[1] + load[2] < domain.settledLoad[i])) {
             // As with its water, a finished neighbour's cell passes on the load recorded there; on the
@@ -280,21 +281,28 @@ void carryLoad(Sweep& sweep, bool final) {
             }
         }
 
+        // Load reaching standing water feeds the plume; in a finished neighbour's lake or sea, the
+        // load its record carries. What arrives there is not fed: it also holds the load the
+        // neighbour's own cells passed down to its lake, which that lake took already.
         if (sweep.flooded(i) && domain.hold[i] != Rim) {
             if (final)
                 for (int c = 0; c < SedimentClasses; ++c) scratch.plume[c][i] += load[c] * sweep.dt;
             continue;
         }
+        // The ledger is the tile's: load is booked where it crosses between the tile's own cells and
+        // the rest of the domain, so the halo's own erosion is not counted as leaving the tile.
         const float* share = &scratch.share[i * 8];
+        const double total = double(load[0] + load[1] + load[2]) * sweep.dt;
         bool passed = false;
         for (int k = 0; k < 8; ++k) {
             if (share[k] <= 0) continue;
             passed = true;
-            const size_t other = domain.index(x + NeighborX[k], z + NeighborZ[k]);
+            const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
+            const size_t other = domain.index(nx, nz);
             for (int c = 0; c < SedimentClasses; ++c) scratch.flux[c][other] += load[c] * share[k];
+            if (final && owned != domain.owned(nx, nz)) (owned ? domain.ledger.sedimentOut : domain.ledger.sedimentIn) += total * share[k];
         }
-        // A finished neighbour's load that goes no further here stays in that neighbour's record.
-        if (!passed && final && domain.hold[i] != Settled) domain.ledger.sedimentOut += double(load[0] + load[1] + load[2]) * sweep.dt;
+        if (!passed && final && owned) domain.ledger.sedimentOut += total;
     }
     for (int c = 0; c < SedimentClasses; ++c) scratch.settle[c].swap(fresh[c]);
 }
