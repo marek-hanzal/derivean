@@ -92,12 +92,6 @@ std::vector<Tunnel> parentTunnels(const Domain& domain, const std::function<cons
     const double extent = domain.size * domain.cell;
     const int64_t lowX = int64_t(std::floor(domain.origin.x / parents.cell)), lowZ = int64_t(std::floor(domain.origin.z / parents.cell));
     const int64_t highX = int64_t(std::floor((domain.origin.x + extent) / parents.cell)), highZ = int64_t(std::floor((domain.origin.z + extent) / parents.cell));
-    // Where a parent cell's water goes, or 255.
-    const auto onward = [&](int64_t gx, int64_t gz) {
-        size_t c = 0;
-        const Tile* tile = parents.at(gx, gz, c);
-        return tile && tile->sheet ? tile->sheet->meltTo[c] : uint8_t(255);
-    };
     for (int64_t gz = lowZ; gz <= highZ; ++gz) {
         for (int64_t gx = lowX; gx <= highX; ++gx) {
             size_t c = 0;
@@ -110,18 +104,6 @@ std::vector<Tunnel> parentTunnels(const Domain& domain, const std::function<cons
             tunnel.to = parents.centre(gx + NeighborX[to], gz + NeighborZ[to]);
             tunnel.fill = double(record.esker[c]) * parents.cell * parents.cell;
             tunnel.discharge = record.meltwater[c];
-            // Upstream: the neighbour sending this cell the most water; downstream: where the next cell's water goes.
-            float most = 0;
-            tunnel.before = tunnel.from * 2.0 - tunnel.to;
-            for (int k = 0; k < 8; ++k) {
-                const int64_t nx = gx + NeighborX[k], nz = gz + NeighborZ[k];
-                size_t n = 0;
-                const Tile* other = parents.at(nx, nz, n);
-                if (!other || !other->sheet || other->sheet->meltTo[n] != (k + 4) % 8) continue;
-                if (other->sheet->meltwater[n] > most) most = other->sheet->meltwater[n], tunnel.before = parents.centre(nx, nz);
-            }
-            const uint8_t next = onward(gx + NeighborX[to], gz + NeighborZ[to]);
-            tunnel.after = next > 7 ? tunnel.to * 2.0 - tunnel.from : parents.centre(gx + NeighborX[to] + NeighborX[next], gz + NeighborZ[to] + NeighborZ[next]);
             found.push_back(tunnel);
         }
     }

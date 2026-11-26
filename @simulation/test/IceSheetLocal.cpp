@@ -2,12 +2,14 @@
 #include "icesheet/fn/Local.hpp"
 #include "measure/fn/Plane.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 
 using namespace derivean::sim;
 
+// About 360 lines, one owner: the last sheet over one hand-built Local plain, varied case by case.
 // The last sheet over a settled Local domain, with its parent's record given by hand: a gentle
 // plain under a cover of till, ice sliding east, three knobs of rock, a fracture zone across the
 // flow and a stream under the ice along a line.
@@ -72,6 +74,27 @@ float groundOf(const Domain& domain, int x, int z) {
     return domain.ground.rock[i] + domain.sedimentAt(i);
 }
 
+// How far each cell stands above the highest of its eight neighbours (zero at the domain's edge).
+std::vector<float> standing(const Domain& domain) {
+    std::vector<float> above(domain.cells(), 0.0f);
+    for (int z = 1; z + 1 < domain.size; ++z)
+        for (int x = 1; x + 1 < domain.size; ++x) {
+            float highest = -1e30f;
+            for (int k = 0; k < 8; ++k) highest = std::max(highest, groundOf(domain, x + NeighborX[k], z + NeighborZ[k]));
+            above[domain.index(x, z)] = groundOf(domain, x, z) - highest;
+        }
+    return above;
+}
+
+// The last sheet leaves no cell standing higher above all its neighbours than the tallest esker.
+bool leaveChecked(Domain& domain, SheetWork& work, const ParentSheet& parent, const std::vector<Tunnel>& tunnels) {
+    const std::vector<float> before = standing(domain);
+    const bool passed = leaveFiner(domain, work, parent, tunnels);
+    const std::vector<float> after = standing(domain);
+    for (size_t i = 0; i < after.size(); ++i) expect(after[i] <= std::max(0.0f, before[i]) + EskerTallest, "the last sheet left a column standing over its neighbours", after[i]);
+    return passed;
+}
+
 } // namespace
 
 void testIceSheetLocal() {
@@ -80,12 +103,12 @@ void testIceSheetLocal() {
     std::vector<Tunnel> tunnels;
     const double z = (Stream + 0.5) * domain.cell + domain.origin.z, stretch = Refinement * domain.cell;
     for (double x = domain.origin.x; x < domain.origin.x + domain.size * domain.cell; x += stretch)
-        tunnels.push_back({{x - stretch, z}, {x, z}, {x + stretch, z}, {x + 2 * stretch, z}, 10.0 * stretch * stretch, 1e9f});
+        tunnels.push_back({{x, z}, {x + stretch, z}, 10.0 * stretch * stretch, 1e9f});
     double before = 0;
     for (int z = Halo; z < Halo + TileCells; ++z)
         for (int x = Halo; x < Halo + TileCells; ++x) before += groundOf(domain, x, z);
     SheetWork work;
-    expect(leaveFiner(domain, work, parent, tunnels), "the last sheet did not pass over ground its parent had under ice");
+    expect(leaveChecked(domain, work, parent, tunnels), "the last sheet did not pass over ground its parent had under ice");
 
     // The tile's own ground changed by what its ledger says.
     double after = 0;
@@ -133,6 +156,118 @@ void testIceSheetLocal() {
     expect(lowest > 1, "the esker breaks along its stream", lowest);
     expect(highest <= EskerTallest, "an esker stands higher than any on Earth", highest);
 
+    // The stream keeps to a winding trough of its bed, whose sides fall faster than the ice surface.
+    const auto trough = [](int x) { return Stream + 6.0 * std::sin(2 * M_PI * x / 128.0); };
+    Domain winding = plain();
+    for (int z = 0; z < winding.size; ++z)
+        for (int x = 0; x < winding.size; ++x) {
+            const double off = z - trough(x);
+            winding.ground.rock[winding.index(x, z)] -= float(30 * std::exp(-off * off / 4.0));
+        }
+    SheetWork windingWork;
+    leaveChecked(winding, windingWork, eastward(winding), tunnels);
+    double missed = 0, straight = 0;
+    int columns = 0;
+    for (int x = Halo + 8; x < Halo + TileCells - 8; ++x) {
+        int crest = -1;
+        float top = 1;
+        for (int z = Stream - 12; z <= Stream + 12; ++z)
+            if (const float h = windingWork.left.esker[winding.index(x, z)]; h > top) top = h, crest = z;
+        if (crest < 0) continue;
+        missed += std::abs(crest - trough(x)), straight += std::abs(crest - Stream), ++columns;
+    }
+    expect(columns > TileCells / 2, "the esker in a winding trough is mostly missing", columns);
+    expect(missed / columns < 1.5 && straight / columns > 2.5, "the esker does not wind with the trough it ran in", missed / columns);
+
+    // Where a finished neighbour's esker comes over the edge, the stream carries on from it.
+    Domain joining = plain();
+    Tile west;
+    auto ridged = std::make_shared<SheetRecord>();
+    ridged->esker.assign(size_t(TileCells) * TileCells, 0.0f);
+    for (auto& part : ridged->passing) part.assign(size_t(TileCells) * TileCells, 0.0f);
+    constexpr int Beside = Stream + 5;
+    for (int z = 0; z < joining.size; ++z)
+        for (int x = 1; x < Halo; ++x) {
+            joining.hold[joining.index(x, z)] = Settled;
+            if (std::abs(z - Beside) <= 1 && z >= Halo && z < Halo + TileCells) ridged->esker[size_t(z - Halo) * TileCells + size_t(x - Halo + TileCells)] = 5.0f;
+        }
+    west.sheet = ridged;
+    joining.finished[3] = &west;
+    SheetWork joiningWork;
+    leaveChecked(joining, joiningWork, eastward(joining), tunnels);
+    int crest = -1;
+    float top = 1;
+    for (int z = Stream - 12; z <= Stream + 12; ++z)
+        if (const float h = joiningWork.left.esker[joining.index(Halo + 1, z)]; h > top) top = h, crest = z;
+    expect(std::abs(crest - Beside) <= 1, "the esker does not carry on from the one a finished neighbour left at the edge", crest - Beside);
+
+    // Running into a finished neighbour that recorded its esker beside the route, the stream ends on it.
+    Domain downstream = plain();
+    Tile east;
+    auto ahead = std::make_shared<SheetRecord>();
+    ahead->esker.assign(size_t(TileCells) * TileCells, 0.0f);
+    for (auto& part : ahead->passing) part.assign(size_t(TileCells) * TileCells, 0.0f);
+    for (int z = 0; z < downstream.size; ++z)
+        for (int x = Halo + TileCells; x < downstream.size - 1; ++x) {
+            downstream.hold[downstream.index(x, z)] = Settled;
+            if (std::abs(z - Beside) <= 1 && z >= Halo && z < Halo + TileCells) ahead->esker[size_t(z - Halo) * TileCells + size_t(x - Halo - TileCells)] = 5.0f;
+        }
+    east.sheet = ahead;
+    downstream.finished[5] = &east;
+    SheetWork downstreamWork;
+    leaveChecked(downstream, downstreamWork, eastward(downstream), tunnels);
+    crest = -1, top = 1;
+    for (int z = Stream - 12; z <= Stream + 12; ++z)
+        if (const float h = downstreamWork.left.esker[downstream.index(Halo + TileCells - 2, z)]; h > top) top = h, crest = z;
+    expect(std::abs(crest - Beside) <= 1, "the esker does not end on the one a finished neighbour left at the edge", crest - Beside);
+
+    // Where the head rises over a ridge of rock across the stream, the water ponded and left no
+    // esker; beyond, the esker carries on.
+    constexpr int Sill = 150;
+    Domain sill = plain();
+    for (int z = 0; z < sill.size; ++z)
+        for (int x = 0; x < sill.size; ++x) sill.ground.rock[sill.index(x, z)] += float(60 * std::exp(-(x - Sill) * (x - Sill) / 8.0));
+    SheetWork sillWork;
+    leaveChecked(sill, sillWork, eastward(sill), tunnels);
+    const auto across = [&](int x) {
+        float most = 0;
+        for (int z = Stream - 3; z <= Stream + 3; ++z) most = std::max(most, sillWork.left.esker[sill.index(x, z)]);
+        return most;
+    };
+    float beyond = 1e9f;
+    for (int x = Sill + 10; x < Halo + TileCells; ++x) beyond = std::min(beyond, across(x));
+    expect(across(Sill - 10) < 1 && across(Sill - 30) < 1, "an esker stands where its water ponded behind a rise", std::max(across(Sill - 10), across(Sill - 30)));
+    expect(beyond > 1, "the esker does not carry on beyond the pond", beyond);
+
+    // A smaller stream joining the trunk from the north-west leaves an esker that reaches the trunk's.
+    std::vector<Tunnel> withTributary = tunnels;
+    const double trunkX = 12 * stretch + domain.origin.x;
+    for (int k = 2; k >= 1; --k) withTributary.push_back({{trunkX - k * stretch, z - k * stretch}, {trunkX - (k - 1) * stretch, z - (k - 1) * stretch}, 10.0 * stretch * stretch, 1e8f});
+    Domain confluence = plain();
+    ParentSheet fed = eastward(confluence);
+    // The parent spread the tributary's fill along its line too.
+    const int joinX = int((trunkX - confluence.origin.x) / confluence.cell);
+    for (int z = 0; z < confluence.size; ++z)
+        for (int x = joinX - 2 * Refinement - 8; x <= joinX; ++x)
+            if (std::abs((x - joinX) - (z - Stream)) < 11) fed.esker[confluence.index(x, z)] = 10.0f;
+    SheetWork confluenceWork;
+    leaveChecked(confluence, confluenceWork, fed, withTributary);
+    std::vector<bool> reached(confluence.cells(), false);
+    std::vector<size_t> open{confluence.index(Halo + TileCells / 2 + 40, Stream)};
+    for (int z = Stream - 2; z <= Stream + 2; ++z)
+        if (confluenceWork.left.esker[confluence.index(Halo + TileCells / 2 + 40, z)] > 1) open.push_back(confluence.index(Halo + TileCells / 2 + 40, z));
+    while (!open.empty()) {
+        const size_t c = open.back();
+        open.pop_back();
+        if (reached[c] || confluenceWork.left.esker[c] <= 1) continue;
+        reached[c] = true;
+        for (int k = 0; k < 8; ++k) open.push_back(confluence.index(int(c % size_t(confluence.size)) + NeighborX[k], int(c / size_t(confluence.size)) + NeighborZ[k]));
+    }
+    bool upstream = false;
+    for (int dz = -8; dz <= 8; ++dz)
+        for (int dx = -8; dx <= 8; ++dx) upstream = upstream || reached[confluence.index(int((trunkX - 1.5 * stretch - confluence.origin.x) / confluence.cell) + dx, Stream - 24 + dz)];
+    expect(upstream, "the esker of a stream joining the trunk does not reach the trunk's");
+
     // A tile whose up-ice halo a finished neighbour owns, holding what the last sheet left there,
     // gets the till the same ice brings it.
     Domain later = plain();
@@ -153,7 +288,7 @@ void testIceSheetLocal() {
     neighbour.sheet = record;
     later.finished[3] = &neighbour;
     SheetWork laterWork;
-    leaveFiner(later, laterWork, parent, {});
+    leaveChecked(later, laterWork, parent, {});
     double near = 0, alone = 0;
     for (int z = 40; z < 70; ++z)
         for (int x = Halo; x < Halo + 6; ++x) near += laterWork.left.till[later.index(x, z)], alone += work.left.till[domain.index(x, z)];
@@ -174,7 +309,7 @@ void testIceSheetLocal() {
     for (int z = 0; z < margin.size; ++z)
         for (int x = End; x < margin.size; ++x) ending.iceThen[margin.index(x, z)] = 0;
     SheetWork marginWork;
-    leaveFiner(margin, marginWork, ending, {});
+    leaveChecked(margin, marginWork, ending, {});
     float moraine = 0, steepest = 0, spread = 0;
     for (int z = Halo + 20; z < Halo + 200; ++z) {
         moraine = std::max(moraine, marginWork.left.moraine[margin.index(End, z)]);
@@ -202,7 +337,7 @@ void testIceSheetLocal() {
         ParentSheet sheet = eastward(pitted);
         sheet.iceThen.assign(pitted.cells(), thickness);
         SheetWork pittedWork;
-        leaveFiner(pitted, pittedWork, sheet, {});
+        leaveChecked(pitted, pittedWork, sheet, {});
         float rim = 1e9f;
         for (int k = 0; k < 8; ++k) rim = std::min(rim, groundOf(pitted, At[0] + 2 * NeighborX[k], At[1] + 2 * NeighborZ[k]));
         return rim - groundOf(pitted, At[0], At[1]);
@@ -210,6 +345,18 @@ void testIceSheetLocal() {
     const float filled = hollow(800), kettle = hollow(StagnantIce - 50);
     expect(kettle > 3, "a hollow under stagnant ice did not stay open", kettle);
     expect(filled < 0.5f * kettle, "active ice did not fill a hollow more than stagnant ice", filled / std::max(1e-3f, kettle));
+
+    // A hollow in the ice surface keeps no more of what the ice brings into it than till stands
+    // in; the meltwater takes the rest (the check in leaveChecked), and the ledger still closes.
+    Domain bowl = plain();
+    ParentSheet dipped = eastward(bowl);
+    for (int z = 0; z < bowl.size; ++z)
+        for (int x = 0; x < bowl.size; ++x) dipped.topThen[bowl.index(x, z)] -= float(60 * std::exp(-((x - 150.0) * (x - 150.0) + (z - 100.0) * (z - 100.0)) / 200.0));
+    SheetWork bowlWork;
+    leaveChecked(bowl, bowlWork, dipped, {});
+    const TileLedger& pooled = bowl.ledger;
+    expect(std::abs(pooled.eroded + pooled.sedimentIn - pooled.deposited - pooled.sedimentOut) < 1e-4 * pooled.eroded, "what a hollow in the ice surface kept does not add up",
+           pooled.eroded + pooled.sedimentIn - pooled.deposited - pooled.sedimentOut);
 
     // Ground no sheet reached is left alone and carries no record.
     Domain bare = plain();

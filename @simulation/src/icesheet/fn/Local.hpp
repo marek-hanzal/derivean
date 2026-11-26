@@ -20,9 +20,11 @@ namespace derivean::sim {
 EskerFill setAsideEskers(Domain& domain, const ParentSheet& parent, const std::vector<Tunnel>& tunnels);
 
 // EskerPath.cpp — where the tunnels ran through the domain. Water under the ice runs down its head
-// (bed + 0.917 · the ice over it), so each chain of the parent's stretches is followed down the head
-// on the domain's own cells, within the parent cells its route crossed; the bed's own relief bends
-// it. Through cells a finished neighbour owns it keeps to the ridge that neighbour recorded.
+// (bed + 0.917 · the ice over it), so each chain of the parent's stretches is followed down the
+// slope of the head on the domain's own cells, within the parent cells its route crossed; the
+// bed's own relief bends it, and where the head rises along it the water ran full and left no
+// ridge. A chain starts on the ridge a finished neighbour recorded where that comes over the edge,
+// and is drawn into the ridge of a finished neighbour it runs into, or into the trunk it joins.
 std::vector<EskerTrack> traceEskers(const Domain& domain, const ParentSheet& parent, const std::vector<Tunnel>& tunnels);
 void layEskers(Domain& domain, SheetWork& work, const EskerFill& fill);
 

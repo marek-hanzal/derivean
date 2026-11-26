@@ -20,9 +20,9 @@ struct ParentSheet {
 };
 
 // A stream under the last maximum's ice that left a tunnel fill: one parent cell's stretch of it,
-// from that cell's centre to the next one's, with the centres before and after for a smooth line.
+// from that cell's centre to the next one's.
 struct Tunnel {
-    Vec2 before, from, to, after;   // world position
+    Vec2 from, to;                  // world position
     double fill{};                  // m³ of gravel and sand along the stretch
     float discharge{};              // m³/yr of water through it
 };

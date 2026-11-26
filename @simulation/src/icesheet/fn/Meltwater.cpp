@@ -95,8 +95,11 @@ OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::
     const float sea = float(domain.seaLevel);
     OutwashTotals totals;
     // The level water stands at on each cell: the lowest it can spill from towards the domain's
-    // edge or the sea, with the ice (1e30) as a dam. Cells it stands over form lakes.
+    // edge, the sea or the ice, under which it drains. Cells it stands over form lakes. The cells in
+    // the order the water reached them from its outlets, and the cell each was reached from.
     std::vector<float> level(cells, 0.0f);
+    std::vector<int32_t> reachedFrom(cells, -1), order;
+    order.reserve(cells);
     {
         using Entry = std::pair<float, int32_t>;
         std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> open;
@@ -104,18 +107,23 @@ OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::
         for (int z = 0; z < size; ++z)
             for (int x = 0; x < size; ++x) {
                 const size_t i = domain.index(x, z);
-                if (x == 0 || z == 0 || x == size - 1 || z == size - 1 || ground[i] < sea) reached[i] = true, level[i] = ground[i], open.push({ground[i], int32_t(i)});
+                const bool iced = ground[i] >= 1e30f;
+                if (iced || x == 0 || z == 0 || x == size - 1 || z == size - 1 || ground[i] < sea) {
+                    reached[i] = true, level[i] = iced ? -1e30f : ground[i];
+                    open.push({level[i], int32_t(i)});
+                }
             }
         while (!open.empty()) {
             const auto [stand, cell] = open.top();
             open.pop();
+            order.push_back(cell);
             const int x = cell % size, z = cell / size;
             for (int k = 0; k < 8; ++k) {
                 const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
                 if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
                 const size_t n = domain.index(nx, nz);
                 if (reached[n]) continue;
-                reached[n] = true, level[n] = std::max(ground[n], stand);
+                reached[n] = true, level[n] = std::max(ground[n], stand), reachedFrom[n] = cell;
                 open.push({level[n], int32_t(n)});
             }
         }
@@ -148,16 +156,18 @@ OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::
     // What reaches a lake, by class, on the tile's cells and in all.
     std::vector<double> arrived[2], arrivedOwned(lakes.size(), 0.0);
     for (auto& part : arrived) part.assign(lakes.size(), 0.0);
+    const auto pooled = [&](size_t n) { return lake[n] >= 0 && domain.hold[n] == Free; };
     // Beyond the ice the water runs down the ground and divides over every lower neighbour, as a
-    // river with more gravel than it can carry does.
+    // river with more gravel than it can carry does; over a flat it runs on the way the water
+    // reached it, back towards its outlet. Every cell is passed before the cells it sends to.
     const float settling[2] = {1.0f - std::exp(-float(domain.cell) / OutwashReach[Coarse]), 1.0f - std::exp(-float(domain.cell) / OutwashReach[Sand])};
-    for (const int32_t cell : descending(ground)) {
-        const size_t i = size_t(cell);
+    for (auto next = order.rbegin(); next != order.rend(); ++next) {
+        const size_t i = size_t(*next);
         if (ground[i] >= 1e30f || load[Coarse][i] + load[Sand][i] <= 0) continue;
-        const int x = cell % size, z = cell / size;
+        const int x = int(i % size_t(size)), z = int(i / size_t(size));
         const bool free = domain.hold[i] == Free;
         // Standing water takes in everything that reaches it, to be spread over its floor below.
-        if (free && lake[i] >= 0) {
+        if (pooled(i)) {
             for (int c = 0; c < 2; ++c) arrived[c][size_t(lake[i])] += load[c][i];
             if (domain.owned(x, z)) arrivedOwned[size_t(lake[i])] += load[Coarse][i] + load[Sand][i];
             continue;
@@ -170,10 +180,12 @@ OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::
             const size_t n = domain.index(nx, nz);
             if (ground[n] < ground[i]) total += fall[k] = (ground[i] - ground[n]) / NeighborReach[k];
         }
-        // The sea keeps everything that reaches it; a flat the water runs on across keeps nothing.
+        const int32_t back = reachedFrom[i];
+        const bool flat = total <= 0 && back >= 0 && ground[size_t(back)] < 1e30f;
+        // The sea keeps everything that reaches it.
         const bool sunk = ground[i] < sea;
         for (int c = 0; c < 2; ++c) {
-            const float settled = free && (sunk || total > 0) ? load[c][i] * (sunk ? 1.0f : settling[c]) : 0.0f;
+            const float settled = free ? load[c][i] * (sunk ? 1.0f : settling[c]) : 0.0f;
             if (settled > 0) {
                 domain.ground.sediment[c][i] += settled / area;
                 domain.deposited[i] += settled / area;
@@ -183,16 +195,21 @@ OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::
             }
             const float onward = load[c][i] - settled;
             if (onward <= 0) continue;
-            if (!free || total <= 0) {
+            if (!free || (total <= 0 && !flat)) {
                 totals.carriedOff += onward;
                 if (domain.owned(x, z)) domain.ledger.sedimentOut += onward;
                 continue;
             }
             for (int k = 0; k < 8; ++k) {
-                if (fall[k] <= 0) continue;
                 const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
-                const float share = onward * fall[k] / total;
-                load[c][domain.index(nx, nz)] += share;
+                if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
+                const size_t n = domain.index(nx, nz);
+                const float share = flat ? (n == size_t(back) ? onward : 0.0f) : onward * fall[k] / total;
+                if (share <= 0) continue;
+                if (pooled(n)) {
+                    arrived[c][size_t(lake[n])] += share;
+                    if (domain.owned(nx, nz)) arrivedOwned[size_t(lake[n])] += share;
+                } else load[c][n] += share;
                 // What crosses between the tile's cells and its halo crosses its edge.
                 const bool from = domain.owned(x, z), into = domain.owned(nx, nz);
                 if (from && !into) domain.ledger.sedimentOut += share;

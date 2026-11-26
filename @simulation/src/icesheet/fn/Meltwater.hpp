@@ -24,9 +24,9 @@ struct OutwashTotals {
 };
 
 // Gravel and sand (`load`, m³ per cell by Coarse and Sand) run down `ground` (1e30 under ice) and
-// settle along the way, gravel first. The sea keeps what reaches it; a lake (a hollow the ice
-// dams or the land closes) spreads it over its floor up to the level it spills at and loses the
-// rest over its rim. What settles is added to `outwash` (m) and booked.
+// settle along the way, gravel first. The sea keeps what reaches it; a lake (a hollow the land
+// closes; water drains under the ice) spreads it over its floor up to the level it spills at and
+// loses the rest over its rim. What settles is added to `outwash` (m) and booked.
 OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::vector<float> load[2], std::vector<float>& outwash);
 
 } // namespace derivean::sim

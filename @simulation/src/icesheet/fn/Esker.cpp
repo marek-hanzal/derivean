@@ -27,8 +27,9 @@ EskerFill setAsideEskers(Domain& domain, const ParentSheet& parent, const std::v
     if (tunnels.empty()) return fill;
     // Each stretch holds as much of its fill as a ridge as wide as its tunnel takes, no steeper at
     // its foot than gravel stands; the rest stays spread in the cover. Its section is set by its own
-    // fill over its own length, so it stands the same in every domain that holds it; narrower than
-    // a cell, it is drawn over the cells its path crosses with the same section.
+    // fill over its own length; narrower than a cell, it is drawn over the cells its path crosses
+    // with the same section. Where the cover holds less than the ridge, the ridge is lowered by a
+    // ratio of this domain's own cells, so two domains can differ there (an open item).
     const size_t count = tunnels.size();
     std::vector<double> section(count, 0.0), drawn(count, 0.0), fits(count, 0.0);
     for (size_t s = 0; s < count; ++s) {
@@ -40,32 +41,41 @@ EskerFill setAsideEskers(Domain& domain, const ParentSheet& parent, const std::v
         const double volume = std::min(tunnel.fill, 4.0 / 3.0 * crest * half * reach);
         section[s] = volume / reach, drawn[s] = std::max(half, domain.cell), fits[s] = volume / tunnel.fill;
     }
+    // Each track's ridge over the cells within its width of an open step, the nearest step's
+    // stretch setting its section; where tracks meet, the higher ridge.
     std::vector<int32_t> owner(cells, -1);
+    std::vector<float> closest(cells, 1e30f);
+    std::vector<int32_t> nearestStretch(cells, -1);
+    std::vector<size_t> touched;
     for (const EskerTrack& track : traceEskers(domain, parent, tunnels)) {
-        Vec2 low{1e30, 1e30}, high{-1e30, -1e30};
-        double widest = 0;
-        for (size_t k = 0; k < track.points.size(); ++k) {
-            const Vec2 p = track.points[k];
-            low = {std::min(low.x, p.x), std::min(low.z, p.z)}, high = {std::max(high.x, p.x), std::max(high.z, p.z)};
-            widest = std::max(widest, drawn[size_t(track.stretch[k])]);
-        }
-        const int x0 = std::max(0, int(std::floor((low.x - widest - domain.origin.x) / domain.cell))), z0 = std::max(0, int(std::floor((low.z - widest - domain.origin.z) / domain.cell)));
-        const int x1 = std::min(domain.size - 1, int(std::floor((high.x + widest - domain.origin.x) / domain.cell))), z1 = std::min(domain.size - 1, int(std::floor((high.z + widest - domain.origin.z) / domain.cell)));
-        for (int z = z0; z <= z1; ++z)
-            for (int x = x0; x <= x1; ++x) {
-                const size_t i = domain.index(x, z);
-                if (domain.hold[i] != Free) continue;
-                double closest = 1e30, where = 0;
-                size_t piece = 0;
-                for (size_t k = 0; k + 1 < track.points.size(); ++k) {
+        touched.clear();
+        for (size_t k = 0; k + 1 < track.points.size(); ++k) {
+            const size_t s = size_t(track.stretch[k]);
+            if (!track.open[k] || section[s] <= 0) continue;
+            const Vec2 a = track.points[k], b = track.points[k + 1];
+            const double reach = drawn[s];
+            const int x0 = std::max(0, int(std::floor((std::min(a.x, b.x) - reach - domain.origin.x) / domain.cell)));
+            const int z0 = std::max(0, int(std::floor((std::min(a.z, b.z) - reach - domain.origin.z) / domain.cell)));
+            const int x1 = std::min(domain.size - 1, int(std::floor((std::max(a.x, b.x) + reach - domain.origin.x) / domain.cell)));
+            const int z1 = std::min(domain.size - 1, int(std::floor((std::max(a.z, b.z) + reach - domain.origin.z) / domain.cell)));
+            for (int z = z0; z <= z1; ++z)
+                for (int x = x0; x <= x1; ++x) {
+                    const size_t i = domain.index(x, z);
+                    if (domain.hold[i] != Free) continue;
                     double t = 0;
-                    if (const double d = distanceToSegment(domain.center(x, z), track.points[k], track.points[k + 1], t); d < closest) closest = d, piece = k, where = t;
+                    const float d = float(distanceToSegment(domain.center(x, z), a, b, t));
+                    if (d >= float(reach) || d >= closest[i]) continue;
+                    if (closest[i] >= 1e30f) touched.push_back(i);
+                    closest[i] = d, nearestStretch[i] = int32_t(s);
                 }
-                const size_t s = size_t(track.stretch[where < 0.5 ? piece : piece + 1]);
-                if (section[s] <= 0 || closest >= drawn[s]) continue;
-                const float height = float(section[s] / (4.0 / 3.0 * drawn[s]) * (1.0 - (closest / drawn[s]) * (closest / drawn[s])));
-                if (height > fill.ridge[i]) fill.ridge[i] = height, owner[i] = int32_t(s);
-            }
+        }
+        for (const size_t i : touched) {
+            const size_t s = size_t(nearestStretch[i]);
+            const double off = closest[i] / drawn[s];
+            const float height = float(section[s] / (4.0 / 3.0 * drawn[s]) * (1.0 - off * off));
+            if (height > fill.ridge[i]) fill.ridge[i] = height, owner[i] = int32_t(s);
+            closest[i] = 1e30f;
+        }
     }
     // The gravel and sand come out of the cover the parent spread them in: from each cell the share
     // of what the parent spread there that the nearest stretch's ridge holds.
@@ -91,7 +101,7 @@ EskerFill setAsideEskers(Domain& domain, const ParentSheet& parent, const std::v
     for (size_t i = 0; i < cells; ++i) {
         if (owner[i] < 0) continue;
         const size_t s = size_t(owner[i]);
-        fill.ridge[i] = available[s] > 0 ? std::min(fill.ridge[i] * float(std::min(1.0, available[s] / wanted[s])), EskerTallest) : 0.0f;
+        fill.ridge[i] = available[s] > 0 ? fill.ridge[i] * float(std::min(1.0, available[s] / wanted[s])) : 0.0f;
     }
     double coarse = 0, sand = 0, owned = 0;
     for (int z = 0; z < domain.size; ++z)

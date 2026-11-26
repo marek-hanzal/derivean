@@ -8,10 +8,12 @@
 namespace derivean::sim {
 
 // The path a chain of the parent's tunnel stretches took through a finer domain: world points in
-// order downstream, each with the stretch (index into the domain's tunnels) it belongs to.
+// order downstream, each with the stretch (index into the domain's tunnels) it belongs to, and per
+// step to the next point whether the stream left a ridge there.
 struct EskerTrack {
     std::vector<Vec2> points;
     std::vector<int32_t> stretch;
+    std::vector<bool> open;   // one fewer than points
 };
 
 // The tunnel fills of a finer domain while the last sheet passes: the ridge they will stand as and

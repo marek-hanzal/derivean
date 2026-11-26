@@ -239,14 +239,20 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
             }
             cavity *= pressing;
             const float lodging = weights <= 0 ? 1.0f : std::min(1.0f, cavity / total + (1.0f - std::exp(-1.0f / float(LodgeCells))));
-            // A hollow in the ice surface has nowhere to pass its load on: it keeps all of it.
-            kept = weights <= 0 ? 1.0f : std::min(lodging, room / total);
+            // A hollow in the ice surface has nowhere to pass its load on: it keeps what fits, no
+            // higher than till stands against its lowest neighbour.
+            kept = std::min(lodging, room / total);
             const float stays[SedimentClasses] = {load[0] * kept, load[1] * kept, load[2] * kept};
             lay(domain, i, stays, work.left.till);
         }
-        if (free)
+        if (free && weights > 0)
             for (int c = 0; c < SedimentClasses; ++c) work.left.passing[c][i] = load[c] * (1 - kept);
-        if (kept >= 1.0f || weights <= 0) continue;
+        if (kept >= 1.0f) continue;
+        // The meltwater under the ice takes the rest of what a hollow cannot hold.
+        if (weights <= 0) {
+            if (owned) domain.ledger.sedimentOut += double(total * (1 - kept)) * area;
+            continue;
+        }
         for (int k = 0; k < 8; ++k) {
             if (weight[k] <= 0) continue;
             const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
