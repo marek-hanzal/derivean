@@ -133,7 +133,8 @@ test("the world describes itself and arrives around a player who waits for it", 
   assert.equal(frame.water.initial, 0);
 
   const record = session.inspect(frame.eye[0], frame.eye[2]);
-  assert.equal(record.level, "site");
+  // Where the player stands the ground tile is finished: the inspector answers from the level the voxels are cut from.
+  assert.equal(record.level, "ground");
   assert.ok(Math.abs(record.ground - frame.ground) < 1e-3 && typeof record.bedrock === "string");
 });
 
