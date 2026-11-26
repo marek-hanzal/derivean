@@ -76,6 +76,36 @@ double valueNoise3(uint64_t seed, double x, double y, double z) {
     return mix(low, high, v);
 }
 
+double gradientNoise3(uint64_t seed, double x, double y, double z) {
+    const double fx = std::floor(x), fy = std::floor(y), fz = std::floor(z);
+    const int64_t ix = int64_t(fx), iy = int64_t(fy), iz = int64_t(fz);
+    const double dx = x - fx, dy = y - fy, dz = z - fz;
+    // The twelve directions to the edge midpoints of a cube, picked by hash (Perlin 2002).
+    static constexpr double table[12][3] = {{1, 1, 0}, {-1, 1, 0}, {1, -1, 0}, {-1, -1, 0}, {1, 0, 1}, {-1, 0, 1},
+                                            {1, 0, -1}, {-1, 0, -1}, {0, 1, 1}, {0, -1, 1}, {0, 1, -1}, {0, -1, -1}};
+    const auto at = [&](int ox, int oy, int oz) {
+        const double* g = table[hash(seed, ix + ox, iy + oy, iz + oz) % 12];
+        return g[0] * (dx - ox) + g[1] * (dy - oy) + g[2] * (dz - oz);
+    };
+    const double u = fade(dx), v = fade(dy), w = fade(dz);
+    const double low = mix(mix(at(0, 0, 0), at(1, 0, 0), u), mix(at(0, 1, 0), at(1, 1, 0), u), v);
+    const double high = mix(mix(at(0, 0, 1), at(1, 0, 1), u), mix(at(0, 1, 1), at(1, 1, 1), u), v);
+    return mix(low, high, w);
+}
+
+double fractalNoise3(uint64_t seed, double x, double y, double z, int octaves, double gain) {
+    double sum = 0, amplitude = 1, total = 0;
+    for (int octave = 0; octave < octaves; ++octave) {
+        sum += amplitude * gradientNoise3(seed + uint64_t(octave) * 0x51ed27, x, y, z);
+        total += amplitude;
+        amplitude *= gain;
+        x *= 2;
+        y *= 2;
+        z *= 2;
+    }
+    return sum / total;
+}
+
 CellularSite cellularNoise(uint64_t seed, double x, double z, double jitter, int period) {
     const int64_t ix = int64_t(std::floor(x)), iz = int64_t(std::floor(z));
     CellularSite result;

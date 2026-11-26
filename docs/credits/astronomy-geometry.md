@@ -88,6 +88,7 @@ Urban, S. E., Seidelmann, P. K. (eds.) (2013). *Explanatory Supplement to the As
 González, Á. (2010). Measurement of areas on a sphere using Fibonacci and latitude–longitude lattices. *Mathematical Geosciences* 42(1), 49–64. doi:10.1007/s11004-009-9257-x
 - **Model:** Fibonacci points that cover the sphere evenly, for sampling the tide.
 - **Checked by:** `@simulation/test/AstronomyTide.cpp:25`.
+- **Used in (S3b):** the plate sites of an epoch on the sphere, a jittered Fibonacci lattice, `@simulation/src/tectonics/fn/Euler.hpp:8`, `@simulation/src/tectonics/fn/Euler.cpp:51`.
 
 ### Kaplan 2005: the IAU reference systems and Earth rotation
 Kaplan, G. H. (2005). *The IAU Resolutions on Astronomical Reference Systems, Time Scales, and Earth Rotation Models: Explanation and Implementation*. U.S. Naval Observatory Circular 179. https://aa.usno.navy.mil/downloads/Circular_179.pdf
@@ -207,6 +208,8 @@ Jones, P. W. (1999). First- and second-order conservative remapping schemes for 
 - **Used in:** planned, `.out/lead/handover/PLANET.md:207`.
 - **Used in (S3a):** the overlap of two convex geodesic polygons, the weight of a crust piece's footprint in a mantle cell, `@simulation/src/geometry/fn/Overlap.hpp:7`.
 - **Checked by:** `@simulation/test/GeometrySphereOverlap.cpp:57`, `:114`: a cell with itself, its parent and its neighbours; the overlaps over the candidates summing to the footprint's area to 1e-12 before any normalisation.
+- **Used in (S3b):** the coupling of crust pieces and mantle cells, exact in the boundary band and cloud-in-cell normalised inside plates, `@simulation/src/planet/type/Globe.hpp:17`, `@simulation/src/planet/fn/Coupling.hpp:13`.
+- **Checked by (S3b):** `@simulation/test/GlobeCoupling.cpp` (identity at rest, the sum in every substep of a rigid turn).
 
 ### Lauritzen, Nair and Ullrich 2010: CSLAM, overlaps on the cubed sphere
 Lauritzen, P. H., Nair, R. D., Ullrich, P. A. (2010). A conservative semi-Lagrangian multi-tracer transport scheme (CSLAM) on the cubed-sphere grid. *Journal of Computational Physics* 229(5), 1401–1424. doi:10.1016/j.jcp.2009.10.036

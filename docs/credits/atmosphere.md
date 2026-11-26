@@ -183,6 +183,7 @@ Sweby, P. K. (1984). High resolution schemes using flux limiters for hyperbolic 
 Neumaier, A. (1974). Rundungsfehleranalyse einiger Verfahren zur Summation endlicher Summen. *ZAMM – Zeitschrift für Angewandte Mathematik und Mechanik* 54(1), 39–51. doi:10.1002/zamm.19740540106
 - **Model:** the area means over the sphere summed with a running compensation.
 - **Used in:** `@simulation/src/atmosphere/fn/SphereOperators.cpp:163`.
+- **Used in (S3b):** the planet's stock totals over crust pieces in key order, `@simulation/src/planet/fn/Pieces.hpp:39`.
 
 ### Haurwitz 1940: the Rossby–Haurwitz wave
 Haurwitz, B. (1940). The motion of atmospheric disturbances on the spherical Earth. *Journal of Marine Research* 3(3), 254–267. https://elischolar.library.yale.edu/journal_of_marine_research/575 (unverified: pages, given as 254–267 by Williamson et al. 1992 and as 245–267 elsewhere)
