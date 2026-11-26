@@ -6,13 +6,16 @@ import { fileURLToPath } from "node:url";
 // Passed to the preload script so that the capture bridge exists only in capture runs.
 export const CaptureFlag = "--derivean-capture";
 
-// A run that reports nothing for this long is hung: a world that never starts, an engine that stops answering.
-// It is longer than any wait the renderer allows itself by default (src/capture/constant/timing.ts).
-const IdleSeconds = 600;
+// A run that reports nothing for this long, beyond the shots' own timeouts, is hung: a world that never starts, an
+// engine that stops answering. It covers an engine start under load (up to 8 minutes) and the 5 minutes a shot may
+// take to become playable where it stands (PlayableSeconds in src/capture/constant/timing.ts).
+const IdleSeconds = 900;
 
 const repository = fileURLToPath(new URL("../../", import.meta.url));
 const finite = (value) => typeof value === "number" && Number.isFinite(value);
 const flag = (value) => value === undefined || typeof value === "boolean";
+const Readiness = ["site", "local", "region", "far"];
+const readiness = (value) => value === undefined || (Array.isArray(value) && value.every((level) => Readiness.includes(level)));
 
 function reject(file, reason) {
   throw new Error(`Capture plan ${file}: ${reason}`);
@@ -39,6 +42,7 @@ function checkShot(file, shot) {
   if (turn !== undefined && !(finite(turn?.seconds) && turn.seconds >= 0 && finite(turn.radiansPerSecond) && cruise === undefined
     && brush === undefined)) reject(file, `shot ${shot.name} has a malformed turn or one with a cruise or brush`);
   if (shot.map !== undefined && !(finite(shot.map?.span) && shot.map.span > 0)) reject(file, `shot ${shot.name} has a malformed map`);
+  if (!readiness(shot.ready)) reject(file, `shot ${shot.name} asks for readiness other than ${Readiness.join(", ")}`);
 }
 
 // The plan named by DERIVEAN_CAPTURE, or null for a normal run. src/capture/type/CapturePlan.ts owns its shape.
@@ -52,6 +56,7 @@ export async function readCapturePlan() {
   for (const key of ["settleSeconds", "timeoutSeconds"]) {
     if (plan[key] !== undefined && !(finite(plan[key]) && plan[key] >= 0)) reject(file, `${key} is not a duration`);
   }
+  if (!readiness(plan.ready)) reject(file, `ready asks for readiness other than ${Readiness.join(", ")}`);
   const { size } = plan;
   if (size !== undefined && !(Array.isArray(size) && size.length === 2 && size.every((edge) => Number.isInteger(edge) && edge > 0))) reject(file, "size is not a width and a height");
   return { ...plan, out: path.resolve(repository, plan.out ?? ".out/playwright/capture") };
@@ -63,6 +68,9 @@ export function serveCapture(plan, window, handle) {
   const longest = Math.max(0, ...plan.shots.map((shot) => shot.cruise?.seconds ?? 0)) + 2 * (plan.timeoutSeconds ?? 0);
   let watchdog;
   let finished = false;
+  // How each shot ended: settled, stalled (pending work stopped delivering) or timed out, and which lacked the
+  // readiness they asked for. A run in which a shot lacked it is not an acceptance run and exits 2.
+  const outcomes = [];
   const fail = (reason) => {
     if (finished) return;
     finished = true;
@@ -90,12 +98,21 @@ export function serveCapture(plan, window, handle) {
     const { width } = window.getContentBounds();
     await writeFile(path.join(plan.out, `${name}.png`), image.resize({ width, quality: "best" }).toPNG());
     await writeFile(path.join(plan.out, `${name}.json`), `${JSON.stringify(record, null, 2)}\n`);
-    console.log(`Captured ${path.join(plan.out, `${name}.png`)}`);
+    const outcome = record?.outcome ?? "taken";
+    const unready = Array.isArray(record?.unready) ? record.unready : [];
+    outcomes.push({ name, outcome, unready });
+    console.log(`Captured ${path.join(plan.out, `${name}.png`)} ${outcome}${unready.length ? `, unready ${unready.join(" ")}` : ""}`);
   });
   handle("derivean:capture-finish", (failure) => {
     clearTimeout(watchdog);
     if (typeof failure === "string") return fail(failure || "the renderer gave no reason");
     finished = true;
+    const count = (outcome) => outcomes.filter((shot) => shot.outcome === outcome).length;
+    const unready = outcomes.filter((shot) => shot.unready.length).map((shot) => shot.name);
+    console.log(`Capture ended: ${outcomes.length} shots, ${count("settled")} settled, ${count("stalled")} stalled, ${count("timedOut")} timed out; `
+      + (unready.length ? `${unready.length} lacked the readiness they asked for (${unready.join(", ")})` : "none lacked the readiness asked for"));
+    // Electron leaves process.exitCode unread; the code is set as the quit ends.
+    if (unready.length) app.once("will-quit", () => app.exit(2));
     app.quit();
   });
 }

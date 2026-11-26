@@ -45,6 +45,7 @@ Napi::Value clouds(Napi::Env env, const Frame& frame) {
     output["aerosolDepth"] = packed(env, field.aerosolDepth);
     output["hazeDepth"] = packed(env, field.hazeDepth);
     output["hazeTop"] = packed(env, field.hazeTop);
+    output["hazeColour"] = packed(env, field.hazeColour);
     output["hazeThickness"] = field.hazeThickness;
     output["ashAloft"] = packed(env, field.ashAloft);
     output["ashLevel"] = packed(env, field.ashLevel);

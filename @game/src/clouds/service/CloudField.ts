@@ -92,17 +92,36 @@ export function createCloudField() {
       return [latest.bands[band].windX[cz * cells + cx], latest.bands[band].windZ[cz * cells + cx]];
     },
     // The haze of the weather over a world position, linear between cell centres: optical depth of the low band's
-    // haze, the height of its top above the sea and its thickness, and the veil above it.
+    // haze, the height of its top above the sea and its thickness, and the veil above it. The haze's colour is
+    // weighed by each cell's haze.
     air(x: number, z: number): HazeAir | undefined {
       if (!latest) return undefined;
-      const { cells, cell, origin, hazeDepth, hazeTop, aerosolDepth } = latest;
+      const { cells, cell, origin, hazeDepth, hazeTop, hazeColour, aerosolDepth } = latest;
       const fx = (x - origin[0]) / cell - 0.5, fz = (z - origin[1]) / cell - 0.5;
       const x0 = Math.floor(fx), z0 = Math.floor(fz), tx = fx - x0, tz = fz - z0;
-      const at = (values: Float32Array) => {
-        const read = (dx: number, dz: number) => values[(((z0 + dz) % cells + cells) % cells) * cells + ((x0 + dx) % cells + cells) % cells];
-        return (read(0, 0) * (1 - tx) + read(1, 0) * tx) * (1 - tz) + (read(0, 1) * (1 - tx) + read(1, 1) * tx) * tz;
+      const corners = [[0, 0, (1 - tx) * (1 - tz)], [1, 0, tx * (1 - tz)], [0, 1, (1 - tx) * tz], [1, 1, tx * tz]] as const;
+      const index = (dx: number, dz: number) => (((z0 + dz) % cells + cells) % cells) * cells + ((x0 + dx) % cells + cells) % cells;
+      const at = (values: Float32Array) => corners.reduce((sum, [dx, dz, weight]) => sum + values[index(dx, dz)] * weight, 0);
+      // Entries per cell of hazeColour (the contract's five).
+      const stride = hazeColour.length / hazeDepth.length;
+      // A ratio over the four cells, each weighed by its own denominator: the depth at 550 nm for the spectrum,
+      // the depth at that colour for the albedo.
+      const ratio = (entry: number, over: (at: number) => number) => {
+        let sum = 0, weights = 0;
+        for (const [dx, dz, weight] of corners) {
+          const share = weight * Math.max(over(index(dx, dz)), 1e-6);
+          sum += hazeColour[index(dx, dz) * stride + entry] * share;
+          weights += share;
+        }
+        return sum / weights;
       };
-      return { haze: at(hazeDepth), top: at(hazeTop), thickness: latest.hazeThickness, veil: at(aerosolDepth) };
+      const depthAt = (cell: number) => hazeDepth[cell];
+      const colourAt = (colour: number) => (cell: number) => hazeDepth[cell] * (colour === 1 ? 1 : hazeColour[cell * stride + (colour === 0 ? 0 : 1)]);
+      return {
+        haze: at(hazeDepth), top: at(hazeTop), thickness: latest.hazeThickness, veil: at(aerosolDepth),
+        spectrum: [ratio(0, depthAt), 1, ratio(1, depthAt)],
+        albedo: [ratio(2, colourAt(0)), ratio(3, colourAt(1)), ratio(4, colourAt(2))],
+      };
     },
     // The cloud over a world position as the ground's light sees it: the share of the sky covered, and the optical
     // depth of what covers it.

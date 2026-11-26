@@ -1,6 +1,6 @@
 import type { BrushShape, Frame, Point, WorldInfo } from "../../../contract/GameBridge";
 import type { WeatherSought } from "../../clouds/fn/findWeather";
-import type { HazeAir } from "../../sky/type/HazeAir";
+import type { SeenAir } from "../../sky/type/SeenAir";
 
 // What draws the world (CubeScene): the session feeds it frames and poses, the HUD and captures read it.
 export interface WorldView {
@@ -22,7 +22,7 @@ export interface WorldView {
   // Chunks held by each level of cubes.
   levelCounts(): number[];
   // The weather's haze the air is drawn with, null before the first weather snapshot.
-  air(): Readonly<HazeAir> | null;
+  air(): SeenAir | null;
   // GPU milliseconds the clouds take, null while they are not drawn or not timed.
   cloudCost(): number | null;
   // Milliseconds the draw takes on the CPU and on the GPU; null where that is not measured.

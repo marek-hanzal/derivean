@@ -226,8 +226,9 @@ struct WeatherReport {
     std::string cause;                      // one sentence on how the column's clouds came about
 };
 
-// Optical depth at 550 nm of each kind of haze over a cell, swollen by the humidity of its low band.
-std::array<double, HazeKinds> hazeDepths(const Atmosphere& atmosphere, int x, int z);
+// Optical depth at 550 nm of each kind of haze over a cell, swollen by the humidity of the hour near
+// its ground, or dry when `swollen` is false.
+std::array<double, HazeKinds> hazeDepths(const Atmosphere& atmosphere, int x, int z, bool swollen = true);
 
 // m of view along a level line `height` metres above the sea at a position (Koschmieder): clean air
 // thinning with height, and inside the low band its haze and ash spread evenly through it.

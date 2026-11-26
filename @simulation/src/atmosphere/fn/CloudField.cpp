@@ -34,10 +34,22 @@ CloudField cloudField(const Atmosphere& atmosphere) {
     field.aerosolDepth.resize(cells);
     field.hazeDepth.resize(cells);
     field.hazeTop.resize(cells);
+    field.hazeColour.resize(cells * HazeColours);
     field.hazeThickness = LowDepth;
+    const Haze& haze = atmosphere.haze;
     for (size_t cell = 0; cell < cells; ++cell) {
+        const double fine = haze.depth.cells[cell], ash = atmosphere.plume.lowDepth.cells[cell], all = fine + ash;
+        std::array<double, 3> depth{}, albedo{};
+        for (size_t colour = 0; colour < 3; ++colour) {
+            depth[colour] = fine * haze.spectrum[colour].cells[cell] + ash;
+            albedo[colour] = depth[colour] > 1e-12 ? (fine * haze.spectrum[colour].cells[cell] * haze.albedo[colour].cells[cell] + ash) / depth[colour] : 1.0;
+        }
+        float* colour = &field.hazeColour[cell * HazeColours];
+        colour[0] = float(all > 1e-12 ? depth[0] / all : 1.0);
+        colour[1] = float(all > 1e-12 ? depth[2] / all : 1.0);
+        for (size_t c = 0; c < 3; ++c) colour[2 + c] = float(albedo[c]);
         field.aerosolDepth[cell] = float(std::max(0.0, atmosphere.plume.depth.cells[cell] - atmosphere.plume.lowDepth.cells[cell]));
-        field.hazeDepth[cell] = float(atmosphere.haze.depth.cells[cell] + atmosphere.plume.lowDepth.cells[cell]);
+        field.hazeDepth[cell] = float(all);
         field.hazeTop[cell] = float(atmosphere.ground.cells[cell] + LowDepth);
     }
     field.ashAloft.resize(cells);

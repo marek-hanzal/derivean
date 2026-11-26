@@ -3,7 +3,9 @@ import { uniform } from "three/tsl";
 import type { Point } from "../../../contract/GameBridge";
 import { Adaptation, AirEnd, ExposedLight, Exposure, ExposureRange, GroundBounce, GroundTint, ReliefSun, StillAir } from "../constant/air";
 import { createSkyLight, setSkyLight } from "../fn/skyLight";
+import type { AirOptics } from "../type/AirOptics";
 import type { HazeAir } from "../type/HazeAir";
+import type { SeenAir } from "../type/SeenAir";
 import type { SkyNodes } from "../type/SkyNodes";
 
 const PlainAir = 0.35;
@@ -15,8 +17,8 @@ const Setting = [0.02, 0.05] as const;
 const luminance = (color: Color) => 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
 
 // Sun, sky light, air and exposure, all following the simulated sun, as the uniforms node materials light
-// themselves from. Everything here lives in render space.
-export function createDaylight(viewDistance: number) {
+// themselves from. Everything here lives in render space. `optics` is the simulation's clean air.
+export function createDaylight(viewDistance: number, optics: AirOptics) {
   const light = createSkyLight();
   const nodes: SkyNodes = {
     skySun: uniform(light.skySun.value),
@@ -31,6 +33,8 @@ export function createDaylight(viewDistance: number) {
     groundLight: uniform(new Color()),
     airSea: uniform(0),
     airHaze: uniform(new Vector3()),
+    airHazeSpectrum: uniform(new Vector3(1, 1, 1)),
+    airClean: uniform(new Vector4(optics.cleanAir[0], optics.cleanAir[1], optics.cleanAir[2], optics.cleanAirHeight)),
     airShare: uniform(1),
     airEnd: uniform(new Vector2(viewDistance * AirEnd, viewDistance)),
     airVeil: uniform(new Vector4()),
@@ -44,7 +48,7 @@ export function createDaylight(viewDistance: number) {
   // Height above the sea of the ground under the eye, where the light is worked out.
   let altitude = 0;
   // The weather's haze over the eye, eased.
-  const air: HazeAir = { ...StillAir };
+  const air: HazeAir = { ...StillAir, spectrum: [...StillAir.spectrum], albedo: [...StillAir.albedo] };
   let weathered = false;
   const next = new Vector3();
   // Plain shading keeps one air whatever the weather.
@@ -53,6 +57,7 @@ export function createDaylight(viewDistance: number) {
   function breathe() {
     const shown = drawn();
     nodes.airHaze.value.set(shown.haze / shown.thickness, shown.top, shown.veil);
+    nodes.airHazeSpectrum.value.set(...shown.spectrum);
   }
 
   // Plain shading is a fixed white light for judging relief at any hour; daylight is the hour's own.
@@ -93,7 +98,7 @@ export function createDaylight(viewDistance: number) {
     exposure = Math.min(Math.max(Exposure * (ExposedLight / Math.max(fallen, 1e-3)) ** Adaptation, ExposureRange[0]), ExposureRange[1]);
   }
 
-  setSkyLight(light, ReliefSun.toArray(), altitude, drawn());
+  setSkyLight(light, ReliefSun.toArray(), altitude, drawn(), optics);
   breathe();
   relight();
 
@@ -107,27 +112,34 @@ export function createDaylight(viewDistance: number) {
       const moved = ground !== null && Math.abs(ground - altitude) > AltitudeStep;
       if (!moved && light.skySun.value.distanceToSquared(next.set(...direction)) < 2.5e-7) return;
       if (ground !== null) altitude = ground;
-      setSkyLight(light, direction, altitude, drawn());
+      setSkyLight(light, direction, altitude, drawn(), optics);
       relight();
     },
     // The weather's haze over the eye, eased over a second or two like the cloud.
     haze(seen: HazeAir | undefined, dt: number) {
-      if (!seen || !Number.isFinite(seen.haze + seen.top + seen.veil) || !(seen.thickness > 0)) return;
+      if (!seen || ![seen.haze, seen.top, seen.veil, ...seen.spectrum, ...seen.albedo].every(Number.isFinite) || !(seen.thickness > 0)) return;
       weathered = true;
-      const change = Math.abs(seen.haze - air.haze) + Math.abs(seen.veil - air.veil) + Math.abs(seen.top - air.top) / 1000;
+      let change = Math.abs(seen.haze - air.haze) + Math.abs(seen.veil - air.veil) + Math.abs(seen.top - air.top) / 1000;
+      for (let colour = 0; colour < 3; colour++) {
+        change += Math.abs(seen.spectrum[colour] - air.spectrum[colour]) + Math.abs(seen.albedo[colour] - air.albedo[colour]);
+      }
       if (change < 0.0005 && seen.thickness === air.thickness) return;
       const ease = 1 - Math.exp(-2 * dt);
       air.haze += (seen.haze - air.haze) * ease;
       air.veil += (seen.veil - air.veil) * ease;
       air.top += (seen.top - air.top) * ease;
+      for (let colour = 0; colour < 3; colour++) {
+        air.spectrum[colour] += (seen.spectrum[colour] - air.spectrum[colour]) * ease;
+        air.albedo[colour] += (seen.albedo[colour] - air.albedo[colour]) * ease;
+      }
       air.thickness = seen.thickness;
       breathe();
-      setSkyLight(light, light.skySun.value.toArray(), altitude, drawn());
+      setSkyLight(light, light.skySun.value.toArray(), altitude, drawn(), optics);
       relight();
     },
     shade(value: boolean) {
       plain = value;
-      setSkyLight(light, light.skySun.value.toArray(), altitude, drawn());
+      setSkyLight(light, light.skySun.value.toArray(), altitude, drawn(), optics);
       breathe();
       relight();
     },
@@ -142,7 +154,7 @@ export function createDaylight(viewDistance: number) {
     },
     // The weather's haze as the light and the air are drawn with it.
     // Null until the first weather snapshot has reached it.
-    get air(): Readonly<HazeAir> | null { return weathered ? air : null; },
+    get air(): SeenAir | null { return weathered ? { haze: air, optics } : null; },
     // `sea` is the sea's height in render space; call when the render origin moves.
     rebase(sea: number) { nodes.airSea.value = sea; },
   };

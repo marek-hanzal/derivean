@@ -21,8 +21,8 @@ function advance(command) {
     ...frame.cubes.added.flatMap(({ quads, water }) => [quads.buffer, ...water.map((sheet) => sheet.quads.buffer)]),
   ];
   if (frame.clouds) {
-    const { bands, heaping, rain, snow, snowpack, snowLadder, snowLine, aerosolDepth, hazeDepth, hazeTop, ashAloft, ashLevel } = frame.clouds;
-    transfer.push(heaping.buffer, rain.buffer, snow.buffer, snowpack.buffer, snowLadder.buffer, snowLine.buffer, aerosolDepth.buffer, hazeDepth.buffer, hazeTop.buffer, ashAloft.buffer, ashLevel.buffer, ...bands.flatMap((band) => Object.values(band).map(({ buffer }) => buffer)));
+    const { bands, heaping, rain, snow, snowpack, snowLadder, snowLine, aerosolDepth, hazeDepth, hazeTop, hazeColour, ashAloft, ashLevel } = frame.clouds;
+    transfer.push(heaping.buffer, rain.buffer, snow.buffer, snowpack.buffer, snowLadder.buffer, snowLine.buffer, aerosolDepth.buffer, hazeDepth.buffer, hazeTop.buffer, hazeColour.buffer, ashAloft.buffer, ashLevel.buffer, ...bands.flatMap((band) => Object.values(band).map(({ buffer }) => buffer)));
   }
   return { value: frame, transfer };
 }

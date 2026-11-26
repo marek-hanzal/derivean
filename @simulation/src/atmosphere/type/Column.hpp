@@ -55,6 +55,10 @@ struct ColumnProfile {
 
 ColumnProfile profileOf(const AirColumn& column);
 
+// Relative humidity of the air near the ground at this hour: the low band's water against what it holds at
+// the daily mean temperature, lowered as far as the ground warms the air now (raised as it cools at night).
+double surfaceHumidity(const AirColumn& column, const ColumnProfile& profile);
+
 // m by which the air of a band is being lifted: friction and overturning act from below, warm air
 // gliding up over cold acts from above.
 inline double bandLift(const AirColumn& column, int band) {

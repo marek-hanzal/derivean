@@ -130,6 +130,8 @@ void shapeHaze(Atmosphere& atmosphere, const Planet& planet) {
     const Field<double> blank(AirCells, AirCells);
     for (Field<double>& field : haze.mass) field = blank;
     haze.plants = haze.depth = blank;
+    for (Field<double>& field : haze.spectrum) field = Field<double>(AirCells, AirCells, 1.0);
+    for (Field<double>& field : haze.albedo) field = Field<double>(AirCells, AirCells, 1.0);
     haze.work.assign(2 * HazeKinds, blank);
     // Plants hold the ground as far as the rain keeps up with the air: the aeolian stream's cover,
     // over the land of the cell. The planet's fields have to fit the weather grid as its heights do

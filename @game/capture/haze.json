@@ -3,109 +3,144 @@
     "seed": 42,
     "age": 4600000000.0
   },
-  "out": ".out/playwright/renderer/haze-s42-2026-11-26",
+  "out": ".out/playwright/renderer/haze-colour-s42-2026-11-26",
   "settleSeconds": 2,
-  "timeoutSeconds": 180,
+  "timeoutSeconds": 600,
+  "ready": ["site", "local", "region", "far"],
   "shots": [
     {
-      "name": "s42-d030h12-x983040-z12648448-humid-ground",
+      "name": "s42-d035h11-x983040-z13041664-humid-green-ground",
       "position": [
         983040,
         null,
-        12648448
+        13041664
       ],
       "above": 0,
       "yaw": 0.0,
       "pitch": -0.01,
       "fly": false,
       "time": {
-        "dayOfYear": 30,
-        "hour": 12.0,
+        "dayOfYear": 35,
+        "hour": 11.0,
         "rate": 0
       }
     },
     {
-      "name": "s42-d030h12-x983040-z12648448-humid-3km",
+      "name": "s42-d035h11-x983040-z13041664-humid-green-3km",
       "position": [
         983040,
         null,
-        12648448
+        13041664
       ],
-      "above": 2846,
+      "above": 2908,
       "yaw": 0.0,
       "pitch": -0.06,
       "fly": true,
       "time": {
-        "dayOfYear": 30,
-        "hour": 12.0,
+        "dayOfYear": 35,
+        "hour": 11.0,
         "rate": 0
       }
     },
     {
-      "name": "s42-d043h12-x6225920-z5963776-dusty-ground",
+      "name": "s42-d180h09-x16056320-z9895936-humid-warm-ground",
       "position": [
-        6225920,
+        16056320,
         null,
-        5963776
+        9895936
       ],
       "above": 0,
       "yaw": 0.0,
       "pitch": -0.01,
       "fly": false,
       "time": {
-        "dayOfYear": 43,
-        "hour": 12.0,
+        "dayOfYear": 180,
+        "hour": 9.0,
         "rate": 0
       }
     },
     {
-      "name": "s42-d043h12-x6225920-z5963776-dusty-3km",
+      "name": "s42-d180h09-x16056320-z9895936-humid-warm-3km",
       "position": [
-        6225920,
+        16056320,
         null,
-        5963776
+        9895936
       ],
-      "above": 2867,
+      "above": 2785,
       "yaw": 0.0,
       "pitch": -0.06,
       "fly": true,
       "time": {
-        "dayOfYear": 43,
-        "hour": 12.0,
+        "dayOfYear": 180,
+        "hour": 9.0,
         "rate": 0
       }
     },
     {
-      "name": "s42-d191h12-x14352384-z8454144-after-rain-ground",
+      "name": "s42-d190h10-x851968-z12124160-dusty-ground",
       "position": [
-        14352384,
+        851968,
         null,
-        8454144
+        12124160
       ],
       "above": 0,
       "yaw": 0.0,
       "pitch": -0.01,
       "fly": false,
       "time": {
-        "dayOfYear": 191,
-        "hour": 12.0,
+        "dayOfYear": 190,
+        "hour": 10.0,
         "rate": 0
       }
     },
     {
-      "name": "s42-d191h12-x14352384-z8454144-after-rain-3km",
+      "name": "s42-d190h10-x851968-z12124160-dusty-3km",
       "position": [
-        14352384,
+        851968,
         null,
-        8454144
+        12124160
       ],
-      "above": 2970,
+      "above": 2729,
       "yaw": 0.0,
       "pitch": -0.06,
       "fly": true,
       "time": {
-        "dayOfYear": 191,
-        "hour": 12.0,
+        "dayOfYear": 190,
+        "hour": 10.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "s42-d350h09-x1769472-z10420224-after-rain-ground",
+      "position": [
+        1769472,
+        null,
+        10420224
+      ],
+      "above": 0,
+      "yaw": 0.0,
+      "pitch": -0.01,
+      "fly": false,
+      "time": {
+        "dayOfYear": 350,
+        "hour": 9.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "s42-d350h09-x1769472-z10420224-after-rain-3km",
+      "position": [
+        1769472,
+        null,
+        10420224
+      ],
+      "above": 2779,
+      "yaw": 0.0,
+      "pitch": -0.06,
+      "fly": true,
+      "time": {
+        "dayOfYear": 350,
+        "hour": 9.0,
         "rate": 0
       }
     }

@@ -27,5 +27,6 @@ description = "Build and verify the simulation and renderer"
 depends = ["build"]
 run = [
   "mise -C @game run check",
+  "mise -C @game run test",
   "mise -C @napi run test",
 ]

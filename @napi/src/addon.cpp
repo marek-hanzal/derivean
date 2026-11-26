@@ -1,5 +1,6 @@
 #include "chart.hpp"
 #include "convert.hpp"
+#include "atmosphere/constant/Light.hpp"
 #include "atmosphere/constant/Snow.hpp"
 #include "planet/constant/Scale.hpp"
 #include "threads/type/Threads.hpp"
@@ -121,6 +122,14 @@ Napi::Object initialize(Napi::Env env, Napi::Object exports) {
     far["viewDistance"] = CubeView;
     world["far"] = far;
     world["snowLadder"] = numbers(env, sim::SnowLadder);
+    // Clean air by the colours the picture is drawn in (WorldInfo.air).
+    auto air = Napi::Object::New(env);
+    air["wavelengths"] = numbers(env, sim::Wavelengths);
+    std::array<double, sim::Wavelengths.size()> clean{};
+    for (size_t colour = 0; colour < clean.size(); ++colour) clean[colour] = sim::cleanAirAt(sim::Wavelengths[colour]);
+    air["cleanAir"] = numbers(env, clean);
+    air["cleanAirHeight"] = sim::RayleighHeight;
+    world["air"] = air;
     world["materials"] = project(env, Materials, [](Napi::Env env, const MaterialInfo& value) {
         auto material = Napi::Object::New(env);
         material["name"] = Napi::String::New(env, value.name.data(), value.name.size());

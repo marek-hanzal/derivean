@@ -36,6 +36,10 @@ double moistLapseAt(double celsius) { return std::clamp(6.4e-3 - 8.5e-5 * celsiu
 
 double pressureAt(double height) { return 101325.0 * std::exp(-height / 7800.0); }
 
+double surfaceHumidity(const AirColumn& column, const ColumnProfile& profile) {
+    return std::min(1.0, column.vapour[Low] * profile.perCapacity[Low] * std::max(0.2, 1.0 - SurfaceDrying * column.surfaceWarmth));
+}
+
 ColumnProfile profileOf(const AirColumn& column) {
     ColumnProfile profile;
     profile.lapse = std::clamp((column.airTemperature - column.upperTemperature) / UpperLevel, SlackLapse, SteepLapse);
@@ -60,7 +64,7 @@ ColumnProfile profileOf(const AirColumn& column) {
     // drier air it mixes with on the way.
     // Air warmed at the ground is relatively drier and condenses higher up; air cooled there may
     // be saturated where it stands.
-    const double humidity = std::min(1.0, column.vapour[Low] * profile.perCapacity[Low] * std::max(0.2, 1.0 - SurfaceDrying * column.surfaceWarmth));
+    const double humidity = surfaceHumidity(column, profile);
     profile.condensationLevel = DewSpread * (1.0 - humidity);
     profile.cloudBaseCelsius = floor + column.surfaceWarmth - DryLapse * profile.condensationLevel;
     profile.moistLapse = moistLapseAt(profile.cloudBaseCelsius);

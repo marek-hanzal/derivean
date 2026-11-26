@@ -1,4 +1,5 @@
-import { CleanAir, CleanAirHeight, VeilHeight } from "../constant/air";
+import { VeilHeight } from "../constant/air";
+import type { AirOptics } from "../type/AirOptics";
 import type { HazeAir } from "../type/HazeAir";
 
 // Share of the light the air scatters out of the sun's beam that reaches the ground, and of what the haze scatters
@@ -23,18 +24,25 @@ function airMass(degrees: number) {
   return 1 / (Math.sin(degrees * Math.PI / 180) + 0.50572 * (degrees + 6.07995) ** -1.6364);
 }
 
-// Optical depth of the weather's haze and veil above a height in metres over the sea.
-export function hazeAbove(air: HazeAir, altitude: number) {
+// Optical depth at 550 nm of the weather's haze and of the veil above a height in metres over the sea.
+function layersAbove(air: HazeAir, altitude: number) {
   // The band's density goes on down into valleys below the cell's mean ground, as the aerial perspective draws it.
   const inBand = Math.max(0, air.top - altitude) / air.thickness;
-  return air.haze * inBand + air.veil * Math.exp(-Math.max(altitude, 0) / VeilHeight);
+  return { band: air.haze * inBand, veil: air.veil * Math.exp(-Math.max(altitude, 0) / VeilHeight) };
+}
+
+// Optical depth at 550 nm of the weather's haze and veil above a height in metres over the sea.
+export function hazeAbove(air: HazeAir, altitude: number) {
+  const { band, veil } = layersAbove(air, altitude);
+  return band + veil;
 }
 
 // The clear sky's light over ground `altitude` metres above the sea, with the sun `up` (sine of its height): the
 // air drawn by the aerial perspective, its clean air thinning with height and the weather's haze, scatters the
 // sun's beam, and Bird and Hulstrom's model gives what is left of the beam and what of the scattered light falls
 // on level ground. The same air, so the low sun's light and its shadows follow from what the view shows of the air.
-export function clearSky(up: number, altitude: number, air: HazeAir): ClearSky {
+// What the haze absorbs (its albedo below 1) is lost to both; what it scatters goes forward to the ground.
+export function clearSky(up: number, altitude: number, air: HazeAir, optics: AirOptics): ClearSky {
   const out: ClearSky = { direct: [0, 0, 0], diffuse: [0, 0, 0] };
   const height = Math.asin(Math.max(-1, Math.min(1, up))) * 180 / Math.PI;
   // The sun's height the model is evaluated at, and what the twilight leaves of that below it.
@@ -42,17 +50,20 @@ export function clearSky(up: number, altitude: number, air: HazeAir): ClearSky {
   const twilight = height < TwilightFrom ? 10 ** ((height - TwilightFrom) / TwilightFall) : 1;
   const mass = airMass(degrees);
   const above = Math.max(altitude, 0);
-  const haze = hazeAbove(air, altitude);
-  const hazeThrough = Math.exp(-haze * mass);
+  const layers = layersAbove(air, altitude);
   // Light scattered more than once reaches the ground from a low sun through this much more air.
   const spread = 1 - mass + mass ** 1.02;
   const sine = Math.sin(degrees * Math.PI / 180);
   // The beam's own path: none once the sun is down.
   const beam = height > 0 ? airMass(height) : Infinity;
   for (let colour = 0; colour < 3; colour++) {
-    const clean = CleanAir[colour] * CleanAirHeight * Math.exp(-above / CleanAirHeight);
+    const clean = optics.cleanAir[colour] * optics.cleanAirHeight * Math.exp(-above / optics.cleanAirHeight);
     const cleanThrough = Math.exp(-clean * mass);
-    out.diffuse[colour] = twilight * Reaching * sine * (0.5 * (1 - cleanThrough) + HazeForward * (1 - hazeThrough)) / spread;
+    const fine = layers.band * air.spectrum[colour];
+    const haze = fine + layers.veil, scattered = fine * air.albedo[colour] + layers.veil;
+    // Bird and Hulstrom's split of the haze's transmittance into what it absorbs and what it scatters.
+    const unabsorbed = Math.exp(-(haze - scattered) * mass), unscattered = Math.exp(-scattered * mass);
+    out.diffuse[colour] = twilight * Reaching * sine * unabsorbed * (0.5 * (1 - cleanThrough) + HazeForward * (1 - unscattered)) / spread;
     out.direct[colour] = Math.exp(-(clean + haze) * beam);
   }
   return out;

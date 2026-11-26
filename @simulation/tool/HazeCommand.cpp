@@ -1,6 +1,7 @@
 #include "Arguments.hpp"
 
 #include "atmosphere/fn/Kernels.hpp"
+#include "climate/type/Climate.hpp"
 #include "core/service/Workers.hpp"
 #include "planet/type/Planet.hpp"
 
@@ -18,17 +19,20 @@ constexpr double Tg = 1e9;   // kg
 
 // One column at one time: what the haze is made of and how far one sees through it.
 struct Moment {
-    double day{}, x{}, z{}, humidity{}, ground{}, rainBefore{}, plants{}, water{};
+    double day{}, x{}, z{}, humidity{}, ground{}, rainBefore{}, plants{}, water{}, dryHours{};
+    double daily{}, celsius{};   // the low band's humidity at the daily mean temperature; the air's °C at the ground now
     std::array<double, HazeKinds> depth{};
-    double total{}, low{}, high{};   // optical depth; view in km at sea level (or the ground) and 3 km up
+    double total{}, dry{}, low{}, high{};   // optical depth swollen and dry; view in km at the ground and 3 km up
 };
 
 void print(const char* name, const Moment& m) {
-    std::printf("%-12s day %6.2f at x %8.0f z %8.0f  ground %5.0f m  water %.2f  plants %.2f  RH %3.0f %%  rain in the 5 h before %5.1f mm\n", name, m.day, m.x,
-                m.z, m.ground, m.water, m.plants, 100 * m.humidity, m.rainBefore);
+    std::printf("%-12s day %6.2f at x %8.0f z %8.0f  ground %5.0f m  water %.2f  plants %.2f  %.0f °C  RH %3.0f %% (daily mean %3.0f %%)\n", name,
+                m.day, m.x, m.z, m.ground, m.water, m.plants, m.celsius, 100 * m.humidity, 100 * m.daily);
+    std::printf("             rain in the 5 h before %.1f mm, dry for %.0f h\n", m.rainBefore, m.dryHours);
     std::printf("             AOD %.3f =", m.total);
     for (int kind = 0; kind < HazeKinds; ++kind) std::printf("  %s %.3f (%2.0f %%)", KindNames[kind], m.depth[size_t(kind)], m.total > 0 ? 100 * m.depth[size_t(kind)] / m.total : 0.0);
-    std::printf("\n             view at sea level %.0f km, at 3 km %.0f km\n", m.low, m.high);
+    std::printf("\n             dry (no water taken up) %.3f, so humidity multiplies it by %.2f\n", m.dry, m.dry > 0 ? m.total / m.dry : 0.0);
+    std::printf("             view at the ground %.0f km, at 3 km %.0f km\n", m.low, m.high);
 }
 
 // The cases sought, each the median among the columns that fit it, so that none is an extreme.
@@ -58,11 +62,11 @@ int hazeCommand(const Arguments& arguments) {
     std::vector<std::array<double, 6>> recent(cells);
     std::vector<double> sumDepth(cells, 0.0), mostDepth(cells, 0.0);
     std::vector<std::array<double, HazeKinds>> sumKinds(cells);
-    std::vector<double> sumRain(cells, 0.0), sumHumidity(cells, 0.0);
+    std::vector<double> sumRain(cells, 0.0), sumHumidity(cells, 0.0), dryHours(cells, 0.0);
     std::array<double, 20> humidities{};   // dry low land by relative humidity, 5 % bins
-    std::array<Case, 3> cases{Case{"after rain", {}}, Case{"humid haze", {}}, Case{"dusty day", {}}};
+    std::array<Case, 4> cases{Case{"after rain", {}}, Case{"humid green", {}}, Case{"dusty day", {}}, Case{"humid warm", {}}};
     double hazeSeconds = 0, stepSeconds = 0;
-    int samples = 0;
+    int samples = 0;   // six-hourly
     const int64_t end = air.step + int64_t(days * AirStepsPerDay);
     while (air.step < end) {
         // The step as the atmosphere runs it, and the haze's part timed on its own over a copy.
@@ -86,9 +90,13 @@ int hazeCommand(const Arguments& arguments) {
             auto& rain = recent[cell];
             std::rotate(rain.begin(), rain.begin() + 1, rain.end());
             rain.back() = (air.rainRate.cells[cell] + air.snowRate.cells[cell]) * AirStep;
+            dryHours[cell] = rain.back() > 0.1 ? 0.0 : dryHours[cell] + AirStep / 3600.0;
         }
-        if (air.step % 6 != 0) continue;
-        ++samples;
+        // Means every six hours; the cases between 9 and 15 h, when a picture of them can be taken.
+        const int64_t hour = air.step % AirStepsPerDay;
+        const bool sampled = air.step % 6 == 0, daylight = hour >= 9 && hour <= 15;
+        if (!sampled && !daylight) continue;
+        samples += sampled;
         for (int z = 0; z < AirCells; ++z)
             for (int x = 0; x < AirCells; ++x) {
                 const size_t cell = air.ground.index(x, z);
@@ -97,24 +105,34 @@ int hazeCommand(const Arguments& arguments) {
                 m.x = (x + 0.5) * AirCell, m.z = (z + 0.5) * AirCell;
                 m.depth = hazeDepths(air, x, z);
                 for (double d : m.depth) m.total += d;
-                sumDepth[cell] += m.total;
-                for (int kind = 0; kind < HazeKinds; ++kind) sumKinds[cell][size_t(kind)] += m.depth[size_t(kind)];
-                mostDepth[cell] = std::max(mostDepth[cell], m.total);
                 m.ground = air.ground.cells[cell];
                 m.water = air.openWater.cells[cell];
                 m.plants = air.haze.plants.cells[cell];
                 const AirColumn column = columnAt(air, x, z);
-                m.humidity = std::clamp(column.vapour[Low] * profileOf(column).perCapacity[Low], 0.0, 1.0);
-                sumHumidity[cell] += m.humidity;
-                sumRain[cell] += (air.rainRate.cells[cell] + air.snowRate.cells[cell]) * DaySeconds;
+                const ColumnProfile profile = profileOf(column);
+                m.humidity = surfaceHumidity(column, profile);
+                m.daily = std::min(1.0, column.vapour[Low] * profile.perCapacity[Low]);
+                m.celsius = column.airTemperature - LapseRate * column.ground + column.surfaceWarmth;
+                m.dryHours = dryHours[cell];
+                if (sampled) {
+                    sumDepth[cell] += m.total;
+                    for (int kind = 0; kind < HazeKinds; ++kind) sumKinds[cell][size_t(kind)] += m.depth[size_t(kind)];
+                    mostDepth[cell] = std::max(mostDepth[cell], m.total);
+                    sumHumidity[cell] += m.humidity;
+                    sumRain[cell] += (air.rainRate.cells[cell] + air.snowRate.cells[cell]) * DaySeconds;
+                }
                 for (int k = 0; k < 5; ++k) m.rainBefore += recent[cell][size_t(k)];
                 const bool rainingNow = recent[cell].back() > 0.01, lowLand = m.water < 0.5 && m.ground < 300;
-                // The cases are looked for at noon, when a picture of them can be taken.
-                if (!lowLand || air.step % AirStepsPerDay != 12) continue;
+                if (!lowLand || !daylight) continue;
+                for (double d : hazeDepths(air, x, z, false)) m.dry += d;
                 m.low = viewDistance(air, {m.x, m.z}, m.ground) / 1000;
                 m.high = viewDistance(air, {m.x, m.z}, 3000.0) / 1000;
                 if (!rainingNow && m.rainBefore > 1.0) cases[0].found.push_back(m);
-                if (!rainingNow && m.rainBefore < 0.05 && m.humidity > 0.7) cases[1].found.push_back(m);
+                // Humid continental air: green land, the hour's humidity over 80 %, three days without rain.
+                if (!rainingNow && m.plants > 0.6 && m.humidity > 0.8 && m.dryHours >= 72) {
+                    cases[1].found.push_back(m);
+                    if (m.celsius > 15) cases[3].found.push_back(m);   // the same in the growing season
+                }
                 if (!rainingNow && m.rainBefore < 0.05) humidities[std::min<size_t>(19, size_t(m.humidity * 20))] += 1;
                 if (m.humidity < 0.4 && m.depth[MineralDust] > 0.5 * m.total && m.total > 0.1) cases[2].found.push_back(m);
             }
@@ -164,7 +182,7 @@ int hazeCommand(const Arguments& arguments) {
         for (int kind = 0; kind < HazeKinds; ++kind) std::printf("  %s %2.0f %%", KindNames[kind], region.sum > 0 ? 100 * region.kinds[size_t(kind)] / region.sum : 0.0);
         std::printf("  | rain %.2f mm/day, RH %.0f %%\n", region.count > 0 ? region.rain / region.count : 0.0, region.count > 0 ? 100 * region.humidity / region.count : 0.0);
     }
-    std::printf("dry low land by relative humidity (5 %% bins from 0):");
+    std::printf("low land without rain, 9 to 15 h, by the hour's relative humidity (5 %% bins from 0):");
     double dry = 0;
     for (double count : humidities) dry += count;
     for (double count : humidities) std::printf(" %.1f", dry > 0 ? 100 * count / dry : 0.0);
@@ -173,7 +191,11 @@ int hazeCommand(const Arguments& arguments) {
 
     for (Case& found : cases) {
         if (found.found.empty()) std::printf("%-12s none found\n", found.name);
-        else print(found.name, median(found.found));
+        else {
+            std::printf("%-12s %zu columns, the median and the tenth from the top:\n", found.name, found.found.size());
+            print(found.name, median(found.found));
+            print(found.name, found.found[found.found.size() * 9 / 10]);
+        }
     }
     return 0;
 }

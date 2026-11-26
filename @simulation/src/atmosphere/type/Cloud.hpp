@@ -54,6 +54,9 @@ struct SunDirection {
     double x{}, up{}, z{};
 };
 
+// Entries per cell of CloudField::hazeColour.
+inline constexpr int HazeColours = 5;
+
 // World-anchored cloud description for a renderer. Channel entry (x, z) of every band belongs to
 // the column centred at ((x + ½), (z + ½)) · cell in world metres, and the whole field repeats
 // after `span`. The renderer adds the detail below a cell; coverage, height, thickness, phase,
@@ -82,6 +85,10 @@ struct CloudField {
     std::vector<float> aerosolDepth; // visible optical depth of fine ash and sulphate veil over the cell above the low band: dims and reddens the sun
     std::vector<float> hazeDepth;    // optical depth at 550 nm of the low band's haze and ash, spread evenly through hazeThickness below hazeTop
     std::vector<float> hazeTop;      // m above `seaLevel` of the top of the low band
+    // The colour of hazeDepth, HazeColours entries per cell from cell · HazeColours: its optical depth at the
+    // red and blue Wavelengths against 550 nm, then its single-scattering albedo at red, green and blue. The
+    // ash in it counts as grey and not absorbing.
+    std::vector<float> hazeColour;
     double hazeThickness{};          // m of the low band below hazeTop
     std::vector<float> ashAloft;     // kg/m² of fine ash in the air over the cell: where there is an ash cloud to draw
     std::vector<float> ashLevel;     // m above `seaLevel` around which most of that ash floats

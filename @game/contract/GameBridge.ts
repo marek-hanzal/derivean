@@ -50,6 +50,9 @@ export interface WorldInfo {
   planetSpan: number;
   // Metres above the sea of the rungs CloudField.snowLadder keeps snow at.
   snowLadder: number[];
+  // Clean air by the colours the picture is drawn in: their wavelengths in nm (red, green, blue), what clean air
+  // takes from light at each per metre at sea level, and the metres over which it thins by e.
+  air: { wavelengths: number[]; cleanAir: number[]; cleanAirHeight: number };
   // Shorts per quad in every Int16Array of faces: 9.
   faceWords: number;
   // Level k holds cubes of voxelSize · 2^k metres on the voxels' own lattice, from
@@ -230,7 +233,7 @@ export interface Frame {
   // Weather at the player from the simulated atmosphere: °C at the ground, rain and snow in mm/h of water, wind in
   // m/s along x and z, cloud cover and relative humidity as shares, pressure in Pa, snowpack in kg/m² (mm of
   // water) lying on ground of the player's height there. `lag` is the calendar seconds the atmosphere is behind the clock, above
-  // zero only while a high rate outruns it.
+  // zero while a high rate or a skip outruns it, and exactly zero again once its stepping has caught up.
   weather: {
     temperature: number; rain: number; snow: number; wind: [number, number];
     cloudCover: number; humidity: number; pressure: number; snowpack: number; lag: number;
@@ -293,6 +296,9 @@ export interface CloudField {
   hazeDepth: Float32Array;
   hazeTop: Float32Array;
   hazeThickness: number;
+  // The colour of hazeDepth, five entries per cell from cell · 5: its optical depth at the red and blue
+  // WorldInfo.air.wavelengths against 550 nm, then its single-scattering albedo at red, green and blue.
+  hazeColour: Float32Array;
   // kg/m² of fine ash in the air over each cell, and the metres above `seaLevel` around which most of it floats:
   // where there is an ash cloud to draw. All three are zero until something throws ash into the air.
   ashAloft: Float32Array;

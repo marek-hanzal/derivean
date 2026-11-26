@@ -1,4 +1,4 @@
-import type { WorldOptions } from "../../../contract/GameBridge";
+import type { Frame, WorldOptions } from "../../../contract/GameBridge";
 import type { WeatherSought } from "../../clouds/fn/findWeather";
 
 export interface CaptureShot {
@@ -37,6 +37,9 @@ export interface CaptureShot {
   // Opens the map over the shot, centred on the player, with this many metres across the shorter side of the
   // window; the shot waits for its sharp chart and a cruise flies with the map open. Omitted closes the map.
   map?: { span: number };
+  // Readiness the shot needs to count (Frame.ready): it is not taken on a stall without it, and once its timeout
+  // has passed without it, it is taken and recorded as `unready`. Overrides the plan's.
+  ready?: Array<keyof Frame["ready"]>;
 }
 
 export interface CapturePlan {
@@ -53,6 +56,9 @@ export interface CapturePlan {
   timeoutSeconds?: number;
   // Window content size in CSS pixels; the window's usual size when absent.
   size?: [number, number];
+  // Readiness every shot needs to count, unless the shot says otherwise (CaptureShot.ready). An acceptance plan
+  // asks for all four; a stand-in picture then never passes for one.
+  ready?: Array<keyof Frame["ready"]>;
   shots: CaptureShot[];
 }
 

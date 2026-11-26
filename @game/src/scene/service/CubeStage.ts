@@ -40,7 +40,9 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
   camera.far = viewDistance * 2;
   camera.updateProjectionMatrix();
 
-  const daylight = createDaylight(viewDistance);
+  // A recording made before the clean air was part of the world cannot be drawn in it.
+  if (!world.air) throw new Error("This world has no clean air (WorldInfo.air): its addon or recording predates it");
+  const daylight = createDaylight(viewDistance, world.air);
   daylight.rebase(world.seaLevel);
   const sky = daylight.nodes;
   scene.backgroundNode = skyBackground(sky);

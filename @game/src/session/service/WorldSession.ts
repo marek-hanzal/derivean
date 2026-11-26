@@ -83,9 +83,11 @@ export function createWorldSession(
     const active = pilot.active();
     if (active) visited = true;
     if (active && dt > 0) metrics.frame(dt);
-    // The engine streams only when asked, so a paused world is still advanced until it has settled, and once
-    // more for a skip of the clock asked for from the launcher.
-    if (world && !inFlight && (active || !frame || !worldSettled(frame) || clock.skipping)) advance(time, world, pilot);
+    // The engine streams and steps the weather only when asked, so a paused world is still advanced until it has
+    // settled, for a skip of the clock asked for from the launcher, and until the weather has caught up with the
+    // calendar after one: each advance collects the last slice of weather and starts the next.
+    const behind = frame !== undefined && frame.weather.lag > 0;
+    if (world && !inFlight && (active || !frame || !worldSettled(frame) || behind || clock.skipping)) advance(time, world, pilot);
     else if (!active && !inFlight) lastAdvance = time;
     if (!world) return undefined;
     scene.target(active ? frame?.target?.voxel : undefined, pilot.shape, pilot.radius);

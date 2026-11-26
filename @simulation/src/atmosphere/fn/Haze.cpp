@@ -1,5 +1,6 @@
 #include "atmosphere/fn/Kernels.hpp"
 
+#include "atmosphere/constant/Light.hpp"
 #include "climate/constant/Moisture.hpp"
 #include "core/service/Workers.hpp"
 #include "hydrology/constant/Water.hpp"
@@ -12,18 +13,30 @@ namespace {
 // particle at relative humidity h holds 1 + κ·h/(1 − h) times its dry volume. Extinction then grows
 // as that volume ratio to the power `swelling`/3, fitted to Mie theory over the swelling particles
 // (water lowering their refractive index) for humidities up to 95 %.
+// By colour (Wavelengths, 680, 550 and 440 nm), Mie theory over the same sizes gives each kind's dry
+// extinction against 550 nm (an Ångström exponent of −0.2 for dust, 0 for salt, 0.8 for sulphate and
+// 1 for organics) and its single-scattering albedo, from the refractive indices: dust 1.53 + 0.0010i,
+// 0.0014i, 0.0025i (Dubovik et al. 2002, Saharan); salt, ammonium sulphate and biogenic organics do not
+// absorb. Water taken up adds scattering and no absorption. It flattens the spectrum of sulphate (an
+// exponent of 0.5 at 90 %), which is left out.
 struct Optics {
     double extinction;   // m²/kg of dry aerosol
     double kappa;
     double swelling;
     double radius;       // m, mass median of the dry particles
     double density;      // kg/m³ dry
+    std::array<double, 3> spectrum;   // dry extinction by colour against 550 nm
+    std::array<double, 3> albedo;     // dry single-scattering albedo by colour
 };
 constexpr Optics KindOptics[HazeKinds] = {
-    {740.0, 0.03, 2.0, 1.25e-6, 2650.0},    // mineral dust, lognormal σ 2 (Koehler et al. 2009 for κ)
-    {780.0, 1.1, 1.95, 1.0e-6, 2160.0},     // sea salt of the Gong spectrum (Zieger et al. 2017 for κ)
-    {3660.0, 0.61, 2.2, 0.3e-6, 1770.0},    // ammonium sulphate, accumulation mode σ 2
-    {4010.0, 0.1, 2.35, 0.3e-6, 1400.0},    // secondary organics, accumulation mode σ 2
+    // mineral dust, lognormal σ 2 (Koehler et al. 2009 for κ)
+    {740.0, 0.03, 2.0, 1.25e-6, 2650.0, {1.040, 1.0, 0.955}, {0.9825, 0.9701, 0.9393}},
+    // sea salt of the Gong spectrum (Zieger et al. 2017 for κ)
+    {780.0, 1.1, 1.95, 1.0e-6, 2160.0, {0.997, 1.0, 0.998}, {1.0, 1.0, 1.0}},
+    // ammonium sulphate, accumulation mode σ 2
+    {3660.0, 0.61, 2.2, 0.3e-6, 1770.0, {0.817, 1.0, 1.169}, {1.0, 1.0, 1.0}},
+    // secondary organics, accumulation mode σ 2
+    {4010.0, 0.1, 2.35, 0.3e-6, 1400.0, {0.793, 1.0, 1.208}, {1.0, 1.0, 1.0}},
 };
 // Above this humidity haze particles grow into fog and cloud droplets, which the clouds own.
 constexpr double HumidityCap = 0.95;
@@ -41,13 +54,15 @@ constexpr double Brushing = 0.002;
 constexpr double LandRoughness = 0.1;      // m, mixed plant cover
 constexpr double SeaRoughness = 2e-4;      // m
 
-double humidityOf(const AirColumn& column) { return std::clamp(column.vapour[Low] * profileOf(column).perCapacity[Low], 0.0, HumidityCap); }
+// The particles swell with the humidity of the hour, which the sun's warming of the ground air lowers by day.
+double humidityOf(const AirColumn& column) { return std::clamp(surfaceHumidity(column, profileOf(column)), 0.0, HumidityCap); }
 
 double swellOf(int kind, double humidity) { return 1.0 + KindOptics[kind].kappa * humidity / (1.0 - humidity); }
 
-double opticalDepth(int kind, double mass, double humidity) {
-    return mass * KindOptics[kind].extinction * std::pow(swellOf(kind, humidity), KindOptics[kind].swelling / 3.0);
-}
+// Extinction of the swollen particles against the dry ones.
+double growthOf(int kind, double humidity) { return std::pow(swellOf(kind, humidity), KindOptics[kind].swelling / 3.0); }
+
+double opticalDepth(int kind, double mass, double humidity) { return mass * KindOptics[kind].extinction * growthOf(kind, humidity); }
 
 // Rain takes down a share of everything, the ground a share of each kind, and the same pass
 // measures how much the haze left hides.
@@ -64,6 +79,7 @@ void depositHaze(Atmosphere& atmosphere, int begin, int end, std::array<double, 
             const double roughness = mix(LandRoughness, SeaRoughness, atmosphere.openWater.cells[cell]);
             const double friction = 0.4 * speed / std::log(10.0 / roughness);
             double depth = 0;
+            std::array<double, 3> colours{}, scattered{};
             for (int kind = 0; kind < HazeKinds; ++kind) {
                 const Optics& optics = KindOptics[kind];
                 const double swell = swellOf(kind, humidity), radius = optics.radius * std::cbrt(swell);
@@ -75,9 +91,18 @@ void depositHaze(Atmosphere& atmosphere, int begin, int end, std::array<double, 
                 mass -= rained + settled;
                 rows[z][size_t(kind)] += rained * AirCellArea;
                 rows[z][size_t(HazeKinds + kind)] += settled * AirCellArea;
-                depth += opticalDepth(kind, mass, humidity);
+                const double growth = growthOf(kind, humidity), seen = mass * optics.extinction * growth;
+                depth += seen;
+                for (size_t colour = 0; colour < 3; ++colour) {
+                    colours[colour] += seen * optics.spectrum[colour];
+                    scattered[colour] += seen * optics.spectrum[colour] * (1.0 - (1.0 - optics.albedo[colour]) / growth);
+                }
             }
             haze.depth.cells[cell] = depth;
+            for (size_t colour = 0; colour < 3; ++colour) {
+                haze.spectrum[colour].cells[cell] = depth > 1e-12 ? colours[colour] / depth : 1.0;
+                haze.albedo[colour].cells[cell] = colours[colour] > 1e-12 ? scattered[colour] / colours[colour] : 1.0;
+            }
         }
     }
 }
@@ -102,8 +127,8 @@ void stepHaze(Atmosphere& atmosphere, Workers& workers) {
         }
 }
 
-std::array<double, HazeKinds> hazeDepths(const Atmosphere& atmosphere, int x, int z) {
-    const double humidity = humidityOf(columnAt(atmosphere, x, z));
+std::array<double, HazeKinds> hazeDepths(const Atmosphere& atmosphere, int x, int z, bool swollen) {
+    const double humidity = swollen ? humidityOf(columnAt(atmosphere, x, z)) : 0.0;
     const size_t cell = atmosphere.ground.index(x, z);
     std::array<double, HazeKinds> depths{};
     for (int kind = 0; kind < HazeKinds; ++kind) depths[size_t(kind)] = opticalDepth(kind, atmosphere.haze.mass[size_t(kind)].cells[cell], humidity);

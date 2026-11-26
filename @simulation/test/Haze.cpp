@@ -1,4 +1,5 @@
 #include "atmosphere/fn/Kernels.hpp"
+#include "atmosphere/constant/Light.hpp"
 #include "climate/constant/Moisture.hpp"
 #include "core/service/Workers.hpp"
 #include "planet/type/Planet.hpp"
@@ -91,6 +92,14 @@ void testHaze() {
     const double desertOrganic = eastMean(clean.haze.mass[Organic], 4, AirCells / 2 - 4), greenOrganic = eastMean(clean.haze.mass[Organic], AirCells / 2 + 4, AirCells - 4);
     expect(greenOrganic > 20 * desertOrganic, "the desert gives off as many organics as plants", desertOrganic / std::max(greenOrganic, 1e-30));
 
+    // Dust takes red light a little more than blue and absorbs blue most; the sea's salt and sulphate absorb nothing.
+    const int desertX = AirCells * 3 / 4, desertZ = AirCells / 4, seaCellX = AirCells / 4, seaCellZ = AirCells / 4;
+    const Haze& raised = clean.haze;
+    expect(raised.albedo[2].at(desertX, desertZ) < raised.albedo[0].at(desertX, desertZ) && raised.albedo[0].at(desertX, desertZ) < 1.0, "dust does not absorb blue",
+           raised.albedo[2].at(desertX, desertZ));
+    expect(raised.spectrum[0].at(desertX, desertZ) > raised.spectrum[2].at(desertX, desertZ), "dust does not take red as much as blue", raised.spectrum[2].at(desertX, desertZ));
+    expect(raised.albedo[2].at(seaCellX, seaCellZ) > 0.995, "the sea's haze absorbs", raised.albedo[2].at(seaCellX, seaCellZ));
+
     // Wet ground holds its dust.
     stepHaze(wet, workers);
     const double wetDust = eastMean(wet.haze.mass[MineralDust], 4, AirCells / 2 - 4);
@@ -125,6 +134,10 @@ void testHaze() {
     for (size_t cell = 0; cell < field.hazeDepth.size(); ++cell) {
         const double split = double(field.hazeDepth[cell]) + field.aerosolDepth[cell] - start.haze.depth.cells[cell] - start.plume.depth.cells[cell];
         expect(std::abs(split) < 1e-5 * (1 + start.haze.depth.cells[cell]), "the published haze and veil do not add up", split);
+        for (int entry = 0; entry < HazeColours; ++entry) {
+            const float value = field.hazeColour[cell * HazeColours + size_t(entry)];
+            expect(value > 0.5f && value < 1.5f && (entry < 2 || value <= 1.0f), "the haze's published colour is out of range", value);
+        }
     }
     const Vec2 sea{(seaX + 0.5) * AirCell, (seaZ + 0.5) * AirCell};
     Atmosphere thick = start;

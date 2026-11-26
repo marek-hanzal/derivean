@@ -1,4 +1,4 @@
-// 267 lines: one state machine over a shot's phases, which share the shot's bookkeeping; split by phase, that
+// 272 lines: one state machine over a shot's phases, which share the shot's bookkeeping; split by phase, that
 // state would pass through a layer that only forwards it.
 import type { Frame, Point } from "../../../contract/GameBridge";
 import type { WorldClock } from "../../calendar/service/WorldClock";
@@ -43,7 +43,6 @@ const Caught = 60;
 const surfaceOf = (frame: Frame, ground: number) => Math.max(ground, frame.waterLevel ?? -Infinity);
 
 // Steers the player through the plan's shots without pointer lock: teleport, wait for the surroundings, shoot.
-// About 250 lines, kept whole: it is one state machine over a shot's phases, and the phases share its state.
 // The engine applies a flight toggle in the frame that carries it, so each command can ask for one whenever the
 // last frame disagrees with the wanted state.
 export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, host: CaptureHost): Pilot {
@@ -191,16 +190,22 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
       if (worldSettled(frame) && posed && host.mapSettled()) quiet ??= time;
       else quiet = undefined;
       const settled = quiet !== undefined && time - quiet >= settle;
-      const stalled = quiet === undefined && frame.streamingReady && posed
+      const quietTiles = quiet === undefined && frame.streamingReady && posed
         && time - Math.max(since, lastArrival) > StallSeconds * 1000;
+      // A shot that asks for levels of readiness is not taken on a stall without them: it waits them out to its
+      // timeout and is then taken as lacking them. It still stands again on a stall.
+      const unready = (current.ready ?? plan.ready ?? []).filter((level) => !frame.ready[level]);
+      const stalled = quietTiles && unready.length === 0;
       const moved = surface !== undefined && frame.ground !== null
         && Math.abs(surfaceOf(frame, frame.ground) - surface) > SurfaceTolerance;
-      if ((settled || stalled) && !lost && moved && refined < Refinements && frame.ground !== null) {
+      if ((settled || quietTiles) && !lost && moved && refined < Refinements && frame.ground !== null) {
         refined++;
         next.teleport = stand(current, frame, frame.ground, x, z);
         enter("settle", time);
       } else if (settled || stalled || lost) {
         if (!settled) notes[stalled ? "stalled" : "timedOut"] = true;
+        notes.outcome = settled ? "settled" : stalled ? "stalled" : "timedOut";
+        if (unready.length) notes.unready = unready;
         notes.waitedSeconds = Number(((time - began) / 1000).toFixed(1));
         if (current.cruise) {
           cruise = { from: frame.eye, pendingChunks: 0, pendingPatches: 0, generationMs: 0 };

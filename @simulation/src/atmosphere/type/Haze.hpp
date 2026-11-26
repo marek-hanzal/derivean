@@ -22,7 +22,10 @@ struct HazeLedger {
 struct Haze {
     std::array<Field<double>, HazeKinds> mass;   // kg/m² of dry aerosol, mixed through the low band
     Field<double> plants;                        // share of the land plants cover, from the planet's climate
-    Field<double> depth;                         // optical depth at 550 nm, swollen by the air's humidity, as of the last step
+    Field<double> depth;                         // optical depth at 550 nm, swollen by the hour's humidity, as of the last step
+    // By the picture's colours (Wavelengths): optical depth against `depth`, and the share of it scattered
+    // rather than absorbed (single-scattering albedo), as of the last step.
+    std::array<Field<double>, 3> spectrum, albedo;
     std::vector<Field<double>> work;             // transport work space
     HazeLedger totals;
 };
@@ -30,9 +33,5 @@ struct Haze {
 // Koschmieder: the distance at which a black target fades to the 2 % contrast an eye still sees.
 inline constexpr double SeenContrast = 0.02;
 inline double visibilityOf(double extinction) { return -std::log(SeenContrast) / extinction; }   // m, extinction in 1/m
-
-// Clean air alone at 550 nm: 1.16e-5 /m at sea level (Bucholtz 1995), thinning with the air above.
-inline constexpr double RayleighExtinction = 1.16e-5;   // 1/m
-inline constexpr double RayleighHeight = 8000.0;        // m
 
 } // namespace derivean::sim

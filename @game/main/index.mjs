@@ -20,7 +20,11 @@ function windowOrigin(capturing) {
   let build;
   try {
     const stamp = JSON.parse(readFileSync(`${addon}.json`, "utf8"));
-    build = `${at(new Date(stamp.builtAt))} ${stamp.commit ? String(stamp.commit).slice(0, 7) : "NO COMMIT"}${stamp.dirty ? ` dirty ${String(stamp.diffHash).slice(0, 6)}` : ""}`;
+    // A clean tree is its commit; a dirty one, or one whose state git could not tell (dirty null), is told apart
+    // by the hash of its diff.
+    const hash = String(stamp.diffHash).slice(0, 6);
+    const tree = stamp.dirty === false ? "" : stamp.dirty ? ` dirty ${hash}` : ` tree ${hash}`;
+    build = `${at(new Date(stamp.builtAt))} ${stamp.commit ? String(stamp.commit).slice(0, 7) : "NO COMMIT"}${tree}`;
   } catch {
     try {
       build = `${at(statSync(addon).mtime)} UNSTAMPED`;

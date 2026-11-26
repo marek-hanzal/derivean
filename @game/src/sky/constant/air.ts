@@ -1,15 +1,14 @@
 import { Vector3 } from "three/webgpu";
+import type { HazeAir } from "../type/HazeAir";
 
-// What clean air takes from light per metre at sea level by colour (Rayleigh scattering), thinning by e over its
-// height in metres. The haze is the weather's (HazeAir): it takes all colours alike.
-export const CleanAir = [5.8e-6, 13.5e-6, 33.1e-6] as const;
-export const CleanAirHeight = 8000;
+// Clean air is the simulation's (WorldInfo.air, AirOptics); the haze is the weather's (HazeAir), coloured by
+// what it is made of.
 // The veil of ash and sulphate above the haze thins by e over this height from the sea.
 export const VeilHeight = 8000;
 // Metres over which the haze fades out at its top.
 export const HazeEdge = 100;
-// The air until the first weather snapshot arrives: a clean maritime day's.
-export const StillAir = { haze: 0.05, top: 2000, thickness: 2000, veil: 0 } as const;
+// The air until the first weather snapshot arrives: a clean maritime day's, grey sea salt.
+export const StillAir: Readonly<HazeAir> = { haze: 0.05, top: 2000, thickness: 2000, veil: 0, spectrum: [1, 1, 1], albedo: [1, 1, 1] };
 
 // Metres between which the cloud over the eye stops colouring the air: the weather there is another cell's.
 export const VeilReach = [30000, 120000] as const;
