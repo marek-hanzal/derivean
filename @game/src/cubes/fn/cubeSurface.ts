@@ -1,6 +1,6 @@
 import { MeshBasicNodeMaterial, type Node, type Texture, type UniformNode, type Vector3 } from "three/webgpu";
 import {
-  Fn, If, PI, cameraPosition, clamp, float, floor, fract, fwidth, int, ivec2, length, luminance, max, min, mix, positionWorld, smoothstep,
+  Fn, If, PI, cameraPosition, clamp, float, floor, fract, fwidth, int, ivec2, length, luminance, max, min, mix, modelWorldMatrix, positionWorld, smoothstep,
   step, textureLoad, uint, varying, vec3, vec4,
 } from "three/tsl";
 import { GrainCells, GroundRepeat } from "../../scene/constant/grain";
@@ -62,8 +62,9 @@ export function cubeSurface({ sky, levels, palette, anchor, shadow, snow, land }
     If(face.top, () => { mass.assign(snowMass(snow, positionWorld, sky.airSea)); });
     return mass;
   })(), "vSnow");
-  // The snow round a face, one value for the whole face: what the ground in front of a riser sends back.
-  const around = snow && varying(snowMass(snow, positionWorld, sky.airSea), "vSnowAround").setInterpolation("flat");
+  // The snow round a face, one value for the whole face, read at its middle: what the ground in front of a riser
+  // sends back.
+  const around = snow && varying(snowMass(snow, modelWorldMatrix.mul(vec4(face.middle, 1)).xyz, sky.airSea), "vSnowAround");
   // The node builder is the function's only argument when it is called without inputs.
   type Built = { renderer: { backend: { isWebGPUBackend?: boolean } } };
   material.colorNode = (Fn((builder: Built) => {
@@ -121,8 +122,9 @@ export function cubeSurface({ sky, levels, palette, anchor, shadow, snow, land }
     const fallen = luminance(sky.groundLight).div(GroundBounce);
     const below = snow && around ? mix(sky.groundLight, vec3(fallen).mul(snow.color), clamp(around.div(CoverMass), 0, 1).mul(sky.plain.oneMinus())) : undefined;
     const itself = faceLight(sky, normal, open, lit, below);
-    const stands = land && builder.renderer.backend.isWebGPUBackend && landNormal(land, face.field(Face.level), edge, inside);
-    const light = stands ? mix(itself, faceLight(sky, stands.normal, open, lit, below), stands.share) : itself;
+    const stands = land && builder.renderer.backend.isWebGPUBackend
+      && landNormal(land, face.field(Face.level), edge, inside, (point) => sunlit(shadow, point));
+    const light = stands ? mix(itself, faceLight(sky, stands.normal, open, stands.lit, below), stands.share) : itself;
     return vec4(airFade(sky, albedo.mul(light).div(PI), fromEye), 1);
   }) as unknown as () => Node<"vec4">)();
   return material;

@@ -65,6 +65,12 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
   let strokes = 0;
   // When the view of a turning shot began to turn.
   let turning: number | undefined;
+  // Where the shot looks: a turning shot keeps turning until it is taken.
+  const viewYaw = () => {
+    const current = shot();
+    const turned = turning === undefined || !current?.turn ? 0 : (performance.now() - turning) / 1000 * current.turn.radiansPerSecond;
+    return (current?.yaw ?? 0) + turned;
+  };
 
   const shot = (): CaptureShot | undefined => plan.shots[index];
 
@@ -87,7 +93,7 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
   function save(current: CaptureShot, frame: Frame, extra: Record<string, unknown>) {
     phase = "save";
     const record = {
-      name: current.name, eye: frame.eye, yaw: current.yaw, pitch: current.pitch, flying: frame.flying,
+      name: current.name, eye: frame.eye, yaw: viewYaw(), pitch: current.pitch, flying: frame.flying,
       calendar: frame.calendar, sun: frame.sun, weather: frame.weather,
       ground: frame.ground, waterLevel: frame.waterLevel, streamingReady: frame.streamingReady, ready: frame.ready,
       pending: frame.pending, generationMs: frame.generationMs, nativeMs: frame.nativeMs,
@@ -108,7 +114,7 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
 
   function command(elapsed: number, time: number, frame: Frame | undefined): Steering {
     const current = shot();
-    const yaw = current?.yaw ?? 0;
+    const yaw = viewYaw();
     const pitch = current?.pitch ?? 0;
     const next: Steering = {
       elapsed: Math.min(elapsed, 0.1), x: 0, z: 0, jump: false, sprint: false, active: true,
@@ -240,12 +246,7 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
   return {
     command,
     active: () => true,
-    // A turning shot keeps turning until it is taken.
-    get yaw() {
-      const current = shot();
-      const turned = turning === undefined || !current?.turn ? 0 : (performance.now() - turning) / 1000 * current.turn.radiansPerSecond;
-      return (current?.yaw ?? 0) + turned;
-    },
+    get yaw() { return viewYaw(); },
     get pitch() { return shot()?.pitch ?? 0; },
     // The brush shown is the one the shot holds.
     get radius() { return shot()?.brush?.radius ?? 1; },

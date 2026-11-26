@@ -22,6 +22,7 @@ export function faceNodes() {
   const across = vec2(select(negative, positionGeometry.x.oneMinus(), positionGeometry.x), positionGeometry.y);
   const u = lowU.add(across.x.mul(sizeU));
   const v = lowV.add(across.y.mul(sizeV));
+  const [midU, midV] = [lowU.add(sizeU.mul(0.5)), lowV.add(sizeV.mul(0.5))];
   const onX = axis.equal(uint(0));
   const onY = axis.equal(uint(Upright));
   const facing = select(negative, float(-1), float(1));
@@ -30,8 +31,12 @@ export function faceNodes() {
   const normal = select(onX, vec3(facing, 0, 0), select(onY, vec3(0, facing, 0), vec3(0, 0, facing)));
   const carried = varying(face.zw, "vFaceWords");
   const late = [undefined, undefined, carried.x, carried.y];
+  const place = (atU: Node<"float">, atV: Node<"float">) =>
+    select(onX, vec3(plane, atU, atV), select(onY, vec3(atV, plane, atU), vec3(atU, atV, plane))).add(vec3(0, rise, 0));
   return {
-    corner: select(onX, vec3(plane, u, v), select(onY, vec3(v, plane, u), vec3(u, v, plane))).add(vec3(0, rise, 0)),
+    corner: place(u, v),
+    // The middle of the face, the same at all four corners. For the vertex stage.
+    middle: place(midU, midV),
     normal: varying(normal.transformDirection(modelWorldMatrix), "vFaceNormal"),
     across: varying(across, "vFaceAcross"),
     // A top: the face of a cube that looks up. For the vertex stage.
