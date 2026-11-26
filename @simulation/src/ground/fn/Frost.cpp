@@ -139,8 +139,9 @@ bool flowThawed(Domain& domain, FlowScratch& scratch) {
 
 } // namespace
 
-bool workFrozenGround(Domain& domain, FlowScratch& scratch, std::vector<uint8_t>& sorted) {
+bool workFrozenGround(Domain& domain, FlowScratch& scratch, std::vector<uint8_t>& sorted, FrostMovement mode) {
     sorted.assign(domain.cells(), 0);
+    if (mode == FrostMovement::PassThrough) return false;
     const bool flowed = flowThawed(domain, scratch);
     return sortStones(domain, scratch, sorted) || flowed;
 }

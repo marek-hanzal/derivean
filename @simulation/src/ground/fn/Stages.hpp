@@ -21,7 +21,7 @@ void widenChannels(Domain& domain);
 
 // Finish.cpp — on the settled surface: stones, the beds of streams, frozen and scalded ground and
 // the water that stands in what they leave. Reads the finished tile off the domain, with its `detail`.
-void finishGround(Domain& domain, FlowScratch& scratch, const Setting& setting, const TileLookup& lookup, Tile& tile);
+void finishGround(Domain& domain, FlowScratch& scratch, const Setting& setting, const TileLookup& lookup, const AquiferLookup& aquifers, Tile& tile);
 
 // Water.cpp — the last routing, with stones and spring deposits in the water's way, then the tile
 // read off the domain and the level of its water: in every hollow that is fed through the year, and

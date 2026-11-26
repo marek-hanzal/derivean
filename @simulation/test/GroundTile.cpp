@@ -9,30 +9,11 @@
 #include "landscape/fn/Build.hpp"
 #include "simulation/fn/Query.hpp"
 
-#include <cstring>
 #include <map>
 
 using namespace derivean::sim;
 
 namespace {
-
-bool sameFloats(const std::vector<float>& a, const std::vector<float>& b) { return a.size() == b.size() && std::memcmp(a.data(), b.data(), a.size() * sizeof(float)) == 0; }
-
-bool sameTile(const Tile& a, const Tile& b) {
-    bool same = sameFloats(a.now.rock, b.now.rock) && sameFloats(a.now.datum, b.now.datum) && sameFloats(a.water, b.water) && sameFloats(a.discharge, b.discharge);
-    for (int c = 0; c < SedimentClasses; ++c) same = same && sameFloats(a.now.sediment[c], b.now.sediment[c]);
-    const GroundDetail& da = *a.detail;
-    const GroundDetail& db = *b.detail;
-    same = same && a.flowTo == b.flowTo && da.clasts.size() == db.clasts.size() && sameFloats(da.crust, db.crust) && da.crustKind == db.crustKind &&
-           da.coarseKind == db.coarseKind && da.fineKind == db.fineKind && da.bare == db.bare && sameFloats(da.stepGaps, db.stepGaps);
-    for (size_t i = 0; same && i < da.clasts.size(); ++i) {
-        const Clast& p = da.clasts[i];
-        const Clast& q = db.clasts[i];
-        same = p.x == q.x && p.y == q.y && p.z == q.z && p.a == q.a && p.b == q.b && p.c == q.c && p.yaw == q.yaw && p.pitch == q.pitch && p.roll == q.roll &&
-               p.roundness == q.roundness && p.travel == q.travel && p.rock == q.rock && p.origin == q.origin && p.source.x == q.source.x && p.source.z == q.source.z;
-    }
-    return same;
-}
 
 // The point as the centre of one cube of a block whose size, edge and alignment are drawn anew each time.
 Material throughBlock(World& world, double x, double y, double z, uint64_t draw) {

@@ -22,7 +22,10 @@ void line(double time, const Game& game, const Frame& frame) {
     for (size_t level = 1; level < sim::LevelCount; ++level) std::printf(" %u/%u", frame.tilesFinished[level], frame.tilesWanted[level]);   // region, local, site, ground
     std::array<int, sim::LevelCount> flying{};
     int water = 0;
-    for (const TileRequest& request : game.nature.tiles.flying) request.water ? ++water : ++flying[size_t(request.key.level)];
+    for (const TileRequest& request : game.nature.tiles.flying) {
+        if (request.key.product == sim::BuildProduct::Terrain) ++flying[size_t(request.key.tile.level)];
+        else ++water;
+    }
     std::printf("  flying %zu (%d %d %d %d water %d)  pending chunks %zu cubes %zu", game.nature.tiles.flying.size(), flying[1], flying[2], flying[3],
                 flying[4], water, frame.pendingChunks, frame.pendingCubes);
     std::printf("  audit %zu seen %zu of %zu |", game.cubes.audit.size(), game.cubes.tilesSeen, game.nature.world.atlas.finished());

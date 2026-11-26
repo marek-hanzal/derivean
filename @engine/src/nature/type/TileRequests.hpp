@@ -1,11 +1,11 @@
 #pragma once
 
-#include "landscape/type/Level.hpp"
+#include "simulation/type/BuildKey.hpp"
 #include "voxel/type/Grid.hpp"
 
 #include <array>
-#include <atomic>
-#include <memory>
+#include <cstdint>
+#include <future>
 #include <vector>
 
 namespace derivean {
@@ -16,20 +16,19 @@ struct Nature;
 // around the eye, and up to this clearance above the ground, above which nobody stands on the voxels soon.
 inline constexpr double GroundReach = 96.0, GroundCeiling = 150.0;   // m
 
-// One task on the simulation's pool: build landscape tile `key`, or with `water` the groundwater of
-// local tile `key`. Clearing `live` calls it off if it has not started.
 struct TileRequest {
-    sim::TileKey key;
-    bool water{};
-    std::shared_ptr<std::atomic<bool>> live;
+    sim::BuildKey key;
+    uint64_t ticket;
+    std::future<void> completion;
 };
 
 // Simulation tiles the engine asked for and is still waiting on. Only tiles whose dependencies
 // are all finished are asked for, and ground tiles only once their groundwater exists, so each
-// request is one build that starts when a worker is free; as many are in flight as the simulation
-// has workers and no more. A request no wanted tile leads to any more is called off.
+// request is one build. The current plan's budget counts flying requests. After replanning, queued
+// work no longer needed is removed from the worker pool. Claimed work finishes with its key and
+// future in retired. If a later plan wants the build, it counts against that plan again.
 struct TileRequests {
-    std::vector<TileRequest> flying;
+    std::vector<TileRequest> flying, retired;
     std::array<bool, sim::LevelCount> ready{};   // by sim::Level: every tile wanted at that level is finished
     std::array<uint32_t, sim::LevelCount> wanted{}, finished{};   // by sim::Level: tiles the view wants and how many of them are built
     // By sim::Level: metres around the eye over which tiles are wanted. The game sets them to what the

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ground/type/FrostMovement.hpp"
 #include "landscape/type/Drainage.hpp"
 #include "planet/type/Planet.hpp"
 
@@ -40,6 +41,7 @@ struct Setting {
     // builds with it. What a tile contains does not depend on it; without one a tile is built on the
     // calling thread alone.
     Workers* workers{};
+    FrostMovement frostMovement{FrostMovement::Apply};
 };
 
 } // namespace derivean::sim

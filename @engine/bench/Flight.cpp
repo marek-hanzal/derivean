@@ -65,7 +65,7 @@ struct Fill {
     Game& game;
     bool quick{};   // voxels to stand on are enough
     double surface{-1}, voxels{-1}, local{-1}, region{-1}, far{-1};
-    size_t busy{}, samples{};
+    size_t planned{}, samples{};
 
     void operator()(double, Command&) const {}
     bool operator()(double time, const Frame& frame) {
@@ -75,7 +75,7 @@ struct Fill {
         if (local < 0 && frame.localReady) local = time;
         if (region < 0 && frame.regionReady) region = time;
         if (!frame.localReady || !frame.regionReady) {
-            busy += game.nature.tiles.flying.size();
+            planned += game.nature.tiles.flying.size();
             ++samples;
         }
         return voxels < 0 || (!quick && (local < 0 || region < 0));
@@ -84,10 +84,10 @@ struct Fill {
 
 void report(const char* phase, const Fill& fill, const Game& game) {
     std::printf("%-6s first far surface %.1f s, far view whole %.1f s, voxels to stand on %.1f s, %.0f km at 64 m data %.1f s, %.0f km at 1 km data %.1f s; "
-                "%.1f of %u simulation workers held a tile request while tiles were owed\n",
+                "%.1f active-plan requests while tiles were owed (%u simulation workers)\n",
                 phase, fill.surface, fill.far, fill.voxels, game.nature.tiles.reach[size_t(sim::Level::Local)] / 1000, fill.local,
                 game.nature.tiles.reach[size_t(sim::Level::Region)] / 1000, fill.region,
-                double(fill.busy) / double(std::max<size_t>(1, fill.samples)), game.nature.world.workers.threads());
+                double(fill.planned) / double(std::max<size_t>(1, fill.samples)), game.nature.world.workers.threads());
 }
 
 // On foot, with the calendar at an hour a second so that the atmosphere steps while the ground streams.

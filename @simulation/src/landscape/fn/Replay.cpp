@@ -49,7 +49,7 @@ void stepDomain(Domain& domain, FlowScratch& scratch, const Setting& setting) {
     ++domain.taken;
 }
 
-std::shared_ptr<Tile> replayTile(const Setting& setting, TileKey key, const TileLookup& lookup) {
+std::shared_ptr<Tile> replayTile(const Setting& setting, TileKey key, const TileLookup& lookup, const AquiferLookup& aquifers) {
     Domain domain = buildDomain(setting, key, lookup);
     FlowScratch scratch;
     auto tile = std::make_shared<Tile>();
@@ -79,7 +79,7 @@ std::shared_ptr<Tile> replayTile(const Setting& setting, TileKey key, const Tile
     if (key.level == Level::Ground) {
         // What lives on the ground at its own scale is made last, and the tile read off after it.
         refreshPartings(domain, setting.seed);
-        finishGround(domain, scratch, setting, lookup, *tile);
+        finishGround(domain, scratch, setting, lookup, aquifers, *tile);
         return tile;
     }
     refreshUnits(domain, setting.seed);

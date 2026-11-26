@@ -22,8 +22,8 @@ struct NatureOptions {
 // push in front of the crew's work.
 struct Nature {
     explicit Nature(NatureOptions options);
-    // The simulation tears its atlas down before it joins its pool, so the pool must be idle first:
-    // the crew stops, then every queued tile build is allowed to finish.
+    // Join the engine pools before releasing the World they use. The World stops its own pool
+    // before destroying the atlas and aquifers.
     ~Nature();
     Nature(const Nature&) = delete;
     Nature& operator=(const Nature&) = delete;
