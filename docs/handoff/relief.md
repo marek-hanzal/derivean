@@ -52,7 +52,20 @@ Known defects, with status:
 
 ## 3. In progress
 
-Nothing half-edited in the tree, nothing running. Private mirrors: `relief3/sim` is the tree's @simulation with these changes (build with `XMAKE_CONFIGDIR=relief3/xmakecfg xmake build`, builddir `relief3/build`); `relief2/` is the predecessor's switchable lab (`LAB_*` variables, `run.sh`, `view.sh`).
+Nothing half-edited in the tree. Fourth run (after the lead's review of 26 Nov) is in the lab only: scratchpad `relief4/` (mirror `sim/` of the tree at 6398f11 plus `labpatch.py` switches read from `LAB_*` variables; `range.sh tag` runs the humid range at Local and prints per-tile uplift, drift from the parent and a spike probe with `LAB_DEBUG`; `view.sh tag` renders the two views; `sum.sh tags` tabulates). Findings so far, humid range at Local, 26 Nov planet:
+
+| Run | Change | Mean slope | >30/45/60° | Faces >60° of ground | Valley floor p50/p95 | Ice |
+| --- | --- | --- | --- | --- | --- | --- |
+| base | tree | 21.4° | 18/3.3/0.2 % | 0.36 % | 128/1536 m | 91 % |
+| floor1 | found uplift ≥ parent's rock uplift | 33.7° | 65/13/1.0 % | 2.7 % | 64/192 m | 98 % |
+| pin0 | no river floor at the parent's surface | 26.9° | 40/10/0.3 % | 1.1 % | 64/1232 m | 90 % |
+| ice1 | snow slides off ground over 40°; ice erodes with sliding speed² along its flow lines | 30.6° | 52/16/0.8 % | 2.0 % | 128/448 m | 80 % |
+| ice3 | as ice1, speed spread over the glacier's width (250 m) and weighted by thickness across it | 28.7° | 46/14/0.7 % | 1.6 % | 192/1024 m | 80 % |
+| ice3pin0 | ice3 and pin0 | 31.6° | 57/18/0.8 % | 2.5 % | 64/832 m | 79 % |
+
+Uplift found by the controller in the base run is 0.05–0.12 mm/yr against the parent's 0.33–0.87: the Local level holds its mean by eroding five to eight times slower than its parent, i.e. at low relief. Giving it the parent's rate (floor1) makes the slopes but lifts the mean 1–3 km above the parent in 6 Myr: the Local level does not erode as fast as the Region does on the same ground. The ice and the river floor are where the relief was lost: the old ice ground every cell it covered in proportion to depth × slope, so it lowered ridges and flanks as fast as troughs; the river floor held the parent's big rivers at the parent's mean surface, so no valley could lie below the mean the block is held to.
+
+A spike of 20–80 km stands in one place of the range (`ground … 26585 m` in the base run); it is not in any replayed Local tile's own cells at the end of the step loop, so it comes after (ice-sheet leave, seams, volcanic or extraction); being traced with the `tilespike` probe. Private mirrors: `relief3/sim` is the tree's @simulation with these changes (build with `XMAKE_CONFIGDIR=relief3/xmakecfg xmake build`, builddir `relief3/build`); `relief2/` is the predecessor's switchable lab (`LAB_*` variables, `run.sh`, `view.sh`).
 
 ## 4. Next steps
 

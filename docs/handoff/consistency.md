@@ -15,11 +15,17 @@ Owned: `@simulation/src/landscape/**` files the relief stream is not changing (n
 
 ## 2. State now
 
-Started 26 Nov. Reading the model; nothing changed in code yet.
+Nothing changed in the shared tree yet. Experiments run in a private mirror (section 7).
+
+Findings (seed 42, 4.6 Gyr, planet of 26 Nov 10:30, sea 53.7 m):
+
+- **Lakes vanish already in the child's starting surface**, before any settling. lake3 area (2 × 2 Local tiles from 319, −365): of the parent lake cells under the block only 5.3 % are lake in the child's start, and the child water stands 39.5 m below the parent's. Two causes in `Seed.cpp`/`Build.cpp`: (1) the smoothing spline of the parent's rock cuts through a lake's rim (a shore cell ≥ the water level is averaged with the lake floor) and raises the floor, so the basin drains far below the parent's level; (2) `levelHollows` then fills every remaining hollow by up to 45 m (Local) / 6 m (Site), parent lakes included, and makes that filled surface the trend the controller holds.
+- **Rivers and seam lakes are one defect**: a river the parent has is a one-cell valley the spline erases, so the child grows its own rivers elsewhere (parent rivers found within one parent cell: 41 %). A later tile's river then meets the cells of an earlier neighbour where that neighbour has no valley: the finished cells do not erode and dam it, and a lake backs up along the tile edge (lake3 block: a 15 km lake against a seam where the parent has none; lakes 1.8× denser within 3 cells of an edge). Local crossings lost: 36 % (into earlier 50 %, into later 29 %).
+- **Region** (3 × 3 tiles from 18, −24): lakes 0.63 % of land there but 32× denser within 3 cells of a tile edge than inside (thin strips along edges); 37.5 % of river crossings lose > 30 % (into earlier 48 %, into later 34 %), mostly to near zero.
 
 ## 3. In progress
 
-Reading `Build.cpp` (`levelHollows`), `Seed.cpp`, `Flood.cpp`, `Extract.cpp`, `Replay.cpp`.
+Mirror variants (`labVariant` in the mirror only): 1 = `levelHollows` leaves parent lakes; 2 = 1 + bilinear interpolation of the parent's rock within two parent cells of a parent lake; 3 = 2 + the parent's rivers carried into the child seed (`carveParentRivers`: course through parent centres smoothed two cells up and down, bed at the parent's ground, banks 0.25). Being compared at lake3; Region seam cases being dumped.
 
 ## 4. Next steps
 

@@ -1,6 +1,6 @@
 # Hand-over: ground water, springs, caves, karst
 
-Owner of `@simulation/src/groundwater/**`, `@simulation/test/Groundwater*.cpp`, `@simulation/tool/Groundwater*.cpp`. Nothing is committed.
+Owner of `@simulation/src/groundwater/**`, `@simulation/test/Groundwater*.cpp`, `@simulation/tool/Groundwater*.cpp`. Committed by the lead up to c4fa358.
 
 ## 1. Goal
 
@@ -33,9 +33,7 @@ Not verified:
 
 ## 3. In progress
 
-Nothing. No edit is half-done and no run of this stream is going.
-
-Second independent review done after the takeover (findings and what was done: section 5).
+Third run (lead's tasks after c4fa358): open review items (section 5, second pass), landscape hook diffs with tests (sent to the lead, not applied), Region ground-water pass (design in section 6 first), aeolian transmission-loss contract. The lead is changing `strata/` (`strataAt` returns the window-start column), so rock at the surface in ranges moves.
 
 Shared-file state: `ground/fn/GroundwaterStandIn.cpp` is deleted; `World::groundwater` exists; `groundwaterCommand` is registered in `tool/main.cpp` and `tool/Arguments.hpp`; `testGroundwaterBlock`, `testGroundwaterEdge`, `testGroundwaterTile` are registered in `test/Main.cpp`. No shared file was touched in the second run.
 

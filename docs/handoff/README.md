@@ -23,7 +23,7 @@ These are binding and are not in the original briefs.
 
 ## State of the tree
 
-Last checkpoint commit: `e60c5ef` (work in progress, not a verified state). Later work is uncommitted unless a newer commit exists.
+Last checkpoint commit: `38b4939` (work in progress, not a verified state). Later work is uncommitted unless a newer commit exists.
 
 On 26 Nov at about 03:00 every running stream stopped mid-work on a model usage limit. Each was restarted by a fresh worker from its own file here and the checkpoint `c131234`; a stream's file can lag behind its code, so a successor first compares `git diff 54fdbd9 c131234` over the stream's directories and finishes or undoes half-done edits. The orphaned run `terra volcanic --x 13686236 --z 11027538 --level 2` (six hours of CPU without finishing) was stopped; the volcanic stream found and fixed its cause (oversized minor eruptions, millimetre relaxation of cones on steep ground).
 
@@ -31,7 +31,9 @@ On 26 Nov at about 03:00 every running stream stopped mid-work on a model usage 
 
 Starting the game builds the planet first: about 8 minutes at 08:54 and still unfinished after 25 minutes at 09:30 (load 35–52, other games running). Whether the tree got slower or only the machine is not established; a cached planet or a faster build is an engine item.
 
-Open investigation: thin vertical columns, one cell wide and up to hundreds of metres tall, seen in a worker's game capture (owner's screenshot). They are in the engine's quads (2 347 riser quads one cube wide and 16 or more high at level 5 in the 03:03 data, materials silt, sand, gravel), so loose cover; cause not yet found.
+The thin vertical columns in the owner's screenshot came from a stale replay (`.out/renderer-replay/rec-stills`, recorded 02:52–03:03 from a half-edited tree): one-cell needles of 2.2 km of loose cover from the old `settleDebris`, fixed by the relief stream; today's simulation and engine have none at that spot. The relief stream adds a test that loose cover cannot stand above its angle of repose.
+
+The strata column is now the one at the start of the region window (`strata/fn/Window.cpp`); before, the Region read the planet's present cover and counted the window's erosion twice, so ranges showed basement only. See planet.md.
 
 - `mise -C @simulation run build` builds when no stream is mid-save; streams share one working tree, so a failing build is usually someone's half-saved file — wait and retry before touching another owner's code.
 - `mise -C @simulation run test` gets past the relief, ice and volcanic checks and stops at `testChart` ("the local chart does not mix the local tile with the region around it"): more Local tiles are finished around the test focus than before; a build cascade is suspected and being checked.
