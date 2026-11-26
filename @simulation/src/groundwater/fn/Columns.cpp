@@ -3,6 +3,7 @@
 #include "groundwater/fn/Beds.hpp"
 #include "groundwater/fn/Conductivity.hpp"
 #include "groundwater/fn/Recharge.hpp"
+#include "groundwater/fn/Regional.hpp"
 #include "groundwater/fn/Swallow.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "volcanic/fn/Volcanic.hpp"
@@ -138,11 +139,18 @@ void readColumns(const Setting& setting, TileKey key, const Tile* const around[9
                 // runoff that soaks in as their own recharge, so only the rest of the bed's take is
                 // new water, as only the rest of the discharge is stream.
                 if (!tile.seeped.empty()) column.recharge += tile.seeped[from] * (gone > 0 ? 1.0f : 1.0f - share);
-                column.drain = flooded ? Drain::Still : column.stream >= (soluble ? SwallowLimit : DrainingFlow) ? Drain::Stream : Drain::None;
+                // What goes deeper and farther than this field follows belongs to the regional flow,
+                // which takes the same water of the same rock in (fn/Regional.cpp).
+                column.handed = deepRechargeOf(deepColumnOf(walk.layers, walk.count), column.recharge, WaterCellArea);
+                // A stream whose bed loses much of it stands above the ground water there: no outlet.
+                const bool losing = !tile.seeped.empty() && tile.seeped[from] > LosingShare * column.stream;
+                column.drain = flooded ? Drain::Still : !losing && column.stream >= (soluble ? SwallowLimit : DrainingFlow) ? Drain::Stream : Drain::None;
                 column.stage = flooded ? tile.water[from] : column.ground;
                 column.base = walk.base, column.shallowBase = walk.shallowBase;
                 column.crush = walk.mass.crush;
                 fillStoreys(column, walk.layers, walk.count);
+                // The handed water went down through the tight bed under perched water too.
+                column.floorLeak = std::max(0.0f, column.floorLeak - column.handed);
 
                 spreadOf(walk.mass, definitionOf(walk.top), column.spread);
                 const float fall = std::tan(walk.mass.dip);

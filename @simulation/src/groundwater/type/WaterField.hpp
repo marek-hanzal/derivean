@@ -40,6 +40,7 @@ struct AquiferColumn {
     float bedrock{};         // m, top of the solid rock under the loose cover
     float stage{};           // m, level of the surface water that drains the cell; read with `drain`
     float recharge{};        // m³/yr entering the ground
+    float handed{};          // of it, joining the regional flow (fn/Regional.hpp): the storeys here do not carry it
     float rain{};            // m/yr
     float warmth{};          // °C, annual mean at the ground
     float stream{};          // m³/yr of water on the surface of the cell: the landscape's, less what soaked in on its way
@@ -78,6 +79,12 @@ struct AquiferColumn {
 };
 
 inline float lowerT(const AquiferColumn& column) { return column.shallowT + column.deepT[0] + column.deepT[1]; }
+
+// m³/yr of a column's recharge that its own storeys carry.
+inline float shallowRecharge(const AquiferColumn& column) { return column.recharge - column.handed; }
+
+// A drain the lower storey comes out at: no tight bed lies between it and the water at the surface.
+inline bool drainsLower(const AquiferColumn& column) { return column.drain != Drain::None && !column.perched; }
 
 inline constexpr int Upper = 0, Lower = 1;
 

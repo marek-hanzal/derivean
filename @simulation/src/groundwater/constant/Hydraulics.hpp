@@ -18,10 +18,9 @@ namespace derivean::sim {
 // spread over a region cell's 16 × 16 cells by their streams, so a clamped slope in the outer ring
 // spoils the inflow 16 cells deep; that is inside the levels' rings and reaches only the routing.
 // A stage that adds a read of a neighbour adds a ring.
-// Water is followed RouteSweeps cells (3.5 km). What travels farther is booked as underflow: in
-// hill country a third of the recharge, under faulted plateaus and confined beds most of it, a
-// regional flow below the streams that only a coarser model could follow. Cost grows with the
-// field's area times the sweeps.
+// Water is followed RouteSweeps cells (3.5 km). What still travels farther is booked as underflow;
+// the deep share of the recharge is not routed here at all but handed to the regional flow
+// (fn/Regional.cpp). Cost grows with the field's area times the sweeps.
 inline constexpr int WaterReach = 96;
 inline constexpr int FieldCells = TileCells + 2 * WaterReach;
 inline constexpr int LevelSweeps = 36;   // cells over which the level of a valley is felt under the ground beside it
@@ -62,6 +61,7 @@ inline constexpr float LeastRecharge = 0.02f;     // m/yr against which a bed is
 // Share of its conductivity the rock under the base of circulation passes downwards: what a
 // regional flow system a kilometre thick and tens of kilometres long can carry away below it.
 inline constexpr float DeepGradient = 3.0e-5f;
+inline constexpr float LosingShare = 0.01f;     // of a stream's flow its bed loses in a cell (15 % a km) beyond which it stands above the table
 inline constexpr float HillLength = 400.0f;       // m water of a slope travels to its outlet: sets the least gradient of a water table
 inline constexpr float LeastGradient = 1.0e-3f;
 inline constexpr float MostGradient = 4.0f;

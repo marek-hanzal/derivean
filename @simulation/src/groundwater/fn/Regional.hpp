@@ -1,6 +1,7 @@
 #pragma once
 
 #include "groundwater/type/Regional.hpp"
+#include "groundwater/type/WaterField.hpp"
 #include "landscape/type/Terrain.hpp"
 
 #include <memory>
@@ -24,13 +25,26 @@ struct RegionalColumn {
     uint8_t outlet{};        // as RegionalTile::outlet, without 4: that one the solve finds
 };
 
-// 0..1: the share of a column's recharge that travels farther than a local tile follows and joins
-// the regional flow. Closed form of the column's transmissivity (m²/yr) and of whether a tight bed
-// lies over its conducting rock: water under such a bed cannot come up into the streams beside it.
-// Set after the share local tiles leave under way (groundwater.md, section 5: granite hills a few
-// per cent, ordinary country a tenth to a third, faulted or confined rock most of it); not yet
-// fitted against Local runs.
+// 0..1: the share of a column's recharge that goes deeper and farther than the streams of its own
+// hillside and joins the regional flow. Closed form of the column's transmissivity (m²/yr) and of
+// whether a tight bed lies over its conducting rock: water under such a bed cannot come up into the
+// streams beside it. Granite hills hand a few per cent, ordinary country a tenth to a third,
+// faulted or confined rock most of it; not fitted against measured catchments.
 float deepShareOf(float transmissivity, bool confined);
+
+// What the regional flow reads of a column's beds, top first, down to the base of circulation.
+struct DeepColumn {
+    float transmissivity{};  // m²/yr of all of them
+    float passes{1e30f};     // m/yr across the tightest bed (at least 1 m) over at least half of it: what water going deep crosses
+    bool confined{};         // a tight bed (at least 5 m, under 0.05 m/yr across) lies over at least half of it
+    bool karst{};            // a run of soluble rock holds conduits, at any depth: its water rises at their own springs
+};
+DeepColumn deepColumnOf(const WaterLayer* layers, int count);
+
+// m³/yr of the recharge (m³/yr over `area` m²) of a column with those beds that joins the regional
+// flow: its deep share, no more than its tightest bed lets down, none where conduits drain it. A
+// local column hands it on (AquiferColumn::handed) and a region column takes it in: one accounting.
+float deepRechargeOf(const DeepColumn& column, float recharge, float area);
 
 // The columns of the region tile `key` and RegionalMargin cells around it, row-major over
 // RegionalCells², from the nine finished region tiles around it (row-major, the tile in the middle).

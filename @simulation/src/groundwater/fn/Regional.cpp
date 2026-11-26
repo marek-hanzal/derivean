@@ -53,10 +53,33 @@ struct Around {
 
 } // namespace
 
+DeepColumn deepColumnOf(const WaterLayer* layers, int count) {
+    DeepColumn column;
+    for (int l = 0; l < count; ++l) column.transmissivity += layers[l].along * std::max(0.0f, layers[l].top - layers[l].bottom);
+    float below = column.transmissivity, run = 0;
+    for (int l = 0; l < count; ++l) {
+        const float thick = std::max(0.0f, layers[l].top - layers[l].bottom);
+        below -= layers[l].along * thick;
+        // Beds as Storeys.cpp reads them (cover, piles and basement are not beds) that lie over at
+        // least half of what conducts: the water must cross them to go deep. Under that depth the
+        // regional flow runs along the rock above a tight bed and need not cross it.
+        if (layers[l].unit != 0 && thick >= 1.0f && below >= 0.5f * column.transmissivity) column.passes = std::min(column.passes, layers[l].through);
+        if (!column.confined) column.confined = layers[l].unit != 0 && thick >= TightBed && layers[l].through < TightThrough && below >= 0.5f * column.transmissivity;
+        run = layers[l].soluble >= SolubleEnough ? run + thick : 0.0f;
+        column.karst = column.karst || run >= KarstThickness;
+    }
+    return column;
+}
+
 float deepShareOf(float transmissivity, bool confined) {
     const float t = std::max(0.0f, transmissivity);
     const float share = DeepLeast + (DeepMost - DeepLeast) * t / (t + DeepReference);
     return confined ? std::max(share, ConfinedShare) : share;
+}
+
+float deepRechargeOf(const DeepColumn& column, float recharge, float area) {
+    if (column.karst || recharge <= 0) return 0;
+    return std::min(recharge * deepShareOf(column.transmissivity, column.confined), column.passes * area);
 }
 
 void readRegionalColumns(const Setting& setting, TileKey key, const Tile* const around[9], std::vector<RegionalColumn>& field) {
@@ -90,24 +113,15 @@ void readRegionalColumns(const Setting& setting, TileKey key, const Tile* const 
                 bed.pile = pile.thickness, bed.lava = float(pile.lava) / 255.0f;
                 BedWalk walk;
                 walkBeds(bed, walk);
-                float total = 0;
-                for (int l = 0; l < walk.count; ++l) total += walk.layers[l].along * std::max(0.0f, walk.layers[l].top - walk.layers[l].bottom);
-                // Confined: a tight bed lies over at least half of what conducts.
-                float below = total;
-                for (int l = 0; l < walk.count && !column.confined; ++l) {
-                    const WaterLayer& layer = walk.layers[l];
-                    const float thick = std::max(0.0f, layer.top - layer.bottom);
-                    below -= layer.along * thick;
-                    column.confined = layer.unit != 0 && thick >= TightBed && layer.through < TightThrough && below >= 0.5f * total;
-                }
-                column.transmissivity = total, column.depth = std::max(0.0f, column.ground - walk.base);
+                const DeepColumn deep = deepColumnOf(walk.layers, walk.count);
+                column.transmissivity = deep.transmissivity, column.confined = deep.confined, column.depth = std::max(0.0f, column.ground - walk.base);
                 const float slope = float(std::hypot(tiles.ground(gx + 1, gz) - tiles.ground(gx - 1, gz), tiles.ground(gx, gz + 1) - tiles.ground(gx, gz - 1)) / (2 * cell));
                 const Soak soak{tile.rain[from], tile.warmth[from], slope, {bed.cover[0], bed.cover[1], bed.cover[2]}, tile.ice[from], Material(tile.rock[from])};
                 // As a local column takes it (fn/Columns.cpp): the cell's own soak and what a dry
                 // country's loose bed took from passing floods beyond that share.
                 const float share = infiltrationShare(soak);
                 const double seeped = tile.seeped.empty() ? 0.0 : double(tile.seeped[from]) * (1.0f - share);
-                column.recharge = float((double(runoffOf(tile.rain[from], tile.warmth[from])) * share * area + seeped) * deepShareOf(total, column.confined));
+                column.recharge = deepRechargeOf(deep, float(double(runoffOf(tile.rain[from], tile.warmth[from])) * share * area + seeped), area);
             }
     };
     if (setting.workers) setting.workers->parallelFor(RegionalCells, rows, 4);

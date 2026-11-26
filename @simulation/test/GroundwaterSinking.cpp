@@ -153,6 +153,22 @@ void testGroundwaterSinking() {
     std::printf("ground water: limestone plateau after %d steps: %.0f %% of its runoff goes down, %.3g m3/yr come out at its edge; of the hollows dug %.1f m deep "
                 "%d drain down, %d are dolines deeper still and %d dry, %d on sandstone filled in\n",
                 Steps, 100 * work.total / runoff, atEdge, double(HollowDepth), open, deeper, dry, filled);
+
+    // Under a lake the parent holds, solution stops at the parent's floor: the last step's sinking
+    // dissolved once more, with that floor a millimetre under every cell, and once with none.
+    Domain free = d, held = d;
+    free.lakeFloor.clear();
+    held.lakeFloor.resize(d.cells());
+    for (size_t i = 0; i < d.cells(); ++i) held.lakeFloor[i] = d.ground.rock[i] + d.sedimentAt(i) - 1e-3f;
+    dissolveSinks(free), dissolveSinks(held);
+    float freely = 0, under = 0;
+    for (size_t i = 0; i < d.cells(); ++i) {
+        freely = std::max(freely, d.ground.rock[i] - free.ground.rock[i]);
+        under = std::max(under, held.lakeFloor[i] - (held.ground.rock[i] + held.sedimentAt(i)));
+    }
+    expectWater(freely > 1e-2f, "a step's sinking dissolves nothing to hold back", freely);
+    expectWater(under < 1e-5f, "karst lowers a floor below the parent's lake floor", under);
+    std::printf("ground water: a step's sinking lowers floors up to %.2f m, and none below the parent's lake floor\n", double(freely));
 }
 
 // Bare limestone opens into grikes along its joints; under a cover of soil, or where the ground

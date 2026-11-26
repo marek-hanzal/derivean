@@ -44,7 +44,7 @@ uint8_t mainSource(const WaterField& field, int x, int z, int storey) {
     const size_t i = field.index(x, z);
     const AquiferColumn& column = field.column[i];
     const bool fed = storey == Upper || !column.perched;
-    float most = fed ? column.recharge + column.sunk : 0.0f;
+    float most = fed ? shallowRecharge(column) + column.sunk : 0.0f;
     uint8_t source = 255;
     if (storey == Lower && column.regional > most) most = column.regional, source = 9;
     if (!fed) {
@@ -102,7 +102,7 @@ void readFields(const WaterField& field, GroundwaterTile& tile) {
             if (column.perched) tile.rock[Upper][own] = uint8_t(column.upperRock);
             budget.rain += double(column.rain) * WaterCellArea;
             budget.runoff += double(runoffOf(column.rain, column.warmth)) * WaterCellArea;
-            budget.recharge += column.recharge, budget.sunk += column.sunk, budget.regional += column.regional;
+            budget.recharge += column.recharge, budget.sunk += column.sunk, budget.regional += column.regional, budget.handed += column.handed;
             for (int storey = column.perched ? Upper : Lower; storey <= Lower; ++storey) {
                 const NodeFate& fate = field.fate[i * 2 + size_t(storey)];
                 tile.from[storey][own] = mainSource(field, fx, fz, storey);

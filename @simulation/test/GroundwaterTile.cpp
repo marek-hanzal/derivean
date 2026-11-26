@@ -1,3 +1,5 @@
+// One real tile checked along every way the world serves it (about 270 lines): the checks share
+// the tile, its neighbour and the fields that cost minutes to build, so they stay one owner.
 #include "GroundwaterFixture.hpp"
 #include "LandscapeFixture.hpp"
 
@@ -165,19 +167,20 @@ void checkEdge(World& world, const GroundwaterTile& west, const GroundwaterTile&
         expectWater(nearest >= 0, "a tube reaches past the edge of its tile", nearest);
         if (!tile->caves->conduits.empty()) std::printf("ground water: tubes of local tile %d %d keep %.1f m from its edges\n", tile->key.x, tile->key.z, nearest);
     }
-    // A strip two cells either side of the edge, along the stretch whose edge cells have springs.
+    // A strip `Strip` cells either side of the edge, along the stretch whose cells there have springs.
+    constexpr int64_t Strip = 8;
     const int64_t edge = int64_t(east.key.x) * TileCells;
     int64_t first = INT64_MAX, last = INT64_MIN;
     for (const GroundwaterTile* tile : {&west, &east})
         for (size_t index = 0; index < tile->springs.size(); ++index) {
             int64_t x, z;
             cellOf(*tile, index, x, z);
-            if (x >= edge - 2 && x < edge + 2) first = std::min(first, z), last = std::max(last, z);
+            if (x >= edge - Strip && x < edge + Strip) first = std::min(first, z), last = std::max(last, z);
         }
-    expectWater(first <= last, "the test tiles have no spring within two cells of their shared edge", west.key.x);
+    expectWater(first <= last, "the test tiles have no spring near their shared edge", west.key.x);
     last = std::min(last, first + 31);   // 32 rows: two or three site tiles along the edge
-    const size_t count = checkRectangle(world, {&west, &east}, edge - 2, first, edge + 2, last + 1, {edge});
-    std::printf("ground water: %zu springs within two cells of the shared edge, rows %lld to %lld, each answered once\n", count, static_cast<long long>(first),
+    const size_t count = checkRectangle(world, {&west, &east}, edge - Strip, first, edge + Strip, last + 1, {edge});
+    std::printf("ground water: %zu springs within %lld cells of the shared edge, rows %lld to %lld, each answered once\n", count, static_cast<long long>(Strip), static_cast<long long>(first),
                 static_cast<long long>(last));
 }
 
@@ -213,7 +216,9 @@ void testGroundwaterTile() {
     for (const AquiferColumn& column : single.column) upwelled += column.regional > 0;
     expectWater(upwelled > 0, "no regional water comes up anywhere in the field of the test tile", 0);
     expectWater(std::abs(imbalance(budget)) < 1e-6, "water entering the ground of a tile is not all accounted for", imbalance(budget));
-    expectWater(budget.underflow < 0.5 * (budget.recharge + budget.sunk + budget.regional), "most of a tile's ground water is followed no farther", budget.underflow / budget.recharge);
+    // What the tile's own storeys carry: its recharge less what it hands the regional flow.
+    const double carried = budget.recharge - budget.handed + budget.sunk + budget.regional;
+    expectWater(budget.underflow < 0.5 * carried, "most of the ground water a tile carries is followed no farther", budget.underflow / carried);
 
     // Two tiles say the same of the cells along their shared edge without one reading the other:
     // the last own column of the western tile and the first of the eastern, in both fields.
@@ -245,8 +250,9 @@ void testGroundwaterTile() {
     checkVents(world, *asked[2]);
     checkEdge(world, *asked[2], *asked[0]);
 
-    // The two models of what travels farther, which need not agree: the region's deep recharge
-    // under the tile against the share the tile follows no farther.
+    // One accounting: what the tile hands the regional flow is what the region takes down under it.
+    // Both take it by deepRechargeOf from the same beds, but read the ground at 64 m here and at
+    // 1 km there (slope, cover, streams), so the two agree only within a factor.
     double deepUnder = 0;
     for (const auto& region : hereHeld)
         for (int z = 0; z < TileCells / Refinement; ++z)
@@ -254,14 +260,15 @@ void testGroundwaterTile() {
                 const int64_t rx = int64_t(key.x) * (TileCells / Refinement) + x - int64_t(region->key.x) * TileCells, rz = int64_t(key.z) * (TileCells / Refinement) + z - int64_t(region->key.z) * TileCells;
                 if (rx >= 0 && rz >= 0 && rx < TileCells && rz < TileCells) deepUnder += region->recharge[size_t(rz) * TileCells + size_t(rx)];
             }
-    std::printf("ground water: local tile %d %d hands the regional flow %.3g m3/yr (its underflow); the region takes %.3g m3/yr down under it and brings %.3g m3/yr up into its own cells; %zu cells of its field take some\n",
-                key.x, key.z, budget.underflow, deepUnder, budget.regional, upwelled);
+    expectWater(budget.handed > 0.5 * deepUnder && budget.handed < 2.0 * deepUnder, "a tile hands the regional flow other water than the region takes down under it", budget.handed / std::max(1.0, deepUnder));
+    std::printf("ground water: local tile %d %d hands the regional flow %.3g m3/yr (%.1f %% of its recharge); the region takes %.3g m3/yr down under it and brings %.3g m3/yr up into its own cells; %zu cells of its field take some\n",
+                key.x, key.z, budget.handed, 100 * budget.handed / budget.recharge, deepUnder, budget.regional, upwelled);
 
     int kinds[4] = {};
     for (const SpringRecord& record : first->records) ++kinds[int(record.kind)];
-    std::printf("ground water: local tile %d %d: recharge %.0f mm/yr of %.0f mm/yr runoff; springs %.1f %%, seepage %.1f %%, baseflow %.1f %%, deep %.1f %%, followed no farther %.1f %% of it; regional flow up %.1f %% of it; "
-                "%d table, %d contact, %d fault, %d karst springs; %zu conduits; %.3g m3/yr cross its east edge\n",
+    std::printf("ground water: local tile %d %d: recharge %.0f mm/yr of %.0f mm/yr runoff; of what its storeys carry: springs %.1f %%, seepage %.1f %%, baseflow %.1f %%, deep %.1f %%, "
+                "followed no farther %.1f %%, from the regional flow %.1f %%; %d table, %d contact, %d fault, %d karst springs; %zu conduits; %.3g m3/yr cross its east edge\n",
                 key.x, key.z, 1000 * budget.recharge / (tileSpan(Level::Local) * tileSpan(Level::Local)), 1000 * budget.runoff / (tileSpan(Level::Local) * tileSpan(Level::Local)),
-                100 * budget.springs / budget.recharge, 100 * budget.seepage / budget.recharge, 100 * budget.baseflow / budget.recharge, 100 * budget.deep / budget.recharge,
-                100 * budget.underflow / budget.recharge, 100 * budget.regional / budget.recharge, kinds[0], kinds[1], kinds[2], kinds[3], first->caves->conduits.size(), eastward);
+                100 * budget.springs / carried, 100 * budget.seepage / carried, 100 * budget.baseflow / carried, 100 * budget.deep / carried, 100 * budget.underflow / carried,
+                100 * budget.regional / carried, kinds[0], kinds[1], kinds[2], kinds[3], first->caves->conduits.size(), eastward);
 }

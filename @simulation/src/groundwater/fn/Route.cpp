@@ -64,7 +64,7 @@ NodeSplit splitNode(const WaterField& field, size_t cell, int storey, float flux
     else rest -= split.lost = std::min(rest, column.baseLeak);
     if (field.karst[node]) {
         split.captured = rest;
-    } else if (column.drain != Drain::None) {
+    } else if (storey == Upper ? column.drain != Drain::None : drainsLower(column)) {
         split.out = rest;
     } else {
         // Water under a tight bed cannot come up through it: it goes on while anywhere lower is left.
@@ -97,7 +97,7 @@ void routeGroundWater(WaterField& field) {
                     for (int storey = column.perched ? Upper : Lower; storey <= Lower; ++storey) {
                         const size_t node = i * 2 + size_t(storey);
                         Mixing mix;
-                        if (storey == Upper || !column.perched) take(mix, column.recharge + column.sunk, Borne{0, 0, column.ground, column.recharge / WaterCellArea, 0, 0}, 0);
+                        if (storey == Upper || !column.perched) take(mix, shallowRecharge(column) + column.sunk, Borne{0, 0, column.ground, column.recharge / WaterCellArea, 0, 0}, 0);
                         else take(mix, down[i], field.borne[i * 2 + Upper], 0);
                         if (storey == Lower && column.regional > 0) take(mix, column.regional, field.upwelled[i], 0);
                         for (int k = 0; k < 8; ++k) {

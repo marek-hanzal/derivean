@@ -114,7 +114,7 @@ void findVents(const WaterField& field, GroundwaterTile& tile) {
             const float emerging = upper.emerges + lower.emerges;
             // A spring gathers the water of ground around it. What a cell gives back of its own
             // recharge is a wet slope, not a vent.
-            const float least = std::max(LeastSpring, GatherShare * (column.recharge + column.sunk));
+            const float least = std::max(LeastSpring, GatherShare * (shallowRecharge(column) + column.sunk));
             tile.emergence[own] = emerging + upper.outcrop;
             if (column.drain != Drain::None || (emerging > 0 && gaining(field, fx, fz))) {
                 tile.budget.baseflow += emerging;

@@ -50,7 +50,7 @@ void timeGroundwater(World& world, TileKey local) {
                 for (int x = field.margin; x < field.size - field.margin; ++x) {
                     const size_t cell = field.index(x, z);
                     const AquiferColumn& column = field.column[cell];
-                    entered += column.recharge + column.sunk;
+                    entered += shallowRecharge(column) + column.sunk + column.regional;
                     lag[0] += field.fate[cell * 2 + Upper].lag;
                     lag[column.crush >= 0.2f ? 1 : column.perched ? 2 : 3] += field.fate[cell * 2 + Lower].lag;
                 }

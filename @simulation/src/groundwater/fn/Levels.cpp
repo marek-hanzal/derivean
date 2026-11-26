@@ -15,7 +15,7 @@ float ease(const AquiferColumn& column, int k) {
 // Least gradient a storey's water table takes: what carries the recharge of a hillside through it.
 float leastGradient(const AquiferColumn& column, float transmissivity) {
     if (transmissivity <= 0) return MostGradient;
-    return std::clamp(column.recharge / WaterCellArea * HillLength / transmissivity, LeastGradient, MostGradient);
+    return std::clamp(shallowRecharge(column) / WaterCellArea * HillLength / transmissivity, LeastGradient, MostGradient);
 }
 
 float harmonic(float a, float b) { return a + b > 0 ? 2.0f * a * b / (a + b) : 0.0f; }
@@ -54,10 +54,18 @@ void findWays(WaterField& field) {
 // The stand of water each storey takes when little arrives: the level of its outlets, rising away
 // from them by the least gradient, never under its floor and never over the ground. One sweep
 // carries an outlet's level one cell farther.
+//
+// An open lower storey stands on the drain it rises least from, not on the lowest one in reach.
+// The water a Local field follows is the shallow share (the regional flow takes the deep one,
+// fn/Regional.cpp), and shallow water comes out at the stream nearest it: a stream that does not
+// lose (fn/Columns.cpp) is in contact with the ground water beside it, which therefore cannot stand
+// under its stage, however far down the valley a lower drain lies. Under a tight bed, out of
+// contact with the streams above, and where no drain is in reach, the lowest stand around is taken.
 void spreadLevels(WaterField& field) {
     const int size = field.size;
     const size_t cells = field.cells();
-    std::vector<float> next(cells * 2), spill(cells, 1e9f);
+    constexpr float Unreached = 1e30f;
+    std::vector<float> next(cells * 2), spill(cells, 1e9f), rise(cells, Unreached), riseNext(cells);
     field.level.resize(cells * 2);
     for (size_t i = 0; i < cells; ++i) {
         const AquiferColumn& column = field.column[i];
@@ -71,7 +79,8 @@ void spreadLevels(WaterField& field) {
             }
         }
         field.level[i * 2 + Upper] = column.perched ? std::clamp(spill[i], column.floor, std::max(column.floor, column.ground)) : column.ground;
-        field.level[i * 2 + Lower] = column.drain != Drain::None ? column.stage : column.ground;
+        field.level[i * 2 + Lower] = drainsLower(column) ? column.stage : column.ground;
+        if (drainsLower(column)) rise[i] = 0;
     }
     for (int sweep = 0; sweep < LevelSweeps; ++sweep) {
         forRows(field, [&](int begin, int end) {
@@ -80,22 +89,29 @@ void spreadLevels(WaterField& field) {
                     const size_t i = field.index(x, z);
                     const AquiferColumn& column = field.column[i];
                     const float upperOwn = leastGradient(column, column.upperT), lowerOwn = leastGradient(column, lowerT(column));
-                    float upper = spill[i], lower = column.ground;
+                    // `nearest` is the stand by the drain it rises least from, `lowest` the lowest stand around.
+                    float upper = spill[i], lowest = column.ground, nearest = column.ground, least = Unreached;
                     for (int k = 0; k < 8; ++k) {
                         const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
                         if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
                         const size_t j = field.index(nx, nz);
                         const AquiferColumn& other = field.column[j];
                         const float run = float(WaterCell) * NeighborReach[k] * 0.5f;
-                        lower = std::min(lower, field.level[j * 2 + Lower] + run * (lowerOwn / ease(column, k) + leastGradient(other, lowerT(other)) / ease(other, k)));
+                        const float up = run * (lowerOwn / ease(column, k) + leastGradient(other, lowerT(other)) / ease(other, k));
+                        const float stand = field.level[j * 2 + Lower] + up;
+                        lowest = std::min(lowest, stand);
+                        if (rise[j] < Unreached && (rise[j] + up < least || (rise[j] + up == least && stand < nearest))) least = rise[j] + up, nearest = stand;
                         if (Way(field.way[i * 8 + size_t(k)]) == Way::Along)
                             upper = std::min(upper, field.level[j * 2 + Upper] + run * (upperOwn / ease(column, k) + leastGradient(other, other.upperT) / ease(other, k)));
                     }
                     next[i * 2 + Upper] = column.perched ? std::clamp(upper, column.floor, std::max(column.floor, column.ground)) : column.ground;
-                    next[i * 2 + Lower] = column.drain != Drain::None ? column.stage : std::max(column.base, lower);
+                    const bool drains = drainsLower(column), reached = !column.perched && least < Unreached;
+                    next[i * 2 + Lower] = drains ? column.stage : std::max(column.base, reached ? std::min(column.ground, nearest) : lowest);
+                    riseNext[i] = drains ? 0.0f : reached ? least : Unreached;
                 }
         });
         field.level.swap(next);
+        rise.swap(riseNext);
     }
 }
 

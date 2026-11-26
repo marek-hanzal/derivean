@@ -169,7 +169,9 @@ void dissolveSinks(Domain& domain) {
         if (work.sunk[i] <= 0 || domain.hold[i] != Free) continue;
         // A cell's own runoff already dissolves it (Hillslope.cpp); this is the water gathered from elsewhere.
         const float gathered = std::min(std::max(0.0f, work.sunk[i] - domain.runoff[i] * area), (DolineGain - 1) * domain.runoff[i] * area);
-        const float lowered = sinkSolution(domain.unit[i].traits.solubility, gathered, float(domain.cell)) * dt;
+        float lowered = sinkSolution(domain.unit[i].traits.solubility, gathered, float(domain.cell)) * dt;
+        // Karst does not lower the sill of a lake the parent holds below the parent's water.
+        if (!domain.lakeFloor.empty()) lowered = std::min(lowered, std::max(0.0f, domain.ground.rock[i] + domain.sedimentAt(i) - domain.lakeFloor[i]));
         domain.ground.rock[i] -= lowered;
         if (domain.owned(int(i % size_t(size)), int(i / size_t(size)))) domain.ledger.dissolved += double(lowered) * area;
     }
