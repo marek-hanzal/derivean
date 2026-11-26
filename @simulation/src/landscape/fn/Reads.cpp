@@ -1,6 +1,6 @@
 #include "landscape/fn/Build.hpp"
 
-#include "ground/type/SpringGround.hpp"
+#include "ground/fn/SpringBounds.hpp"
 
 namespace derivean::sim {
 

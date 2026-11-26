@@ -17,3 +17,5 @@ struct GroundSpec {
 derivean::sim::Domain groundDomain(const GroundSpec& spec);
 
 void expectGround(bool passed, const char* message, double value = 0);
+
+bool sameTile(const derivean::sim::Tile& a, const derivean::sim::Tile& b);

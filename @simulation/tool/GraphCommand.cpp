@@ -1,7 +1,7 @@
 #include "Arguments.hpp"
 
 #include "ground/type/Detail.hpp"
-#include "landscape/type/WaterInfluences.hpp"
+#include "landscape/constant/WaterInfluences.hpp"
 #include "measure/fn/Digest.hpp"
 #include "simulation/fn/BuildGraph.hpp"
 #include "simulation/type/World.hpp"
@@ -32,7 +32,6 @@ void describe(std::ostream& out, BuildKey key, BuildKeys& shown) {
         describe(out, input, shown);
     }
 }
-
 
 void describeWaterInfluences(std::ostream& out) {
     out << "digraph WaterInfluences {\n";

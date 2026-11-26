@@ -40,6 +40,8 @@ public:
     void bind(World& world);
 
 private:
+    friend struct BuildGraphFixture;
+
     struct Slot {
         std::shared_ptr<const Tile> tile;
         bool claimed{};

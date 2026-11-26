@@ -26,7 +26,7 @@ struct TileRequest {
 // are all finished are asked for, and ground tiles only once their groundwater exists, so each
 // request is one build. The current plan's budget counts flying requests. After replanning, queued
 // work no longer needed is removed from the worker pool. Claimed work finishes with its key and
-// future reserved in retired, so a new plan can submit work without duplicating an old build.
+// future in retired. If a later plan wants the build, it counts against that plan again.
 struct TileRequests {
     std::vector<TileRequest> flying, retired;
     std::array<bool, sim::LevelCount> ready{};   // by sim::Level: every tile wanted at that level is finished

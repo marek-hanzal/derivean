@@ -42,10 +42,17 @@ void testReplan() {
     expect(tiles.flying.size() == 1 && tiles.flying.front().key.tile.x == 0, "An old request kept the new queue slot");
     expect(!workers.cancelQueued(ticket), "The obsolete queued request was left in the pool");
 
-    // Returning to the old spot must keep its running build and remove the new queued one.
-    requestTiles(nature, {100 * sim::tileSpan(sim::Level::Region), Clearance, 0}, {}, Clearance);
-    expect(tiles.flying.empty() && tiles.retired.size() == 1, "Replanning submitted a duplicate of the retired build");
+    // At the old region's edge, the returning build must take the only shared slot.
+    const double span = sim::tileSpan(sim::Level::Region);
+    tiles.reach[size_t(sim::Level::Region)] = 1;
+    requestTiles(nature, {100 * span, Clearance, span / 2}, {}, Clearance);
+    expect(tiles.flying.size() == 1 && tiles.flying.front().key == old && tiles.retired.empty(),
+        "The returning build did not take the shared slot");
 
+    constexpr double AboveAllLevels = 2e9;
+    requestTiles(nature, {0, AboveAllLevels, 0}, {}, AboveAllLevels);
+    expect(tiles.flying.empty() && tiles.retired.size() == 1 && tiles.retired.front().key == old,
+        "The returning build could not be retired again");
     release.set_value();
     tiles.retired.front().completion.wait();
     bool reported = false;

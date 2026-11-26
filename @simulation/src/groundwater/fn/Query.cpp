@@ -1,6 +1,6 @@
 #include "groundwater/fn/Query.hpp"
 
-#include "ground/type/SpringGround.hpp"
+#include "ground/fn/SpringBounds.hpp"
 #include "groundwater/fn/Refine.hpp"
 #include "simulation/type/World.hpp"
 

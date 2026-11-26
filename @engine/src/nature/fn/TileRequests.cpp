@@ -45,7 +45,7 @@ void collect(std::vector<TileRequest>& requests, std::exception_ptr& failure) {
     std::erase_if(requests, [](const TileRequest& request) { return !request.completion.valid(); });
 }
 
-void retireUnwanted(TileRequests& tiles, const sim::BuildKeys& wanted, sim::Workers& workers) {
+void reconcileRequests(TileRequests& tiles, const sim::BuildKeys& wanted, sim::Workers& workers) {
     auto request = tiles.flying.begin();
     while (request != tiles.flying.end()) {
         if (wanted.contains(request->key)) {
@@ -54,6 +54,15 @@ void retireUnwanted(TileRequests& tiles, const sim::BuildKeys& wanted, sim::Work
         }
         if (!workers.cancelQueued(request->ticket)) tiles.retired.push_back(std::move(*request));
         request = tiles.flying.erase(request);
+    }
+    auto retired = tiles.retired.begin();
+    while (retired != tiles.retired.end()) {
+        if (!wanted.contains(retired->key)) {
+            ++retired;
+            continue;
+        }
+        tiles.flying.push_back(std::move(*retired));
+        retired = tiles.retired.erase(retired);
     }
 }
 
@@ -66,6 +75,7 @@ RequestBudget requestBudget(size_t workers) {
 
 void requestTiles(Nature& nature, Position eye, Position velocity, double clearance) {
     TileRequests& tiles = nature.tiles;
+    // Drain both sets and rethrow the first build failure.
     std::exception_ptr failure;
     collect(tiles.flying, failure);
     collect(tiles.retired, failure);
@@ -117,7 +127,7 @@ void requestTiles(Nature& nature, Position eye, Position velocity, double cleara
         sim::buildFrontier(world, wanted.key, seen, ready);
         for (const sim::BuildKey node : ready) order.push_back({wanted.gain, node, wanted.own});
     }
-    retireUnwanted(tiles, seen, world.workers);
+    reconcileRequests(tiles, seen, world.workers);
 
     const RequestBudget budget = requestBudget(world.workers.threads());
     tiles.flying.reserve(budget.own);
@@ -125,7 +135,7 @@ void requestTiles(Nature& nature, Position eye, Position velocity, double cleara
     for (const Wanted& wanted : order) {
         if (tiles.flying.size() >= (wanted.own ? budget.own : budget.shared)) break;
         const auto sameKey = [&](const TileRequest& request) { return request.key == wanted.key; };
-        if (std::ranges::any_of(tiles.flying, sameKey) || std::ranges::any_of(tiles.retired, sameKey)) continue;
+        if (std::ranges::any_of(tiles.flying, sameKey)) continue;
         const auto task = std::make_shared<std::packaged_task<void()>>([&world, key = wanted.key] { sim::buildReady(world, key); });
         auto completion = task->get_future();
         const uint64_t ticket = world.workers.submit([task] { (*task)(); }, wanted.own ? ownPriority-- : priority--);

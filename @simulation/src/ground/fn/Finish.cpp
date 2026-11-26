@@ -3,6 +3,7 @@
 #include "ground/constant/Ground.hpp"
 #include "ground/fn/Frost.hpp"
 #include "ground/fn/Hydrothermal.hpp"
+#include "ground/fn/SpringBounds.hpp"
 #include "ground/fn/Stones.hpp"
 #include "ground/type/SpringGround.hpp"
 #include "groundwater/fn/Query.hpp"

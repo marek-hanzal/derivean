@@ -1,6 +1,6 @@
 #pragma once
 
-#include "groundwater/type/SpillStop.hpp"
+#include "groundwater/constant/SpillStop.hpp"
 #include "simulation/type/InfluenceGraph.hpp"
 
 #include <array>

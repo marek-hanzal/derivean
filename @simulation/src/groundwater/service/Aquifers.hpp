@@ -35,6 +35,8 @@ public:
     std::shared_ptr<const RegionalTile> findRegional(TileKey region) const;
 
 private:
+    friend struct BuildGraphFixture;
+
     template <class T>
     struct Slot {
         std::shared_ptr<const T> tile;

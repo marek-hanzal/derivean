@@ -1,11 +1,13 @@
 #include "groundwater/service/Aquifers.hpp"
-#include "landscape/type/WaterInfluences.hpp"
+#include "landscape/constant/WaterInfluences.hpp"
 #include "simulation/fn/BuildGraph.hpp"
 
 #include <cstdio>
 #include <cstdlib>
 #include <stdexcept>
 #include <unordered_map>
+
+void testBuildGraphTile();
 
 namespace {
 
@@ -50,7 +52,6 @@ size_t countReads(BuildKey from, BuildProduct product) {
     return count;
 }
 
-
 template <class Build>
 bool rejectsMissing(Build&& build) {
     try {
@@ -93,4 +94,5 @@ void testBuildGraph() {
     visit(corner, seen);
     expect(seen.contains(aquifer) && seen.contains(regional));
     preparedNeedsInputs();
+    testBuildGraphTile();
 }
