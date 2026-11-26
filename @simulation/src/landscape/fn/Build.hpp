@@ -15,6 +15,16 @@ using TileLookup = std::function<const Tile*(TileKey)>;
 // earlier pass. Fixed by the key alone, which is what makes the result independent of visiting order.
 std::vector<TileKey> dependencies(TileKey key);
 
+// Reads.cpp — the ground water a build reads besides its dependencies, which the atlas does not
+// build first: asked for before they are there, a build makes them inline, one after the other.
+// The local tiles whose ground water a tile reads: a ground tile the springs within SpringReach
+// of it (ground/fn/Finish.cpp, springsIn); no other level reads ground water.
+std::vector<TileKey> groundwaterRead(TileKey key);
+// The landscape tiles the ground water of local tile `local` is built from
+// (groundwater/service/Aquifers.cpp): the nine local tiles around it, and the nine region tiles
+// around each region tile under the corners of those, once each.
+std::vector<TileKey> groundwaterSources(TileKey local);
+
 // Build.cpp — the domain at the start of its window.
 Domain buildDomain(const Setting& setting, TileKey key, const TileLookup& lookup);
 

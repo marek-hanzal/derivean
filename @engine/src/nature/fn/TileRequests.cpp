@@ -1,4 +1,3 @@
-#include "ground/type/SpringGround.hpp"
 #include "landscape/fn/Build.hpp"
 #include "nature/service/Nature.hpp"
 #include "simulation/fn/Query.hpp"
@@ -36,37 +35,6 @@ bool finished(const sim::World& world, sim::TileKey key) { return world.atlas.fi
 
 using Keys = std::unordered_set<sim::TileKey, sim::TileKeyHash>;
 
-// A ground tile asks the groundwater for the springs of the local tiles within SpringReach of it
-// while it builds (ground/fn/Finish.cpp), and a groundwater tile not there yet is built then and
-// there with the landscape tiles it reads. Those are not among the tile's dependencies.
-std::vector<sim::TileKey> watersOf(sim::TileKey ground) {
-    const double span = sim::tileSpan(ground.level);
-    const sim::TileKey low = sim::tileAt(sim::Level::Local, {ground.x * span - sim::SpringReach, ground.z * span - sim::SpringReach});
-    const sim::TileKey high = sim::tileAt(sim::Level::Local, {(ground.x + 1) * span + sim::SpringReach, (ground.z + 1) * span + sim::SpringReach});
-    std::vector<sim::TileKey> locals;
-    for (int z = low.z; z <= high.z; ++z)
-        for (int x = low.x; x <= high.x; ++x) locals.push_back({sim::Level::Local, x, z});
-    return locals;
-}
-
-// The landscape tiles the groundwater of a local tile reads (groundwater/service/Aquifers.cpp): the
-// nine local tiles around it and, for the region tiles under the corners of those, the nine region
-// tiles around each.
-std::vector<sim::TileKey> waterNeeds(sim::TileKey local) {
-    std::vector<sim::TileKey> needed;
-    const auto around = [&](sim::TileKey key) {
-        for (int dz = -1; dz <= 1; ++dz)
-            for (int dx = -1; dx <= 1; ++dx) {
-                const sim::TileKey other{key.level, key.x + dx, key.z + dz};
-                if (std::find(needed.begin(), needed.end(), other) == needed.end()) needed.push_back(other);
-            }
-    };
-    around(local);
-    for (const int dz : {-1, 1})
-        for (const int dx : {-1, 1}) around(sim::parentOf({sim::Level::Local, local.x + dx, local.z + dz}));
-    return needed;
-}
-
 // The unfinished tiles `key` is built from, down to those whose own dependencies are all finished:
 // those go to `buildable`, deepest first, with the groundwater a ground tile reads marked `water`.
 // Asked for directly, a tile the atlas would otherwise build with its whole chain inline: requests
@@ -80,27 +48,31 @@ void frontier(const sim::World& world, sim::TileKey key, Keys& seen, Keys& dry, 
             ready = false;
             frontier(world, other, seen, dry, buildable);
         }
-    // Its groundwater reads tiles far from the ground tile's own chain: walked beside that chain,
-    // not after it, so both are built at once.
-    if (key.level == sim::Level::Ground)
-        for (const sim::TileKey& local : watersOf(key)) {
-            if (world.groundwater.find(local)) continue;
-            ready = false;
-            if (!dry.insert(local).second) continue;
-            // Asked for once what it reads is finished; it can still wait on a region tile's regional
-            // flow that another groundwater build has claimed.
-            bool readable = true;
-            for (const sim::TileKey& other : waterNeeds(local))
-                if (!finished(world, other)) {
-                    readable = false;
-                    frontier(world, other, seen, dry, buildable);
-                }
-            if (readable) buildable.push_back({0, local, false, true});
-        }
+    // Ground water a ground tile reads is built from tiles far from its own chain: walked beside
+    // that chain, not after it, so both are built at once.
+    for (const sim::TileKey& local : sim::groundwaterRead(key)) {
+        if (world.groundwater.find(local)) continue;
+        ready = false;
+        if (!dry.insert(local).second) continue;
+        // Asked for once what it reads is finished; it can still wait on a region tile's regional
+        // flow that another groundwater build has claimed.
+        bool readable = true;
+        for (const sim::TileKey& other : sim::groundwaterSources(local))
+            if (!finished(world, other)) {
+                readable = false;
+                frontier(world, other, seen, dry, buildable);
+            }
+        if (readable) buildable.push_back({0, local, false, true});
+    }
     if (ready) buildable.push_back({0, key, false});
 }
 
 } // namespace
+
+// A lone worker is never kept free: the rest of the view would then never be asked for at all.
+RequestBudget requestBudget(size_t workers) {
+    return {workers, workers - (workers > 1 ? std::max<size_t>(1, workers / FreeShare) : 0)};
+}
 
 void requestTiles(Nature& nature, Position eye, Position velocity, double clearance) {
     TileRequests& tiles = nature.tiles;
@@ -159,10 +131,10 @@ void requestTiles(Nature& nature, Position eye, Position velocity, double cleara
         request.live->store(false);
         return true;
     });
-    const size_t capacity = world.workers.threads(), shared = capacity - std::max<size_t>(1, capacity / FreeShare);
+    const RequestBudget budget = requestBudget(world.workers.threads());
     int priority = FirstPriority, ownPriority = OwnPriority;
     for (const Wanted& wanted : order) {
-        if (tiles.flying.size() >= (wanted.own ? capacity : shared)) break;
+        if (tiles.flying.size() >= (wanted.own ? budget.own : budget.shared)) break;
         if (std::any_of(tiles.flying.begin(), tiles.flying.end(), [&](const TileRequest& request) { return request.key == wanted.key && request.water == wanted.water; }))
             continue;
         // Straight to the pool, not through sim::requestAround (which ranks coarse levels first

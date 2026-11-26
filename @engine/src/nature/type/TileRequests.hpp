@@ -44,6 +44,13 @@ struct TileRequests {
     int calls{};
 };
 
+// How many requests may be in flight on a pool of `workers`: the player's own place may use every
+// worker, the rest of the view leaves a share of them free, but never the only one.
+struct RequestBudget {
+    size_t own, shared;
+};
+RequestBudget requestBudget(size_t workers);
+
 // Asks for the tiles the view around `eye` gains most from. `velocity` is the eye's in m/s: what
 // lies ahead of a fast flight counts as nearer. `clearance` is the height above ground in metres;
 // fine tiles are pointless from far above.

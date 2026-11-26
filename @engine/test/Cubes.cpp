@@ -1,9 +1,14 @@
+// 264 lines, one owner: the checks of the far cubes, from one mesher scene to a planet's levels,
+// sharing the quad readers at the top.
+#include "ground/fn/Stamp.hpp"
 #include "horizon/type/FarCubes.hpp"
 #include "nature/type/SurfaceReader.hpp"
+#include "simulation/fn/Reader.hpp"
 
 #include "PlanetSession.hpp"
 
 #include <cmath>
+#include <iostream>
 
 using namespace derivean;
 
@@ -140,8 +145,19 @@ size_t risersCarryCover(const sim::World& world, CubeKey key, const std::vector<
     return compared;
 }
 
+// Whether a point lies in a stone of the ground tiles, which the levels cut from them carry.
+bool inStone(const sim::World& world, double x, double y, double z) {
+    sim::TileReader fine{world.atlas, sim::Level::Ground};
+    const sim::TileKey low = sim::tileAt(sim::Level::Ground, {x - sim::ClastReach, z - sim::ClastReach});
+    const sim::TileKey high = sim::tileAt(sim::Level::Ground, {x + sim::ClastReach, z + sim::ClastReach});
+    for (int tz = low.z; tz <= high.z; ++tz)
+        for (int tx = low.x; tx <= high.x; ++tx)
+            if (const sim::Tile* tile = fine.tile(tx, tz); tile && sim::clastAt(*tile, x, y, z)) return true;
+    return false;
+}
+
 // Chunks are cut alone and must still fit: tops follow the rule, neighbours close the wall between
-// them, and water lies in its basin.
+// them, and water lies in its basin. A top that is a stone stands on the ground, not at it.
 void chunksFit(const sim::World& world, Position around) {
     for (int level : {FinestCubes, 5, 9, CoarsestCubes}) {
         const double edge = edgeOf(level), size = CubeSide * edge;
@@ -151,19 +167,26 @@ void chunksFit(const sim::World& world, Position around) {
         const std::vector<int> tops = topsOf(quads), next = topsOf(others);
         const std::vector<WaterSheet>& water = here.chunks.back().water;
         SurfaceReader reader = surfaceReader(world, cubeSource(level));
-        int near = 0;
+        int near = 0, stones = 0;
         for (int z = 0; z < CubeSide; ++z) {
             for (int x = 0; x < CubeSide; ++x) {
                 const int top = tops[size_t(z) * CubeSide + x];
                 expect(top != std::numeric_limits<int>::min(), "A column of far cubes has no top");
-                const double ground = surfaceEased(reader, {(key.x * CubeSide + x + 0.5) * edge, (key.z * CubeSide + z + 0.5) * edge}).ground;
+                const double px = (key.x * CubeSide + x + 0.5) * edge, pz = (key.z * CubeSide + z + 0.5) * edge;
+                const double ground = surfaceEased(reader, {px, pz}).ground;
+                if (cubeSource(level) == sim::Level::Ground && top * edge > ground + 0.5 * edge + 1e-3 && inStone(world, px, (top - 0.5) * edge, pz)) {
+                    ++stones;
+                    continue;
+                }
                 expect(std::abs(top * edge - ground) <= 1.5 * edge + 1e-3, "A column of far cubes ends far from the ground");
                 near += std::abs(top * edge - ground) <= 0.5 * edge + 1e-3;
             }
             const int step = tops[size_t(z) * CubeSide + CubeSide - 1] - next[size_t(z) * CubeSide];
             expect(sideCubes(quads, 1, z) == std::max(step, 0) && sideCubes(others, -1, z) == std::max(-step, 0), "Neighbouring chunks leave their border open or doubled");
         }
-        expect(water.size() > 0 || near == CubeSide * CubeSide, "Away from water a column's top is the cube nearest the ground");
+        if (water.empty() && near + stones != CubeSide * CubeSide)
+            std::cout << "level " << level << ": " << near << " tops at the ground, " << stones << " on stones, of " << CubeSide * CubeSide << "\n";
+        expect(water.size() > 0 || near + stones == CubeSide * CubeSide, "Away from water a column's top is the cube nearest the ground, or a stone on it");
         for (const WaterSheet& sheet : water) {
             std::vector<uint8_t> wet(tops.size(), 0);
             for (const Quad& quad : quadsOf(sheet.faces))
