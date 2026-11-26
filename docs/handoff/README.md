@@ -29,6 +29,8 @@ On 26 Nov at about 03:00 every running stream stopped mid-work on a model usage 
 
 `mise -C @simulation run build` reconfigures the shared build directory every time; a stream that builds privately sets its own `XMAKE_CONFIGDIR` (the `xmake` on the path is a mise shim that otherwise writes the shared configuration).
 
+Starting the game builds the planet first: about 8 minutes at 08:54 and still unfinished after 25 minutes at 09:30 (load 35–52, other games running). Whether the tree got slower or only the machine is not established; a cached planet or a faster build is an engine item.
+
 Open investigation: thin vertical columns, one cell wide and up to hundreds of metres tall, seen in a worker's game capture (owner's screenshot); cause not yet found.
 
 - `mise -C @simulation run build` builds when no stream is mid-save; streams share one working tree, so a failing build is usually someone's half-saved file — wait and retry before touching another owner's code.
@@ -53,7 +55,7 @@ Open investigation: thin vertical columns, one cell wide and up to hundreds of m
 | Measurements, inspector, scouting | [measure.md](measure.md) | `@simulation/src/{measure,inspect}`, `tool/Measure*`, `tool/InspectCommand.cpp` | Finished a full pass; to be repeated |
 | Engine | [engine.md](engine.md) | `@engine/**`, `@napi/**`, `@game/main/engine*`, `@game/contract/GameBridge.ts`, `@game/preload/**` | In progress; long queue |
 | Renderer | [renderer.md](renderer.md) | `@game/src/**` except the map, `@game/main/{index,capture}.mjs`, `@game/capture/**` | Third run: cube levels draw on WebGPU beside the WebGL path (`DERIVEAN_RENDERER=webgpu`); sun shadows, snow, the flip and clouds are next |
-| Map | [map.md](map.md) | `@game/src/map/**`, `@simulation/src/chart/**` | `M` works in the game (own canvas, independent of the terrain renderer); final measurement pending |
+| Map | [map.md](map.md) | `@game/src/map/**`, `@simulation/src/chart/**` | Finished; no active owner. Review fixes in (stale reads, world change, lost context); an open map costs no more frame time than the closed game; `M` last confirmed by real input before those fixes — confirm on a quiet machine with the steps in map.md |
 
 A stream whose file is missing has not written it yet; its state is then only in the code.
 
