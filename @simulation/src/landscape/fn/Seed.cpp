@@ -6,10 +6,6 @@
 namespace derivean::sim {
 namespace {
 
-// Height of the seeded roughness a level starts with and the wavelength it sits at. It only breaks
-// the symmetry of an interpolated surface; relief comes from what the replay does with it.
-constexpr float RoughHeight[LevelCount] = {0, 14.0f, 2.2f, 0.22f, 0.02f};
-constexpr double RoughLength[LevelCount] = {0, 9000.0, 620.0, 42.0, 2.6};
 constexpr float LeastLake = 1.0f;   // m of water a parent cell holds for a finer level to keep its basin
 constexpr float GroundMantle = 0.3f;   // m of loose cover above which a ground tile starts rough in its mantle, not in its rock
 

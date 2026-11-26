@@ -1,5 +1,6 @@
 #pragma once
 
+#include "landscape/type/Level.hpp"
 #include "landscape/type/Setting.hpp"
 #include "strata/type/Column.hpp"
 
@@ -30,10 +31,17 @@ float fractureAt(uint64_t seed, Vec2 material, double strike, double spacing);
 
 // Seeded roughness of an initial surface at about `wavelength` metres, in [-1, 1].
 float roughnessAt(uint64_t seed, Vec2 material, double wavelength);
+// Height of the seeded roughness a level starts with and the wavelength it sits at. It only breaks
+// the symmetry of an interpolated surface; relief comes from what the replay does with it.
+inline constexpr float RoughHeight[LevelCount] = {0, 14.0f, 2.2f, 0.22f, 0.02f};
+inline constexpr double RoughLength[LevelCount] = {0, 9000.0, 620.0, 42.0, 2.6};
 
 // Seeded rock quality: a factor around one on erodibility, varying over about `wavelength` metres.
 // Without it a uniform slope has nothing to choose its valleys by and cuts them at even spacing.
 float qualityAt(uint64_t seed, Vec2 material, double wavelength);
+// Cells over which the seeded rock quality varies. Its finest part must stay wider than the valleys
+// a level draws, or every cell erodes at a pace of its own and the relief is that of the pattern.
+inline constexpr double QualitySpan[LevelCount] = {0, 48.0, 48.0, 48.0, 14.0};
 
 double seaLevelAt(const Setting& setting, double time);
 

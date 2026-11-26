@@ -13,9 +13,6 @@ constexpr int StrataStride[LevelCount] = {1, 2, 8, 8, 64};          // cells bet
 // m between the seeded fracture zones of the ground level. The coarser levels read theirs from the
 // rock-mass structure instead (Structure.cpp).
 constexpr double FractureSpacing[LevelCount] = {0, 0, 0, 0, 60.0};
-// Cells over which the seeded rock quality varies. Its finest part must stay wider than the valleys
-// a level draws, or every cell erodes at a pace of its own and the relief is that of the pattern.
-constexpr double QualitySpan[LevelCount] = {0, 48.0, 48.0, 48.0, 14.0};
 
 void allocate(Domain& domain) {
     const size_t cells = domain.cells();

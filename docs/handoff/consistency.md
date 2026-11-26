@@ -39,16 +39,31 @@ Measured, seed 42, 4.6 Gyr:
 
 Region lakes are 0.71 % of land against Earth's 1.5–3 %. The lakes `keepCourses` removed were dams of the blend. The gap is partly the glacial lake districts and partly the closed arid basins the planet does not have yet (README, Defects 6).
 
-The test fails on one crossing: Local tile (907, 584) takes a river of 9.2 × 10⁷ m³/yr from its pass-0 western neighbour at z ≈ 233; it joins the later tile's own river of 4.3 × 10⁸, which runs back west into the finished tile, where the record carries 1.4 × 10⁵. It predates this stream's changes (the same loss with them switched off). It is item 1 at Local: two tiles that simulated the same overlap put the river in different places, and the one finished first decides.
+**Known failure:** the test's crossing check fails on one crossing, kept as it is until the trunk routing (section 4) lands; it runs last in the suite (`test/Main.cpp`), so the tests before it are still checked. Local tile (907, 584) takes a river of 9.2 × 10⁷ m³/yr from its pass-0 western neighbour at z ≈ 233; it joins the later tile's own river of 4.3 × 10⁸, which runs back west into the finished tile, where the record carries 1.4 × 10⁵. It predates this stream's changes (the same loss with them switched off). It is item 1 at Local: two tiles that simulated the same overlap put the river in different places, and the one finished first decides.
+
+The coast finder's lake1 (4928000, −6024704) and lake2 (4986368, −5981696) were dams of the old seam blend: they lie 4.5 and 5.5 cells from a Region tile edge, and with `keepCourses` off the Region holds them (21 km², 135 m deep; 108 km², 69 m deep), with it neither. The Site tiles at lake2 are bit-identical whether built alone or after the 4 × 4 block around them in reverse (`.out/consistency/order`): no build-order dependence.
+
+**Trunk field** (`landscape/type/Trunks.hpp`, `fn/Trunks.cpp`, `routeTrunks`; not yet called): the planet's rivers at PlanetCell / 16 (4.1 km, 4096² cells) over `pastElevation` with the Region's seeded roughness and rock quality, the planet's own yield shared over each planet cell's land, a priority flood, and the region window's erosion by stream power with the levels' exponent (one rock, no uplift) in 12 implicit steps. Deterministic with and without a worker pool. 55–80 s and about 0.2 GB per world under load.
+
+| network, channels above 1000 km² (100 km²) | side by side | sinuosity p50 | Hack | Rb | density km/km² |
+| --- | --- | --- | --- | --- | --- |
+| `Backdrop::drainage` (8.2 km, smooth) | 93 % (98 %) | 1.04 | 0.46 (0.97) | 20, 6.9 (27, 6.8) | 0.065 (0.158) |
+| trunk field | 2.5 % (19 %) | 1.26 | 0.60 (0.63) | 5.5, 6.3 (5.5, 5.2, 5.7) | 0.026 (0.070) |
+| Earth | – | about 1.1–1.5 at this scale | 0.5–0.6 | 3–5 | about 0.027 (0.085), from HydroRIVERS' 36 million km at 10 km² scaled by A^−½ |
+
+"Side by side": channel cells with a parallel channel of at least a third of their water beside them, which is the parallel-filament defect. The roughness removes most of it; the erosion tightens the network. Rb at the low orders stays 5.2–5.7 at either threshold, slightly above Earth's. Against the Region's own trunks on the 3 × 3 from (18, −25) the field places 3 of 31 edge-crossing trunks above 3 × 10⁹ within 8 Region cells with 0.7–1.5 of their water (water-weighted 0.13; drainage 0.22): the Region's settled trunks follow neither, which is what the wiring is to change.
 
 ## 3. In progress
 
-- Build-order dependence reported at lake2 (X 4986368, Z −5981696): `terra coast --find` saw 2434 Site cells 5–15 m deep at its beach, a fresh build of the same four Site tiles none. Being reproduced (same tiles, two build orders).
-- lake1 (4928000, −6024704; 14.7 km², 116 m deep) shows only ponds at Local on the current tree: to be checked with `lakeFloor` in.
+- Nothing running.
 
 ## 4. Next steps
 
-1. **World trunk routing** (decided: option A of the item 1 options). A Backdrop field at about 4 km between the 8.2 km drainage and the Region: priority flood over `pastElevation` plus an erosion pre-pass, built once per world. First as a standalone field, measured against Earth (sinuosity, drainage density, trunk positions against the Region's own trunks on settled tiles); a river that looks drawn is a failure. Wired into Region tiles (rim inflow and outlets at trunk crossings, with the trunk's water) only after relief's Region erosion change has landed; the lead says when.
+1. **Wire the trunk field** (decided: option A of the item 1 options) once the lead says relief's Region erosion change has landed: Region rim inflow and outlets at trunk crossings with the trunk's water, replacing `Backdrop::drainage` (one owner for the fact) and its call in `readBackdrop`. Before that:
+   - sample roughness and quality at the crust's material position as the Region does (`materialOf`, `strata/fn/Column.cpp` drift), and average them over the 4 × 4 Region cells of a trunk cell: `roughnessAt` has octaves down to 1.1 km, finer than the 4.1 km grid can hold;
+   - give a planet cell whose land all falls under the sea after roughness its yield somewhere (the drainage drops it too);
+   - cut the cost (the flood seeds every sea cell; 13 floods of 16.8 M cells), or solve it once per world off the start path;
+   - decide whether the region tiles' own trunks must also conform inside a tile, not only at its rim; measure with the position check above.
 2. Deep Region lakes in the later tile's first three cells (x edges 9 / 5 / 2 %, z edges 17 / 14 / 10 %, 130–340 m deep): rivers of a later tile that meet a finished tile's settled ground and pond. Item 1; expected to fall with the trunk routing.
 3. At Local the uplift blocks straddling a tile edge (relief, `Uplift.cpp`) left the later tile's edge column lower than its neighbours; relief's `followFinished` addresses it. Re-measure the edge band (`lakeprobe` `band` lines) after it settles.
 
@@ -81,4 +96,4 @@ Private mirrors under the scratchpad `cons/`, each a copy of the shared tree wit
 
 ## 8. Open questions
 
-1. Should the test's hand-on assertion stay while item 1 is open at Local? It fails on one real loss; the lead decides whether the suite carries a known failure until the trunk routing lands.
+1. Does the trunk routing settle rivers into a finished tile at Local too, or does Local need its own authority (the Region's rivers decide crossings there already, yet 57 % of the into-earlier crossings at the lowland block lose water downstream)?
