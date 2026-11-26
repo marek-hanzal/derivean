@@ -87,5 +87,4 @@ Citations to correct:
 - `@simulation/src/astronomy/fn/Eclipse.hpp:29`: "as in NASA's canons"; the Five Millennium lunar canon enlarges the shadow by Danjon's rule, not Chauvenet's.
 - `docs/reference-landscapes.md:801`: the "Körner et al. 2021" link (boris.unibe.ch/158972) is Körner, Urbach and Paulsen 2021, "Mountain definitions and their consequences"; the inventory of mountains is Körner et al. 2017. The PDF path may also be wrong (the file `2021_AlpineBot.pdf` appears under handle 158030).
 - `docs/handoff/volcanic.md:24`: Earth's eruption rates first quoted "from memory"; line 25 then reads them from White, Crisp and Spera 2006.
-- `docs/handoff/astronomy.md:190`: the IAU 2012 resolution URL (`iau.org/static/resolutions/IAU2012_English.pdf`) no longer resolves.
 - Held evaporation: `docs/handoff/groundwater.md:124` says a lake at 3.8 km evaporates about 22 % short with γ at sea level, `.out/groundwater/evap/patched/@simulation/src/hydrology/fn/Evaporation.cpp:24` says a lake at 3 km about a third short.
