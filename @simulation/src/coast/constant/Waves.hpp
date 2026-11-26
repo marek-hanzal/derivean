@@ -30,7 +30,9 @@ inline constexpr float WaveSpread = 0.2f;      // share of a train that arrives 
 inline constexpr float SeaSwing = float(SpringTide);
 inline constexpr float LakeSwing = 0.25f;
 inline constexpr float SeaBand = 0.5f;         // m above the sea level up to which standing water is the sea
-inline constexpr float Runup = 0.6f;           // m the swash climbs above high water per metre of wave
+// Height over deep-water wavelength of a wind sea (Hs/L0 ≈ 0.04, Tp ≈ 4·√Hs): it sets the period,
+// the period how deep the bed lies under the wave and how far its swash runs up a beach.
+inline constexpr float WindSeaSteepness = 0.04f;
 inline constexpr float HighestBerm = 3.0f;     // m above high water
 
 // Rock withstands waves lower than Hc = Withstand·(compressive strength in MPa, as jointed and

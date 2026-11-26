@@ -15,6 +15,9 @@ constexpr float Wet = 0.01f;       // m of water over the ground below which a p
 constexpr float SeaReach = 0.5f;   // m above sea level up to which standing water belongs to the sea
 constexpr double StreamReach = 0.5;   // pixels to either side of a stream's path that carry its flow
 constexpr float NoWater = std::numeric_limits<float>::lowest();
+// m from the origin within which ground tile indices fit 32 bits with room to spare; ground tiles
+// exist only around a player, so a chart further out starts at the site level.
+constexpr double GroundIndexed = 0.5 * double(std::numeric_limits<int32_t>::max()) * tileSpan(Level::Ground);
 
 const Tile* tileOf(TileReader& reader, int64_t cellX, int64_t cellZ, size_t& at) {
     const int32_t tileX = int32_t(std::floor(double(cellX) / TileCells)), tileZ = int32_t(std::floor(double(cellZ) / TileCells));
@@ -84,8 +87,9 @@ float shoreLevel(TileReader& reader, int64_t cellX, int64_t cellZ) {
     return level;
 }
 
-// False when the reader's level has no finished tile under the pixel centre.
-bool readTiles(TileReader& reader, Vec2 centre, double pitch, float sea, Chart& chart, size_t pixel) {
+// False when the reader's level has no finished tile under the pixel centre. `site` reads the site
+// level for a reader of the ground level.
+bool readTiles(TileReader& reader, TileReader& site, Vec2 centre, double pitch, float sea, Chart& chart, size_t pixel) {
     SurfaceSample sample;
     if (!readSurface(reader, centre, sample)) return false;
     const double cell = specOf(reader.level).cell;
@@ -103,6 +107,19 @@ bool readTiles(TileReader& reader, Vec2 centre, double pitch, float sea, Chart& 
     chart.level[pixel] = uint8_t(reader.level);
     const PathFlow path = magnified ? flowAlong(reader, centre, pitch, cellX, cellZ) : PathFlow{};
     chart.discharge[pixel] = magnified ? path.flow : pitch > cell ? flowAcross(reader, centre, pitch) : sample.discharge;
+    if (reader.level == Level::Ground) {
+        // A ground tile carries the water of its streams and pools as well as of lakes; whether water
+        // stands there is the site level's say, as it is for the far cubes (standingWater).
+        if (sample.water > sample.ground + Wet) {
+            const double siteCell = specOf(Level::Site).cell;
+            size_t siteAt;
+            const Tile* still = tileOf(site, int64_t(std::floor(centre.x / siteCell)), int64_t(std::floor(centre.z / siteCell)), siteAt);
+            const float lake = still ? standingLevel(*still, siteAt) : NoWater;
+            chart.water[pixel] = sample.water;
+            chart.waters[pixel] = uint8_t(lake <= sample.ground + Wet ? ChartWater::Stream : lake <= sea + SeaReach ? ChartWater::Sea : ChartWater::Lake);
+        }
+        return true;
+    }
     float standing = standingLevel(*home, at);
     if (magnified && standing <= sample.ground + Wet) standing = shoreLevel(reader, cellX, cellZ);
     if (standing > sample.ground + Wet) {
@@ -144,7 +161,7 @@ void readPlanet(const Planet& planet, Vec2 centre, Chart& chart, size_t pixel) {
 } // namespace
 
 bool chartFinest(double pitch, Level& finest) {
-    for (int level = int(Level::Site); level >= int(Level::Region); --level) {
+    for (int level = int(Level::Ground); level >= int(Level::Region); --level) {
         if (pitch > CellsPerPixel * specOf(Level(level)).cell) continue;
         finest = Level(level);
         return true;
@@ -169,19 +186,21 @@ Chart chartOf(const World& world, const ChartRequest& request) {
     chart.level.assign(pixels, 0);
 
     Level finest{};
-    const int first = chartFinest(chart.pitch, finest) ? int(finest) : 0;
+    int first = chartFinest(chart.pitch, finest) ? int(finest) : 0;
+    const double reach = std::max(std::abs(request.centre.x), std::abs(request.centre.z)) + request.span;
+    if (first == int(Level::Ground) && !(reach < GroundIndexed)) first = int(Level::Site);
     chart.finest = uint8_t(first);
     const float sea = float(world.planet.seaLevel);
     // One reader per level for the whole chart: a run of pixels takes the atlas lock only when it
     // crosses into another tile, so reading a chart does not hold up whoever else reads the atlas.
-    std::array<TileReader, 3> readers{{{world.atlas, Level::Region}, {world.atlas, Level::Local}, {world.atlas, Level::Site}}};
+    std::array<TileReader, 4> readers{{{world.atlas, Level::Region}, {world.atlas, Level::Local}, {world.atlas, Level::Site}, {world.atlas, Level::Ground}}};
     for (int j = 0; j < request.size; ++j)
         for (int i = 0; i < request.size; ++i) {
             const Vec2 centre{chart.origin.x + (i + 0.5) * chart.pitch, chart.origin.z + (j + 0.5) * chart.pitch};
             const size_t pixel = size_t(j) * size_t(request.size) + size_t(i);
             bool read = false;
             for (int level = first; level >= int(Level::Region) && !read; --level)
-                read = readTiles(readers[size_t(level) - 1], centre, chart.pitch, sea, chart, pixel);
+                read = readTiles(readers[size_t(level) - 1], readers[size_t(Level::Site) - 1], centre, chart.pitch, sea, chart, pixel);
             if (!read) readPlanet(world.planet, centre, chart, pixel);
         }
     return chart;

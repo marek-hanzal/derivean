@@ -57,14 +57,20 @@ VolcanicRecord volcanicAt(World& world, Vec2 position, double calendarYears, dou
     if (!tile->volcanic) return record;
     const VolcanicTile& volcanic = *tile->volcanic;
     if (record.pile.thickness > 0) record.rock = pileBedAt(world.atlas.setting().seed, volcanic, record.pile, record.pile.thickness - 0.01f).rock;
+    // A centre lists one vent per epoch at nearly the same conduit, so the nearest conduit is often
+    // an extinct life. A vent the melt still supplies within reach wins over any extinct one.
     record.distance = reach;
+    bool supplied = false;
     for (const Vent& vent : volcanic.vents) {
+        if (vent.feeders.empty()) continue;
         const double distance = length(vent.feeders.back().site - position);
-        if (distance >= record.distance) continue;
+        const bool live = vent.supply > 0;
+        if (distance >= reach || (supplied && !live) || (supplied == live && distance >= record.distance)) continue;
         record.found = true;
         record.vent = vent;
         record.site = vent.feeders.back().site;
         record.distance = distance;
+        supplied = supplied || live;
     }
     if (record.found) record.unrest = ventUnrest(world.atlas.setting().seed, record.vent, world.atlas.setting().age + calendarYears);
     return record;

@@ -48,6 +48,7 @@ struct AquiferColumn {
     uint8_t flowTo{255};     // neighbour the surface water leaves by
     float swallow{};         // m/yr a wetted square metre of the cell's bed takes underground: its rock's alone
     float sunk{};            // m³/yr of the stream that goes underground in the cell
+    float regional{};        // m³/yr of the regional flow coming up into the lower storey (fn/Regional.hpp)
 
     bool perched{};
     float floor{};           // m, top of the tight bed
@@ -113,6 +114,7 @@ struct WaterField {
 
     std::vector<AquiferColumn> column;
     std::vector<Fissures> fissures;
+    std::vector<Borne> upwelled;    // by the regional flow coming up into a cell (AquiferColumn::regional); empty where none does
 
     std::vector<float> level;       // m, the stand of water in a storey that only its outlets and its floor decide
     std::vector<float> share;       // nodes × 8: part of a node's sideways flow that leaves towards each neighbour

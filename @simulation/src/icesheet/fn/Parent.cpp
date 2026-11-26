@@ -71,7 +71,9 @@ ParentSheet readParentSheet(const Domain& domain, const std::function<const Tile
                 const float weight = ((k & 1) ? tx : 1 - tx) * ((k >> 1) ? tz : 1 - tz);
                 const float ground = groundOf(*tile, c);
                 const SheetRecord* record = tile->sheet.get();
-                const float values[Fields] = {tile->ice[c], tile->iceAge[c], ground + tile->ice[c], ground + tile->iceAge[c], record ? record->slideX[c] : 0.0f,
+                // A finer parent's own glaciers are in its iceAge; its record holds the sheet's alone.
+                const float then = record && !record->sheetThen.empty() ? record->sheetThen[c] : tile->key.level == Level::Region ? tile->iceAge[c] : 0.0f;
+                const float values[Fields] = {tile->ice[c], then, ground + tile->ice[c], ground + then, record ? record->slideX[c] : 0.0f,
                                               record ? record->slideZ[c] : 0.0f, record ? record->worn[c] : 0.0f, record ? record->esker[c] : 0.0f};
                 for (int f = 0; f < Fields; ++f) sum[f] += weight * values[f];
             }
@@ -124,6 +126,14 @@ std::vector<Tunnel> parentTunnels(const Domain& domain, const std::function<cons
         }
     }
     return found;
+}
+
+const SheetRecord* finishedSheet(const Domain& domain, int x, int z, size_t& at) {
+    const int tx = x < Halo ? -1 : x >= Halo + TileCells ? 1 : 0, tz = z < Halo ? -1 : z >= Halo + TileCells ? 1 : 0;
+    const Tile* tile = tx || tz ? domain.finished[(tz + 1) * 3 + tx + 1] : nullptr;
+    if (!tile || !tile->sheet) return nullptr;
+    at = size_t(z - Halo - tz * TileCells) * TileCells + size_t(x - Halo - tx * TileCells);
+    return tile->sheet.get();
 }
 
 } // namespace derivean::sim

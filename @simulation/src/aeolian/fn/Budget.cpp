@@ -111,7 +111,7 @@ void routeSand(Domain& domain, const WindGraph& graph, std::vector<float>& raise
             // A stream catches the sand blown across it while it runs, and in dry country it runs a
             // few days a year unless it brings the water of wetter ground.
             const float dry = float(dryShare(domain.rain[i], domain.warmthNow[i], wind.halfRange));
-            const float runs = std::max(1.0f - aridityOf(domain.rain[i], domain.warmthNow[i]) * (1.0f - FloodShare), domain.discharge[i] / (domain.discharge[i] + PerennialFlow));
+            const float runs = std::max(runningShareOf(domain.rain[i], domain.warmthNow[i]), domain.discharge[i] / (domain.discharge[i] + PerennialFlow));
             const float caught = sand * runs * domain.discharge[i] / (domain.discharge[i] + RiverHalf);
             if (free) domain.ground.sediment[Sand][i] += caught / area, wind.ledger.sandDrowned += caught, bookWind(domain, i, caught / area);
             sand -= caught;

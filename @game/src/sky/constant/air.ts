@@ -7,6 +7,13 @@ export const CleanAir = [5.8e-6, 13.5e-6, 33.1e-6] as const;
 export const CleanAirHeight = 8000;
 export const HazeAir = 3e-6;
 export const HazeAirHeight = 1200;
+// The rest of the dust and droplets, spread higher: its optical depth straight up from the sea, and the height
+// over which it thins by e. With the haze below it the air holds about 0.05 of it, a clean day's on Earth, and that
+// is what lights the shadows (clearSky): at a sun 10° up, snow in shadow takes about 0.39 of the light of
+// snow in the sun at the sea, 0.33 at 1200 m. It costs the view: a dark ridge is told from the sky about 180 km
+// away at the sea, 220 km at 1200 m.
+export const HighHaze = 0.045;
+export const HighHazeHeight = 8000;
 
 // Metres between which the cloud over the eye stops colouring the air: the weather there is another cell's.
 export const VeilReach = [30000, 120000] as const;
@@ -25,10 +32,6 @@ export const ExposureRange = [0.9, 2.2] as const;
 // Share of the light falling on level ground that the ground sends back up at the faces above it, and its hue.
 export const GroundBounce = 0.28;
 export const GroundTint = "#8b6952";
-
-// Optical depth of clear air straight up for red, green and blue light. Slanted through more air near the
-// horizon, it is what turns the low sun and everything it lights orange.
-export const AirDepth = [0.07, 0.13, 0.27] as const;
 
 // Where the light of plain relief shading comes from, whatever the hour.
 export const ReliefSun = new Vector3(-13, 12, 7).normalize();

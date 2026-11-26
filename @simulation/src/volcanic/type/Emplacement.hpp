@@ -29,6 +29,7 @@ struct Emplacement {
     std::vector<float> ground;    // m, surface the material comes to lie on; rises as it is laid
     std::vector<float> water;     // m, level of standing water; below the ground where the cell is dry
     std::vector<float> laid;      // m laid since `laid` was last cleared
+    std::vector<int32_t> fresh;   // cells `laid` rose from nothing on since then, so a reader visits only those
     std::vector<float> mobile;    // m still moving
     std::vector<float> heat;      // 0..1 of the mobile layer: 1 as it leaves the vent, 0 once it has set
     std::vector<Rest> rest;
@@ -41,12 +42,17 @@ struct Emplacement {
     bool contains(int x, int z) const { return x >= 0 && z >= 0 && x < width && z < height; }
     Vec2 center(int x, int z) const { return {origin.x + (x + 0.5) * cell, origin.z + (z + 0.5) * cell}; }
     bool submerged(size_t i) const { return water[i] > ground[i] + 1.0f; }
+    void lay(size_t i, float part) {
+        if (laid[i] <= 0) fresh.push_back(int32_t(i));
+        laid[i] += part, ground[i] += part;
+    }
 
     void resize(int w, int h) {
         width = w, height = h;
         ground.assign(cells(), 0.0f);
         water.assign(cells(), -1e9f);
         laid.assign(cells(), 0.0f);
+        fresh.clear();
         mobile.assign(cells(), 0.0f);
         heat.assign(cells(), 0.0f);
         rest.assign(cells(), Rest::Open);

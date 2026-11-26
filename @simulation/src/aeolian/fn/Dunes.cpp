@@ -4,6 +4,7 @@
 #include "core/fn/Hash.hpp"
 #include "core/service/Workers.hpp"
 
+#include <algorithm>
 #include <functional>
 
 namespace derivean::sim {
@@ -68,7 +69,15 @@ void cutBands(const SandBed& bed, const DuneRun& run, Work& work) {
     work.entered.assign(work.band.size() - 1, 0.0);
 }
 
-float topAt(const SandBed& bed, int x, int z) { return bed.top(bed.index(wrapped(x, bed.size), wrapped(z, bed.size))); }
+// Across an edge the bed continues as another piece of the same field standing on this side's
+// ground (as in `castShadow`): the far cell's sand on the ground of the nearest cell on this side.
+// Read with the far side's own ground, a domain whose ground falls across it sees a wall over its
+// upwind edge, where nothing lifts and all the sand coming round the torus stops.
+float topAt(const SandBed& bed, int x, int z) {
+    const int last = bed.size - 1;
+    const size_t near = bed.index(std::clamp(x, 0, last), std::clamp(z, 0, last));
+    return bed.base[near] + bed.sand[bed.index(wrapped(x, bed.size), wrapped(z, bed.size))];
+}
 
 // Gusts are wider than a cell: their strength is seeded on a lattice and renewed every round.
 void drawGusts(const SandBed& bed, Work& work, uint64_t round) {

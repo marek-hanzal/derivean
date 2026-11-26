@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <queue>
 
 namespace derivean::sim {
 namespace {
@@ -89,8 +90,64 @@ void spreadOutwash(Domain& domain, const SheetField& field, const std::vector<fl
 
 OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::vector<float> load[2], std::vector<float>& outwash) {
     const int size = domain.size;
+    const size_t cells = domain.cells();
     const float area = float(domain.cell * domain.cell);
+    const float sea = float(domain.seaLevel);
     OutwashTotals totals;
+    // The level water stands at on each cell: the lowest it can spill from towards the domain's
+    // edge or the sea, with the ice (1e30) as a dam. Cells it stands over form lakes.
+    std::vector<float> level(cells, 0.0f);
+    {
+        using Entry = std::pair<float, int32_t>;
+        std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> open;
+        std::vector<bool> reached(cells, false);
+        for (int z = 0; z < size; ++z)
+            for (int x = 0; x < size; ++x) {
+                const size_t i = domain.index(x, z);
+                if (x == 0 || z == 0 || x == size - 1 || z == size - 1 || ground[i] < sea) reached[i] = true, level[i] = ground[i], open.push({ground[i], int32_t(i)});
+            }
+        while (!open.empty()) {
+            const auto [stand, cell] = open.top();
+            open.pop();
+            const int x = cell % size, z = cell / size;
+            for (int k = 0; k < 8; ++k) {
+                const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
+                if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
+                const size_t n = domain.index(nx, nz);
+                if (reached[n]) continue;
+                reached[n] = true, level[n] = std::max(ground[n], stand);
+                open.push({level[n], int32_t(n)});
+            }
+        }
+    }
+    // Each lake's cells, and the room its floor offers on the cells this domain evolves.
+    std::vector<int32_t> lake(cells, -1);
+    std::vector<std::vector<int32_t>> lakes;
+    std::vector<double> room;
+    for (size_t s = 0; s < cells; ++s) {
+        if (lake[s] >= 0 || level[s] <= ground[s] || ground[s] >= 1e30f) continue;
+        const int32_t id = int32_t(lakes.size());
+        lakes.emplace_back();
+        room.push_back(0.0);
+        std::vector<int32_t> stack{int32_t(s)};
+        lake[s] = id;
+        while (!stack.empty()) {
+            const int32_t cell = stack.back();
+            stack.pop_back();
+            lakes[size_t(id)].push_back(cell);
+            if (domain.hold[size_t(cell)] == Free) room[size_t(id)] += double(level[size_t(cell)] - ground[size_t(cell)]) * area;
+            const int x = cell % size, z = cell / size;
+            for (int k = 0; k < 8; ++k) {
+                const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
+                if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
+                const size_t n = domain.index(nx, nz);
+                if (lake[n] < 0 && level[n] > ground[n] && ground[n] < 1e30f) lake[n] = id, stack.push_back(int32_t(n));
+            }
+        }
+    }
+    // What reaches a lake, by class, on the tile's cells and in all.
+    std::vector<double> arrived[2], arrivedOwned(lakes.size(), 0.0);
+    for (auto& part : arrived) part.assign(lakes.size(), 0.0);
     // Beyond the ice the water runs down the ground and divides over every lower neighbour, as a
     // river with more gravel than it can carry does.
     const float settling[2] = {1.0f - std::exp(-float(domain.cell) / OutwashReach[Coarse]), 1.0f - std::exp(-float(domain.cell) / OutwashReach[Sand])};
@@ -98,6 +155,13 @@ OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::
         const size_t i = size_t(cell);
         if (ground[i] >= 1e30f || load[Coarse][i] + load[Sand][i] <= 0) continue;
         const int x = cell % size, z = cell / size;
+        const bool free = domain.hold[i] == Free;
+        // Standing water takes in everything that reaches it, to be spread over its floor below.
+        if (free && lake[i] >= 0) {
+            for (int c = 0; c < 2; ++c) arrived[c][size_t(lake[i])] += load[c][i];
+            if (domain.owned(x, z)) arrivedOwned[size_t(lake[i])] += load[Coarse][i] + load[Sand][i];
+            continue;
+        }
         float fall[8], total = 0;
         for (int k = 0; k < 8; ++k) {
             fall[k] = 0;
@@ -106,11 +170,10 @@ OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::
             const size_t n = domain.index(nx, nz);
             if (ground[n] < ground[i]) total += fall[k] = (ground[i] - ground[n]) / NeighborReach[k];
         }
-        const bool free = domain.hold[i] == Free;
-        // A hollow, a lake floor or the sea keeps everything that reaches it.
-        const bool held = total <= 0 || ground[i] < float(domain.seaLevel);
+        // The sea keeps everything that reaches it; a flat the water runs on across keeps nothing.
+        const bool sunk = ground[i] < sea;
         for (int c = 0; c < 2; ++c) {
-            const float settled = free ? load[c][i] * (held ? 1.0f : settling[c]) : 0.0f;
+            const float settled = free && (sunk || total > 0) ? load[c][i] * (sunk ? 1.0f : settling[c]) : 0.0f;
             if (settled > 0) {
                 domain.ground.sediment[c][i] += settled / area;
                 domain.deposited[i] += settled / area;
@@ -136,6 +199,35 @@ OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::
                 if (!from && into) domain.ledger.sedimentIn += share;
             }
         }
+    }
+    // A lake's floor takes what reached it up to the level its water spills at, deepest cells most,
+    // so it fills flat; the water spilling over its rim takes the rest away.
+    for (size_t id = 0; id < lakes.size(); ++id) {
+        const double reached = arrived[Coarse][id] + arrived[Sand][id];
+        if (reached <= 0) continue;
+        const double kept = std::min(1.0, room[id] / reached);
+        double depths = 0, ownedLaid = 0;
+        for (const int32_t cell : lakes[id])
+            if (domain.hold[size_t(cell)] == Free) depths += double(level[size_t(cell)] - ground[size_t(cell)]);
+        for (const int32_t cell : lakes[id]) {
+            const size_t i = size_t(cell);
+            if (domain.hold[i] != Free || depths <= 0) continue;
+            const double share = double(level[i] - ground[i]) / depths;
+            float laid = 0;
+            for (int c = 0; c < 2; ++c) {
+                const float part = float(arrived[c][id] * kept * share / area);
+                domain.ground.sediment[c][i] += part, laid += part;
+            }
+            domain.deposited[i] += laid, outwash[i] += laid;
+            if (domain.owned(cell % size, cell / size)) ownedLaid += double(laid) * area;
+        }
+        const double settled = depths > 0 ? reached * kept : 0.0;
+        totals.settled += settled, totals.carriedOff += reached - settled;
+        // What reached the lake on the tile's cells and what its floor kept there differ by what
+        // crossed the tile's edge inside the lake or left over its rim.
+        domain.ledger.deposited += ownedLaid;
+        if (ownedLaid > arrivedOwned[id]) domain.ledger.sedimentIn += ownedLaid - arrivedOwned[id];
+        else domain.ledger.sedimentOut += arrivedOwned[id] - ownedLaid;
     }
     return totals;
 }

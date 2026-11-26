@@ -74,6 +74,9 @@ inline constexpr float OutwashReach[2] = {6e3f, 22e3f};   // m gravel and sand t
 // The last sheet at the finer levels (icesheet/fn/Local.hpp).
 inline constexpr float LastSheetYears = 20e3f;      // yr the last maximum's ice stood at its full extent, sliding and taking up the cover it found
 inline constexpr float BasinDepth = 50.0f;          // m a rock basin is dug below the ground around it at most (Local): the deepest lakes of a shield
+// m of the last maximum's ice: thinner, near its margin, it stagnated as the sheet withdrew and
+// pressed into no hollow of its bed; thicker than PressingIce it slid into every one; between, in proportion.
+inline constexpr float StagnantIce = 100.0f, PressingIce = 200.0f;
 // Behind a rise of the bed the ice rides over a cavity of lower pressure, and till squeezed from
 // the rest of the bed fills it: up to a line falling from the rise at this slope, the gentle lee
 // of a drumlin or a crag's tail.

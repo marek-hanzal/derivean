@@ -1,9 +1,13 @@
 import { Color, Vector3 } from "three/webgpu";
 import type { Point } from "../../../contract/GameBridge";
-import { AirDepth, DaySky, DuskSky, NightSky } from "../constant/air";
+import { DaySky, DuskSky, NightSky } from "../constant/air";
+import { clearSky } from "./clearSky";
 import type { SkyLight } from "../type/SkyLight";
 
+// The sun's light outside the air.
 const SunStrength = 2.7;
+// What the night sky lights the ground with, against its own colour: enough to walk by.
+const NightLight = 0.5;
 const scratch = new Color();
 const smooth = (from: number, to: number, value: number) => {
   const t = Math.max(0, Math.min(1, (value - from) / (to - from)));
@@ -31,9 +35,10 @@ function blend(target: Color, day: string, dusk: string, night: string, days: nu
   }
 }
 
-// Sets the light for a sun direction. The sun's colour is its path through the air (Kasten and Young's air mass
-// against AirDepth); the sky's is blended between day, dusk and night by the sun's height.
-export function setSkyLight(light: SkyLight, sun: Point) {
+// Sets the light for a sun direction over ground `altitude` metres above the sea. The sun's light and the clear
+// sky's on level ground are what the air leaves of the sun's (clearSky); the sky's colours, which the background
+// and the aerial perspective draw, are blended between day, dusk and night by the sun's height.
+export function setSkyLight(light: SkyLight, sun: Point, altitude: number) {
   const height = sun[1];
   const days = smooth(-0.02, 0.3, height);
   const nights = 1 - smooth(-0.24, -0.04, height);
@@ -43,13 +48,11 @@ export function setSkyLight(light: SkyLight, sun: Point) {
   blend(light.skyHorizon.value, DaySky.horizon, DuskSky.horizon, NightSky.horizon, days, dusks, nights);
   blend(light.skyGlow.value, DaySky.glow, DuskSky.glow, NightSky.glow, days * 0.25, dusks, 0);
 
-  const degrees = Math.max(height, 0) * 180 / Math.PI;
-  const airMass = 1 / (Math.max(height, 0) + 0.50572 * (degrees + 6.07995) ** -1.6364);
-  const risen = SunStrength * smooth(-0.035, 0.05, height);
-  light.sunLight.value.setRGB(
-    risen * Math.exp(-AirDepth[0] * airMass), risen * Math.exp(-AirDepth[1] * airMass), risen * Math.exp(-AirDepth[2] * airMass),
-  );
-  // The dome lights the ground with a blend of its zenith and horizon; the night keeps enough to walk by.
-  const ambient = 1.9 * days + 1.1 * dusks + 0.5 * nights;
-  light.skyAmbient.value.copy(light.skyZenith.value).lerp(light.skyHorizon.value, 0.55).multiplyScalar(ambient);
+  const air = clearSky(light.skySun.value.y, altitude);
+  light.sunLight.value.setRGB(...air.direct).multiplyScalar(SunStrength);
+  // The night sky, a blend of its zenith and horizon, under what the sun's light leaves in the air.
+  light.skyAmbient.value.set(NightSky.zenith).lerp(scratch.set(NightSky.horizon), 0.55).multiplyScalar(NightLight * nights);
+  light.skyAmbient.value.r += air.diffuse[0] * SunStrength;
+  light.skyAmbient.value.g += air.diffuse[1] * SunStrength;
+  light.skyAmbient.value.b += air.diffuse[2] * SunStrength;
 }

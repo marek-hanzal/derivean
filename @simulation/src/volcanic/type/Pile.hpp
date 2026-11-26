@@ -34,6 +34,10 @@ struct VolcanicTile {
     std::vector<uint8_t> lava;   // share of lava in the pile in parts of 255; the rest is ash and scoria
     std::vector<uint16_t> vent;   // index into `vents` of the vent that laid the top; NoVent for none
     std::vector<Vent> vents;     // every vent whose products or conduits reach the tile
+    // Pile and lava share over the tile and the Apron cells beyond its edge, (TileCells + 2·Apron)²,
+    // as its own replay left them: what a later neighbour blends its seam towards (fn/Seams.cpp).
+    std::vector<float> wide;
+    std::vector<uint8_t> wideLava;
     VolcanicLedger ledger;
 };
 
@@ -52,6 +56,7 @@ struct VolcanicDomain {
 };
 
 inline constexpr float NoPile = -1e9f;   // a floor that far above the datum: nothing stands on it
+inline constexpr float ThinnestPile = 0.02f;   // m of pile a finer level inherits or a seam blends below which a cell has none
 
 // One cell of a tile's pile, as a reader of rock needs it.
 struct PileColumn {

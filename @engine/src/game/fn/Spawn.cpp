@@ -18,6 +18,11 @@ constexpr sim::Vec2 Turns[]{{1, 0}, {Diagonal, Diagonal}, {0, 1}, {-Diagonal, Di
 // Dry land reports a water surface under its ground (sim::SurfaceSample::water).
 bool dry(const sim::SurfaceSample& ground) { return ground.found && ground.ground > ground.water; }
 
+// The level a spawn is found and stood on. The ground level, which the voxels are cut from, comes in
+// with them while the player waits (awaitsGround): built on every worker, not before the game opens.
+// A player it buries is lifted onto it (resolveOverlap); one it leaves in the air falls the metre.
+constexpr sim::Level Surveyed = sim::Level::Site;
+
 // The places of a ring still in the running after `level`: the tiles under all of them are queued
 // at once so the pool builds them side by side, then each is surveyed, which waits for its own.
 void narrow(sim::World& world, std::vector<sim::Vec2>& places, sim::Level level) {
@@ -27,17 +32,16 @@ void narrow(sim::World& world, std::vector<sim::Vec2>& places, sim::Level level)
 
 // The simulation lands a new player at a shore. Where its pick lies under water, the player is put
 // on the first dry ground a widening search finds: rings of eight places, each twice as far out,
-// surveyed from the local level down, a finer level only where the coarser one stands clear of the
-// water. Surveys build what they read and the first place of a ring in a fixed order wins, so the
-// place depends on the world alone.
+// surveyed from the local level to the site level, the finer only where the coarser one stands clear
+// of the water. Surveys build what they read and the first place of a ring in a fixed order wins, so
+// the place depends on the world alone.
 sim::Vec2 dryLanding(sim::World& world, sim::Vec2 landing) {
-    if (dry(sim::surveyAt(world, landing, sim::Level::Ground))) return landing;
+    if (dry(sim::surveyAt(world, landing, Surveyed))) return landing;
     for (double reach = FirstRing; reach < LastRing; reach *= 2) {
         std::vector<sim::Vec2> places;
         for (const sim::Vec2 turn : Turns) places.push_back({landing.x + reach * turn.x, landing.z + reach * turn.z});
         narrow(world, places, sim::Level::Local);
-        narrow(world, places, sim::Level::Site);
-        narrow(world, places, sim::Level::Ground);
+        narrow(world, places, Surveyed);
         if (!places.empty()) return places.front();
     }
     return landing;
@@ -47,8 +51,7 @@ sim::Vec2 dryLanding(sim::World& world, sim::Vec2 landing) {
 
 Position findSpawn(sim::World& world, const std::optional<std::array<double, 2>>& wish) {
     const sim::Vec2 place = wish ? sim::Vec2{(*wish)[0], (*wish)[1]} : dryLanding(world, sim::findLanding(world, {0, 0}));
-    // The ground level is what the voxels are cut from; a coarser surface can lie a metre off it.
-    const sim::SurfaceSample ground = sim::surveyAt(world, place, sim::Level::Ground);
+    const sim::SurfaceSample ground = sim::surveyAt(world, place, Surveyed);
     const double feet = ground.water > ground.ground ? std::max(double(ground.ground), ground.water - FloatingFeet) : ground.ground;
     return {place.x, feet + StandOff, place.z};
 }

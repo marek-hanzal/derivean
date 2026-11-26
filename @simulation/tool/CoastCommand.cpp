@@ -30,7 +30,7 @@ void printKinds(const char* water, const double length[]) {
 }
 
 // terra coast --scene straight|bay|lake [--level 2|3] [--rock name] [--other name] [--wind-from deg] [--wind m/s] [--swell m]
-//             [--sand m] [--gravel m] [--mud m] [--joints 0..1] [--river m3/yr] [--upland m] [--shelf m] [--steps n] [--waves-only 1]
+//             [--sand m] [--gravel m] [--mud m] [--joints 0..1] [--river m3/yr] [--upland m] [--shelf m] [--bank rise/run] [--steps n] [--waves-only 1]
 // A hand-built shore (coast/fn/Scenario.hpp) replayed by the level's whole step loop, or with
 // --waves-only 1 by the coast alone, with its statistics, a map and a view from the sea.
 int sceneCommand(const Arguments& arguments) {
@@ -43,7 +43,7 @@ int sceneCommand(const Arguments& arguments) {
     spec.windFrom = arguments.number("wind-from", 0), spec.wind = arguments.number("wind", 7), spec.swell = arguments.number("swell", 3);
     spec.sand = arguments.number("sand", 0), spec.gravel = arguments.number("gravel", 0), spec.mud = arguments.number("mud", 0);
     spec.joints = arguments.number("joints", 0), spec.river = arguments.number("river", 0), spec.upland = arguments.number("upland", 60);
-    spec.shelf = arguments.number("shelf", 15);
+    spec.shelf = arguments.number("shelf", 15), spec.bank = arguments.number("bank", 0.04);
     spec.steps = int(arguments.number("steps", 0));
     spec.seed = arguments.seed();
     Lap lap;

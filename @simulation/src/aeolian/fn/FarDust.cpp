@@ -20,6 +20,7 @@ constexpr float DustWindCap = 2.0f;     // most a windier place multiplies that 
 constexpr double TraceStep = 30e3;      // m
 constexpr double TraceReach = 2400e3;   // m, four fall lengths of the fine dust
 constexpr double Calm = 0.3;            // m/s of mean wind below which the air is taken to stand
+// Tile origins step by TileCells, a multiple of the stride, so all tiles read one world lattice of points.
 constexpr int FarStride = 64;           // cells between the points the far dust is read at
 
 // Dust comes from the driest ground almost alone.
@@ -37,17 +38,18 @@ float emissionAt(const Planet& planet, uint64_t seed, Vec2 position, const WindR
     return DustRise * dustSource(rain, warmth) * std::min(DustWindCap, float(regime.potential) / DustDrift);
 }
 
-// m/yr of fines settling at `position` in dry air out of dust raised outside the domain's square.
-float farDustAt(const Domain& domain, const Setting& setting, Vec2 position) {
+// m/yr of fines settling at `position` in dry air out of dust raised anywhere upwind on the planet grid.
+// It is a function of the world position alone, so neighbouring tiles agree along their shared edge;
+// leaving out the domain's own square would step the field at every tile border. The dust the
+// domain's own floor raises is then counted again by the routed dust, which on seed 42 is some six
+// hundred times smaller than this field, so the double count is negligible.
+float farDustAt(const Setting& setting, Vec2 position) {
     const Planet& planet = *setting.planet;
-    const double low[2] = {domain.origin.x, domain.origin.z};
-    const double high[2] = {low[0] + domain.size * domain.cell, low[1] + domain.size * domain.cell};
     double flux[DustSizes] = {}, depth[DustSizes] = {};   // m²/yr arriving, and optical depth of the way back
     Vec2 at = position;
     for (double travelled = 0; travelled < TraceReach; travelled += TraceStep) {
         const WindRegime regime = regimeAt(setting.seed, at, setting.age);
-        const bool inside = at.x >= low[0] && at.x < high[0] && at.z >= low[1] && at.z < high[1];
-        const float raised = inside ? 0.0f : emissionAt(planet, setting.seed, at, regime);
+        const float raised = emissionAt(planet, setting.seed, at, regime);
         const float rain = std::max(0.0f, float(samplePlanet(planet.precipitation, planetPoint(setting.seed, at), Kernel::Linear)));
         // Each stretch of the way gives what it raises less what settles before it has crossed the rest.
         for (int s = 0; s < DustSizes; ++s) {
@@ -76,7 +78,7 @@ void readFarDust(Domain& domain, const Setting& setting) {
     std::vector<float> node(size_t(nodes) * size_t(nodes));
     for (int nz = 0; nz < nodes; ++nz)
         for (int nx = 0; nx < nodes; ++nx)
-            node[size_t(nz) * size_t(nodes) + size_t(nx)] = farDustAt(domain, setting, {domain.origin.x + nx * FarStride * domain.cell, domain.origin.z + nz * FarStride * domain.cell});
+            node[size_t(nz) * size_t(nodes) + size_t(nx)] = farDustAt(setting, {domain.origin.x + nx * FarStride * domain.cell, domain.origin.z + nz * FarStride * domain.cell});
     for (int z = 0; z < domain.size; ++z)
         for (int x = 0; x < domain.size; ++x) {
             const double fx = (x + 0.5) / FarStride, fz = (z + 0.5) / FarStride;

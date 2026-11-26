@@ -30,6 +30,9 @@ struct MagmaticCentre {
 };
 
 MagmaticCentre centreNear(const Planet& planet, Vec2 position, double time);
+// The same for a point whose place in the frame of the crust is known (`crustFrame` of `position`):
+// one point asked about several epochs reckons that frame once.
+MagmaticCentre centreNear(const Planet& planet, Vec2 position, Vec2 material, double time);
 
 // Rock temperature in °C at a depth below a surface of the given annual mean.
 inline float rockTemperature(const Geotherm& geotherm, float surface, float depth) {

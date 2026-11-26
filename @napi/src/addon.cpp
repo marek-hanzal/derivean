@@ -66,19 +66,15 @@ private:
         output["seaLevel"] = world.nature.world.planet.seaLevel;
         output["worldFloor"] = sim::WorldFloor;
         output["planetSpan"] = sim::PlanetSpan;
-        output["faceWords"] = world.cubes ? FaceWords : FaceWords - 1;
-        if (world.cubes) {
-            auto cubes = Napi::Object::New(info.Env());
-            cubes["reach"] = world.cubes->reach;
-            cubes["side"] = CubeSide;
-            cubes["band"] = CubeBand;
-            cubes["finestLevel"] = FinestCubes;
-            cubes["coarsestLevel"] = CoarsestCubes;
-            cubes["viewDistance"] = CubeView;
-            output["cubes"] = cubes;
-        } else {
-            output["cubes"] = info.Env().Null();
-        }
+        output["faceWords"] = FaceWords;
+        auto cubes = Napi::Object::New(info.Env());
+        cubes["reach"] = world.cubes.reach;
+        cubes["side"] = CubeSide;
+        cubes["band"] = CubeBand;
+        cubes["finestLevel"] = FinestCubes;
+        cubes["coarsestLevel"] = CoarsestCubes;
+        cubes["viewDistance"] = CubeView;
+        output["cubes"] = cubes;
         return output;
     }
 
@@ -120,11 +116,9 @@ Napi::Object initialize(Napi::Env env, Napi::Object exports) {
     world["defaultBrushRadius"] = DefaultBrushRadius;
     world["maxBrushRadius"] = MaxBrushRadius;
     world["waterUnitsPerVoxel"] = WaterUnits;
+    // The far cubes' view distance, kept while the renderer still falls back on it (WorldInfo.far).
     auto far = Napi::Object::New(env);
-    far["cells"] = PatchCells;
-    far["splitCells"] = SplitCells;
-    far["morphStart"] = MorphStart;
-    far["viewDistance"] = ViewDistance;
+    far["viewDistance"] = CubeView;
     world["far"] = far;
     world["snowLadder"] = numbers(env, sim::SnowLadder);
     world["materials"] = project(env, Materials, [](Napi::Env env, const MaterialInfo& value) {

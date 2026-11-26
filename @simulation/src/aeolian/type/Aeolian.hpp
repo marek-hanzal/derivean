@@ -61,6 +61,10 @@ struct WindField {
 // What a finished tile keeps: the labels over its own cells, row-major.
 struct WindRecord {
     WindLabels labels;
+    // The labels as this tile's replay left them over the wide square (WideCells², Apron cells
+    // beyond each edge, before any blending). A later neighbour fades its labels into these at the
+    // shared edge, as its ground fades into `Tile::nowWide`.
+    WindLabels wide;
     WindRegime regime;
     double span{};
     int rounds{};

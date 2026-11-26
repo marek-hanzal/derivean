@@ -159,13 +159,17 @@ std::vector<Vent> ventsNear(const Setting& setting, Vec2 low, Vec2 high, double 
         }
     }
     const std::vector<Life> lives = livesOver(planet, window);
+    std::vector<double> middles;
+    for (const Life& life : lives) middles.push_back(0.5 * (life.from + life.to));
     for (const auto& [cellZ, cellX] : cells) {
         const Budget budget = budgetOf(planet, window, cellX, cellZ);
         double total = 0;
         for (const double volume : budget.volume) total += volume;
         if (total <= 0) continue;
-        for (const Life& life : lives) {
-            const std::vector<Centre> centres = centresIn(planet, cellX, cellZ, 0.5 * (life.from + life.to));
+        const std::vector<std::vector<Centre>> epochs = centresIn(planet, cellX, cellZ, middles);
+        for (size_t e = 0; e < lives.size(); ++e) {
+            const Life& life = lives[e];
+            const std::vector<Centre>& centres = epochs[e];
             double vigor = 0;
             for (const Centre& centre : centres) vigor += centre.vigor;
             for (const Centre& centre : centres) {

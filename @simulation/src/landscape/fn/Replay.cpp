@@ -2,6 +2,7 @@
 
 #include "climate/type/Climate.hpp"
 #include "ground/fn/Stages.hpp"
+#include "groundwater/fn/Sinking.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "volcanic/fn/Volcanic.hpp"
 
@@ -12,6 +13,7 @@ void stepDomain(Domain& domain, FlowScratch& scratch, const Setting& setting) {
     domain.seaLevel = seaLevelAt(setting, dated ? domain.time + domain.step : setting.age);
     followNeighbours(domain, domain.time + domain.step);
     readClimate(domain, setting);
+    prepareSinks(domain);
     raise(domain, scratch);
     erupt(domain, scratch, setting);
     if (ground) refreshPartings(domain, setting.seed);
@@ -21,6 +23,7 @@ void stepDomain(Domain& domain, FlowScratch& scratch, const Setting& setting) {
     shapeSlopes(domain, scratch);
     floodLevels(domain, scratch);
     routeWater(domain, scratch);
+    dissolveSinks(domain);
     if (ground) widenChannels(domain);
     // Cold phases alternate with warm ones while a finer level settles, as glacials and
     // interglacials did; the last steps are warm, so rivers and lakes occupy what the ice left.
@@ -35,11 +38,12 @@ void stepDomain(Domain& domain, FlowScratch& scratch, const Setting& setting) {
     }
     sheetIce(domain, scratch, setting, IceStage::Step);
     cutAndFill(domain, scratch);
-    // Banks of loose cover the water has cut into slide in the same step; left standing they are
-    // walls of sand tens of metres high on a Site tile.
-    if (!dated && !ground) settleDebris(domain, scratch);
     workShores(domain, scratch);
     blowLoose(domain, scratch);
+    // Banks of loose cover the water has cut into, or whose foot the wind has swept bare, slide in
+    // the same step; left standing they are walls of sand tens of metres high on a Site tile. The
+    // last step's cover is what the tile keeps, so nothing may move loose cover after this.
+    if (!dated && !ground) settleDebris(domain, scratch);
     domain.time += domain.step;
     ++domain.taken;
 }
@@ -50,11 +54,16 @@ std::shared_ptr<Tile> replayTile(const Setting& setting, TileKey key, const Tile
     auto tile = std::make_shared<Tile>();
     const Window window = windowAt(key.level, setting.age);
     for (int step = 0; step < window.steps; ++step) stepDomain(domain, scratch, setting);
-    sheetIce(domain, scratch, setting, IceStage::Leave, &lookup);
+    // A region's sheets are part of its settling, so its edge is blended with them.
+    if (key.level == Level::Region) sheetIce(domain, scratch, setting, IceStage::Leave, &lookup);
     // The blended edge goes back into the domain first, so the water described below stands on the
     // surface that is handed over.
     followNeighbours(domain, domain.endTime);
     settleSeams(domain, *tile);
+    // At the finer levels the last sheet's change is a layer of its own over the blended edge:
+    // neighbours blend the ground they both settled, and the sheet carries on across the edge from
+    // what the finished neighbour's sheet recorded.
+    if (key.level != Level::Region) sheetIce(domain, scratch, setting, IceStage::Leave, &lookup);
     readClimate(domain, setting);
     tile->volcanic = volcanicOf(domain);
     if (key.level == Level::Ground) {
@@ -64,6 +73,7 @@ std::shared_ptr<Tile> replayTile(const Setting& setting, TileKey key, const Tile
         return tile;
     }
     refreshUnits(domain, setting.seed);
+    prepareSinks(domain);
     floodLevels(domain, scratch);
     routeWater(domain, scratch);
     // Ice that the present climate still keeps.

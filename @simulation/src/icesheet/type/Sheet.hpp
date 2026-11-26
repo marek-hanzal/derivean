@@ -4,6 +4,7 @@
 #include "icesheet/type/Continental.hpp"
 #include "icesheet/type/IceGrid.hpp"
 #include "landscape/type/Level.hpp"
+#include "landscape/type/Terrain.hpp"
 
 #include <functional>
 #include <memory>
@@ -24,9 +25,12 @@ struct SheetRecord {
     std::vector<float> esker;            // laid in a stream under the ice
     std::vector<float> meltwater;        // m³/yr of water under the ice of the last maximum
     std::vector<uint8_t> meltTo;         // neighbour index 0..7 that water leaves by, 255 for none
-    // Finer levels only: m of debris the last sheet carried on down-ice from each cell. A later
-    // neighbour's ice takes it up where it crosses into that neighbour, so the two agree at the seam.
-    std::vector<float> passing;
+    // Finer levels only: m of debris the last sheet carried on down-ice from each cell, by class. A
+    // later neighbour's ice takes it up where it crosses into that neighbour, so the two agree at the seam.
+    std::vector<float> passing[SedimentClasses];
+    // Finer levels only: m of the last maximum's sheet over each cell. `Tile::iceAge` there also
+    // holds the level's own valley glaciers; the level below reads the sheet from here.
+    std::vector<float> sheetThen;
 };
 
 // One stage's sheet on the cells of a domain, read off the coarse relaxation over the domain's own ground.

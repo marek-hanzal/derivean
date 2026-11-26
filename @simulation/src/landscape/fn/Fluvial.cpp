@@ -1,6 +1,8 @@
 #include "landscape/fn/Process.hpp"
 
-// About 320 lines: the erosion factor, the implicit solve and the carrying of the load are three
+#include "aeolian/fn/Regime.hpp"
+
+// About 350 lines: the erosion factor, the implicit solve and the carrying of the load are three
 // sweeps over one flow order that share one working state and are only meaningful together.
 namespace derivean::sim {
 namespace {
@@ -43,8 +45,16 @@ void measurePower(Sweep& sweep) {
             // lowered at the pace such a stream cuts on the cell's slope. Ground that sheds no water is
             // not lowered. The pace follows the cell's own runoff, never the water routed through it:
             // lowering that grew with the sheet a slope carries would rill every slope at a cell's width.
+            //
+            // In dry country such a stream runs only in a share f of the year (`runningShareOf`),
+            // carrying the year's water in those floods. Stream power summed over the year is then
+            // f × (Q / f)^m, the year-round pace times f^(1 − m): the same water cuts less when it
+            // comes seldom. A stream the cell gathers is fed from the ground above, not from the
+            // climate of the cell, and keeps its year-round pace; the larger of the two cuts.
+            const float own = hidden * std::min(1.0f, domain.runoff[i]);
+            const float running = std::pow(runningShareOf(domain.rain[i], domain.warmthNow[i]), 1.0f - float(StreamExponent));
             const float wash = ground ? std::max(0.0f, std::pow(working[i], float(StreamExponent)) - head)
-                                      : std::pow(std::max(sweep.scratch.gathered[i], hidden * std::min(1.0f, domain.runoff[i])), float(StreamExponent));
+                                      : std::max(std::pow(sweep.scratch.gathered[i], float(StreamExponent)), running * std::pow(own, float(StreamExponent)));
             if (wash > 0) {
                 // What is about to settle here is as easy to pick up again as what already lies here.
                 // Storms count for loose cover only: rock is cut by what runs over it year in, year out.
@@ -92,9 +102,13 @@ void solveHeights(Sweep& sweep) {
     FlowScratch& scratch = sweep.scratch;
     const int size = domain.size;
     const bool drains = domain.key.level != Level::Ground;
-    // Only a domain led by its parent has a parent's rivers; a hand-built block has none.
-    const bool pinned = (domain.key.level == Level::Local || domain.key.level == Level::Site) && !scratch.parentLift.empty();
-    const float parentHead = pinned ? channelHeadOf(Level(int(domain.key.level) - 1)) : 0.0f;
+    // A Site tile is led by a Local level that draws its rivers at 64 m: a river it has drawn
+    // already lies at the depth the Local level cut it to, and the Site level shapes its bed and
+    // banks, not its descent. A Local tile's parent averages its valleys with their walls over a
+    // kilometre, so its surface over a river stands far above the river: the Local level finds the
+    // descent of its rivers itself. Only a domain led by its parent has a parent's rivers.
+    const bool pinned = domain.key.level == Level::Site && !scratch.parentLift.empty();
+    const float parentHead = pinned ? channelHeadOf(Level::Local) : 0.0f;
     for (const int32_t cell : domain.order) {
         const size_t i = size_t(cell);
         const float before = domain.surface[i];
@@ -146,9 +160,7 @@ void solveHeights(Sweep& sweep) {
             return std::max(0.0f, top - (top + power * weighted) / (1 + power * pull));
         };
         scratch.next[i] = scratch.pool[i] = raised - lowering(domain.sedimentAt(i) + laid, scratch.coverPower[i], scratch.power[i], cutBy);
-        // A river the parent level has drawn already lies at the depth the parent cut it to: a
-        // finer level shapes its bed and its banks, not its descent. A river is the parent's where
-        // it has gathered the water the parent needs to draw a channel.
+        // A river is the parent's where it has gathered the water the parent needs to draw a channel.
         if (pinned && scratch.gathered[i] >= parentHead)
             scratch.next[i] = scratch.pool[i] = std::max(scratch.next[i], std::min(raised, domain.trend[i]));
     }
@@ -188,6 +200,9 @@ void carryLoad(Sweep& sweep, bool final) {
             load[Sand] = 0.45f * domain.settledLoad[i];
             load[Fines] = 0.40f * domain.settledLoad[i];
         }
+        // A finished neighbour's cell that hands its river to a cell this domain evolves has handed
+        // the load on with it (`inflowLoad` there); it neither leaves the domain nor goes on here.
+        if (domain.handsOnward(i)) continue;
 
         if (domain.hold[i] != Settled) {
             float laid[SedimentClasses] = {scratch.settle[0][i], scratch.settle[1][i], scratch.settle[2][i]};
@@ -276,7 +291,8 @@ void carryLoad(Sweep& sweep, bool final) {
             const size_t other = domain.index(x + NeighborX[k], z + NeighborZ[k]);
             for (int c = 0; c < SedimentClasses; ++c) scratch.flux[c][other] += load[c] * share[k];
         }
-        if (!passed && final) domain.ledger.sedimentOut += double(load[0] + load[1] + load[2]) * sweep.dt;
+        // A finished neighbour's load that goes no further here stays in that neighbour's record.
+        if (!passed && final && domain.hold[i] != Settled) domain.ledger.sedimentOut += double(load[0] + load[1] + load[2]) * sweep.dt;
     }
     for (int c = 0; c < SedimentClasses; ++c) scratch.settle[c].swap(fresh[c]);
 }
@@ -311,6 +327,15 @@ void cutAndFill(Domain& domain, FlowScratch& scratch) {
             lowest = std::min(lowest, domain.level[other]);
         }
         if (lowest < domain.level[i]) scratch.room[i] = std::min(scratch.room[i], std::max(0.0f, lowest + rise - domain.level[i]));
+        // A finished neighbour's cell that hands its river on drains into that cell as surely as by
+        // a share of its own: the bed there may not rise above it either.
+        if (domain.handsOnward(i)) {
+            const int x = int(i % size_t(domain.size)) + NeighborX[domain.settledWay[i]], z = int(i / size_t(domain.size)) + NeighborZ[domain.settledWay[i]];
+            if (x >= 0 && z >= 0 && x < domain.size && z < domain.size) {
+                const size_t to = domain.index(x, z);
+                scratch.room[to] = std::min(scratch.room[to], std::max(0.0f, domain.level[i] - domain.level[to]));
+            }
+        }
     }
     for (auto& cloud : scratch.plume) cloud.assign(cells, 0.0f);
     for (int pass = 0; pass < Passes; ++pass) {

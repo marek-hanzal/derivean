@@ -9,7 +9,6 @@ constexpr double RegionReach = 80000.0;   // m beyond a region's domain within w
 // m beyond a finer domain within which a vent's conduits are kept: at the local level the reach of
 // its small eruptions around a conduit, below it only the conduit's own width.
 constexpr double FinerReach[LevelCount] = {0, 0, 9000.0, 700.0, 700.0};
-constexpr float Thinnest = 0.02f;         // m of inherited pile below which a cell has none
 
 // The parent tiles under a domain, by the parent's global cell index.
 struct Parents {
@@ -89,7 +88,7 @@ void inheritParent(Domain& domain, const TileLookup& lookup) {
             const int64_t ix = int64_t(std::floor(fx)), iz = int64_t(std::floor(fz));
             const float tx = float(fx - double(ix)), tz = float(fz - double(iz));
             const float thickness = (parents.pile(ix, iz) * (1 - tx) + parents.pile(ix + 1, iz) * tx) * (1 - tz) + (parents.pile(ix, iz + 1) * (1 - tx) + parents.pile(ix + 1, iz + 1) * tx) * tz;
-            if (thickness < Thinnest) continue;
+            if (thickness < ThinnestPile) continue;
             size_t cell;
             const Tile* tile = parents.at(int64_t(std::floor(here.x / parentCell)), int64_t(std::floor(here.z / parentCell)), cell);
             if (!tile || !tile->volcanic || tile->volcanic->pile.empty()) continue;
@@ -115,7 +114,7 @@ void adoptNeighbours(Domain& domain) {
             if (!tile || !tile->volcanic || tile->volcanic->pile.empty()) continue;
             const size_t cell = size_t(z - Halo - tz * TileCells) * TileCells + size_t(x - Halo - tx * TileCells), i = domain.index(x, z);
             const float thickness = tile->volcanic->pile[cell];
-            if (thickness < Thinnest) continue;
+            if (thickness < ThinnestPile) continue;
             allocateVolcanic(domain);
             const uint16_t from = tile->volcanic->vent[cell];
             const uint16_t vent = from < tile->volcanic->vents.size() ? adopt(domain, tile->volcanic->vents[from], 1e30) : NoVent;

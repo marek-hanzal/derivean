@@ -27,8 +27,7 @@ void timeGroundwater(World& world, TileKey local) {
             field = WaterField{};
             readColumns(setting, local, around, field);
             const double columns = lap();
-            sinkStreams(field);
-            const double sinks = lap();
+            const double sinks = 0;   // what sank is the landscape's record (groundwater/fn/Sinking.hpp)
             settleLevels(field);
             const double levels = lap();
             routeGroundWater(field);

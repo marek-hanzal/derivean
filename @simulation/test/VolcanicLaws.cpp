@@ -154,12 +154,39 @@ void testColumn() {
     }
 }
 
+// Thick lava parts into upright columns as wide as its thickness makes them, open only within the
+// weathered skin of a face; a thin sheet and ash beds do not, and nothing is drawn finer than its points.
+void testJoints() {
+    const PilePoint point{40.0f, 1.0f, Material::Andesite, 7};
+    const PileBed thick{0, 34, Material::Andesite, true}, thin{0, 2, Material::Andesite, true}, ash{0, 34, Material::Tuff, false};
+    constexpr int Samples = 4000;
+    constexpr double Run = 40.0;
+    constexpr float Voxel = 0.125f;
+    int open = 0, changes = 0, deep = 0, other = 0, coarse = 0;
+    bool was = false;
+    for (int k = 0; k < Samples; ++k) {
+        const double x = Run * k / Samples;
+        const bool in = columnOpen(42, point, thick, x, 3.3, 0.1f, Voxel);
+        open += in, changes += k > 0 && in != was, was = in;
+        deep += columnOpen(42, point, thick, x, 3.3, 5.0f, Voxel);
+        other += columnOpen(42, point, thin, x, 3.3, 0.1f, Voxel) + columnOpen(42, point, ash, x, 3.3, 0.1f, Voxel);
+        coarse += columnOpen(42, point, thick, x, 3.3, 0.1f, 1.0f);
+    }
+    expect(deep == 0 && other == 0, "columns open in sound rock, in a thin sheet or in ash", deep + other);
+    expect(coarse == 0, "columns narrower than two points are drawn", coarse);
+    expect(open > 0.1 * Samples && open < 0.8 * Samples, "the weathered face of a colonnade is not part open, part rock", double(open) / Samples);
+    // Along a line the face turns from rock to air and back about once a column.
+    const double width = 0.09 * std::sqrt(34.0), spacing = 2.0 * Run / std::max(1, changes);
+    expect(spacing > 0.5 * width && spacing < 3.0 * width, "columns are not as wide as the thickness of their sheet makes them", spacing);
+}
+
 } // namespace
 
 // A vent on a plane of a region, through the level's own replay.
 void testVolcanicLaws() {
     testLaws();
     testColumn();
+    testJoints();
 
     ProvingSpec spec;
     spec.ground.level = Level::Region;

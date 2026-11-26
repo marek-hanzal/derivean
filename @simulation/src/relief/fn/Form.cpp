@@ -1,6 +1,7 @@
 #include "relief/type/Form.hpp"
 
 #include "ground/fn/Partings.hpp"
+#include "groundwater/fn/Pavement.hpp"
 #include "planet/constant/Scale.hpp"
 #include "relief/type/City.hpp"
 #include "volcanic/fn/Volcanic.hpp"
@@ -18,7 +19,6 @@ float recessOf(const RockTraits& rock) {
 }
 
 constexpr float ThinRoof = 0.3f;        // m of rock over a void that does not hold
-constexpr int MostSpans = 6;            // voids one vertical line is taken to cross
 
 // Loose cover in the order it lies: coarse on the rock, sand on it, fines on top.
 Material coverAt(const GroundPoint& ground, float aboveRock, float belowGround) {
@@ -64,8 +64,8 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
 
     // A void that comes within a thin roof of the rock surface is open: the cover over it has
     // fallen in and lies on its floor, `fallen` thick from `floor` up.
-    CaveSpan spans[MostSpans];
-    const int voids = caves ? caveSpans(*caves, {x, z}, spans, MostSpans) : 0;
+    CaveSpan spans[MostCaveSpans];
+    const int voids = caves ? caveSpans(*caves, {x, z}, spans, MostCaveSpans) : 0;
     float floor = 0, fallen = 0;
     bool open = false;
     for (int v = 0; v < voids; ++v) {
@@ -107,6 +107,16 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
             top = bedAt(setting.seed, setting.strata, unitAt(setting.strata, depth, fold), depth, material);
             if (massive(traitsOf(top.rock)) < 0.5f) break;
         }
+    }
+
+    // Bare soluble rock opens along its joints into grikes as deep as `grike` below its surface.
+    float grike = 0;
+    if (setting.runoff > 0 && ground.pile.thickness <= 0) {
+        const float depth = std::max(0.0f, ground.datum - ground.rock) + 0.05f;
+        const StrataUnit unit = unitAt(setting.strata, depth, fold);
+        const Bed surface = bedAt(setting.seed, setting.strata, unit, depth, material);
+        const Pavement pavement = pavementOf(surface.rock, loose, setting.runoff);
+        if (pavement.halfWidth > 0) grike = grikeDepth(setting.seed, pavement, massFor(setting, surface, unit.laidDown), material, depth);
     }
 
     // Where the bed at the surface stands back from the face, the thin cover on it lies that much lower.
@@ -161,12 +171,16 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
             bool solid = y < (base ? partingFace : face);
             bool sand = false;
             if (solid && city.strength > 0.05f && y >= city.floor) solid = !cityOpens(city, material, y, depth, ground.rock, sand);
+            if (grike > 0 && y >= ground.rock - grike && y < ground.rock) solid = false;
             bool hollow = false;
             for (int v = 0; v < voids && !hollow; ++v) hollow = y >= spans[v].bottom && y < spans[v].top;
             if (hollow || (open && y >= ground.rock)) {
                 result = open && y >= floor && y < floor + fallen ? coverAt(ground, y - floor, floor + fallen - y) : Material::Air;
             } else if (solid && inPile) {
                 result = plug != Material::Air ? plug : member.rock;
+                // A thick flow parts into its columns within the skin of a bare face (volcanic/fn/Pile.cpp).
+                const float skin = ((base ? partingFace : face) - y) / std::sqrt(1.0f + ground.slope * ground.slope);
+                if (plug == Material::Air && bare > 0.5f && columnOpen(setting.seed, ground.pile, member, x, z, skin, float(step))) result = Material::Air;
             } else if (solid) {
                 result = bed.rock;
                 if (seams) {

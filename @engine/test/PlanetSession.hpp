@@ -91,9 +91,8 @@ inline const derivean::Frame& step(PlanetSession& session, const derivean::Comma
     Frame& frame = session.last;
     session.slowestMs = std::max(session.slowestMs, frame.nativeMs);
     ++session.frames;
-    expect(frame.far.added.empty() && frame.far.removed.empty(), "A world of cubes sent far patches");
     hold(session.cubes, frame.cubes);
-    checkBoxes(*session.game.cubes, session.cubes, frame.eye);
+    checkBoxes(session.game.cubes, session.cubes, frame.eye);
     return frame;
 }
 

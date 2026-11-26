@@ -53,7 +53,7 @@ WindGraph windGraph(const Domain& domain);
 void routeSand(Domain& domain, const WindGraph& graph, std::vector<float>& raised);
 
 // FarDust.cpp — Region: `WindField::farDust`, a closed form over the planet grid of the dust that
-// deserts beyond the domain raise and the annual mean wind brings to each cell. Called by `beginWind`.
+// upwind deserts raise and the annual mean wind brings to each cell, a function of world position. Called by `beginWind`.
 void readFarDust(Domain& domain, const Setting& setting);
 
 // Dust.cpp — Region: fines raised this step travel with the same drift and settle with distance,

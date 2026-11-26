@@ -32,6 +32,7 @@ void allocate(Domain& domain) {
     domain.order.reserve(cells);
     domain.rank.assign(cells, 0);
     domain.spill.assign(cells, -1);
+    domain.settledWay.assign(cells, uint8_t(255));
 }
 
 // Forcing varies over tens of kilometres, so it is read at the strata nodes and interpolated;
@@ -99,8 +100,28 @@ void adoptNeighbours(Domain& domain, const TileLookup& lookup) {
             domain.erosionRate[to] = tile->erosionRate[from];
             domain.depositionRate[to] = tile->depositionRate[from];
             domain.hold[to] = Settled;
+            domain.settledWay[to] = tile->flowTo[from];
         }
     }
+    // A finished neighbour's river enters this domain where that neighbour sent it. A ground tile
+    // keeps its own way of taking a neighbour's flow (routeWater), so it hands nothing on here.
+    const bool ground = domain.key.level == Level::Ground;
+    for (int z = 0; z < domain.size; ++z)
+        for (int x = 0; x < domain.size; ++x) {
+            const size_t from = domain.index(x, z);
+            const uint8_t way = domain.settledWay[from];
+            if (way > 7) continue;
+            const int tx = x + NeighborX[way], tz = z + NeighborZ[way];
+            // The outer ring becomes the open rim (openRim), which passes on what it holds itself.
+            const bool rim = x == 0 || z == 0 || x == domain.size - 1 || z == domain.size - 1;
+            const bool inside = tx >= 0 && tz >= 0 && tx < domain.size && tz < domain.size;
+            if (ground || rim || !inside || domain.hold[domain.index(tx, tz)] == Settled) {
+                domain.settledWay[from] = 255;
+                continue;
+            }
+            domain.inflow[domain.index(tx, tz)] += domain.settledFlow[from];
+            domain.inflowLoad[domain.index(tx, tz)] += domain.settledLoad[from];
+        }
 }
 
 // The outer ring is where water leaves. In a region a free rim cell keeps cutting at the slope it
@@ -127,14 +148,15 @@ void openRim(Domain& domain) {
 // Interpolating a parent whose valleys are one cell wide leaves a chain of hollows along every
 // diagonal reach, and a finer level that is held to that surface would keep them as lakes. Hollows
 // shallower than the level can tell from an artefact are levelled before the settling starts; a
-// deeper basin is a real feature of the parent and stays.
+// deeper basin is a real feature of the parent and stays, and so does any basin under the parent's
+// standing water: a lake the parent holds is a lake here, whatever its depth.
 void levelHollows(Domain& domain) {
     constexpr float Artefact[LevelCount] = {0, 0, 45.0f, 6.0f, 0.4f};
     FlowScratch scratch;
     floodLevels(domain, scratch);
     const float limit = Artefact[size_t(domain.key.level)];
     for (size_t i = 0; i < domain.cells(); ++i) {
-        if (domain.hold[i] != Free || domain.surface[i] < domain.seaLevel) continue;
+        if (domain.hold[i] != Free || domain.surface[i] < domain.seaLevel || domain.standing[i] > domain.surface[i]) continue;
         const float fill = std::min(limit, domain.level[i] - domain.surface[i]);
         if (fill <= 0) continue;
         domain.ground.rock[i] += fill;

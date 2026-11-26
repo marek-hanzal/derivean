@@ -43,11 +43,9 @@ Napi::Object cubeChunk(Napi::Env env, const CubeChunk& value) {
     return chunk;
 }
 
-// Null in a game whose far terrain is patches.
 } // namespace
 
-Napi::Value farCubes(Napi::Env env, const Frame& frame) {
-    if (frame.cubeLevels.empty()) return env.Null();
+Napi::Object farCubes(Napi::Env env, const Frame& frame) {
     auto cubes = Napi::Object::New(env);
     cubes["added"] = project(env, frame.cubes.added, cubeChunk);
     cubes["removed"] = numbers(env, frame.cubes.removed);
@@ -63,39 +61,6 @@ Napi::Value farCubes(Napi::Env env, const Frame& frame) {
         return level;
     });
     return cubes;
-}
-
-namespace {
-
-Napi::Object farPatch(Napi::Env env, const FarPatch& value) {
-    auto patch = Napi::Object::New(env);
-    const double size = sizeOf(value.key.level);
-    patch["id"] = value.id;
-    patch["level"] = value.key.level;
-    patch["origin"] = numbers(env, Position{value.key.x * size, value.base, value.key.z * size});
-    patch["size"] = size;
-    patch["cells"] = PatchCells;
-    patch["heights"] = packed(env, value.heights);
-    patch["morph"] = packed(env, value.morph);
-    patch["normals"] = packed(env, value.normals);
-    patch["colors"] = packed(env, value.colors);
-    patch["dataLevel"] = value.dataLevel;
-    patch["wantedLevel"] = uint8_t(sourceFor(value.key.level));
-    patch["shadeDetail"] = ShadeDensity;
-    patch["shade"] = packed(env, value.shade);
-    patch["water"] = packed(env, value.water);
-    patch["skirt"] = value.skirt;
-    return patch;
-}
-
-} // namespace
-
-Napi::Object farPatches(Napi::Env env, const Frame& frame) {
-    auto far = Napi::Object::New(env);
-    far["added"] = project(env, frame.far.added, farPatch);
-    far["removed"] = numbers(env, frame.far.removed);
-    far["data"] = numbers(env, frame.cubeLevels.empty() ? frame.farData : decltype(frame.farData){});
-    return far;
 }
 
 } // namespace derivean

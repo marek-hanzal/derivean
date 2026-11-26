@@ -39,13 +39,14 @@ float tableOf(const WaterField& field, size_t cell, int storey) {
     return high;
 }
 
-// The neighbour most of a node's water arrives from; 8 for the storey above, 255 for its own recharge.
+// The neighbour most of a node's water arrives from; 8 for the storey above, 9 for the regional flow, 255 for its own recharge.
 uint8_t mainSource(const WaterField& field, int x, int z, int storey) {
     const size_t i = field.index(x, z);
     const AquiferColumn& column = field.column[i];
     const bool fed = storey == Upper || !column.perched;
     float most = fed ? column.recharge + column.sunk : 0.0f;
     uint8_t source = 255;
+    if (storey == Lower && column.regional > most) most = column.regional, source = 9;
     if (!fed) {
         const float down = splitNode(field, i, Upper, field.flux[i * 2 + Upper]).down;
         if (down > most) most = down, source = 8;
@@ -101,7 +102,7 @@ void readFields(const WaterField& field, GroundwaterTile& tile) {
             if (column.perched) tile.rock[Upper][own] = uint8_t(column.upperRock);
             budget.rain += double(column.rain) * WaterCellArea;
             budget.runoff += double(runoffOf(column.rain, column.warmth)) * WaterCellArea;
-            budget.recharge += column.recharge, budget.sunk += column.sunk;
+            budget.recharge += column.recharge, budget.sunk += column.sunk, budget.regional += column.regional;
             for (int storey = column.perched ? Upper : Lower; storey <= Lower; ++storey) {
                 const NodeFate& fate = field.fate[i * 2 + size_t(storey)];
                 tile.from[storey][own] = mainSource(field, fx, fz, storey);

@@ -107,7 +107,7 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
       water.apply(frame);
       particles.apply(frame.particles, frame.particleOrigin);
       eyeTarget.set(...frame.eye);
-      daylight.turn(frame.sun);
+      daylight.turn(frame.sun, frame.ground === null ? null : frame.ground - world.seaLevel);
       ground = frame.ground;
       clouds.apply(frame, performance.now());
       precipitation.apply(frame);

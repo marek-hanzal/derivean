@@ -37,6 +37,7 @@ struct FormSetting {
     const StrataColumn* node{};
     std::vector<BedMass>* masses{};
     const VolcanicTile* volcanic{};   // vents whose plugs may cut the column (volcanic/type/Pile.hpp); null where there are none
+    float runoff{};          // m/yr the ground sheds where the column stands: bare soluble rock opens by it into grikes (groundwater/fn/Pavement.hpp)
 };
 
 // Materials of one vertical run of `count` points, `step` apart upwards from `bottom`, written to

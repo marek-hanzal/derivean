@@ -14,38 +14,17 @@ const controls = {
 
 let session;
 let first;
-// What a renderer would hold of the far terrain; every frame must keep it consistent.
-const patches = new Map();
-
-function applyFar(frame) {
-  for (const id of frame.far.removed) assert.ok(patches.delete(id), `patch ${id} was removed but never added`);
-  for (const patch of frame.far.added) {
-    assert.ok(!patches.has(patch.id), `patch id ${patch.id} was used twice`);
-    const vertices = (patch.cells + 1) ** 2;
-    assert.equal(patch.cells, world.far.cells);
-    assert.ok(patch.heights instanceof Float32Array && patch.heights.length === vertices);
-    assert.ok(patch.morph instanceof Float32Array && patch.morph.length === vertices);
-    assert.ok(patch.water instanceof Float32Array && patch.water.length === vertices);
-    assert.ok(patch.normals instanceof Int8Array && patch.normals.length === vertices * 3);
-    assert.ok(patch.colors instanceof Uint8Array && patch.colors.length === vertices * 3);
-    assert.equal(patch.size, patch.cells * 2 ** patch.level);
-    assert.ok(Number.isInteger(patch.origin[0] / patch.size) && Number.isInteger(patch.origin[2] / patch.size));
-    assert.ok(Number.isInteger(patch.origin[1]) && patch.heights.every((height) => height >= 0) && Math.min(...patch.heights) < 1,
-              "heights are measured from the patch origin");
-    assert.ok([1, 2, 4].includes(patch.shadeDetail) && patch.shade instanceof Uint8Array);
-    assert.equal(patch.shade.length, (patch.cells * patch.shadeDetail + 1) ** 2 * 4);
-    for (let texel = 2; texel < patch.shade.length; texel += 4) assert.ok(patch.shade[texel] > 0 && patch.shade[texel] < world.materials.length);
-    assert.ok(patch.morph.every(Number.isFinite));
-    assert.ok(patch.skirt > 0);
-    patches.set(patch.id, patch.level);
-  }
-}
+let faceWords;
+// Far cube chunks a renderer would hold.
+let held = 0;
 
 function wellFormed(frame) {
   assert.equal(typeof frame.flying, "boolean");
-  assert.equal(frame.cubes, null, "a world of patches sends no cubes");
-  for (const mesh of [...frame.chunks, ...frame.waterMeshes, ...frame.spawned])
-    assert.ok(mesh.faces instanceof Int16Array && mesh.faces.length % 8 === 0 && !mesh.quads, "a world of patches reads eight words a face");
+  assert.ok(frame.cubes && frame.cubes.levels.length > 0, "every world's far terrain is cubes");
+  for (const mesh of frame.chunks)
+    assert.ok(mesh.faces.length === 0 && mesh.quads instanceof Uint32Array && mesh.quads.length % 2 === 0, "the ground comes as quads");
+  for (const mesh of [...frame.waterMeshes, ...frame.spawned])
+    assert.ok(mesh.faces instanceof Int16Array && mesh.faces.length % faceWords === 0 && !mesh.quads, "water and debris come as faces");
   assert.equal(typeof frame.generationMs, "number");
   assert.equal(typeof frame.streamingMs, "number");
   for (const level of ["site", "local", "region"]) assert.equal(typeof frame.ready[level], "boolean");
@@ -85,7 +64,7 @@ function wellFormed(frame) {
 function step(command = {}) {
   const frame = session.advance({ ...controls, ...command });
   wellFormed(frame);
-  applyFar(frame);
+  held += frame.cubes.added.length - frame.cubes.removed.length;
   return frame;
 }
 
@@ -110,6 +89,7 @@ function aim(from, to) {
 
 before(async () => {
   session = new Session(options);
+  faceWords = session.info().faceWords;
   first = step({ active: false, elapsed: 0 });
   await until(settled);
 }, { timeout: 2_400_000 });
@@ -126,7 +106,7 @@ test("the world describes itself and arrives around a player who waits for it", 
 
   let frame;
   for (let i = 0; i < 60; i++) frame = step();
-  assert.ok(frame.visibleChunks > 100 && patches.size > 0);
+  assert.ok(frame.visibleChunks > 100 && held > 0);
   assert.ok(frame.voxelBox.min[0] < frame.eye[0] && frame.eye[0] < frame.voxelBox.max[0]);
   assert.ok(Math.abs(frame.eye[1] - EyeHeight - frame.ground) < 0.4, "the player stands on the simulated ground");
   assert.ok(Math.hypot(frame.eye[0] - first.eye[0], frame.eye[2] - first.eye[2]) < 1, "waiting keeps the player where the world put them");

@@ -88,6 +88,8 @@ void extractTile(const Domain& domain, const FlowScratch& scratch, Tile& tile) {
     tile.upIce = domain.upIce;
     tile.shore = recordShore(domain);
     tile.flowTo.assign(cells, 255);
+    if (domain.sinking.active()) tile.sunk.assign(cells, 0.0f);
+    if (!domain.seeped.empty()) tile.seeped.assign(cells, 0.0f);
     tile.rock.assign(cells, uint8_t(Material::Bedrock));
     for (int z = 0; z < TileCells; ++z) {
         for (int x = 0; x < TileCells; ++x) {
@@ -98,6 +100,8 @@ void extractTile(const Domain& domain, const FlowScratch& scratch, Tile& tile) {
             const bool sea = domain.level[from] <= float(domain.seaLevel) + 0.5f;
             tile.water[to] = flooded && (sea || domain.discharge[from] > 0) ? domain.level[from] : domain.surface[from] - 1.0f;
             tile.discharge[to] = domain.discharge[from];
+            if (!tile.sunk.empty()) tile.sunk[to] = domain.sinking.sunk[from];
+            if (!tile.seeped.empty()) tile.seeped[to] = domain.seeped[from];
             tile.rock[to] = uint8_t(domain.unit[from].traits.dominant);
             // A replay of zero steps (a world at its very beginning) has moved no sediment yet.
             tile.load[to] = scratch.flux[0].empty() ? 0.0f : scratch.flux[0][from] + scratch.flux[1][from] + scratch.flux[2][from];

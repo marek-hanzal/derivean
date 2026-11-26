@@ -39,4 +39,11 @@ inline constexpr float DustShare[DustSizes] = {0.6f, 0.4f};
 inline constexpr float DustFall[DustSizes] = {60e3f, 600e3f};   // m of travel over which all but 1/e has settled in dry air
 inline constexpr float DustWashRain = 0.5f;                     // m/yr of rain that doubles the fall-out
 
+// m/yr: the fastest the floor of a continental playa rises when averaged over its wet and dry
+// phases. Death Valley's core DV93-1 holds some 186 m of halite and mud laid over about 200 kyr
+// (Ku et al. 1998; Lowenstein et al. 1999), near 1 mm/yr in one of the fastest-sinking closed
+// basins on Earth; the Bonneville Salt Flats crust, about 1 m since the lake dried some 13 kyr
+// ago, is ten times slower.
+inline constexpr double EvaporiteRate = 1e-3;
+
 } // namespace derivean::sim

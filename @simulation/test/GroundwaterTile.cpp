@@ -1,6 +1,7 @@
 #include "GroundwaterFixture.hpp"
 #include "LandscapeFixture.hpp"
 
+#include "groundwater/fn/Inflow.hpp"
 #include "groundwater/fn/Refine.hpp"
 #include "simulation/type/World.hpp"
 
@@ -190,22 +191,34 @@ void testGroundwaterTile() {
     alone.workers = nullptr;
     const Setting pooled = world.atlas.setting();
 
+    // The regional flow coming up into the tiles, as the world hands it to their builds.
+    const auto hereHeld = world.groundwater.regionsUnder(world.atlas, key), thereHeld = world.groundwater.regionsUnder(world.atlas, east);
+    std::vector<const RegionalTile*> hereRegions, thereRegions;
+    for (const auto& region : hereHeld) hereRegions.push_back(region.get());
+    for (const auto& region : thereHeld) thereRegions.push_back(region.get());
+
     // One thread and the pool give the same tile, bit for bit.
     WaterField single, many, beside;
     readColumns(alone, key, here.around, single);
+    addRegionalInflow(single, hereRegions);
     const std::shared_ptr<GroundwaterTile> first = solveField(single);
     readColumns(pooled, key, here.around, many);
+    addRegionalInflow(many, hereRegions);
     const std::shared_ptr<GroundwaterTile> second = solveField(many);
     expectWater(sameTile(*first, *second), "a tile's ground water depends on the number of threads");
 
     const WaterBudget& budget = first->budget;
     expectWater(budget.recharge > 0 && budget.recharge < budget.runoff, "recharge is not a share of the runoff", budget.recharge / std::max(1.0, budget.runoff));
+    size_t upwelled = 0;
+    for (const AquiferColumn& column : single.column) upwelled += column.regional > 0;
+    expectWater(upwelled > 0, "no regional water comes up anywhere in the field of the test tile", 0);
     expectWater(std::abs(imbalance(budget)) < 1e-6, "water entering the ground of a tile is not all accounted for", imbalance(budget));
-    expectWater(budget.underflow < 0.5 * (budget.recharge + budget.sunk), "most of a tile's ground water is followed no farther", budget.underflow / budget.recharge);
+    expectWater(budget.underflow < 0.5 * (budget.recharge + budget.sunk + budget.regional), "most of a tile's ground water is followed no farther", budget.underflow / budget.recharge);
 
     // Two tiles say the same of the cells along their shared edge without one reading the other:
     // the last own column of the western tile and the first of the eastern, in both fields.
     readColumns(pooled, east, there.around, beside);
+    addRegionalInflow(beside, thereRegions);
     const std::shared_ptr<GroundwaterTile> third = solveField(beside);
     for (int column = TileCells - 1; column <= TileCells; ++column)
         for (int z = 0; z < TileCells; ++z) {
@@ -214,7 +227,7 @@ void testGroundwaterTile() {
                 const NodeFate &f = many.fate[a * 2 + node], &g = beside.fate[b * 2 + node];
                 const bool same = many.level[a * 2 + node] == beside.level[b * 2 + node] && many.flux[a * 2 + node] == beside.flux[b * 2 + node] &&
                                   many.sideways[a * 2 + node] == beside.sideways[b * 2 + node] && f.emerges == g.emerges && f.outcrop == g.outcrop && f.lost == g.lost &&
-                                  f.captured == g.captured && f.lag == g.lag && many.column[a].sunk == beside.column[b].sunk &&
+                                  f.captured == g.captured && f.lag == g.lag && many.column[a].sunk == beside.column[b].sunk && many.column[a].regional == beside.column[b].regional &&
                                   std::memcmp(&many.borne[a * 2 + node], &beside.borne[b * 2 + node], sizeof(Borne)) == 0;
                 expectWater(same, "two tiles disagree about the ground water of a cell on their shared edge", z);
             }
@@ -232,11 +245,23 @@ void testGroundwaterTile() {
     checkVents(world, *asked[2]);
     checkEdge(world, *asked[2], *asked[0]);
 
+    // The two models of what travels farther, which need not agree: the region's deep recharge
+    // under the tile against the share the tile follows no farther.
+    double deepUnder = 0;
+    for (const auto& region : hereHeld)
+        for (int z = 0; z < TileCells / Refinement; ++z)
+            for (int x = 0; x < TileCells / Refinement; ++x) {
+                const int64_t rx = int64_t(key.x) * (TileCells / Refinement) + x - int64_t(region->key.x) * TileCells, rz = int64_t(key.z) * (TileCells / Refinement) + z - int64_t(region->key.z) * TileCells;
+                if (rx >= 0 && rz >= 0 && rx < TileCells && rz < TileCells) deepUnder += region->recharge[size_t(rz) * TileCells + size_t(rx)];
+            }
+    std::printf("ground water: local tile %d %d hands the regional flow %.3g m3/yr (its underflow); the region takes %.3g m3/yr down under it and brings %.3g m3/yr up into its own cells; %zu cells of its field take some\n",
+                key.x, key.z, budget.underflow, deepUnder, budget.regional, upwelled);
+
     int kinds[4] = {};
     for (const SpringRecord& record : first->records) ++kinds[int(record.kind)];
-    std::printf("ground water: local tile %d %d: recharge %.0f mm/yr of %.0f mm/yr runoff; springs %.1f %%, seepage %.1f %%, baseflow %.1f %%, deep %.1f %%, followed no farther %.1f %% of it; "
+    std::printf("ground water: local tile %d %d: recharge %.0f mm/yr of %.0f mm/yr runoff; springs %.1f %%, seepage %.1f %%, baseflow %.1f %%, deep %.1f %%, followed no farther %.1f %% of it; regional flow up %.1f %% of it; "
                 "%d table, %d contact, %d fault, %d karst springs; %zu conduits; %.3g m3/yr cross its east edge\n",
                 key.x, key.z, 1000 * budget.recharge / (tileSpan(Level::Local) * tileSpan(Level::Local)), 1000 * budget.runoff / (tileSpan(Level::Local) * tileSpan(Level::Local)),
                 100 * budget.springs / budget.recharge, 100 * budget.seepage / budget.recharge, 100 * budget.baseflow / budget.recharge, 100 * budget.deep / budget.recharge,
-                100 * budget.underflow / budget.recharge, kinds[0], kinds[1], kinds[2], kinds[3], first->caves->conduits.size(), eastward);
+                100 * budget.underflow / budget.recharge, 100 * budget.regional / budget.recharge, kinds[0], kinds[1], kinds[2], kinds[3], first->caves->conduits.size(), eastward);
 }

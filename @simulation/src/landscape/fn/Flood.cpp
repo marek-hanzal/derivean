@@ -1,6 +1,10 @@
 #include "landscape/fn/Process.hpp"
 
+#include "groundwater/fn/Sinking.hpp"
+
 #include <limits>
+#include <utility>
+#include <vector>
 
 namespace derivean::sim {
 
@@ -66,7 +70,18 @@ void floodLevels(Domain& domain, FlowScratch& scratch) {
         domain.level[lowest] = std::max(domain.surface[lowest], sea);
         push(int32_t(lowest), domain.level[lowest]);
     }
+    // A hollow in soluble rock whose floor takes in all that reaches it holds no lake: its water
+    // goes down there (groundwater/fn/Sinking.hpp).
+    for (size_t i = 0; domain.sinking.active() && i < cells; ++i) {
+        if (scratch.visited[i] || !drainsDown(domain, i)) continue;
+        scratch.visited[i] = 1;
+        domain.level[i] = domain.surface[i];
+        push(int32_t(i), domain.level[i]);
+    }
 
+    // A cell into which a finished neighbour hands its river (Domain::handsOn) is not reached from
+    // that neighbour's cell while any other way to it is left, so it never drains back against the river.
+    std::vector<std::pair<int32_t, int32_t>> deferred;
     while (true) {
         int32_t cell;
         if (!scratch.pit.empty()) {
@@ -75,7 +90,25 @@ void floodLevels(Domain& domain, FlowScratch& scratch) {
         } else {
             while (current < Buckets - 1 && (current < 0 || scratch.head[size_t(current)] < 0)) ++current;
             cell = scratch.head[size_t(current)];
-            if (cell < 0) break;
+            if (cell < 0) {
+                // Only cells reached solely across a handed-on step are left: they are flooded on from
+                // there in rising order like the rest.
+                if (deferred.empty()) break;
+                current = -1;
+                for (const auto& [from, to] : deferred) {
+                    if (scratch.visited[size_t(to)]) continue;
+                    scratch.visited[size_t(to)] = 1;
+                    float level = std::max(domain.surface[size_t(to)], sea);
+                    if (level <= domain.level[size_t(from)]) {
+                        level = std::nextafter(domain.level[size_t(from)], std::numeric_limits<float>::max());
+                        domain.spill[size_t(to)] = from;
+                    }
+                    domain.level[size_t(to)] = level;
+                    push(to, level);
+                }
+                deferred.clear();
+                continue;
+            }
             scratch.head[size_t(current)] = scratch.link[size_t(cell)];
         }
         domain.rank[size_t(cell)] = int32_t(domain.order.size());
@@ -87,6 +120,10 @@ void floodLevels(Domain& domain, FlowScratch& scratch) {
             if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
             const size_t other = domain.index(nx, nz);
             if (scratch.visited[other]) continue;
+            if (domain.handsOn(size_t(cell), other)) {
+                deferred.emplace_back(cell, int32_t(other));
+                continue;
+            }
             scratch.visited[other] = 1;
             float level = std::max(domain.surface[other], sea);
             if (level <= here) {

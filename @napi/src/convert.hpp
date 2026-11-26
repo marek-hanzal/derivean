@@ -39,8 +39,7 @@ Napi::Value optional(Napi::Env env, const std::optional<T>& value) {
 Napi::Object renderFrame(Napi::Env env, const Frame& frame);
 // Faces of a chunk as two words per quad, laid out as GameBridge.ts says. Only a chunk's faces fit: no coordinate above 32.
 Napi::Value quads(Napi::Env env, const FaceMesh& faces);
-Napi::Value farCubes(Napi::Env env, const Frame& frame);     // null in a world of patches
-Napi::Object farPatches(Napi::Env env, const Frame& frame);
+Napi::Object farCubes(Napi::Env env, const Frame& frame);
 Command parseCommand(const Napi::CallbackInfo& info);
 PlanetOptions parseWorld(Napi::Value value);   // the default planet when no options are given
 double readPlace(Napi::Value value);           // a horizontal world coordinate in metres

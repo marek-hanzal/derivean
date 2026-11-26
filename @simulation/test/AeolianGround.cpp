@@ -105,9 +105,11 @@ void checkBudget() {
 }
 
 // A hollow in dry country whose water never reaches its rim: what flows in leaves as vapour, and
-// its salt lies level on the lowest ground of the hollow and nowhere else. One step is all the hollow has: the
-// model lays the sediment of a whole step in it as if a lake stood to its rim, and it is full after that.
-void checkBasin() {
+// its salt lies level over the floor of the hollow and nowhere else, never faster than salt pans
+// grow. One step is all the hollow has: the model lays the sediment of a whole step in it as if a
+// lake stood to its rim, and it is full after that. A step shortened to `years` brings in salt
+// enough to raise the floor faster than pans grow; when `capped`, the floor must stop at that pace.
+void checkBasin(double years, bool capped) {
     PlaneSpec spec;
     spec.level = Level::Region;
     spec.slope = 0.002;
@@ -115,6 +117,7 @@ void checkBasin() {
     spec.rock = Material::Limestone;
     spec.steps = 1;
     Domain domain = planeDomain(spec);
+    if (years > 0) domain.step = years, domain.endTime = domain.startTime + years;
     const int middle = domain.size / 2;
     for (int z = 0; z < domain.size; ++z)
         for (int x = 0; x < domain.size; ++x) {
@@ -167,6 +170,9 @@ void checkBasin() {
     expect(pan >= 4 && astray == 0, "a drying basin left no salt on its floor, or left it outside", pan);
     expect(floor <= bare + 0.01f, "salt lies above lake floor it left bare", floor - bare);
     expect(thickest > 0.01f, "the crust is a film", thickest);
+    const float most = float(EvaporiteRate * domain.step);
+    expect(thickest <= most * 1.001f, "salt grew faster than salt pans do", thickest);
+    expect(!capped || thickest >= 0.99f * most, "the floor of a short step did not reach the pans' pace", thickest / most);
     expect(step < 0.01f, "the salt floor is not level", step);
     expect(domain.aeolian.ledger.salt > 0 && domain.aeolian.ledger.salt <= domain.ledger.dissolved * 1.0001 + 1.0, "more salt was laid than rock gave to solution", domain.aeolian.ledger.salt);
 }
@@ -197,6 +203,7 @@ void checkFarDust() {
 
 void testAeolianGround() {
     checkBudget();
-    checkBasin();
+    checkBasin(0, false);
+    checkBasin(2000, true);
     checkFarDust();
 }

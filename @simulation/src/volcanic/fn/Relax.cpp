@@ -94,7 +94,7 @@ long relax(Emplacement& field, const Rheology& rheology, Worklist& work, long vi
             const float heat = field.heat[i] - way;
             if (heat <= 0) {
                 // Spent: it sets as it arrives.
-                field.laid[j] += part, field.ground[j] += part;
+                field.lay(j, part);
                 continue;
             }
             if (field.mobile[j] <= 0) work.touched.push_back(int32_t(j));
@@ -118,7 +118,7 @@ void set(Emplacement& field, Worklist& work) {
         const size_t i = size_t(at);
         const float layer = field.mobile[i];
         if (layer <= 0) continue;
-        if (field.rest[i] != Rest::Closed) field.laid[i] += layer, field.ground[i] += layer;
+        if (field.rest[i] != Rest::Closed) field.lay(i, layer);
         else field.lost += double(layer) * area;
         field.mobile[i] = field.heat[i] = 0;
     }

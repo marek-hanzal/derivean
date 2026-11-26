@@ -1,5 +1,6 @@
 #pragma once
 
+#include "landscape/type/Drainage.hpp"
 #include "planet/type/Planet.hpp"
 
 namespace derivean::sim {
@@ -15,13 +16,16 @@ struct Backdrop {
     Field<float> load;            // m³/yr of sediment they carry
     Field<float> graded;          // m, bed a river in balance with present erosion would have on its way to the sea
     Field<uint8_t> flowTo;        // neighbour index they leave by, 255 for none
+    Drainage drainage;            // the same rivers on a grid fine enough to say where they cross a region's edge
     double regionStart{};
 };
 
-Backdrop readBackdrop(const Planet& planet, double age);
+class Workers;
+
+// `workers` spreads the work over a pool; null runs it on the calling thread. The result is the same.
+Backdrop readBackdrop(const Planet& planet, double age, Workers* workers = nullptr);
 
 struct World;
-class Workers;
 
 // Identity of a world. Everything a tile contains is a function of this and of its key.
 struct Setting {

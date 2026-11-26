@@ -99,6 +99,7 @@ void routeGroundWater(WaterField& field) {
                         Mixing mix;
                         if (storey == Upper || !column.perched) take(mix, column.recharge + column.sunk, Borne{0, 0, column.ground, column.recharge / WaterCellArea, 0, 0}, 0);
                         else take(mix, down[i], field.borne[i * 2 + Upper], 0);
+                        if (storey == Lower && column.regional > 0) take(mix, column.regional, field.upwelled[i], 0);
                         for (int k = 0; k < 8; ++k) {
                             const int nx = x - NeighborX[k], nz = z - NeighborZ[k];
                             if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;

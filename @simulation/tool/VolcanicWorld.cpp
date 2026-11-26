@@ -19,6 +19,7 @@ struct Sheet {
     HeightGrid grid;
     std::vector<float> water, laid;
     std::vector<uint8_t> lava;
+    std::vector<uint64_t> vent;   // id of the vent that laid the top, 0 for none
     double seaLevel{};
 };
 
@@ -31,6 +32,7 @@ Sheet gather(World& world, Level level, Vec2 centre, int tiles, std::map<uint64_
     sheet.water.assign(sheet.grid.top.size(), -1e9f);
     sheet.laid.assign(sheet.grid.top.size(), 0.0f);
     sheet.lava.assign(sheet.grid.top.size(), 0);
+    sheet.vent.assign(sheet.grid.top.size(), 0);
     for (int tz = 0; tz < tiles; ++tz)
         for (int tx = 0; tx < tiles; ++tx) world.atlas.request({level, first.x + tx, first.z + tz});
     const auto started = std::chrono::steady_clock::now();
@@ -45,6 +47,7 @@ Sheet gather(World& world, Level level, Vec2 centre, int tiles, std::map<uint64_
                     sheet.water[to] = tile->water[from];
                     const PileColumn column = pileColumn(*tile, from);
                     sheet.grid.pile[to] = column.thickness, sheet.laid[to] = column.laid, sheet.lava[to] = column.lava;
+                    if (tile->volcanic && column.vent < tile->volcanic->vents.size()) sheet.vent[to] = tile->volcanic->vents[column.vent].id;
                 }
             }
             if (!tile->volcanic) continue;
@@ -71,6 +74,53 @@ void writeMap(const Sheet& sheet, const std::string& path) {
         image[i * 3 + 2] = uint8_t(image[i * 3 + 2] * 0.5f);
     }
     writePng(path, side, side, image);
+}
+
+// Tiles are built apart, so a pile or a flow that crosses their edge must come out whole: the step
+// in pile thickness and in lava share between two cells across an edge is set against the same step
+// between two cells beside each other within a tile, and the vent that laid the top must be the same
+// on both sides about as often as it is inside.
+void printSeams(const Sheet& sheet, int tiles) {
+    if (tiles < 2) return;
+    const int side = sheet.grid.width;
+    struct Steps {
+        double pile{}, lava{}, ground{}, worst{};
+        long pairs{}, sameVent{}, vented{}, wet{};
+        size_t at{};
+    } across, inside;
+    const auto compare = [&](size_t a, size_t b, Steps& steps) {
+        if (sheet.grid.pile[a] <= 0 && sheet.grid.pile[b] <= 0) return;
+        const double step = std::abs(sheet.grid.pile[a] - sheet.grid.pile[b]);
+        steps.pile += step;
+        steps.ground += std::abs(sheet.grid.top[a] - sheet.grid.top[b]);
+        steps.wet += sheet.grid.top[a] < sheet.seaLevel;
+        if (step > steps.worst) steps.worst = step, steps.at = a;
+        steps.lava += std::abs(int(sheet.lava[a]) - int(sheet.lava[b])) / 255.0;
+        ++steps.pairs;
+        if (sheet.vent[a] && sheet.vent[b]) ++steps.vented, steps.sameVent += sheet.vent[a] == sheet.vent[b];
+    };
+    // A pair whose second cell starts a tile is across an edge; one just past the band a seam is
+    // blended over (Apron cells) on either side of it is inside.
+    const auto kind = [&](int next) -> Steps* {
+        const int within = next % TileCells;
+        return within == 0 ? &across : within == Apron + 2 || within == TileCells - Apron - 2 ? &inside : nullptr;
+    };
+    for (int a = 0; a < side; ++a) {
+        for (int b = 1; b < side; ++b) {
+            if (Steps* into = kind(b)) {
+                compare(size_t(a) * side + size_t(b - 1), size_t(a) * side + size_t(b), *into);
+                compare(size_t(b - 1) * side + size_t(a), size_t(b) * side + size_t(a), *into);
+            }
+        }
+    }
+    const auto mean = [](double sum, long n) { return n ? sum / double(n) : 0.0; };
+    std::printf("  seams (1 = invisible): pile step %.2f (%.1f m across, %.1f m inside), lava share step %.2f (%.3f, %.3f), same top vent %.0f %% across, %.0f %% inside (%ld, %ld pairs)\n",
+                mean(across.pile, across.pairs) / std::max(1e-6, mean(inside.pile, inside.pairs)), mean(across.pile, across.pairs), mean(inside.pile, inside.pairs),
+                mean(across.lava, across.pairs) / std::max(1e-6, mean(inside.lava, inside.pairs)), mean(across.lava, across.pairs), mean(inside.lava, inside.pairs),
+                100.0 * mean(double(across.sameVent), across.vented), 100.0 * mean(double(inside.sameVent), inside.vented), across.pairs, inside.pairs);
+    std::printf("    the ground surface over those pairs steps %.1f m across, %.1f m inside; %.0f %% of them under the sea; worst pile step across %.0f m at X %.0f Z %.0f\n",
+                mean(across.ground, across.pairs), mean(inside.ground, inside.pairs), 100.0 * mean(double(across.wet), across.pairs), across.worst,
+                sheet.grid.origin.x + (double(across.at % size_t(side)) + 0.5) * sheet.grid.cell, sheet.grid.origin.z + (double(across.at / size_t(side)) + 0.5) * sheet.grid.cell);
 }
 
 } // namespace
@@ -102,6 +152,7 @@ int volcanicWorld(const Arguments& arguments) {
                 100.0 * volcanic / std::max(1L, land), lavaCells * area / 1e6, young * area / 1e6, pile / Km3);
     std::printf("  ledgers of these tiles, km3: erupted %.1f = lava %.1f + fall and flows %.1f + ash %.1f + left %.1f + drifted %.1f | on the tiles' own cells %.1f | sealed cover %.1f | foundered %.1f\n",
                 ledger.erupted / Km3, ledger.lava / Km3, ledger.cone / Km3, ledger.ash / Km3, ledger.left / Km3, ledger.drifted / Km3, ledger.built / Km3, ledger.sealed / Km3, ledger.foundered / Km3);
+    printSeams(sheet, tiles);
     std::printf("  vents whose conduits come up here (X, Z in m; ages before the world's age):\n");
     for (const auto& [id, vent] : vents) {
         const Feeder& feeder = vent.feeders.back();

@@ -136,11 +136,12 @@ Vec2 findLanding(World& world, Vec2 near) {
         const Level level = Level(step);
         const double cell = specOf(level).cell;
         const int reach = Reach[step];
-        const TileKey low = tileAt(level, {at.x - reach * cell, at.z - reach * cell}), high = tileAt(level, {at.x + reach * cell, at.z + reach * cell});
-        for (int z = low.z; z <= high.z; ++z)
-            for (int x = low.x; x <= high.x; ++x) world.atlas.request({level, x, z});
-        for (int z = low.z; z <= high.z; ++z)
-            for (int x = low.x; x <= high.x; ++x) world.atlas.require({level, x, z});
+        // Only the tile under the answer so far is searched, so a new player waits for that tile
+        // alone: one to four builds deep for one to seventeen tiles, by its pass (landscape/fn/Build.cpp
+        // `dependencies`). A shore just across the tile's edge is not seen.
+        const TileKey home = tileAt(level, at);
+        world.atlas.require(home);
+        const int64_t firstX = int64_t(home.x) * TileCells, firstZ = int64_t(home.z) * TileCells;
         TileReader reader{world.atlas, level};
         const float sea = float(world.planet.seaLevel);
         // A dry cell carries a water value below its ground; only the sea can then be its water level.
@@ -152,12 +153,19 @@ Vec2 findLanding(World& world, Vec2 near) {
         // Dry cells of the search square and the size of the piece of land each belongs to, so the
         // answer is the shore of real country and not of a rock in the sea.
         const int side = 2 * reach + 1;
-        std::vector<uint8_t> dry(size_t(side) * size_t(side), 0);
+        const int64_t centreX = int64_t(std::floor(centre.x / cell)), centreZ = int64_t(std::floor(centre.z / cell));
+        const auto inside = [&](int dx, int dz) {
+            const int64_t x = centreX + dx - firstX, z = centreZ + dz - firstZ;
+            return x >= 0 && z >= 0 && x < TileCells && z < TileCells;
+        };
+        std::vector<uint8_t> known(size_t(side) * size_t(side), 0), dry(known.size(), 0);
         std::vector<float> ground(dry.size(), 0.0f);
         for (int dz = -reach; dz <= reach; ++dz)
             for (int dx = -reach; dx <= reach; ++dx) {
+                if (!inside(dx, dz)) continue;
                 SurfaceSample sample;
                 const size_t i = size_t(dz + reach) * size_t(side) + size_t(dx + reach);
+                known[i] = 1;
                 dry[i] = water({centre.x + dx * cell, centre.z + dz * cell}, sample) + Freeboard[step] <= sample.ground;
                 ground[i] = sample.ground;
             }
@@ -190,7 +198,7 @@ Vec2 findLanding(World& world, Vec2 near) {
             for (int oz = -RegionOutlook; oz <= RegionOutlook; oz += 2)
                 for (int ox = -RegionOutlook; ox <= RegionOutlook; ox += 2) {
                     const int nx = std::clamp(x + ox, 0, side - 1), nz = std::clamp(z + oz, 0, side - 1);
-                    highest = std::max(highest, ground[size_t(nz) * size_t(side) + size_t(nx)]);
+                    if (known[size_t(nz) * size_t(side) + size_t(nx)]) highest = std::max(highest, ground[size_t(nz) * size_t(side) + size_t(nx)]);
                 }
             return double(highest - ground[size_t(z) * size_t(side) + size_t(x)]) / OutlookForDistance;
         };
@@ -199,6 +207,8 @@ Vec2 findLanding(World& world, Vec2 near) {
             for (int x = 1; x < side - 1; ++x) {
                 const size_t i = size_t(z) * size_t(side) + size_t(x);
                 if (!dry[i] || sizes[size_t(piece[i])] < Mainland[step]) continue;
+                // A shore is dry ground beside water the search has seen, not beside the tile's edge.
+                if (!known[i + 1] || !known[i - 1] || !known[i + size_t(side)] || !known[i - size_t(side)]) continue;
                 if (dry[i + 1] && dry[i - 1] && dry[i + size_t(side)] && dry[i - size_t(side)]) continue;
                 const double cost = std::hypot(x - reach, z - reach) - outlook(x, z);
                 if (cost >= best) continue;

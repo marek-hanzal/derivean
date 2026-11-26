@@ -125,9 +125,19 @@ void readColumns(const Setting& setting, TileKey key, const Tile* const around[9
                 Soak soak{column.rain, column.warmth, std::hypot(slopeX, slopeZ), {bed.cover[0], bed.cover[1], bed.cover[2]}, tile.ice[from], Material(tile.rock[from])};
                 const float share = flooded ? 0.0f : infiltrationShare(soak);
                 column.recharge = runoffOf(column.rain, column.warmth) * share * WaterCellArea;
-                // The landscape routes all the runoff over the surface. The share that soaked in is
-                // not in its streams: a stream is taken to have lost what the ground here takes.
-                column.stream = tile.discharge[from] * (1.0f - share);
+                // On soluble rock the landscape takes out of its streams what soaks in and what their
+                // beds take (fn/Sinking.cpp), and records it; the part beyond the recharge here sank
+                // from streams. Elsewhere it routes all the runoff, and a stream is taken to have
+                // lost the share that soaks in.
+                const float gone = tile.sunk.empty() ? 0.0f : tile.sunk[from];
+                column.stream = gone > 0 ? tile.discharge[from] : tile.discharge[from] * (1.0f - share);
+                column.sunk = std::max(0.0f, gone - column.recharge);
+                // What a dry country's loose bed took from the stream (aeolian/fn/Soak.cpp) is
+                // recharge, and already off the discharge. The landscape took it from all the
+                // runoff it routes; off soluble rock the cells upstream count the share of that
+                // runoff that soaks in as their own recharge, so only the rest of the bed's take is
+                // new water, as only the rest of the discharge is stream.
+                if (!tile.seeped.empty()) column.recharge += tile.seeped[from] * (gone > 0 ? 1.0f : 1.0f - share);
                 column.drain = flooded ? Drain::Still : column.stream >= (soluble ? SwallowLimit : DrainingFlow) ? Drain::Stream : Drain::None;
                 column.stage = flooded ? tile.water[from] : column.ground;
                 column.base = walk.base, column.shallowBase = walk.shallowBase;
@@ -146,7 +156,7 @@ void readColumns(const Setting& setting, TileKey key, const Tile* const around[9
                     column.fissured = true;
                     field.fissures[i] = fissuresAt(setting.seed, walk.solubleMass, bed.material, std::max(0.0f, walk.solubleDepth - 2.0f));
                 }
-                // What the rock alone says a stream loses here; Sinks.cpp works out how much of the stream is left to lose.
+                // What the rock alone says a stream loses here; the karst step in routing (Sinking.cpp) works out how much of the stream is left to lose.
                 if (soluble) {
                     const float broken = fractureShare(setting.seed, walk.mass, bed.material, std::max(0.0f, bed.datum - bed.rockTop), float(WaterCell));
                     column.swallow = swallowRate({walk.top, bed.cover[0] + bed.cover[1] + bed.cover[2], broken, walk.mass.openDepth, walk.mass.dip});

@@ -137,16 +137,19 @@ NearField layOutbreak(Emplacement& field, const Outbreak& outbreak) {
     near.fragments.assign(field.cells(), 0.0f);
     near.lava.assign(field.cells(), 0.0f);
     std::fill(field.laid.begin(), field.laid.end(), 0.0f);
+    field.fresh.clear();
     const double before = field.lost + field.passed;
     // Moves what the laws laid since the last call into `into`; what lies on cells the grid may not
     // change is booked as left, as the replay books it (volcanic/fn/Lay.cpp).
     const auto harvest = [&](std::vector<float>& into) {
-        for (size_t i = 0; i < field.cells(); ++i) {
+        for (const int32_t at : field.fresh) {
+            const size_t i = size_t(at);
             if (field.laid[i] <= 0) continue;
             if (field.rest[i] == Rest::Open) into[i] += field.laid[i];
             else field.passed += double(field.laid[i]) * field.cell * field.cell;
             field.laid[i] = 0;
         }
+        field.fresh.clear();
     };
     const int x = int(std::floor((outbreak.site.x - field.origin.x) / field.cell)), z = int(std::floor((outbreak.site.z - field.origin.z) / field.cell));
     if (outbreak.fall > 0) {

@@ -17,7 +17,7 @@ const places = new Map();
 let occluded = 0;
 
 before(() => {
-  session = new Session({ seed: 42, age: 2e9, cubes: true });
+  session = new Session({ seed: 42, age: 2e9 });
   info = { ...world, ...session.info() };
 });
 
@@ -36,7 +36,7 @@ function quads(packed, visit) {
 
 function apply(frame) {
   const { cubes } = frame;
-  assert.ok(cubes && frame.far.added.length === 0, "a world of cubes sends no patches");
+  assert.ok(cubes, "every world sends its far terrain as cubes");
   for (const id of cubes.removed) {
     assert.ok(held.has(id), `cube chunk ${id} was removed but never added`);
     const place = held.get(id);

@@ -2,7 +2,10 @@
 
 #include "PlanetSession.hpp"
 
+#include <algorithm>
+#include <map>
 #include <random>
+#include <vector>
 
 using namespace derivean;
 
@@ -12,9 +15,13 @@ constexpr double BlockedMs = 250.0;   // far beyond a frame even on a loaded mac
 // Two billion years is about the youngest this seed offers a mainland coast to land on; older planets take longer to evolve.
 constexpr double Age = 2e9;
 
+// The spawn is found on the site level; the ground level must not have been built for it.
 void spawnsOnDryLand(PlanetSession& session) {
     Game& game = session.game;
-    const sim::SurfaceSample ground = sim::surveyAt(game.nature.world, {game.spawn[0], game.spawn[2]}, sim::Level::Ground);
+    sim::World& world = game.nature.world;
+    expect(!world.atlas.find(sim::tileAt(sim::Level::Ground, {game.spawn[0], game.spawn[2]})),
+           "The ground tile under the spawn must come with the voxels, not before the game opens");
+    const sim::SurfaceSample ground = sim::surveyAt(world, {game.spawn[0], game.spawn[2]}, sim::Level::Site);
     expect(ground.ground > ground.water && std::abs(game.spawn[1] - ground.ground) < 0.5, "The spawn must stand on the surveyed dry ground");
     std::cout << "spawn " << game.spawn[0] << " " << game.spawn[1] << " " << game.spawn[2] << ", ground " << ground.ground - ground.water
               << " m above the water\n";
@@ -32,6 +39,8 @@ void streamsWithoutBlocking(PlanetSession& session) {
     expect(waitFor(session, idle(), [](const Frame& frame) { return frame.pendingChunks == 0; }), "The voxel region never completed");
     const Frame& frame = run(session, idle(), 120);
     expect(frame.ground && std::abs(frame.eye[1] - PlayerEyeHeight - *frame.ground) < 0.4, "The player must come to rest on the ground");
+    const sim::SurfaceSample finest = sim::surfaceAt(game.nature.world, {frame.eye[0], frame.eye[2]}, sim::Level::Ground);
+    expect(finest.found && finest.level == sim::Level::Ground, "The player must stand on the ground level once the voxels are in");
     expect(frame.voxelBox->min[0] < frame.eye[0] && frame.voxelBox->max[0] > frame.eye[0] && frame.voxelBox->min[2] < frame.eye[2] &&
            frame.voxelBox->max[2] > frame.eye[2] && frame.voxelBox->max[0] - frame.voxelBox->min[0] >= 80,
            "The voxel box must surround the player");
@@ -66,6 +75,7 @@ void cubesMatchVoxels(PlanetSession& session) {
            "The finest far cubes never settled");
     const double edge = edgeOf(FinestCubes);
     int compared = 0, agreed = 0;
+    std::map<std::pair<int, int>, int> differ;   // (voxel, cube) materials where they disagree
     for (const auto& [id, chunk] : session.cubes.byId) {
         if (chunk.level != FinestCubes) continue;
         for (size_t at = 0; at < chunk.faces.size(); at += FaceWords) {
@@ -79,10 +89,18 @@ void cubesMatchVoxels(PlanetSession& session) {
             while (materialAt(game.world, cell) == Material::Air && cell.y > cellAt({x, top - 4.0, z}).y) --cell.y;
             if (!game.world.streamed->loaded.contains(chunkOf(cell)) || materialAt(game.world, cell) == Material::Air) continue;
             ++compared;
-            agreed += int(materialAt(game.world, cell)) == face[7];
+            const int voxel = int(materialAt(game.world, cell));
+            agreed += voxel == face[7];
+            if (voxel != face[7]) ++differ[{voxel, face[7]}];
         }
     }
     std::cout << "of " << compared << " finest cube tops over loaded voxels, " << agreed << " are of the top voxel's material\n";
+    std::vector<std::pair<int, std::pair<int, int>>> worst;
+    for (const auto& [pair, count] : differ) worst.push_back({count, pair});
+    std::sort(worst.rbegin(), worst.rend());
+    for (size_t at = 0; at < std::min<size_t>(worst.size(), 6); ++at)
+        std::cout << "  voxel " << sim::definitionOf(sim::Material(worst[at].second.first)).name << " under a cube of "
+                  << sim::definitionOf(sim::Material(worst[at].second.second)).name << ": " << worst[at].first << "\n";
     // The far view knows the cover's classes, not which stones or silts the ground level laid there; the rest must agree.
     expect(compared > 200 && agreed >= compared * 3 / 4, "Far cubes and voxels disagree about what the ground is made of");
 }
@@ -98,7 +116,7 @@ void becomesReady(PlanetSession& session) {
     for (const CubeLevelView& level : frame.cubeLevels) expect(level.settled == level.wanted, "A ready view holds a level that is not final");
     // What a settled column was cut from is what a build now would read: every shown column not
     // being rebuilt, while no tile has finished since the view was last compared with the tiles.
-    const FarCubes& far = *session.game.cubes;
+    const FarCubes& far = session.game.cubes;
     if (far.tilesSeen != session.game.nature.world.atlas.finished()) return;
     size_t final = 0;
     for (int level = FinestCubes; level <= CoarsestCubes; ++level)
@@ -218,9 +236,7 @@ void flies(PlanetSession& session) {
 
 void testPlanet() {
     const auto start = std::chrono::steady_clock::now();
-    PlanetOptions options{42, Age, std::nullopt, 0};
-    options.cubes = true;
-    Game game(options);
+    Game game(PlanetOptions{42, Age, std::nullopt, 0});
     std::cout << "planet ready after " << std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count() << " s\n";
     PlanetSession session{game, {}, {}, 0.0, 0};
     spawnsOnDryLand(session);

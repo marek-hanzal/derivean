@@ -15,6 +15,7 @@ struct Centre {
 
 // Centres.cpp — the centres that lie in one planet cell.
 std::vector<Centre> centresIn(const Planet& planet, int cellX, int cellZ, double time);   // those of the epoch `time` lies in
+std::vector<std::vector<Centre>> centresIn(const Planet& planet, int cellX, int cellZ, const std::vector<double>& times);   // the same for each of several
 
 // Source.cpp — every vent within `reach` of a world rectangle, with its whole history over the
 // region's window: what the planet recorded as melt rising under it, the share of that which

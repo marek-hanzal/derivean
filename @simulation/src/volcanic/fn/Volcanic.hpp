@@ -45,7 +45,14 @@ void settleLaying(Domain& domain, const Laying& laying);
 // plug; false where it is the old layering. Called by refreshUnits before its own work.
 bool volcanicUnit(Domain& domain, size_t cell, uint64_t seed);
 // What a finished tile keeps; null where the tile holds nothing volcanic.
-std::shared_ptr<const VolcanicTile> volcanicOf(const Domain& domain);
+// It first blends the pile along the edges of finished neighbours (Seams.cpp `blendPileSeams`), as
+// the surface over it was blended.
+std::shared_ptr<const VolcanicTile> volcanicOf(Domain& domain);
+void blendPileSeams(Domain& domain);
+// 0..1, share of lava in what was laid into a cell's pile; 1 where nothing is recorded.
+inline float lavaShare(const VolcanicDomain& volcanic, size_t cell) {
+    return volcanic.allLaid[cell] > 0 ? std::clamp(volcanic.lavaLaid[cell] / volcanic.allLaid[cell], 0.0f, 1.0f) : 1.0f;
+}
 // Readers of rock.
 PileColumn pileColumn(const Tile& tile, size_t cell);
 // `height` is metres above the pile's floor, which lies `column.thickness` under the rock surface.
@@ -53,6 +60,13 @@ PileBed pileBedAt(uint64_t seed, const VolcanicTile& volcanic, const PileColumn&
 // The same for a reader that crosses tile edges (the voxel column).
 PilePoint pilePoint(const Tile& tile, size_t cell);
 PileBed pileBed(uint64_t seed, const PilePoint& point, float height);
+// A sheet of lava cools from its top and its base, and shrinks as it cools: it cracks into upright
+// columns, the wider the thicker the sheet (the slower it cooled). In sound rock they stay shut;
+// within the weathered skin of an exposed face, `depth` metres deep, each column has weathered back
+// by its own amount and the joints between wide columns stand open. True where a point is open air
+// for that reason. `step` is the spacing of the points drawn: columns and joints narrower than a
+// few points are not drawn, so they never alias into noise.
+bool columnOpen(uint64_t seed, const PilePoint& point, const PileBed& bed, double x, double z, float depth, float step);
 // The plug of a conduit: it cuts the pile and the old beds alike, at any depth. Air outside every conduit.
 Material neckAt(const VolcanicTile& volcanic, Vec2 position);
 

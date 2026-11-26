@@ -104,4 +104,6 @@ double dryShare(double rain, double warmth, double halfRange) {
 
 float aridityOf(float rain, float celsius) { return std::clamp(1.0f - std::max(0.0f, rain) / evaporationDemand(celsius), 0.0f, 1.0f); }
 
+float runningShareOf(float rain, float celsius) { return 1.0f - aridityOf(rain, celsius) * (1.0f - FloodShare); }
+
 } // namespace derivean::sim

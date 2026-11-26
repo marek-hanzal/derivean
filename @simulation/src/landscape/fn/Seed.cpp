@@ -10,6 +10,7 @@ namespace {
 // the symmetry of an interpolated surface; relief comes from what the replay does with it.
 constexpr float RoughHeight[LevelCount] = {0, 14.0f, 2.2f, 0.22f, 0.02f};
 constexpr double RoughLength[LevelCount] = {0, 9000.0, 620.0, 42.0, 2.6};
+constexpr float LeastLake = 1.0f;   // m of water a parent cell holds for a finer level to keep its basin
 constexpr float GroundMantle = 0.3f;   // m of loose cover above which a ground tile starts rough in its mantle, not in its rock
 
 // The parent tiles under a domain, addressed by the parent's global cell index.
@@ -118,10 +119,13 @@ void seedFromPlanet(Domain& domain, const Setting& setting) {
             domain.rimFloor[i] = float(samplePlanet(backdrop.graded, point, Kernel::Linear));
         }
     }
-    injectInflow(domain, {PlanetCell,
-                          [&](int64_t gx, int64_t gz) { return backdrop.discharge.at(wrapIndex(int(gx), PlanetCells), wrapIndex(int(gz), PlanetCells)); },
-                          [&](int64_t gx, int64_t gz) { return backdrop.load.at(wrapIndex(int(gx), PlanetCells), wrapIndex(int(gz), PlanetCells)); },
-                          [&](int64_t gx, int64_t gz) { return backdrop.flowTo.at(wrapIndex(int(gx), PlanetCells), wrapIndex(int(gz), PlanetCells)); }});
+    // The planet's rivers enter where its drainage, routed finer than its own cells, crosses the
+    // domain's edge: near where the region's own valleys will take them, and at the same place for
+    // the two regions on either side of an edge.
+    const Drainage& drainage = backdrop.drainage;
+    injectInflow(domain, {Drainage::Cell, [&](int64_t gx, int64_t gz) { return drainage.discharge[drainage.index(gx, gz)]; },
+                          [&](int64_t gx, int64_t gz) { return drainage.load[drainage.index(gx, gz)]; },
+                          [&](int64_t gx, int64_t gz) { return drainage.flowTo[drainage.index(gx, gz)]; }});
 }
 
 void seedFromParent(Domain& domain, const Setting& setting, const TileLookup& lookup) {
@@ -129,7 +133,7 @@ void seedFromParent(Domain& domain, const Setting& setting, const TileLookup& lo
     const size_t level = size_t(domain.key.level);
     const double parentCell = domain.cell * Refinement;
     const bool ground = domain.key.level == Level::Ground;
-    if (ground) domain.standing.assign(domain.cells(), -1e9f);
+    domain.standing.assign(domain.cells(), -1e9f);
     if (domain.key.level == Level::Site) traceIce(domain, parent, parentCell);
     for (int z = 0; z < domain.size; ++z) {
         for (int x = 0; x < domain.size; ++x) {
@@ -155,16 +159,21 @@ void seedFromParent(Domain& domain, const Setting& setting, const TileLookup& lo
                 domain.ground.sediment[top][i] = std::max(0.0f, domain.ground.sediment[top][i] + rough);
             }
             domain.ground.datum[i] = std::max(domain.ground.rock[i], datum);
+            {
+                // The parent's standing water: a ground tile holds it as its own, and a finer level
+                // keeps the basin under it (levelHollows). Above the ground level a pit the parent's
+                // flood has barely filled is a hollow of its surface, not a lake.
+                const float least = ground ? 1e-3f : LeastLake;
+                const int64_t px = int64_t(std::floor(here.x / parentCell)), pz = int64_t(std::floor(here.z / parentCell));
+                domain.standing[i] = parent.at(px, pz, [least](const Tile& t, size_t c) {
+                    const float top = t.now.rock[c] + t.now.sediment[0][c] + t.now.sediment[1][c] + t.now.sediment[2][c];
+                    return t.water[c] > top + least ? t.water[c] : -1e9f;
+                });
+            }
             if (ground) {
-                // Ice and standing water are the parent's: a ground tile is too small to hold either by itself.
+                // Ice is the parent's: a ground tile is too small to hold it by itself.
                 domain.ice[i] = std::max(0.0f, parent.linear(fx, fz, [](const Tile& t, size_t c) { return t.ice[c]; }));
                 domain.iceAge[i] = std::max(0.0f, parent.linear(fx, fz, [](const Tile& t, size_t c) { return t.iceAge[c]; }));
-                const int64_t px = int64_t(std::floor(here.x / parentCell)), pz = int64_t(std::floor(here.z / parentCell));
-                const float held = parent.at(px, pz, [](const Tile& t, size_t c) {
-                    const float top = t.now.rock[c] + t.now.sediment[0][c] + t.now.sediment[1][c] + t.now.sediment[2][c];
-                    return t.water[c] > top + 1e-3f ? t.water[c] : -1e9f;
-                });
-                domain.standing[i] = held;
             }
             // The parent's rock uplift already holds its tectonics and the plate's response to erosion.
             domain.tectonic[i] = parent.linear(fx, fz, [](const Tile& t, size_t c) { return t.uplift[c]; });

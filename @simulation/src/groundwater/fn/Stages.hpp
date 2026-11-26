@@ -26,9 +26,6 @@ void readColumns(const Setting& setting, TileKey key, const Tile* const around[9
 // each cell, and how much a cell can pass on.
 void settleLevels(WaterField& field);
 
-// Sinks.cpp — how much of each stream on soluble rock goes underground, cell by cell.
-void sinkStreams(WaterField& field);
-
 // Route.cpp — follows the recharge through both storeys to where it comes out.
 void routeGroundWater(WaterField& field);
 
@@ -41,7 +38,10 @@ void growConduits(const WaterField& field, GroundwaterTile& tile);
 // Solve.cpp — everything after the columns are set, for a tile of the world or a field built by hand.
 std::shared_ptr<GroundwaterTile> solveField(WaterField& field);
 
-// The tile as the world's setting and the atlas's finished tiles give it.
-std::shared_ptr<GroundwaterTile> buildGroundwater(const Setting& setting, TileKey key, const Tile* const around[9]);
+struct RegionalTile;
+
+// The tile as the world's setting and the atlas's finished tiles give it, with the regional flow
+// of the region tiles under its field coming up into it (fn/Inflow.hpp; none where empty).
+std::shared_ptr<GroundwaterTile> buildGroundwater(const Setting& setting, TileKey key, const Tile* const around[9], const std::vector<const RegionalTile*>& regions = {});
 
 } // namespace derivean::sim

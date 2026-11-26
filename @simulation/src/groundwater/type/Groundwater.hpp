@@ -51,12 +51,13 @@ struct ConduitRecord {
 };
 
 // m³/yr over a tile's own cells. What enters the ground leaves it again:
-// recharge + sunk + lateralIn = springs + seepage + baseflow + deep + underflow + lateralOut.
+// recharge + sunk + regional + lateralIn = springs + seepage + baseflow + deep + underflow + lateralOut.
 struct WaterBudget {
     double rain{};          // falling on the tile
     double runoff{};        // of it, left by evaporation: what the landscape routes over the surface
     double recharge{};      // of the runoff, entering the ground where it falls
     double sunk{};          // of routed streams, going underground in soluble rock
+    double regional{};      // coming up from the regional flow (fn/Regional.hpp): water that went down tens of kilometres away
     double springs{};       // out at listed vents
     double seepage{};       // out in amounts too small to be a vent
     double baseflow{};      // out into streams, lakes and the sea
@@ -67,7 +68,7 @@ struct WaterBudget {
 };
 
 inline double imbalance(const WaterBudget& b) {
-    const double in = b.recharge + b.sunk + b.lateralIn, out = b.springs + b.seepage + b.baseflow + b.deep + b.underflow + b.lateralOut;
+    const double in = b.recharge + b.sunk + b.regional + b.lateralIn, out = b.springs + b.seepage + b.baseflow + b.deep + b.underflow + b.lateralOut;
     return in > 0 ? (in - out) / in : 0.0;
 }
 
@@ -84,7 +85,7 @@ struct GroundwaterTile {
     std::vector<float> emergence;   // m³/yr the ground returns to the surface in the cell: springs, seeps and baseflow
     std::vector<uint8_t> state;
     std::vector<uint8_t> rock[2];   // Material the water of each storey moves in
-    std::vector<uint8_t> from[2];   // neighbour most of a storey's water arrives from; 8 from the storey above; 255 none
+    std::vector<uint8_t> from[2];   // neighbour most of a storey's water arrives from; 8 from the storey above; 9 the regional flow; 255 its own recharge
     std::vector<Spring> springs;
     std::vector<SpringRecord> records;       // one per spring
     std::shared_ptr<const CaveField> caves;

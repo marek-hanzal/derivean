@@ -146,9 +146,10 @@ void testIceSheetLocal() {
     // The neighbour's ice carried on from those cells what this domain's own ice did.
     Tile neighbour;
     auto record = std::make_shared<SheetRecord>();
-    record->passing.assign(size_t(TileCells) * TileCells, 0.0f);
+    for (auto& part : record->passing) part.assign(size_t(TileCells) * TileCells, 0.0f);
     for (int z = Halo; z < Halo + TileCells; ++z)
-        for (int x = 0; x < Halo; ++x) record->passing[size_t(z - Halo) * TileCells + size_t(x - Halo + TileCells)] = work.left.passing[domain.index(x, z)];
+        for (int x = 0; x < Halo; ++x)
+            for (int c = 0; c < SedimentClasses; ++c) record->passing[c][size_t(z - Halo) * TileCells + size_t(x - Halo + TileCells)] = work.left.passing[c][domain.index(x, z)];
     neighbour.sheet = record;
     later.finished[3] = &neighbour;
     SheetWork laterWork;
@@ -191,6 +192,24 @@ void testIceSheetLocal() {
     expect(std::abs(moved) < 1e-4 * ended.deposited, "the ground at the ice's end changed by other than its ledger", moved);
     expect(std::abs(ended.eroded + ended.sedimentIn - ended.deposited - ended.sedimentOut) < 1e-4 * ended.eroded, "what the ice left at its end does not add up",
            ended.eroded + ended.sedimentIn - ended.deposited - ended.sedimentOut);
+
+    // A hollow under active ice fills with till; under thin ice that stagnated it stays open as a kettle.
+    const auto hollow = [&](float thickness) {
+        Domain pitted = plain();
+        constexpr int At[2] = {120, 100};
+        for (int dz = -1; dz <= 1; ++dz)
+            for (int dx = -1; dx <= 1; ++dx) pitted.ground.rock[pitted.index(At[0] + dx, At[1] + dz)] -= 6.0f;
+        ParentSheet sheet = eastward(pitted);
+        sheet.iceThen.assign(pitted.cells(), thickness);
+        SheetWork pittedWork;
+        leaveFiner(pitted, pittedWork, sheet, {});
+        float rim = 1e9f;
+        for (int k = 0; k < 8; ++k) rim = std::min(rim, groundOf(pitted, At[0] + 2 * NeighborX[k], At[1] + 2 * NeighborZ[k]));
+        return rim - groundOf(pitted, At[0], At[1]);
+    };
+    const float filled = hollow(800), kettle = hollow(StagnantIce - 50);
+    expect(kettle > 3, "a hollow under stagnant ice did not stay open", kettle);
+    expect(filled < 0.5f * kettle, "active ice did not fill a hollow more than stagnant ice", filled / std::max(1e-3f, kettle));
 
     // Ground no sheet reached is left alone and carries no record.
     Domain bare = plain();

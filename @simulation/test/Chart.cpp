@@ -33,8 +33,8 @@ SurfaceSample untouchedAt(const World& world, Vec2 position, Level finest) {
 
 // Every pixel is that surface at its centre where a tile the pitch may read is finished, and the planet
 // elsewhere. Returns how many pixels came from each level.
-std::array<int, 4> checkAgainstSurface(const World& world, const Chart& chart) {
-    std::array<int, 4> byLevel{};
+std::array<int, 5> checkAgainstSurface(const World& world, const Chart& chart) {
+    std::array<int, 5> byLevel{};
     Level finest{};
     const bool tiles = chartFinest(chart.pitch, finest);
     for (int j = 0; j < chart.size; ++j)
@@ -139,4 +139,11 @@ void testChart() {
     checkChartWater(world, focus, site, local);
 
     expect(world.atlas.finished() == before, "reading charts built a tile", double(world.atlas.finished() - before));
+
+    // A pitch of half a metre reads the ground tile the voxels are cut from, and the site around it.
+    surveyAt(world, focus, Level::Ground);
+    const TileKey under = tileAt(Level::Ground, focus);
+    const Vec2 middle{(under.x + 0.5) * tileSpan(Level::Ground), (under.z + 0.5) * tileSpan(Level::Ground)};
+    const auto byGround = checkAgainstSurface(world, chartOf(world, {middle, 2 * tileSpan(Level::Ground), 256}));
+    expect(byGround[4] >= 128 * 128 && byGround[4] + byGround[3] == 256 * 256, "a chart fine enough does not read the ground tile under it", byGround[4]);
 }

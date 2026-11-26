@@ -15,4 +15,8 @@ ParentSheet readParentSheet(const Domain& domain, const std::function<const Tile
 // Stretches of tunnel fill whose parent cell lies under the domain.
 std::vector<Tunnel> parentTunnels(const Domain& domain, const std::function<const Tile*(TileKey)>& tiles);
 
+// The sheet record of the finished neighbour that owns a halo cell, and the cell's index in it;
+// null where no finished neighbour with a record owns the cell.
+const SheetRecord* finishedSheet(const Domain& domain, int x, int z, size_t& at);
+
 } // namespace derivean::sim

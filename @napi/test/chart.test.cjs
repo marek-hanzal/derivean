@@ -25,11 +25,11 @@ function wellFormed(chart, request) {
   assert.equal(chart.pitch, request.span / request.size);
   assert.equal(chart.size, request.size);
   assert.ok(Number.isInteger(chart.tiles) && chart.tiles >= 0);
-  assert.ok(Number.isInteger(chart.finest) && chart.finest >= 0 && chart.finest <= 3 && chart.level.every((level) => level <= chart.finest));
+  assert.ok(Number.isInteger(chart.finest) && chart.finest >= 0 && chart.finest <= 4 && chart.level.every((level) => level <= chart.finest));
   for (const name of Floats) assert.ok(chart[name] instanceof Float32Array && chart[name].length === pixels, name);
   for (const name of Bytes) assert.ok(chart[name] instanceof Uint8Array && chart[name].length === pixels, name);
   for (const name of [...Floats, ...Bytes]) assert.equal(chart[name].buffer, chart.ground.buffer, `${name} shares the one buffer`);
-  assert.ok(chart.ground.every(Number.isFinite) && chart.level.every((level) => level <= 3) && chart.waters.every((kind) => kind <= 3));
+  assert.ok(chart.ground.every(Number.isFinite) && chart.level.every((level) => level <= 4) && chart.waters.every((kind) => kind <= 3));
   assert.ok(chart.waters.every((kind, pixel) => (kind === 0) === Number.isNaN(chart.water[pixel])), "water has a level exactly where it has a kind");
 }
 
@@ -62,12 +62,24 @@ test("a chart is promised at once and read while the session goes on advancing",
 });
 
 test("a chart around the player reads the tiles under them, and the same tiles give the same chart", { timeout: 300_000 }, async () => {
-  const request = { x: eye[0], z: eye[2], span: 800, size: 128 };
+  // The ground tile under the player is built after the start, with the voxels.
+  while (session.inspect(eye[0], eye[2]).level !== "ground") {
+    session.advance(controls);
+    await sleep(50);
+  }
+  // Half a metre a pixel reads the ground level: what the voxels are cut from and the inspector reads.
+  const request = { x: eye[0], z: eye[2], span: 64, size: 128 };
   const chart = await session.chart(request);
   wellFormed(chart, request);
-  assert.ok(chart.finest === 3 && chart.level[64 * 128 + 64] === 3, "the player stands on a finished site tile");
+  assert.ok(chart.finest === 4 && chart.level[64 * 128 + 64] === 4, "the player stands on a finished ground tile");
   const record = session.inspect(chart.origin[0] + 64.5 * chart.pitch, chart.origin[1] + 64.5 * chart.pitch);
+  assert.equal(record.level, "ground", "the inspector reads the level the chart reads");
   assert.ok(Math.abs(record.ground - chart.ground[64 * 128 + 64]) < 1e-3, "the chart and the inspector agree on the ground");
+  // A pixel wider than four ground cells reads the site level, which is all a map at that pitch can show.
+  const wide = { x: eye[0], z: eye[2], span: 800, size: 128 };
+  const map = await session.chart(wide);
+  wellFormed(map, wide);
+  assert.ok(map.finest === 3 && map.level[64 * 128 + 64] === 3, "a wide chart reads the site tile under the player");
 
   const again = await session.chart({ ...request, unless: chart.tiles });
   if (again !== null) assert.ok(again.tiles > chart.tiles, "a chart is only read again when tiles were finished meanwhile");
@@ -79,6 +91,11 @@ test("positions beyond the planet's span are charted and bad requests are refuse
   wellFormed(await session.chart(far), far);
   const farthest = { x: 1e12, z: -1e12, span: 1e6, size: 16 };
   wellFormed(await session.chart(farthest), farthest);
+  // Ground tile indices would not fit 32 bits out there: a chart fine enough for the ground level reads the site level.
+  const finest = { x: 1e12, z: -1e12, span: 64, size: 128 };
+  const outThere = await session.chart(finest);
+  wellFormed(outThere, finest);
+  assert.equal(outThere.finest, 3);
   for (const bad of [{ size: 0 }, { size: 4096 }, { span: 0 }, { span: Number.NaN }, { x: Infinity }, { z: "0" }])
     assert.throws(() => session.chart({ ...far, ...bad }), /Chart request/);
   assert.throws(() => session.chart(), /Missing chart request/);

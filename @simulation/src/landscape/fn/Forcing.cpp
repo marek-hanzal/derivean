@@ -1,5 +1,7 @@
 #include "landscape/fn/Forcing.hpp"
 
+#include "landscape/fn/Drainage.hpp"
+
 #include "climate/type/Climate.hpp"
 #include "core/fn/Hash.hpp"
 #include "core/fn/Noise.hpp"
@@ -82,7 +84,7 @@ void routePlanet(const Planet& planet, Backdrop& backdrop) {
 
 } // namespace
 
-Backdrop readBackdrop(const Planet& planet, double age) {
+Backdrop readBackdrop(const Planet& planet, double age, Workers* workers) {
     Backdrop backdrop;
     const int n = PlanetCells;
     backdrop.regionStart = std::min(windowAt(Level::Region, age).start, planet.time);
@@ -104,6 +106,7 @@ Backdrop readBackdrop(const Planet& planet, double age) {
         backdrop.residual.cells[i] = float((planet.elevation.cells[i] - past.elevation - IsostaticRise * (gain - removed)) / years);
     }
     routePlanet(planet, backdrop);
+    backdrop.drainage = drainPlanet(planet, backdrop, workers);
     return backdrop;
 }
 

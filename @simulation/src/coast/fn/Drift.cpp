@@ -7,10 +7,6 @@
 namespace derivean::sim {
 namespace {
 
-// Rise over run each class holds in the swash. Below the waterline a bed holds less the deeper it
-// lies, as SwashSlope/√(1 + depth/ProfileDepth): the concave shoreface of an equilibrium profile.
-constexpr float SwashSlope[SedimentClasses] = {0.27f, 0.08f, 0.004f};
-constexpr float ProfileDepth = 0.5f;
 constexpr float Closure = 2.5f;      // depth over wave height beyond which a bed is out of the waves' reach
 constexpr float Breaking = 2.0f;     // depth over wave height at which they move it most
 constexpr float GravelLift = 0.25f;  // how readily waves lift gravel against sand from a bed under water
@@ -25,8 +21,6 @@ constexpr float Carry[LevelCount] = {0, 8.0f, 5.0f, 3.0f, 0};
 constexpr float Stir[LevelCount] = {0, 3.0f, 1.5f, 0.3f, 0};
 constexpr size_t Outside = ~size_t(0);
 
-float holds(int kind, float depth) { return SwashSlope[kind] / std::sqrt(1.0f + std::max(0.0f, depth) / ProfileDepth); }
-
 // One train's pass over the shore, upwind cells first: each cell takes what was handed to it,
 // drops or lifts by what its waves can carry, and hands the rest on.
 struct Sweep {
@@ -35,6 +29,11 @@ struct Sweep {
     int train;
     float run, carry, stir;
     double area;
+    // The train at the cell being visited: its height, and the beach face each class takes under it (Beach.cpp).
+    float surge{}, face[SedimentClasses]{};
+
+    // Rise over run a class holds `depth` m below still water (above it, the face).
+    float holds(int kind, float depth) const { return profileSlope(kind, depth, surge, face[kind]); }
 
     // A cell the train crosses: the water covers it, or the train's swash does.
     bool covered(size_t i) const { return i != Outside && shore.wave[i * WaveDirections + size_t(train)] > 0; }
@@ -75,7 +74,7 @@ struct Sweep {
             shore.pending[kind][ahead] -= taken, moving[kind] += taken;
         }
         for (const int kind : {Fines, Sand, Coarse}) {
-            const float over = shore.top[ahead] - shore.top[i] - SwashSlope[kind] * run;
+            const float over = shore.top[ahead] - shore.top[i] - face[kind] * run;
             const float fallen = std::min({domain.ground.sediment[kind][ahead], 0.5f * over, reach});
             if (fallen <= 0) continue;
             lay(ahead, kind, -fallen);
@@ -88,20 +87,20 @@ struct Sweep {
     // The swash runs up the land ahead of the last cell the train crosses and leaves what it
     // carries: sand as high as sand lies, gravel above it, neither above the run-up of the waves.
     void swash(size_t i, float height, float moving[SedimentClasses]) {
-        const float water = shore.still[i], limit = water + swingOf(domain, water) + std::min(HighestBerm, Runup * height);
-        const int reach = std::clamp(int(HighestBerm / (SwashSlope[Sand] * run)) + 1, 1, 12);
+        const float water = shore.still[i], limit = water + swingOf(domain, water) + runUp(height, face[Sand]);
+        const int reach = std::clamp(int(HighestBerm / (face[Sand] * run)) + 1, 1, 12);
         float below = shore.top[i];
         size_t n = i;
         for (int step = 0; step < reach && moving[Coarse] + moving[Sand] > 0; ++step) {
             n = toward(n, train);
             if (n == Outside || domain.hold[n] != Free || shore.top[n] >= limit) return;
             for (const int kind : {Sand, Coarse}) {
-                const float laid = std::min(moving[kind], std::min(limit, below + SwashSlope[kind] * run) - shore.top[n]);
+                const float laid = std::min(moving[kind], std::min(limit, below + face[kind] * run) - shore.top[n]);
                 if (laid <= 0) continue;
                 lay(n, kind, laid);
                 moving[kind] -= laid;
             }
-            if (shore.top[n] > below + SwashSlope[Coarse] * run) return;
+            if (shore.top[n] > below + face[Coarse] * run) return;
             below = shore.top[n];
         }
     }
@@ -116,6 +115,8 @@ struct Sweep {
         if (!covered(i)) return;
         const size_t at = i * WaveDirections + size_t(train), straight = toward(i, train);
         const float water = shore.still[i], depth = water - shore.top[i], height = std::sqrt(shore.arrive[at]);
+        surge = height;
+        for (int kind = 0; kind < SedimentClasses; ++kind) face[kind] = faceSlope(kind, height);
         // A cell is as shallow as its bed gets on the way to the cell ahead: the surf of a shore
         // lies inside the last cell of water, however deep that cell is on average.
         const float shoal = straight == Outside ? depth : std::min(depth, water - 0.5f * (shore.top[i] + shore.top[straight]));

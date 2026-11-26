@@ -42,6 +42,12 @@ MagmaticCentre centreNear(const Planet& planet, Vec2 position, double time) {
     return {position + (site.site * CentreSpacing - material), site.cellX, site.cellZ, epoch, centreVigor(planet, site, epoch)};
 }
 
+MagmaticCentre centreNear(const Planet& planet, Vec2 position, Vec2 material, double time) {
+    const int64_t epoch = centreEpoch(time);
+    const CellularSite site = centreSite(planet, material, epoch);
+    return {position + (site.site * CentreSpacing - material), site.cellX, site.cellZ, epoch, centreVigor(planet, site, epoch)};
+}
+
 // Crust is handed between cells whole, so neighbouring columns can differ by a whole step of melt.
 // The heat of a belt is that of its columns spread over the belt's width, not of one column.
 void refreshMeltHeat(Planet& planet) {

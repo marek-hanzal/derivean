@@ -10,6 +10,14 @@ namespace derivean {
 // waits for every `every` seconds and whenever one changes, with what keeps each of them false.
 void watchReadiness(Game& game, double duration, double every);
 
+// Starts a game at x and z, puts the eye `height` metres above the ground there in flight, and
+// watches its readiness for `duration` seconds as watchReadiness does.
+void watchPlace(double age, double x, double z, double height, double duration);
+
+// Starts a game at x and z, puts the eye `height` metres above the ground there in flight, and
+// watches its readiness for `duration` seconds as watchReadiness does.
+void watchPlace(double age, double x, double z, double height, double duration);
+
 // Times the steps a game's start waits for, one after another, without a game (bench/Start.cpp).
 void timeStart(double age);
 

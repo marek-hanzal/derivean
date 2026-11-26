@@ -1,3 +1,5 @@
+// About 270 lines, one owner: the last sheet's pass over a finer domain's bed. What it takes up
+// and where it lodges it read the same flow, the same shelter and the same stripped depth.
 #include "icesheet/fn/Local.hpp"
 
 #include "icesheet/constant/Ice.hpp"
@@ -49,12 +51,13 @@ Vec2 flowAt(const Domain& domain, const ParentSheet& parent, int x, int z) {
     return length(fall) > 1e-6 ? normalized(fall) : Vec2{};
 }
 
-// m of debris a finished neighbour's last sheet carried on from a domain cell it owns; negative where none is recorded.
-float recordedPassing(const Domain& domain, int x, int z) {
-    const int tx = x < Halo ? -1 : x >= Halo + TileCells ? 1 : 0, tz = z < Halo ? -1 : z >= Halo + TileCells ? 1 : 0;
-    const Tile* tile = tx || tz ? domain.finished[(tz + 1) * 3 + tx + 1] : nullptr;
-    if (!tile || !tile->sheet || tile->sheet->passing.empty()) return -1;
-    return tile->sheet->passing[size_t(z - Halo - tz * TileCells) * TileCells + size_t(x - Halo - tx * TileCells)];
+// m of debris by class a finished neighbour's last sheet carried on from a domain cell it owns; false where none is recorded.
+bool recordedPassing(const Domain& domain, int x, int z, float passing[SedimentClasses]) {
+    size_t at = 0;
+    const SheetRecord* record = finishedSheet(domain, x, z, at);
+    if (!record || record->passing[0].empty()) return false;
+    for (int c = 0; c < SedimentClasses; ++c) passing[c] = record->passing[c][at];
+    return true;
 }
 
 } // namespace
@@ -97,10 +100,13 @@ SheetLoad takeUpBed(Domain& domain, SheetWork& work, const ParentSheet& parent) 
             if (domain.hold[i] != Free) {
                 // A cell this domain does not evolve feeds the ice what its owner's ice carried on
                 // from it; with no such record, the load in balance with what its bed would give.
-                const float recorded = domain.hold[i] == Settled ? recordedPassing(domain, x, z) : -1.0f;
-                const float passing = recorded >= 0 ? recorded : strip / lodged;
-                if (recorded < 0) carried.unstripped[i] = strip;
-                for (int c = 0; c < SedimentClasses; ++c) carried.load[c][i] = passing * (cover > 0 ? domain.ground.sediment[c][i] / cover : TillSplit[c]);
+                float recorded[SedimentClasses] = {};
+                if (domain.hold[i] == Settled && recordedPassing(domain, x, z, recorded)) {
+                    for (int c = 0; c < SedimentClasses; ++c) carried.load[c][i] = recorded[c];
+                    continue;
+                }
+                carried.unstripped[i] = strip;
+                for (int c = 0; c < SedimentClasses; ++c) carried.load[c][i] = strip / lodged * (cover > 0 ? domain.ground.sediment[c][i] / cover : TillSplit[c]);
                 continue;
             }
             if (strip <= 0 && speed < LeastSlide) continue;
@@ -221,20 +227,25 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
             // line falling from that rise at ShelterSlope. Till squeezed into it fills it first; a
             // cell it fills shelters the next, so the fill runs out behind the rise as a tail.
             // A hollow narrower than a cell the ice cannot sole into: till fills it to its lowest rim.
+            // Thin ice that stagnated as the sheet withdrew pressed into neither: the hollows under
+            // it stay open as kettles, and its load passes over them as over the rest of the bed.
+            const float pressing = std::clamp((parent.iceThen[i] - StagnantIce) / (PressingIce - StagnantIce), 0.0f, 1.0f);
             float cavity = pit < 1e30f ? std::max(0.0f, pit) : 0.0f;
-            for (int k = 1; k <= ShelterCells; ++k) {
+            for (int k = 1; k <= ShelterCells && pressing > 0; ++k) {
                 const int ux = x - int(std::lround(flow.x * k)), uz = z - int(std::lround(flow.z * k));
                 if (ux < 0 || uz < 0 || ux >= size || uz >= size) break;
                 const size_t u = domain.index(ux, uz);
                 cavity = std::max(cavity, groundOf(domain, u) - carried.unstripped[u] - ShelterSlope * float(k * domain.cell) - here);
             }
+            cavity *= pressing;
             const float lodging = weights <= 0 ? 1.0f : std::min(1.0f, cavity / total + (1.0f - std::exp(-1.0f / float(LodgeCells))));
             // A hollow in the ice surface has nowhere to pass its load on: it keeps all of it.
             kept = weights <= 0 ? 1.0f : std::min(lodging, room / total);
             const float stays[SedimentClasses] = {load[0] * kept, load[1] * kept, load[2] * kept};
             lay(domain, i, stays, work.left.till);
         }
-        if (free) work.left.passing[i] = total * (1 - kept);
+        if (free)
+            for (int c = 0; c < SedimentClasses; ++c) work.left.passing[c][i] = load[c] * (1 - kept);
         if (kept >= 1.0f || weights <= 0) continue;
         for (int k = 0; k < 8; ++k) {
             if (weight[k] <= 0) continue;

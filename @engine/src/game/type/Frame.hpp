@@ -4,7 +4,6 @@
 #include "nature/type/Air.hpp"
 #include "chronology/type/Calendar.hpp"
 #include "horizon/type/FarCubes.hpp"
-#include "horizon/type/Patch.hpp"
 #include "particles/type/Particles.hpp"
 #include "voxel/type/Mesh.hpp"
 #include "water/type/Water.hpp"
@@ -32,7 +31,7 @@ struct Target {
     Material material;
 };
 
-// Box in metres inside which voxel chunks, not far patches, are what the renderer must draw.
+// Box in metres inside which voxel chunks, not far cubes, are what the renderer must draw.
 struct VoxelBox {
     Position min, max;
 };
@@ -76,19 +75,18 @@ struct Frame {
     bool streamingReady{};
 
     bool flying{};
-    FarDelta far;
-    std::array<size_t, sim::LevelCount> farData{};   // far patches or cube chunks the renderer holds, by the coarsest data level they were built from
+    std::array<size_t, sim::LevelCount> farData{};   // cube chunks the renderer holds, by the coarsest data level they were built from
     CubeDelta cubes;
-    std::vector<CubeLevelView> cubeLevels;   // from the finest; empty in a game of patches
+    std::vector<CubeLevelView> cubeLevels;   // from the finest
     std::optional<VoxelBox> voxelBox;
     std::optional<double> ground;            // m, simulated ground under the eye
     std::optional<double> waterLevel;        // m, natural water standing over that ground
     bool siteReady{true}, localReady{true}, regionReady{true};   // simulation tiles the view wants are finished
     bool farReady{true};                     // the far terrain is whole and cut from the data it wants
     std::array<uint32_t, sim::LevelCount> tilesWanted{}, tilesFinished{};   // by sim::Level: what the view wants and how much of it is built
-    size_t pendingChunks{}, pendingPatches{};
+    size_t pendingChunks{}, pendingCubes{};   // voxel chunks and columns of far cubes the view is short of
     double generationMs{};                   // background time of the voxel columns that entered this frame
-    double streamingMs{};                    // game-thread time this frame spent bringing the planet in: tiles, voxels, far patches
+    double streamingMs{};                    // game-thread time this frame spent bringing the planet in: tiles, voxels, far cubes
 
     sim::Calendar calendar;                  // the world clock
     double dayOfYear{}, hour{};

@@ -88,7 +88,6 @@ PlanetOptions parseWorld(Napi::Value value) {
         options.spawn = {readNumber(point.Get(uint32_t(0)), -sim::PlanetSpan, sim::PlanetSpan),
                          readNumber(point.Get(uint32_t(1)), -sim::PlanetSpan, sim::PlanetSpan)};
     }
-    if (const Napi::Value cubes = input.Get("cubes"); !absent(cubes)) options.cubes = readFlag(cubes);
     if (const Napi::Value reach = input.Get("cubeReach"); !absent(reach)) options.cubeReach = int(readNumber(reach, 64, 256));
     return options;
 }

@@ -1,6 +1,6 @@
 // Measures what streaming a planet costs the game thread: a walk along the ground, then a minute of
 // fast flight into ground that was never loaded, both paced at 60 frames a second of real time so
-// that tile builds, voxel columns and far patches compete with the frames the way they do in play.
+// that tile builds, voxel columns and far cubes compete with the frames the way they do in play.
 #include "Bench.hpp"
 #include "game/type/Game.hpp"
 #include "nature/type/TileRequests.hpp"
@@ -69,8 +69,8 @@ struct Fill {
 
     void operator()(double, Command&) const {}
     bool operator()(double time, const Frame& frame) {
-        if (surface < 0 && (game.cubes ? game.cubes->ids : game.horizon.ids) > 0) surface = time;
-        if (far < 0 && surface >= 0 && frame.pendingPatches == 0) far = time;
+        if (surface < 0 && game.cubes.ids > 0) surface = time;
+        if (far < 0 && surface >= 0 && frame.pendingCubes == 0) far = time;
         if (voxels < 0 && frame.streamingReady && frame.voxelBox && frame.pendingChunks == 0) voxels = time;
         if (local < 0 && frame.localReady) local = time;
         if (region < 0 && frame.regionReady) region = time;
@@ -134,7 +134,8 @@ struct Arrive {
 } // namespace
 
 // engine-bench [age] start: what a game's start waits for, step by step
-// engine-bench [age] [patches|cubes] [engine workers, 0 for the machine's] [plain|favoured: the frame thread] [quick: no waiting for the far rings | ready [seconds, 300]: watch the readiness signals standing still]
+// engine-bench [age] at x z height [seconds, 300]: the readiness signals in flight `height` m above the ground there
+// engine-bench [age] [engine workers, 0 for the machine's] [plain|favoured: the frame thread] [quick: no waiting for the far rings | ready [seconds, 300]: watch the readiness signals standing still]
 int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IOLBF, 0);
     const double age = argc > 1 ? std::atof(argv[1]) : 2e9;
@@ -142,19 +143,22 @@ int main(int argc, char** argv) {
         timeStart(age);
         return 0;
     }
-    const bool cubes = argc > 2 && !std::strcmp(argv[2], "cubes"), plain = argc > 4 && !std::strcmp(argv[4], "plain");
-    const bool quick = argc > 5 && !std::strcmp(argv[5], "quick"), ready = argc > 5 && !std::strcmp(argv[5], "ready");
+    if (argc > 5 && !std::strcmp(argv[2], "at")) {
+        favourCallingThread();
+        watchPlace(age, std::atof(argv[3]), std::atof(argv[4]), std::atof(argv[5]), argc > 6 ? std::atof(argv[6]) : 300);
+        return 0;
+    }
+    const bool plain = argc > 3 && !std::strcmp(argv[3], "plain");
+    const bool quick = argc > 4 && !std::strcmp(argv[4], "quick"), ready = argc > 4 && !std::strcmp(argv[4], "ready");
     if (!plain) favourCallingThread();
     auto start = Clock::now();
-    PlanetOptions options{42, age, std::nullopt, 0};
-    options.cubes = cubes;
-    Game game(options);
-    if (const int crew = argc > 3 ? std::atoi(argv[3]) : 0) game.nature.crew.emplace(unsigned(crew));
-    std::printf("seed 42 age %g, far %s, frame thread %s: planet and spawn after %.1f s, %u simulation workers, %u engine workers\n", age,
-                cubes ? "cubes" : "patches", plain ? "plain" : "favoured", seconds(start), game.nature.world.workers.threads(), game.nature.crew->threads());
+    Game game(PlanetOptions{42, age, std::nullopt, 0});
+    if (const int crew = argc > 2 ? std::atoi(argv[2]) : 0) game.nature.crew.emplace(unsigned(crew));
+    std::printf("seed 42 age %g, frame thread %s: planet and spawn after %.1f s, %u simulation workers, %u engine workers\n", age,
+                plain ? "plain" : "favoured", seconds(start), game.nature.world.workers.threads(), game.nature.crew->threads());
 
     if (ready) {
-        watchReadiness(game, argc > 6 ? std::atof(argv[6]) : 300, 5);
+        watchReadiness(game, argc > 5 ? std::atof(argv[5]) : 300, 5);
         return 0;
     }
     Fill spawn{game, quick};
@@ -202,17 +206,14 @@ int main(int argc, char** argv) {
     report("away", "game-thread step", settling.step);
 
     const TerrainStream& stream = game.stream;
-    const Horizon& horizon = game.horizon;
-    std::printf("background: %zu voxel columns, %.3f ms each; %zu chunks, %.3f ms each; %zu far patches, %.3f ms each; %zu tiles finished\n",
+    std::printf("background: %zu voxel columns, %.3f ms each; %zu chunks, %.3f ms each; %zu tiles finished\n",
                 stream.builtColumns, stream.builtMs / double(std::max<size_t>(1, stream.builtColumns)), stream.builtChunks,
-                stream.builtMs / double(std::max<size_t>(1, stream.builtChunks)), horizon.builds,
-                horizon.buildMs / double(std::max<size_t>(1, horizon.builds)), game.nature.world.atlas.finished());
+                stream.builtMs / double(std::max<size_t>(1, stream.builtChunks)), game.nature.world.atlas.finished());
     std::printf("background: %zu hourly weather steps, %.2f ms each\n", game.weather.steps,
                 game.weather.stepMs / double(std::max<size_t>(1, game.weather.steps)));
-    if (!game.cubes) return 0;
     size_t held = 0;
     for (int level = FinestCubes; level <= CoarsestCubes; ++level) {
-        const CubeLevel& state = game.cubes->levels[size_t(level - FinestCubes)];
+        const CubeLevel& state = game.cubes.levels[size_t(level - FinestCubes)];
         const double builds = double(std::max<size_t>(1, state.builds));
         std::printf("cubes of %7.1f m: %4zu chunks held, %5zu built, %7.0f faces and %6.2f ms a chunk\n", edgeOf(level), state.shown, state.builds,
                     double(state.faces) / builds, state.buildMs / builds);

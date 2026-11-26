@@ -5,8 +5,8 @@
 
 namespace derivean::sim {
 
-// Finest level a chart of this pitch reads, never finer than Site; false when a pixel is too wide
-// even for a region.
+// Finest level a chart of this pitch reads, down to Ground (what the voxels are cut from, so a chart
+// fine enough agrees with what the player stands on); false when a pixel is too wide even for a region.
 bool chartFinest(double pitch, Level& finest);
 
 // Reads the square from what is finished: each pixel from the finest tile level built under its

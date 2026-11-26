@@ -90,15 +90,11 @@ void projectNature(Game& game, Frame& frame) {
     projectScene(game, frame);
     const Footing footing = footingAt(game, frame.eye);
     const double clearance = footing.ground ? frame.eye[1] - *footing.ground : 0.0;
-    if (game.cubes) {
-        const Position velocity = game.physics.velocity();
-        advanceCubes(*game.cubes, game.nature, frame.eye, clearance, std::hypot(velocity[0], velocity[1], velocity[2]), frame.cubes);
-        for (int level = FinestCubes; level <= CoarsestCubes; ++level) {
-            const CubeLevel& held = game.cubes->levels[size_t(level - FinestCubes)];
-            frame.cubeLevels.push_back({level, held.wanted, held.held, held.settled, held.box});
-        }
-    } else {
-        advanceHorizon(game.horizon, game.nature, frame.eye, clearance, frame.far);
+    const Position velocity = game.physics.velocity();
+    advanceCubes(game.cubes, game.nature, frame.eye, clearance, std::hypot(velocity[0], velocity[1], velocity[2]), frame.cubes);
+    for (int level = FinestCubes; level <= CoarsestCubes; ++level) {
+        const CubeLevel& held = game.cubes.levels[size_t(level - FinestCubes)];
+        frame.cubeLevels.push_back({level, held.wanted, held.held, held.settled, held.box});
     }
     frame.streamingMs += millisecondsSince(start);
 
@@ -111,9 +107,9 @@ void projectNature(Game& game, Frame& frame) {
     frame.tilesWanted = game.nature.tiles.wanted;
     frame.tilesFinished = game.nature.tiles.finished;
     frame.pendingChunks = game.stream.missing + game.stream.arrived.size() + game.view.queue.size();
-    frame.pendingPatches = game.cubes ? game.cubes->missing : game.horizon.missing;
-    frame.farReady = game.cubes ? game.cubes->whole : game.horizon.missing == 0 && game.horizon.settled;
-    frame.farData = game.cubes ? game.cubes->shownByData : game.horizon.shownByData;
+    frame.pendingCubes = game.cubes.missing;
+    frame.farReady = game.cubes.whole;
+    frame.farData = game.cubes.shownByData;
     frame.streamingReady = !game.held;
     projectSky(game, frame, footing.ground);
 }
@@ -147,20 +143,16 @@ Game::Game(const PlanetOptions& options) : nature(NatureOptions{options.seed, op
     startWeather(weather, nature, calendar);
     world.streamed.emplace();
     stream.finished = std::make_shared<Mailbox<ColumnResult>>();
-    horizon.finished = std::make_shared<Mailbox<FarPatch>>();
-    if (options.cubes) {
-        cubes.emplace();
-        cubes->reach = std::clamp(options.cubeReach, 64, 256);
-        cubes->finished = std::make_shared<Mailbox<CubeColumn>>();
-        // The tiles the view wants are the ones its levels read; the ground level also feeds the voxels.
-        for (const sim::Level level : {sim::Level::Local, sim::Level::Site}) {
-            nature.tiles.reach[size_t(level)] = cubeDataReach(*cubes, level);
-            nature.tiles.ceiling[size_t(level)] = cubeCeiling(*cubes, level);
-        }
-        nature.tiles.reach[size_t(sim::Level::Region)] = cubeDataReach(*cubes, sim::Level::Region);
-        nature.tiles.reach[size_t(sim::Level::Ground)] = std::max(GroundReach, cubeDataReach(*cubes, sim::Level::Ground));
-        nature.tiles.ceiling[size_t(sim::Level::Ground)] = std::max(GroundCeiling, cubeCeiling(*cubes, sim::Level::Ground));
+    cubes.reach = std::clamp(options.cubeReach, 64, 256);
+    cubes.finished = std::make_shared<Mailbox<CubeColumn>>();
+    // The tiles the view wants are the ones its levels read; the ground level also feeds the voxels.
+    for (const sim::Level level : {sim::Level::Local, sim::Level::Site}) {
+        nature.tiles.reach[size_t(level)] = cubeDataReach(cubes, level);
+        nature.tiles.ceiling[size_t(level)] = cubeCeiling(cubes, level);
     }
+    nature.tiles.reach[size_t(sim::Level::Region)] = cubeDataReach(cubes, sim::Level::Region);
+    nature.tiles.reach[size_t(sim::Level::Ground)] = std::max(GroundReach, cubeDataReach(cubes, sim::Level::Ground));
+    nature.tiles.ceiling[size_t(sim::Level::Ground)] = std::max(GroundCeiling, cubeCeiling(cubes, sim::Level::Ground));
     colliders.finished = std::make_shared<Mailbox<ShapeResult>>();
     spawn = findSpawn(nature.world, options.spawn);
     physics.returnPlayer(spawn);

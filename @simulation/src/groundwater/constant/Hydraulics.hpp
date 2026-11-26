@@ -14,9 +14,10 @@ namespace derivean::sim {
 // Rings a build spoils from the field's edge: 1 (slope and lie of the beds, clamped at the edge),
 // 1 (ways and outlets read the neighbour's column), LevelSweeps, 1 (shares read the neighbour's
 // level), RouteSweeps, 1 (the sweep that finds what is still under way), 1 (a vent asks its
-// neighbours whether water already runs in from above). The streams that sink take SinkSweeps + 2
-// before the routing instead of the levels' LevelSweeps + 3. A stage that adds a read of a
-// neighbour adds a ring.
+// neighbours whether water already runs in from above). The regional inflow (fn/Inflow.cpp) is
+// spread over a region cell's 16 × 16 cells by their streams, so a clamped slope in the outer ring
+// spoils the inflow 16 cells deep; that is inside the levels' rings and reaches only the routing.
+// A stage that adds a read of a neighbour adds a ring.
 // Water is followed RouteSweeps cells (3.5 km). What travels farther is booked as underflow: in
 // hill country a third of the recharge, under faulted plateaus and confined beds most of it, a
 // regional flow below the streams that only a coarser model could follow. Cost grows with the
@@ -24,9 +25,8 @@ namespace derivean::sim {
 inline constexpr int WaterReach = 96;
 inline constexpr int FieldCells = TileCells + 2 * WaterReach;
 inline constexpr int LevelSweeps = 36;   // cells over which the level of a valley is felt under the ground beside it
-inline constexpr int SinkSweeps = 24;    // cells a sinking stream's losses are followed down its course
 inline constexpr int RouteSweeps = 54;   // cells ground water is followed; what travels farther is booked as underflow
-static_assert((LevelSweeps > SinkSweeps ? LevelSweeps : SinkSweeps) + RouteSweeps + 5 < WaterReach);
+static_assert(LevelSweeps + RouteSweeps + 5 < WaterReach && 16 <= LevelSweeps + 3);
 
 inline constexpr double WaterCell = 64.0;                             // m
 inline constexpr float WaterCellArea = float(WaterCell * WaterCell);  // m²

@@ -11,7 +11,7 @@
 namespace derivean {
 namespace {
 
-constexpr double MaxPosition = 1e12;                // m; tile indices of the finest level still fit 32 bits there
+constexpr double MaxPosition = 1e12;                // m; site tile indices still fit 32 bits there, and the chart reads no ground tile so far out
 constexpr double MaxSpan = 64 * sim::PlanetSpan;    // m
 constexpr double MinSpan = 1.0;                     // m
 constexpr int MaxSize = 1024;                       // pixels per side

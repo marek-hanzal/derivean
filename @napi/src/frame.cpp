@@ -14,16 +14,6 @@ Napi::Object chunkMesh(Napi::Env env, const ChunkMesh& value) {
     return chunk;
 }
 
-// A renderer of far patches reads faces without the occlusion word.
-Napi::Value faceWords(Napi::Env env, const FaceMesh& faces, bool occluded) {
-    if (occluded) return packed(env, faces);
-    constexpr size_t words = FaceWords - 1;
-    const size_t count = faces.size() / FaceWords;
-    auto array = Napi::TypedArrayOf<int16_t>::New(env, count * words);
-    for (size_t face = 0; face < count; ++face) std::memcpy(array.Data() + face * words, faces.data() + face * FaceWords, words * sizeof(int16_t));
-    return array;
-}
-
 Napi::Value clouds(Napi::Env env, const Frame& frame) {
     if (!frame.clouds) return env.Null();
     const sim::CloudField& field = *frame.clouds;
@@ -83,7 +73,11 @@ void sky(Napi::Env env, const Frame& frame, Napi::Object output) {
 Napi::Object natural(Napi::Env env, const Frame& frame, Napi::Object output) {
     sky(env, frame, output);
     output["flying"] = frame.flying;
-    output["far"] = farPatches(env, frame);
+    // Always empty; kept because the renderer's capture stall rule reads it.
+    auto far = Napi::Object::New(env);
+    far["added"] = Napi::Array::New(env);
+    far["removed"] = Napi::Array::New(env);
+    output["far"] = far;
     output["cubes"] = farCubes(env, frame);
     if (frame.voxelBox) {
         auto box = Napi::Object::New(env);
@@ -112,7 +106,7 @@ Napi::Object natural(Napi::Env env, const Frame& frame, Napi::Object output) {
     output["tiles"] = tiles;
     auto pending = Napi::Object::New(env);
     pending["chunks"] = double(frame.pendingChunks);
-    pending["patches"] = double(frame.pendingPatches);
+    pending["patches"] = double(frame.pendingCubes);
     output["pending"] = pending;
     output["generationMs"] = frame.generationMs;
     output["streamingMs"] = frame.streamingMs;
@@ -132,16 +126,14 @@ Napi::Object renderFrame(Napi::Env env, const Frame& frame) {
     } else {
         output["target"] = env.Null();
     }
-    const bool occluded = !frame.cubeLevels.empty();
-    const auto mesh = [occluded](Napi::Env env, const ChunkMesh& value) {
+    const auto mesh = [](Napi::Env env, const ChunkMesh& value) {
         auto chunk = chunkMesh(env, value);
-        chunk["faces"] = faceWords(env, value.faces, occluded);
+        chunk["faces"] = packed(env, value.faces);
         chunk["quads"] = env.Null();
         return chunk;
     };
-    // In a world of cubes the ground comes as packed quads, like the far chunks.
-    output["chunks"] = project(env, frame.chunks, [&](Napi::Env env, const ChunkMesh& value) {
-        if (!occluded) return mesh(env, value);
+    // The ground comes as packed quads, like the far chunks.
+    output["chunks"] = project(env, frame.chunks, [](Napi::Env env, const ChunkMesh& value) {
         auto chunk = chunkMesh(env, value);
         chunk["faces"] = Napi::Int16Array::New(env, 0);
         chunk["quads"] = quads(env, value.faces);
@@ -149,10 +141,10 @@ Napi::Object renderFrame(Napi::Env env, const Frame& frame) {
     });
     output["waterMeshes"] = project(env, frame.waterMeshes, mesh);
     output["unloaded"] = project(env, frame.unloaded, coordinates);
-    output["spawned"] = project(env, frame.spawned, [occluded](Napi::Env env, const DebrisMesh& value) {
+    output["spawned"] = project(env, frame.spawned, [](Napi::Env env, const DebrisMesh& value) {
         auto body = Napi::Object::New(env);
         body["id"] = value.id;
-        body["faces"] = faceWords(env, value.faces, occluded);
+        body["faces"] = packed(env, value.faces);
         return body;
     });
     output["debris"] = project(env, frame.debris, [](Napi::Env env, const DebrisPose& value) {

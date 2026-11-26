@@ -1,5 +1,5 @@
 import { abs, cameraPosition, exp, float, length, max, mix, normalize, select, smoothstep, vec3 } from "three/tsl";
-import { CleanAir, CleanAirHeight, HazeAir, HazeAirHeight, VeilReach } from "../constant/air";
+import { CleanAir, CleanAirHeight, HazeAir, HazeAirHeight, HighHaze, HighHazeHeight, VeilReach } from "../constant/air";
 import type { SkyNodes } from "../type/SkyNodes";
 import type { Node } from "three/webgpu";
 import { skyRadiance } from "./radiance";
@@ -24,7 +24,7 @@ export function airLight(sky: SkyNodes, direction: Vec3, range: Float) {
 }
 
 // Aerial perspective: what distance does to a colour seen through the air. Light is lost along the way and the
-// sky's own light scattered in, blue first. Both the clean air and the haze in it thin with height. At the end of
+// sky's own light scattered in, blue first. The clean air and the haze in it thin with height. At the end of
 // the view the ground has become the clear sky just above the horizon in its direction, which is what the
 // background draws there, so the terrain never ends in an edge.
 export function airFade(sky: SkyNodes, color: Vec3, fromEye: Vec3) {
@@ -32,7 +32,7 @@ export function airFade(sky: SkyNodes, color: Vec3, fromEye: Vec3) {
   const from = cameraPosition.y.sub(sky.airSea);
   const to = from.add(fromEye.y);
   const depth = vec3(...CleanAir).mul(airMean(from, to, CleanAirHeight)).add(airMean(from, to, HazeAirHeight).mul(HazeAir))
-    .mul(range).mul(sky.airShare);
+    .add(airMean(from, to, HighHazeHeight).mul(HighHaze / HighHazeHeight)).mul(range).mul(sky.airShare);
   const lost = max(exp(depth.negate()).oneMinus(), smoothstep(sky.airEnd.x, sky.airEnd.y, range));
   // Just over the horizon the way the ground lies, also for ground straight below.
   const low = normalize(vec3(fromEye.x.add(1e-3), max(fromEye.y, 0).mul(0.4).add(length(fromEye.xz).mul(0.03)), fromEye.z));

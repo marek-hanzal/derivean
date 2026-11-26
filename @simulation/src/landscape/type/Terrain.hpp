@@ -1,6 +1,7 @@
 #pragma once
 
 #include "aeolian/type/Aeolian.hpp"
+#include "groundwater/type/Sinking.hpp"
 #include "landscape/type/Level.hpp"
 #include "ore/type/Ore.hpp"
 #include "strata/type/Column.hpp"
@@ -57,9 +58,12 @@ struct Tile {
     Ground now;                     // state at `time`
     // The same state as this tile's own replay left it, including Apron cells beyond its edge. A
     // later neighbour blends towards it so the shared edge carries no step.
+    // At Local and Site it is the ground before the last ice sheet passed (landscape/fn/Replay.cpp).
     Ground nowWide;                 // (TileCells + 2·Apron)² entries
     std::vector<float> water;       // m, water surface where water stands or flows; below ground when dry
     std::vector<float> discharge;   // m³/yr, mean annual
+    std::vector<float> sunk;        // m³/yr that went down into soluble rock in each cell: soaked in and taken from streams (groundwater/type/Sinking.hpp); empty where none did
+    std::vector<float> seeped;      // m³/yr of passing flood water each cell's loose bed took in (aeolian/fn/Soak.cpp), the groundwater's recharge; empty where none did
     std::vector<float> load;        // m³/yr of sediment the water carries in
     std::vector<uint8_t> flowTo;    // neighbour index 0..7 the main flow leaves by, 255 for none
     std::vector<uint8_t> rock;      // Material of the solid rock at the top of the column
@@ -81,6 +85,10 @@ struct Tile {
 };
 
 enum Hold : uint8_t { Free, Settled, Rim };
+
+inline constexpr int NeighborX[8] = {1, 1, 0, -1, -1, -1, 0, 1};
+inline constexpr int NeighborZ[8] = {0, 1, 1, 1, 0, -1, -1, -1};
+inline constexpr float NeighborReach[8] = {1, 1.41421356f, 1, 1.41421356f, 1, 1.41421356f, 1, 1.41421356f};
 
 inline constexpr int Apron = 4;
 inline constexpr int WideCells = TileCells + 2 * Apron;
@@ -131,6 +139,12 @@ struct Domain {
     std::vector<float> inflowLoad;  // m³/yr of sediment that water brings
     std::vector<float> settledFlow; // m³/yr a finished neighbour already carries through its cells
     std::vector<float> settledLoad; // m³/yr of sediment it carries with that water
+    std::vector<float> standing;    // m, water surface the parent holds over the cell; far below the ground where it is dry; empty in a region
+    // Neighbour 0..7 by which a finished neighbour's water leaves a cell into a cell this domain
+    // evolves, 255 elsewhere. That water and its load enter there as `inflow`, wherever this
+    // domain's own ground would send them: a finished cell does not erode, and a river that met it
+    // as a dam would be lost to both tiles.
+    std::vector<uint8_t> settledWay;
     std::vector<float> windX, windZ;   // m/s, prevailing
     std::vector<uint8_t> outlet;    // Rim cells through which the coarser level says water leaves the domain
     std::vector<float> rimSlope;    // slope a free Rim cell keeps cutting at; 0 for a rim that follows a given path
@@ -143,6 +157,7 @@ struct Domain {
     std::vector<int32_t> rank;      // position of each cell in `order`
     std::vector<int32_t> spill;     // neighbour that drains a cell with no lower neighbour, else -1
     std::vector<float> discharge;   // m³/yr
+    std::vector<float> seeped;      // m³/yr of the water reaching each cell that its loose bed took in (routeWater); empty until a bed took any
 
     // Records.
     std::vector<float> ice, iceAge;
@@ -156,17 +171,24 @@ struct Domain {
     VolcanicDomain volcanic;        // vents and the pile they lay (volcanic/type/Pile.hpp); its arrays stay empty until something volcanic touches the domain
     std::shared_ptr<SheetWork> sheet;   // continental ice over the domain during this replay (icesheet/type/Sheet.hpp); null until first asked for
     WindField aeolian;              // the wind's regime, what it has laid and left, and its sand kept aside (aeolian/type/Aeolian.hpp)
+    SinkWork sinking;               // surface water going down into soluble rock (groundwater/type/Sinking.hpp); empty until a step meets such rock
 
     // Ground level only.
     std::vector<Bed> bed;           // the bed each cell has cut into; `unit` then holds the parting inside it
     std::vector<double> laidDown;   // yr that bed's unit began to accumulate; 0 for basement
     std::vector<OreField> ore;      // per strata node: bodies that cut the beds there
     std::vector<float> stream;      // m³/yr working a cell's bed: its own flow or, within a river's width, the river's
-    std::vector<float> standing;    // m, water surface the parent holds over the cell; far below the ground where it is dry
     float frost{};                  // share of the year rock spends in the frost-cracking window, at the middle of the tile
     float halfRange{};              // °C between the annual mean and the warmest month
 
     size_t index(int x, int z) const { return size_t(z) * size_t(size) + size_t(x); }
+    // A finished neighbour's cell `from` hands its river to the evolving cell `to`, which therefore
+    // may not drain back into it.
+    bool handsOn(size_t from, size_t to) const {
+        if (settledWay.empty() || settledWay[from] > 7) return false;
+        return index(int(from % size_t(size)) + NeighborX[settledWay[from]], int(from / size_t(size)) + NeighborZ[settledWay[from]]) == to;
+    }
+    bool handsOnward(size_t from) const { return !settledWay.empty() && settledWay[from] < 8; }
     size_t cells() const { return size_t(size) * size_t(size); }
     Vec2 center(int x, int z) const { return {origin.x + (x + 0.5) * cell, origin.z + (z + 0.5) * cell}; }
     bool owned(int x, int z) const { return x >= Halo && z >= Halo && x < Halo + TileCells && z < Halo + TileCells; }
@@ -185,9 +207,5 @@ struct Domain {
     }
     float sedimentAt(size_t i) const { return ground.sediment[0][i] + ground.sediment[1][i] + ground.sediment[2][i]; }
 };
-
-inline constexpr int NeighborX[8] = {1, 1, 0, -1, -1, -1, 0, 1};
-inline constexpr int NeighborZ[8] = {0, 1, 1, 1, 0, -1, -1, -1};
-inline constexpr float NeighborReach[8] = {1, 1.41421356f, 1, 1.41421356f, 1, 1.41421356f, 1, 1.41421356f};
 
 } // namespace derivean::sim

@@ -50,6 +50,29 @@ void sampleBlock(World& world, const Block& block, Material* materials) {
     // A void is a property of a point; each column asks the field of the local tile it stands in.
     TileKey caveKey = tileAt(Level::Local, {block.originX, block.originZ});
     std::shared_ptr<const CaveField> caves = caveFieldAt(world, {block.originX, block.originZ});
+    // m/yr the ground sheds at a point (runoffOf the site cells' rain and warmth), interpolated
+    // between the cell centres so grikes do not step at the cells' edges.
+    const double siteCell = specOf(Level::Site).cell;
+    const auto cellRunoff = [&](int64_t gx, int64_t gz, float& runoff) {
+        const int32_t tx = int32_t(std::floor(double(gx) / TileCells)), tz = int32_t(std::floor(double(gz) / TileCells));
+        const Tile* tile = site.tile(tx, tz);
+        if (!tile || tile->rain.empty()) return false;
+        const size_t at = size_t(gz - int64_t(tz) * TileCells) * TileCells + size_t(gx - int64_t(tx) * TileCells);
+        runoff = runoffOf(tile->rain[at], tile->warmth[at]);
+        return true;
+    };
+    const auto siteRunoff = [&](double x, double z) {
+        const double fx = x / siteCell - 0.5, fz = z / siteCell - 0.5;
+        const int64_t gx = int64_t(std::floor(fx)), gz = int64_t(std::floor(fz));
+        const float tx = float(fx - double(gx)), tz = float(fz - double(gz));
+        float sum = 0, weights = 0;
+        for (int corner = 0; corner < 4; ++corner) {
+            const int dx = corner & 1, dz = corner >> 1;
+            const float weight = (dx ? tx : 1 - tx) * (dz ? tz : 1 - tz);
+            if (float runoff; weight > 0 && cellRunoff(gx + dx, gz + dz, runoff)) sum += weight * runoff, weights += weight;
+        }
+        return weights > 0 ? sum / weights : 0.0f;
+    };
     const size_t layer = size_t(block.countX) * size_t(block.countZ);
     for (int iz = 0; iz < block.countZ; ++iz) {
         for (int ix = 0; ix < block.countX; ++ix) {
@@ -64,6 +87,7 @@ void sampleBlock(World& world, const Block& block, Material* materials) {
             FormSetting here{setting.seed, blendThickness(nearest.strata, corner, weight), nearest.strataCentre, nearest.ore, &nearest.strata, nearest.masses};
             const TileKey under = tileAt(Level::Ground, {x, z});
             if (const Tile* tile = fine.tile(under.x, under.z)) here.volcanic = tile->volcanic.get();
+            here.runoff = siteRunoff(x, z);   // bare soluble rock opens by it into grikes (groundwater/fn/Pavement.hpp)
             const double ex = x / ExposureLattice - double(openX), ez = z / ExposureLattice - double(openZ);
             const int ox = std::clamp(int(ex), 0, openCountX - 2), oz = std::clamp(int(ez), 0, openCountZ - 2);
             const float tx = float(ex - ox), tz = float(ez - oz);

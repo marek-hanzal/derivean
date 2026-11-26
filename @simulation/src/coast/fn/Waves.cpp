@@ -16,9 +16,6 @@ constexpr float SmoothBed = 0.2f;       // friction of such a bed against a rock
 // that caps every train.
 constexpr float ShallowSea = 0.283f;
 constexpr float ShallowDepth = 0.530f;
-// Height over deep-water wavelength of a wind sea (Hs/L0 ≈ 0.04, Tp ≈ 4·√Hs): it sets the period,
-// and the period how deep the bed lies under the wave.
-constexpr float Steepness = 0.04f;
 
 // m², the square of the highest wave a wind of square speed `gale` raises over water `depth` deep.
 float shallowSea(float depth, float gale) {
@@ -30,7 +27,7 @@ float shallowSea(float depth, float gale) {
 // linear theory the motion at the bed is the shallow-water one times √(kh·tanh kh)/sinh kh, and the
 // energy travels at n·c instead of √(g·h). kh by Fenton and McKee (1990) from the deep-water k0·h.
 float bedShare(float height, float depth) {
-    const float deep = 2 * float(std::numbers::pi) * Steepness * depth / height;
+    const float deep = 2 * float(std::numbers::pi) * WindSeaSteepness * depth / height;
     const float kh = deep * std::pow(1.0f / std::tanh(std::pow(deep, 0.75f)), 2.0f / 3.0f);
     if (kh > 10) return 0;
     const float rising = std::tanh(kh), orbit = std::sqrt(kh * rising) / std::sinh(kh), share = 0.5f * (1 + 2 * kh / std::sinh(2 * kh));
@@ -74,7 +71,7 @@ void raiseWaves(const Domain& domain, Shore& shore) {
             shore.arrive[at] = energy;
             // Ground that stands out of high water is still crossed by a train whose swash runs over it.
             float depth = water + swingOf(domain, water) - shore.top[i];
-            if (depth <= 0 && energy > 0) depth += std::min(HighestBerm, Runup * std::sqrt(energy));
+            if (depth <= 0 && energy > 0) depth += runUp(std::sqrt(energy), faceSlope(Sand, std::sqrt(energy)));
             if (depth <= 0) return;
             const float gale = shore.gale[at], limit = std::sqrt(shallowSea(depth, gale)), most = std::min(FullSea * gale, limit);
             if (energy < most * most) {

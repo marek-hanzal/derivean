@@ -3,7 +3,7 @@
 #include "game/type/Command.hpp"
 #include "game/type/Frame.hpp"
 #include "granular/type/Sand.hpp"
-#include "horizon/type/Horizon.hpp"
+#include "horizon/type/FarCubes.hpp"
 #include "nature/service/Nature.hpp"
 #include "nature/type/Weather.hpp"
 #include "terrain/type/TerrainStream.hpp"
@@ -77,8 +77,7 @@ struct Game {
 
     TerrainStream stream;
     EditStore edits;
-    Horizon horizon;
-    std::optional<FarCubes> cubes;   // set in a game whose far terrain is cubes; `horizon` then rests
+    FarCubes cubes;          // the far terrain
     ColliderQueue colliders;
     StreamView view;
 };

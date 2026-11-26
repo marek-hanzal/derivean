@@ -8,7 +8,7 @@ World::World(WorldOptions chosen)
     : options(chosen),
       workers(chosen.threads),
       planet(evolvePlanet(chosen.seed, chosen.age, workers)),
-      backdrop(readBackdrop(planet, chosen.age)),
+      backdrop(readBackdrop(planet, chosen.age, &workers)),
       atlas(Setting{chosen.seed, chosen.age, &planet, &backdrop}, workers),
       ocean(fillOcean(planet, chosen.age)) {
     interventions.calendar.era = chosen.age;

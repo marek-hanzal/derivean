@@ -1,6 +1,7 @@
 #pragma once
 
 #include "icesheet/fn/Parent.hpp"
+#include "icesheet/type/Esker.hpp"
 
 namespace derivean::sim {
 
@@ -17,6 +18,12 @@ namespace derivean::sim {
 // domain that holds it. Tunnels come from a Region parent only: at Site the Local ridge is part of
 // the parent's surface already.
 EskerFill setAsideEskers(Domain& domain, const ParentSheet& parent, const std::vector<Tunnel>& tunnels);
+
+// EskerPath.cpp — where the tunnels ran through the domain. Water under the ice runs down its head
+// (bed + 0.917 · the ice over it), so each chain of the parent's stretches is followed down the head
+// on the domain's own cells, within the parent cells its route crossed; the bed's own relief bends
+// it. Through cells a finished neighbour owns it keeps to the ridge that neighbour recorded.
+std::vector<EskerTrack> traceEskers(const Domain& domain, const ParentSheet& parent, const std::vector<Tunnel>& tunnels);
 void layEskers(Domain& domain, SheetWork& work, const EskerFill& fill);
 
 // Lodge.cpp — the ice takes up the loose cover of the cells it slid over (as much as one glaciation

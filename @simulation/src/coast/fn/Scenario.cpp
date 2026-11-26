@@ -32,7 +32,7 @@ Shape shapeOf(const CoastSpec& spec, double x, double z, double cell, double rou
         // A hollow with an outlet to the south, so the lake stands at the lip of that channel.
         const bool channel = std::abs(x) < 2.5 && z > 0;
         const double inland = radius - shoreAt;
-        return {float(channel && inland > 0 ? 0.02 - 0.001 * inland : inland >= 0 ? 0.4 + 0.04 * inland * cell + rough : 0.03 * inland * cell - 0.3), std::abs(inland) < 24};
+        return {float(channel && inland > 0 ? 0.02 - 0.001 * inland : inland >= 0 ? 0.4 + spec.bank * inland * cell + rough : 0.03 * inland * cell - 0.3), std::abs(inland) < 24};
     }
     double shoreline = 0;
     if (spec.scene == CoastScene::Bay) {

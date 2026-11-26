@@ -41,5 +41,8 @@ double dryShare(double rain, double warmth, double halfRange);
 // 0..1: the share of what the air could take from the ground that the rain leaves it; 0 where rain
 // keeps up. How seldom running water and plants hold a place, as against how often its surface is dry.
 float aridityOf(float rain, float celsius);
+// Share of the year a stream fed by the rain of its own ground runs: all of it where the rain keeps
+// up with the air, the few flood days of the driest country (`FloodShare`) where none does.
+float runningShareOf(float rain, float celsius);
 
 } // namespace derivean::sim

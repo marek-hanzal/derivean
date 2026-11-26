@@ -17,8 +17,9 @@ struct World;
 
 // A place to stand at the water's edge under high ground: starts from findVale, picks in the region
 // the shore of a sea, lake or river with the most country rising over it, then walks down through
-// the local and site levels to a dry site cell with water beside it. Blocks while those tiles are
-// built. Falls back to the best position found when a level has no shore within its reach.
+// the local and site levels to a dry site cell with water beside it. Each level searches only the
+// one tile under the answer so far, within a reach of it. Blocks while those tiles are built. Falls
+// back to the best position found when a level has no shore within its reach.
 Vec2 findLanding(World& world, Vec2 near);
 
 } // namespace derivean::sim

@@ -33,9 +33,6 @@ struct PlanetOptions {
     double age{4.6e9};                              // yr
     std::optional<std::array<double, 2>> spawn;     // x and z in m; a shore near the origin when absent
     unsigned threads{};                             // 0 sizes the pools from the machine
-    // The far terrain as levels of cubes instead of height-field patches. Both exist while the
-    // renderer moves from one to the other; a game makes one of them.
-    bool cubes{};
     int cubeReach{128};                             // cubes from the eye to the side of a level's box: a cube there is 1/reach rad wide
 };
 

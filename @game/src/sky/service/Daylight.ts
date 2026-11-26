@@ -6,6 +6,8 @@ import { createSkyLight, setSkyLight } from "../fn/skyLight";
 import type { SkyNodes } from "../type/SkyNodes";
 
 const PlainAir = 0.35;
+// Metres the ground under the eye may rise or fall before its light is worked out again.
+const AltitudeStep = 25;
 const luminance = (color: Color) => 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
 
 // Sun, sky light, air and exposure, all following the simulated sun, as the uniforms node materials light
@@ -34,6 +36,8 @@ export function createDaylight(viewDistance: number) {
   // Share of the sky under cloud and that cloud's optical depth, eased.
   let veil = 0;
   let veilDepth = 0;
+  // Height above the sea of the ground under the eye, where the light is worked out.
+  let altitude = 0;
   const next = new Vector3();
 
   // Plain shading is a fixed white light for judging relief at any hour; daylight is the hour's own.
@@ -73,18 +77,20 @@ export function createDaylight(viewDistance: number) {
     exposure = Math.min(Math.max(Exposure * (ExposedLight / Math.max(fallen, 1e-3)) ** Adaptation, ExposureRange[0]), ExposureRange[1]);
   }
 
-  setSkyLight(light, ReliefSun.toArray());
+  setSkyLight(light, ReliefSun.toArray(), altitude);
   relight();
 
   return {
     nodes,
     // What the tone mapping should multiply the light by.
     get exposure() { return exposure; },
-    // The hour's light for a direction towards the sun. The sun creeps, so the light follows in steps too small
-    // to see.
-    turn(direction: Point) {
-      if (light.skySun.value.distanceToSquared(next.set(...direction)) < 2.5e-7) return;
-      setSkyLight(light, direction);
+    // The hour's light for a direction towards the sun, over ground `ground` metres above the sea (the last
+    // height known when null). The sun creeps, so the light follows in steps too small to see.
+    turn(direction: Point, ground: number | null) {
+      const moved = ground !== null && Math.abs(ground - altitude) > AltitudeStep;
+      if (!moved && light.skySun.value.distanceToSquared(next.set(...direction)) < 2.5e-7) return;
+      if (ground !== null) altitude = ground;
+      setSkyLight(light, direction, altitude);
       relight();
     },
     shade(value: boolean) {

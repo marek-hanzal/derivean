@@ -27,9 +27,13 @@ void testRockMass();
 void testGroundwaterBlock();
 void testGroundwaterEdge();
 void testGroundwaterTile();
+void testGroundwaterSinking();
+void testGroundwaterPavement();
+void testGroundwaterRegion();
 void testVolcanicLaws();
 void testVolcanicLive();
 void testCoast();
+void testLevelConsistency();
 
 int main() {
     testMaterials();
@@ -59,8 +63,12 @@ int main() {
     testGroundwaterBlock();
     testGroundwaterEdge();
     testGroundwaterTile();
+    testGroundwaterSinking();
+    testGroundwaterPavement();
+    testGroundwaterRegion();
     testVolcanicLaws();
     testVolcanicLive();
     testCoast();
+    testLevelConsistency();
     return 0;
 }

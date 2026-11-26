@@ -1,6 +1,9 @@
+#include "aeolian/constant/Wind.hpp"
 #include "aeolian/fn/Wind.hpp"
 
 #include "hydrology/constant/Water.hpp"
+
+#include <algorithm>
 
 namespace derivean::sim {
 namespace {
@@ -10,6 +13,7 @@ namespace {
 // tile lays down more salt than its own rock gave to solution.
 constexpr float SoluteLoad = 1.4e-4f;
 constexpr double Freeboard = 0.05;   // m the salt floor stays below the rim
+constexpr int LevelSearch = 40;      // halvings of the search for the floor
 
 } // namespace
 
@@ -17,7 +21,7 @@ constexpr double Freeboard = 0.05;   // m the salt floor stays below the rim
 // than the whole of that surface gives back to the air: its real lake would stand lower, at the
 // level where the two balance, and never spill. The routing evaporates a lake only along the one
 // path its water takes to the outlet, so its outlet flow cannot say this. What flowed in has left as
-// vapour, and the salt it carried lies on the lowest ground of the basin.
+// vapour, and the salt it carried lies over the floor of the basin.
 void dryBasins(Domain& domain, FlowScratch& scratch) {
     WindField& wind = domain.aeolian;
     const size_t cells = domain.cells();
@@ -70,30 +74,36 @@ void dryBasins(Domain& domain, FlowScratch& scratch) {
         }
         // A basin that spills, or one this domain sees only part of, keeps its salt in solution.
         if (!whole || inflow[id] > vapour[id] || inflow[id] <= 0) continue;
-        // Brine stands level, so its salt builds a level floor from the lowest ground up: thin and
-        // wide rather than thick and narrow. The lake that balances its inflow covers only the
-        // lowest ground of the hollow, so the floor stays inside it and below the ground that rises
-        // out of it; what does not fit stays in solution.
-        std::sort(begin, end, [&](int32_t a, int32_t b) { return ground(size_t(a)) != ground(size_t(b)) ? ground(size_t(a)) < ground(size_t(b)) : a < b; });
-        long pan = 0;
-        for (float lost = 0; pan < end - begin && lost < inflow[id]; ++pan) {
-            const size_t i = size_t(begin[pan]);
-            lost += std::max(0.0f, evaporationDemand(domain.warmthNow[i]) - domain.rain[i]) * area;
-        }
+        // At each wet phase the inflow floods the hollow and its brine spreads over all of it; the
+        // salt it leaves lies level, so it builds a flat floor from the lowest ground up across the
+        // whole flood, thin and wide, never a column on the lowest cell. The floor rises no faster
+        // than salt pans accumulate, nor above the rim; what does not fit stays in solution.
         const double given = std::max(0.0, domain.ledger.dissolved - wind.ledger.salt);
-        const double volume = std::min(given, double(SoluteLoad) * inflow[id] * dt) / area;   // m over one cell
-        const double rim = std::min(double(domain.level[size_t(outlet)]) - Freeboard, pan < end - begin ? double(ground(size_t(begin[pan]))) : 1e30);
-        double floor = ground(size_t(*begin)), used = 0;
-        long under = 1;
-        for (; under < pan; ++under) {
-            const double step = (std::min(rim, double(ground(size_t(begin[under])))) - floor) * double(under);
-            if (used + step > volume || step < 0) break;
-            used += step, floor = std::min(rim, double(ground(size_t(begin[under]))));
+        const double volume = std::min(given, double(SoluteLoad) * inflow[id] * dt);   // m³
+        double lowest = double(domain.level[size_t(outlet)]);
+        for (auto it = begin; it != end; ++it) lowest = std::min(lowest, double(ground(size_t(*it))));
+        // The floor is level: it stands no higher than the rim, nor than the lowest ground plus
+        // what a pan lays in a step.
+        const double top = std::min(double(domain.level[size_t(outlet)]) - Freeboard, lowest + EvaporiteRate * dt);
+        const auto crustAt = [&](size_t i, double floor) { return std::max(0.0, floor - double(ground(i))); };
+        const auto laid = [&](double floor) {
+            double sum = 0;
+            for (auto it = begin; it != end; ++it) sum += crustAt(size_t(*it), floor);
+            return sum * area;
+        };
+        // The highest floor whose crust the salt fills, between the lowest ground and the top.
+        double floor = top;
+        if (laid(top) > volume) {
+            double low = lowest, high = top;
+            for (int k = 0; k < LevelSearch; ++k) {
+                const double middle = 0.5 * (low + high);
+                (laid(middle) > volume ? high : low) = middle;
+            }
+            floor = low;
         }
-        floor = std::min(rim, floor + (volume - used) / double(under));
-        for (auto it = begin; it != begin + under; ++it) {
+        for (auto it = begin; it != end; ++it) {
             const size_t i = size_t(*it);
-            const float crust = float(floor - ground(i));
+            const float crust = float(crustAt(i, floor));
             if (crust <= 0) continue;
             domain.ground.sediment[Fines][i] += crust;
             wind.labels.salt[i] += crust;

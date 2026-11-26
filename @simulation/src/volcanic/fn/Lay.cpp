@@ -9,7 +9,8 @@ constexpr float Shortest = 0.2f;      // share of the cooling length that the mo
 // Moves what the laws laid since the last call into `into` and marks whose it is; returns its volume in m³.
 double harvest(Emplacement& field, Laying& laying, std::vector<float>& into, int vent) {
     double volume = 0;
-    for (size_t i = 0; i < field.cells(); ++i) {
+    for (const int32_t at : field.fresh) {
+        const size_t i = size_t(at);
         if (field.laid[i] <= 0) continue;
         if (field.rest[i] != Rest::Open) {
             field.passed += double(field.laid[i]) * field.cell * field.cell;
@@ -22,6 +23,7 @@ double harvest(Emplacement& field, Laying& laying, std::vector<float>& into, int
         field.laid[i] = 0;
         laying.any = true;
     }
+    field.fresh.clear();
     return volume * field.cell * field.cell;
 }
 

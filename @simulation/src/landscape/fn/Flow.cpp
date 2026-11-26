@@ -1,6 +1,9 @@
 #include "landscape/fn/Process.hpp"
 
+#include "aeolian/fn/Wind.hpp"
 #include "core/fn/Hash.hpp"
+#include "groundwater/fn/Sinking.hpp"
+#include "groundwater/type/Sinking.hpp"
 
 namespace derivean::sim {
 namespace {
@@ -34,13 +37,23 @@ void routeWater(Domain& domain, FlowScratch& scratch) {
     const int size = domain.size;
     const float area = float(domain.cell * domain.cell);
     scratch.share.assign(cells * 8, 0.0f);
-    for (size_t i = 0; i < cells; ++i) domain.discharge[i] = domain.runoff[i] * area + domain.inflow[i];
+    // Water that went down into soluble rock in the step before comes out at its rising; what
+    // soaks into such rock where it falls goes down there.
+    const std::vector<float>* risen = domain.sinking.active() ? &domain.sinking.risen : nullptr;
+    for (size_t i = 0; i < cells; ++i) {
+        const float own = domain.runoff[i] * area;
+        domain.discharge[i] = own + domain.inflow[i] + (risen ? (*risen)[i] - (domain.hold[i] == Free ? soakAt(domain, i, own) : 0.0f) : 0.0f);
+    }
+    if (domain.seeped.size() == cells) std::fill(domain.seeped.begin(), domain.seeped.end(), 0.0f);
+    else domain.seeped.clear();
     const bool ground = !gathersWater(domain.key.level);
     const float head = channelHeadOf(domain.key.level), own = std::max(2.0f * head, 0.4f * area);
     // m·m³/yr: the length of slope above each cell, summed over the water that arrives from it.
     std::vector<float>& travelled = scratch.travelled;
     if (!ground) travelled.assign(cells, 0.0f), scratch.gathered.resize(cells);
     const float sea = float(domain.seaLevel);
+    // Cells that carry a river a finished neighbour handed on (Domain::handsOn), and every cell below them.
+    std::vector<uint8_t> handed(domain.settledWay.empty() ? 0 : cells, 0);
 
     // Upstream cells first: by the time a cell is visited it has received all of its water.
     for (size_t step = cells; step-- > 0;) {
@@ -49,15 +62,35 @@ void routeWater(Domain& domain, FlowScratch& scratch) {
         const float here = domain.level[size_t(cell)];
         const int32_t rank = domain.rank[size_t(cell)];
         float slope[8];
-        float steepest = 0;
-        int best = -1;
+        bool settled[8]{};
+        bool open = false;
         for (int k = 0; k < 8; ++k) {
             slope[k] = 0;
             const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
             if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
             const size_t other = domain.index(nx, nz);
+            if (domain.handsOn(other, size_t(cell))) {
+                handed[size_t(cell)] = 1;
+                continue;
+            }
             if (domain.rank[other] >= rank || domain.level[other] >= here) continue;
+            // A finished neighbour's record already sends its water on through its own cells; what
+            // crosses into this domain arrives only as the river it hands on (above). Passed down the
+            // slope into an evolving cell as well, it would be counted twice and cut a gutter along the
+            // seam. A ground tile keeps its own way (the larger of the two flows, below).
+            if (!ground && domain.hold[size_t(cell)] == Settled && domain.hold[other] == Free) continue;
             slope[k] = (here - domain.level[other]) / NeighborReach[k];
+            settled[k] = domain.hold[other] == Settled;
+            open = open || !settled[k];
+        }
+        // A river a finished neighbour handed on goes on through cells this domain evolves while it
+        // has any way down among them: a finished cell would pass on its own record instead and
+        // drop the river.
+        const bool keep = !handed.empty() && handed[size_t(cell)] && domain.hold[size_t(cell)] != Settled;
+        float steepest = 0;
+        int best = -1;
+        for (int k = 0; k < 8; ++k) {
+            if (keep && open && settled[k]) slope[k] = 0;
             if (slope[k] > steepest) {
                 steepest = slope[k];
                 best = k;
@@ -67,6 +100,9 @@ void routeWater(Domain& domain, FlowScratch& scratch) {
         // make the rim a gutter that gathers every sheet crossing it into a river of the domain's own.
         if (!ground && domain.hold[size_t(cell)] == Rim && domain.outlet[size_t(cell)]) best = -1;
         if (best < 0) {
+            // A free cell with nowhere to go is a hollow in soluble rock that the flood left open.
+            if (risen && domain.hold[size_t(cell)] == Free)
+                domain.discharge[size_t(cell)] -= sinkAt(domain, size_t(cell), domain.discharge[size_t(cell)], false, true);
             // Where the water leaves the domain or has nowhere to go, all of it counts as gathered.
             if (!ground) scratch.gathered[size_t(cell)] = domain.discharge[size_t(cell)];
             continue;
@@ -78,7 +114,15 @@ void routeWater(Domain& domain, FlowScratch& scratch) {
         // is the recorded flow wherever both agree.
         if (domain.hold[size_t(cell)] == Settled)
             domain.discharge[size_t(cell)] = domain.key.level == Level::Ground ? std::max(domain.discharge[size_t(cell)], domain.settledFlow[size_t(cell)]) : domain.settledFlow[size_t(cell)];
+        // Where it hands that water to a cell this domain evolves, the cell has it as inflow already.
+        if (domain.handsOnward(size_t(cell))) {
+            scratch.gathered[size_t(cell)] = domain.discharge[size_t(cell)];
+            continue;
+        }
         float* share = &scratch.share[size_t(cell) * 8];
+        // The slope length above a cell is weighted by the water that arrived over it, before any
+        // of that water is lost here.
+        const float reached = domain.discharge[size_t(cell)];
         const bool standing = here > domain.surface[size_t(cell)] + 1e-3f;
         // Open water gives back to the air what the climate can take; a lake in a dry basin passes
         // on only what is left, and none at all once its surface loses as much as it receives.
@@ -86,10 +130,20 @@ void routeWater(Domain& domain, FlowScratch& scratch) {
             const float demand = std::clamp(0.25f + 0.035f * domain.warmthNow[size_t(cell)], 0.05f, 1.6f);
             domain.discharge[size_t(cell)] = std::max(0.0f, domain.discharge[size_t(cell)] - std::max(0.0f, demand - domain.rain[size_t(cell)]) * area);
         }
+        // Soluble rock takes in what its bed or the floor under standing water lets through.
+        if (risen && domain.hold[size_t(cell)] == Free)
+            domain.discharge[size_t(cell)] -= sinkAt(domain, size_t(cell), domain.discharge[size_t(cell)], standing, false);
+        // The loose bed of a dry country's stream takes part of each flood that passes. That water
+        // leaves the surface here for good; the groundwater takes it as recharge (Domain::seeped).
+        if (const float sunk = sinkIntoBed(domain, size_t(cell), domain.discharge[size_t(cell)]); sunk > 0) {
+            if (domain.seeped.empty()) domain.seeped.assign(cells, 0.0f);
+            domain.seeped[size_t(cell)] = sunk;
+            domain.discharge[size_t(cell)] -= sunk;
+        }
         const float water = domain.discharge[size_t(cell)];
         float gathered = water, way = 0;
         if (!ground) {
-            const float yield = domain.runoff[size_t(cell)] * area, arrived = water - yield - domain.inflow[size_t(cell)];
+            const float yield = domain.runoff[size_t(cell)] * area, arrived = reached - yield - domain.inflow[size_t(cell)];
             way = arrived > 0 ? travelled[size_t(cell)] / arrived : 0.0f;
             gathered = std::max(0.0f, water - SheetMargin * yield * (way / float(domain.cell) + 0.5f));
             scratch.gathered[size_t(cell)] = gathered;
@@ -143,6 +197,7 @@ void routeWater(Domain& domain, FlowScratch& scratch) {
             if (share[k] <= 0) continue;
             const size_t other = domain.index(x + NeighborX[k], z + NeighborZ[k]);
             domain.discharge[other] += water * share[k];
+            if (keep) handed[other] = 1;
             if (!ground) travelled[other] += water * share[k] * (way + NeighborReach[k] * float(domain.cell));
         }
     }
