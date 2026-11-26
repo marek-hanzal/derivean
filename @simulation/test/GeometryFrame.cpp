@@ -111,9 +111,18 @@ void checkAntipodes() {
                    length(transport(tangent, from, to) - transport(transport(tangent, from, middle), middle, to)));
         }
     }
-    for (double tiny : {1e-160, 3e-162, 1e-300}) {   // a × (a + b) far below the square root of the smallest double
-        const Vec3 there = transport(Vec3{0, 0, 1}, {1, 0, 0}, {-1, tiny, 0}), back = transport(there, {-1, tiny, 0}, {1, 0, 0});
-        expect(near(length(there), 1, 1e-15) && same(back, Vec3{0, 0, 1}, 1e-15), "transport a denormal angle short of the antipode is not a rotation");
+    // a × (a + b) far below the square root of the smallest normal double, and subnormal (Codex
+    // DREV-CLAUDE-002-04: 1e-310 gave NaN).
+    for (double tiny : {1e-160, 3e-162, 1e-300, 1e-310, 1e-318, 5e-324}) {
+        for (Vec3 vector : {Vec3{0, 0, 1}, Vec3{0, 1, 0}}) {
+            const Vec3 there = transport(vector, {1, 0, 0}, {-1, tiny, 0}), back = transport(there, {-1, tiny, 0}, {1, 0, 0});
+            expect(std::isfinite(there.x) && std::isfinite(there.y) && std::isfinite(there.z), "transport a subnormal angle short of the antipode is not finite", tiny);
+            expect(near(length(there), 1, 1e-15) && same(back, vector, 1e-15), "transport a subnormal angle short of the antipode is not a rotation", tiny);
+        }
+        const Vec3 from = normalized({0.6, 0.8, 0}), to = Vec3{-from.x, -from.y, tiny}, tangent{-0.8, 0.6, 0.0};   // off the axes
+        const Vec3 there = transport(tangent, from, to);
+        expect(same(transport(from, from, to), to, 1e-15) && std::abs(dot(there, to)) < 1e-15 && same(transport(there, to, from), tangent, 1e-15),
+               "transport a subnormal angle short of an off-axis antipode is not a rotation onto the target", tiny);
     }
     for (int level : {0, 3, RegionLevel, SiteLevel, GroundCellLevel, MaxLevel})
         for (const Cell& cell : samplesAt(level)) {

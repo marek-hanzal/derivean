@@ -62,9 +62,10 @@ Vec3 axisAcross(Vec3 d) {
 // metre apart (1 + a·b >= 1). Beyond it 1 + a·b goes to zero, so Rodrigues' form about the unit axis
 // takes over: v cos θ + (n × v) sin θ + n (n·v)(1 − cos θ), with cos θ = a·b. The axis is taken as
 // a × (a + b), equal to a × b: near the antipode a + b is a small vector of small absolute error, so
-// the axis keeps full relative precision where a × b would cancel to an error of 1e-16 / sin θ. The
-// axis is scaled by its largest component before its length is taken, which would otherwise
-// underflow below sin θ ≈ 1e-154.
+// the axis keeps full relative precision where a × b would cancel to an error of 1e-16 / sin θ.
+// a + b is first scaled by an exact power of two to a largest component in [0.5, 1): otherwise its
+// length would underflow below sin θ ≈ 1e-154, and subnormal components would round the cross
+// product's terms to the absolute 1e-324 grid and tilt the axis (Codex DREV-CLAUDE-002-04).
 Vec3 transport(Vec3 vector, Vec3 from, Vec3 to) {
     const Vec3 a = normalized(from), b = normalized(to);
     const double cosine = dot(a, b);
@@ -72,11 +73,13 @@ Vec3 transport(Vec3 vector, Vec3 from, Vec3 to) {
         const Vec3 sum = a + b;
         return vector - sum * (dot(sum, vector) / (1 + cosine)) + b * (2 * dot(a, vector));
     }
-    const Vec3 normal = cross(a, a + b);
-    const double largest = std::max({std::abs(normal.x), std::abs(normal.y), std::abs(normal.z)});
-    const Vec3 scaled = largest > 0 ? normal * (1 / largest) : normal;
-    const double sine = largest > 0 ? length(scaled) * largest : 0;
-    const Vec3 axis = largest > 0 ? scaled * (1 / length(scaled)) : axisAcross(a - b);
+    const Vec3 sum = a + b;
+    int exponent = 0;
+    std::frexp(std::max({std::abs(sum.x), std::abs(sum.y), std::abs(sum.z)}), &exponent);
+    const Vec3 normal = cross(a, {std::ldexp(sum.x, -exponent), std::ldexp(sum.y, -exponent), std::ldexp(sum.z, -exponent)});
+    const double scaled = length(normal);
+    const double sine = std::ldexp(scaled, exponent);
+    const Vec3 axis = scaled > 0 ? normal * (1 / scaled) : axisAcross(a - b);
     return vector * cosine + cross(axis, vector) * sine + axis * (dot(axis, vector) * (1 - cosine));
 }
 

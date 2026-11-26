@@ -6,7 +6,8 @@
 namespace derivean::sim {
 
 // Positions: ECEF metres as doubles are the identity of a place, with radial height above the datum
-// sphere authoritative. Directions are any non-zero ECEF vector; `normalized` makes one unit.
+// sphere authoritative. Directions are ECEF vectors of length 1e-15 to 1e150; `normalized` makes one
+// unit (shorter ones are not scaled up, longer ones overflow its squared length).
 Vec3 ecefOf(Vec3 direction, double height);   // direction of any length
 double heightOf(Vec3 ecef);                   // m above PlanetRadius, along the radius
 
