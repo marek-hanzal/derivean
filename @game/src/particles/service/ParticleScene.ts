@@ -1,6 +1,7 @@
 import {
-  BoxGeometry, DynamicDrawUsage, InstancedMesh, Matrix4, MeshStandardMaterial, type Scene,
+  BoxGeometry, DynamicDrawUsage, type Group, InstancedMesh, Matrix4, MeshStandardMaterial,
 } from "three";
+import type { Point } from "../../../contract/GameBridge";
 
 interface ParticleGroup {
   material: MeshStandardMaterial;
@@ -9,7 +10,9 @@ interface ParticleGroup {
   count: number;
 }
 
-export function createParticleScene(scene: Scene) {
+// Particle positions arrive as float32 offsets from an origin the engine sends in doubles; the mesh position
+// carries that origin, so the offsets go into the float32 instance matrices as they are.
+export function createParticleScene(content: Group) {
   const cube = new BoxGeometry(1, 1, 1);
   const matrix = new Matrix4();
   const groups: ParticleGroup[] = [
@@ -22,14 +25,14 @@ export function createParticleScene(scene: Scene) {
     count: 0,
   }));
 
-  function apply(particles: Float32Array) {
+  function apply(particles: Float32Array, origin: Point) {
     for (const group of groups) group.count = 0;
     for (let i = 0; i < particles.length; i += 5) groups[particles[i + 4]].count++;
 
     for (const group of groups) {
       if (group.count > group.capacity) {
         if (group.mesh) {
-          scene.remove(group.mesh);
+          content.remove(group.mesh);
           group.mesh.dispose();
         }
         group.capacity = 2 ** Math.ceil(Math.log2(group.count));
@@ -37,12 +40,13 @@ export function createParticleScene(scene: Scene) {
         mesh.instanceMatrix.setUsage(DynamicDrawUsage);
         mesh.frustumCulled = false;
         mesh.renderOrder = group.material.transparent ? 1 : 0;
-        scene.add(mesh);
+        content.add(mesh);
         group.mesh = mesh;
       }
       if (group.mesh) {
         group.mesh.count = group.count;
         group.mesh.visible = group.count > 0;
+        group.mesh.position.set(...origin);
       }
       group.count = 0;
     }
@@ -58,5 +62,17 @@ export function createParticleScene(scene: Scene) {
     }
   }
 
-  return { apply };
+  return {
+    apply,
+    dispose() {
+      for (const { mesh, material } of groups) {
+        if (mesh) {
+          content.remove(mesh);
+          mesh.dispose();
+        }
+        material.dispose();
+      }
+      cube.dispose();
+    },
+  };
 }

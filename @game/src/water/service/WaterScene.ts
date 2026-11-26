@@ -1,8 +1,8 @@
-import { DoubleSide, Mesh, MeshStandardMaterial, type Color, type Scene } from "three";
+import { DoubleSide, type Group, Mesh, MeshStandardMaterial, type Color } from "three";
 import type { Frame, WorldInfo } from "../../../contract/GameBridge";
 import { voxelGeometry } from "../../scene/fn/voxelGeometry";
 
-export function createWaterScene(scene: Scene, world: WorldInfo, palette: readonly Color[]) {
+export function createWaterScene(content: Group, world: WorldInfo, palette: readonly Color[]) {
   const material = new MeshStandardMaterial({
     vertexColors: true,
     roughness: 0.27,
@@ -18,7 +18,7 @@ export function createWaterScene(scene: Scene, world: WorldInfo, palette: readon
   function remove(id: string) {
     const part = meshes.get(id);
     if (!part) return;
-    scene.remove(part);
+    content.remove(part);
     part.geometry.dispose();
     meshes.delete(id);
   }
@@ -32,11 +32,19 @@ export function createWaterScene(scene: Scene, world: WorldInfo, palette: readon
       const geometry = voxelGeometry(faces, world, palette, world.waterUnitsPerVoxel);
       const mesh = new Mesh(geometry, material);
       mesh.position.set(...origin);
+      mesh.matrixAutoUpdate = false;
+      mesh.updateMatrix();
       mesh.receiveShadow = true;
       meshes.set(id, mesh);
-      scene.add(mesh);
+      content.add(mesh);
     }
   }
 
-  return { apply };
+  return {
+    apply,
+    dispose() {
+      for (const id of [...meshes.keys()]) remove(id);
+      material.dispose();
+    },
+  };
 }

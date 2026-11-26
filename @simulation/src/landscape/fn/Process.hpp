@@ -1,0 +1,118 @@
+#pragma once
+
+#include "landscape/type/Terrain.hpp"
+
+#include <functional>
+
+namespace derivean::sim {
+
+// Working arrays of one step. Kept outside Domain so a replay allocates them once.
+struct FlowScratch {
+    std::vector<float> share;                    // cells × 8: part of a cell's outflow that leaves towards each neighbour
+    std::vector<float> next;                     // m, surface after cutting and filling
+    std::vector<float> flux[SedimentClasses];    // m³/yr of sediment passing through
+    std::vector<float> settle[SedimentClasses];  // m laid down this step, by class
+    std::vector<float> plume[SedimentClasses];   // m³ of sediment suspended in standing water
+    std::vector<float> power;                    // K·dt·(Q^m - threshold), the implicit erosion factor
+    std::vector<float> room;                     // m a bed can rise before it dams a cell upstream
+    std::vector<int32_t> head, link, pit;        // bucket queue of the flood
+    std::vector<uint8_t> visited;
+    std::vector<float> moved[SedimentClasses + 1];   // slope transfers; the last entry is rock
+    std::vector<float> broke;                    // m of rock each cell lost to failure this step
+    std::vector<float> blurA, blurB;
+    std::vector<float> work;                     // m, surface the slope processes of a step work on
+    std::vector<int32_t> byHeight, spare;        // cells from the lowest up, as that surface stood before anything fell
+    std::vector<int32_t> foot;                   // cell at the foot of the slope each cell stands on
+    std::vector<float> retreated;                // m the free face of each column has weathered back since the column last came down
+    double left{};                               // m³ of debris that slid onto cells that do not evolve, over the whole replay and domain
+    std::vector<float> soundScale, soundLog;     // how sound each cell's rock is against its material: fixed for a replay
+    std::vector<uint8_t> channelled;             // 1 where the water of a cell is enough to cut a channel
+    std::vector<uint8_t> drained;                // 1 where a lake of this step lost its water to the cutting of its outlet
+    std::vector<float> pool;                     // m, water surface each cell is left with once the beds below it are cut
+    std::vector<float> travelled;                // routing only: the way a cell's inflow has come, summed over that inflow
+    std::vector<float> gathered;                 // m³/yr of a cell's water beyond the sheet a plane of the same length would bring it
+    std::vector<float> delivered[SedimentClasses];   // m of broken rock a cell hands to its water this step; empty where debris stays as talus
+};
+
+// Rows.cpp — runs `body(begin, end)` over the rows [0, count) of a domain: spread over its pool
+// where it has one, on the calling thread otherwise. `body` may write only what belongs to its own
+// rows and must not sum across them, so the result is the same however the rows are cut.
+void forRows(const Domain& domain, int count, const std::function<void(int, int)>& body);
+
+// Flood.cpp — fills every depression with standing water and orders cells from the outlets upstream.
+void floodLevels(Domain& domain, FlowScratch& scratch);
+
+// Flow.cpp — spreads each cell's water over its lower neighbours and accumulates discharge.
+void routeWater(Domain& domain, FlowScratch& scratch);
+
+// Fluvial.cpp — stream-power incision with transport-length deposition, solved implicitly.
+void cutAndFill(Domain& domain, FlowScratch& scratch);
+
+// Plume.cpp — sediment that reached standing water this step spreads from where it entered and
+// settles; `dt` and `area` are the step in years and the cell in m².
+void settlePlume(Domain& domain, FlowScratch& scratch, float dt, float area);
+
+// Hillslope.cpp — regolith production, solution, creep and slope failure.
+void shapeSlopes(Domain& domain, FlowScratch& scratch);
+
+// Stability.cpp — free faces retreat as they weather, and rock that stands higher than its strength
+// allows over any run breaks; both leave their debris on the cell. Region, Local and Site levels.
+void breakSlopes(Domain& domain, FlowScratch& scratch);
+// Share of the year a cell's rock spends in the frost-cracking window.
+float frostShare(const Domain& domain, size_t i);
+// Cells in rising order of `height`, ties in index order.
+void orderByHeight(const std::vector<float>& height, std::vector<int32_t>& order, std::vector<int32_t>& spare);
+
+// Talus.cpp — loose cover comes to rest at its angle of repose; coarse debris breaks down.
+void settleDebris(Domain& domain, FlowScratch& scratch);
+void wearDebris(Domain& domain);
+
+// Glacial.cpp — ice from the snow balance of a sinusoidal year, its erosion and its moraines.
+void glaciate(Domain& domain, FlowScratch& scratch, float seasonalHalfRange, float cooling, bool erode);
+
+// Units.cpp — keeps the cached rock traits in step with how deep the surface has cut.
+void refreshUnits(Domain& domain, uint64_t seed);
+
+// Coefficients shared by the processes.
+inline constexpr double StreamExponent = 0.45;        // discharge exponent of stream power
+inline constexpr float ChannelHead = 3000.0f;          // m³/yr below which running water does not incise
+// A cell of the coarser levels is far wider than the rills on it and hides them; a ground cell is
+// a rill's width, so there the water of a few tens of square metres already cuts.
+inline constexpr float GroundChannelHead = 60.0f;
+// A level cuts only the valleys it can draw. Below the water of a few of its cells the ground is
+// slope, not channel: a Region cell of a square kilometre holds its headwater streams inside
+// itself, a Local cell its gullies, a Site cell its rills. Rock there is lowered by the slope
+// processes in step with the valley it falls to; the channels it hides belong to the next level.
+// Site: twice what the longest slope inside one tile gathers as a sheet. With the little creep bare
+// ground has, less would let the sheet itself rill a featureless slope.
+inline constexpr float ChannelHeads[LevelCount] = {0, 2.5e7f, ChannelHead, 2.0f * ChannelHead, GroundChannelHead};
+inline constexpr float channelHeadOf(Level level) { return ChannelHeads[size_t(level)]; }
+// The Region level draws its valleys by the water a cell has gathered beyond the sheet any slope
+// carries, lowers the ground between them at the pace of the streams a cell hides, and lets a stream
+// keep to one drawn path. The Local and Site levels still cut with all the water of a cell from one
+// cell's worth upwards: the same rule made them rib a led plane at the width of the settling
+// controller's average, and that has to be cured there first.
+inline constexpr bool gathersWater(Level level) { return level == Level::Region; }
+// m³/yr of the largest stream a Region cell holds inside itself: a headwater stream. A cell that
+// has gathered less water than a channel of the level is lowered at the pace such a stream cuts on
+// the cell's slope.
+inline constexpr float HiddenStreams[LevelCount] = {0, 2.5e7f, 0, 0, 0};
+// A ground cell also meets a slope's water as it comes: in storms, at many times the yearly mean
+// the discharge stands for. The less water a cell gathers the flashier it is; a stream of the size
+// the coarser levels cut with carries its mean most of the time, and the gain is gone.
+inline constexpr float GroundStormGain = 9.0f;
+// Its parent has already struck the balance between the river and the rock of its bed. A ground
+// tile's water works the cover; rock it cuts only by this share of what the same law gives a wider
+// cell, enough to step the bed over a strong layer and not enough to saw a slot along a weak one.
+inline constexpr float GroundRockCut = 0.08f;
+inline constexpr float rockCutOf(Level level) { return level == Level::Ground ? GroundRockCut : 1.0f; }
+inline constexpr float stormGainOf(Level level, float discharge) {
+    return level == Level::Ground ? 1.0f + GroundStormGain / (1.0f + discharge / ChannelHead) : 1.0f;
+}
+inline constexpr float SedimentErodibility[SedimentClasses] = {2.2e-5f, 8.0e-5f, 5.5e-5f};
+inline constexpr float SettlingNumber[SedimentClasses] = {2.4f, 0.9f, 0.16f};   // dimensionless transport length
+inline constexpr float BedloadWear = 2.0e-5f;          // share of coarse load ground down per metre travelled
+inline constexpr float ReposeTan[SedimentClasses] = {0.78f, 0.62f, 0.70f};
+inline constexpr float DebrisFrost = 10.0f;            // gain of the breakdown of rock and debris per unit share of the year spent cracking
+
+} // namespace derivean::sim

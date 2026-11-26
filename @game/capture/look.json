@@ -1,0 +1,443 @@
+{
+  "world": {
+    "seed": 42,
+    "age": 4600000000.0
+  },
+  "out": ".out/playwright/look",
+  "settleSeconds": 2,
+  "timeoutSeconds": 240,
+  "shots": [
+    {
+      "name": "high-ground-north",
+      "above": 0,
+      "yaw": 0.0,
+      "pitch": -0.03,
+      "fly": false,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-ground-east",
+      "above": 0,
+      "yaw": -1.5708,
+      "pitch": -0.03,
+      "fly": false,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-ground-south",
+      "above": 0,
+      "yaw": 3.1416,
+      "pitch": -0.03,
+      "fly": false,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-ground-west",
+      "above": 0,
+      "yaw": 1.5708,
+      "pitch": -0.03,
+      "fly": false,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-300m-north",
+      "above": 300,
+      "yaw": 0.0,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-300m-east",
+      "above": 300,
+      "yaw": -1.5708,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-300m-south",
+      "above": 300,
+      "yaw": 3.1416,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-300m-west",
+      "above": 300,
+      "yaw": 1.5708,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-2km-north",
+      "above": 2000,
+      "yaw": 0.0,
+      "pitch": -0.25,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-2km-east",
+      "above": 2000,
+      "yaw": -1.5708,
+      "pitch": -0.25,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-2km-south",
+      "above": 2000,
+      "yaw": 3.1416,
+      "pitch": -0.25,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-2km-west",
+      "above": 2000,
+      "yaw": 1.5708,
+      "pitch": -0.25,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-8km-north",
+      "above": 8000,
+      "yaw": 0.0,
+      "pitch": -0.3,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-8km-east",
+      "above": 8000,
+      "yaw": -1.5708,
+      "pitch": -0.3,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-8km-south",
+      "above": 8000,
+      "yaw": 3.1416,
+      "pitch": -0.3,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "high-8km-west",
+      "above": 8000,
+      "yaw": 1.5708,
+      "pitch": -0.3,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-ground-north",
+      "above": 0,
+      "yaw": 0.0,
+      "pitch": -0.03,
+      "fly": false,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-ground-east",
+      "above": 0,
+      "yaw": -1.5708,
+      "pitch": -0.03,
+      "fly": false,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-ground-south",
+      "above": 0,
+      "yaw": 3.1416,
+      "pitch": -0.03,
+      "fly": false,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-ground-west",
+      "above": 0,
+      "yaw": 1.5708,
+      "pitch": -0.03,
+      "fly": false,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-300m-north",
+      "above": 300,
+      "yaw": 0.0,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-300m-east",
+      "above": 300,
+      "yaw": -1.5708,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-300m-south",
+      "above": 300,
+      "yaw": 3.1416,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-300m-west",
+      "above": 300,
+      "yaw": 1.5708,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-2km-north",
+      "above": 2000,
+      "yaw": 0.0,
+      "pitch": -0.25,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-2km-east",
+      "above": 2000,
+      "yaw": -1.5708,
+      "pitch": -0.25,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-2km-south",
+      "above": 2000,
+      "yaw": 3.1416,
+      "pitch": -0.25,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-2km-west",
+      "above": 2000,
+      "yaw": 1.5708,
+      "pitch": -0.25,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-8km-north",
+      "above": 8000,
+      "yaw": 0.0,
+      "pitch": -0.3,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-8km-east",
+      "above": 8000,
+      "yaw": -1.5708,
+      "pitch": -0.3,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-8km-south",
+      "above": 8000,
+      "yaw": 3.1416,
+      "pitch": -0.3,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "low-8km-west",
+      "above": 8000,
+      "yaw": 1.5708,
+      "pitch": -0.3,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "range-300m-north",
+      "position": [
+        -2581902,
+        null,
+        -4571906
+      ],
+      "above": 300,
+      "yaw": 0.0,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "range-300m-north-plain",
+      "position": [
+        -2581902,
+        null,
+        -4571906
+      ],
+      "above": 300,
+      "yaw": 0.0,
+      "pitch": -0.12,
+      "fly": true,
+      "plain": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "range-300m-north-low",
+      "position": [
+        -2581902,
+        null,
+        -4571906
+      ],
+      "above": 300,
+      "yaw": 0.0,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "boost-30s",
+      "above": 300,
+      "yaw": 0.0,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      },
+      "cruise": {
+        "seconds": 30,
+        "boost": true
+      }
+    },
+    {
+      "name": "boost-30s-clear",
+      "above": 300,
+      "yaw": 0.0,
+      "pitch": -0.12,
+      "fly": true,
+      "clouds": false,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      },
+      "cruise": {
+        "seconds": 30,
+        "boost": true
+      }
+    }
+  ]
+}

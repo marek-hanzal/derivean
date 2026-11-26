@@ -1,0 +1,21 @@
+.inspector {
+  position: absolute;
+  top: 51px;
+  right: 25px;
+  width: 300px;
+  max-height: calc(100% - 190px);
+  overflow: hidden;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  font: var(--label);
+}
+.inspector h2 { margin: 0 0 7px; color: var(--key); font: inherit; letter-spacing: .1em; }
+.inspector { overflow-y: auto; }
+.inspector h3 { margin: 9px 0 4px; color: var(--muted); font: inherit; letter-spacing: .1em; text-transform: uppercase; }
+.inspector dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 14px; margin: 0; }
+.inspector dl p { grid-column: 1 / -1; margin: 2px 0; color: inherit; line-height: 1.5; white-space: normal; }
+.inspector dt { color: var(--muted); }
+.inspector dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+.inspector p { margin: 0; color: var(--muted); }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "material/constant/Materials.hpp"
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -7,7 +9,9 @@
 
 namespace derivean {
 
-enum class Material : uint8_t { Air, Moss, Soil, Clay, Shale, Chalk, Basalt, Timber, Leaf, Bedrock, Sand, Water };
+// The simulation module owns every material and its physical definition. The engine keeps only
+// the per-voxel view its support, grain and liquid systems read, indexed by the same voxel id.
+using Material = sim::Material;
 
 enum class Matter { Gas, Solid, Granular, Liquid };
 
@@ -24,20 +28,38 @@ struct MaterialInfo {
     float surfaceTension{};      // N/m, for liquids
 };
 
-inline constexpr std::array Materials{
-    MaterialInfo{"Air",     0x000000, 1.00f,    0,     0, 0.00f, Matter::Gas},
-    MaterialInfo{"Moss",    0x78875a, 0.96f, 1300,    80, 0.85f},
-    MaterialInfo{"Soil",    0x947459, 1.00f, 1550,    95, 0.85f},
-    MaterialInfo{"Clay",    0xb26d53, 0.93f, 1900,   130, 0.72f},
-    MaterialInfo{"Shale",   0x596c73, 0.87f, 2300,   210, 0.82f},
-    MaterialInfo{"Chalk",   0xc9ad84, 0.83f, 2100,   220, 0.75f},
-    MaterialInfo{"Basalt",  0x4b6062, 0.79f, 2900,   280, 0.85f},
-    MaterialInfo{"Timber",  0xb77949, 0.84f,  650,   160, 0.78f},
-    MaterialInfo{"Leaf",    0x9cae62, 0.90f,  100,  0.35f, 0.55f},
-    MaterialInfo{"Bedrock", 0x414953, 0.90f, 3100, 10000, 0.92f},
-    MaterialInfo{"Sand",    0xc3a478, 0.98f, 1600,    22, 0.67f, Matter::Granular, 33.0f},
-    MaterialInfo{"Water",   0x2f939b, 0.16f,  998,     0, 0.00f, Matter::Liquid, 0, 0.001002f, 0.0728f},
-};
+constexpr Matter matterOf(sim::Phase phase) {
+    switch (phase) {
+        case sim::Phase::Gas: return Matter::Gas;
+        case sim::Phase::Granular: return Matter::Granular;
+        case sim::Phase::Liquid: return Matter::Liquid;
+        case sim::Phase::Solid: break;
+    }
+    return Matter::Solid;
+}
+
+constexpr MaterialInfo materialInfoOf(const sim::MaterialDefinition& definition) {
+    const Matter matter = matterOf(definition.phase);
+    return {
+        definition.name,
+        definition.color,
+        definition.roughness,
+        definition.density,
+        definition.loadCapacity,
+        definition.slidingFriction,
+        matter,
+        // A solid's friction angle is its internal strength, not a slope loose grains settle to.
+        matter == Matter::Granular ? definition.frictionAngle : 0.0f,
+        definition.dynamicViscosity,
+        definition.surfaceTension,
+    };
+}
+
+inline constexpr std::array<MaterialInfo, sim::MaterialCount> Materials = [] {
+    std::array<MaterialInfo, sim::MaterialCount> materials{};
+    for (size_t id = 0; id < materials.size(); ++id) materials[id] = materialInfoOf(*sim::MaterialDefinitions[id]);
+    return materials;
+}();
 
 inline constexpr const MaterialInfo& materialInfo(Material material) {
     return Materials[static_cast<size_t>(material)];

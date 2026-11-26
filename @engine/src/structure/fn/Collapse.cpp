@@ -1,7 +1,9 @@
 #include "structure/type/Collapse.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
+#include <span>
 #include <unordered_map>
 
 namespace derivean {
@@ -78,6 +80,40 @@ void discover(const Voxels& voxels, Volume<int>& owners,
     }
 }
 
+// In a world that continues beyond its voxels the material at the edge of the search is the ground
+// itself, and whatever reaches it stands: only a piece cut free on every side can fall. The search
+// dives for that edge first and stops there, so a cut into a hillside costs a column, not the hill.
+void discoverGrounded(const Voxels& voxels, Volume<int>& owners, std::vector<Island>& islands, std::span<const Cell> seeds) {
+    constexpr std::array<Cell, 6> Dive{{{0, 1, 0}, {1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}, {0, -1, 0}}};
+    std::vector<Cell> open;
+    for (Cell seed : seeds) {
+        if (!voxels.bounds.contains(seed) || voxels[seed] == Material::Air || owners[seed] || horizon(voxels.bounds, seed)) continue;
+        islands.emplace_back();
+        Island& island = islands.back();
+        const int id = int(islands.size());
+        owners[seed] = id;
+        open.assign(1, seed);
+        while (!open.empty() && !island.stable) {
+            const Cell point = open.back();
+            open.pop_back();
+            island.cells.push_back(point);
+            island.mass += materialInfo(voxels[point]).density * VoxelVolume;
+            for (Cell delta : Dive) {
+                const Cell neighbor = point + delta;
+                if (!voxels.bounds.contains(neighbor) || voxels[neighbor] == Material::Air) continue;
+                const int owner = owners[neighbor];
+                if (horizon(voxels.bounds, neighbor) || (owner && owner != id && islands[size_t(owner) - 1].stable)) {
+                    island.stable = true;
+                    break;
+                }
+                if (owner) continue;
+                owners[neighbor] = id;
+                open.push_back(neighbor);
+            }
+        }
+    }
+}
+
 void carryLoads(std::vector<Island>& islands) {
     for (Island& island : islands) island.stable = island.direct >= island.mass;
     for (Island& island : islands) {
@@ -120,7 +156,7 @@ void extract(VoxelWorld& world, const Voxels& original, std::vector<Cell>& chang
         removeVoxel(world, point);
         changed.push_back(point);
         if (info.matter == Matter::Granular) {
-            detached.looseSand.push_back(point);
+            detached.loose.emplace_back(point, material);
             continue;
         }
         const float weight = info.density * VoxelVolume;
@@ -143,8 +179,13 @@ CollapseResult collapse(VoxelWorld& world, std::vector<Cell>& changed) {
         for (Cell direction : Neighbors) seeds.push_back(hole + direction);
     }
     std::vector<Island> islands;
-    discover(voxels, owners, islands, seeds);
-    carryLoads(islands);
+    // A world that is whole in memory hangs on what its contacts can carry; a streamed one stands on its ground.
+    if (world.streamed) {
+        discoverGrounded(voxels, owners, islands, seeds);
+    } else {
+        discover(voxels, owners, islands, seeds);
+        carryLoads(islands);
+    }
     crushLeaves(world, voxels, owners, islands, changed);
 
     CollapseResult detached;

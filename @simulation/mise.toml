@@ -1,0 +1,30 @@
+[tools."github:xmake-io/xmake"]
+version = "v3.1.2"
+bin_path = "."
+
+[tools."github:xmake-io/xmake".platforms.macos-arm64]
+asset_pattern = "xmake-bundle-v3.1.2.macos.arm64"
+rename_exe = "xmake"
+checksum = "sha256:e719121c56cd34f5f0c0731954a154c1df1b0915f303e5c82dfb6c6cb9e3ef9e"
+
+[env]
+XMAKE_CONFIGDIR = "{{ config_root }}/../.out/simulation/xmake"
+
+[tasks.configure]
+hide = true
+run = "xmake config --yes --mode=release --builddir=../.out/simulation/build"
+
+[tasks.build]
+description = "Build the standalone world simulation, its diagnostics tool and its tests"
+depends = ["configure"]
+run = "xmake build --yes terra simulation-tests"
+
+[tasks.test]
+description = "Run the simulation checks without the engine"
+depends = ["build"]
+run = "xmake run simulation-tests"
+
+[tasks.terra]
+description = "Run the diagnostics tool, for example: mise run terra -- map --seed 42 --age 4.6e9"
+depends = ["build"]
+run = "xmake run terra"

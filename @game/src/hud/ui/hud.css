@@ -1,0 +1,61 @@
+#hud { pointer-events: none; }
+.world-tag, .tool-info, .metrics { font: var(--label); letter-spacing: .13em; }
+.world-tag, .terrain-label, .controls { text-shadow: 0 1px 6px #09140b, 0 1px 2px #111; }
+.world-tag { position: absolute; left: 25px; top: 24px; }
+.world-tag i { margin-right: 6px; }
+.terrain-label { position: absolute; top: 24px; right: 25px; font: 600 12px/1.4 var(--mono); }
+.crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 17px;
+  height: 17px;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 1px #161c15);
+  color: #fff8df;
+  opacity: .75;
+}
+.crosshair[data-target="true"] { color: #ffdb8e; opacity: 1; }
+.crosshair::before, .crosshair::after { content: ""; position: absolute; inset: 7px 0; background: currentColor; }
+.crosshair::after { inset: 0 7px; }
+.tools {
+  position: absolute;
+  left: 50%;
+  bottom: 58px;
+  transform: translateX(-50%);
+  width: 290px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+}
+.tool-info { display: flex; justify-content: space-between; color: var(--muted); margin: 0 2px 8px; letter-spacing: .05em; }
+.tool-info strong { color: var(--key); }
+.brushes { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.brushes div { display: flex; gap: 8px; align-items: center; padding: 7px 8px; border: 1px solid var(--line); border-radius: 4px; font-size: 12px; }
+.brushes [data-selected="true"] { color: var(--key); border-color: #ad9865; background: rgb(227 193 116 / 13%); }
+.sphere-icon, .cube-icon { width: 11px; height: 11px; border: 1px solid currentColor; }
+.sphere-icon { border-radius: 50%; }
+kbd { padding: 2px 4px; border: 1px solid var(--line); border-radius: 3px; background: rgb(22 31 25 / 62%); font: 600 10px var(--mono); }
+.controls {
+  position: absolute;
+  inset: auto 0 21px;
+  display: flex;
+  justify-content: center;
+  gap: 13px;
+  font-size: 11px;
+}
+.metrics {
+  position: absolute;
+  top: 51px;
+  left: 24px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  white-space: pre;
+  line-height: 1.55;
+  letter-spacing: 0;
+}
+.controls .flying, #hud[data-flying="true"] .controls .walking { display: none; }
+#hud[data-flying="true"] .controls .flying { display: inline; }

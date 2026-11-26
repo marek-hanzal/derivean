@@ -48,7 +48,7 @@ bool displaceWater(WaterState& state, const VoxelWorld& world, Cell point);
 void advanceWater(WaterState& state, const VoxelWorld& world, double step,
                   const JoltRuntime* physics = nullptr, double lowestMoving = 1e100);
 FaceMesh meshWater(const WaterState& state, const VoxelWorld& world, Cell chunk);
-void projectWaterParticles(ParticleProjection& output, const WaterState& state, Bounds visible);
+void projectWaterParticles(ParticleProjection& output, const WaterState& state, Bounds visible, Position origin);
 std::optional<float> waterDepth(const WaterState& state, Position point);
 
 } // namespace derivean

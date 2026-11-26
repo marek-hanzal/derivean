@@ -25,3 +25,10 @@ run = [
   "xmake run engine-tests",
   "node --test test/*.test.cjs",
 ]
+
+[tasks.bench]
+description = "Measure what streaming a planet costs the game thread; pass an age in years, 2e9 by default"
+run = [
+  "xmake build --yes engine-bench",
+  "xmake run engine-bench",
+]

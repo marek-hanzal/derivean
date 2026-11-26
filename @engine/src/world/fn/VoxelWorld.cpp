@@ -17,16 +17,45 @@ void dropCell(Map& counts, const Key& key) {
     if (--counter->second == 0) counts.erase(counter);
 }
 
-} // namespace
-
-Material materialAt(const VoxelWorld& world, Cell point) {
+// The voxel as stored: air wherever no tile exists, loaded or not.
+Material storedAt(const VoxelWorld& world, Cell point) {
     const Cell key = tileOf(point);
     const auto tile = world.tiles.find(key);
     return tile == world.tiles.end() ? Material::Air : at(tile->second, point - key * VoxelsPerMeter);
 }
 
+} // namespace
+
+bool known(const VoxelWorld& world, Cell chunk) {
+    if (!world.streamed || chunk.y < world.voidLevel) return true;
+    const StreamedExtent& extent = *world.streamed;
+    if (extent.loaded.contains(chunk)) return true;
+    const auto sky = extent.sky.find({chunk.x, 0, chunk.z});
+    return sky != extent.sky.end() && chunk.y >= sky->second;
+}
+
+Material materialAt(const VoxelWorld& world, Cell point) {
+    const Cell key = tileOf(point);
+    const auto tile = world.tiles.find(key);
+    if (tile != world.tiles.end()) return at(tile->second, point - key * VoxelsPerMeter);
+    return known(world, chunkOf(point)) ? Material::Air : Unloaded;
+}
+
 Voxels sampleWorld(const VoxelWorld& world, Bounds bounds) {
     Voxels result(bounds);
+    if (world.streamed) {
+        const Cell low = chunkOf(bounds.min), high = chunkOf(bounds.max - Cell{1, 1, 1});
+        for (int y = low.y; y <= high.y; ++y)
+            for (int z = low.z; z <= high.z; ++z)
+                for (int x = low.x; x <= high.x; ++x) {
+                    if (known(world, {x, y, z})) continue;
+                    const Bounds region = intersection(bounds, chunkBounds({x, y, z}));
+                    for (int rowY = region.min.y; rowY < region.max.y; ++rowY)
+                        for (int rowZ = region.min.z; rowZ < region.max.z; ++rowZ)
+                            std::fill_n(result.cells.begin() + result.index({region.min.x, rowY, rowZ}),
+                                        region.max.x - region.min.x, Unloaded);
+                }
+    }
     const Cell first = tileOf(bounds.min);
     const Cell last = tileOf(bounds.max - Cell{1, 1, 1});
     for (int y = first.y; y <= last.y; ++y)
@@ -53,9 +82,12 @@ Voxels sampleWorld(const VoxelWorld& world, Bounds bounds) {
 
 void setVoxel(VoxelWorld& world, Cell point, Material material) {
     const Cell key = tileOf(point);
+    const Cell chunk = chunkOf(point);
     auto found = world.tiles.find(key);
     if (found == world.tiles.end()) {
-        if (material == Material::Air) return;
+        // Rock that is not materialised cannot be edited; open sky becomes a loaded chunk on first use.
+        if (material == Material::Air || !known(world, chunk)) return;
+        if (world.streamed) world.streamed->loaded.insert(chunk);
         found = world.tiles.try_emplace(key).first;
     }
 
@@ -63,13 +95,12 @@ void setVoxel(VoxelWorld& world, Cell point, Material material) {
     const Cell offset = point - key * VoxelsPerMeter;
     const Material before = at(tile, offset);
     if (before == material) return;
+    if (world.streamed) world.streamed->journal.push_back({point, before, material});
     if (before == Material::Air) {
-        ++world.chunks[chunkOf(point)];
-        ++world.occupiedLevels[point.y];
+        ++world.chunks[chunk];
         ++tile.occupied;
     } else if (material == Material::Air) {
-        dropCell(world.chunks, chunkOf(point));
-        dropCell(world.occupiedLevels, point.y);
+        dropCell(world.chunks, chunk);
         if (--tile.occupied == 0) {
             world.tiles.erase(found);
             return;
@@ -95,7 +126,7 @@ void fillBox(VoxelWorld& world, Bounds area, Material material) {
 }
 
 bool removeVoxel(VoxelWorld& world, Cell point) {
-    if (materialAt(world, point) == Material::Air) return false;
+    if (storedAt(world, point) == Material::Air) return false;
     setVoxel(world, point, Material::Air);
     return true;
 }
@@ -108,7 +139,7 @@ std::vector<Cell> carve(VoxelWorld& world, Cell center, int radius, BrushShape s
             for (int x = -inner; x <= inner; ++x) {
                 if (shape == BrushShape::Sphere && x * x + y * y + z * z >= radius * radius) continue;
                 const Cell point = center + Cell{x, y, z};
-                const Material material = materialAt(world, point);
+                const Material material = storedAt(world, point);
                 if (material == Material::Air) continue;
                 if (excavatedKg) *excavatedKg += materialInfo(material).density * double(VoxelVolume);
                 setVoxel(world, point, Material::Air);
@@ -117,8 +148,24 @@ std::vector<Cell> carve(VoxelWorld& world, Cell center, int radius, BrushShape s
     return changed;
 }
 
-bool belowTerrain(const VoxelWorld& world, double highestPoint) {
-    return world.occupiedLevels.empty() || highestPoint < world.occupiedLevels.begin()->first * double(VoxelSize);
+bool inVoid(const VoxelWorld& world, double highestPoint) {
+    return highestPoint < world.voidLevel * (ChunkSide * double(VoxelSize));
+}
+
+void loadChunk(VoxelWorld& world, ChunkVoxels&& chunk) {
+    world.streamed->loaded.insert(chunk.key);
+    if (chunk.occupied) world.chunks[chunk.key] = chunk.occupied;
+    for (auto& [key, tile] : chunk.tiles) world.tiles.insert_or_assign(key, std::move(tile));
+}
+
+void unloadChunk(VoxelWorld& world, Cell chunk) {
+    world.streamed->loaded.erase(chunk);
+    if (!world.chunks.erase(chunk)) return;
+    constexpr int side = ChunkSide / VoxelsPerMeter;
+    const Cell origin = chunk * side;
+    for (int y = 0; y < side; ++y)
+        for (int z = 0; z < side; ++z)
+            for (int x = 0; x < side; ++x) world.tiles.erase(origin + Cell{x, y, z});
 }
 
 } // namespace derivean

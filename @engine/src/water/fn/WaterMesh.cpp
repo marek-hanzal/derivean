@@ -5,7 +5,7 @@ namespace {
 
 void face(FaceMesh& result, int axis, int sign, int plane, int u, int v, int width, int height) {
     result.insert(result.end(), {int16_t(axis), int16_t(sign), int16_t(plane), int16_t(u), int16_t(v),
-                                 int16_t(width), int16_t(height), int16_t(Material::Water)});
+                                 int16_t(width), int16_t(height), int16_t(Material::Water), 0});
 }
 
 } // namespace

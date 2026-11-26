@@ -1,0 +1,13 @@
+{
+  "world": {"seed": 42, "age": 4600000000},
+  "out": ".out/playwright/map",
+  "settleSeconds": 2,
+  "timeoutSeconds": 180,
+  "shots": [
+    {"name": "map-5km", "above": 0, "yaw": 0.6, "pitch": -0.1, "fly": false, "map": {"span": 5000}, "time": {"hour": 12}},
+    {"name": "map-200km", "above": 0, "yaw": 0.6, "pitch": -0.1, "fly": false, "map": {"span": 200000}, "time": {"hour": 12}},
+    {"name": "map-1000km", "above": 0, "yaw": 0.6, "pitch": -0.1, "fly": false, "map": {"span": 1000000}, "time": {"hour": 12}},
+    {"name": "map-planet", "above": 0, "yaw": 0.6, "pitch": -0.1, "fly": false, "map": {"span": 16777216}, "time": {"hour": 12}},
+    {"name": "map-closed", "above": 0, "yaw": 0.6, "pitch": -0.1, "fly": false, "time": {"hour": 12}}
+  ]
+}

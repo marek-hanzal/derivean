@@ -1,7 +1,7 @@
 #include "water/type/WaterTransfer.hpp"
 #include "particles/type/VoxelContact.hpp"
 #include "physics/constant/Gravity.hpp"
-#include "simulation/type/JoltRuntime.hpp"
+#include "physics/service/JoltRuntime.hpp"
 
 #include <cmath>
 
@@ -48,6 +48,7 @@ bool receive(WaterState& state, const VoxelWorld& world, WaterParcel& parcel, Po
 bool advanceParcel(WaterState& state, const VoxelWorld& world, WaterParcel& parcel,
                    double step, const JoltRuntime* physics, double lowestMoving) {
     const double half = parcelWidth(parcel.amount) / 2;
+    if (reachesUnloaded(world, parcel.position, half)) return false;
     const auto clear = recoverFromTerrain(world, parcel.position, half);
     if (!clear) return false;
     const Position from = *clear;
@@ -73,6 +74,11 @@ bool advanceParcel(WaterState& state, const VoxelWorld& world, WaterParcel& parc
         }
         const Position sample = interpolate(from, to, fraction);
         const bool solid = touchesTerrain(world, sample, half);
+        // Ground that is not loaded offers no surface yet; the parcel waits as it is.
+        if (solid && reachesUnloaded(world, sample, half)) {
+            parcel.velocity[1] += Gravity * step;
+            return false;
+        }
         if (solid || poolContact(state, sample, half)) {
             if (receive(state, world, parcel, lastFree)) {
                 if (parcel.velocity[1] < -1.4 && state.foam.size() < 768)
@@ -89,7 +95,7 @@ bool advanceParcel(WaterState& state, const VoxelWorld& world, WaterParcel& parc
     }
     parcel.position = to;
     const double upper = to[1] + half;
-    if (!belowTerrain(world, upper) || upper >= lowestMoving || parcel.velocity[1] >= 0) return false;
+    if (!inVoid(world, upper) || upper >= lowestMoving || parcel.velocity[1] >= 0) return false;
     state.budget.airborne -= uint64_t(parcel.amount);
     state.budget.escaped += uint64_t(parcel.amount);
     return true;
@@ -106,17 +112,17 @@ void moveWaterParcels(WaterState& state, const VoxelWorld& world, double step,
     });
 }
 
-void projectWaterParticles(ParticleProjection& output, const WaterState& state, Bounds visible) {
+void projectWaterParticles(ParticleProjection& output, const WaterState& state, Bounds visible, Position origin) {
     for (const auto& parcel : state.parcels) {
         if (!visible.contains(cellAt(parcel.position))) continue;
-        appendParticle(output, float(parcel.position[0]), float(parcel.position[1]), float(parcel.position[2]),
-                       float(parcelWidth(parcel.amount)), ParticleKind::Water);
+        appendParticle(output, float(parcel.position[0] - origin[0]), float(parcel.position[1] - origin[1]),
+                       float(parcel.position[2] - origin[2]), float(parcelWidth(parcel.amount)), ParticleKind::Water);
     }
     for (const auto& foam : state.foam) {
         if (!visible.contains(cellAt(foam.position))) continue;
-        const float lift = float(0.10 * (0.27 - foam.life));
-        appendParticle(output, float(foam.position[0]), float(foam.position[1]) + lift, float(foam.position[2]),
-                       float(0.034 + foam.life * 0.21), ParticleKind::Foam);
+        const double lift = 0.10 * (0.27 - foam.life);
+        appendParticle(output, float(foam.position[0] - origin[0]), float(foam.position[1] + lift - origin[1]),
+                       float(foam.position[2] - origin[2]), float(0.034 + foam.life * 0.21), ParticleKind::Foam);
     }
 }
 

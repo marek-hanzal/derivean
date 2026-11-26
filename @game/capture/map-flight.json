@@ -1,0 +1,13 @@
+{
+  "world": {"seed": 42, "age": 4600000000},
+  "out": ".out/playwright/map",
+  "settleSeconds": 2,
+  "timeoutSeconds": 60,
+  "shots": [
+    {"name": "flight-warm", "position": [-2581902, null, -4571906], "above": 300, "yaw": 3.51, "pitch": -0.3, "fly": true, "cruise": {"seconds": 20, "boost": true}, "time": {"hour": 12}},
+    {"name": "flight-closed-1", "position": [-2581902, null, -4571906], "above": 300, "yaw": 3.51, "pitch": -0.3, "fly": true, "cruise": {"seconds": 20, "boost": true}, "time": {"hour": 12}},
+    {"name": "flight-open-1", "position": [-2581902, null, -4571906], "above": 300, "yaw": 3.51, "pitch": -0.3, "fly": true, "map": {"span": 5000}, "cruise": {"seconds": 20, "boost": true}, "time": {"hour": 12}},
+    {"name": "flight-closed-2", "position": [-2581902, null, -4571906], "above": 300, "yaw": 3.51, "pitch": -0.3, "fly": true, "cruise": {"seconds": 20, "boost": true}, "time": {"hour": 12}},
+    {"name": "flight-open-2", "position": [-2581902, null, -4571906], "above": 300, "yaw": 3.51, "pitch": -0.3, "fly": true, "map": {"span": 5000}, "cruise": {"seconds": 20, "boost": true}, "time": {"hour": 12}}
+  ]
+}

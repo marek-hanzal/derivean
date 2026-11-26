@@ -1,158 +1,108 @@
-#include "simulation/type/Simulation.hpp"
-
-#include <napi.h>
-
-#include <cmath>
-#include <cstring>
-#include <optional>
+#include "chart.hpp"
+#include "convert.hpp"
+#include "atmosphere/constant/Snow.hpp"
+#include "planet/constant/Scale.hpp"
+#include "threads/type/Threads.hpp"
 
 namespace derivean {
 namespace {
 
-template<class Range>
-Napi::Array numbers(Napi::Env env, const Range& range) {
-    auto array = Napi::Array::New(env, range.size());
-    uint32_t index = 0;
-    for (auto value : range) array[index++] = Napi::Number::New(env, double(value));
-    return array;
-}
-
-template<class Range, class Project>
-Napi::Array project(Napi::Env env, const Range& range, Project convert) {
-    auto array = Napi::Array::New(env, range.size());
-    uint32_t index = 0;
-    for (const auto& value : range) array[index++] = convert(env, value);
-    return array;
-}
-
-Napi::Array coordinates(Napi::Env env, Cell cell) {
-    return numbers(env, std::array{cell.x, cell.y, cell.z});
-}
-
-template<class T>
-Napi::TypedArrayOf<T> packed(Napi::Env env, const std::vector<T>& values) {
-    auto array = Napi::TypedArrayOf<T>::New(env, values.size());
-    if (!values.empty()) std::memcpy(array.Data(), values.data(), values.size() * sizeof(T));
-    return array;
-}
-
-Napi::Object renderFrame(Napi::Env env, const Frame& frame) {
-    auto output = Napi::Object::New(env);
-    output["eye"] = numbers(env, frame.eye);
-    if (frame.target) {
-        auto target = Napi::Object::New(env);
-        target["voxel"] = coordinates(env, frame.target->voxel);
-        target["material"] = uint8_t(frame.target->material);
-        output["target"] = target;
-    } else {
-        output["target"] = env.Null();
-    }
-    const auto chunkMesh = [](Napi::Env env, const ChunkMesh& value) {
-        auto chunk = Napi::Object::New(env);
-        chunk["key"] = coordinates(env, value.key);
-        chunk["origin"] = numbers(env, value.origin);
-        chunk["faces"] = packed(env, value.faces);
-        return chunk;
-    };
-    output["chunks"] = project(env, frame.chunks, chunkMesh);
-    output["waterMeshes"] = project(env, frame.waterMeshes, chunkMesh);
-    output["unloaded"] = project(env, frame.unloaded, coordinates);
-    output["spawned"] = project(env, frame.spawned, [](Napi::Env env, const DebrisMesh& value) {
-        auto body = Napi::Object::New(env);
-        body["id"] = value.id;
-        body["faces"] = packed(env, value.faces);
-        return body;
-    });
-    output["debris"] = project(env, frame.debris, [](Napi::Env env, const DebrisPose& value) {
-        auto body = Napi::Object::New(env);
-        body["id"] = value.id;
-        body["position"] = numbers(env, value.pose.position);
-        body["rotation"] = numbers(env, value.pose.rotation);
-        return body;
-    });
-    output["editedTiles"] = double(frame.editedTiles);
-    output["visibleChunks"] = double(frame.visibleChunks);
-    output["bodies"] = double(frame.bodies);
-    output["nativeMs"] = frame.nativeMs;
-    output["particles"] = packed(env, frame.particles);
-    output["retired"] = numbers(env, frame.retired);
-    output["streamingReady"] = frame.streamingReady;
-    output["buildStock"] = frame.buildStock;
-    output["sandAirborne"] = double(frame.sandAirborne);
-    output["sandDeposited"] = double(frame.sandDeposited);
-    output["sandEscaped"] = double(frame.sandEscaped);
-    output["debrisEscapedKg"] = frame.debrisEscapedKg;
-    output["excavatedKg"] = frame.excavatedKg;
-    auto water = Napi::Object::New(env);
-    water["initial"] = double(frame.water.initial);
-    water["bulk"] = double(frame.water.bulk);
-    water["airborne"] = double(frame.water.airborne);
-    water["escaped"] = double(frame.water.escaped);
-    output["water"] = water;
-    output["waterDepth"] = frame.waterDepth ? Napi::Number::New(env, *frame.waterDepth).As<Napi::Value>() : env.Null();
-    return output;
-}
-
-double readNumber(Napi::Value value, double min, double max) {
-    if (!value.IsNumber()) throw Napi::TypeError::New(value.Env(), "Expected a numeric input");
-    const double number = value.As<Napi::Number>().DoubleValue();
-    if (!std::isfinite(number) || number < min || number > max)
-        throw Napi::RangeError::New(value.Env(), "Engine input out of range");
-    return number;
-}
-
-bool readFlag(Napi::Value value) {
-    if (!value.IsBoolean()) throw Napi::TypeError::New(value.Env(), "Expected a boolean input");
-    return value.As<Napi::Boolean>().Value();
-}
-
-Command parseCommand(const Napi::CallbackInfo& info) {
-    if (!info[0].IsObject()) throw Napi::TypeError::New(info.Env(), "Missing engine input");
-    const auto input = info[0].As<Napi::Object>();
-    const Napi::Value aim = input.Get("direction");
-    if (!aim.IsArray()) throw Napi::TypeError::New(info.Env(), "Missing direction vector");
-    const auto direction = aim.As<Napi::Array>();
-    const Napi::Value shape = input.Get("shape");
-    if (!shape.IsString()) throw Napi::TypeError::New(info.Env(), "Missing brush shape");
-    const auto name = shape.As<Napi::String>().Utf8Value();
-    if (name != "sphere" && name != "cube") throw Napi::TypeError::New(info.Env(), "Unknown brush shape");
-    return {
-        .elapsed = readNumber(input.Get("elapsed"), 0.0, 0.1),
-        .x = float(readNumber(input.Get("x"), -1.0, 1.0)),
-        .z = float(readNumber(input.Get("z"), -1.0, 1.0)),
-        .jump = readFlag(input.Get("jump")),
-        .sprint = readFlag(input.Get("sprint")),
-        .active = readFlag(input.Get("active")),
-        .direction = {readNumber(direction.Get(uint32_t(0)), -1.0, 1.0),
-                      readNumber(direction.Get(uint32_t(1)), -1.0, 1.0),
-                      readNumber(direction.Get(uint32_t(2)), -1.0, 1.0)},
-        .radius = int(readNumber(input.Get("radius"), 1, MaxBrushRadius)),
-        .shape = name == "sphere" ? BrushShape::Sphere : BrushShape::Cube,
-        .dig = readFlag(input.Get("dig")),
-        .place = readFlag(input.Get("place")),
-    };
-}
-
 class Session final : public Napi::ObjectWrap<Session> {
 public:
-    explicit Session(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Session>(info), game_(std::in_place) {}
+    explicit Session(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Session>(info) { start(info); }
     static Napi::Function define(Napi::Env env) {
         return DefineClass(env, "Session", {
             InstanceMethod("advance", &Session::frame),
             InstanceMethod("restart", &Session::restart),
+            InstanceMethod("info", &Session::describe),
+            InstanceMethod("inspect", &Session::inspect),
+            InstanceMethod("chart", &Session::chart),
+            InstanceMethod("abandon", &Session::abandon),
         });
     }
 
 private:
-    std::optional<Simulation> game_;
+    std::unique_ptr<Game> game_;
+    PlanetOptions planet_;
+    ChartGate charts_;   // declared after game_: destroyed first, which waits for charts still reading that world
 
-    void restart(const Napi::CallbackInfo&) {
-        game_.emplace();
+    // A planet takes seconds to minutes to evolve and blocks the calling thread for that long.
+    void start(const Napi::CallbackInfo& info) {
+        try {
+            planet_ = parseWorld(info[0]);
+            favourCallingThread();   // this thread advances the game from now on
+            charts_.wait();
+            game_.reset();
+            game_ = std::make_unique<Game>(planet_);
+        } catch (const Napi::Error&) {
+            throw;
+        } catch (const std::exception& error) {
+            throw Napi::Error::New(info.Env(), error.what());
+        }
+    }
+
+    void restart(const Napi::CallbackInfo& info) { start(info); }
+
+    // Lets go of the world without taking it down, for a process that is about to exit. Taking a
+    // world down waits for every tile build in flight, which can be most of a minute; an exiting
+    // process has no use for that. The world and its threads live on until the process ends, so
+    // the addon must stay loaded until then.
+    void abandon(const Napi::CallbackInfo&) {
+        charts_.wait();
+        (void)game_.release();
+    }
+
+    // A failed start leaves no world behind; every other call needs one.
+    Game& game(Napi::Env env) {
+        if (!game_) throw Napi::Error::New(env, "No world has been started");
+        return *game_;
+    }
+
+    Napi::Value describe(const Napi::CallbackInfo& info) {
+        const Game& world = game(info.Env());
+        auto output = Napi::Object::New(info.Env());
+        output["seed"] = double(planet_.seed);
+        output["age"] = planet_.age;
+        output["seaLevel"] = world.nature.world.planet.seaLevel;
+        output["worldFloor"] = sim::WorldFloor;
+        output["planetSpan"] = sim::PlanetSpan;
+        output["faceWords"] = world.cubes ? FaceWords : FaceWords - 1;
+        if (world.cubes) {
+            auto cubes = Napi::Object::New(info.Env());
+            cubes["reach"] = world.cubes->reach;
+            cubes["side"] = CubeSide;
+            cubes["band"] = CubeBand;
+            cubes["finestLevel"] = FinestCubes;
+            cubes["coarsestLevel"] = CoarsestCubes;
+            cubes["viewDistance"] = CubeView;
+            output["cubes"] = cubes;
+        } else {
+            output["cubes"] = info.Env().Null();
+        }
+        return output;
+    }
+
+    Napi::Value chart(const Napi::CallbackInfo& info) { return requestChart(info, game(info.Env()).nature.world, charts_); }
+
+    Napi::Value inspect(const Napi::CallbackInfo& info) {
+        const Napi::Env env = info.Env();
+        try {
+            auto output = Napi::Object::New(env);
+            for (const auto& [key, value] : derivean::inspect(game(env), readPlace(info[0]), readPlace(info[1]))) {
+                if (const double* number = std::get_if<double>(&value)) output.Set(key, *number);
+                else output.Set(key, std::get<std::string>(value));
+            }
+            return output;
+        } catch (const Napi::Error&) {
+            throw;
+        } catch (const std::exception& error) {
+            throw Napi::Error::New(env, error.what());
+        }
     }
 
     Napi::Value frame(const Napi::CallbackInfo& info) {
         try {
-            return renderFrame(info.Env(), advance(*game_, parseCommand(info)));
+            return renderFrame(info.Env(), advance(game(info.Env()), parseCommand(info)));
         } catch (const Napi::Error&) {
             throw;
         } catch (const std::exception& error) {
@@ -170,6 +120,13 @@ Napi::Object initialize(Napi::Env env, Napi::Object exports) {
     world["defaultBrushRadius"] = DefaultBrushRadius;
     world["maxBrushRadius"] = MaxBrushRadius;
     world["waterUnitsPerVoxel"] = WaterUnits;
+    auto far = Napi::Object::New(env);
+    far["cells"] = PatchCells;
+    far["splitCells"] = SplitCells;
+    far["morphStart"] = MorphStart;
+    far["viewDistance"] = ViewDistance;
+    world["far"] = far;
+    world["snowLadder"] = numbers(env, sim::SnowLadder);
     world["materials"] = project(env, Materials, [](Napi::Env env, const MaterialInfo& value) {
         auto material = Napi::Object::New(env);
         material["name"] = Napi::String::New(env, value.name.data(), value.name.size());

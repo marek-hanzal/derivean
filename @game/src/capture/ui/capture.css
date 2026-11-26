@@ -1,0 +1,11 @@
+#game[data-mode="capture"] .launcher, #game[data-mode="capture"] #hud { display: none; }
+.capture-line {
+  position: absolute;
+  left: 12px;
+  bottom: 9px;
+  color: rgb(240 236 220 / 82%);
+  font: 600 10px/1.2 var(--mono);
+  text-shadow: 0 1px 3px #09140b, 0 0 2px #111;
+  white-space: pre;
+  pointer-events: none;
+}

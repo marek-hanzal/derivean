@@ -4,32 +4,69 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DeRivean</title>
+    <title>DeRivean · Fable</title>
   </head>
   <body>
-    <main id="game" data-mode="boot">
-      <canvas id="world" aria-label="DeRivean world"></canvas>
-      <div class="veil"></div>
+    <main id="game" class="layer" data-mode="boot">
+      <canvas id="world" class="layer" aria-label="DeRivean world"></canvas>
+      <div class="veil layer"></div>
       <header class="masthead">
         <div class="mark" aria-hidden="true"><i></i><i></i><i></i></div>
         <span>DeRivean</span>
       </header>
-      <section id="menu" data-ui="Launcher" class="launcher">
+      <section id="menu" data-ui="Launcher" class="launcher layer">
         <div class="launcher-body">
-          <div class="launch-kicker"><i></i> VOXEL PHYSICS SANDBOX</div>
+          <div class="launch-kicker"><i class="diamond"></i> VOXEL PHYSICS SANDBOX</div>
           <h1>DeRivean<span aria-hidden="true">.</span></h1>
           <p>Cut into the terrain and see what holds.</p>
+          <form id="world-form" class="world-form" autocomplete="off">
+            <div class="field">
+              <label class="field-name" for="seed">SEED</label>
+              <input id="seed" type="text" inputmode="numeric" spellcheck="false" aria-invalid="false">
+            </div>
+            <div class="field">
+              <label class="field-name" for="age">AGE</label>
+              <div class="age">
+                <input id="age" type="text" spellcheck="false" aria-invalid="false" aria-describedby="age-readout">
+                <span id="age-readout" class="readout"></span>
+              </div>
+            </div>
+            <div class="field">
+              <span class="field-name"></span>
+              <div id="age-presets" class="choices" role="group" aria-label="Control ages"></div>
+            </div>
+            <div class="field">
+              <span class="field-name">SPAWN</span>
+              <div class="spawn">
+                <input id="spawn-x" type="text" inputmode="decimal" spellcheck="false" placeholder="X · nearest shore" aria-label="Spawn X in metres" aria-invalid="false">
+                <input id="spawn-z" type="text" inputmode="decimal" spellcheck="false" placeholder="Z · nearest shore" aria-label="Spawn Z in metres" aria-invalid="false">
+              </div>
+            </div>
+          </form>
           <nav>
             <button type="button" id="play" data-action="enter world" disabled><span id="play-label">Preparing world</span><span aria-hidden="true">↗</span></button>
             <button type="button" id="quit" data-action="exit derivean">Exit game</button>
           </nav>
-          <p id="message" class="message" role="status" hidden></p>
+          <div class="clock-row">
+            <div class="field">
+              <span class="field-name">TIME</span>
+              <div id="clock-rates" class="choices" role="group" aria-label="Clock rate"></div>
+            </div>
+            <div class="field">
+              <span class="field-name"></span>
+              <div id="clock-skips" class="choices" role="group" aria-label="Skip ahead"></div>
+            </div>
+            <span id="clock-date" class="readout"></span>
+          </div>
+          <p id="progress" class="progress" role="status"></p>
+          <p id="message" class="message" role="alert" hidden></p>
         </div>
-        <div class="launch-footer"><span>THE STACKED CHANNELS</span><span id="voxel-scale"></span></div>
+        <div class="launch-footer"><span id="world-name"></span><span id="voxel-scale"></span></div>
       </section>
-      <section id="hud" data-ui="GameHud" hidden>
+      <section id="hud" class="layer" data-ui="GameHud" data-flying="false" hidden>
         <div class="crosshair" data-target="false" aria-hidden="true"></div>
-        <div class="field-label"><i></i> THE STACKED CHANNELS</div>
+        <div class="world-tag"><i class="diamond"></i> <span id="world-tag"></span></div>
+        <div class="clock" id="clock"></div>
         <div class="terrain-label" id="material">—</div>
         <div class="tools">
           <div class="tool-info"><span>EXCAVATION BRUSH</span><strong id="brush-size"></strong></div>
@@ -39,11 +76,17 @@
           </div>
         </div>
         <div class="controls">
-          <span><kbd>WASD</kbd> Move</span><span><kbd>SPACE</kbd> Jump</span><span><kbd>SHIFT</kbd> Sprint</span>
-          <span><kbd>LMB</kbd> Cut</span><span><kbd>RMB</kbd> Place <span id="stock"></span></span><span><kbd>WHEEL</kbd> Size</span><span><kbd>ESC</kbd> Menu</span><span><kbd>F3</kbd> Stats</span>
+          <span class="walking"><kbd>WASD</kbd> Move</span><span class="walking"><kbd>SPACE</kbd> Jump</span><span class="walking"><kbd>SHIFT</kbd> Sprint</span><span class="walking"><kbd>SPACE ×2</kbd> Fly</span>
+          <span class="flying"><kbd>WASD</kbd> Fly</span><span class="flying"><kbd>SPACE</kbd> Up</span><span class="flying"><kbd>SHIFT</kbd> Down</span><span class="flying"><kbd>CTRL</kbd> Boost</span><span class="flying"><kbd>SPACE ×2</kbd> Walk</span>
+          <span><kbd>LMB</kbd> Cut</span><span><kbd>RMB</kbd> Place <span id="stock"></span></span><span><kbd>WHEEL</kbd> Size</span>
+          <span><kbd>P</kbd> <kbd>,</kbd> <kbd>.</kbd> Time</span><span><kbd>N</kbd> <kbd>B</kbd> Day, season</span>
+          <span><kbd>M</kbd> Map</span><span><kbd>I</kbd> Inspect</span><span><kbd>L</kbd> Plain light</span><span><kbd>ESC</kbd> Menu</span><span><kbd>F3</kbd> Stats</span>
         </div>
         <output id="metrics" class="metrics" hidden></output>
+        <aside id="inspector" class="inspector" data-ui="Inspector" aria-live="polite" hidden></aside>
       </section>
+      <section id="map" class="map layer" data-ui="WorldMap" aria-label="Map" hidden></section>
+      <div id="capture-line" class="capture-line" hidden></div>
     </main>
     <script type="module" src="./src/index.ts"></script>
   </body>

@@ -12,7 +12,7 @@ struct VoxelPiece {
 
 struct CollapseResult {
     std::vector<VoxelPiece> pieces;
-    std::vector<Cell> looseSand;
+    std::vector<std::pair<Cell, Material>> loose;   // granular voxels of a fallen piece, each to become a grain of its material
 };
 
 CollapseResult collapse(VoxelWorld& world, std::vector<Cell>& changed);

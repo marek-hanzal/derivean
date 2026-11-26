@@ -1,0 +1,64 @@
+#pragma once
+
+#include "coast/constant/Waves.hpp"
+#include "landscape/type/Terrain.hpp"
+
+namespace derivean::sim {
+
+// Totals in m³ of solid over every cell of a domain for one replay. They close: loose cover and
+// surf debris at the end = at the start + cut − dissolved + entered − left.
+struct CoastLedger {
+    double cut{};         // rock the waves broke off
+    double dissolved{};   // the part of it that went into solution
+    double entered{};     // sand and gravel handed in by the surf of cells that do not evolve
+    double left{};        // carried onto such cells
+};
+
+inline constexpr float NoWater = -1e30f;
+
+// The coast's working state of one replay. Per-cell arrays have Domain::cells() entries; the wave
+// arrays have WaveDirections values per cell.
+struct Shore {
+    std::vector<float> beyond;    // m², per train: what arrives at a Rim cell from outside the domain; empty where none does
+    std::vector<float> wave;      // m², per train: what leaves a cell
+    std::vector<float> arrive;    // m², per train: what reaches a cell, before the cell's own depth acts on it
+    std::vector<float> top;       // m, rock plus loose cover as the coast works on it
+    std::vector<float> stood;     // m, water surface where water stood when the step was flooded; NoWater elsewhere
+    std::vector<float> still;     // m, still water that waves ride on to reach a cell; NoWater where none can
+    std::vector<float> notch;     // m the foot of each column has been cut back since it last came down
+    std::vector<float> pending[SedimentClasses];   // m of broken rock in the surf of a cell, not yet carried off or laid
+    std::vector<float> cut, laid; // m of rock the waves took and of cover they left, net, over the replay
+    std::vector<float> before;    // m of loose cover when the step's work began
+    std::vector<float> rate;      // m/yr each face is going back in the current round
+    std::vector<float> load[SedimentClasses];      // m of sand and gravel on its way through a cell in the current sweep
+    int minX{}, maxX{-1}, minZ{}, maxZ{-1};        // box around every cell with still water, one cell wider
+    CoastLedger ledger;
+};
+
+// What a finished tile keeps of its shore. Null for a tile no standing water reaches.
+struct ShoreRecord {
+    // Per cell and train, in steps of WaveQuantum: the height that leaves a cell of water and the
+    // height that strikes a cell of land. A finer level reads its open boundary from this.
+    std::vector<uint8_t> height;
+    std::vector<float> notch;       // m the foot of the column is cut back: the notch under a face, the bench before it where wider
+    std::vector<float> cut, laid;   // m, as in Shore
+    CoastLedger ledger;
+};
+
+inline float swingOf(const Domain& domain, float water) { return water <= float(domain.seaLevel) + SeaBand ? SeaSwing : LakeSwing; }
+
+// Calls `visit(x, z)` for every cell of the shore's box so that a cell comes after the three it
+// receives a train travelling towards neighbour `k` from, and before the three it hands it to.
+template<typename Visit>
+void sweepDownwind(const Shore& shore, int k, Visit&& visit) {
+    const int dx = NeighborX[k], dz = NeighborZ[k];
+    if (dz == 0) {
+        for (int x = dx > 0 ? shore.minX : shore.maxX; x >= shore.minX && x <= shore.maxX; x += dx)
+            for (int z = shore.minZ; z <= shore.maxZ; ++z) visit(x, z);
+        return;
+    }
+    for (int z = dz > 0 ? shore.minZ : shore.maxZ; z >= shore.minZ && z <= shore.maxZ; z += dz)
+        for (int x = dx >= 0 ? shore.minX : shore.maxX; x >= shore.minX && x <= shore.maxX; x += dx >= 0 ? 1 : -1) visit(x, z);
+}
+
+} // namespace derivean::sim

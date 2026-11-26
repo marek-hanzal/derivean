@@ -1,0 +1,62 @@
+import type { WorldOptions } from "../../../contract/GameBridge";
+import type { WeatherSought } from "../../clouds/fn/findWeather";
+
+export interface CaptureShot {
+  // File stem of the PNG and JSON written for the shot.
+  name: string;
+  // World metres of the player's feet. A null height stands the player on the ground there (or hovers over
+  // water). Omitted leaves the player where the world or the previous shot put them.
+  position?: [number, number | null, number];
+  // With a null height, or with no position at all (which keeps the player's place): fly this many metres above
+  // the ground or water there. Zero stands on it.
+  above?: number;
+  // Radians. Yaw 0 looks north (-Z) and grows to the west; positive pitch looks up.
+  yaw: number;
+  pitch: number;
+  fly: boolean;
+  // Neutral relief shading instead of daylight.
+  plain?: boolean;
+  // The calendar moment to shoot at: the clock skips ahead to the next such day of the year (0…365) and hour
+  // (0…24) and the shot waits for the weather to catch up. `rate` then stays as the clock's rate.
+  time?: { dayOfYear?: number; hour?: number; rate?: number };
+  // Shoot from the weather cell that best shows this instead of from `position`, whose height still applies.
+  // It picks where to look in the simulated weather; it never makes any.
+  seek?: WeatherSought;
+  // False draws the shot without clouds, for timing them.
+  clouds?: boolean;
+  // Once the view has settled, fly level along the yaw this long and shoot on arrival. The record then carries
+  // the frame times of the flight. Needs `fly`.
+  cruise?: { seconds: number; boost?: boolean };
+  // Opens the map over the shot, centred on the player, with this many metres across the shorter side of the
+  // window; the shot waits for its sharp chart and a cruise flies with the map open. Omitted closes the map.
+  map?: { span: number };
+}
+
+export interface CapturePlan {
+  // Omitted starts the engine's default world.
+  world?: WorldOptions;
+  // Directory for the shots. Like the plan's own path, a relative one starts at the repository root; main/capture.mjs
+  // names the one used when absent.
+  out?: string;
+  // How long the surroundings must stay ready with nothing pending before a shot. A shot is also taken, and marked
+  // `stalled`, once the world is playable and pending work has stopped delivering. Defaults: constant/timing.
+  settleSeconds?: number;
+  // Upper bound on waiting for one shot; the shot is then taken anyway and marked `timedOut`.
+  timeoutSeconds?: number;
+  // Window content size in CSS pixels; the window's usual size when absent.
+  size?: [number, number];
+  shots: CaptureShot[];
+}
+
+export interface CaptureBridge {
+  plan(): Promise<CapturePlan>;
+  shot(name: string, record: unknown): Promise<void>;
+  finish(failure?: string): Promise<void>;
+}
+
+declare global {
+  interface Window {
+    // Present only when the app was started with DERIVEAN_CAPTURE.
+    deriveanCapture?: CaptureBridge;
+  }
+}

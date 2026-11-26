@@ -1,7 +1,7 @@
 #include "granular/type/Sand.hpp"
 #include "particles/type/VoxelContact.hpp"
 #include "physics/constant/Gravity.hpp"
-#include "simulation/type/JoltRuntime.hpp"
+#include "physics/service/JoltRuntime.hpp"
 
 #include <cmath>
 #include <numbers>
@@ -32,12 +32,13 @@ std::optional<Cell> fallDirection(const VoxelWorld& world, Cell voxel) {
     return std::nullopt;
 }
 
-void addGrain(SandState& sand, Cell point, Cell direction) {
+void addGrain(SandState& sand, Cell point, Cell direction, Material material) {
     sand.grains.push_back({
         {(point.x + 0.5 + direction.x) * VoxelSize,
          (point.y + 0.5) * VoxelSize,
          (point.z + 0.5 + direction.z) * VoxelSize},
         {direction.x * 0.35, 0, direction.z * 0.35},
+        material,
     });
 }
 
@@ -63,17 +64,20 @@ void releaseSand(SandState& sand, VoxelWorld& world, std::vector<Cell>& changed)
         changed.push_back(point);
         neighborsAbove(candidates, point);
 
-        addGrain(sand, point, *direction);
+        addGrain(sand, point, *direction, Material::Sand);
     }
 }
 
-void scatterSand(SandState& sand, std::span<const Cell> cells) {
-    for (Cell point : cells) addGrain(sand, point, {});
+void scatterSand(SandState& sand, std::span<const Cell> cells, Material material) {
+    for (Cell point : cells) addGrain(sand, point, {}, material);
 }
 
 void stepSand(SandState& sand, VoxelWorld& world, WaterState& water, double dt, std::vector<Cell>& landed,
               const JoltRuntime* physics, double lowestMoving) {
     std::erase_if(sand.grains, [&](SandGrain& grain) {
+        // A grain whose own ground is not loaded waits where it is; working it free of that
+        // unknown would move it by what happens to be loaded.
+        if (reachesUnloaded(world, grain.position, GrainSize * 0.5)) return false;
         const auto clear = recoverFromTerrain(world, grain.position, GrainSize * 0.5);
         if (!clear) return false;
         const Position from = *clear;
@@ -97,10 +101,16 @@ void stepSand(SandState& sand, VoxelWorld& world, WaterState& water, double dt, 
             }
             const Position sample = interpolate(from, to, fraction);
             if (touchesTerrain(world, sample, GrainSize * 0.5)) {
+                // Ground that is not loaded offers no surface yet. The grain waits as it is, so
+                // where it ends up does not depend on what was loaded when it got here.
+                if (reachesUnloaded(world, sample, GrainSize * 0.5)) {
+                    grain.velocity[1] += Gravity * dt;
+                    return false;
+                }
                 const Cell site = cellAt(lastFree);
                 if (materialAt(world, site) == Material::Air &&
                     (!physics || !physics->overlapsMovingVoxel(site)) && displaceWater(water, world, site)) {
-                    setVoxel(world, site, Material::Sand);
+                    setVoxel(world, site, grain.material);
                     landed.push_back(site);
                     ++sand.deposited;
                     return true;
@@ -114,17 +124,17 @@ void stepSand(SandState& sand, VoxelWorld& world, WaterState& water, double dt, 
 
         grain.position = to;
         const double upper = to[1] + GrainSize * 0.5;
-        if (grain.velocity[1] >= 0 || !belowTerrain(world, upper) || upper >= lowestMoving) return false;
+        if (grain.velocity[1] >= 0 || !inVoid(world, upper) || upper >= lowestMoving) return false;
         ++sand.escaped;
         return true;
     });
 }
 
-void projectSand(ParticleProjection& output, const SandState& sand, Bounds visible) {
+void projectSand(ParticleProjection& output, const SandState& sand, Bounds visible, Position origin) {
     for (const auto& grain : sand.grains) {
         if (!visible.contains(cellAt(grain.position))) continue;
-        appendParticle(output, float(grain.position[0]), float(grain.position[1]), float(grain.position[2]),
-                       GrainSize, ParticleKind::Sand);
+        appendParticle(output, float(grain.position[0] - origin[0]), float(grain.position[1] - origin[1]),
+                       float(grain.position[2] - origin[2]), GrainSize, ParticleKind::Sand);
     }
 }
 

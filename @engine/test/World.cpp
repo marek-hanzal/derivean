@@ -1,46 +1,14 @@
 #include "granular/type/Sand.hpp"
 #include "particles/type/VoxelContact.hpp"
-#include "simulation/type/JoltRuntime.hpp"
+#include "physics/service/JoltRuntime.hpp"
 #include "voxel/type/Mesh.hpp"
 #include "water/type/Water.hpp"
 
-#include <cstdlib>
-#include <iostream>
+#include "WaterChecks.hpp"
 
 using namespace derivean;
 
 namespace {
-
-void expect(bool passed, const char* message) {
-    if (passed) return;
-    std::cerr << message << '\n';
-    std::exit(1);
-}
-
-void checkBalance(const WaterState& water) {
-    uint64_t cells = 0, parcels = 0;
-    for (const auto& [point, amount] : water.cells) {
-        expect(amount > 0 && amount <= WaterUnits, "Overfilled or empty water cell");
-        cells += amount;
-    }
-    for (const auto& parcel : water.parcels) parcels += parcel.amount;
-    expect(cells == water.budget.bulk && parcels == water.budget.airborne, "Water ledger disagrees with stored state");
-    expect(cells + parcels + water.budget.escaped == water.budget.initial, "Water volume changed");
-}
-
-void simulate(WaterState& water, const VoxelWorld& world, int steps, const JoltRuntime* runtime = nullptr) {
-    for (int step = 0; step < steps; ++step) {
-        advanceWater(water, world, 1.0 / 120.0, runtime, runtime ? 0.0 : 1e100);
-        checkBalance(water);
-    }
-}
-
-uint64_t below(const WaterState& water, int level) {
-    uint64_t count = 0;
-    for (const auto& [cell, amount] : water.cells)
-        if (cell.y < level) count += amount;
-    return count;
-}
 
 void sparseTerrain() {
     VoxelWorld world;
@@ -52,23 +20,15 @@ void sparseTerrain() {
     setVoxel(world, sky, Material::Shale);
     expect(sampleWorld(world, chunkBounds(chunkOf(floor)))[floor] == Material::Bedrock, "Deep tile did not round trip");
     expect(sampleWorld(world, chunkBounds(chunkOf(sky)))[sky] == Material::Shale, "Sky tile did not round trip");
-    expect(!belowTerrain(world, -125), "A remote floor must still count as material");
     expect(carve(world, floor, 1, BrushShape::Cube).size() == 1, "Lowest authored material should be destructible");
-    expect(belowTerrain(world, 0), "Empty space beneath the remaining island should be open");
+    expect(!inVoid(world, -1000) && inVoid(world, sim::WorldFloor - 1), "Only the world floor bounds the world, whatever material is left");
     removeVoxel(world, sky);
-    expect(world.tiles.empty() && world.chunks.empty() && world.occupiedLevels.empty(), "Empty tiles survived removal");
-}
-
-void trough(VoxelWorld& world, int floor, int width) {
-    fillBox(world, {{-width, floor, -4}, {width + 1, floor + 1, 5}}, Material::Basalt);
-    fillBox(world, {{-width, floor + 1, -4}, {-width + 1, floor + 8, 5}}, Material::Basalt);
-    fillBox(world, {{width, floor + 1, -4}, {width + 1, floor + 8, 5}}, Material::Basalt);
-    fillBox(world, {{-width + 1, floor + 1, -4}, {width, floor + 8, -3}}, Material::Basalt);
-    fillBox(world, {{-width + 1, floor + 1, 4}, {width, floor + 8, 5}}, Material::Basalt);
+    expect(world.tiles.empty() && world.chunks.empty(), "Empty tiles survived removal");
 }
 
 void independentTroughsAndVoid() {
     VoxelWorld world;
+    world.voidLevel = -6;
     WaterState water;
     constexpr int upper = 65, lower = -66;
     trough(world, upper, 4);
@@ -179,6 +139,7 @@ void weakBearingFails() {
 
 void contactsAndSediment() {
     VoxelWorld world;
+    world.voidLevel = -2;
     WaterState water;
     JoltRuntime physics;
     physics.returnPlayer({0.5, 0.025, 1.7});
@@ -198,7 +159,7 @@ void contactsAndSediment() {
 
 } // namespace
 
-int main() {
+void testWorld() {
     sparseTerrain();
     independentTroughsAndVoid();
     damAndDisplacement();

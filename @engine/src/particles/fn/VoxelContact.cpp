@@ -29,6 +29,17 @@ bool touchesTerrain(const VoxelWorld& world, Position point, double halfSize) {
     return false;
 }
 
+bool reachesUnloaded(const VoxelWorld& world, Position point, double halfSize) {
+    if (!world.streamed) return false;
+    const Cell min = chunkOf(cellAt({point[0] - halfSize, point[1] - halfSize, point[2] - halfSize}));
+    const Cell max = chunkOf(cellAt({point[0] + halfSize, point[1] + halfSize, point[2] + halfSize}));
+    for (int y = min.y; y <= max.y; ++y)
+        for (int z = min.z; z <= max.z; ++z)
+            for (int x = min.x; x <= max.x; ++x)
+                if (!known(world, {x, y, z})) return true;
+    return false;
+}
+
 std::optional<Position> recoverFromTerrain(const VoxelWorld& world, Position point, double halfSize) {
     // Another grain can settle or a player can build between two sweeps.
     if (!touchesTerrain(world, point, halfSize)) return point;
