@@ -8,4 +8,7 @@ namespace derivean {
 // waits for every `every` seconds and whenever one changes, with what keeps each of them false.
 void watchReadiness(Game& game, double duration, double every);
 
+// Times the steps a game's start waits for, one after another, without a game (bench/Start.cpp).
+void timeStart(double age);
+
 } // namespace derivean

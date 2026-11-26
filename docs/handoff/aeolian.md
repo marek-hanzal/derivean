@@ -65,7 +65,7 @@ Second worker, 26 Nov. Pictures and logs in `.out/aeolian/w/`; nothing is half-e
 
 **Measured.** Thread CPU of one tile replay, wind on against off, parents built beforehand, on a loaded machine: Region 6.8 s against 5.4 s; Local 6.2 s against 3.9 s; Site 4.9 s against 2.7 s (500 rounds). Taken before the reviewer fixes; those change no loop.
 
-**Tests.** Every test of `test/Main.cpp` run separately against this library (results in section 7's runner log). `testLandscapePlane` fails ("a crease does not gather the water of its flanks") with the wind on and with it off: the relief stream's regression.
+**Tests.** Every test of `test/Main.cpp` (except `testVolcanicLive`, whose library function was mid-edit) run one by one against the final code at about 09:50: all pass, `testLandscapePlane` and `testLandscapeWorld` (budgets, determinism) included, except `testIceSheetLocal` and `testGroundwaterTile`, whose streams were editing their sources and tests at that moment; not attributed to the wind, not re-run.
 
 ## 4. Next steps
 

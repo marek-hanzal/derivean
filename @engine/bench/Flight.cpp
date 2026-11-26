@@ -133,10 +133,15 @@ struct Arrive {
 
 } // namespace
 
+// engine-bench [age] start: what a game's start waits for, step by step
 // engine-bench [age] [patches|cubes] [engine workers, 0 for the machine's] [plain|favoured: the frame thread] [quick: no waiting for the far rings | ready [seconds, 300]: watch the readiness signals standing still]
 int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IOLBF, 0);
     const double age = argc > 1 ? std::atof(argv[1]) : 2e9;
+    if (argc > 2 && !std::strcmp(argv[2], "start")) {
+        timeStart(age);
+        return 0;
+    }
     const bool cubes = argc > 2 && !std::strcmp(argv[2], "cubes"), plain = argc > 4 && !std::strcmp(argv[4], "plain");
     const bool quick = argc > 5 && !std::strcmp(argv[5], "quick"), ready = argc > 5 && !std::strcmp(argv[5], "ready");
     if (!plain) favourCallingThread();
