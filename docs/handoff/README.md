@@ -33,7 +33,7 @@ On 26 Nov at about 03:00 every running stream stopped mid-work on a model usage 
 
 Starting the game builds the planet first: about 8 minutes at 08:54 and still unfinished after 25 minutes at 09:30 (load 35–52, other games running). Whether the tree got slower or only the machine is not established; a cached planet or a faster build is an engine item.
 
-Thin vertical columns, one cell wide and up to hundreds of metres tall: first traced to a stale replay of 02:52–03:03 (one-cell needles of 2.2 km of loose cover from the old `settleDebris`, fixed in the relief stream), but the owner saw them again at 10:45 in a live game at the spawn (x −2521902, z −4671906) on a build after that fix. Open; under investigation with a scan of the whole view.
+Thin vertical columns, one cell wide and up to hundreds of metres tall: the owner's screenshots (2.webp, 3.webp at 10:49) match the replay of the stale 02:52–03:03 recording, which holds pre-fix loose-cover needles. No game instance the owner sees is their own; all windows are workers' (renderer replays, engine tests, live captures). Addons up to 10:13 do not have the trough-ice edit, the spawn was never glaciated, and live captures (09:36–10:45) and scans of current data (levels 5–11 ±16 km, streaming 30 min) show no pillars (`.out/inspect-columns/`). The stale recording is being removed, and replays will say REPLAY with their date on screen. Separate and real: one-cell rock needles at Site under glaciers (relief stream).
 
 The strata column is now the one at the start of the region window (`strata/fn/Window.cpp`); before, the Region read the planet's present cover and counted the window's erosion twice, so ranges showed basement only. See planet.md.
 
