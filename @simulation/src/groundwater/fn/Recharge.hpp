@@ -21,7 +21,8 @@ struct Soak {
 //   - a thin cover on tight rock fills in one storm and sheds the rest;
 //   - water runs off steep ground before it soaks in;
 //   - frozen ground and glacier ice let nothing through;
-//   - over the year no more gets in than leaves the cover, down into the rock or along the cover.
+//   - over the year no more gets in than leaves the cover, down into the rock or along the cover,
+//     and no more goes into the rock than its opened zone and joints carry to the slope's outlet.
 float infiltrationShare(const Soak& soak);
 
 } // namespace derivean::sim

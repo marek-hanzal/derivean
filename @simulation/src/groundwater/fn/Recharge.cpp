@@ -37,9 +37,14 @@ float infiltrationShare(const Soak& soak) {
     // Over the year what got in must also get out of the cover: down into the rock, or along the
     // cover to where a slope's water leaves it. The rest comes back out of the soil to the stream
     // within days, or is taken up by the air: it is not recharge. Tight rock under soil, a clay
-    // vale, recharges little however readily the soil drinks.
-    const float runoff = runoffOf(soak.rain, soak.warmth);
-    const float away = (rock.conductivity + joints + along * std::max(soak.slope, LeastGradient) / HillLength) * PerYear;
+    // vale, recharges little however readily the soil drinks. What goes down must leave the rock
+    // too, along its opened zone and the joints below to where the slope's water comes out: on
+    // gentle crystalline ground the table stands at the surface and turns the rest away.
+    const float runoff = runoffOf(soak.rain, soak.warmth), gradient = std::max(soak.slope, LeastGradient) / HillLength;
+    const float carried = (rock.conductivity + joints) * OpenedZone + (rock.conductivity + jointConductivity(rock, OpenedZone, 0)) * JointDecay;
+    // Water in carbonate rock leaves by its conduits, not along the joints.
+    const float down = soluble ? rock.conductivity + joints : std::min(rock.conductivity + joints, carried * gradient);
+    const float away = (down + along * gradient) * PerYear;
     const float drained = runoff > 0 ? std::min(1.0f, away / runoff) : 1.0f;
     return std::min({MostRecharge, entry * held * steep * thawed, drained});
 }

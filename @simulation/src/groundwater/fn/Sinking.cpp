@@ -3,6 +3,7 @@
 #include "groundwater/fn/Conductivity.hpp"
 #include "groundwater/fn/Recharge.hpp"
 #include "groundwater/fn/Swallow.hpp"
+#include "hydrology/constant/Water.hpp"
 #include "landscape/fn/Process.hpp"
 
 #include <algorithm>
@@ -10,7 +11,6 @@
 namespace derivean::sim {
 namespace {
 
-constexpr float OpenDepth = 10.0f;      // m of weathered, opened joints: the rock mass is not known at this level
 // Water that gathers on soluble rock has taken up most of what it can carry where it fell. A hollow
 // that takes it in dissolves at most this many times as fast as bare ground beside it: dolines
 // deepen until their slopes bring in as much as the floor loses.
@@ -41,7 +41,7 @@ void prepareSinks(Domain& domain) {
     std::vector<float>& base = work.soak;
     for (size_t i = 0; i < cells; ++i)
         if (fissuredBySolution(definitionOf(domain.unit[i].traits.dominant)))
-            base[i] = swallowRate({domain.unit[i].traits.dominant, domain.sedimentAt(i), std::clamp(domain.weakness[i], 0.0f, 1.0f), OpenDepth, 0.0f});
+            base[i] = swallowRate({domain.unit[i].traits.dominant, domain.sedimentAt(i), std::clamp(domain.weakness[i], 0.0f, 1.0f), OpenedZone, 0.0f});
 
     // Soluble bodies, each the land cells it joins by any of the eight neighbours, labelled in
     // index order. A body rises at its lowest free cell that meets other rock, the sea or the rim:
@@ -118,11 +118,17 @@ void prepareSinks(Domain& domain) {
     // What reached a lake: what it passed to its outlet and what its floor took in. A hollow opens
     // only where one cell's floor takes all of that; judged by what the lake passed on alone, a
     // lake whose floor takes nearly all would open, overflow its one cell, and close again.
+    // What its surface gave back to the air reached it as well (landscape/fn/Flow.cpp, at this
+    // step's climate): in dry country a lake that loses most of its inflow so would otherwise
+    // look small enough to drain down.
+    const float area = float(domain.cell * domain.cell), sea = float(domain.seaLevel);
     std::vector<float>& lake = work.lake;
     lake.assign(cells, 0.0f);
-    for (size_t i = 0; !fresh && i < cells; ++i)
-        if (domain.spill[i] >= 0 && outlet[i] >= 0) lake[size_t(outlet[i])] += work.sunk[i];
-    const float area = float(domain.cell * domain.cell);
+    for (size_t i = 0; !fresh && i < cells; ++i) {
+        if (domain.spill[i] < 0 || outlet[i] < 0) continue;
+        const bool open = domain.level[i] > domain.surface[i] + 1e-3f && domain.level[i] > sea + 0.5f;
+        lake[size_t(outlet[i])] += work.sunk[i] + (open ? std::max(0.0f, evaporationDemand(domain.warmthNow[i]) - domain.rain[i]) * area : 0.0f);
+    }
     for (size_t i = 0; i < cells; ++i) {
         float inflow = work.received[i] >= 0 ? work.received[i] : domain.discharge[i];
         if (domain.spill[i] >= 0 && outlet[i] >= 0) inflow = domain.discharge[size_t(outlet[i])] + lake[size_t(outlet[i])];
@@ -159,7 +165,10 @@ float soakAt(Domain& domain, size_t cell, float own) {
 
 float sinkAt(Domain& domain, size_t cell, float water, bool standing, bool pit) {
     SinkWork& work = domain.sinking;
-    if (!work.active() || work.rate[cell] <= 0 || water <= 0) return 0;
+    if (!work.active() || work.rate[cell] <= 0) return 0;
+    // An open hollow nothing reached this step took nothing: what reached it the step before is gone.
+    if (pit && water <= 0) work.received[cell] = 0;
+    if (water <= 0) return 0;
     const float width = float(domain.cell);
     const float lost = pit || standing ? std::min(water, work.rate[cell] * width * width) : swallowed(work.rate[cell], water, width);
     // What an open hollow cannot take leaves this step's surface water here (it would fill the

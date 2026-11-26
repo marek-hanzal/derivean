@@ -47,6 +47,7 @@ inline constexpr float JointReference = 3.0f;         // m
 inline constexpr float OpenJointGain = 10.0f;         // within RockMass::openDepth of the rock surface
 inline constexpr float JointDecay = 60.0f;            // m of depth over which joints lose 1/e of their conductivity
 inline constexpr float SolutionGain = 30.0f;          // how much more the joints of carbonate rock conduct for being widened by solution
+inline constexpr float OpenedZone = 10.0f;            // m of weathered, opened joints where the rock mass is not known: closed forms of a cell
 inline constexpr float FaultConductivity = 2.0e-6f;   // m/s along the crushed rock of a domain fault, at any depth it reaches
 inline constexpr float FaultDepth = 3000.0f;          // m a fault's crushed rock stays open to
 inline constexpr float DriveRatio = 6.0f;             // m of depth water is driven down a fault per metre its catchment stands above the vent

@@ -22,6 +22,10 @@ void testHooks() {
     expectWater(soak(Material::Shale, 0.3f, 0.1f, 8, 0) < 0.05f, "soil on shale recharges as if water could leave it", soak(Material::Shale, 0.3f, 0.1f, 8, 0));
     expectWater(infiltrationShare({1.0f, 8, 0.1f, {0, 1.0f, 0}, 0, Material::Shale}) > 0.5f, "a sand cover on shale takes in no water", infiltrationShare({1.0f, 8, 0.1f, {0, 1.0f, 0}, 0, Material::Shale}));
     expectWater(soak(Material::Granite, 0.5f, 0.1f, -6, 0) == 0 && soak(Material::Granite, 0.5f, 0.1f, 8, 30) == 0, "frozen or ice-covered ground soaks up rain");
+    // Granite's opened zone carries away no more than its slope drives: on flat ground most of
+    // what the soil drinks is turned back, while sandstone takes it on.
+    expectWater(soak(Material::Granite, 0.3f, 0.01f, 8, 0) < 0.6f * soak(Material::Granite, 0.3f, 0.05f, 8, 0), "flat granite takes on all its soil can drink", soak(Material::Granite, 0.3f, 0.01f, 8, 0));
+    expectWater(soak(Material::Sandstone, 0, 0.01f, 8, 0) > 0.8f, "flat sandstone turns rain away", soak(Material::Sandstone, 0, 0.01f, 8, 0));
 
     const float bare = swallowRate({Material::Limestone, 0, 0, 10, 0}), plugged = swallowRate({Material::Limestone, 4, 0, 10, 0});
     expectWater(swallowRate({Material::Granite, 0, 0.5f, 10, 0}) == 0 && swallowRate({Material::RockSalt, 0, 0, 10, 0}) == 0, "rock that water does not fissure swallows streams");
