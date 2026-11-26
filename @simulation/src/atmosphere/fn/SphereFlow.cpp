@@ -8,6 +8,7 @@
 #include <cassert>
 #include <cmath>
 #include <numbers>
+#include <utility>
 
 namespace derivean::sim {
 namespace {
@@ -18,9 +19,27 @@ namespace {
 constexpr double FilterStrength = 0.1;
 constexpr double FilterSplit = 0.53;
 
-void invert(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson) {
-    flow.inversion = solveSpherePoisson(poisson, grid, flow.vorticity, flow.stream, flow.tolerance, flow.limit);
-    flow.flux = streamFluxOf(grid, stencil, flow.stream);
+// Inverts the candidate vorticity into the candidate stream function and fluxes, starting from the
+// accepted ψ; the accepted state is not touched.
+bool invertTrial(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson) {
+    flow.trialStream = flow.stream;
+    flow.inversion = solveSpherePoisson(poisson, grid, flow.trialVorticity, flow.trialStream, flow.tolerance, flow.limit);
+    if (!flow.inversion.converged) return false;
+    flow.trialFlux = streamFluxOf(grid, stencil, flow.trialStream);
+    return true;
+}
+
+// Drops the older time level, so the next step is a forward step. Only with ζ, ψ and the fluxes
+// consistent: after setVorticity's inversion or when the step changes.
+void restart(SphereFlow& flow) {
+    flow.before = flow.vorticity;
+    flow.started = false;
+}
+
+void acceptTrial(SphereFlow& flow) {
+    std::swap(flow.vorticity, flow.trialVorticity);
+    std::swap(flow.stream, flow.trialStream);
+    std::swap(flow.flux, flow.trialFlux);
 }
 
 // −∇·(v q) per cell with the edge value of q the mean of its two cells moved to the edge's midpoint
@@ -69,30 +88,48 @@ SphereFlow makeSphereFlow(const SphereGrid& grid, double rotation) {
     return flow;
 }
 
-void setVorticity(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson, const std::vector<double>& vorticity) {
-    flow.vorticity = vorticity;
-    flow.before = vorticity;
-    flow.started = false;
-    invert(flow, grid, stencil, poisson);
+bool setVorticity(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
+                  const std::vector<double>& vorticity) {
+    assert(vorticity.size() == size_t(grid.cells));
+    flow.trialVorticity = vorticity;
+    if (!invertTrial(flow, grid, stencil, poisson)) return false;
+    acceptTrial(flow);
+    restart(flow);
+    return true;
 }
 
-void stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson, double step) {
+void setStep(SphereFlow& flow, double step) {
+    assert(step > 0);
+    if (step == flow.step) return;
+    flow.step = step;
+    restart(flow);
+}
+
+bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson) {
+    if (!(flow.step > 0)) return false;   // also NaN
+    const double step = flow.step;
+    const size_t n = size_t(grid.cells);
     tendencyOf(flow, grid, stencil, flow.vorticity, flow.tendency);
-    flow.next.resize(size_t(grid.cells));
+    flow.trialVorticity.resize(n);
+    flow.trialBefore.resize(n);
     if (!flow.started) {
-        for (size_t c = 0; c < flow.next.size(); ++c) flow.next[c] = flow.vorticity[c] + step * flow.tendency[c];
-        flow.before = flow.vorticity;
-        flow.vorticity = flow.next;
-        flow.started = true;
+        for (size_t c = 0; c < n; ++c) {
+            flow.trialVorticity[c] = flow.vorticity[c] + step * flow.tendency[c];
+            flow.trialBefore[c] = flow.vorticity[c];
+        }
     } else {
-        for (size_t c = 0; c < flow.next.size(); ++c) {
+        for (size_t c = 0; c < n; ++c) {
             const double next = flow.before[c] + 2 * step * flow.tendency[c];
             const double curve = 0.5 * FilterStrength * (flow.before[c] - 2 * flow.vorticity[c] + next);
-            flow.before[c] = flow.vorticity[c] + FilterSplit * curve;
-            flow.vorticity[c] = next - (1 - FilterSplit) * curve;
+            flow.trialBefore[c] = flow.vorticity[c] + FilterSplit * curve;
+            flow.trialVorticity[c] = next - (1 - FilterSplit) * curve;
         }
     }
-    invert(flow, grid, stencil, poisson);
+    if (!invertTrial(flow, grid, stencil, poisson)) return false;
+    acceptTrial(flow);
+    std::swap(flow.before, flow.trialBefore);
+    flow.started = true;
+    return true;
 }
 
 double outflowCourant(const SphereGrid& grid, const std::vector<double>& flux, double step) {

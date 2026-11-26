@@ -35,7 +35,7 @@ SphereFlow solidRotation(const SphereGrid& grid, const SphereStencil& stencil, S
     SphereFlow flow = makeSphereFlow(grid, rotation);
     std::vector<double> vorticity(size_t(grid.cells));
     for (int c = 0; c < grid.cells; ++c) vorticity[size_t(c)] = 2 * Spin * dot(Axis, grid.centre[size_t(c)]);
-    setVorticity(flow, grid, stencil, poisson, vorticity);
+    expect(setVorticity(flow, grid, stencil, poisson, vorticity), "solid rotation did not invert", flow.inversion.residual);
     return flow;
 }
 
@@ -48,33 +48,19 @@ double largestFlux(const std::vector<double>& flux) {
 // The step that keeps the outflow Courant number at `courant`.
 double stepFor(const SphereGrid& grid, const std::vector<double>& flux, double courant) { return courant / outflowCourant(grid, flux, 1.0); }
 
-// The Rossby–Haurwitz wave of wavenumber 4 (Haurwitz 1940; Williamson et al. 1992 case 6, ω = K =
-// 7.848e-6 1/s) is an exact solution of the non-divergent barotropic vorticity equation: the pattern
-// turns east at ν = (R(3 + R) ω − 2Ω) / ((1 + R)(2 + R)) with Earth's Ω, 12.2° a day. After a day the
-// stepped flow matches it; the integral of the absolute vorticity holds to rounding and that of
-// relative vorticity stays zero.
+// The Rossby–Haurwitz wave (rossbyHaurwitz in the fixture) with Earth's Ω turns east by 12.2° a day.
+// After a day the stepped flow matches it; the integral of the absolute vorticity holds to rounding
+// and that of relative vorticity stays zero.
 void checkWave() {
-    constexpr double Omega = 7.848e-6, Strength = 7.848e-6;
-    constexpr int Wave = 4;
     const double rotation = rotationRateAt(PresentAge);
-    const double drift = (Wave * (3 + Wave) * Omega - 2 * rotation) / ((1 + Wave) * (2 + Wave));
     double errors[3] = {}, enstrophies[3] = {};
     for (int level = 4; level <= 6; ++level) {
         const SphereGrid grid = makeSphereGrid(level);
         const SphereStencil stencil = makeSphereStencil(grid);
         SpherePoisson poisson = makeSpherePoisson(grid, stencil);
         SphereFlow flow = makeSphereFlow(grid, rotation);
-        auto wave = [&](double time) {
-            std::vector<double> vorticity(size_t(grid.cells));
-            for (int c = 0; c < grid.cells; ++c) {
-                const Vec3 d = grid.centre[size_t(c)];
-                const double around = std::hypot(d.x, d.y), longitude = std::atan2(d.y, d.x);
-                vorticity[size_t(c)] = 2 * Omega * d.z - (Wave + 1) * (Wave + 2) * Strength * std::pow(around, Wave) * d.z *
-                                                             std::cos(Wave * (longitude - drift * time));
-            }
-            return vorticity;
-        };
-        setVorticity(flow, grid, stencil, poisson, wave(0));
+        auto wave = [&](double time) { return rossbyHaurwitz(grid, rotation, time); };
+        expect(setVorticity(flow, grid, stencil, poisson, wave(0)), "the wave did not invert", flow.inversion.residual);
         auto integrals = [&](double& absolute, double& relative, double& enstrophy, double& scale) {
             absolute = relative = enstrophy = scale = 0;
             for (int c = 0; c < grid.cells; ++c) {
@@ -88,7 +74,9 @@ void checkWave() {
         double absolute0, relative0, enstrophy0, scale0;
         integrals(absolute0, relative0, enstrophy0, scale0);
         const int steps = int(std::ceil(Day / stepFor(grid, flow.flux, 0.4)));
-        for (int s = 0; s < steps; ++s) stepSphereFlow(flow, grid, stencil, poisson, Day / steps);
+        setStep(flow, Day / steps);
+        bool accepted = true;
+        for (int s = 0; s < steps; ++s) accepted = stepSphereFlow(flow, grid, stencil, poisson) && accepted;
         double absolute, relative, enstrophy, scale;
         integrals(absolute, relative, enstrophy, scale);
         const std::vector<double> exact = wave(Day), start = wave(0);
@@ -98,7 +86,7 @@ void checkWave() {
             moved = std::max(moved, std::abs(start[size_t(c)] - exact[size_t(c)]));
             amplitude = std::max(amplitude, std::abs(exact[size_t(c)]));
         }
-        expect(flow.inversion.converged, "stream function did not converge", flow.inversion.residual);
+        expect(accepted, "a step of the wave was not accepted", flow.inversion.residual);
         expect(moved > 0.7 * amplitude, "the wave did not move", moved / amplitude);
         expect(std::abs(absolute - absolute0) < 1e-14 * scale0, "absolute vorticity is not kept", (absolute - absolute0) / scale0);
         expect(std::abs(relative) < 1e-14 * scale0, "relative vorticity does not integrate to zero", relative / scale0);
@@ -141,7 +129,8 @@ void checkFlow() {
         const std::vector<double> start = flow.vorticity;
         const double step = stepFor(grid, flow.flux, 0.4);
         const int steps = int(std::ceil(Day / step));
-        for (int s = 0; s < steps; ++s) stepSphereFlow(flow, grid, stencil, poisson, Day / steps);
+        setStep(flow, Day / steps);
+        for (int s = 0; s < steps; ++s) expect(stepSphereFlow(flow, grid, stencil, poisson), "a step of the rotation was not accepted", s);
         double change = 0;
         for (int c = 0; c < grid.cells; ++c) change = std::max(change, std::abs(flow.vorticity[size_t(c)] - start[size_t(c)]) / (2 * Spin));
         for (int band = 0; band < 3; ++band) fluxes[level - 4][band] = worst[band];

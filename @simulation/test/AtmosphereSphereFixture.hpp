@@ -54,11 +54,29 @@ inline PlaceErrors errorsOf(const SphereGrid& grid, const std::vector<double>& v
     return errors;
 }
 
+// The Rossby–Haurwitz wave of wavenumber 4 (Haurwitz 1940; Williamson et al. 1992 case 6, ω = K =
+// 7.848e-6 1/s), an exact solution of the non-divergent barotropic vorticity equation: its relative
+// vorticity at `time`, the pattern turning east at ν = (R(3 + R) ω − 2Ω) / ((1 + R)(2 + R)).
+inline std::vector<double> rossbyHaurwitz(const SphereGrid& grid, double rotation, double time) {
+    constexpr double Omega = 7.848e-6, Strength = 7.848e-6;
+    constexpr int Wave = 4;
+    const double drift = (Wave * (3 + Wave) * Omega - 2 * rotation) / ((1 + Wave) * (2 + Wave));
+    std::vector<double> vorticity(size_t(grid.cells));
+    for (int c = 0; c < grid.cells; ++c) {
+        const Vec3 d = grid.centre[size_t(c)];
+        const double around = std::hypot(d.x, d.y), longitude = std::atan2(d.y, d.x);
+        vorticity[size_t(c)] =
+            2 * Omega * d.z - (Wave + 1) * (Wave + 2) * Strength * std::pow(around, Wave) * d.z * std::cos(Wave * (longitude - drift * time));
+    }
+    return vorticity;
+}
+
 // Tests run on several resolutions; levels 4 to 6 keep the suite fast (6 × 16² to 6 × 64² cells).
 void checkPoisson();
 void checkFlow();
 void checkTracer();
 void checkDrift();
+void checkStep();
 void checkEddyBand();
 
 } // namespace derivean::sim::atmosphere_sphere_test
