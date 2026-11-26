@@ -18,8 +18,11 @@ export interface SkyNodes {
   skyLight: UniformNode<"color", Color>;
   groundLight: UniformNode<"color", Color>;
   // The air (Air): render-space height of the sea, share of the air's thickness that is drawn, metres between
-  // which the last of the view is given to the sky, and the cloud over the eye.
+  // which the last of the view is given to the sky, and the cloud over the eye. `airHaze` is the weather's haze
+  // over the eye (HazeAir): what it takes per metre inside the low band, the band's top in metres above the sea,
+  // and the veil's optical depth.
   airSea: UniformNode<"float", number>;
+  airHaze: UniformNode<"vec3", Vector3>;
   airShare: UniformNode<"float", number>;
   airEnd: UniformNode<"vec2", Vector2>;
   airVeil: UniformNode<"vec4", Vector4>;

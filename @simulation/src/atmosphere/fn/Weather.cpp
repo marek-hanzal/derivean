@@ -67,6 +67,8 @@ WeatherReport inspectWeather(const Atmosphere& atmosphere, Vec2 position, double
     report.cause = explainClouds(report.column, report.profile, report.clouds);
     report.ash = ashFallAt(atmosphere, position);
     report.aerosolDepth = atmosphere.plume.depth.cells[cell];
+    report.hazeDepth = hazeDepths(atmosphere, x, z);
+    report.visibility = viewDistance(atmosphere, position, groundElevation - atmosphere.seaLevel);
     if (report.ash.mass > 0) {
         char line[160];
         std::snprintf(line, sizeof line, "; ash from source %llu, in eruption since day %.1f: %.3g kg/m² fallen here", static_cast<unsigned long long>(report.ash.source),

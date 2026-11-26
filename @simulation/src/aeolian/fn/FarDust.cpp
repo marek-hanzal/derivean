@@ -12,9 +12,7 @@ namespace derivean::sim {
 namespace {
 
 // Deserts raise dust in proportion to how seldom rain reaches their ground and how hard the wind
-// blows over it: the Sahara gives up some 0.5–1 Gt a year from 9 million km², 0.04–0.07 mm of loess.
-constexpr float DustRise = 5e-5f;       // m/yr of fines a hyper-arid floor gives up under DustDrift
-constexpr float DustDrift = 30.0f;      // m²/yr of drift potential, that of a trade-wind desert
+// blows over it (DustRise and DustDrift, constant/Wind.hpp).
 constexpr float DustWindCap = 2.0f;     // most a windier place multiplies that by
 // The air is followed back along the annual mean wind until the coarser dust it could carry is gone.
 constexpr double TraceStep = 30e3;      // m

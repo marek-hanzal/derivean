@@ -5,6 +5,7 @@
 #include "atmosphere/fn/Spectral.hpp"
 #include "atmosphere/type/Cloud.hpp"
 #include "atmosphere/type/Column.hpp"
+#include "atmosphere/type/Haze.hpp"
 #include "atmosphere/type/Plume.hpp"
 #include "chronology/type/Calendar.hpp"
 #include "core/type/Field.hpp"
@@ -126,6 +127,7 @@ struct Atmosphere {
     double evaporation{}, precipitation{};
 
     Plume plume;                   // ash, sulphur and what else sources put into the air
+    Haze haze;                     // dust, sea salt, sulphate and organics the weather raises in the low band
 
     PoissonSolver poisson;
     AirWork work;
@@ -217,10 +219,19 @@ struct WeatherReport {
     double verticalSpeed{};                 // m/s of large-scale ascent
     double snowLine{};                      // m above the sea of the lowest snow in the cell (snowLineOf)
     AshFall ash;                            // ash on the ground here
-    double aerosolDepth{};                  // visible optical depth of ash and sulphate veil overhead
+    double aerosolDepth{};                  // visible optical depth of ash and sulphate veil overhead, the whole column (CloudField splits off the low band)
+    std::array<double, HazeKinds> hazeDepth{};   // optical depth at 550 nm of each kind of haze overhead, swollen by the humidity
+    double visibility{};                    // m a black target stays visible along the ground (viewDistance at the ground)
     WaterLedger ledger;                     // planet-wide water balance
     std::string cause;                      // one sentence on how the column's clouds came about
 };
+
+// Optical depth at 550 nm of each kind of haze over a cell, swollen by the humidity of its low band.
+std::array<double, HazeKinds> hazeDepths(const Atmosphere& atmosphere, int x, int z);
+
+// m of view along a level line `height` metres above the sea at a position (Koschmieder): clean air
+// thinning with height, and inside the low band its haze and ash spread evenly through it.
+double viewDistance(const Atmosphere& atmosphere, Vec2 position, double height);
 
 WeatherReport inspectWeather(const Atmosphere& atmosphere, Vec2 position, double groundElevation, const Calendar& calendar);
 

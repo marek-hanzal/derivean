@@ -90,6 +90,7 @@ Atmosphere startAtmosphere(const Planet& planet, const Calendar& calendar, Worke
     allocate(atmosphere);
     describeRows(atmosphere);
     setSurface(atmosphere, planet.elevation, planet.seaLevel);
+    shapeHaze(atmosphere, planet);
     settleHeat(atmosphere);
     settleWater(atmosphere, planet);
     atmosphere.season = seasonOf(atmosphere);

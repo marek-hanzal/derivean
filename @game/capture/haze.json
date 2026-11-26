@@ -1,0 +1,113 @@
+{
+  "world": {
+    "seed": 42,
+    "age": 4600000000.0
+  },
+  "out": ".out/playwright/renderer/haze-s42-2026-11-26",
+  "settleSeconds": 2,
+  "timeoutSeconds": 180,
+  "shots": [
+    {
+      "name": "s42-d030h12-x983040-z12648448-humid-ground",
+      "position": [
+        983040,
+        null,
+        12648448
+      ],
+      "above": 0,
+      "yaw": 0.0,
+      "pitch": -0.01,
+      "fly": false,
+      "time": {
+        "dayOfYear": 30,
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "s42-d030h12-x983040-z12648448-humid-3km",
+      "position": [
+        983040,
+        null,
+        12648448
+      ],
+      "above": 2846,
+      "yaw": 0.0,
+      "pitch": -0.06,
+      "fly": true,
+      "time": {
+        "dayOfYear": 30,
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "s42-d043h12-x6225920-z5963776-dusty-ground",
+      "position": [
+        6225920,
+        null,
+        5963776
+      ],
+      "above": 0,
+      "yaw": 0.0,
+      "pitch": -0.01,
+      "fly": false,
+      "time": {
+        "dayOfYear": 43,
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "s42-d043h12-x6225920-z5963776-dusty-3km",
+      "position": [
+        6225920,
+        null,
+        5963776
+      ],
+      "above": 2867,
+      "yaw": 0.0,
+      "pitch": -0.06,
+      "fly": true,
+      "time": {
+        "dayOfYear": 43,
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "s42-d191h12-x14352384-z8454144-after-rain-ground",
+      "position": [
+        14352384,
+        null,
+        8454144
+      ],
+      "above": 0,
+      "yaw": 0.0,
+      "pitch": -0.01,
+      "fly": false,
+      "time": {
+        "dayOfYear": 191,
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "s42-d191h12-x14352384-z8454144-after-rain-3km",
+      "position": [
+        14352384,
+        null,
+        8454144
+      ],
+      "above": 2970,
+      "yaw": 0.0,
+      "pitch": -0.06,
+      "fly": true,
+      "time": {
+        "dayOfYear": 191,
+        "hour": 12.0,
+        "rate": 0
+      }
+    }
+  ]
+}

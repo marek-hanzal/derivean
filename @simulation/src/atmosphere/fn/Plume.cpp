@@ -111,7 +111,7 @@ void settle(Atmosphere& atmosphere) {
     for (size_t cell = 0; cell < plume.fallen.size(); ++cell) {
         const double rain = (atmosphere.rainRate.cells[cell] + atmosphere.snowRate.cells[cell]) * AirStep;
         const double washed = rain > 0 ? 1.0 - std::exp(-Washing * rain) : 0.0;
-        double ash = 0, sulphur = 0, dustOver = 0, veilOver = 0, arriving = 0, sinking = 0;
+        double ash = 0, sulphur = 0, dustOver = 0, veilOver = 0, arriving = 0, sinking = 0, low = 0;
         for (int level = PlumeLevels - 1; level >= 0; --level) {
             const size_t at = size_t(level);
             double dust = plume.dust[at].cells[cell] + arriving, gas = plume.gas[at].cells[cell], veil = plume.veil[at].cells[cell] + sinking;
@@ -130,6 +130,7 @@ void settle(Atmosphere& atmosphere) {
             sulphur += gasDown + (level == PlumeLevels - 1 ? 0.0 : veilGone);
             dustOver += dust;
             veilOver += veil;
+            if (level == Low) low = AshOptics * dust + VeilOptics * veil;
             left += dust + gas + veil;
         }
         plume.dustFallen.cells[cell] += ash;
@@ -139,6 +140,7 @@ void settle(Atmosphere& atmosphere) {
         sulphurFallen += sulphur;
         const double ashDepth = AshOptics * dustOver, veilDepth = VeilOptics * veilOver;
         plume.depth.cells[cell] = ashDepth + veilDepth;
+        plume.lowDepth.cells[cell] = low;
         plume.dimming.cells[cell] = 1.0 - (1.0 - AshDim * (1.0 - std::exp(-ashDepth))) * (1.0 - VeilDim * (1.0 - std::exp(-veilDepth)));
     }
     // Once what is left no longer dims anything, it is put down where it floats and the sky is clean.
@@ -156,7 +158,7 @@ void settle(Atmosphere& atmosphere) {
                 sulphurFallen += plume.gas[level].cells[cell] + plume.veil[level].cells[cell];
                 plume.dust[level].cells[cell] = plume.gas[level].cells[cell] = plume.veil[level].cells[cell] = 0;
             }
-            plume.depth.cells[cell] = plume.dimming.cells[cell] = 0;
+            plume.depth.cells[cell] = plume.lowDepth.cells[cell] = plume.dimming.cells[cell] = 0;
         }
         plume.aloft = false;
     }
@@ -185,7 +187,7 @@ void shapePlume(Atmosphere& atmosphere) {
     Plume& plume = atmosphere.plume;
     for (auto* levels : {&plume.dust, &plume.gas, &plume.veil})
         for (Field<double>& field : *levels) field = blank;
-    for (Field<double>* field : {&plume.fallen, &plume.onSnow, &plume.dustFallen, &plume.fallRate, &plume.depth, &plume.dimming}) *field = blank;
+    for (Field<double>* field : {&plume.fallen, &plume.onSnow, &plume.dustFallen, &plume.fallRate, &plume.depth, &plume.lowDepth, &plume.dimming}) *field = blank;
 }
 
 void addSource(Atmosphere& atmosphere, const AirSource& source) { atmosphere.plume.sources.push_back(source); }

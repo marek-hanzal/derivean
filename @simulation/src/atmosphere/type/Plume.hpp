@@ -62,6 +62,7 @@ struct Plume {
     Field<double> dustFallen;   // kg/m²: the part of it that came down from the dust on the grid
     Field<double> fallRate;     // kg/m²/s of ash landing in the cell during the last step
     Field<double> depth;        // visible optical depth of ash and veil over the cell
+    Field<double> lowDepth;     // the part of it in the low band, which hazes the view along the ground
     Field<double> dimming;      // share of sunlight they keep from the surface
     std::vector<AshPatch> patches;
     std::vector<Field<double>> work;   // transport work space

@@ -102,6 +102,7 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
     findWeather: (sought: WeatherSought) => field ? findWeather(field, sought) : undefined,
     counts: terrain.counts,
     get exposure() { return daylight.exposure; },
+    get air() { return daylight.air; },
     apply(frame: Frame) {
       terrain.apply(frame);
       water.apply(frame);
@@ -148,6 +149,7 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
       const overhead = shown ? clouds.field.overcast(eye.x, eye.z) : [0, 0] as const;
       cloudShadow.update(renderer, origin, eye, ground ?? eye.y, shown, now, overhead);
       daylight.cover(overhead[0], overhead[1], dt);
+      daylight.haze(clouds.field.air(eye.x, eye.z), dt);
       precipitation.update(eye, now / 1000, !plain && cloudy);
       shadow.cast(renderer, {
         origin, eye, ground, sun: sky.sunDirection.value, squares,

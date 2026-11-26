@@ -10,6 +10,7 @@ import type { WorldOptions } from "../contract/GameBridge";
 import { createClockPanel } from "./calendar/service/ClockPanel";
 import { createWorldClock } from "./calendar/service/WorldClock";
 import { dataLevels } from "./capture/fn/dataLevels";
+import { hazeRecord } from "./capture/fn/hazeRecord";
 import { createCaptureDriver } from "./capture/service/CaptureDriver";
 import { createWorldControls } from "./control/service/WorldControls";
 import { createFrameMetrics } from "./diagnostics/service/FrameMetrics";
@@ -194,7 +195,7 @@ async function boot() {
       drawCalls: scene.renderStats.calls, triangles: scene.renderStats.triangles, chunksByLevel: scene.levelCounts(),
       metresPerSecond: Number(metrics.speed.toFixed(1)), viewport: [canvas.clientWidth, canvas.clientHeight],
       cloudGpuMs: scene.cloudCost(), map: map.describe(), backend: scene.backend,
-      drawMs: scene.timings(),
+      drawMs: scene.timings(), haze: hazeRecord(scene.air()),
     }),
     survey: (x, z) => dataLevels(window.derivean, x, z),
   }));

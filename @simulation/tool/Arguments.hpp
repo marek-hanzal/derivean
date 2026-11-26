@@ -40,6 +40,7 @@ int sliceCommand(const Arguments& arguments);
 int findCommand(const Arguments& arguments);
 int groundCommand(const Arguments& arguments);
 int atmosphereCommand(const Arguments& arguments);
+int hazeCommand(const Arguments& arguments);
 int snowCommand(const Arguments& arguments);
 int measureCommand(const std::string& what, const Arguments& arguments);
 int inspectCommand(const Arguments& arguments);

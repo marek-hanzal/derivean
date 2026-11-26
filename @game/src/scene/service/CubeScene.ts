@@ -87,6 +87,7 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
     veil(shown: boolean) { stage?.veil(shown); },
     findWeather: (sought: WeatherSought) => stage?.findWeather(sought),
     levelCounts: () => stage?.counts() ?? [],
+    air: () => stage?.air ?? null,
     cloudCost: () => null,
     timings: () => ({ cpuMs, gpuMs }),
     renderStats,

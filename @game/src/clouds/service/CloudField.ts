@@ -1,5 +1,6 @@
 import { DataArrayTexture, FloatType, LinearFilter, RepeatWrapping, RGBAFormat } from "three/webgpu";
 import type { CloudField } from "../../../contract/GameBridge";
+import type { HazeAir } from "../../sky/type/HazeAir";
 import { BandLayers, Bands, encodeClouds } from "../fn/encodeClouds";
 
 // Cells around the eye whose clouds bound what a ray can meet before the haze takes it.
@@ -89,6 +90,19 @@ export function createCloudField() {
       const cx = ((Math.floor((x - origin[0]) / cell) % cells) + cells) % cells;
       const cz = ((Math.floor((z - origin[1]) / cell) % cells) + cells) % cells;
       return [latest.bands[band].windX[cz * cells + cx], latest.bands[band].windZ[cz * cells + cx]];
+    },
+    // The haze of the weather over a world position, linear between cell centres: optical depth of the low band's
+    // haze, the height of its top above the sea and its thickness, and the veil above it.
+    air(x: number, z: number): HazeAir | undefined {
+      if (!latest) return undefined;
+      const { cells, cell, origin, hazeDepth, hazeTop, aerosolDepth } = latest;
+      const fx = (x - origin[0]) / cell - 0.5, fz = (z - origin[1]) / cell - 0.5;
+      const x0 = Math.floor(fx), z0 = Math.floor(fz), tx = fx - x0, tz = fz - z0;
+      const at = (values: Float32Array) => {
+        const read = (dx: number, dz: number) => values[(((z0 + dz) % cells + cells) % cells) * cells + ((x0 + dx) % cells + cells) % cells];
+        return (read(0, 0) * (1 - tx) + read(1, 0) * tx) * (1 - tz) + (read(0, 1) * (1 - tx) + read(1, 1) * tx) * tz;
+      };
+      return { haze: at(hazeDepth), top: at(hazeTop), thickness: latest.hazeThickness, veil: at(aerosolDepth) };
     },
     // The cloud over a world position as the ground's light sees it: the share of the sky covered, and the optical
     // depth of what covers it.

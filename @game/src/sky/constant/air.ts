@@ -1,19 +1,15 @@
 import { Vector3 } from "three/webgpu";
 
-// What the air takes from light per metre at sea level: clean air by colour (Rayleigh scattering), and the dust
-// and droplets in it, which take all colours alike. Each thins by e over its height in metres.
+// What clean air takes from light per metre at sea level by colour (Rayleigh scattering), thinning by e over its
+// height in metres. The haze is the weather's (HazeAir): it takes all colours alike.
 export const CleanAir = [5.8e-6, 13.5e-6, 33.1e-6] as const;
 export const CleanAirHeight = 8000;
-export const HazeAir = 3e-6;
-export const HazeAirHeight = 1200;
-// The rest of the dust and droplets, spread through the whole air: its optical depth straight up from the sea,
-// and the height over which it thins by e. With the haze below it the air holds about 0.05 of it, a clean day's on
-// Earth, and that is what lights the shadows (clearSky): at a sun 10° up, snow in shadow takes about 0.39 of the
-// light of snow in the sun at the sea, 0.34 at 1200 m. Spread this high it thickens the air along the ground
-// little: with it a dark ridge is told from the sky (2 % contrast in luminance) about 240 km away at the sea and
-// 320 km at 1200 m.
-export const HighHaze = 0.045;
-export const HighHazeHeight = 20000;
+// The veil of ash and sulphate above the haze thins by e over this height from the sea.
+export const VeilHeight = 8000;
+// Metres over which the haze fades out at its top.
+export const HazeEdge = 100;
+// The air until the first weather snapshot arrives: a clean maritime day's.
+export const StillAir = { haze: 0.05, top: 2000, thickness: 2000, veil: 0 } as const;
 
 // Metres between which the cloud over the eye stops colouring the air: the weather there is another cell's.
 export const VeilReach = [30000, 120000] as const;
@@ -37,6 +33,12 @@ export const GroundTint = "#8b6952";
 // Where the light of plain relief shading comes from, whatever the hour.
 export const ReliefSun = new Vector3(-13, 12, 7).normalize();
 
+// Sky colours at the three moments the rest are blended from, as sRGB, for StillAir: its haze makes ReferenceHaze
+// of the light lost along the ground at the sea and holds ReferenceDepth overhead. More haze whitens the day's
+// horizon towards its own grey and pales the day's zenith towards the horizon by ZenithPaling per unit of depth.
+export const ReferenceHaze = 0.65;
+export const ReferenceDepth = 0.05;
+export const ZenithPaling = 1.5;
 // Sky colours at the three moments the rest are blended from, as sRGB.
 export const DaySky = { zenith: "#3d6d9c", horizon: "#b3c4c8", glow: "#fff1d6" };
 export const DuskSky = { zenith: "#2a3b63", horizon: "#b79a8c", glow: "#ff8b3d" };

@@ -79,7 +79,10 @@ struct CloudField {
     // rungs beyond the ladder; then linear between the four cells around the position.
     std::vector<float> snowLadder;
     std::vector<float> snowLine;     // m above `seaLevel` per cell (snowLineOf)
-    std::vector<float> aerosolDepth; // visible optical depth of fine ash and sulphate veil over the cell: dims and reddens the sun
+    std::vector<float> aerosolDepth; // visible optical depth of fine ash and sulphate veil over the cell above the low band: dims and reddens the sun
+    std::vector<float> hazeDepth;    // optical depth at 550 nm of the low band's haze and ash, spread evenly through hazeThickness below hazeTop
+    std::vector<float> hazeTop;      // m above `seaLevel` of the top of the low band
+    double hazeThickness{};          // m of the low band below hazeTop
     std::vector<float> ashAloft;     // kg/m² of fine ash in the air over the cell: where there is an ash cloud to draw
     std::vector<float> ashLevel;     // m above `seaLevel` around which most of that ash floats
     double seaLevel{};               // m against the datum

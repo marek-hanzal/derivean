@@ -1,7 +1,8 @@
 import { Color, Vector3 } from "three/webgpu";
 import type { Point } from "../../../contract/GameBridge";
-import { DaySky, DuskSky, NightSky } from "../constant/air";
-import { clearSky } from "./clearSky";
+import { CleanAir, CleanAirHeight, DaySky, DuskSky, NightSky, ReferenceDepth, ReferenceHaze, VeilHeight, ZenithPaling } from "../constant/air";
+import { clearSky, hazeAbove } from "./clearSky";
+import type { HazeAir } from "../type/HazeAir";
 import type { SkyLight } from "../type/SkyLight";
 
 // The sun's light outside the air.
@@ -38,10 +39,29 @@ function blend(target: Color, day: string, dusk: string, night: string, days: nu
   }
 }
 
-// Sets the light for a sun direction over ground `altitude` metres above the sea. The sun's light and the clear
-// sky's on level ground are what the air leaves of the sun's (clearSky); the sky's colours, which the background
-// and the aerial perspective draw, are blended between day, dusk and night by the sun's height.
-export function setSkyLight(light: SkyLight, sun: Point, altitude: number) {
+// What the haze and the clean air's green take from light per metre along a level line at a height.
+function levelLoss(air: HazeAir, altitude: number) {
+  const haze = (altitude < air.top ? air.haze / air.thickness : 0) + air.veil / VeilHeight * Math.exp(-Math.max(altitude, 0) / VeilHeight);
+  return { haze, clean: CleanAir[1] * Math.exp(-Math.max(altitude, 0) / CleanAirHeight) };
+}
+
+// Share of what the air takes from light along a level line at a height that the haze takes.
+export function hazeShare(air: HazeAir, altitude: number) {
+  const { haze, clean } = levelLoss(air, altitude);
+  return haze / (haze + clean);
+}
+
+// Metres along a level line at a height at which a dark target fades to 2 % contrast in the drawn air (Koschmieder).
+export function levelView(air: HazeAir, altitude: number) {
+  const { haze, clean } = levelLoss(air, altitude);
+  return -Math.log(0.02) / (haze + clean);
+}
+
+// Sets the light for a sun direction over ground `altitude` metres above the sea under the weather's haze `air`.
+// The sun's light and the clear sky's on level ground are what the air leaves of the sun's (clearSky); the sky's
+// colours, which the background and the aerial perspective draw, are blended between day, dusk and night by the
+// sun's height, and by day the haze whitens the horizon and pales the zenith.
+export function setSkyLight(light: SkyLight, sun: Point, altitude: number, air: HazeAir) {
   const height = sun[1];
   const days = smooth(-0.02, 0.3, height);
   const nights = 1 - smooth(-0.24, -0.04, height);
@@ -50,14 +70,19 @@ export function setSkyLight(light: SkyLight, sun: Point, altitude: number) {
   blend(light.skyZenith.value, DaySky.zenith, DuskSky.zenith, NightSky.zenith, days, dusks, nights);
   blend(light.skyHorizon.value, DaySky.horizon, DuskSky.horizon, NightSky.horizon, days, dusks, nights);
   blend(light.skyGlow.value, DaySky.glow, DuskSky.glow, NightSky.glow, days * 0.25, dusks, 0);
+  const horizon = light.skyHorizon.value;
+  const whitening = days * Math.max(0, hazeShare(air, altitude) - ReferenceHaze) / (1 - ReferenceHaze);
+  const grey = 0.2126 * horizon.r + 0.7152 * horizon.g + 0.0722 * horizon.b;
+  horizon.lerp(scratch.setRGB(grey, grey, grey), whitening);
+  light.skyZenith.value.lerp(horizon, 1 - Math.exp(-ZenithPaling * days * Math.max(0, hazeAbove(air, altitude) - ReferenceDepth)));
 
-  const air = clearSky(light.skySun.value.y, altitude);
-  light.sunLight.value.setRGB(...air.direct).multiplyScalar(SunStrength);
+  const sky = clearSky(light.skySun.value.y, altitude, air);
+  light.sunLight.value.setRGB(...sky.direct).multiplyScalar(SunStrength);
   // What the sun's light leaves in the air, down to the night sky's own (a blend of its zenith and horizon), which
   // the twilight reaches with the sun about 1.5° down.
   const night = light.skyAmbient.value.set(NightSky.zenith).lerp(scratch.set(NightSky.horizon), 0.55).multiplyScalar(NightLight);
   night.setRGB(
-    Math.max(night.r, air.diffuse[0] * SunStrength), Math.max(night.g, air.diffuse[1] * SunStrength), Math.max(night.b, air.diffuse[2] * SunStrength),
+    Math.max(night.r, sky.diffuse[0] * SunStrength), Math.max(night.g, sky.diffuse[1] * SunStrength), Math.max(night.b, sky.diffuse[2] * SunStrength),
   );
   // The dome's colours are still a palette rather than the radiance of that air, so the clouds drawn against them
   // take the dome's light as drawn; lit by the air's, they would stand black against a bright dusk.

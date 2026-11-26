@@ -38,6 +38,10 @@ inline constexpr int DustSizes = 2;
 inline constexpr float DustShare[DustSizes] = {0.6f, 0.4f};
 inline constexpr float DustFall[DustSizes] = {60e3f, 600e3f};   // m of travel over which all but 1/e has settled in dry air
 inline constexpr float DustWashRain = 0.5f;                     // m/yr of rain that doubles the fall-out
+// Fines raised per sand moved: the Sahara gives up some 0.5–1 Gt a year from 9 million km², 0.04–0.07
+// mm of loess. The far dust and the haze of the weather both raise dust at this ratio to the drift.
+inline constexpr float DustRise = 5e-5f;                        // m/yr of fines a hyper-arid floor gives up under DustDrift
+inline constexpr float DustDrift = 30.0f;                       // m²/yr of drift potential, that of a trade-wind desert
 
 // m/yr: the fastest the floor of a continental playa rises when averaged over its wet and dry
 // phases. Death Valley's core DV93-1 holds some 186 m of halite and mud laid over about 200 kyr

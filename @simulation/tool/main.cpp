@@ -14,6 +14,7 @@ int main(int count, char** words) {
     if (command == "find") return findCommand(arguments);
     if (command == "ground") return groundCommand(arguments);
     if (command == "atmosphere") return atmosphereCommand(arguments);
+    if (command == "haze") return hazeCommand(arguments);
     if (command == "snow") return snowCommand(arguments);
     if (command == "inspect") return inspectCommand(arguments);
     if (command == "scout") return scoutCommand(arguments);

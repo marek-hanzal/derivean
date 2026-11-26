@@ -114,7 +114,9 @@ export interface ChunkMesh {
 
 // One chunk of a level of far cubes: the voxel world resampled at a coarser cube size, 32 cubes along every
 // edge. A cube is solid if the world is solid at its centre and is made of what is there; the top cube of a
-// column is made of what covers the surface. Chunks of one level never overlap. What is held of a level changes
+// column is made of what covers the surface. Levels finer than 1 m also carry the stones lying on the ground,
+// as the voxels do, so there a column can show the ground again under a stone's overhanging rim. Chunks of one
+// level never overlap. What is held of a level changes
 // a column of chunks at a time: all the chunks over one square of ground are added, dropped, or swapped for a
 // better build of themselves, `removed` and `added` in the same frame.
 export interface CubeChunk {
@@ -282,8 +284,15 @@ export interface CloudField {
   snowLine: Float32Array;
   // Metres against the datum.
   seaLevel: number;
-  // Visible optical depth of the veil of fine ash and sulphate over each cell: it dims and reddens the sun.
+  // Visible optical depth of the veil of fine ash and sulphate over each cell above the low band: it dims and
+  // reddens the sun.
   aerosolDepth: Float32Array;
+  // Optical depth at 550 nm of the haze of each cell's low band (dust, sea salt, sulphate, organics and low ash,
+  // swollen by the humidity), spread evenly through the `hazeThickness` metres below `hazeTop` metres above
+  // `seaLevel`, and on down into the valleys beneath.
+  hazeDepth: Float32Array;
+  hazeTop: Float32Array;
+  hazeThickness: number;
   // kg/m² of fine ash in the air over each cell, and the metres above `seaLevel` around which most of it floats:
   // where there is an ash cloud to draw. All three are zero until something throws ash into the air.
   ashAloft: Float32Array;

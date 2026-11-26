@@ -31,7 +31,15 @@ CloudField cloudField(const Atmosphere& atmosphere) {
     field.rain.resize(cells);
     field.snow.resize(cells);
     field.seaLevel = atmosphere.seaLevel;
-    field.aerosolDepth.assign(atmosphere.plume.depth.cells.begin(), atmosphere.plume.depth.cells.end());
+    field.aerosolDepth.resize(cells);
+    field.hazeDepth.resize(cells);
+    field.hazeTop.resize(cells);
+    field.hazeThickness = LowDepth;
+    for (size_t cell = 0; cell < cells; ++cell) {
+        field.aerosolDepth[cell] = float(std::max(0.0, atmosphere.plume.depth.cells[cell] - atmosphere.plume.lowDepth.cells[cell]));
+        field.hazeDepth[cell] = float(atmosphere.haze.depth.cells[cell] + atmosphere.plume.lowDepth.cells[cell]);
+        field.hazeTop[cell] = float(atmosphere.ground.cells[cell] + LowDepth);
+    }
     field.ashAloft.resize(cells);
     field.ashLevel.resize(cells);
     field.snowLine.resize(cells);

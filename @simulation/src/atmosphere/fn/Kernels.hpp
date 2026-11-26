@@ -58,6 +58,14 @@ void weighSnow(Atmosphere& atmosphere, size_t cell);   // a cell's snow and snow
 void shapePlume(Atmosphere& atmosphere);                       // empty fields
 void stepPlume(Atmosphere& atmosphere, Workers& workers);      // sources, transport, fallout and dimming of one step
 
+// HazeSources.cpp
+void shapeHaze(Atmosphere& atmosphere, const Planet& planet);   // empty fields and the plant cover from the planet's climate
+// What wind, sea and plants put into the low band over one step, rows [begin, end); kg per row and kind added to `rows[z]`.
+void raiseHaze(Atmosphere& atmosphere, int begin, int end, std::array<double, HazeKinds>* rows);
+
+// Haze.cpp
+void stepHaze(Atmosphere& atmosphere, Workers& workers);   // sources, wash-out, settling and optical depth of one step; Advance.cpp carries it
+
 // Advance.cpp
 void stepAtmosphere(Atmosphere& atmosphere, Workers& workers);
 

@@ -30,6 +30,8 @@ void describeWeather(Inspection& record, const Game& game, sim::Vec2 place, doub
     add("Ash fallen kg/m²", report.ash.mass);
     add("Ash falling kg/m²/s", report.ash.rate);
     add("Veil optical depth", report.aerosolDepth);
+    add("Haze optical depth dust, salt, sulphate, organics", std::to_string(report.hazeDepth[0]) + ", " + std::to_string(report.hazeDepth[1]) + ", " + std::to_string(report.hazeDepth[2]) + ", " + std::to_string(report.hazeDepth[3]));
+    add("Visibility m", report.visibility);
     add("Snow lying kg/m²", report.weather.snowpack);
     add("Snow line m above the sea", report.snowLine);
     add("Snow is kept", std::string("per weather cell at a ladder of heights; every height gets the cell's precipitation, without wind drift, aspect or avalanches"));

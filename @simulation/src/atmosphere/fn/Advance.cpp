@@ -21,8 +21,10 @@ void stepAtmosphere(Atmosphere& atmosphere, Workers& workers) {
     AirWork& work = atmosphere.work;
     work.before.cells = atmosphere.airTemperature.cells;
     // Task 0 is the circulation; the others carry one field each: the two temperatures, then
-    // vapour, liquid and ice of every band.
-    AirField* carried[2 + 3 * AirBands] = {&atmosphere.airTemperature, &atmosphere.upperTemperature};
+    // vapour, liquid and ice of every band, then every kind of haze in the low band.
+    constexpr int WeatherFields = 2 + 3 * AirBands;
+    AirField* carried[WeatherFields] = {&atmosphere.airTemperature, &atmosphere.upperTemperature};
+    Haze& haze = atmosphere.haze;
     AirLayers* const water[3] = {&atmosphere.vapour, &atmosphere.liquid, &atmosphere.ice};
     for (int kind = 0; kind < 3; ++kind)
         for (int band = 0; band < AirBands; ++band) carried[2 + kind * AirBands + band] = &(*water[kind])[size_t(band)];
@@ -30,7 +32,7 @@ void stepAtmosphere(Atmosphere& atmosphere, Workers& workers) {
     for (int part = 0; part < WindSteps; ++part) {
         prepareTransport(atmosphere);
         const bool eddies = (atmosphere.step * WindSteps + part + 1) % EddyEvery == 0;
-        workers.parallelFor(3 + 3 * AirBands, [&](int begin, int end) {
+        workers.parallelFor(1 + WeatherFields + HazeKinds, [&](int begin, int end) {
             for (int task = begin; task < end; ++task) {
                 if (task == 0) {
                     stepCirculation(atmosphere);
@@ -38,12 +40,18 @@ void stepAtmosphere(Atmosphere& atmosphere, Workers& workers) {
                     continue;
                 }
                 const int field = task - 1;
+                if (field >= WeatherFields) {
+                    const size_t kind = size_t(field - WeatherFields);
+                    advect(atmosphere, haze.mass[kind], haze.work[2 * kind], haze.work[2 * kind + 1], Low, Carried::Vapour);
+                    continue;
+                }
                 const int band = field == 0 ? Low : field == 1 ? Middle : (field - 2) % AirBands;
                 const Carried kind = field < 2 ? Carried::Temperature : field < 2 + AirBands ? Carried::Vapour : Carried::Cloud;
                 advect(atmosphere, *carried[field], work.carried[size_t(field)], work.slope[size_t(field)], band, kind);
             }
         }, TaskGrain);
-        for (int field = 0; field < 2 + 3 * AirBands; ++field) std::swap(carried[field]->cells, work.carried[size_t(field)].cells);
+        for (int field = 0; field < WeatherFields; ++field) std::swap(carried[field]->cells, work.carried[size_t(field)].cells);
+        for (size_t kind = 0; kind < HazeKinds; ++kind) std::swap(haze.mass[kind].cells, haze.work[2 * kind].cells);
     }
 
     workers.parallelFor(AirCells, [&](int begin, int end) {
@@ -52,6 +60,7 @@ void stepAtmosphere(Atmosphere& atmosphere, Workers& workers) {
     }, RowGrain);
     closeWater(atmosphere);
     stepPlume(atmosphere, workers);
+    stepHaze(atmosphere, workers);
     ++atmosphere.step;
 }
 

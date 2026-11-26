@@ -40,6 +40,7 @@ void testGroundwaterRegion();
 void testVolcanicLaws();
 void testVolcanicLive();
 void testCoast();
+void testHaze();
 void testLevelConsistency();
 
 namespace {
@@ -87,6 +88,7 @@ constexpr Test Tests[] = {
     {"testVolcanicLaws", testVolcanicLaws},
     {"testVolcanicLive", testVolcanicLive},
     {"testCoast", testCoast},
+    {"testHaze", testHaze},
     {"testLevelConsistency", testLevelConsistency},
 };
 

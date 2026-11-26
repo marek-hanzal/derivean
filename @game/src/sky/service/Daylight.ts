@@ -1,8 +1,9 @@
 import { Color, Vector2, Vector3, Vector4 } from "three/webgpu";
 import { uniform } from "three/tsl";
 import type { Point } from "../../../contract/GameBridge";
-import { Adaptation, AirEnd, ExposedLight, Exposure, ExposureRange, GroundBounce, GroundTint, ReliefSun } from "../constant/air";
+import { Adaptation, AirEnd, ExposedLight, Exposure, ExposureRange, GroundBounce, GroundTint, ReliefSun, StillAir } from "../constant/air";
 import { createSkyLight, setSkyLight } from "../fn/skyLight";
+import type { HazeAir } from "../type/HazeAir";
 import type { SkyNodes } from "../type/SkyNodes";
 
 const PlainAir = 0.35;
@@ -29,6 +30,7 @@ export function createDaylight(viewDistance: number) {
     skyLight: uniform(new Color()),
     groundLight: uniform(new Color()),
     airSea: uniform(0),
+    airHaze: uniform(new Vector3()),
     airShare: uniform(1),
     airEnd: uniform(new Vector2(viewDistance * AirEnd, viewDistance)),
     airVeil: uniform(new Vector4()),
@@ -41,7 +43,17 @@ export function createDaylight(viewDistance: number) {
   let veilDepth = 0;
   // Height above the sea of the ground under the eye, where the light is worked out.
   let altitude = 0;
+  // The weather's haze over the eye, eased.
+  const air: HazeAir = { ...StillAir };
+  let weathered = false;
   const next = new Vector3();
+  // Plain shading keeps one air whatever the weather.
+  const drawn = () => plain ? StillAir : air;
+
+  function breathe() {
+    const shown = drawn();
+    nodes.airHaze.value.set(shown.haze / shown.thickness, shown.top, shown.veil);
+  }
 
   // Plain shading is a fixed white light for judging relief at any hour; daylight is the hour's own.
   function relight() {
@@ -81,7 +93,8 @@ export function createDaylight(viewDistance: number) {
     exposure = Math.min(Math.max(Exposure * (ExposedLight / Math.max(fallen, 1e-3)) ** Adaptation, ExposureRange[0]), ExposureRange[1]);
   }
 
-  setSkyLight(light, ReliefSun.toArray(), altitude);
+  setSkyLight(light, ReliefSun.toArray(), altitude, drawn());
+  breathe();
   relight();
 
   return {
@@ -94,11 +107,28 @@ export function createDaylight(viewDistance: number) {
       const moved = ground !== null && Math.abs(ground - altitude) > AltitudeStep;
       if (!moved && light.skySun.value.distanceToSquared(next.set(...direction)) < 2.5e-7) return;
       if (ground !== null) altitude = ground;
-      setSkyLight(light, direction, altitude);
+      setSkyLight(light, direction, altitude, drawn());
+      relight();
+    },
+    // The weather's haze over the eye, eased over a second or two like the cloud.
+    haze(seen: HazeAir | undefined, dt: number) {
+      if (!seen || !Number.isFinite(seen.haze + seen.top + seen.veil) || !(seen.thickness > 0)) return;
+      weathered = true;
+      const change = Math.abs(seen.haze - air.haze) + Math.abs(seen.veil - air.veil) + Math.abs(seen.top - air.top) / 1000;
+      if (change < 0.0005 && seen.thickness === air.thickness) return;
+      const ease = 1 - Math.exp(-2 * dt);
+      air.haze += (seen.haze - air.haze) * ease;
+      air.veil += (seen.veil - air.veil) * ease;
+      air.top += (seen.top - air.top) * ease;
+      air.thickness = seen.thickness;
+      breathe();
+      setSkyLight(light, light.skySun.value.toArray(), altitude, drawn());
       relight();
     },
     shade(value: boolean) {
       plain = value;
+      setSkyLight(light, light.skySun.value.toArray(), altitude, drawn());
+      breathe();
       relight();
     },
     // The cloud overhead, eased over a second or two so a weather cell's border passing over does not flick the
@@ -110,6 +140,9 @@ export function createDaylight(viewDistance: number) {
       veilDepth += (depth - veilDepth) * ease;
       if (!plain) relight();
     },
+    // The weather's haze as the light and the air are drawn with it.
+    // Null until the first weather snapshot has reached it.
+    get air(): Readonly<HazeAir> | null { return weathered ? air : null; },
     // `sea` is the sea's height in render space; call when the render origin moves.
     rebase(sea: number) { nodes.airSea.value = sea; },
   };
