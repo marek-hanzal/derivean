@@ -22,6 +22,8 @@ struct RockTraits {
 
 // Everything under one point of the surface, blended from the four planet columns around it.
 // Depths are measured down from the datum: the top the cover had before the current replay eroded it.
+// The column is therefore the one at the start of the region window, not the planet's present one:
+// the replays erode and deposit that window themselves, so what the planet did in it is undone here.
 struct StrataColumn {
     std::array<float, StrataSlots> thickness{};
     std::array<Facies, StrataSlots> facies{};
@@ -39,6 +41,7 @@ struct StrataColumn {
     float orogenTime{-1};// yr of its last collision stacking; negative if never
     Vec2 material;       // m, crust-attached coordinates: where this rock was when its column formed
     double now{};        // yr
+    float restored{};    // m the planet removed from this column during the region window (negative: laid on), undone above
 };
 
 // m, the warping that even undisturbed cover shares; the rest of `foldSpan` only reaches strata older than `deformed`.

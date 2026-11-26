@@ -3,6 +3,7 @@
 #include "core/fn/Hash.hpp"
 #include "core/fn/Noise.hpp"
 #include "planet/fn/Sample.hpp"
+#include "strata/fn/Window.hpp"
 
 namespace derivean::sim {
 namespace {
@@ -89,7 +90,8 @@ float plutonRoof(uint64_t seed, const StrataColumn& column, Vec2 material) {
     constexpr double RoofDepth = 2200.0;   // m of cover a pluton keeps over its margin
     constexpr double RoofMargin = 0.10;    // pattern units from the margin to where the dome reaches the datum
     const double margin = plutonMargin(seed, column, material);
-    return margin <= 0 ? 1e9f : float(RoofDepth * std::max(0.0, 1.0 - margin / RoofMargin));
+    // The roof is fixed in the crust, so it lies deeper under a datum the window has raised.
+    return margin <= 0 ? 1e9f : float(RoofDepth * std::max(0.0, 1.0 - margin / RoofMargin)) + column.restored;
 }
 
 const RockTraits& traitsOf(Material material) {
@@ -154,6 +156,7 @@ StrataColumn strataAt(const Planet& planet, Vec2 position) {
     column.material = position - Vec2{double(owner.driftX), double(owner.driftZ)} * PlanetCell;
     column.coverTotal = column.older;
     for (float thickness : column.thickness) column.coverTotal += thickness;
+    restoreWindow(planet, around, column);
     // Collision belts fold their cover; quiet crust keeps it nearly flat.
     column.foldSpan = owner.basement == Basement::Orogen ? 520.0f : owner.basement == Basement::Arc ? 180.0f : 45.0f;
     return column;
