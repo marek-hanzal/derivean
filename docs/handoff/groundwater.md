@@ -66,8 +66,9 @@ Shared-file state: `ground/fn/GroundwaterStandIn.cpp` is deleted; `World::ground
 
 ## 4. Next steps
 
-1. The spill patch: reviewed and fixed, the lead lands it once the groundwater, intervention and coast tests pass on it. The spilled water's losses downstream (sinking, evaporation) and the cells between a hollow and its pass are a known gap, accepted for now.
-2. Soak share on crystalline rock under soil: the lead decides the yield (section 8); then saturation excess where the table stands in the soil, measured on a Local tile with soil on crystalline rock (to be found), and young basalt (low).
+1. Yield and evaporation (lead's approval in principle, in progress): one humidity-aware open-water and potential evaporation shared by the planet consumers, the live water and the landscape, with Fu's yield (ω 2.6) on it and `StormShare` as the floor. Prepared in a mirror, measured world-wide (Region lake share and relief, river discharge at the 3×3 blocks, recharge) before the lead lands it in a quiet window. The spill patch landed as 6af424b; the spilled water's losses downstream (sinking, evaporation) and the cells between a hollow and its pass are a known gap, accepted for now.
+2. Saturation excess where the table stands in the soil, after item 1: measured first on a Local tile with soil on crystalline rock (to be found), then young basalt (low).
+2b. Volcanic piles in `fn/Beds.cpp:82` (after item 1; volcanic's note through the lead): `column.lava >= 0.5f ? Basalt : Tuff` makes andesite piles Basalt and ignores ignimbrite, lapilli tuff, pillow lava and hyaloclastite. Read the pile's mixture through `membersOf` (`volcanic/fn/Pile.cpp`, anonymous namespace today); ask volcanic to expose it in `volcanic/fn/Volcanic.hpp`.
 3. Re-run the hot and limestone places with the nearest-drain level, the handed share and the sinking cap, and a layered sedimentary place for the handed share under interbedded shale.
 4. `FormSetting::runoff` in `simulation/fn/Block.cpp` (engine stream). Then look for dolines and blind valleys in a real Local tile.
 5. `seeped` on tight rock: off soluble rock all but the soak share of a dry bed's take counts as recharge, though shale under the bed passes no more than under soil (third review, low).

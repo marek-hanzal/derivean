@@ -59,10 +59,10 @@ Fourth run (26 Nov, from 08:50). Done in it: sun shadows, snow, the face layout 
 
 ## 4. Next steps
 
-1. The dome's colours are still a palette, whitened and paled by the weather's haze but not the radiance of the air that now lights the ground; the clouds take their light from the palette to match it. Working the dome's zenith, horizon and glow out of the same air (single scattering over `CleanAir` and the weather's haze) would let the exposure follow the whole picture and the clouds take the same light as the ground.
+1. The dome's colours are still a palette, whitened and paled by the weather's haze but not the radiance of the air that now lights the ground; the clouds take their light from the palette to match it. Working the dome's zenith, horizon and glow out of the same air (single scattering over the clean air, `WorldInfo.air`, and the weather's haze, with its colour) would let the exposure follow the whole picture and the clouds take the same light as the ground.
 2. Light by height: `clearSky` is evaluated for the ground under the eye. A peak 4 km above the eye's ground is lit with the eye's air (sun term about 30 % off at a 10° sun). Two evaluations (eye and a high reference) blended per fragment by world height would do.
 3. The owner judges the land light (`land-before-*` against `land-after-*`) and the low-sun light (`clearsky2-*`, `dusk-*`); the lead puts them to the owner. `LandShare` stays 0.75.
-4. Haze by kind: the in-scattered light is grey-white for every aerosol; dust absorbs blue (single-scattering albedo about 0.9 at 550 nm, less in blue) and should tint the dusty sky and horizon tan. Needs the kinds' shares in `CloudField`. Haze above the low band (a Saharan air layer) needs the atmosphere first.
+4. Haze above the low band (a Saharan air layer) needs the atmosphere first. The haze's spectrum is kept dry (water flattens sulphate's from an Ångström exponent of 0.8 to 0.5 at 90 %), and the plume's ash in the band is drawn grey and not absorbing.
 5. Fog for particles and the brush (node materials of their own); a colour per liquid for voxel water.
 6. Put the chunk side into `WorldInfo.cubes.side` everywhere and drop `session/fn/cubeWorlds.ts` once the engine makes cubes only.
 
@@ -116,7 +116,7 @@ Engine (`@game/contract/GameBridge.ts`, read it for the truth):
 - `ChunkMesh.quads` is the ground of a voxel chunk; `ChunkMesh.faces` (`WorldInfo.faceWords` shorts a face) stays for water meshes and debris.
 - `CubeChunk { id, level, edge, origin, quads, water: { level, quads }[] }`; sheet quads have plane 0 and are drawn at `level` metres.
 - `Frame.cubes.levels[]`: `{ level, edge, wanted, shown, box }`. A level is drawn inside its box and outside the next finer box; the finest outside `voxelBox`, whose footprint counts at any height.
-- Haze, drawn: `CloudField.hazeDepth` (optical depth at 550 nm of the band from the ground to `hazeTop`, `hazeThickness` metres thick, uniform in it), `aerosolDepth` (the veil above the band, spread as an 8 km exponential from the sea). The renderer's clean air is 1.35e-5 /m in green against the atmosphere's 1.16e-5 in `viewDistance`; the record's `viewAtSeaKm` uses the renderer's.
+- Haze, drawn: `CloudField.hazeDepth` (optical depth at 550 nm of the band from the ground to `hazeTop`, `hazeThickness` metres thick, uniform in it), `aerosolDepth` (the veil above the band, spread as an 8 km exponential from the sea), `hazeColour` (five per cell: the band's extinction in red and blue against 550 nm, then its single-scattering albedo in red, green and blue; ash counts as grey, not absorbing). `WorldInfo.air` (wavelengths 680, 550, 440 nm, the clean air's extinction at each, its scale height) comes from `atmosphere/constant/Light.hpp`, the one owner of clean air, which `viewDistance` uses too; the renderer holds no clean-air constant. A recording without `WorldInfo.air` does not replay (the scene refuses it).
 - Snow, drawn: `CloudField.snowLadder` (kg/m², rungs at `WorldInfo.snowLadder` metres above `seaLevel`), `snowLine` per cell. Nothing below the snow line, linear from there to the first rung above and between rungs, end rungs held, bilinear between four cells. Drawn on tops, and on risers by the renderer's rule (section 2).
 
 Asked of the engine stream, not yet answered:
@@ -125,14 +125,18 @@ Asked of the engine stream, not yet answered:
 - Views hold up to 3.5 M quads (levels 7 and 8 hold about 1 M each at a land spot); a way to cull, or fewer hidden faces, would help weaker GPUs.
 - `Frame.pending.patches` and `ready` are what a capture waits on; confirm they cover cube chunks.
 - After a teleport of thousands of kilometres (from the cold range to the pinned spot, or to a weather cell a `seek` chose), `frame.ground` stayed null for six minutes, so such shots are taken from the probe height (`clearsky-*/pin-*`, `final-*/h12-cumulus-*`, `groundUnknown`). Plans keep each spot in its own run for now.
-- The addon stamp hashes `git diff HEAD` only: untracked sources that the build links are not in `diffHash`, and a relink within the same second keeps the old stamp.
+- A relink within the same second keeps the old addon stamp. (Untracked sources are in `diffHash` since 3bd5b92.)
 - Pillars of silt and sand one cube wide and up to hundreds of metres high in the 03:03 data (section 2): an engine or ground defect.
 - A riser one cube high under a covered top carries the bed's material; on gentle covered slopes every step then shows a dark band. Should the top cube's own sides carry the cover?
 
 Lines added to shared files:
 
 - `@game/contract/GameBridge.ts`: `WorldInfo.origin?: string` with its comment (the lead's commit f0bef85 had `replay?`, which it replaces). `CloudField.hazeDepth`, `hazeTop`, `hazeThickness` with their comments; `aerosolDepth`'s comment now says above the low band.
-- `@game/main/engine-worker.cjs`: the `hazeDepth` and `hazeTop` buffers in the cloud field's transfer list.
+- `@game/main/engine-worker.cjs`: the `hazeDepth`, `hazeTop` and `hazeColour` buffers in the cloud field's destructure and transfer list.
+- `@game/contract/GameBridge.ts`: `WorldInfo.air` and `CloudField.hazeColour` with their comments.
+- `@game/main/index.mjs` `windowOrigin`: the stamp's `dirty` null shows as `tree <hash>` (git state unknown), `dirty false` as the commit alone.
+- `@napi/src/addon.cpp`: the include of `atmosphere/constant/Light.hpp` and `world["air"]` in the world info. `@napi/src/frame.cpp`: `output["hazeColour"]`. `@napi/test/session.test.cjs`: assertions on `hazeColour` (cells² × 5, all positive) and `world.air`.
+- `@simulation/src/atmosphere/type/Column.hpp`, `fn/Column.cpp`: `surfaceHumidity(column, profile)` split out of `profileOf` (same numbers), so the haze swells with the hour's humidity. `type/Cloud.hpp`: `HazeColours` and `CloudField::hazeColour`; `fn/CloudField.cpp`: the per-cell colour of haze and ash. `type/Atmosphere.hpp`: `hazeDepths(..., swollen = true)`. The haze files (`Haze.*`, `HazeSources.cpp`, `constant/Light.hpp`, `test/Haze.cpp`, `tool/HazeCommand.cpp`) are this stream's from the haze task.
 - `@game/src/index.ts`: `haze: hazeRecord(scene.air())` in `measure`, and its import.
 - `docs/architecture.md`: after the Daylight paragraph, one paragraph on the clear-sky light; after the first Capture paragraph, one on the window's origin line.
 
