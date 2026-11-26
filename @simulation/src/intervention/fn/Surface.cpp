@@ -24,6 +24,7 @@ void overlaySurface(const World& world, Vec2 position, SurfaceSample& sample) {
     const size_t at = size_t(gz - int64_t(key.z) * TileCells) * TileCells + size_t(gx - int64_t(key.x) * TileCells);
     const Ground& was = tile->pristine->now;
     sample.rock += tile->now.rock[at] - was.rock[at];
+    sample.datum += tile->now.datum[at] - was.datum[at];
     sample.ground = sample.rock;
     for (int c = 0; c < SedimentClasses; ++c) {
         sample.sediment[c] = std::max(0.0f, sample.sediment[c] + tile->now.sediment[c][at] - was.sediment[c][at]);

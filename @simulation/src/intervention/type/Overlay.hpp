@@ -14,6 +14,19 @@ namespace derivean::sim {
 // only the edit, so the set of live tiles is a function of the history of edits and of nothing else.
 inline constexpr double EditReach = 256.0;   // m
 
+// Volcanic rock a Deposit laid on a live cell: it fills the column from its floor up to the rock
+// surface, so cutting the rock thins it by itself. The floor is kept below the datum, as the
+// replay keeps it, so foundering takes the pile down whole.
+struct LivePile {
+    float floor{-1e30f};  // m below the datum; above any rock where none was laid
+    float laid{};         // m ever laid into it, buried cover included
+    float lava{};         // m of that which was lava
+    Material kind{Material::Basalt};
+    uint64_t vent{};
+
+    float thickness(float rock, float datum) const { return std::max(0.0f, rock - (datum - floor)); }
+};
+
 // A site tile the world has been changed on or near. It is the tile's own columns and water as
 // they are now; the untouched tile stays in the atlas. Arrays are laid out as in Tile.
 struct EditedTile {
@@ -24,6 +37,7 @@ struct EditedTile {
     std::vector<float> discharge;      // m³/yr
     std::vector<double> depth, salt;   // m of water; kg/m² dissolved in it, or lying as a crust where it dried up
     bool touched{};                    // columns changed since its group's grid last read them
+    std::vector<LivePile> pile;        // empty until a Deposit lays rock here
 };
 
 // Live tiles that touch form one group, solved as one grid; groups that do not touch never

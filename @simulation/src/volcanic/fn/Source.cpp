@@ -3,6 +3,7 @@
 #include "core/fn/Hash.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "landscape/type/Level.hpp"
+#include "planet/fn/Heat.hpp"
 
 #include <set>
 
@@ -45,15 +46,39 @@ double normalDraw(uint64_t base, int64_t a, int64_t b) {
     return std::sqrt(-2.0 * std::log(1.0 - unit(base, a, b, 1))) * std::cos(6.283185307179586 * unit(base, a, b, 2));
 }
 
-// The steps of the window a vent erupts in, their volumes, and where its conduit came up.
-void schedule(uint64_t seed, Vent& vent, const Budget& budget, double share, const Window& window, double now) {
+// The part of the window one epoch of centres covers, by whole region steps (a step belongs to the
+// epoch its middle lies in).
+struct Life {
+    int64_t epoch{};
+    double from{}, to{};   // yr
+};
+
+std::vector<Life> livesOver(const Planet& planet, const Window& window) {
+    std::vector<Life> lives;
+    const double end = std::max(window.end, planet.time);   // a young planet's last step can lie past the window
+    for (double time = std::ceil(window.start / RegionStep - 1e-9) * RegionStep; time < end - 1.0; time += RegionStep) {
+        const int64_t epoch = centreNear(planet, {0.0, 0.0}, time + 0.5 * RegionStep).epoch;
+        if (lives.empty() || lives.back().epoch != epoch) lives.push_back({epoch, time, time});
+        lives.back().to = time + RegionStep;
+    }
+    return lives;
+}
+
+// The steps of its life a vent erupts in, their volumes, and where its conduit came up. Each mark
+// interval's volume is dealt to the epochs by their steps in it, so the centres of successive
+// epochs together erupt what the cell erupted.
+void schedule(uint64_t seed, Vent& vent, const Budget& budget, double share, const Window& window, double now, const Life& life) {
     const uint64_t base = stream(seed, VentStream) ^ vent.id;
     const int64_t cycle = 2 + int64_t(hash(base, 1) % 6), shift = int64_t(hash(base, 2) % uint64_t(cycle));
     double lastRate = 0;
     for (size_t k = 0; k < budget.volume.size(); ++k) {
         const double from = budget.bound[k], to = std::min(budget.bound[k + 1], std::max(budget.quiet, from + RegionStep));
-        const int64_t first = int64_t(std::ceil(from / RegionStep - 1e-9)), last = int64_t(std::ceil(to / RegionStep - 1e-9));
-        if (budget.volume[k] <= 0 || last <= first) continue;
+        const int64_t whole = int64_t(std::ceil(to / RegionStep - 1e-9)) - int64_t(std::ceil(from / RegionStep - 1e-9));
+        const int64_t first = int64_t(std::ceil(std::max(from, life.from) / RegionStep - 1e-9)), last = int64_t(std::ceil(std::min(to, life.to) / RegionStep - 1e-9));
+        if (budget.volume[k] <= 0 || whole <= 0) continue;
+        lastRate = budget.volume[k] * share / (double(whole) * RegionStep);   // the cell's rate, whichever epoch had it
+        if (last <= first) continue;
+        const double dealt = budget.volume[k] * share * double(last - first) / double(whole);
         std::vector<double> weight(size_t(last - first));
         double total = 0;
         for (int64_t step = first; step < last; ++step) {
@@ -62,24 +87,26 @@ void schedule(uint64_t seed, Vent& vent, const Budget& budget, double share, con
         }
         if (total <= 0) weight.assign(weight.size(), 1.0), total = double(weight.size());
         for (int64_t step = first; step < last; ++step) {
-            const double volume = budget.volume[k] * share * weight[size_t(step - first)] / total;
+            const double volume = dealt * weight[size_t(step - first)] / total;
             if (volume > 0) vent.episodes.push_back({double(step) * RegionStep, volume, 0.0, {}});
         }
-        lastRate = budget.volume[k] * share / (double(last - first) * RegionStep);
     }
     // A window may end later than the planet's last step: melt that was rising then still does.
-    vent.supply = budget.quiet >= now - 1.0 ? lastRate : 0.0;
-    for (double time = now; time < window.end - 1.0 && vent.supply > 0; time += RegionStep) vent.episodes.push_back({time, vent.supply * RegionStep, 0.0, {}});
+    // The steps after it go to the epochs they lie in; only the centre of the last is still supplied.
+    const double rising = budget.quiet >= now - 1.0 ? lastRate : 0.0;
+    vent.supply = life.to >= window.end - 1.0 ? rising : 0.0;
+    for (double time = now; time < window.end - 1.0 && rising > 0; time += RegionStep)
+        if (time >= life.from && time < life.to) vent.episodes.push_back({time, rising * RegionStep, 0.0, {}});
 
     // The supply of each step fills the chamber; what comes out in a step are the eruptions whose
     // turn comes within it. A great one has waited through steps that brought up little.
     std::vector<Episode> supplied;
     supplied.swap(vent.episodes);
-    // The chamber is sized by what the centre was supplied with over the window, dormant spells
+    // The chamber is sized by what the centre was supplied with over its life, dormant spells
     // included: a property of the vent, so every eruption of its sequence is drawn on one chamber.
     double fed = 0;
     for (const Episode& filling : supplied) fed += filling.volume;
-    vent.chamber = chamberOf(fed / std::max(RegionStep, std::max(now, window.end) - window.start));
+    vent.chamber = chamberOf(fed / std::max(RegionStep, life.to - life.from));
     double held = 0, next = eruptionVolume(seed, vent, 0);
     for (const Episode& filling : supplied) {
         Episode episode{filling.time, 0.0, 0.0, {}};
@@ -108,6 +135,7 @@ void schedule(uint64_t seed, Vent& vent, const Budget& budget, double share, con
         vent.erupted += episode.volume;
         vent.episodes.push_back(episode);
     }
+    // What a centre of a past epoch still held when its melt went elsewhere froze in its chamber.
     vent.held = held;
 }
 
@@ -130,26 +158,29 @@ std::vector<Vent> ventsNear(const Setting& setting, Vec2 low, Vec2 high, double 
                 for (int dx = -1; dx <= 1; ++dx) cells.insert({cz + dz, cx + dx});
         }
     }
+    const std::vector<Life> lives = livesOver(planet, window);
     for (const auto& [cellZ, cellX] : cells) {
         const Budget budget = budgetOf(planet, window, cellX, cellZ);
         double total = 0;
         for (const double volume : budget.volume) total += volume;
         if (total <= 0) continue;
-        const std::vector<Centre> centres = centresIn(planet, cellX, cellZ);
-        double vigor = 0;
-        for (const Centre& centre : centres) vigor += centre.vigor;
-        for (const Centre& centre : centres) {
-            const Vec2 at = worldPoint(setting.seed, centre.position);
-            if (at.x < from.x || at.z < from.z || at.x > to.x || at.z > to.z) continue;
-            Vent vent;
-            vent.id = centre.id;
-            vent.centre = at;
-            vent.magma = budget.magma;
-            vent.vigor = centre.vigor;
-            vent.begin = window.start;
-            vent.until = window.end;
-            schedule(setting.seed, vent, budget, centre.vigor / vigor, window, planet.time);
-            if (vent.erupted > 0) vents.push_back(std::move(vent));
+        for (const Life& life : lives) {
+            const std::vector<Centre> centres = centresIn(planet, cellX, cellZ, 0.5 * (life.from + life.to));
+            double vigor = 0;
+            for (const Centre& centre : centres) vigor += centre.vigor;
+            for (const Centre& centre : centres) {
+                const Vec2 at = worldPoint(setting.seed, centre.position);
+                if (at.x < from.x || at.z < from.z || at.x > to.x || at.z > to.z) continue;
+                Vent vent;
+                vent.id = centre.id;
+                vent.centre = at;
+                vent.magma = budget.magma;
+                vent.vigor = centre.vigor;
+                vent.begin = life.from;
+                vent.until = window.end;
+                schedule(setting.seed, vent, budget, centre.vigor / vigor, window, planet.time, life);
+                if (vent.erupted > 0) vents.push_back(std::move(vent));
+            }
         }
     }
     return vents;

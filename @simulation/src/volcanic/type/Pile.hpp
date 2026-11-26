@@ -25,12 +25,14 @@ struct VolcanicLedger {
     double built{};       // of lava, cone and ash: on the tile's own cells
 };
 
+inline constexpr uint16_t NoVent = 0xFFFF;   // a vent index naming no vent; a region lists one vent per centre and epoch, hundreds
+
 // What a finished tile keeps of it. Arrays have TileCells² entries, row-major.
 struct VolcanicTile {
     std::vector<float> pile;     // m of volcanic rock under the rock surface: it fills (rock − pile, rock]
     std::vector<float> laid;     // yr before the tile's time that the top of the pile was laid
     std::vector<uint8_t> lava;   // share of lava in the pile in parts of 255; the rest is ash and scoria
-    std::vector<uint8_t> vent;   // index into `vents` of the vent that laid the top; 255 for none
+    std::vector<uint16_t> vent;   // index into `vents` of the vent that laid the top; NoVent for none
     std::vector<Vent> vents;     // every vent whose products or conduits reach the tile
     VolcanicLedger ledger;
 };
@@ -43,8 +45,8 @@ struct VolcanicDomain {
     std::vector<float> lavaLaid;   // m of lava ever laid into the pile
     std::vector<float> allLaid;    // m of everything ever laid into it
     std::vector<float> laidAt;     // yr after the domain's start that the top was laid
-    std::vector<uint8_t> vent;     // index into `vents`, 255 for none
-    std::vector<uint8_t> plug;     // 1 + index of the vent whose conduit comes up through the cell, 0 for none
+    std::vector<uint16_t> vent;     // index into `vents`, NoVent for none
+    std::vector<uint16_t> plug;     // 1 + index of the vent whose conduit comes up through the cell, 0 for none
     std::vector<uint8_t> inside;   // 1 while the cell's cached rock traits are the pile's or a plug's
     VolcanicLedger ledger;
 };
@@ -56,7 +58,7 @@ struct PileColumn {
     float thickness{};   // m
     float laid{};        // yr before the tile's time
     uint8_t lava{};      // parts of 255
-    uint8_t vent{255};
+    uint16_t vent{NoVent};
 };
 
 // The pile under one point of the ground, as a reader that crosses tile edges carries it: nothing

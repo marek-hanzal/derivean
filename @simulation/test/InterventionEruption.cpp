@@ -1,6 +1,7 @@
 #include "InterventionShared.hpp"
 
 #include "chronology/type/Calendar.hpp"
+#include "simulation/fn/Live.hpp"
 #include "volcanic/fn/Outbreak.hpp"
 
 using namespace derivean::sim;
@@ -36,9 +37,19 @@ void testEruption(World& world, const StreamSite& site) {
         const SiteColumn after = siteColumn(world, gx, gz);
         expectLive(after.live && std::abs(after.rock - (before.rock - 1.0f + cover + 3.0f)) < 1e-3f, "a deposit did not sink the floor, seal the cover and lay rock on it", after.rock - before.rock);
         expectLive(after.cover[Coarse] <= 0 && after.cover[Fines] <= 0 && std::abs(after.cover[Sand] - 0.5f) < 1e-4f, "the loose part of a deposit is not on top of its rock", after.cover[Sand]);
+        // What the voxels read: the layering went down with the floor, and the rock laid is a pile.
+        const CellChange change = changeAt(world, (double(gx) + 0.5) * cell, (double(gz) + 0.5) * cell);
+        expectLive(std::abs(change.datum + 1.0f) < 1e-4f, "the layering did not founder with the floor", change.datum);
+        expectLive(std::abs(change.pile.thickness - (3.0f + cover)) < 1e-3f && change.pile.lava == 0, "the rock a deposit laid is not a pile of welded fragments", change.pile.thickness);
+        // The floor foundering again takes the pile down whole.
+        auto sink = std::make_shared<Deposit>(*one);
+        sink->rock.clear(), sink->loose[Sand].clear(), sink->drop = {0.5f};
+        intervene(world, deposit(sink));
+        const CellChange sunk = changeAt(world, (double(gx) + 0.5) * cell, (double(gz) + 0.5) * cell);
+        expectLive(std::abs(sunk.datum + 1.5f) < 1e-4f && std::abs(sunk.pile.thickness - change.pile.thickness) < 1e-3f, "foundering thinned the pile on the floor", sunk.pile.thickness - change.pile.thickness);
         const WorldBudget budget = budgetOf(world);
         // To a millimetre of the column: the columns are floats at the ground's height.
-        expectLive(std::abs(budget.dug - cell * cell) < 1e-3 * cell * cell && std::abs(budget.filled - 3.5 * cell * cell) < 1e-3 * cell * cell, "a deposit booked other volumes than it laid", budget.filled);
+        expectLive(std::abs(budget.dug - 1.5 * cell * cell) < 1e-3 * cell * cell && std::abs(budget.filled - 3.5 * cell * cell) < 1e-3 * cell * cell, "a deposit booked other volumes than it laid", budget.filled);
         expectLive(solidImbalance(budget) <= Closed, "a deposit does not close the solid budget", solidImbalance(budget));
         forgetInterventions(world);
     }
@@ -64,7 +75,7 @@ void testEruption(World& world, const StreamSite& site) {
     vent.feeders.push_back({site.at + Vec2{60, 0}, 150.0f, vent.until - 1e5, vent.until, 1e9});
     const Outbreak outbreak = outbreakOf(world.options.seed, vent, 3, vent.until + 1, 2e6);
     const NearField near = layOutbreak(field, outbreak);
-    const std::shared_ptr<const Deposit> laid = depositOf(field, near);
+    const std::shared_ptr<const Deposit> laid = depositOf(field, near, outbreak);
     double thrown = 0, welded = 0;
     for (size_t i = 0; i < field.cells(); ++i) thrown += double(near.fragments[i]) + double(near.lava[i]), welded += laid->rock[i];
     thrown *= cell * cell;
@@ -81,6 +92,14 @@ void testEruption(World& world, const StreamSite& site) {
     const int64_t vx = int64_t(std::floor(outbreak.site.x / cell)), vz = int64_t(std::floor(outbreak.site.z / cell));
     const size_t middle = field.index(int(vx - int64_t(std::floor(field.origin.x / cell))), int(vz - int64_t(std::floor(field.origin.z / cell))));
     expectLive(siteColumn(world, vx, vz).live && laid->rock[middle] > 0, "the vent is not under a welded pile of the eruption", laid->rock[middle]);
+    // The voxels read the new rock as andesite of this vent, on top of whatever pile was there.
+    GroundLattice lattice;
+    lattice.spacing = cell, lattice.shift = 0.5 * cell;
+    lattice.originX = vx, lattice.originZ = vz, lattice.countX = lattice.countZ = 1;
+    lattice.rock = lattice.datum = lattice.crust = {0.0f};
+    for (auto& layer : lattice.cover) layer = {0.0f};
+    expectLive(changeLattice(world, lattice) && lattice.pile.size() == 1 && lattice.pile[0].thickness >= laid->rock[middle] - 1e-3f && lattice.pile[0].rock == Material::Andesite && lattice.pile[0].vent == vent.id,
+               "the voxels do not read the eruption's rock as its pile", lattice.pile.empty() ? -1.0 : lattice.pile[0].thickness);
     for (int call = 0; call < 3; ++call) advance(world, 10 * Day);
     const double end = world.interventions.calendar.seconds;
     const WorldBudget live = budgetOf(world);

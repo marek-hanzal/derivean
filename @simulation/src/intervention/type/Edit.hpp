@@ -27,6 +27,9 @@ struct Deposit {
     int width{}, height{};
     std::vector<float> drop, rock;              // m per cell, row-major; empty where there is none
     std::vector<float> loose[SedimentClasses];  // m per cell by class
+    std::vector<float> lava;                    // m of `rock` that is lava; the rest welded fragments
+    Material kind{Material::Basalt};            // what its lava is
+    uint64_t vent{};                            // Vent::id of what laid it
 };
 
 // One change the game hands back, in simulation terms. A stroke is the band of `width` around the

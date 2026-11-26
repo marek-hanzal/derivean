@@ -43,7 +43,7 @@ void allocateVolcanic(Domain& domain) {
     volcanic.lavaLaid.assign(cells, 0.0f);
     volcanic.allLaid.assign(cells, 0.0f);
     volcanic.laidAt.assign(cells, 0.0f);
-    volcanic.vent.assign(cells, 255);
+    volcanic.vent.assign(cells, NoVent);
     volcanic.inside.assign(cells, 0);
 }
 

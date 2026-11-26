@@ -42,7 +42,7 @@ struct Vent {
     Vec2 centre;         // m, world position of the magmatic centre
     Magma magma{Magma::Basalt};
     float vigor{};       // 0..1, share of its province's melt that gathers here
-    double begin{};      // yr the history below starts at: the start of the region's window
+    double begin{};      // yr the history below starts at: the start of its centre's life within the region's window
     double until{};      // yr it is recorded to: the end of that window
     double supply{};     // m³/yr the centre still supplies at that end; 0 once the melt has stopped rising
     double erupted{};    // m³ over the region's window

@@ -15,7 +15,7 @@ Laying emptyLaying(const Domain& domain) {
     Laying laying;
     const size_t cells = domain.cells();
     for (auto* layer : {&laying.lava, &laying.fall, &laying.ash, &laying.drop}) layer->assign(cells, 0.0f);
-    laying.vent.assign(cells, 255);
+    laying.vent.assign(cells, NoVent);
     return laying;
 }
 

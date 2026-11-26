@@ -38,7 +38,7 @@ NearField layOutbreak(Emplacement& field, const Outbreak& outbreak);
 // grid, by the rule the replay settles with (volcanic/fn/Settle.cpp): a cell that took WeldDepth
 // or more holds it as rock; a thinner layer lies loose, lava as rubble, fragments half coarse and
 // half sand.
-std::shared_ptr<const Deposit> depositOf(const Emplacement& field, const NearField& near);
+std::shared_ptr<const Deposit> depositOf(const Emplacement& field, const NearField& near, const Outbreak& outbreak);
 
 // kg of rock for a volume brought up.
 double rockMass(double volume);

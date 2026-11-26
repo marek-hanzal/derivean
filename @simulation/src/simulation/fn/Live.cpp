@@ -19,6 +19,12 @@ CellChange changeAt(const World& world, double x, double z) {
     const Ground& was = change.tile->pristine->now;
     change.rock = change.tile->now.rock[change.at] - was.rock[change.at];
     for (int c = 0; c < SedimentClasses; ++c) change.cover[c] = change.tile->now.sediment[c][change.at] - was.sediment[c][change.at];
+    change.datum = change.tile->now.datum[change.at] - was.datum[change.at];
+    if (!change.tile->pile.empty()) {
+        const LivePile& laid = change.tile->pile[change.at];
+        const float thickness = laid.thickness(change.tile->now.rock[change.at], change.tile->now.datum[change.at]);
+        if (thickness > 0) change.pile = {thickness, laid.laid > 0 ? std::min(1.0f, laid.lava / laid.laid) : 0.0f, laid.kind, laid.vent};
+    }
     return change;
 }
 
@@ -27,10 +33,19 @@ bool changeLattice(const World& world, GroundLattice& lattice) {
     for (int z = 0; z < lattice.countZ; ++z)
         for (int x = 0; x < lattice.countX; ++x) {
             const CellChange change = changeAt(world, double(lattice.originX + x) * lattice.spacing + lattice.shift, double(lattice.originZ + z) * lattice.spacing + lattice.shift);
-            if (!change.tile || (change.rock == 0 && change.ground() == 0)) continue;
+            if (!change.tile || (change.rock == 0 && change.ground() == 0 && change.datum == 0 && change.pile.thickness == 0)) continue;
             const size_t node = size_t(z) * size_t(lattice.countX) + size_t(x);
             lattice.rock[node] += change.rock;
+            lattice.datum[node] += change.datum;
             for (int c = 0; c < SedimentClasses; ++c) lattice.cover[c][node] = std::max(0.0f, lattice.cover[c][node] + change.cover[c]);
+            // Lava laid in play lies on whatever pile was there; its kind is the top's.
+            if (change.pile.thickness > 0) {
+                if (lattice.pile.empty()) lattice.pile.assign(lattice.rock.size(), PilePoint{});
+                PilePoint& pile = lattice.pile[node];
+                // What stands of the untouched pile: less what the session cut from the rock before laying.
+                const float below = std::clamp(pile.thickness + change.rock - change.datum - change.pile.thickness, 0.0f, pile.thickness), total = below + change.pile.thickness;
+                pile = {total, (pile.lava * below + change.pile.lava * change.pile.thickness) / total, change.pile.rock, change.pile.vent};
+            }
             moved = true;
         }
     return moved;
@@ -44,6 +59,7 @@ void overlayLive(const World& world, Vec2 position, SurfaceSample& sample) {
         // Whatever stands on the cover (a spring's deposit) stays on it.
         const float above = sample.ground - sample.rock - sample.sediment[0] - sample.sediment[1] - sample.sediment[2];
         sample.rock += change.rock;
+        sample.datum += change.datum;
         sample.ground = sample.rock + above;
         for (int c = 0; c < SedimentClasses; ++c) {
             sample.sediment[c] = std::max(0.0f, sample.sediment[c] + change.cover[c]);

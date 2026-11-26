@@ -18,7 +18,7 @@ void allocateVolcanic(Domain& domain);
 struct Laying {
     std::vector<float> lava, fall, ash;   // m
     std::vector<float> drop;              // m the cell founders
-    std::vector<uint8_t> vent;            // index of the vent the top of it came from
+    std::vector<uint16_t> vent;            // index of the vent the top of it came from
     bool any{};
 };
 // The domain's ground as the emplacement laws see it.

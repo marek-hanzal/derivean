@@ -115,7 +115,7 @@ int volcanicSurvey(const Arguments& arguments) {
             ++meltLand;
             ++sources[size_t(column.meltSource)];
             nowLand += double(column.meltTime) + PlanetStep >= planet.time - 1;
-            perCell.push_back(double(centresIn(planet, x, z).size()));
+            perCell.push_back(double(centresIn(planet, x, z, planet.time).size()));
         }
     }
     std::printf("  land cells of the planet: %ld, with melt at the surface in the window: %ld (arc %ld, rift %ld, plume %ld), still rising: %ld | centres found per such cell: p10 %.0f p50 %.0f p90 %.0f max %.0f\n",

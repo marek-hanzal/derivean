@@ -8,7 +8,7 @@ namespace {
 constexpr uint64_t BedStream = 0x50494c45;
 constexpr float Pitch[2] = {14.0f, 34.0f};   // m from the base of one flow to the base of the next, by Magma
 
-Material lavaOf(const VolcanicTile* tile, const std::vector<Vent>& vents, uint8_t vent) {
+Material lavaOf(const VolcanicTile* tile, const std::vector<Vent>& vents, uint16_t vent) {
     const std::vector<Vent>& list = tile ? tile->vents : vents;
     return vent < list.size() && list[vent].magma == Magma::Andesite ? Material::Andesite : Material::Basalt;
 }
@@ -59,7 +59,7 @@ bool volcanicUnit(Domain& domain, size_t i, uint64_t seed) {
     if (volcanic.floor.empty()) return false;
     const float rock = domain.ground.rock[i], datum = domain.ground.datum[i];
     const float height = rock - (datum - volcanic.floor[i]);
-    const uint8_t plug = volcanic.plug.empty() ? 0 : volcanic.plug[i];
+    const uint16_t plug = volcanic.plug.empty() ? 0 : volcanic.plug[i];
     if (!plug && height <= 0) {
         // Cut through: the next reader of the cache must not find the pile's traits in it.
         if (volcanic.inside[i]) {
@@ -124,7 +124,7 @@ std::shared_ptr<const VolcanicTile> volcanicOf(const Domain& domain) {
     tile->pile.assign(cells, 0.0f);
     tile->laid.assign(cells, 0.0f);
     tile->lava.assign(cells, 0);
-    tile->vent.assign(cells, 255);
+    tile->vent.assign(cells, NoVent);
     const float span = float(domain.endTime - domain.startTime);
     for (int z = 0; z < TileCells; ++z) {
         for (int x = 0; x < TileCells; ++x) {

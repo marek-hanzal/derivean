@@ -9,11 +9,12 @@ namespace derivean::sim {
 struct Centre {
     Vec2 position;
     float vigor{};
-    uint64_t id{};
+    uint64_t id{};       // of its lattice cell and its epoch
+    int64_t epoch{};     // planet/fn/Heat.hpp
 };
 
 // Centres.cpp — the centres that lie in one planet cell.
-std::vector<Centre> centresIn(const Planet& planet, int cellX, int cellZ);
+std::vector<Centre> centresIn(const Planet& planet, int cellX, int cellZ, double time);   // those of the epoch `time` lies in
 
 // Source.cpp — every vent within `reach` of a world rectangle, with its whole history over the
 // region's window: what the planet recorded as melt rising under it, the share of that which

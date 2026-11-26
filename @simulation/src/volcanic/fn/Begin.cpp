@@ -44,21 +44,21 @@ struct Parents {
 };
 
 // Index in the domain's list of a vent another tile lists; added if it is new and near enough.
-uint8_t adopt(Domain& domain, const Vent& vent, double reach) {
+uint16_t adopt(Domain& domain, const Vent& vent, double reach) {
     std::vector<Vent>& vents = domain.volcanic.vents;
     for (size_t k = 0; k < vents.size(); ++k)
-        if (vents[k].id == vent.id) return uint8_t(k);
+        if (vents[k].id == vent.id) return uint16_t(k);
     const double span = domain.size * domain.cell;
     bool near = false;
     for (const Feeder& feeder : vent.feeders)
         near = near || (feeder.site.x > domain.origin.x - reach && feeder.site.z > domain.origin.z - reach && feeder.site.x < domain.origin.x + span + reach &&
                         feeder.site.z < domain.origin.z + span + reach);
-    if (!near || vents.size() >= 254) return 255;
+    if (!near || vents.size() >= NoVent - 1) return NoVent;
     vents.push_back(vent);
-    return uint8_t(vents.size() - 1);
+    return uint16_t(vents.size() - 1);
 }
 
-void takeCell(Domain& domain, size_t i, const VolcanicTile& from, size_t cell, float thickness, float rock, float datum, uint8_t vent) {
+void takeCell(Domain& domain, size_t i, const VolcanicTile& from, size_t cell, float thickness, float rock, float datum, uint16_t vent) {
     VolcanicDomain& volcanic = domain.volcanic;
     volcanic.floor[i] = datum - (rock - thickness);
     volcanic.allLaid[i] = thickness;
@@ -99,8 +99,8 @@ void inheritParent(Domain& domain, const TileLookup& lookup) {
             // The seeding lifted the datum to the rock wherever rock stood above it. Under a pile that
             // is no artefact of smoothing: the layering stays below, and only the pile's floor bounds it.
             if (ground.datum[i] <= ground.rock[i]) ground.datum[i] = std::max(ground.rock[i] - thickness, parents.datum(fx, fz));
-            const uint8_t from = tile->volcanic->vent[cell];
-            const uint8_t vent = from < tile->volcanic->vents.size() ? adopt(domain, tile->volcanic->vents[from], 1e30) : uint8_t(255);
+            const uint16_t from = tile->volcanic->vent[cell];
+            const uint16_t vent = from < tile->volcanic->vents.size() ? adopt(domain, tile->volcanic->vents[from], 1e30) : NoVent;
             takeCell(domain, i, *tile->volcanic, cell, thickness, ground.rock[i], ground.datum[i], vent);
         }
     }
@@ -117,8 +117,8 @@ void adoptNeighbours(Domain& domain) {
             const float thickness = tile->volcanic->pile[cell];
             if (thickness < Thinnest) continue;
             allocateVolcanic(domain);
-            const uint8_t from = tile->volcanic->vent[cell];
-            const uint8_t vent = from < tile->volcanic->vents.size() ? adopt(domain, tile->volcanic->vents[from], 1e30) : uint8_t(255);
+            const uint16_t from = tile->volcanic->vent[cell];
+            const uint16_t vent = from < tile->volcanic->vents.size() ? adopt(domain, tile->volcanic->vents[from], 1e30) : NoVent;
             takeCell(domain, i, *tile->volcanic, cell, thickness, domain.settledTo.rock[i], domain.settledTo.datum[i], vent);
         }
     }
@@ -136,7 +136,7 @@ void markPlugs(Domain& domain) {
                     if (length(domain.center(x, z) - feeder.site) >= feeder.radius) continue;
                     allocateVolcanic(domain);
                     if (volcanic.plug.empty()) volcanic.plug.assign(domain.cells(), 0);
-                    volcanic.plug[domain.index(x, z)] = uint8_t(index + 1);
+                    volcanic.plug[domain.index(x, z)] = uint16_t(index + 1);
                 }
             }
         }

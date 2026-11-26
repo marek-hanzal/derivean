@@ -18,7 +18,7 @@ double harvest(Emplacement& field, Laying& laying, std::vector<float>& into, int
         }
         into[i] += field.laid[i];
         volume += field.laid[i];
-        laying.vent[i] = uint8_t(vent);
+        laying.vent[i] = uint16_t(vent);
         field.laid[i] = 0;
         laying.any = true;
     }
@@ -41,7 +41,7 @@ double layAsh(const Domain& domain, Emplacement& field, Laying& laying, const Fa
             if (thickness < AshFloor || field.rest[i] != Rest::Open) continue;
             laying.ash[i] += thickness;
             field.ground[i] += thickness;
-            if (laying.vent[i] == 255) laying.vent[i] = uint8_t(vent);
+            if (laying.vent[i] == NoVent) laying.vent[i] = uint16_t(vent);
             laid += double(thickness) * domain.cell * domain.cell;
             laying.any = true;
         }

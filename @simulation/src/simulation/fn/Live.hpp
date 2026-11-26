@@ -12,6 +12,8 @@ struct CellChange {
     const EditedTile* tile{};                    // null where the world is untouched there
     size_t at{};                                 // the cell in the tile's arrays
     float rock{}, cover[SedimentClasses]{};      // m added to the rock and to each class of cover
+    float datum{};                               // m the layering went down where the ground foundered
+    PilePoint pile;                              // volcanic rock the session laid on the cell; thickness 0 where none
 
     float ground() const { return rock + cover[0] + cover[1] + cover[2]; }
 };
