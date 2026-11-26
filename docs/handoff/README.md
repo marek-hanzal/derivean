@@ -78,7 +78,8 @@ A stream whose file is missing has not written it yet; its state is then only in
 3. Engine: crew size by cores with the frame protected by thread priority, truthful readiness per level, the player on the finest level, water levels as one surface per body, no absolute positions as 32-bit floats.
 4. Wire what is finished but not connected: interventions into the game, snow ladder into the frame and renderer, groundwater's real springs and caves into the voxel answer.
 5. Re-measure against Earth and re-scout the catalogue after the relief rework and after each new process lands.
-6. Produce what the brief asks for at delivery (below), have an independent reviewer go over code and architecture, write the honest evaluation.
+6. **Queued, owner's decision (26 Nov): cover that carries its parent rock.** Today cover is three classes (coarse, sand, fines) and its voxels are generic Sand, Silt, Gravel or Scree; the rock sets only the amounts. Cover should remember its source rock, so granite weathers to grus, shale to clay and sandstone to its own sand, and transport mixes the sources. Start it only once the open streams have settled: the owner wants fewer things in flight at once. It touches landscape cover (`Terrain.hpp` Ground), transport, `relief/fn/Form.cpp` `coverAt` and `ground/fn/Finish.cpp`. Related gaps, not queued: no cementation of buried loose cover (`unconsolidated()` unused), no soil horizons, no weathering during live play.
+7. Produce what the brief asks for at delivery (below), have an independent reviewer go over code and architecture, write the honest evaluation.
 
 ## Delivery conditions of the brief not yet met
 
