@@ -35,7 +35,7 @@ Catalogue targets are in `docs/reference-landscapes.md` (A2, A3, F1–F4, G1). R
 
 **Broken or known wrong:**
 
-- **Band at a Local tile seam** (`local4/seam-diff.png`; profile by `seamprobe.cpp`, section 7). Across the edge between tiles (429,808) and (429,809) till, worn rock and the recorded `passing` load run on without a step (till 3.5 → 3.9 m, passing 17.4 → 17.8 m). The ground dips about 3 m (−2.8 m mean over the row) in the 4–5 rows below the seam and recovers. Those rows are the `Apron` of `blendSeams` (`landscape/fn/Extract.cpp`), which fades the later tile's own cells towards what the finished neighbour computed for them in its halo. The neighbour's halo went through its own pass of the last sheet. Digging against a box mean and filling cavities amplify the small differences in the pre-ice ground, so the two versions differ by metres, not "only in detail" as the blend assumes. Fix candidates: make the pass less sensitive to detail (lodging is the excitable part), or blend the sheet's own change as a separate layer. Not done.
+- **Band at a Local tile seam: fixed.** At the finer levels `Leave` now runs after `settleSeams`, so `blendSeams` mixes two versions of the ground both tiles settled before the sheet. The sheet's change is laid on top, and it continues across the edge from the finished neighbour's recorded `passing`. Measured with `seamprobe` (`.out/icesheet/local6/seam.txt`), rows across the edge between tiles (429,808) and (429,809): the 4–5 row dip of −2.8 m is gone; at most +1.1 m remains over the 6 rows next to the edge, the size of the ±0.8 m till waves elsewhere. The right pair runs smooth (±0.8 m). The recorded load steps 21.5 → 25.0 m there, but till does not.
 - **Look at Local, against F1/F3**: many lakes are one or two 64 m cells (speckle), and rock is dug in short dashes along the grid where the rock-structure field has its joints; rivers that follow fracture zones are dug 20 m deeper with a till bank on their lee side, so they read as straight leveed channels. The ice edge from the parent's 1 km cells is a straight-sided block (top right of `local-diff.png`). Real shield country has lakes of every size up to kilometres with rough rims, and till in separate streamlined hills.
 - Reviewer findings not yet done (26 Nov):
   - Esker cover take-up and ridge height still scale with sums over the whole domain, a seam risk where cover runs short; take per stretch instead.
@@ -51,20 +51,54 @@ Catalogue targets are in `docs/reference-landscapes.md` (A2, A3, F1–F4, G1). R
 
 ## 3. In progress
 
-Nothing half-done. Third run (Opus, 26 Nov), after the lead's commit 08f5a7e:
-- The `testChart` failure is not this stream's. `count.cpp` finds the same 3 tiles either way. Then: digging moved to the rock-mass field; Site no longer digs; the moraine surplus runs on as outwash (`washBeyond`); and the review findings on these changes are fixed. The Region portal Fines are now booked only for owned cells. The surplus starts from the lower bare neighbours, never settling on the moraine. Site does not compute the box means. The margin test checks that the ground changed by the ledger.
-- Site tiles at `--x 7042816 --z 13263360` (`.out/icesheet/site3/local-on.png`, ice only): lakes 13.8 % (4.7 % without the pass, `site2/local-off.png`), mean slope 2.7°, till 1.2 m. The trench grid is gone. Ice lobes of till run with the flow, and lakes lie between them. Tile seams show as straight lines, but they are already in the baseline without the pass (`site2/local-off.png`, which also repeats the same rough patch in every Site tile): another owner's.
-- Both ice tests pass through the drivers. The full suite stopped at `testAeolian` (another stream) on the last run; on the run before, it passed these tests and stopped at `testChart`.
+Nothing half-done. Fourth run (Opus, 26 Nov, after the lead's commit of ed55459):
+- **Seam band** fixed (section 2): `Leave` at the finer levels after `settleSeams`.
+- **Digging**:
+  - follows the rock-mass factor, smoothed twice over the plucking box;
+  - takes the zone's orientation from a structure tensor of the factor's gradients (defined on a zone's axis too);
+  - digs a quarter as deep across the flow as along it (`AcrossShare`);
+  - approaches `BasinDepth` softly.
+- **One-cell pits** below all their neighbours are filled with lodged till up to their lowest rim.
+- **Test:** a second fracture zone along the flow must be dug at least 1.5 × deeper than the one across it.
+- **Pictures** (seed 42, `.out/icesheet/`):
+  - `local6/`: Local 2 × 2 at `--x 7052800 --z 13263360`, before pit filling: lakes 0.1 → 5.5 %, slope 1.3° → 1.8°, till 4.6 m.
+  - `local7/` (pass only): with pit filling, lakes 4.1 %, fewer one-cell lakes. Elongated lakes lie along the fault zone.
+  - `coast1/`: Local 2 × 2 on the coast at `--x 11582976 --z 4307456`, first eskers in the real world: 773 cells, lakes 6.1 → 7.9 %, rock worn 12 m.
+  - `site3/`: Site, digging off: lakes 13.8 %.
+- **Esker columns (lead's report, 26 Nov) fixed.** The crest was `fill / reach · 3 / (4 · half)`, drawn only on cells within the tunnel's half-width (30 m and up) of the path. At 64 m cells a ridge could be single cells of 25.6 × the parent's fill (10 m of fill → 256 m). Now, per stretch:
+  - the ridge holds no more than its section takes. The crest is `min(EskerTallest 50 m, 0.5 · ReposeTan[Coarse] · half)`, so the foot is no steeper than gravel. The rest of the fill stays in the cover;
+  - it is drawn at least one cell wide, with its volume kept, normalised over all grid cells including those beyond the domain;
+  - each stretch owns only its own span, and stretches add at joins;
+  - its gravel and sand come from the cells nearest to it, with a ratio per stretch, so it stands the same in every domain;
+  - heights are clamped at `EskerTallest`.
+
+  Coastal Local 2 × 2 (`eskerstat.cpp`):
+
+  | | Tallest | Cells over 1 m | Mean height | Runs | Width |
+  |---|---|---|---|---|---|
+  | Before | 32.6 m | 922 | 9.3 m | 4 | 2.0 cells |
+  | After the first fix | 7.6 m | 933 | 3.1 m | 2 | 2.3 cells |
+  | After the review fixes | 17.8 m | 570 | 5.1 m | 4 | 2.1 cells |
+
+  No single-cell pieces in any of the three. The review fixes are: per-stretch material, owned spans, sums at joins.
+
+  Before the fix, the coastal ridges were held down only by a cover shortage. Test: parent fill of 10 m (the old law gives about 122 m); the ridge must run unbroken and stay at or below 50 m.
+- **Esker paths still look drawn** (`coast1/local-left.png`, green): thin lines with kinks along the parent's D8 route, one running exactly along a parent row, and a 7 km straight ridge tapering at both ends like a pencil. Real eskers are sinuous, beaded and broken.
+- **Baselines** were re-taken on the tree that includes 38b4939: every `-off` picture in `local6/` and `coast1/`.
+- **The full suite**: the last run (tree with the structure tensor, before the esker fix) printed no failure but hit my 25-minute timeout, so it is unverified past that point. The run before stopped in `testReliefCover` ("loose cover stands steeper than its repose on a finished tile", 7.98 m at Site). `count2.cpp` on the current tree finds the focus Local and Site tiles both bare (no loose cover, unsupported 0), and both carry a sheet record. A rerun of the suite is going; see the report for its result.
 
 ## 4. Next steps
 
-0. Remove the band at Local tile seams (section 2, "Broken"); then the speckle lakes and grid dashes (dig against a wider plucking footprint, or let small hollows fill), then the reviewer's list.
-1. Look at Site tiles under the last sheet (flutes, knobs) and at an esker at Local on the coastal tile; tune `ShelterSlope`, `LodgeCells`, `BasinDepth` against F1/F3 (lakes 10–30 % on a shield, drumlins 250–1 000 m long, 5–50 m high, 300–1 000 m apart).
-2. Kettles and hummocky ground where the last sheet stagnated (moraine and outwash under thin, slow ice): buried ice melting out of the cover.
-3. `terra icesheet`: counts and sizes of drumlins, eskers and lakes at Local.
-4. A real 2 × 2 Local mosaic across a tile edge under ice: no step in till or eskers.
-5. Pictures with `terra view` against the catalogue (F1, F2, F3, G1); rows for `docs/simulation.md`; reviewer; report.
-6. Region: stage-by-stage still-stands (recessional moraines) are still absent; the inland freed lowland is half drowned by the crust still to rebound, which is Earth-like but worth the owner's eye.
+1. **Eskers from the process, not the parent's D8 route.** Let the set-aside fill run along the steepest descent of the water head (bed + 0.917 · the parent's last-maximum ice thickness) at the domain's own cells, and settle it at its repose. Then the ridge bends with the domain's own bed and breaks where the head rises.
+2. **Kettles and hummocky dead-ice ground.** Where the last maximum's ice was slow (no sliding) and thin near its margin, the load melts out of stagnant ice. It should drape the bed: no cavity filling and no pit filling there. Hollows under buried ice then stay as kettle lakes. Ice blocks buried in outwash need the retreat (stage by stage), which is not modelled. No seeded placement.
+3. **Review items**:
+   - esker take-up per stretch;
+   - `passing` by grain class;
+   - Site `iceThen` from the Local tile's `iceAge` (includes valley glaciers);
+   - a hollow beyond the ice keeps everything (cap at its rim);
+   - at a seam where the ice flows towards a finished neighbour, the edge depends on the neighbour's halo estimate; measure it there.
+4. **Count** drumlins, eskers and lakes at Local (`terra icesheet --level 2`). Compare with F1/F3: lakes 10–30 % on a shield, drumlins 250–1 000 m long.
+5. **Region**: no recessional moraines yet. The Region `TileLedger` books halo cells (`Debris.cpp`). The 2 × 2 Region map across a tile edge is not made.
 
 ## 5. Decisions and why
 
@@ -90,6 +124,12 @@ Nothing half-done. Third run (Opus, 26 Nov), after the lead's commit 08f5a7e:
 
 **The last sheet at the finer levels is one pass after settling, not a history.** Its parts act within a few cells (take-up per cell, digging against a box of one parent cell, lodging with a reach of 10 cells and a shelter search of 8, ridges within a tunnel's width), so a tile agrees with its neighbour wherever both see the same parent; where the ice comes out of a finished neighbour the neighbour's recorded `passing` load is fed in, else the load in balance with the bed. Drumlins are not seeded: till fills the cavity behind every rise of the bed, so their places come from the rock and relief the domain settled into, their direction from the parent's sliding and their size from the till supply. Eskers follow the parent's meltwater path (smoothed through the parent's cell centres; the path is a Region result, the parabolic section a tunnel fill's) and carry the parent's fill volume.
 
+**At the finer levels the last sheet runs after the seam blend.** `blendSeams` assumes two tiles' versions of the same cells differ only in detail. The sheet's pass amplifies detail: it digs against a box mean, and the lodging is excitable. So the blend works on the ground before the sheet, and the sheet's change continues across the edge on its own. Region keeps its sheets before the blend because they are part of its settling (whole-domain relaxation).
+
+**Basins follow the rock mass and the flow.** The pluck factor is rock kind × (1 + 2.5 · `weakness`) / `sound`. It is smoothed twice over a 2-cell box and compared with the mean over a parent cell. The ice digs a zone it runs along fully and one it crosses square-on at a quarter (`AcrossShare`), since it rides over a trench across its path. Depth approaches `BasinDepth` softly. A fault zone of the rock mass has a fixed width (`FaultWidth`) and straight planes, so its basin is straight; its depth varies with the parent's wear, the zone's weakness and the angle of the flow.
+
+**An esker is resolved at the level's cell, not at its own width.** A stretch keeps the volume its section can hold, spread over at least the cells its path crosses. So a 60 m-wide ridge at 64 m cells is drawn about two cells wide and half its real height; at Site (4 m) it would show its own width, if Site had tunnels.
+
 **Finer levels are not dated.** Local settles for 6 Myr with twelve warm steps at the end, which fills or drains every lake and wears every fresh form. All sheet work at Local and Site therefore belongs in `Leave`, after settling. Forms wider than about 24 cells survive a child's settling because its averaged surface is held on the parent's (`TrendRadius` 12 in `Uplift.cpp`).
 
 **Traps.**
@@ -109,7 +149,8 @@ Lines this stream added to shared files (all present now):
 - `landscape/type/Terrain.hpp`: `struct SheetRecord;` and `struct SheetWork;` after `struct ShoreRecord;`; in `Tile`, `std::shared_ptr<const SheetRecord> sheet;` before `TileLedger ledger;`; in `Domain`, `std::shared_ptr<SheetWork> sheet;` after `VolcanicDomain volcanic;`.
 - `landscape/fn/Process.hpp`, after `erupt`: a comment, `enum class IceStage : uint8_t { Step, Leave, Present };` and
   `std::shared_ptr<const SheetRecord> sheetIce(Domain&, FlowScratch&, const struct Setting&, IceStage, const std::function<const Tile*(TileKey)>* tiles = nullptr);`
-- `landscape/fn/Replay.cpp`: `sheetIce(domain, scratch, setting, IceStage::Step);` before `cutAndFill` in `stepDomain`; `sheetIce(domain, scratch, setting, IceStage::Leave, &lookup);` right after the step loop in `replayTile`; `tile->sheet = sheetIce(domain, scratch, setting, IceStage::Present, &lookup);` right before `extractTile`.
+- `landscape/fn/Replay.cpp`: `sheetIce(domain, scratch, setting, IceStage::Step);` before `cutAndFill` in `stepDomain`. In `replayTile`, `Leave` is called twice by level: `if (key.level == Level::Region) sheetIce(domain, scratch, setting, IceStage::Leave, &lookup);` right after the step loop (with a comment), and `if (key.level != Level::Region) sheetIce(domain, scratch, setting, IceStage::Leave, &lookup);` right after `settleSeams(domain, *tile);` (with a three-line comment). Changed 26 Nov from one call before `followNeighbours`. A Local or Site tile's `nowWide` therefore holds its ground before the last sheet. `tile->sheet = sheetIce(domain, scratch, setting, IceStage::Present, &lookup);` right before `extractTile`.
+- `landscape/type/Terrain.hpp`: one comment line under the `nowWide` comment: `// At Local and Site it is the ground before the last ice sheet passed (landscape/fn/Replay.cpp).`
 - `tool/main.cpp`: `if (command == "icesheet") return iceSheetCommand(arguments);`; `tool/Arguments.hpp`: `int iceSheetCommand(const Arguments& arguments);`.
 
 `Tile::ice` and `Tile::iceAge` keep their meaning; at Region they now hold sheet ice (they were zero there).
@@ -137,6 +178,8 @@ That scratch directory is session-local and may be gone. What it held, so it can
 - `probe.cpp x z out`: builds the region tile there with `ICE_OFF` and without (the switch is gone from `Sheet.cpp`; put `if (std::getenv("ICE_OFF")) return nullptr;` back locally at the top of `sheetIce` for an A/B run), prints heights, wear, erosion and uplift by class (under ice now / freed / never) and writes `probe-off/on/diff.png`.
 - `spots.cpp x z`: in the region tile there, freed cells with the most till, esker fill, wear and moraine, as `--x --z` arguments.
 - `seamprobe.cpp x z`: 2 × 2 Local mosaic with and without the finer pass; row means across the horizontal seam of (on − off) ground, till, worn and recorded `passing`, plus each tile's pass.
+- `eskerstat.cpp x z [tiles] [level]`: in a square of finer tiles, the tallest esker cell, cells over 1 m, connected runs (and single cells) and mean width across a run.
+- `count2.cpp`: like `count.cpp`, and for the focus Local and Site tiles the cell where loose cover stands most above its repose (the measure of `testReliefCover`), with its sheet record.
 - `localprobe` with `ONLY_ON=1` skips the run without the pass.
 - `count.cpp`: tiles finished after `surveyAt` at the test world's focus, at each level, with and without the finer pass. Result 26 Nov: 3 tiles (one Region, one Local, one Site) either way. The finer pass reads only tiles in `dependencies(key)` through the atlas lookup, so it cannot start builds.
 - `localprobe.cpp x z out [tiles] [exaggeration] [level]`: a square of finer tiles with `ICE_FINER_OFF` and without (same local patch, at the top of `sheetFiner`; about 3 min per pass for 2 × 2 Local); lakes, slope, till; `local-off/on/left/diff.png`.
@@ -154,6 +197,11 @@ $T map --level 1 --tiles 2 --x … --z … --layer ice --out .out/icesheet
 The shared tasks are `mise -C @simulation run build` and `mise -C @simulation run test`; run both before reporting. Pictures go to `.out/icesheet/`; read them with the Read tool beside the catalogue's photographs.
 
 ## 8. Open questions
+
+- **For the level-consistency stream: Site seams and a repeated patch, without any ice.** Seed 42, age 4.6e9, Site 2 × 2 mosaic whose first tile holds `--x 7042816 --z 13263360` (`gatherMosaic(world, Level::Site, {7042816, 13263360}, 2)`). The finer ice pass was switched off for this run (the `ICE_FINER_OFF` patch, section 7), so this is the plain settled replay. Picture: `.out/icesheet/site2/local-off.png` (relief ×3, water blue). What it shows:
+  - straight lines along both tile edges (x = 256 and z = 256 of the 512² picture), a dark groove down the vertical one;
+  - in all four tiles a rough, pitted patch of about the same outline at about the same place in the tile, with smooth ground around it.
+  Rebuild with `localprobe 7042816 13263360 <out> 2 3 3` from section 7. The run was on tree 08f5a7e, before 38b4939 (window-start strata column); not re-checked since.
 
 - A freed lowland 60 m above the sea is half drowned (crust still rebounding plus 20 m net wear): Earth-like (Hudson Bay, Baltic), but the owner may want to see it.
 - Does the 4 km relaxation agree across a tile edge well enough that the end moraine does not step at a seam?

@@ -22,6 +22,7 @@ void expect(bool passed, const char* message, double value = 0) {
 
 constexpr int Zone = 150;          // column of the fracture zone
 constexpr int Stream = 240;        // row the stream under the ice follows
+constexpr int Lane = 200;          // row of a second fracture zone, along the flow
 constexpr int Knobs[3][2] = {{80, 80}, {100, 160}, {200, 110}};
 
 double knob(double x, double z) {
@@ -43,7 +44,7 @@ Domain plain() {
             const size_t i = domain.index(x, z);
             domain.ground.rock[i] = domain.ground.datum[i] = float(200 - 0.002 * x * domain.cell + knob(x, z));
             domain.ground.sediment[Coarse][i] = 2, domain.ground.sediment[Sand][i] = 2, domain.ground.sediment[Fines][i] = 2;
-            domain.weakness[i] = std::abs(x - Zone) <= 1 ? 1.0f : 0.0f;
+            domain.weakness[i] = std::abs(x - Zone) <= 1 || std::abs(z - Lane) <= 1 ? 1.0f : 0.0f;
             if (x == 0 || z == 0 || x == last || z == last) domain.hold[i] = Rim;
         }
     return domain;
@@ -61,7 +62,7 @@ ParentSheet eastward(const Domain& domain) {
             parent.topThen[i] = float(1000 - 0.001 * x * domain.cell);
             parent.topNow[i] = domain.ground.rock[i] + domain.sedimentAt(i);
             // The parent spread its tunnel's fill over the kilometre around the stream.
-            if (std::abs(z - Stream) < 8) parent.esker[i] = 1.0f;
+            if (std::abs(z - Stream) < 8) parent.esker[i] = 10.0f;
         }
     return parent;
 }
@@ -79,7 +80,7 @@ void testIceSheetLocal() {
     std::vector<Tunnel> tunnels;
     const double z = (Stream + 0.5) * domain.cell + domain.origin.z, stretch = Refinement * domain.cell;
     for (double x = domain.origin.x; x < domain.origin.x + domain.size * domain.cell; x += stretch)
-        tunnels.push_back({{x - stretch, z}, {x, z}, {x + stretch, z}, {x + 2 * stretch, z}, 1.0 * stretch * stretch, 1e9f});
+        tunnels.push_back({{x - stretch, z}, {x, z}, {x + stretch, z}, {x + 2 * stretch, z}, 10.0 * stretch * stretch, 1e9f});
     double before = 0;
     for (int z = Halo; z < Halo + TileCells; ++z)
         for (int x = Halo; x < Halo + TileCells; ++x) before += groundOf(domain, x, z);
@@ -96,10 +97,14 @@ void testIceSheetLocal() {
     expect(std::abs(ledger.eroded + ledger.sedimentIn - ledger.deposited - ledger.sedimentOut) < 1e-4 * ledger.eroded, "what the last sheet moved does not add up",
            ledger.eroded + ledger.sedimentIn - ledger.deposited - ledger.sedimentOut);
 
-    // The fracture zone is dug into a basin across the flow.
-    const size_t zone = domain.index(Zone, 200), beside = domain.index(Zone - 6, 200);
-    const float dug = (domain.ground.rock[beside] + 0.002f * float(-6 * domain.cell)) - domain.ground.rock[zone];
-    expect(dug > 10, "the fracture zone was not dug out", dug);
+    // Both fracture zones are dug into basins, the one the ice ran along deeper than the one it crossed.
+    const auto basin = [&](int x0, int z0, int dx, int dz) {
+        const size_t at = domain.index(x0, z0), beside = domain.index(x0 + dx, z0 + dz);
+        return (domain.ground.rock[beside] + 0.002f * float(dx * domain.cell)) - domain.ground.rock[at];
+    };
+    const float crossed = basin(Zone, 130, -6, 0), along = basin(60, Lane, 0, -6);
+    expect(crossed > 3, "the fracture zone across the flow was not dug out", crossed);
+    expect(along > 1.5f * crossed, "the zone the ice ran along is not dug deeper than the one it crossed", along / std::max(1e-3f, crossed));
 
     // Till lies in the lee of every knob, far more than on its stoss side, in a tail drawn out along the flow.
     for (const auto& at : Knobs) {
@@ -118,6 +123,15 @@ void testIceSheetLocal() {
     for (int x = Halo; x < Halo + TileCells; x += 16) ridge += groundOf(domain, x, Stream) - 0.5f * (groundOf(domain, x, Stream - 10) + groundOf(domain, x, Stream + 10));
     ridge /= TileCells / 16;
     expect(ridge > 5, "the tunnel fill does not stand as a ridge", ridge);
+    // It runs unbroken along the stream and stands no higher than eskers do, however narrow its tunnel against a cell.
+    float lowest = 1e9f, highest = 0;
+    for (int x = Halo; x < Halo + TileCells; ++x) {
+        float across = 0;
+        for (int z = Stream - 2; z <= Stream + 2; ++z) across = std::max(across, work.left.esker[domain.index(x, z)]), highest = std::max(highest, work.left.esker[domain.index(x, z)]);
+        lowest = std::min(lowest, across);
+    }
+    expect(lowest > 1, "the esker breaks along its stream", lowest);
+    expect(highest <= EskerTallest, "an esker stands higher than any on Earth", highest);
 
     // A tile whose up-ice halo a finished neighbour owns, holding what the last sheet left there,
     // gets the till the same ice brings it.

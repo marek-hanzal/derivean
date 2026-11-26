@@ -17,6 +17,9 @@ constexpr int MeanRadius = Refinement / 2;  // cells: rock is weak or strong aga
 // Cells over which the ice plucks as one: a basin grows from a zone of close planes until its rim
 // stands in sound rock, so it is wider than any one plane a cell resolves.
 constexpr int PluckRadius = 2;
+// Share of its full depth the ice digs from a weak zone it crosses square-on: it rides over a
+// trench across its path, and is channelled down one that runs with it.
+constexpr float AcrossShare = 0.25f;
 constexpr float CoverShield = 1.0f;         // m of cover left over rock that halves what the ice digs from it, twice over
 
 float groundOf(const Domain& domain, size_t i) { return domain.ground.rock[i] + domain.sedimentAt(i); }
@@ -69,7 +72,22 @@ SheetLoad takeUpBed(Domain& domain, SheetWork& work, const ParentSheet& parent) 
     std::vector<float> factor(cells, 1.0f);
     if (deepest > 0)
         for (size_t i = 0; i < cells; ++i) factor[i] = pluckFactor(domain, i);
-    const std::vector<float> plucked = deepest > 0 ? boxMean(factor, domain.size, PluckRadius) : factor, around = deepest > 0 ? boxMean(factor, domain.size, MeanRadius) : factor;
+    // Twice over the plucking footprint: a basin's walls slope from the zone into sound rock.
+    const std::vector<float> plucked = deepest > 0 ? boxMean(boxMean(factor, domain.size, PluckRadius), domain.size, PluckRadius) : factor;
+    const std::vector<float> around = deepest > 0 ? boxMean(factor, domain.size, MeanRadius) : factor;
+    // Which way the weak zones run, from the gradients of the plucking over its footprint taken
+    // without their sign (a structure tensor): defined on a zone's axis as well as on its walls.
+    std::vector<float> xx(cells, 0.0f), xz(cells, 0.0f), zz(cells, 0.0f);
+    if (deepest > 0) {
+        for (int z = 0; z < domain.size; ++z)
+            for (int x = 0; x < domain.size; ++x) {
+                const int west = std::max(0, x - 1), east = std::min(domain.size - 1, x + 1), north = std::max(0, z - 1), south = std::min(domain.size - 1, z + 1);
+                const float gx = plucked[domain.index(east, z)] - plucked[domain.index(west, z)], gz = plucked[domain.index(x, south)] - plucked[domain.index(x, north)];
+                const size_t i = domain.index(x, z);
+                xx[i] = gx * gx, xz[i] = gx * gz, zz[i] = gz * gz;
+            }
+        xx = boxMean(xx, domain.size, 2 * PluckRadius), xz = boxMean(xz, domain.size, 2 * PluckRadius), zz = boxMean(zz, domain.size, 2 * PluckRadius);
+    }
     for (int z = 0; z < domain.size; ++z) {
         for (int x = 0; x < domain.size; ++x) {
             const size_t i = domain.index(x, z);
@@ -93,7 +111,17 @@ SheetLoad takeUpBed(Domain& domain, SheetWork& work, const ParentSheet& parent) 
             }
             // The parent's sheets wore its cell as a whole; inside it they took the weaker rock first.
             const float shield = std::exp(-(cover - strip) / CoverShield);
-            const float dig = shield * std::min(deepest, parent.worn[i] * std::max(0.0f, plucked[i] / around[i] - 1.0f));
+            float dig = 0;
+            if (deepest > 0 && plucked[i] > around[i]) {
+                // How closely the zone runs with the flow: the share of the change in weakness that lies along the flow.
+                const Vec2 flow = flowAt(domain, parent, x, z);
+                const float total = xx[i] + zz[i];
+                const float crossing = total > 1e-12f ? std::clamp(float(flow.x * flow.x * xx[i] + 2 * flow.x * flow.z * xz[i] + flow.z * flow.z * zz[i]) / total, 0.0f, 1.0f) : 0.0f;
+                const float along = AcrossShare + (1 - AcrossShare) * (1 - crossing);
+                // Deeper where the parent wore more and the zone is weaker, approaching BasinDepth.
+                const float wanted = along * parent.worn[i] * (plucked[i] / around[i] - 1.0f);
+                dig = shield * deepest * (1.0f - std::exp(-wanted / deepest));
+            }
             domain.ground.rock[i] -= dig;
             for (int c = 0; c < SedimentClasses; ++c) carried.load[c][i] += dig * TillSplit[c];
             work.worn[i] += dig;
@@ -128,10 +156,13 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
         if (!free && !iced) continue;
         // As high as till stands against the lowest neighbour.
         const float here = groundOf(domain, i);
-        float room = 1e30f;
+        float room = 1e30f, pit = 1e30f;
         for (int k = 0; k < 8; ++k) {
             const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
-            if (nx >= 0 && nz >= 0 && nx < size && nz < size) room = std::min(room, groundOf(domain, domain.index(nx, nz)) + TillRepose * NeighborReach[k] * float(domain.cell) - here);
+            if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
+            const float there = groundOf(domain, domain.index(nx, nz));
+            room = std::min(room, there + TillRepose * NeighborReach[k] * float(domain.cell) - here);
+            pit = std::min(pit, there - here);
         }
         room = std::max(0.0f, room);
         if (!iced) {
@@ -189,7 +220,8 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
             // The cavity the ice leaves behind every rise up-ice: the bed would have to stand on a
             // line falling from that rise at ShelterSlope. Till squeezed into it fills it first; a
             // cell it fills shelters the next, so the fill runs out behind the rise as a tail.
-            float cavity = 0;
+            // A hollow narrower than a cell the ice cannot sole into: till fills it to its lowest rim.
+            float cavity = pit < 1e30f ? std::max(0.0f, pit) : 0.0f;
             for (int k = 1; k <= ShelterCells; ++k) {
                 const int ux = x - int(std::lround(flow.x * k)), uz = z - int(std::lround(flow.z * k));
                 if (ux < 0 || uz < 0 || ux >= size || uz >= size) break;

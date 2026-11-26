@@ -84,5 +84,6 @@ inline constexpr float TillRepose = 0.45f;          // steepest slope (24°) til
 // of its flow): half-width EskerSpread · (discharge / 1e8 m³/yr)^0.4, within these bounds.
 inline constexpr float EskerSpread = 25.0f;         // m
 inline constexpr float EskerNarrowest = 30.0f, EskerWidest = 250.0f;   // m of half-width
+inline constexpr float EskerTallest = 50.0f;        // m: the highest eskers on Earth stand a few tens of metres
 
 } // namespace derivean::sim
