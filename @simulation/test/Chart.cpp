@@ -114,7 +114,12 @@ void testChart() {
     // Pitches that may read site, local and region tiles, and one too coarse for any tile.
     const Chart site = chartOf(world, {focus, 1536, 96});
     const Chart cells = chartOf(world, {focus, 384, 96});   // a pixel is exactly a site cell
-    const Chart local = chartOf(world, {focus, 24576, 96});
+    // Earlier checks on the shared world may have finished the Local tiles all round the focus, so
+    // the local chart is centred on the eastern edge of what is finished to read both kinds of pixel.
+    Vec2 edge = focus;
+    while (world.atlas.find(tileAt(Level::Local, edge))) edge.x += tileSpan(Level::Local);
+    edge.x = std::floor(edge.x / tileSpan(Level::Local)) * tileSpan(Level::Local);
+    const Chart local = chartOf(world, {edge, 24576, 96});
     const Chart region = chartOf(world, {focus, 393216, 96});
     const Chart planet = chartOf(world, {focus, PlanetSpan, 96});
     const auto bySite = checkAgainstSurface(world, site), byLocal = checkAgainstSurface(world, local);

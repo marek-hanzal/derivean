@@ -10,6 +10,9 @@ namespace {
 
 constexpr uint64_t CentreStream = 0x48454154;
 constexpr double CentreSpacing = 46e3;        // m between magmatic centres along an active belt
+// yr a centre gathers the melt before it finds another way up; arc volcanoes and their clusters
+// live 0.1–2 Myr, and one fixed place fed for a whole replay window piles kilometres of rock.
+constexpr double CentreLife = 1.5 * Myr;
 constexpr double MeltCooling = 3 * Myr;       // e-folding time of a crustal magma body's heat
 constexpr float ContinentalGradient = 0.022f; // K/m through old felsic crust
 constexpr float RidgeGradient = 0.17f;        // K/m through a lid one Myr old; falls with the root of its age
@@ -18,20 +21,25 @@ constexpr float BetweenCentres = 0.10f;       // share of the magmatic heat that
 
 constexpr float MeltForHeat = 600.0f;         // m of added crust that makes a full-strength heat source
 
-CellularSite centreSite(const Planet& planet, Vec2 material) {
-    return cellularNoise(stream(planet.seed, CentreStream), material.x / CentreSpacing, material.z / CentreSpacing, 0.85);
+int64_t centreEpoch(double time) { return int64_t(std::floor(time / CentreLife)); }
+
+uint64_t epochStream(const Planet& planet, int64_t epoch) { return stream(planet.seed, CentreStream) + uint64_t(epoch) * 0x9e3779b97f4a7c15ULL; }
+
+CellularSite centreSite(const Planet& planet, Vec2 material, int64_t epoch) {
+    return cellularNoise(epochStream(planet, epoch), material.x / CentreSpacing, material.z / CentreSpacing, 0.85);
 }
 
-float centreVigor(const Planet& planet, const CellularSite& site) {
-    return float(ranged(hash(stream(planet.seed, CentreStream) + 1, site.cellX, site.cellZ), 0.35, 1.0));
+float centreVigor(const Planet& planet, const CellularSite& site, int64_t epoch) {
+    return float(ranged(hash(epochStream(planet, epoch) + 1, site.cellX, site.cellZ), 0.35, 1.0));
 }
 
 } // namespace
 
-MagmaticCentre centreNear(const Planet& planet, Vec2 position) {
+MagmaticCentre centreNear(const Planet& planet, Vec2 position, double time) {
     const Vec2 material = crustFrame(planet, position);
-    const CellularSite site = centreSite(planet, material);
-    return {position + (site.site * CentreSpacing - material), site.cellX, site.cellZ, centreVigor(planet, site)};
+    const int64_t epoch = centreEpoch(time);
+    const CellularSite site = centreSite(planet, material, epoch);
+    return {position + (site.site * CentreSpacing - material), site.cellX, site.cellZ, epoch, centreVigor(planet, site, epoch)};
 }
 
 // Crust is handed between cells whole, so neighbouring columns can differ by a whole step of melt.
@@ -77,9 +85,10 @@ Geotherm geothermAt(const Planet& planet, Vec2 position) {
         since += weight * (column.meltTime < 0 ? planet.time : std::max(0.0, planet.time - double(column.meltTime) - PlanetStep));
     }
     // Centres sit on a jittered lattice in crust-attached coordinates.
-    const CellularSite site = centreSite(planet, crustFrame(planet, position));
+    const int64_t epoch = centreEpoch(planet.time);
+    const CellularSite site = centreSite(planet, crustFrame(planet, position), epoch);
     const double closeness = 1.0 - smoothstep(0.06, 0.42, site.nearest);
-    const double vigor = centreVigor(planet, site);
+    const double vigor = centreVigor(planet, site, epoch);
     const double focus = BetweenCentres + (1.0 - BetweenCentres) * closeness * closeness * vigor;
     const double magmatic = MagmaticGradient * heat * focus;
     geotherm.gradient = float(conductive + magmatic);

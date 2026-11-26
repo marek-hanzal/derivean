@@ -18,15 +18,18 @@ struct Geotherm {
 Geotherm geothermAt(const Planet& planet, Vec2 position);
 
 // The magmatic centre `Geotherm::centre` is measured against: where melt gathers under a province.
-// Its lattice cell is its identity for the life of the crust it sits in. The position is exact while
-// the point and the centre stand on the same column of crust (`crustFrame`).
+// A centre lives for one epoch of `CentreLife` (1.5 Myr); the next epoch draws a new lattice, so a
+// province's melt wanders between places instead of feeding one for ever. Its lattice cell and epoch
+// are its identity. The position is exact while the point and the centre stand on the same column of
+// crust (`crustFrame`). `geothermAt` uses the epoch of the planet's present.
 struct MagmaticCentre {
     Vec2 position;             // m, where it is now
     int64_t cellX{}, cellZ{};  // lattice cell in the frame of the crust
+    int64_t epoch{};           // floor(time / CentreLife)
     float vigor{};             // 0.35..1, its share of the province's melt
 };
 
-MagmaticCentre centreNear(const Planet& planet, Vec2 position);
+MagmaticCentre centreNear(const Planet& planet, Vec2 position, double time);
 
 // Rock temperature in °C at a depth below a surface of the given annual mean.
 inline float rockTemperature(const Geotherm& geotherm, float surface, float depth) {
