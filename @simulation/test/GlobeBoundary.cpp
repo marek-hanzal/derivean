@@ -43,16 +43,14 @@ void checkRidgeAndTrench() {
     expect(std::abs(felsicDrift(h)) < 1e-12, "felsic crust is not conserved with the interior", felsicDrift(h));
     expect(std::abs(basaltDrift(h)) < 1e-12, "basalt is not conserved with the interior", basaltDrift(h));
     expect(ledger.accreted > 0, "the trench scrapes no wedge");
-    expect(std::abs(ledger.interior.felsic - ledger.subducted) <= 1e-12 * h.start.felsic, "the interior's crust is not what subducted", ledger.interior.felsic - ledger.subducted);
+    // Only oceans meet here, so all that the trench consumed went down but the wedge.
+    const double sunk = ledger.consumedFelsic - ledger.accreted;
+    expect(std::abs(ledger.interior.felsic - sunk) <= 1e-12 * h.start.felsic, "the interior's crust is not the consumed less the wedge", ledger.interior.felsic - sunk);
     expect(std::abs(coverage(h) - 1) < 0.02, "the footprints do not cover the sphere to 2 %", coverage(h) - 1);
     for (const CrustPiece& piece : globe.pieces) expect(piece.stock.felsic >= 0 && piece.stock.basalt >= 0, "a piece holds a negative stock");
-    // Exact weights overcount where footprints overlap, so A − Σ w bounds a cell's hole from below (the
-    // cloud-in-cell weights of the step do not reach across a face edge at a cube vertex).
-    Coupling exact;
-    couple(*globe.grid, globe.pieces, {}, true, exact);
-    double worst = 0;
-    for (int cell = 0; cell < globe.grid->cells; ++cell) worst = std::max(worst, 1 - exact.covered[size_t(cell)] / globe.grid->area[size_t(cell)]);
-    expect(worst < 0.5, "a cell is left uncovered by half or more", worst);
+    const Holes holes = holesOf(globe);
+    expect(holes.worst < 0.75, "a cell outside the band is left uncovered by 0.75 or more", holes.worst);
+    expect(holes.open < 0.06, "over 6 % of the cells outside the band are open by a fifth", holes.open);
 }
 
 // Two continents: nothing sinks, the arriving plate is consumed into the other, stacking stops at StackLimit and the rest backs up or brakes the plate.

@@ -1,5 +1,7 @@
 #include "planet/fn/Band.hpp"
 
+#include "geometry/fn/Cell.hpp"
+#include "geometry/fn/SphereGrid.hpp"
 #include "planet/fn/Coupling.hpp"
 #include "planet/fn/Pieces.hpp"
 
@@ -60,7 +62,7 @@ void markBand(const Globe& globe, int sweep, Band& band) {
     widen(rings, band.decide, band.cells, sweep + 1);
     std::vector<uint8_t> reach = core;
     std::vector<int32_t> reached = coreCells;
-    widen(rings, reach, reached, 2 * sweep + 2);
+    widen(rings, reach, reached, 2 * sweep + 3);
     band.regionCells = reached;
     band.region.assign(size_t(grid.cells), -1);
     for (size_t r = 0; r < reached.size(); ++r) band.region[size_t(reached[r])] = int32_t(r);
@@ -105,6 +107,18 @@ void coupleBand(const Globe& globe, Band& band) {
             const int32_t r = band.region[size_t(w.cell)];
             if (r >= 0) band.lists[size_t(fill[size_t(r)]++)] = {band.pieces[b], w.area};
         }
+}
+
+void requireBandHeld(const Globe& globe, const Band& band) {
+    const SphereGrid& grid = *globe.grid;
+    for (size_t k = 0; k < band.member.size(); ++k) {
+        if (band.member[k]) continue;
+        // A footprint is one cell turned, so it reaches no further than the ring of its centre's cell.
+        const int cell = indexOf(grid, cellOf(centreOf(grid, globe.pieces[k]), grid.level));
+        bool reaches = band.decide[size_t(cell)];
+        for (const int32_t other : (*globe.rings)[size_t(cell)]) reaches = reaches || (other >= 0 && band.decide[size_t(other)]);
+        require(!reaches, "a piece outside the band reaches a deciding cell", double(k));
+    }
 }
 
 void joinBand(const Globe& globe, Band& band, int piece) {

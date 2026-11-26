@@ -104,7 +104,7 @@ PlanResult planTransfers(const PlanInput& input) {
                     const double need = felsic * share;
                     const double put = std::clamp(room[size_t(r)], 0.0, need);
                     room[size_t(r)] -= put;
-                    result.transfers.push_back({k, r, TransferKind::Collide, put, basalt * share, felsic > 0 ? put / felsic : share});
+                    result.transfers.push_back({k, r, TransferKind::Collide, put, basalt * share, felsic > 0 ? put / felsic : 0.0});
                     left += need - put;
                 }
             }

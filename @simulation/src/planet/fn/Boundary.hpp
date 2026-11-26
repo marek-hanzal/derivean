@@ -14,6 +14,7 @@ void advancePlates(Globe& globe, double dt, int step);
 // What the consumption and the births of a substep need to know about it.
 struct Substep {
     int step{}, index{};
+    double duration{};   // yr
 };
 
 // Whether `donor` is the denser of two crusts and sinks under `survivor` (S3-design.md §3): ocean under

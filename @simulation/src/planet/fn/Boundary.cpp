@@ -87,13 +87,14 @@ void advancePlates(Globe& globe, double dt, int step) {
     for (int index = 0; index < substeps; ++index) {
         turn(globe.pieces, turnBy, band.pieces);
         coupleBand(globe, band);
-        const Substep substep{step, index};
+        const Substep substep{step, index, dt / substeps};
         consumeInBand(globe, band, substep);
         bearInBand(globe, band, substep);
         ++globe.stats.substeps;
     }
     // Pieces away from the band turn by the same rotations in the same order, so two pieces with the
     // same history keep the same bits wherever they were.
+    requireBandHeld(globe, band);
     std::vector<int32_t> rest;
     for (size_t k = 0; k < band.member.size(); ++k)
         if (!band.member[k]) rest.push_back(int32_t(k));
@@ -108,10 +109,10 @@ void advancePlates(Globe& globe, double dt, int step) {
         kept.push_back(std::move(globe.pieces[k]));
         exact.push_back(band.member[k]);
     }
-    // Births join in substep and cell order, not key order; a stable sort carries the exact flags along.
+    // Births join in substep and cell order, not key order; the sort carries the exact flags along.
     std::vector<size_t> order(kept.size());
     for (size_t i = 0; i < order.size(); ++i) order[i] = i;
-    std::stable_sort(order.begin(), order.end(), [&](size_t a, size_t b) { return kept[a].key < kept[b].key; });
+    std::sort(order.begin(), order.end(), [&](size_t a, size_t b) { return kept[a].key < kept[b].key; });
     globe.pieces.clear();
     std::vector<uint8_t> flags;
     for (const size_t i : order) globe.pieces.push_back(std::move(kept[i])), flags.push_back(exact[i]);

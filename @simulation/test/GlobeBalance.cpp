@@ -37,22 +37,27 @@ void checkWrites() {
     for (const CrustPiece& piece : globe.pieces) expect(piece.stock.felsic >= 0, "a write leaves a negative stock", piece.stock.felsic);
 }
 
-// Test 5: after a step only donors and receivers change their record; a new epoch changes only `plate`.
+// Test 5: after a step only donors and receivers change their record (a transfer always changes the
+// stock, so a piece with the same stock keeps its record bit for bit, in the band or not); a new epoch
+// changes only `plate`.
 void checkRecords() {
     Hemispheres h = hemispheres({1, 0, 0}, 0.05, 300.0f, 300.0f);
     Globe& globe = h.globe;
     for (int i = 0; i < 3; ++i) advance(h, 1 * Myr);
     std::vector<CrustPiece> before = globe.pieces;
     advance(h, 1 * Myr);
-    size_t far = 0;
+    size_t far = 0, kept = 0;
     for (const CrustPiece& was : before) {
-        if (std::abs(centreOf(*globe.grid, was).z) < 0.5) continue;
         const auto now = std::find_if(globe.pieces.begin(), globe.pieces.end(), [&](const CrustPiece& p) { return p.key == was.key; });
-        expect(now != globe.pieces.end(), "a piece far from the boundary is gone");
-        expect(sameBits(now->record, was.record) && sameBits(now->stock, was.stock), "a piece far from the boundary changed its record or stock");
-        ++far;
+        const bool distant = std::abs(centreOf(*globe.grid, was).z) >= 0.5;
+        expect(now != globe.pieces.end() || !distant, "a piece far from the boundary is gone");
+        if (now == globe.pieces.end()) continue;
+        if (distant) expect(sameBits(now->stock, was.stock), "a piece far from the boundary changed its stock"), ++far;
+        if (!sameBits(now->stock, was.stock)) continue;
+        expect(sameBits(now->record, was.record), "a piece that took no part in a transfer changed its record");
+        ++kept;
     }
-    expect(far > 1000, "too few pieces far from the boundary", double(far));
+    expect(far > 1000 && kept > far, "too few pieces checked", double(far));
     before = globe.pieces;
     globe.seed = 42;
     enterGlobeEpoch(globe);
@@ -72,12 +77,13 @@ void checkRecords() {
 // cells along the trench is itself about 2 % of what it consumes in that time.
 struct Run {
     double born{}, consumed{}, drift{}, cover{};
+    Holes holes;
 };
 
 Run run(Vec3 pole, Vec3 split, double dt) {
     Hemispheres h = hemispheres(pole, 0.05, 300.0f, 300.0f, normalized(split));
     for (double t = 0; t < 192 * Myr - 1; t += dt) advance(h, dt);
-    return {h.globe.ledger.born, h.globe.ledger.consumed, felsicDrift(h), coverage(h)};
+    return {h.globe.ledger.born, h.globe.ledger.consumed, felsicDrift(h), coverage(h), holesOf(h.globe)};
 }
 
 void checkSubsteps() {
@@ -88,14 +94,19 @@ void checkSubsteps() {
     };
     for (const Boundary& b : {Boundary{"oblique", {1, 0, 0.35}, {0, 0, 1}}, Boundary{"vertex", {0.3, 0.3, 1}, {1, -1, 0}}, Boundary{"transform", {0, 0, 1}, {0, 0, 1}}}) {
         const Run full = run(b.pole, b.split, 4 * Myr), half = run(b.pole, b.split, 2 * Myr), quarter = run(b.pole, b.split, 1 * Myr);
-        for (const Run& r : {full, half, quarter}) expect(std::abs(r.drift) < 1e-12, "a step size loses crust", r.drift);
+        for (const Run& r : {full, half, quarter}) {
+            expect(std::abs(r.drift) < 1e-12, "a step size loses crust", r.drift);
+            expect(r.holes.worst < 0.75, "a step size leaves a cell outside the band uncovered by 0.75 or more", r.holes.worst);
+            expect(r.holes.open < 0.06, "a step size opens over 6 % of the cells outside the band by a fifth", r.holes.open);
+        }
         if (b.name[0] == 't') {
             for (const Run& r : {full, half, quarter}) expect(r.born + r.consumed < 20 * cell, "a transform churns crust", (r.born + r.consumed) / cell);
             continue;
         }
         const auto gap = [](double a, double c) { return std::abs(a / c - 1); };
         for (const Run* r : {&full, &half})
-            expect(gap(r->born, quarter.born) <= 0.02 && gap(r->consumed, quarter.consumed) <= 0.02, "a step differs from dt/4 by more than 2 %", gap(r->consumed, quarter.consumed));
+            expect(gap(r->born, quarter.born) <= 0.02 && gap(r->consumed, quarter.consumed) <= 0.02, "a step differs from dt/4 by more than 2 %",
+                   std::max(gap(r->born, quarter.born), gap(r->consumed, quarter.consumed)));
     }
 }
 

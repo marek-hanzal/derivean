@@ -1,5 +1,6 @@
 #include "planet/fn/Boundary.hpp"
 
+#include "chronology/constant/Timeline.hpp"
 #include "geometry/constant/Sphere.hpp"
 #include "geometry/fn/Cell.hpp"
 #include "geometry/fn/Overlap.hpp"
@@ -120,6 +121,7 @@ void book(Globe& globe, const Transfer& t, const std::vector<int>& global, std::
         return;
     }
     // The donor's cover as it was before its first transfer of the substep goes along by share.
+    if (felsic <= 0) return;
     Cover share = covers[size_t(coverOf[size_t(t.from)])];
     scaleCover(share, float(t.cover * from.area / to.area));
     stackCover(to.record.cover, share);
@@ -131,7 +133,6 @@ void book(Globe& globe, const Transfer& t, const std::vector<int>& global, std::
 } // namespace
 
 void consumeInBand(Globe& globe, Band& band, const Substep& substep) {
-    (void)substep;
     const SphereGrid& grid = *globe.grid;
     PlanInput input;
     std::vector<int> global, local(globe.pieces.size(), -1);
@@ -204,7 +205,11 @@ void consumeInBand(Globe& globe, Band& band, const Substep& substep) {
         input.candidates.push_back(std::move(candidate));
     }
     if (input.candidates.empty()) return;
-    input.sinks = [&](int donor, int survivor) { return sinksUnder(globe, global[size_t(donor)], global[size_t(survivor)]); };
+    // Two oceans never stack: a chain that ends on an older ocean still sends the donor down.
+    input.sinks = [&](int donor, int survivor) {
+        const int d = global[size_t(donor)], s = global[size_t(survivor)];
+        return sinksUnder(globe, d, s) || (!continental(globe.pieces[size_t(d)]) && !continental(globe.pieces[size_t(s)]));
+    };
     const PlanResult plan = planTransfers(input);
     globe.stats.rounds += plan.rounds;
     globe.stats.cancelled += long(plan.cancelled.size());
@@ -215,6 +220,7 @@ void consumeInBand(Globe& globe, Band& band, const Substep& substep) {
     std::vector<int> coverOf(global.size(), -1);
     for (const int d : plan.consumed) coverOf[size_t(d)] = int(covers.size()), covers.push_back(globe.pieces[size_t(global[size_t(d)])].record.cover);
     for (const Transfer& t : plan.transfers) book(globe, t, global, covers, coverOf);
+    for (const int d : plan.consumed) globe.ledger.consumedFelsic += input.felsic[size_t(d)];
     for (const int d : plan.consumed) {
         const int k = global[size_t(d)];
         CrustPiece& gone = globe.pieces[size_t(k)];
@@ -227,7 +233,9 @@ void consumeInBand(Globe& globe, Band& band, const Substep& substep) {
         globe.ledger.consumed += gone.area;
         ++globe.stats.consumptions;
     }
-    for (const int c : plan.cancelled) globe.motion[size_t(input.plate[size_t(c)])].resistance += input.felsic[size_t(c)];
+    // A cancelled donor jams its plate for the substep: its crust per planet step of the jam, so the brake
+    // does not depend on how many substeps a step takes.
+    for (const int c : plan.cancelled) globe.motion[size_t(input.plate[size_t(c)])].resistance += input.felsic[size_t(c)] * substep.duration / PlanetStep;
 }
 
 } // namespace derivean::sim

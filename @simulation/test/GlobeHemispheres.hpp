@@ -8,7 +8,10 @@
 #include "geometry/constant/Sphere.hpp"
 #include "planet/fn/Boundary.hpp"
 #include "planet/fn/Coupling.hpp"
+#include "planet/fn/Band.hpp"
 #include "planet/fn/Pieces.hpp"
+
+#include <algorithm>
 
 namespace derivean::sim::globe_test {
 
@@ -61,6 +64,32 @@ inline double felsicDrift(const Hemispheres& h) {
 inline double basaltDrift(const Hemispheres& h) {
     return (totalStock(h.globe.pieces).basalt + h.globe.ledger.interior.basalt - h.start.basalt) / h.start.basalt;
 }
+// Holes outside the boundary band (S3-design.md §4). Births leave a cell open by under half, but a
+// hole split across two mantle cells at its birth can later turn over one cell whole, so the worst
+// share reaches over half (0.46–0.65 measured at L5); the share of cells open by a fifth or more
+// stays small (2–4.6 %). See docs/handoff/planet-globe.md. The exact
+// weights overcount overlaps, so both are lower bounds; the step's cloud-in-cell weights do not reach
+// across a face edge at a cube vertex.
+struct Holes {
+    double worst{}, open{};   // the largest uncovered share of a cell; the share of cells covered under 0.8
+};
+inline Holes holesOf(const Globe& globe) {
+    Band band;
+    markBand(globe, 1, band);
+    Coupling exact;
+    couple(*globe.grid, globe.pieces, {}, true, exact);
+    Holes holes;
+    int open = 0, outside = 0;
+    for (int cell = 0; cell < globe.grid->cells; ++cell) {
+        if (band.decide[size_t(cell)]) continue;
+        const double hole = 1 - exact.covered[size_t(cell)] / globe.grid->area[size_t(cell)];
+        holes.worst = std::max(holes.worst, hole);
+        open += hole > 0.2, ++outside;
+    }
+    holes.open = double(open) / std::max(1, outside);
+    return holes;
+}
+
 inline double coverage(const Hemispheres& h) { return totalArea(h.globe.pieces) / (4 * 3.141592653589793 * PlanetRadius * PlanetRadius); }
 
 } // namespace derivean::sim::globe_test

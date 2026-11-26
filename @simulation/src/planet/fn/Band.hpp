@@ -7,10 +7,11 @@ namespace derivean::sim {
 // The boundary band of one planet step (S3-design.md §4). The core is every cell that has pieces of
 // two plates within its ring, read from the coupling at the step's start. Within the step a plate
 // moves at most `sweep` rings, so births and consumptions can only happen in the core widened by
-// sweep + 1 rings (`decide`), and only pieces listed within 2 · sweep + 2 rings of the core can reach
-// a deciding cell: those are the band's pieces, the only ones coupled exactly in the substeps.
-// Deciding is never done from cloud-in-cell weights; a footprint the band missed would fail the exact
-// coverage requirement of the next coupling.
+// sweep + 1 rings (`decide`), and only pieces listed within 2 · sweep + 3 rings of the core can reach
+// a deciding cell (a ring more than the sweep and the footprint need, for the ring metric against the
+// geodesic one): those are the band's pieces, the only ones coupled exactly in the substeps. Deciding
+// is never done from cloud-in-cell weights. The weights list every piece in the cell of its centre, and
+// `requireBandHeld` checks at the step's end that no piece outside the band reaches a deciding cell.
 struct Band {
     int sweep{};
     std::vector<uint8_t> decide;          // per cell
@@ -32,6 +33,9 @@ void markBand(const Globe& globe, int sweep, Band& band);
 
 // Exact overlaps of every live band piece as the pieces stand; lists per region cell.
 void coupleBand(const Globe& globe, Band& band);
+
+// Fatal when a piece outside the band reaches a deciding cell at the step's end: the band missed it.
+void requireBandHeld(const Globe& globe, const Band& band);
 
 // Adds a piece born in this substep to the band (its footprint is its cell).
 void joinBand(const Globe& globe, Band& band, int piece);

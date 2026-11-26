@@ -99,7 +99,9 @@ struct GlobeLedger {
     double eroded{}, deposited{}, precipitated{};
     double subducted{}, accreted{}, erupted{}, stacked{};
     double born{}, consumed{};      // m² of footprint made at ridges and consumed at trenches and collisions
+    double consumedFelsic{};        // m³ the consumed pieces held when they were consumed
     CrustStock interior;            // net gain of the interior since the start (negative: it gave)
+    double waterInventory{};        // m³, all water the body holds (as the flat history: a closed stock, S3d replaces it)
 };
 
 // What the boundary events did, for `terra globe` and the tests.
