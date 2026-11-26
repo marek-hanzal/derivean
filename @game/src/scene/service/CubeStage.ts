@@ -43,7 +43,8 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
   daylight.rebase(world.seaLevel);
   const sky = daylight.nodes;
   scene.backgroundNode = skyBackground(sky);
-  // three.js's own materials, which the particles and the brush still use, are lit by these two.
+  // three.js's own materials, which the particles and the brush use, are lit by these two; their sun takes the cloud
+  // over the eye.
   const ambient = new HemisphereLight();
   const sun = new DirectionalLight();
   scene.add(ambient, sun);
@@ -51,16 +52,16 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
   const anchor = uniform(new Vector3());
   const levels = createLevelTable();
   const palette = groundPalette(world);
-  const shadow = createSunShadow(world, levels);
   const clouds = createClouds();
   const cloudShadow = createCloudShadow(clouds.nodes, sky.skySun);
-  shadow.nodes.clouds = cloudShadow.shade;
+  const shadow = createSunShadow(world, levels, cloudShadow.shade);
   const cloudPass = createCloudPass(clouds.nodes, sky, viewDistance);
   const snow = createSnowField(world);
   const surface = cubeSurface({ sky, levels, palette, anchor, shadow: shadow.nodes, snow: snow.nodes });
-  const sheet = sheetSurface(sky, levels);
+  const sheet = sheetSurface(sky, levels, cloudShadow.shade);
   const terrain = createCubeTerrain(content, world, levels, surface, sheet, shadow.casting);
-  const wet = voxelWaterSurface(sky, new Color(world.materials.find(({ matter }) => matter === "liquid")?.color ?? 0x2f939b));
+  const liquid = world.materials.find(({ matter }) => matter === "liquid")?.color ?? 0x2f939b;
+  const wet = voxelWaterSurface(sky, cloudShadow.shade, new Color(liquid));
   const water = createVoxelWater(content, world, wet);
   const particles = createParticleScene(content);
   const brush = createBrushIndicator(content, world);
@@ -133,7 +134,7 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
       squares = terrain.place(origin);
       ambient.color.copy(sky.skyLight.value);
       ambient.groundColor.copy(sky.groundLight.value);
-      sun.color.copy(sky.sunLight.value);
+      sun.color.copy(sky.sunLight.value).multiplyScalar(cloudShadow.shade.beyond.value);
       sun.position.copy(sky.sunDirection.value);
     },
     // Draws the view: the shadow maps that are due, the scene, then the clouds over it onto the screen. `counted`
@@ -141,10 +142,10 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
     draw(renderer: WebGPURenderer, counted: () => void) {
       const now = performance.now();
       const shown = clouds.update(renderer, origin, eye, now) && !plain && cloudy;
-      cloudShadow.update(renderer, origin, eye, ground ?? eye.y, shown, now);
       // With the clouds hidden the light is the clear sky's.
-      const [share, depth] = shown ? clouds.field.overcast(eye.x, eye.z) : [0, 0];
-      daylight.cover(share, depth, dt);
+      const overhead = shown ? clouds.field.overcast(eye.x, eye.z) : [0, 0] as const;
+      cloudShadow.update(renderer, origin, eye, ground ?? eye.y, shown, now, overhead);
+      daylight.cover(overhead[0], overhead[1], dt);
       precipitation.update(eye, now / 1000, !plain && cloudy);
       shadow.cast(renderer, {
         origin, eye, ground, sun: sky.sunDirection.value, squares,
@@ -155,7 +156,8 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
       cloudPass.finish(renderer, camera, eye, shown);
     },
     dispose() {
-      for (const part of [terrain, water, particles, brush, surface, sheet, wet, palette, ambient, sun, shadow, snow, clouds, cloudShadow, cloudPass, precipitation]) {
+      const parts = [terrain, water, particles, brush, surface, sheet, wet, palette, ambient, sun, shadow, snow, clouds, cloudShadow, cloudPass];
+      for (const part of [...parts, precipitation]) {
         part.dispose();
       }
       scene.backgroundNode = null;

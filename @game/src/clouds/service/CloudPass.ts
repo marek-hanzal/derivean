@@ -138,15 +138,16 @@ export function createCloudPass(clouds: CloudNodes, sky: SkyNodes, viewDistance:
         lastEye.copy(eye);
         jitter.value = (frames * 0.61803398875) % 1;
         persistence.value = frames === 0 ? 0 : Persistence;
+        // This frame looks the last frame's picture up through the last frame's lens, turned but not moved.
+        turned.copy(camera.matrixWorldInverse).setPosition(0, 0, 0);
+        const lensNow = turned.premultiply(camera.projectionMatrix);
+        pastClip.value.copy(frames === 0 ? lensNow : clip);
+        clip.copy(lensNow);
         draw(renderer, march, marched);
         rememberedNode.value = memory[current].texture;
         current = 1 - current;
         draw(renderer, resolve, memory[current]);
         shownNode.value = memory[current].texture;
-        // Next frame looks this frame's picture up through this frame's lens, turned but not moved.
-        pastClip.value.copy(clip);
-        turned.copy(camera.matrixWorldInverse).setPosition(0, 0, 0);
-        clip.multiplyMatrices(camera.projectionMatrix, turned);
         frames++;
       } else {
         frames = 0;

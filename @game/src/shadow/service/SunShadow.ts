@@ -11,6 +11,7 @@ import {
 } from "../constant/cascades";
 import { casterSurface } from "../fn/casterSurface";
 import type { ShadowNodes } from "../type/ShadowNodes";
+import type { CloudShade } from "../../clouds/type/CloudShade";
 
 // What a cascade's map was last drawn for, in world metres.
 interface Drawn { centre: Vector3; sun: Vector3; square: Box; stamp: number; frame: number; clip: Matrix4 }
@@ -29,9 +30,9 @@ export interface ShadowView {
 }
 
 // The sun's shadows over the whole view (constant/cascades). The casters are a scene of their own, the cube
-// batches' second meshes; a cascade is drawn again only when the eye, the sun or its casters have moved, the
+// batches' second meshes. The clouds' shadows, where the world has them, are read with these; a cascade is drawn again only when the eye, the sun or its casters have moved, the
 // coarse ones seldom, so a still view costs nothing. The depth buffer is reversed, as the renderer's is.
-export function createSunShadow(world: WorldInfo, levels: LevelTable) {
+export function createSunShadow(world: WorldInfo, levels: LevelTable, clouds?: CloudShade) {
   const casters = new Scene();
   casters.matrixAutoUpdate = false;
   const group = new Group();
@@ -58,7 +59,7 @@ export function createSunShadow(world: WorldInfo, levels: LevelTable) {
   });
   const nodes: ShadowNodes = {
     maps: cascades.map(({ depth }) => depth),
-    matrices: uniformArray(matrices, "mat4"), squares: uniformArray(squares, "vec4"), rays: uniformArray(rays, "vec4"), finest,
+    matrices: uniformArray(matrices, "mat4"), squares: uniformArray(squares, "vec4"), rays: uniformArray(rays, "vec4"), finest, clouds,
   };
 
   const scratch = new Matrix4();

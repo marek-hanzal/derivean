@@ -1,9 +1,10 @@
 #include "volcanic/fn/Volcanic.hpp"
 
+#include "volcanic/constant/Rheology.hpp"
+
 namespace derivean::sim {
 namespace {
 
-constexpr float WeldDepth = 2.0f;   // m laid in one step below which it stays loose: rubble, cinders and ash on the ground
 constexpr int SinkRadius = 14;      // cells; the same reach over which landscape/fn/Uplift.cpp lets the plate answer a load
 
 // Two box passes with clamped edges: the bell over which a plate carries a load.

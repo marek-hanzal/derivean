@@ -63,7 +63,7 @@ SheetLoad takeUpBed(Domain& domain, SheetWork& work, const ParentSheet& parent) 
             const size_t i = domain.index(x, z);
             const float speed = std::hypot(parent.slideX[i], parent.slideZ[i]);
             if (parent.iceThen[i] < LeastSheet) continue;
-            const float cover = domain.sedimentAt(i), strip = speed < LeastSlide ? 0.0f : std::min(cover, LooseGain * WearRate * speed * LastSheetYears);
+            const float cover = std::max(0.0f, domain.sedimentAt(i)), strip = speed < LeastSlide ? 0.0f : std::min(cover, LooseGain * WearRate * speed * LastSheetYears);
             if (domain.hold[i] != Free) {
                 // A cell this domain does not evolve feeds the ice what its owner's ice carried on
                 // from it; with no such record, the load in balance with what its bed would give.
@@ -140,6 +140,13 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
             const float along = float(NeighborX[k] * flow.x + NeighborZ[k] * flow.z) / NeighborReach[k];
             if (along > 0) weights += weight[k] = along * along * along * along;
         }
+        // Where the flow points at no lower surface, the load goes down the surface as it falls.
+        if (weights <= 0)
+            for (int k = 0; k < 8; ++k) {
+                const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
+                if (nx < 0 || nz < 0 || nx >= size || nz >= size || rank[domain.index(nx, nz)] <= rank[i]) continue;
+                weights += weight[k] = std::max(1e-6f, (parent.topThen[i] - parent.topThen[domain.index(nx, nz)]) / NeighborReach[k]);
+            }
         if (free) {
             // The cavity the ice leaves behind every rise up-ice: the bed would have to stand on a
             // line falling from that rise at ShelterSlope. Till squeezed into it fills it first; a

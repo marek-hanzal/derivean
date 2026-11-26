@@ -88,9 +88,9 @@ void printCaves(const WaterBlock& block, double land) {
             const double run = std::sqrt((c.bx - c.ax) * (c.bx - c.ax) + (c.by - c.ay) * (c.by - c.ay) + (c.bz - c.az) * (c.bz - c.az));
             ++count, volume += 3.14159265 * c.radius * c.radius * run;
             if (record.level > 0) abandoned += run;
-            else if (record.order == 0 && std::abs(c.bx - c.ax) + std::abs(c.bz - c.az) < 1e-6) shafts += run;
+            else if (record.opens == 1) shafts += run;
             else length[c.radius < Bounds[0] ? 0 : c.radius < Bounds[1] ? 1 : c.radius < Bounds[2] ? 2 : c.radius < Bounds[3] ? 3 : 4] += run;
-            if (record.cover >= 0) thinnest = std::min(thinnest, double(record.cover));   // mouths rise out of the ground on purpose
+            if (!record.opens) thinnest = std::min(thinnest, double(record.cover));
         }
     }
     std::printf("caves: soluble ground that drains by conduits %.1f km2 (%.1f %% of the land), %zu cells where a stream sinks\n", karst / 1e6, land > 0 ? 100 * karst / land : 0.0, swallows);
@@ -155,7 +155,7 @@ int groundwaterCommand(const Arguments& arguments) {
             const WaterBudget& b = tile.budget;
             budget.rain += b.rain, budget.runoff += b.runoff, budget.recharge += b.recharge, budget.sunk += b.sunk, budget.springs += b.springs, budget.seepage += b.seepage;
             budget.baseflow += b.baseflow, budget.deep += b.deep, budget.underflow += b.underflow, budget.dissolved += b.dissolved;
-            // Water that crosses between two tiles of the block is one tile's gain and the other's loss, to the bit.
+            // Water that crosses between two tiles of the block is one tile's gain and the other's loss: per edge the same number on both sides, summed in another order.
             budget.lateralIn += b.lateralIn, budget.lateralOut += b.lateralOut;
             for (int cz = 0; cz < TileCells; ++cz)
                 for (int cx = 0; cx < TileCells; ++cx) {

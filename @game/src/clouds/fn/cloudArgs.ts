@@ -1,18 +1,18 @@
 import { sampler } from "three/tsl";
+import { CloudSkyFields } from "../constant/density";
 import type { CloudNodes } from "../type/CloudNodes";
 
-// The WGSL parameters every function that builds a CloudSky takes, by name:
-//   grid: vec4f, steer: vec2f, datum: f32, range0..2: vec4f, drift0..2: vec4f, wind01: vec4f, wind2: vec2f,
-//   bands: texture_2d_array<f32>, bandSampler: sampler, shapes: texture_3d<f32>, details: texture_3d<f32>,
-//   repeat: sampler, levels: texture_2d<f32>
-export const CloudParams = `grid: vec4f, steer: vec2f, datum: f32, range0: vec4f, range1: vec4f, range2: vec4f, drift0: vec4f, drift1: vec4f,
-  drift2: vec4f, wind01: vec4f, wind2: vec2f, bands: texture_2d_array<f32>, bandSampler: sampler, shapes: texture_3d<f32>,
-  details: texture_3d<f32>, repeat: sampler, levels: texture_2d<f32>`;
-
-// The struct those parameters make, and the textures passed on with it.
-export const CloudSkyOf = "CloudSky(grid, steer, datum, range0, range1, range2, drift0, drift1, drift2, wind01, wind2)";
+// The WGSL parameters every function that builds a CloudSky takes: its fields (constant/density), and the textures
+// passed on with it.
 export const CloudTextures = "bands, bandSampler, shapes, details, repeat, levels";
+export const CloudParams = [
+  ...CloudSkyFields.map(([name, type]) => `${name}: ${type}`),
+  "bands: texture_2d_array<f32>, bandSampler: sampler, shapes: texture_3d<f32>, details: texture_3d<f32>, repeat: sampler",
+  "levels: texture_2d<f32>",
+].join(", ");
+export const CloudSkyOf = `CloudSky(${CloudSkyFields.map(([name]) => name).join(", ")})`;
 
+// The nodes for those parameters, by name.
 export function cloudArgs(clouds: CloudNodes) {
   return {
     grid: clouds.grid, steer: clouds.steer, datum: clouds.datum,

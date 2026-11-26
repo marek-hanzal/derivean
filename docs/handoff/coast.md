@@ -16,15 +16,24 @@ Every hook is in and compiles; the coast runs in every Region, Local and Site re
 
 ## 3. In progress
 
-Running `terra coast --find 1` on seed 42 with the fixed coast (`.out/coast/find2/`). Not half-done in code: every file compiles and the tests pass.
+Nothing half-done in code: every file compiles in the shared build (26 Nov 09:51) and `testCoast` passes.
+
+Seed 42, `terra coast --find 1 --tries 4 --pick lake4,lake3,cliff2,sea1 --out .out/coast/find2` (Region 3 × 3 tiles 174–216 s; each Local 2 × 2 survey 11–17 tiles in 31–78 s; each Site 2 × 2 survey 17 tiles in 55–74 s; each view 6–8 site tiles in 28–140 s; load 35–55):
+
+- **lake3** (X 5241344 Z −5961216, Region 49 km², 69 m deep). Local: lake shore 314 km, 31 % sand beach, 62 % low rock, beach p50 128 m. Site at its sand: 84 % sand beach, slope 8.8°, waves p50 0.05 m. The pictures (`view-lake3-sand-{water,shore}.png`) show a flat sandy pan with shallow pools and bars, not an open lake behind a beach: the Region lake survives at Local only as fragments.
+- **lake4** (X 5240320 Z −6189568, Region 167 km², 160 m deep). Local: 284 km of lake shore, 23 % sand, but no single large water near the place. Site: 87 % sand around many small ponds; views show a dune-and-pond field.
+- **sea1** (X 5044736 Z −5871104). Local: sea shore 692 km — islands, inlets, bays, 40 % sand beach, 52 % low rock, 12.5 km of cliff (p50 19 m, p95 124 m) with a platform p50 38 m, 12.9 km of shore on spits/barriers, lagoons 2.2 km², waves p50 0.20 m, highest 0.95 m. Site at its sand: 81 % sand, beach p50 12 m, slope 11.2°. The water view shows an island ringed by a narrow sand fringe with an offshore bar; the shore view a smooth sand slope into still water.
+- **cliff2**: see below (still running at the time of writing; if `run.txt` ends without it, re-run with `--pick cliff2`).
 
 ## 4. Next steps
 
-1. Judge the find2 pictures against the catalogue (G4, H1, H2) and report.
+1. A lake with a real beach (H1) is not yet findable on seed 42: the deep Region lakes break up at Local into ponds and sand flats. That is first a landscape question (item 3), then a wave one (item 2).
 2. Wave height on the real Local/Site shores is small (p50 0.05–0.3 m): shelves and lakes are a few metres deep over kilometres and bed friction takes the waves. Check against Balaton-like shallow lakes (storm waves ~1 m at 3 m depth) and decide whether `BedFriction`/`SmoothBed` are too strong.
 3. Lakes: Region lakes shallower than 45 m are levelled when a Local domain is built (`levelHollows`, landscape owner); the finder therefore only takes lakes at least 50 m deep. Raise with the landscape owner.
 4. Block alignment test (`test/GroundTile.cpp`) with a point in a sea void: needs a site with a wave-cut face in the test world; not done.
-5. Rows for `docs/simulation.md` to the lead (section 5 has the content).
+5. Rows for `docs/simulation.md`: sent to the lead in the 26 Nov report (section 5 has the content).
+6. Straight lines along tile edges are visible in Local and Site maps (`coast-find-*-L2.png`). Whether the coast contributes (drift handed in at the open rim) is not checked: render one Local tile pair with `workShores` off and compare.
+7. `recordShore` writes into the shared `Shore` through a `const Domain&` (review, not fixed).
 
 ## 5. Decisions and why
 

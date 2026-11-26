@@ -96,7 +96,7 @@ void writeWaterMaps(const WaterBlock& block, const std::string& out, const std::
         for (size_t i = 0; i < tile->caves->conduits.size(); ++i) {
             const Conduit& c = tile->caves->conduits[i];
             const ConduitRecord& record = tile->passages[i];
-            const bool shaft = record.order == 0 && std::abs(c.bx - c.ax) + std::abs(c.bz - c.az) < 1e-6;
+            const bool shaft = record.opens == 1;
             if (shaft) conduits.dot(c.ax, c.az, 3, {230, 30, 30});
             else conduits.line(c.ax, c.az, c.bx, c.bz, c.radius >= 2 ? 1 : 0, record.level ? Rgb{240, 140, 20} : c.radius >= 0.5f ? Rgb{0, 0, 0} : Rgb{70, 70, 90});
         }

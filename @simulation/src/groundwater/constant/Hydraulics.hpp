@@ -17,9 +17,10 @@ namespace derivean::sim {
 // neighbours whether water already runs in from above). The streams that sink take SinkSweeps + 2
 // before the routing instead of the levels' LevelSweeps + 3. A stage that adds a read of a
 // neighbour adds a ring.
-// 96 rather than 64: 34 sweeps left 60 % of the recharge of the test's hill country still under
-// way, 54 sweeps (3.5 km) leave 32 %. Under faulted plateaus and confined beds three quarters stays
-// under way even so: that water is a regional flow below the streams, longer than any reach.
+// Water is followed RouteSweeps cells (3.5 km). What travels farther is booked as underflow: in
+// hill country a third of the recharge, under faulted plateaus and confined beds most of it, a
+// regional flow below the streams that only a coarser model could follow. Cost grows with the
+// field's area times the sweeps.
 inline constexpr int WaterReach = 96;
 inline constexpr int FieldCells = TileCells + 2 * WaterReach;
 inline constexpr int LevelSweeps = 36;   // cells over which the level of a valley is felt under the ground beside it

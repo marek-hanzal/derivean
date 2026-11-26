@@ -1,4 +1,7 @@
-import { Data3DTexture, DataArrayTexture, DataTexture, FloatType, RGBAFormat, Vector2, Vector3, Vector4, type WebGPURenderer } from "three/webgpu";
+import {
+  Data3DTexture, DataArrayTexture, DataTexture, FloatType, LinearFilter, RepeatWrapping, RGBAFormat, Vector2, Vector3, Vector4,
+  type WebGPURenderer,
+} from "three/webgpu";
 import { texture, texture3D, uniform } from "three/tsl";
 import type { Frame } from "../../../contract/GameBridge";
 import { BroadRepeat, SmallRepeats, StreakStretch } from "../constant/repeats";
@@ -20,13 +23,19 @@ const fract = (value: number) => value - Math.floor(value);
 // time `update` has a WebGPU renderer; until it is back nothing is drawn.
 export function createClouds() {
   const field = createCloudField();
+  // Stand-ins until the field and the noise are there, filtered as those are, so that a shader built against them
+  // binds the same samplers.
   const empty = new DataArrayTexture(new Float32Array(4 * BandLayers * Bands), 1, 1, BandLayers * Bands);
   empty.format = RGBAFormat;
   empty.type = FloatType;
+  empty.minFilter = empty.magFilter = LinearFilter;
+  empty.wrapS = empty.wrapT = RepeatWrapping;
   empty.needsUpdate = true;
   const flat = new DataTexture(new Float32Array(4), 1, 1, RGBAFormat, FloatType);
   flat.needsUpdate = true;
   const still = new Data3DTexture(new Uint8Array(4), 1, 1, 1);
+  still.minFilter = still.magFilter = LinearFilter;
+  still.wrapS = still.wrapT = still.wrapR = RepeatWrapping;
   still.needsUpdate = true;
   const nodes: CloudNodes = {
     grid: uniform(new Vector4(0, 0, 1, 1)),
@@ -49,6 +58,7 @@ export function createClouds() {
   let moved = 0;
   let noise: ReturnType<typeof noiseVolumes> | undefined;
   let ready = false;
+  let disposed = false;
 
   return {
     nodes,
@@ -67,10 +77,14 @@ export function createClouds() {
         noise = noiseVolumes(renderer);
         nodes.shapes.value = noise.shapes;
         nodes.details.value = noise.details;
-        void noise.levels.then((levels) => {
+        noise.levels.then((levels) => {
+          if (disposed) {
+            levels.dispose();
+            return;
+          }
           nodes.levels.value = levels;
           ready = true;
-        });
+        }).catch((error: unknown) => console.error("The clouds' noise could not be measured; no clouds are drawn.", error));
       }
       const latest = field.latest;
       nodes.eye.value.copy(eye).sub(origin);
@@ -107,13 +121,14 @@ export function createClouds() {
       return any;
     },
     dispose() {
+      disposed = true;
       field.dispose();
       empty.dispose();
       flat.dispose();
       still.dispose();
       noise?.shapes.dispose();
       noise?.details.dispose();
-      void noise?.levels.then((levels) => levels.dispose());
+      if (ready) (nodes.levels.value as DataTexture).dispose();
     },
   };
 }

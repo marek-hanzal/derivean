@@ -20,7 +20,8 @@ constexpr int Candidates = 24;        // places whose region is built to see how
 constexpr int Probes = 5;             // region cells a side read around a candidate, 2 km apart
 
 // Metres of limestone or chalk of the dated cover between two depths below the datum: beds, not
-// the marble of a basement. Nothing where the cover was folded: what is sought lies flat.
+// the marble of a basement. Nothing where the cover was folded: what is sought lies flat. Read at
+// the planet point with the column's own layering, not the blended layering the ground water reads.
 float carbonateIn(const Planet& planet, Vec2 point, float from, float to) {
     const StrataColumn column = strataAt(planet, point);
     if (column.foldSpan > QuietFoldSpan) return 0;
@@ -75,7 +76,10 @@ Vec2 seekWaterPlace(World& world, const std::string& kind) {
         std::sort(candidates.begin(), candidates.end(), [](const Candidate& a, const Candidate& b) { return a.score > b.score; });
         if (candidates.size() > size_t(Candidates)) candidates.resize(Candidates);
         const double cell = specOf(Level::Region).cell;
-        for (const Candidate& candidate : candidates) world.atlas.request(tileAt(Level::Region, candidate.at), 0);
+        for (const Candidate& candidate : candidates)
+            for (int pz = 0; pz < Probes; pz += Probes - 1)
+                for (int px = 0; px < Probes; px += Probes - 1)
+                    world.atlas.request(tileAt(Level::Region, {candidate.at.x + (px - Probes / 2) * 2 * cell, candidate.at.z + (pz - Probes / 2) * 2 * cell}), 0);
         // What the landscape reads: the layering below the depth its region has cut to.
         for (const Candidate& candidate : candidates) {
             double share = 0, cut = 0, dry = 0, above = 0;
@@ -95,11 +99,11 @@ Vec2 seekWaterPlace(World& world, const std::string& kind) {
             const double probes = Probes * Probes;
             share /= probes, cut /= std::max(1.0, dry), above /= std::max(1.0, dry);
             const double score = share * std::min(candidate.rain, 2.0) * std::clamp(above / 800.0, 0.2, 1.5);
-            std::printf("  candidate X %.0f Z %.0f: %.0f %% dry, %.0f m above the sea; region cut %.0f m into the layering, %.0f %% of the %.0f m below that is limestone or chalk\n", candidate.at.x, candidate.at.z,
-                        100 * dry / probes, above, cut, 100 * share, double(Looked));
-            if (score <= most) continue;
+            std::printf("  candidate X %.0f Z %.0f: %.0f %% of the probes dry, %.0f m above the sea; region cut %.0f m into the layering; of the %.0f m below that, %.0f %% limestone or chalk (wet probes count as none)\n",
+                        candidate.at.x, candidate.at.z, 100 * dry / probes, above, cut, double(Looked), 100 * share);
+            if (score <= std::max(most, 0.0)) continue;
             char reason[256];
-            std::snprintf(reason, sizeof reason, "%.0f %% of the top %.0f m under the region's dry ground is flat-lying limestone or chalk (cut %.0f m); rain %.2f m/yr, %.0f m above the sea, %.0f C", 100 * share,
+            std::snprintf(reason, sizeof reason, "%.0f %% of the top %.0f m under the region's ground is flat-lying limestone or chalk, wet ground counted as none (cut %.0f m); rain %.2f m/yr, %.0f m above the sea, %.0f C", 100 * share,
                           double(Looked), cut, candidate.rain, above, candidate.warmth);
             most = score, best = candidate.at, why = reason;
         }

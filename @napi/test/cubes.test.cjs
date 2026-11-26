@@ -77,7 +77,8 @@ function apply(frame) {
     assert.equal(typeof frame.ready.far, "boolean");
     if (frame.ready.far) assert.ok(frame.pending.patches === 0 && frame.cubes.levels.every((each) => each.settled === each.wanted));
     if (!level.box) continue;
-    const side = level.box.max[0] - frame.eye[0], size = info.cubes.side * level.edge, reach = side + info.cubes.band * level.edge;
+    // A box ends a band short of the nearest square not held, so that square itself may lie exactly at `reach`.
+    const side = level.box.max[0] - frame.eye[0], size = info.cubes.side * level.edge, reach = side + info.cubes.band * level.edge - 1e-6;
     assert.ok(side >= inner - 1e-6, "boxes are nested from the finest level outwards");
     assert.ok(Math.abs(frame.eye[2] - level.box.min[2] - side) < 1e-6, "a box is centred on the eye");
     inner = side;

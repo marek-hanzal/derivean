@@ -28,7 +28,7 @@ void regroup(World& world);                     // rebuilds the grids of groups 
 void storeSet(LiveSet& set);                    // refreshes the tiles from the group's grid
 std::vector<TileKey> tilesWithin(Vec2 low, Vec2 high);
 
-// Raster.cpp — puts one stroke into the live tiles' columns and books what it removed and added.
+// Raster.cpp — puts one stroke or deposit into the live tiles' columns and books what it removed and added.
 void rasterise(World& world, const Edit& edit);
 void strokeBounds(const Edit& edit, Vec2& low, Vec2& high);   // the box around a stroke's footprint
 

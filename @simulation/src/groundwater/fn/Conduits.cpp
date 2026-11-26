@@ -63,7 +63,9 @@ Point pointOf(const Making& making, int32_t node) {
     const size_t cell = size_t(node) / 2;
     const AquiferColumn& here = field.column[cell];
     Point made;
-    made.radius = radiusOf(making.net.flux[size_t(node)]);
+    // A passage stays inside the soluble rock it is cut in.
+    const float thickness = node & 1 ? here.solubleTop - here.solubleBottom : here.upperSoluble;
+    made.radius = std::min(radiusOf(making.net.flux[size_t(node)]), 0.5f * thickness);
     made.at = field.centre(int(cell % size_t(field.size)), int(cell / size_t(field.size)));
     if (here.fissured) {
         const Fissures& fissures = field.fissures[cell];
@@ -88,6 +90,7 @@ float grewIn(const Making& making, int32_t node, float radius) {
     return std::min(OldestCave, Breakthrough * (1.0f + run * run) + radius / std::max(1e-6f, pace));
 }
 
+// `kind` 0 for a passage, 1 for a shaft, 2 for a mouth.
 void addPassage(Making& making, int32_t node, Vec2 a, float ay, Vec2 b, float by, float radius, float flux, uint8_t level, float abandoned, uint8_t order, uint64_t spring, int kind) {
     const WaterField& field = making.field;
     const size_t cell = size_t(node) / 2;
@@ -103,6 +106,7 @@ void addPassage(Making& making, int32_t node, Vec2 a, float ay, Vec2 b, float by
     record.catchment = float(making.net.flux[size_t(node)]) / std::max(1e-4f, field.borne[size_t(node)].rate);
     record.grew = age, record.abandoned = abandoned;
     record.cover = column.ground - std::max(ay, by) - radius;
+    record.opens = uint8_t(kind);
     making.tile.passages.push_back(record);
 }
 
@@ -131,6 +135,9 @@ void openOutlets(Making& making, std::vector<Outflow>& outflows) {
         water.kind = SpringKind::Karst;
         water.position = making.point[size_t(out.node)].at, water.elevation = column.ground;
         if (outlet == Outlet::Lip) lipOf(field, x, z, water.position, water.elevation);
+        // The vent lies in the cell its water leaves the ground in, wherever the joint plane or the lip lies.
+        const Vec2 corner = field.centre(x, z) - Vec2{0.5 * WaterCell, 0.5 * WaterCell};
+        water.position = {std::clamp(water.position.x, corner.x + 0.5, corner.x + WaterCell - 0.5), std::clamp(water.position.z, corner.z + 0.5, corner.z + WaterCell - 0.5)};
         water.flow = float(out.flux);
         const float inverse = 1.0f / float(out.flux);
         water.borne = {out.sum.lime * inverse, out.sum.far * inverse, out.sum.high * inverse, out.sum.rate * inverse, out.sum.age * inverse, out.sum.deep * inverse};
@@ -199,8 +206,8 @@ void growConduits(const WaterField& field, GroundwaterTile& tile) {
             if (!inside(making, parent)) continue;
             end = making.point[size_t(parent)].at, endHeight = making.point[size_t(parent)].height;
         } else if (out.spring >= 0) {
-            // The mouth: out to the spring and a little beyond, rising, so that the passage reaches
-            // daylight whatever the finer ground does there.
+            // The mouth: up to the spring, on a little beyond it where the passage comes from aside,
+            // and rising, so that it reaches daylight whatever the finer ground does there.
             const Spring& vent = tile.springs[size_t(out.spring)];
             const Vec2 way = vent.position - here.at;
             end = vent.position + (length(way) > 1.0 ? normalized(way) * 12.0 : Vec2{});
@@ -208,7 +215,7 @@ void growConduits(const WaterField& field, GroundwaterTile& tile) {
         } else {
             continue;
         }
-        addPassage(making, node, here.at, here.height, end, endHeight, here.radius, float(net.flux[size_t(node)]), 0, 0, here.order, spring, 0);
+        addPassage(making, node, here.at, here.height, end, endHeight, here.radius, float(net.flux[size_t(node)]), 0, 0, here.order, spring, parent >= 0 ? 0 : 2);
         out.passages += float(std::hypot(length(end - here.at), double(endHeight - here.height)));
         out.grew = std::max(out.grew, tile.passages.back().grew);
         if ((node & 1) && parent >= 0 && columnOf(making, net.root[size_t(node)]).incision >= LeastIncision) addAbandoned(making, node, end, endHeight, spring);

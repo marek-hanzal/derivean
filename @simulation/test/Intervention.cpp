@@ -113,4 +113,5 @@ void testIntervention() {
     expectLive(site.found, "the world has no stream to work on");
     testCascade(world, site);
     testDiversion(world, site);
+    testEruption(world, site);
 }

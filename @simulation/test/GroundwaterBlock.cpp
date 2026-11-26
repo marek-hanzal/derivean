@@ -124,6 +124,11 @@ void testLimestoneBlock() {
         expectWater(tile->springs[i].carbonate == 0 && tile->springs[i].silica == 0, "a cold limestone spring brings mineral to lay down", tile->springs[i].carbonate);
         expectWater(tile->records[i].aquifer == Material::Limestone && tile->records[i].floor == Material::Shale, "a karst spring does not name the rock it comes from");
         expectWater(tile->springs[i].position.x > (Valley - 2) * WaterCell, "water of the plateau comes out on the plateau, above its water table", tile->springs[i].position.x);
+        // However far the joint plane it rises on lies from the cell's centre, the vent is in the cell its water left the ground in.
+        const int32_t cell = tile->records[i].cell;
+        const double cornerX = double(int64_t(field.key.x) * TileCells + cell % TileCells) * WaterCell, cornerZ = double(int64_t(field.key.z) * TileCells + cell / TileCells) * WaterCell;
+        const Vec2 at = tile->springs[i].position;
+        expectWater(at.x >= cornerX && at.x < cornerX + WaterCell && at.z >= cornerZ && at.z < cornerZ + WaterCell, "a karst vent lies outside the cell its water left the ground in", at.x - cornerX);
     }
 
     // The voids are there for the voxel column, and a point is in a cave exactly where a span holds it.

@@ -11,9 +11,9 @@ type Float = Node<"float">;
 const leaves = (towards: Float, low: Float, high: Float, at: Float) =>
   select(towards.greaterThanEqual(0), high.sub(at).div(max(towards, 1e-4)), low.sub(at).div(min(towards, -1e-4)));
 
-// Share of the sun's light that reaches a point in render space, 0 in shadow, and less under cloud. A map holds the faces that look
+// Share of the sun's light that reaches a point in render space, 0 in shadow. A map holds the faces that look
 // away from the sun, so a lit face never shadows itself and needs no slope bias: the point is lit where it lies
-// nearer the sun than the first such face on its ray.
+// nearer the sun than the first such face on its ray. Under cloud it is less again, by the clouds' own shadows.
 //
 // A point takes the shadows of the cascade whose square of ground it lies in, cast by cubes of its own size, and
 // from every coarser cascade only what lies beyond that square: there the coarser map holds the same ground

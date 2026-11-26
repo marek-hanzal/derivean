@@ -31,12 +31,12 @@ On 26 Nov at about 03:00 every running stream stopped mid-work on a model usage 
 
 Starting the game builds the planet first: about 8 minutes at 08:54 and still unfinished after 25 minutes at 09:30 (load 35–52, other games running). Whether the tree got slower or only the machine is not established; a cached planet or a faster build is an engine item.
 
-Open investigation: thin vertical columns, one cell wide and up to hundreds of metres tall, seen in a worker's game capture (owner's screenshot); cause not yet found.
+Open investigation: thin vertical columns, one cell wide and up to hundreds of metres tall, seen in a worker's game capture (owner's screenshot). They are in the engine's quads (2 347 riser quads one cube wide and 16 or more high at level 5 in the 03:03 data, materials silt, sand, gravel), so loose cover; cause not yet found.
 
 - `mise -C @simulation run build` builds when no stream is mid-save; streams share one working tree, so a failing build is usually someone's half-saved file — wait and retry before touching another owner's code.
 - `mise -C @simulation run test` stops at `testLandscapePlane` ("a site plane was cut into gullies"): a regression of the relief rework in progress. Tests registered after it do not run; streams run their own tests through small drivers linked against the library.
 - Root `mise run check` fails in `engine-tests` (`Planet.cpp:36`, the player must come to rest on the ground: the engine places the player on the Site surface while voxels come from the finer Ground level).
-- The game still defaults to WebGL with smooth far patches; `DERIVEAN_RENDERER=webgpu` draws the far cube levels with the near voxels' pipeline (first capture pair under `.out/playwright/look/pair-smooth` and `pair-cubes`, plans in `@game/capture/`). Every capture so far was taken as "stalled", i.e. before the data was final, because the engine has no truthful readiness signal yet; they are a baseline, not a result.
+- The renderer is flipped: one WebGPU scene draws voxel chunks and far cube levels 2–13, with sun shadows, snow, clouds, cloud shadow and precipitation; the WebGL path is gone (three's WebGL 2 fallback backend draws no clouds). Captures under `.out/playwright/renderer/`. Captures are still not taken on final data until the engine's readiness is truthful.
 
 ## Workstreams
 
@@ -54,7 +54,7 @@ Open investigation: thin vertical columns, one cell wide and up to hundreds of m
 | Ice sheets | [icesheet.md](icesheet.md) | `@simulation/src/icesheet/**` | Started |
 | Measurements, inspector, scouting | [measure.md](measure.md) | `@simulation/src/{measure,inspect}`, `tool/Measure*`, `tool/InspectCommand.cpp` | Finished a full pass; to be repeated |
 | Engine | [engine.md](engine.md) | `@engine/**`, `@napi/**`, `@game/main/engine*`, `@game/contract/GameBridge.ts`, `@game/preload/**` | In progress; long queue |
-| Renderer | [renderer.md](renderer.md) | `@game/src/**` except the map, `@game/main/{index,capture}.mjs`, `@game/capture/**` | Third run: cube levels draw on WebGPU beside the WebGL path (`DERIVEAN_RENDERER=webgpu`); sun shadows, snow, the flip and clouds are next |
+| Renderer | [renderer.md](renderer.md) | `@game/src/**` except the map, `@game/main/{index,capture}.mjs`, `@game/capture/**` | WebGPU only: cubes at every distance, sun shadows, snow, clouds and cloud shadow ported, rain and snow written; next: clouds in motion and live, the clouds' GPU cost, low-sun captures of a range |
 | Map | [map.md](map.md) | `@game/src/map/**`, `@simulation/src/chart/**` | Finished; no active owner. Review fixes in (stale reads, world change, lost context); an open map costs no more frame time than the closed game; `M` last confirmed by real input before those fixes — confirm on a quiet machine with the steps in map.md |
 
 A stream whose file is missing has not written it yet; its state is then only in the code.

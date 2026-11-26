@@ -54,12 +54,17 @@ inline void checkBoxes(const derivean::FarCubes& far, const Held& held, derivean
     for (int level = CoarsestCubes; level >= FinestCubes; --level) {
         const CubeLevel& state = far.levels[size_t(level - FinestCubes)];
         if (!state.box) { outer = 0; continue; }
-        const double side = state.box->max[0] - eye[0], size = CubeSide * edgeOf(level), reach = side + CubeBand * edgeOf(level);
+        // A box ends a band short of the nearest square not held, so that square itself may lie exactly at `reach`.
+        const double side = state.box->max[0] - eye[0], size = CubeSide * edgeOf(level), reach = side + CubeBand * edgeOf(level) - 1e-6;
         expect(side <= outer + 1e-6, "The box of a finer level reaches beyond the coarser one");
         outer = side;
         for (int z = int(std::floor((eye[2] - reach) / size)); z <= int(std::floor((eye[2] + reach) / size)); ++z)
-            for (int x = int(std::floor((eye[0] - reach) / size)); x <= int(std::floor((eye[0] + reach) / size)); ++x)
-                expect(held.keys.contains({x, level, z}), "A level's box reaches over ground the renderer holds no chunk for");
+            for (int x = int(std::floor((eye[0] - reach) / size)); x <= int(std::floor((eye[0] + reach) / size)); ++x) {
+                if (held.keys.contains({x, level, z})) continue;
+                const double near = std::max({x * size - eye[0], eye[0] - (x + 1) * size, z * size - eye[2], eye[2] - (z + 1) * size, 0.0});
+                std::cout << "level " << level << " box side " << side << " m, square " << x << "," << z << " not held at " << near << " m\n";
+                expect(false, "A level's box reaches over ground the renderer holds no chunk for");
+            }
     }
 }
 

@@ -43,3 +43,6 @@ inline uint64_t digestOf(const derivean::sim::World& world) {
 
 // InterventionReplay.cpp
 void testDiversion(derivean::sim::World& world, const derivean::sim::StreamSite& site);
+
+// InterventionEruption.cpp
+void testEruption(derivean::sim::World& world, const derivean::sim::StreamSite& site);

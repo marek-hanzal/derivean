@@ -27,9 +27,9 @@ struct CaveSpan {
     float bottom{}, top{};     // m, elevation
 };
 
-// Every conduit that reaches into one local tile, with an index for point queries. A conduit that
-// crosses a tile edge is listed in both tiles, so the field of the tile a point lies in is all a
-// reader needs. A field is a pure function of the world's setting and the tile key.
+// Every conduit of one local tile, with an index for point queries. No tube comes within a cell of
+// the tile's edge (fn/Conduits.cpp), so the field of the tile a point lies in is all a reader
+// needs. A field is a pure function of the world's setting and the tile key.
 struct CaveField {
     TileKey key;                         // Level::Local
     std::vector<Conduit> conduits;

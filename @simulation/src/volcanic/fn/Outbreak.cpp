@@ -175,4 +175,25 @@ NearField layOutbreak(Emplacement& field, const Outbreak& outbreak) {
     return near;
 }
 
+std::shared_ptr<const Deposit> depositOf(const Emplacement& field, const NearField& near) {
+    auto laid = std::make_shared<Deposit>();
+    laid->origin = field.origin;
+    laid->cell = field.cell;
+    laid->width = field.width, laid->height = field.height;
+    if (near.fragments.size() != field.cells() || near.lava.size() != field.cells()) return laid;
+    laid->drop = near.drop;
+    laid->rock.assign(field.cells(), 0.0f);
+    for (auto& layer : laid->loose) layer.assign(field.cells(), 0.0f);
+    for (size_t i = 0; i < field.cells(); ++i) {
+        const float fragments = near.fragments[i], lava = near.lava[i];
+        if (fragments + lava >= WeldDepth) {
+            laid->rock[i] = fragments + lava;
+            continue;
+        }
+        laid->loose[Coarse][i] = lava + 0.5f * fragments;
+        laid->loose[Sand][i] = 0.5f * fragments;
+    }
+    return laid;
+}
+
 } // namespace derivean::sim

@@ -17,8 +17,9 @@ struct WaterBlock {
 // `-conduits.png` (soluble ground tinted, passages black, abandoned levels orange, shafts red).
 void writeWaterMaps(const WaterBlock& block, const std::string& out, const std::string& tag);
 
-// GroundwaterSeek.cpp — a place of one kind, found on the planet as the landscapes read it:
-// "limestone" for thick carbonate rock standing high in the rain, "hot" for the hottest ground with rain.
+// GroundwaterSeek.cpp — a place of one kind: "hot" for the hottest ground with rain on the planet;
+// "limestone" for flat-lying carbonate in the rain, ranked on the planet and then checked under the
+// dry ground of the region, which may have cut through the carbonate the planet still records.
 derivean::sim::Vec2 seekWaterPlace(derivean::sim::World& world, const std::string& kind);
 
 // GroundwaterTiming.cpp — what one local tile's ground water costs, stage by stage, on the calling

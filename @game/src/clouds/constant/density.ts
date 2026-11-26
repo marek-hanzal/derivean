@@ -3,6 +3,21 @@ import { BroadRepeat, DetailRepeat, SmallRepeats, StreakStretch } from "./repeat
 // Shares of the sky the cover levels are tabulated for (noiseVolumes).
 export const CoverSteps = 32;
 
+// What the density function reads besides its textures, as the fields of the WGSL struct CloudSky; every function
+// that builds one takes them as parameters of the same names (fn/cloudArgs).
+//   grid    xy: place of the render origin on the weather grid in planet repeats, z: 1 / planet span, w: cells a side
+//   steer   place of the render origin in the broad shapes, in repeats
+//   datum   world height of render-space y = 0
+//   range#  per band: lowest base and highest top near the eye, and z above zero when the band holds cloud there
+//   drift#  per band, in repeats of its small shapes with the wind's drift taken off: xy plain, zw streaked
+//   wind01  unit direction of the wind of band 0 in xy and of band 1 in zw; wind2 that of band 2
+export const CloudSkyFields = [
+  ["grid", "vec4f"], ["steer", "vec2f"], ["datum", "f32"], ["range0", "vec4f"], ["range1", "vec4f"], ["range2", "vec4f"],
+  ["drift0", "vec4f"], ["drift1", "vec4f"], ["drift2", "vec4f"], ["wind01", "vec4f"], ["wind2", "vec2f"],
+] as const;
+
+const CloudSkyStruct = `struct CloudSky { ${CloudSkyFields.map(([name, type]) => `${name}: ${type}`).join(", ")} }`;
+
 const literal = (value: number) => value.toFixed(1);
 
 // Cloud water at a point, reconstructed from the simulated bands, in WGSL. The bands say where cloud is, how much
@@ -14,20 +29,7 @@ const literal = (value: number) => value.toFixed(1);
 //           linear sampler
 //   levels  for each cover step, the noise level above which that share of a layer lies, per character
 export const DensityWgsl = `
-struct CloudSky {
-  // xy: place of the render origin on the weather grid in planet repeats, z: 1 / planet span, w: cells a side.
-  grid: vec4f,
-  // Place of the render origin in the broad shapes, in repeats.
-  steer: vec2f,
-  // World height of render-space y = 0.
-  datum: f32,
-  // Per band: lowest base and highest top near the eye, and z above zero when the band holds cloud there.
-  range0: vec4f, range1: vec4f, range2: vec4f,
-  // Per band, in repeats of its small shapes with the wind's drift taken off: xy plain, zw streaked.
-  drift0: vec4f, drift1: vec4f, drift2: vec4f,
-  // Unit direction of each band's wind: band 0 in xy, band 1 in zw, band 2 in the last.
-  wind01: vec4f, wind2: vec2f,
-}
+${CloudSkyStruct}
 
 fn cloudRange(c: CloudSky, band: i32) -> vec4f {
   switch band { case 0: { return c.range0; } case 1: { return c.range1; } default: { return c.range2; } }

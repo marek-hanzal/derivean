@@ -61,7 +61,8 @@ void addSpring(const WaterField& field, const AquiferColumn& column, const VentW
     spring.position = water.position;
     spring.elevation = water.elevation;
     spring.discharge = water.flow / PerYear;
-    const int64_t cellX = int64_t(std::floor(water.position.x / WaterCell)), cellZ = int64_t(std::floor(water.position.z / WaterCell));
+    // Named by the cell the water left the ground in: a lip or a joint plane can put the vent itself on the cell's edge.
+    const int64_t cellX = int64_t(field.key.x) * TileCells + water.cell % TileCells, cellZ = int64_t(field.key.z) * TileCells + water.cell / TileCells;
     spring.id = hash(stream(field.seed, SpringStream), cellX, cellZ, int64_t(water.kind) * 2 + water.storey);
 
     // Water takes the temperature of the rock it stands in, so what arrives is as warm as the last

@@ -47,6 +47,7 @@ struct ConduitRecord {
     float grew{};            // yr from open fissure to this size
     float abandoned{};       // yr since the falling water table left it dry; 0 while it carries water
     float cover{};           // m of ground over its roof at its shallower end
+    uint8_t opens{};         // 1 a stream's shaft, 2 a spring's mouth: it rises out of the ground on purpose; 0 otherwise
 };
 
 // m³/yr over a tile's own cells. What enters the ground leaves it again:

@@ -1,16 +1,17 @@
 import { LinearFilter, type Node, NodeMaterial, QuadMesh, RenderTarget, UnsignedByteType, Vector3, Vector4, type WebGPURenderer } from "three/webgpu";
 import { uniform, uv, vec4, wgsl, wgslFn } from "three/tsl";
 import { DensityWgsl } from "../constant/density";
-import { ShadowMs, ShadowSize, ShadowSpan } from "../constant/shadow";
+import { ForwardShare, ForwardThinning, LeastThrough, ShadowMs, ShadowSize, ShadowSpan } from "../constant/shadow";
 import { CloudParams, CloudSkyOf, CloudTextures, cloudArgs } from "../fn/cloudArgs";
-import type { CloudShade } from "../fn/cloudShadow";
+import { sunThrough } from "../fn/sunThrough";
 import type { CloudNodes } from "../type/CloudNodes";
+import type { CloudShade } from "../type/CloudShade";
 
 const Texel = ShadowSpan / ShadowSize;
+const literal = (value: number) => value.toFixed(4);
 
-// Each texel looks up the sun's ray through the three bands of the same density field the clouds are drawn from.
-// The straight beam dies off as Beer and Lambert say; light scattered forward keeps thin cloud bright, and some
-// always comes out of the base of the thickest.
+// Each texel looks up the sun's ray through the three bands of the same density field the clouds are drawn from,
+// and lets through what sunThrough says.
 const throughNode = wgslFn(`
 fn cloudThrough(at: vec2f, place: vec4f, sun: vec3f, ${CloudParams}) -> f32 {
   let c = ${CloudSkyOf};
@@ -30,7 +31,7 @@ fn cloudThrough(at: vec2f, place: vec4f, sun: vec3f, ${CloudParams}) -> f32 {
       depth += bandCloud(c, ${CloudTextures}, band, p, cloudCell(c, p), false).x * (shape.z - shape.y) / 3.0 * slant;
     }
   }
-  return 0.12 + 0.88 * mix(exp(-depth), exp(-depth * 0.25), 0.3);
+  return ${literal(LeastThrough)} + ${literal(1 - LeastThrough)} * mix(exp(-depth), exp(-depth * ${literal(ForwardThinning)}), ${literal(ForwardShare)});
 }
 `, [wgsl(DensityWgsl)]);
 
@@ -41,7 +42,7 @@ export function createCloudShadow(clouds: CloudNodes, sun: Node<"vec3">) {
   const target = new RenderTarget(ShadowSize, ShadowSize, { type: UnsignedByteType, depthBuffer: false });
   target.texture.minFilter = target.texture.magFilter = LinearFilter;
   const drawn = uniform(new Vector4());
-  const shade: CloudShade = { map: target.texture, place: uniform(new Vector4()), sun };
+  const shade: CloudShade = { map: target.texture, place: uniform(new Vector4()), sun, beyond: uniform(1) };
   const material = new NodeMaterial();
   material.fragmentNode = vec4(throughNode({ at: uv(), place: drawn, sun, ...cloudArgs(clouds) }) as Node<"float">, 0, 0, 1);
   const quad = new QuadMesh(material);
@@ -50,12 +51,17 @@ export function createCloudShadow(clouds: CloudNodes, sun: Node<"vec3">) {
 
   return {
     shade,
-    // Redraws the map when it is due. `origin` and `eye` are world metres, `ground` the height to lay the plane at.
-    update(renderer: WebGPURenderer, origin: Vector3, eye: Vector3, ground: number, lit: boolean, now: number) {
+    // Redraws the map when it is due. `origin` and `eye` are world metres, `ground` the height to lay the plane at;
+    // `overhead` is the share of the sky the cloud over the eye covers and its optical depth.
+    update(renderer: WebGPURenderer, origin: Vector3, eye: Vector3, ground: number, lit: boolean, now: number,
+      overhead: readonly [number, number]) {
       if (!lit) {
         shade.place.value.setScalar(0);
+        shade.beyond.value = 1;
+        last = -Infinity;
         return;
       }
+      shade.beyond.value = 1 - overhead[0] * (1 - sunThrough(overhead[1]));
       if (now - last >= ShadowMs) {
         last = now;
         centre.set(Math.round(eye.x / Texel) * Texel, Math.round(ground / 50) * 50, Math.round(eye.z / Texel) * Texel);

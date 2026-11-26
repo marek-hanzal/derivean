@@ -25,6 +25,9 @@ inline constexpr float QuenchShare = 0.12f;   // share of its cooling length lav
 // Rise over run above which set lava does not stand where it stopped: quenched under water or
 // stalled on a steep front, it breaks up and its rubble slides to rest.
 inline constexpr float RubbleRest = 0.6f;
+// m laid at once below which it stays loose (rubble, cinders and ash on the ground); above, it
+// welds into rock with the cover it buries.
+inline constexpr float WeldDepth = 2.0f;
 
 inline constexpr const Rheology& lavaOf(Magma magma) { return magma == Magma::Basalt ? BasaltLava : AndesiteLava; }
 

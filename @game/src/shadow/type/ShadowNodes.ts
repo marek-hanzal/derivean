@@ -1,4 +1,4 @@
-import type { CloudShade } from "../../clouds/fn/cloudShadow";
+import type { CloudShade } from "../../clouds/type/CloudShade";
 import type { DepthTexture, UniformArrayNode, UniformNode } from "three/webgpu";
 
 // What a surface reads to know whether the sun reaches it, per cascade and all in render space.
@@ -14,6 +14,6 @@ export interface ShadowNodes {
   rays: UniformArrayNode<"vec4">;
   // For the pass that draws a map: the finest level drawn into it.
   finest: UniformNode<"float", number>;
-  // The clouds' shadows, where a world has them; set before the surfaces that read it are made.
+  // The clouds' shadows, where a world has them.
   clouds?: CloudShade;
 }

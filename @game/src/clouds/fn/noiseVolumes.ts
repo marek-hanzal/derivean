@@ -7,9 +7,12 @@ import { NoiseWgsl } from "../constant/noise";
 
 const ShapeSize = 128;
 const DetailSize = 32;
-// Texels a side of the slices the cover levels are measured on, and where those slices lie.
+// Texels a side of the slices the cover levels are measured on, how many there are, and where the first lies and
+// how far apart they are through the volume.
 const LevelSize = 96;
-const LevelSlices = [0.11, 0.37, 0.63, 0.89];
+const LevelSlices = 4;
+const FirstSlice = 0.11;
+const SliceStep = 0.26;
 
 const noise = wgsl(NoiseWgsl);
 const shapeAt = wgslFn("fn shapeAt(p: vec3f) -> vec4f { return shapeNoise(p); }", [noise]);
@@ -38,14 +41,14 @@ function volume(renderer: WebGPURenderer, size: number, at: typeof shapeAt) {
 // volume's bytes round it, so a cover of 0.3 really leaves 30 % of a layer in cloud. The GPU answers later.
 async function coverLevels(renderer: WebGPURenderer) {
   const each = LevelSize * LevelSize;
-  const samples = instancedArray(each * LevelSlices.length, "vec4");
+  const samples = instancedArray(each * LevelSlices, "vec4");
   const measure = Fn(() => {
     const x = instanceIndex.mod(LevelSize);
     const y = instanceIndex.div(LevelSize).mod(LevelSize);
     const slice = instanceIndex.div(each);
-    const depth = slice.toFloat().mul(0.26).add(0.11);
+    const depth = slice.toFloat().mul(SliceStep).add(FirstSlice);
     samples.element(instanceIndex).assign(shapeAt(vec3(x.toFloat().add(0.5).div(LevelSize), y.toFloat().add(0.5).div(LevelSize), depth)));
-  })().compute(each * LevelSlices.length);
+  })().compute(each * LevelSlices);
   renderer.compute(measure);
   const values = new Float32Array(await renderer.getArrayBufferAsync(samples.value));
   measure.dispose();

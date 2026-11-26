@@ -5,6 +5,7 @@
 #include "planet/fn/Sample.hpp"
 #include "simulation/fn/Spawn.hpp"
 #include "simulation/type/World.hpp"
+#include "volcanic/fn/Outbreak.hpp"
 #include "volcanic/fn/Source.hpp"
 
 #include <algorithm>
@@ -24,6 +25,49 @@ struct Row {
     double next{1e30};      // yr from the world's age to its next eruption
     double nextVolume{};
 };
+
+// Recurrence of eruptions of a VEI or more on Earth (Newhall and Self 1982, as the Global
+// Volcanism Program uses it): 2 weeks for VEI 2, 3 months, 18 months, 12 yr, about 75 yr, about
+// 750 yr. Per year, by class 2 to 7.
+constexpr double EarthAtLeast[6] = {365.25 / 14, 4.0, 1.0 / 1.5, 1.0 / 12, 1.0 / 75, 1.0 / 750};
+constexpr double EarthLand = 1.49e14;   // m²
+// m³ of bulk tephra per m³ of dense rock brought up as fragments.
+constexpr double Bulking = 2.5;
+constexpr int Draws = 4096;              // eruptions drawn from each vent's own sequence
+
+// The VEI of an eruption by its bulk tephra (Newhall and Self 1982): 0 below 1e4 m³, 1 below 1e6,
+// then one class per factor ten.
+int veiOf(double tephra) {
+    if (tephra < 1e4) return 0;
+    if (tephra < 1e6) return 1;
+    return std::min(8, int(std::floor(std::log10(tephra))) - 4);
+}
+
+// Eruptions a year on land by VEI, drawn from the vents' own sequences with the split of each
+// eruption into lava and fragments that play uses, against Earth's for as much land.
+void sizeFrequency(uint64_t seed, const std::vector<Row>& rows, double landArea) {
+    double count[9] = {}, volume[9] = {}, all = 0, brought = 0;
+    for (const Row& row : rows) {
+        const Vent& vent = *row.vent;
+        if (!row.land || vent.supply <= 0) continue;
+        const double rate = vent.supply / meanEruption(vent.magma) / Draws;
+        for (int k = 0; k < Draws; ++k) {
+            const int64_t number = vent.count + k;
+            const Outbreak outbreak = outbreakOf(seed, vent, number, vent.until, eruptionVolume(seed, vent, number));
+            const int vei = veiOf(Bulking * (outbreak.fall + outbreak.flows + outbreak.ash));
+            count[vei] += rate, volume[vei] += rate * outbreak.volume;
+            all += rate, brought += rate * outbreak.volume;
+        }
+    }
+    const double share = landArea / EarthLand;
+    std::printf("  eruptions on land a year by VEI (bulk tephra = %.1f x fragments; Earth scaled to this land, %.2f of its own):\n", Bulking, share);
+    for (int vei = 0; vei <= 7; ++vei) {
+        const double earth = vei < 2 ? -1 : share * (EarthAtLeast[vei - 2] - (vei < 7 ? EarthAtLeast[vei - 1] : 0.0));
+        if (earth < 0) std::printf("    VEI %d: %8.4f a year, %5.1f %% of the volume | Earth: frequent, not counted by recurrence\n", vei, count[vei], 100 * volume[vei] / std::max(1e-30, brought));
+        else std::printf("    VEI %d: %8.4f a year, %5.1f %% of the volume | Earth %8.4f a year, ours / Earth's %.2f\n", vei, count[vei], 100 * volume[vei] / std::max(1e-30, brought), earth, count[vei] / earth);
+    }
+    std::printf("    all: %.3f a year, %.3f km3 a year of dense rock\n", all, brought / Km3);
+}
 
 double nearest(Vec2 from, const std::vector<Row>& rows, bool activeOnly) {
     double best = 1e30;
@@ -133,7 +177,8 @@ int volcanicSurvey(const Arguments& arguments) {
     }
     std::printf("  next eruption of the supplied vents on land, yr from now: p10 %.0f  p50 %.0f  p90 %.0f | within 10 yr: %d, 100 yr: %d, 1 000 yr: %d, 10 000 yr: %d | its volume, km3: p50 %.3f p90 %.3f\n",
                 percentile(wait, 0.1), percentile(wait, 0.5), percentile(wait, 0.9), within[0], within[1], within[2], within[3], percentile(size, 0.5), percentile(size, 0.9));
-    std::printf("  eruptions on land per year, in the mean: %.3f (Earth: 50 to 70 a year on 2.7 times this land)\n", perYear);
+    std::printf("  eruptions on land per year, in the mean: %.3f (Earth: 50 to 70 a year on %.2f times this land)\n", perYear, EarthLand / landArea);
+    sizeFrequency(setting.seed, rows, landArea);
 
     const Vec2 landing = findVale(planet, {0, 0});
     const Row* first = nullptr;

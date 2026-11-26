@@ -1,6 +1,7 @@
 #pragma once
 
 #include "atmosphere/type/Plume.hpp"
+#include "intervention/type/Edit.hpp"
 #include "volcanic/type/Emplacement.hpp"
 #include "volcanic/type/Outbreak.hpp"
 
@@ -32,6 +33,12 @@ void airSourcesOf(const Outbreak& outbreak, double era, double ground, std::vect
 // cell. `field.laid` is cleared first. `field.ground` comes back raised on every cell material
 // reached, Passing cells included, as the replay leaves it; only the NearField says what stays.
 NearField layOutbreak(Emplacement& field, const Outbreak& outbreak);
+
+// What `layOutbreak` left, as the deposit of an edit (intervention/type/Edit.hpp) on the field's
+// grid, by the rule the replay settles with (volcanic/fn/Settle.cpp): a cell that took WeldDepth
+// or more holds it as rock; a thinner layer lies loose, lava as rubble, fragments half coarse and
+// half sand.
+std::shared_ptr<const Deposit> depositOf(const Emplacement& field, const NearField& near);
 
 // kg of rock for a volume brought up.
 double rockMass(double volume);
