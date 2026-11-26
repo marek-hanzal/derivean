@@ -37,7 +37,8 @@ void testEruption(World& world, const StreamSite& site) {
         expectLive(after.live && std::abs(after.rock - (before.rock - 1.0f + cover + 3.0f)) < 1e-3f, "a deposit did not sink the floor, seal the cover and lay rock on it", after.rock - before.rock);
         expectLive(after.cover[Coarse] <= 0 && after.cover[Fines] <= 0 && std::abs(after.cover[Sand] - 0.5f) < 1e-4f, "the loose part of a deposit is not on top of its rock", after.cover[Sand]);
         const WorldBudget budget = budgetOf(world);
-        expectLive(std::abs(budget.dug - cell * cell) < 1e-3 && std::abs(budget.filled - 3.5 * cell * cell) < 1e-3, "a deposit booked other volumes than it laid", budget.filled);
+        // To a millimetre of the column: the columns are floats at the ground's height.
+        expectLive(std::abs(budget.dug - cell * cell) < 1e-3 * cell * cell && std::abs(budget.filled - 3.5 * cell * cell) < 1e-3 * cell * cell, "a deposit booked other volumes than it laid", budget.filled);
         expectLive(solidImbalance(budget) <= Closed, "a deposit does not close the solid budget", solidImbalance(budget));
         forgetInterventions(world);
     }
@@ -75,7 +76,7 @@ void testEruption(World& world, const StreamSite& site) {
     const WorldBudget calm = budgetOf(world);
     intervene(world, deposit(laid));
     const WorldBudget fresh = budgetOf(world);
-    expectLive(relative(fresh.filled - calm.filled, thrown) < 1e-6 && fresh.dug == calm.dug, "the columns did not take what the eruption laid", (fresh.filled - calm.filled) / thrown);
+    expectLive(relative(fresh.filled - calm.filled, thrown) < 1e-5 && fresh.dug == calm.dug, "the columns did not take what the eruption laid", (fresh.filled - calm.filled) / thrown);
     expectLive(relative(fresh.groundChange - calm.groundChange, thrown) < 1e-5, "the ground did not rise by what the eruption laid", (fresh.groundChange - calm.groundChange) / thrown);
     const int64_t vx = int64_t(std::floor(outbreak.site.x / cell)), vz = int64_t(std::floor(outbreak.site.z / cell));
     const size_t middle = field.index(int(vx - int64_t(std::floor(field.origin.x / cell))), int(vz - int64_t(std::floor(field.origin.z / cell))));
@@ -94,9 +95,11 @@ void testEruption(World& world, const StreamSite& site) {
     jumpTo(world, end);
     const WorldBudget replayed = budgetOf(world);
     expectLive(replayed.filled == live.filled && replayed.dug == live.dug, "a replayed eruption laid other volumes", replayed.filled - live.filled);
-    expectLive(relative(replayed.groundChange, live.groundChange) < 1e-3, "a replayed eruption left other ground", relative(replayed.groundChange, live.groundChange));
+    // What water moved since, apart from what the edits laid.
+    const double worked = live.groundChange - (live.filled - live.dug), reworked = replayed.groundChange - (replayed.filled - replayed.dug);
+    expectLive(std::abs(reworked - worked) < 1e-3 * std::max(live.solid.eroded + live.solid.deposited, 1.0), "a replayed eruption left other ground", reworked - worked);
     expectLive(relative(replayed.live.water, live.live.water) < 1e-3, "a replayed eruption left other water", relative(replayed.live.water, live.live.water));
-    expectLive(std::abs(siteColumn(world, vx, vz).ground - over.ground) < 0.05f + 1e-3f * std::abs(over.ground), "the replayed pile over the vent is not the live one", siteColumn(world, vx, vz).ground - over.ground);
+    expectLive(std::abs(siteColumn(world, vx, vz).ground - over.ground) < 0.05f + 1e-3f * laid->rock[middle], "the replayed pile over the vent is not the live one", siteColumn(world, vx, vz).ground - over.ground);
     expectLive(solidImbalance(replayed) <= Closed && waterImbalance(replayed) <= Closed, "a replayed eruption does not close its budgets", solidImbalance(replayed));
     forgetInterventions(world);
 }

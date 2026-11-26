@@ -88,7 +88,8 @@ void schedule(uint64_t seed, Vent& vent, const Budget& budget, double share, con
             filled += next - held;
             held = 0;
             episode.volume += next;
-            episode.paroxysm = std::max(episode.paroxysm, next);
+            const bool emptied = emptiesChamber(vent, next), before = emptiesChamber(vent, episode.paroxysm);
+            episode.paroxysm = emptied ? (before ? episode.paroxysm : 0.0) + next : before ? episode.paroxysm : std::max(episode.paroxysm, next);
             vent.recent.push_back({filling.time + RegionStep * filled / filling.volume, next});
             if (vent.recent.size() > Remembered) vent.recent.erase(vent.recent.begin());
             next = eruptionVolume(seed, vent, ++vent.count);

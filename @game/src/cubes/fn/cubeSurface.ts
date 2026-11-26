@@ -1,12 +1,13 @@
-import { MeshBasicNodeMaterial, type Texture, type UniformNode, type Vector3 } from "three/webgpu";
+import { MeshBasicNodeMaterial, type Node, type Texture, type UniformNode, type Vector3 } from "three/webgpu";
 import {
-  Fn, If, PI, cameraPosition, clamp, float, floor, fract, fwidth, int, ivec2, length, max, min, mix, positionWorld, smoothstep, step,
-  textureLoad, uint, varying, vec3, vec4,
+  Fn, If, PI, cameraPosition, clamp, float, floor, fract, fwidth, int, ivec2, length, luminance, max, min, mix, positionWorld, smoothstep,
+  step, textureLoad, uint, varying, vec3, vec4,
 } from "three/tsl";
 import { GrainCells, GroundRepeat } from "../../scene/constant/grain";
 import { groundColor, groundHash } from "../../scene/fn/groundTone";
 import { sunlit } from "../../shadow/fn/sunlit";
 import type { ShadowNodes } from "../../shadow/type/ShadowNodes";
+import { GroundBounce } from "../../sky/constant/air";
 import { airFade } from "../../sky/fn/aerial";
 import { faceLight } from "../../sky/fn/faceLight";
 import type { SkyNodes } from "../../sky/type/SkyNodes";
@@ -30,8 +31,8 @@ export interface CubeLook {
   shadow: ShadowNodes;
   // Absent in a world that has no snow to draw.
   snow?: SnowNodes;
-  // The far levels' ground heights (LevelHeights); absent where they cannot be read, and faces then take only
-  // their own light.
+  // The far levels' ground heights (LevelHeights). The WebGL fallback reads no storage buffers in a fragment
+  // shader, so there, as without them, faces take only their own light.
   land?: LevelHeights["nodes"];
 }
 
@@ -61,7 +62,11 @@ export function cubeSurface({ sky, levels, palette, anchor, shadow, snow, land }
     If(face.top, () => { mass.assign(snowMass(snow, positionWorld, sky.airSea)); });
     return mass;
   })(), "vSnow");
-  material.colorNode = Fn(() => {
+  // The snow round a face, one value for the whole face: what the ground in front of a riser sends back.
+  const around = snow && varying(snowMass(snow, positionWorld, sky.airSea), "vSnowAround").setInterpolation("flat");
+  // The node builder is the function's only argument when it is called without inputs.
+  type Built = { renderer: { backend: { isWebGPUBackend?: boolean } } };
+  material.colorNode = (Fn((builder: Built) => {
     const { row, edge } = levelRows(levels, face);
     const normal = face.normal.normalize();
     const inside = positionWorld.sub(normal.mul(edge.mul(0.01)));
@@ -111,10 +116,14 @@ export function cubeSurface({ sky, levels, palette, anchor, shadow, snow, land }
     const across = clamp(face.across, 0, 1);
     const open = float(Open).pow(mix(mix(corner(0), corner(1), across.x), mix(corner(2), corner(3), across.x), across.y));
     const lit = sunlit(shadow, positionWorld.add(normal.mul(edge.mul(0.02))));
-    const own = faceLight(sky, normal, open, lit);
-    const stands = land && landNormal(land, face.field(Face.level), edge, inside);
-    const light = stands ? mix(own, faceLight(sky, stands.normal, open, lit), stands.share) : own;
+    // Snow sends back far more of the light than bare ground: the bounce takes its share of the snow's colour.
+    // Plain shading keeps its neutral bounce.
+    const fallen = luminance(sky.groundLight).div(GroundBounce);
+    const below = snow && around ? mix(sky.groundLight, vec3(fallen).mul(snow.color), clamp(around.div(CoverMass), 0, 1).mul(sky.plain.oneMinus())) : undefined;
+    const itself = faceLight(sky, normal, open, lit, below);
+    const stands = land && builder.renderer.backend.isWebGPUBackend && landNormal(land, face.field(Face.level), edge, inside);
+    const light = stands ? mix(itself, faceLight(sky, stands.normal, open, lit, below), stands.share) : itself;
     return vec4(airFade(sky, albedo.mul(light).div(PI), fromEye), 1);
-  })();
+  }) as unknown as () => Node<"vec4">)();
   return material;
 }

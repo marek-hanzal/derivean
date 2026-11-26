@@ -24,6 +24,9 @@ inline constexpr double CliffReach = 100.0;    // m, at least two cells
 inline constexpr float BenchWater = 2.0f;      // m of water over bare rock up to which it is a platform
 inline constexpr double StripWidth = 1500.0;   // m of loose ground between two waters up to which it is a spit or a barrier
 inline constexpr float Sheltered = 0.4f;       // share of the open water's waves below which the water behind a strip is a lagoon
+// m of water, at high water, of the band the waves offshore are read in: the waves at the shore are
+// as high as its depth lets them be, those before it say what the shore is exposed to.
+inline constexpr float OffshoreShallow = 5.0f, OffshoreDeep = 15.0f;
 
 // A square of cells as the coast's measurements read it, from a domain or from finished tiles.
 struct ShoreGrid {
@@ -61,6 +64,7 @@ struct ShoreSurvey {
     Distribution beachWidth[2];                // m of dry beach inland of the waterline: sea, lake
     Distribution beachSlope[SedimentClasses];  // rise over run at the waterline by the class the beach is of
     Distribution struck;                       // m, highest train at shore cells
+    Distribution offshore;                     // m, highest train over water OffshoreShallow to OffshoreDeep deep
     std::vector<uint8_t> kind;                 // ShoreKind per cell; None away from the water's edge
     std::vector<uint8_t> flag;                 // per cell: 1 platform, 2 strip, 4 lagoon, 8 stack
 };

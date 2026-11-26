@@ -61,14 +61,15 @@ void timeGroundwater(World& world, TileKey local) {
         if (!pooled || tile->caves->conduits.empty()) continue;
         // What a voxel column pays: the spans of vertical lines through the middle of every conduit.
         Lap lap;
-        int found = 0;
+        int found = 0, most = 0;
         constexpr int Rounds = 20;
         for (int round = 0; round < Rounds; ++round)
             for (const Conduit& conduit : tile->caves->conduits) {
-                CaveSpan spans[6];
-                found += caveSpans(*tile->caves, {0.5 * (conduit.ax + conduit.bx) + round * 0.25, 0.5 * (conduit.az + conduit.bz)}, spans, 6);
+                CaveSpan spans[MostCaveSpans];
+                const int count = caveSpans(*tile->caves, {0.5 * (conduit.ax + conduit.bx) + round * 0.25, 0.5 * (conduit.az + conduit.bz)}, spans, MostCaveSpans);
+                found += count, most = std::max(most, count);
             }
         const size_t queries = size_t(Rounds) * tile->caves->conduits.size();
-        std::printf("caveSpans: %.3f microseconds a column through a passage (%zu queries, %d spans)\n", 1e6 * lap() / double(queries), queries, found);
+        std::printf("caveSpans: %.3f microseconds a column through a passage (%zu queries, %d spans, at most %d on one line)\n", 1e6 * lap() / double(queries), queries, found, most);
     }
 }

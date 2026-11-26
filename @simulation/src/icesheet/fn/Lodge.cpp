@@ -63,10 +63,13 @@ SheetLoad takeUpBed(Domain& domain, SheetWork& work, const ParentSheet& parent) 
     SheetLoad carried;
     for (auto& part : carried.load) part.assign(cells, 0.0f);
     carried.unstripped.assign(cells, 0.0f);
-    std::vector<float> factor(cells);
-    for (size_t i = 0; i < cells; ++i) factor[i] = pluckFactor(domain, i);
-    const std::vector<float> plucked = boxMean(factor, domain.size, PluckRadius), around = boxMean(factor, domain.size, MeanRadius);
-    const float deepest = domain.key.level == Level::Local ? BasinDepth : KnobRelief;
+    // Rock basins are cut at Local; a Site inherits them in its parent's surface, and its own
+    // planes, cut again, would only deepen the same basins along the grid of their joints.
+    const float deepest = domain.key.level == Level::Local ? BasinDepth : 0.0f;
+    std::vector<float> factor(cells, 1.0f);
+    if (deepest > 0)
+        for (size_t i = 0; i < cells; ++i) factor[i] = pluckFactor(domain, i);
+    const std::vector<float> plucked = deepest > 0 ? boxMean(factor, domain.size, PluckRadius) : factor, around = deepest > 0 ? boxMean(factor, domain.size, MeanRadius) : factor;
     for (int z = 0; z < domain.size; ++z) {
         for (int x = 0; x < domain.size; ++x) {
             const size_t i = domain.index(x, z);
@@ -137,8 +140,30 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
             const float kept = std::min(1.0f, room / total);
             const float stays[SedimentClasses] = {load[0] * kept, load[1] * kept, load[2] * kept};
             lay(domain, i, stays, work.left.moraine);
-            washed[0][i] += float(load[Coarse] * (1 - kept) * area), washed[1][i] += float(load[Sand] * (1 - kept) * area);
-            if (owned) domain.ledger.sedimentOut += double(load[Fines] * (1 - kept)) * area;
+            // The rest starts down the ground from this cell's lower bare neighbours, so none of it
+            // settles on the moraine; with none, the water takes all of it.
+            float fall[8], falls = 0;
+            for (int k = 0; k < 8; ++k) {
+                fall[k] = 0;
+                const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
+                if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
+                const size_t n = domain.index(nx, nz);
+                if (parent.iceThen[n] < LeastSheet && domain.hold[n] == Free && groundOf(domain, n) < groundOf(domain, i)) falls += fall[k] = (groundOf(domain, i) - groundOf(domain, n)) / NeighborReach[k];
+            }
+            float gone = load[Fines] * (1 - kept);
+            if (falls <= 0) gone = total * (1 - kept);
+            else
+                for (int k = 0; k < 8; ++k) {
+                    if (fall[k] <= 0) continue;
+                    const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
+                    const size_t n = domain.index(nx, nz);
+                    const float share = (1 - kept) * fall[k] / falls;
+                    washed[0][n] += float(load[Coarse] * share * area), washed[1][n] += float(load[Sand] * share * area);
+                    const bool into = domain.owned(nx, nz);
+                    if (owned && !into) domain.ledger.sedimentOut += double((load[Coarse] + load[Sand]) * share) * area;
+                    if (!owned && into) domain.ledger.sedimentIn += double((load[Coarse] + load[Sand]) * share) * area;
+                }
+            if (owned) domain.ledger.sedimentOut += double(gone) * area;
             continue;
         }
         const Vec2 flow = flowAt(domain, parent, x, z);

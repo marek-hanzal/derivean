@@ -19,7 +19,7 @@ inline constexpr double EditReach = 256.0;   // m
 struct EditedTile {
     TileKey key;
     std::shared_ptr<const Tile> pristine;
-    Ground now;                        // columns as dug, built and reworked; `datum` is the untouched one
+    Ground now;                        // columns as dug, built and reworked; `datum` is the untouched one but where the ground foundered (a Deposit's drop)
     std::vector<float> water;          // m, surface where water stands; below the ground where it is dry
     std::vector<float> discharge;      // m³/yr
     std::vector<double> depth, salt;   // m of water; kg/m² dissolved in it, or lying as a crust where it dried up

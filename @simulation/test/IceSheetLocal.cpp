@@ -152,6 +152,9 @@ void testIceSheetLocal() {
     // spreads the rest beyond.
     Domain margin = plain();
     ParentSheet ending = eastward(margin);
+    double untouched = 0;
+    for (int z = Halo; z < Halo + TileCells; ++z)
+        for (int x = Halo; x < Halo + TileCells; ++x) untouched += groundOf(margin, x, z);
     constexpr int End = Halo + 180;
     for (int z = 0; z < margin.size; ++z)
         for (int x = End; x < margin.size; ++x) ending.iceThen[margin.index(x, z)] = 0;
@@ -167,6 +170,11 @@ void testIceSheetLocal() {
     expect(steepest <= TillRepose * 1.01f, "the moraine stands steeper than till", steepest);
     expect(spread > 0, "no outwash beyond the moraine", spread);
     const TileLedger& ended = margin.ledger;
+    double left = 0;
+    for (int z = Halo; z < Halo + TileCells; ++z)
+        for (int x = Halo; x < Halo + TileCells; ++x) left += groundOf(margin, x, z);
+    const double moved = (left - untouched) * area - (ended.deposited - ended.eroded);
+    expect(std::abs(moved) < 1e-4 * ended.deposited, "the ground at the ice's end changed by other than its ledger", moved);
     expect(std::abs(ended.eroded + ended.sedimentIn - ended.deposited - ended.sedimentOut) < 1e-4 * ended.eroded, "what the ice left at its end does not add up",
            ended.eroded + ended.sedimentIn - ended.deposited - ended.sedimentOut);
 

@@ -13,17 +13,31 @@ std::shared_ptr<const GroundwaterTile> Aquifers::find(TileKey local) const {
 std::shared_ptr<const GroundwaterTile> Aquifers::require(Atlas& atlas, TileKey local) {
     {
         std::unique_lock lock(mutex_);
+        // The thread that claimed a tile waits for local tiles only, and the local and site tiles
+        // ground water asks the atlas for never ask for ground water: sleeping here cannot close a
+        // circle. Only a ground tile asks, and nothing here waits for one.
+        done_.wait(lock, [&] { return slots_[local].tile != nullptr || !slots_[local].claimed; });
         Slot& slot = slots_[local];
         if (slot.tile) return slot.tile;
-        if (slot.claimed) {
-            // The thread that claimed it waits for local tiles only, and the local and site tiles
-            // ground water asks the atlas for never ask for ground water: sleeping here cannot
-            // close a circle. Only a ground tile asks, and nothing here waits for one.
-            done_.wait(lock, [&] { return slots_[local].tile != nullptr; });
-            return slots_[local].tile;
-        }
+        // Unclaimed: never built, or the build threw and gave the claim back. A tile is a pure
+        // function of the setting and the key, so a waiter then works it out itself rather than
+        // sharing a failure that may have been the machine's.
         slot.claimed = true;
     }
+    // A build that throws gives the claim back, so that nobody waits for it forever.
+    struct Release {
+        Aquifers& owner;
+        TileKey key;
+        bool done{};
+        ~Release() {
+            if (done) return;
+            {
+                std::lock_guard lock(owner.mutex_);
+                owner.slots_[key].claimed = false;
+            }
+            owner.done_.notify_all();
+        }
+    } release{*this, local};
     std::shared_ptr<const Tile> held[9];
     const Tile* around[9];
     for (int dz = -1; dz <= 1; ++dz)
@@ -39,6 +53,7 @@ std::shared_ptr<const GroundwaterTile> Aquifers::require(Atlas& atlas, TileKey l
         std::lock_guard lock(mutex_);
         slots_[local].tile = tile;
     }
+    release.done = true;
     done_.notify_all();
     return tile;
 }

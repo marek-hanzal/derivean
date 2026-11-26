@@ -5,6 +5,8 @@
 
 namespace derivean::sim {
 
+class Workers;
+
 // How a cell of a sand bed takes part in the transport.
 enum class BedCell : uint8_t {
     Open,   // loses and gains sand
@@ -33,6 +35,7 @@ struct SandBed {
     std::vector<float> sand;      // m of loose dry sand on it
     std::vector<BedCell> kind;
     BedLedger ledger;
+    Workers* workers{};           // pool the rounds may spread rows over; the result is the same without
 
     size_t index(int x, int z) const { return size_t(z) * size_t(size) + size_t(x); }
     size_t cells() const { return size_t(size) * size_t(size); }

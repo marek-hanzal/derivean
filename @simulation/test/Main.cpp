@@ -14,6 +14,7 @@ void testLandscapePlane();
 void testLandscapeWorld();
 void testRelief();
 void testReliefBeds();
+void testReliefCover();
 void testInspect();
 void testChart();
 void testPlanetFuture();
@@ -45,6 +46,7 @@ int main() {
     testRelief();
     testReliefBeds();
     testLandscapeWorld();
+    testReliefCover();
     testInspect();
     testChart();
     testPlanetFuture();

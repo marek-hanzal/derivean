@@ -6,9 +6,6 @@
 #include "icesheet/service/Glaciations.hpp"
 #include "landscape/fn/Process.hpp"
 
-
-#include <cstdlib>   // TEMPORARY A/B
-
 namespace derivean::sim {
 namespace {
 
@@ -86,7 +83,7 @@ std::shared_ptr<const SheetRecord> presentRegion(Domain& domain, const Setting& 
 
 // A finer level reads what its parent recorded once it has settled, and is left by the last sheet.
 std::shared_ptr<const SheetRecord> sheetFiner(Domain& domain, IceStage stage, const std::function<const Tile*(TileKey)>& tiles) {
-    if (stage == IceStage::Step || std::getenv("ICE_FINER_OFF")) return nullptr;   // TEMPORARY A/B
+    if (stage == IceStage::Step) return nullptr;
     const ParentSheet parent = readParentSheet(domain, tiles);
     if (!parent.any) return nullptr;
     if (!domain.sheet) domain.sheet = std::make_shared<SheetWork>();

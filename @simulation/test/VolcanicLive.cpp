@@ -62,6 +62,13 @@ void testVolcanicLive() {
     expect(brought <= supply * (1 + 1e-9) && brought >= supply - 2 * largest, "the eruptions do not bring up what the vent was supplied with", brought / supply);
     const double perYear = double(long_.size()) / span, expected = vent.supply / meanEruption(vent);
     expect(std::abs(perYear / expected - 1) < 0.25, "a vent erupts at another rate than its supply and mean eruption give", perYear / expected);
+    // The sequence's own mean is the mean of the law, and no eruption is larger than the chamber.
+    double drawn = 0, most = 0;
+    for (int64_t number = 0; number < 200000; ++number) {
+        const double volume = eruptionVolume(Seed, vent, number);
+        drawn += volume, most = std::max(most, volume);
+    }
+    expect(std::abs(drawn / 200000 / meanEruption(vent) - 1) < 0.02 && most <= vent.chamber, "the eruptions are not drawn by the chamber's law", drawn / 200000 / meanEruption(vent));
 
     // The unrest of the chamber names the eruption that comes next.
     const double now = vent.until + 5000;
@@ -109,7 +116,7 @@ void testVolcanicLive() {
     expect(length(flow.site - fluid.feeders.back().site) < 150, "an eruption opens away from its conduit", length(flow.site - fluid.feeders.back().site));
 
     // A chamber-emptying eruption is all fragments and founders its roof.
-    const Outbreak caldera = outbreakOf(Seed, vent, 11, vent.until + 1, 30e9);
+    const Outbreak caldera = outbreakOf(Seed, vent, 11, vent.until + 1, vent.chamber);
     expect(caldera.empties && caldera.lava == 0 && caldera.effusion == 0, "a chamber-emptying eruption pours lava or leaves the roof standing", caldera.lava);
 
     // On the ground: a small andesite eruption on live site cells lays its cone, its currents and

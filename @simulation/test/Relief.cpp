@@ -1,10 +1,14 @@
 #include "LandscapeFixture.hpp"
 
+#include "landscape/fn/Process.hpp"
 #include "landscape/fn/Strength.hpp"
 #include "measure/constant/Angle.hpp"
 #include "measure/fn/Block.hpp"
 #include "measure/fn/Plane.hpp"
 #include "measure/fn/ReliefStats.hpp"
+
+#include <array>
+#include <utility>
 
 using namespace derivean::sim;
 
@@ -43,6 +47,48 @@ double worstFace(const Domain& domain, double sound) {
 
 // m of ground the water took off the tile's own cells, as a mean over them.
 double erodedFrom(const Domain& domain) { return domain.ledger.eroded / (domain.cell * domain.cell * TileCells * TileCells); }
+
+// How loose cover stands over a grid: the most a cell's cover rises above the angle of repose of
+// its mix over its lowest neighbour (a needle of debris shows here), and the thickest cover.
+struct LooseStand {
+    double unsupported{}, thickest{};
+};
+
+// `at(x, z)` gives a cell's rock and its three sediment classes; cells on the outer ring only serve
+// as neighbours.
+template<typename At>
+LooseStand looseStand(int size, double cell, At&& at) {
+    LooseStand stand;
+    for (int z = 1; z < size - 1; ++z)
+        for (int x = 1; x < size - 1; ++x) {
+            const auto [rock, sediment] = at(x, z);
+            double loose = 0, repose = 0;
+            for (int c = 0; c < SedimentClasses; ++c) loose += sediment[c], repose += ReposeTan[c] * sediment[c];
+            if (loose <= 0) continue;
+            stand.thickest = std::max(stand.thickest, loose);
+            repose /= loose;
+            for (int k = 0; k < 8; ++k) {
+                const auto [otherRock, otherSediment] = at(x + NeighborX[k], z + NeighborZ[k]);
+                const double drop = rock + loose - otherRock - otherSediment[0] - otherSediment[1] - otherSediment[2];
+                stand.unsupported = std::max(stand.unsupported, std::min(loose, drop - repose * NeighborReach[k] * cell));
+            }
+        }
+    return stand;
+}
+
+LooseStand looseStand(const Domain& domain) {
+    return looseStand(TileCells, domain.cell, [&](int x, int z) {
+        const size_t i = domain.index(Halo - 1 + x, Halo - 1 + z);
+        return std::pair{double(domain.ground.rock[i]), std::array<double, SedimentClasses>{domain.ground.sediment[0][i], domain.ground.sediment[1][i], domain.ground.sediment[2][i]}};
+    });
+}
+
+LooseStand looseStand(const Tile& tile, double cell) {
+    return looseStand(TileCells, cell, [&](int x, int z) {
+        const size_t i = size_t(z) * TileCells + size_t(x);
+        return std::pair{double(tile.now.rock[i]), std::array<double, SedimentClasses>{tile.now.sediment[0][i], tile.now.sediment[1][i], tile.now.sediment[2][i]}};
+    });
+}
 
 BlockSpec canyon(Material rock, double sound, int steps) {
     BlockSpec spec;
@@ -132,4 +178,21 @@ void testReliefBeds() {
     const CliffStats cliffs = cliffInventory(stepped, steepestFall(stepped));
     expectLandscape(cliffs.faces > 40 && cliffs.height.p50 > 5 && cliffs.height.p50 < 50, "bedded rock did not break into steps", cliffs.height.p50);
     expectLandscape(tallestFace(steps, std::tan(60 / DegreesPerRadian)) < 0.6 * bedded.height, "bedded rock stands as one wall", tallestFace(steps, std::tan(60 / DegreesPerRadian)));
+    // What fell from the steps lies under them at repose; it never stands as a column of debris.
+    const LooseStand debris = looseStand(steps);
+    expectLandscape(debris.unsupported < 2 * steps.cell, "debris stands steeper than its repose", debris.unsupported);
+    expectLandscape(debris.thickest < bedded.height, "debris piles higher than the wall it fell from", debris.thickest);
+}
+
+// Loose cover on finished tiles of an ordinary world rests at its angle of repose: no cell holds
+// more than a few metres of cover above what repose lets it lean on its lowest neighbour, and none
+// carries hundreds of metres of it.
+void testReliefCover() {
+    World& world = testWorld();
+    for (const Level level : {Level::Local, Level::Site}) {
+        const double cell = specOf(level).cell;
+        const LooseStand stand = looseStand(*world.atlas.require(tileAt(level, testFocus())), cell);
+        expectLandscape(stand.unsupported < std::max(4.0, 0.25 * cell), "loose cover stands steeper than its repose on a finished tile", stand.unsupported);
+        expectLandscape(stand.thickest < 100, "a finished tile carries a column of loose cover", stand.thickest);
+    }
 }

@@ -17,17 +17,20 @@ bool locateCell(Overlay& overlay, int64_t gx, int64_t gz, EditedTile*& tile, siz
     return tile != nullptr;
 }
 
-// Each site cell takes the mean of the grid over its square. Rock laid on a cell turns the cover it
-// buries into rock, as the replay seals it (volcanic/fn/Settle.cpp): the column keeps one rock
-// surface with the loose material on it. The water on a cell keeps its depth and stands on the new
+// Each site cell takes the mean of the grid over its square. The floor founders with its layering,
+// datum and all, as the replay lets it (volcanic/fn/Settle.cpp). Rock laid turns the cover it buries
+// into rock, as the replay welds it, over the share of the cell the rock covers: the column keeps
+// one rock surface with the loose material on it. The water on a cell keeps its depth and stands on the new
 // ground until the solvers move it; lava that fills a lake lifts the lake, which then runs off it.
 // Nothing is pushed aside, so no water is made or lost.
 void layDeposit(Overlay& overlay, const Deposit& laid) {
     const double cell = specOf(Level::Site).cell, area = cell * cell;
+    const size_t cells = size_t(std::max(0, laid.width)) * size_t(std::max(0, laid.height));
+    if (!(laid.cell > 0) || cells == 0) return;
     const Vec2 far = laid.origin + Vec2{laid.cell * laid.width, laid.cell * laid.height};
     const int64_t lowX = int64_t(std::floor(laid.origin.x / cell)), highX = int64_t(std::ceil(far.x / cell)) - 1;
     const int64_t lowZ = int64_t(std::floor(laid.origin.z / cell)), highZ = int64_t(std::ceil(far.z / cell)) - 1;
-    const auto value = [](const std::vector<float>& field, size_t i) { return field.empty() ? 0.0 : double(field[i]); };
+    const auto value = [&](const std::vector<float>& field, size_t i) { return field.size() == cells ? double(field[i]) : 0.0; };
     EditedTile* tile = nullptr;
     size_t at = 0;
     for (int64_t gz = lowZ; gz <= highZ; ++gz) {
@@ -36,13 +39,14 @@ void layDeposit(Overlay& overlay, const Deposit& laid) {
             // The grid cells under this site cell, and how much of the site cell each covers.
             const double x0 = (double(gx) * cell - laid.origin.x) / laid.cell, x1 = (double(gx + 1) * cell - laid.origin.x) / laid.cell;
             const double z0 = (double(gz) * cell - laid.origin.z) / laid.cell, z1 = (double(gz + 1) * cell - laid.origin.z) / laid.cell;
-            double drop = 0, rock = 0, loose[SedimentClasses]{};
+            double drop = 0, rock = 0, loose[SedimentClasses]{}, buried = 0;   // buried: share of the cell under rock
             for (int z = std::max(0, int(std::floor(z0))); z < std::min(laid.height, int(std::ceil(z1))); ++z) {
                 const double across = std::min(z1, double(z + 1)) - std::max(z0, double(z));
                 for (int x = std::max(0, int(std::floor(x0))); x < std::min(laid.width, int(std::ceil(x1))); ++x) {
                     const double share = across * (std::min(x1, double(x + 1)) - std::max(x0, double(x))) / ((x1 - x0) * (z1 - z0));
                     const size_t i = size_t(z) * size_t(laid.width) + size_t(x);
                     drop += share * value(laid.drop, i), rock += share * value(laid.rock, i);
+                    if (value(laid.rock, i) > 0) buried += share;
                     for (int c = 0; c < SedimentClasses; ++c) loose[c] += share * value(laid.loose[c], i);
                 }
             }
@@ -54,9 +58,13 @@ void layDeposit(Overlay& overlay, const Deposit& laid) {
             const double was = held();
             float& top = column.rock[at];
             top = float(double(top) - std::max(0.0, drop));
+            column.datum[at] = float(double(column.datum[at]) - std::max(0.0, drop));
             const double sunk = was - held();
             if (rock > 0) {
-                for (auto& layer : column.sediment) top += std::max(0.0f, layer[at]), layer[at] = std::min(0.0f, layer[at]);
+                for (auto& layer : column.sediment) {
+                    const float welded = std::max(0.0f, layer[at]) * float(std::min(1.0, buried));
+                    top += welded, layer[at] -= welded;
+                }
                 top = float(double(top) + rock);
             }
             for (int c = 0; c < SedimentClasses; ++c) layColumn(column, at, loose[c], SedimentClass(c));

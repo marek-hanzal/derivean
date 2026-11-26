@@ -6,17 +6,21 @@
 namespace derivean::sim {
 namespace {
 
-// Behind high ground the wind is slack below a line that falls from it at LeeTan, and before high
-// ground it stalls below a line that falls back from it at RampTan: sand that reaches either stays
-// until it has filled the room up to that line. Over kilometres both are far gentler than the
-// separation behind a single dune.
+// Behind a fall steep enough to shed the wind's flow it is slack below a line that falls from the
+// brink at LeeTan, and before a rise too steep for hopping sand to climb it stalls below a line that
+// falls back from its foot at RampTan: sand that reaches either stays until it has filled the room up
+// to that line. Over kilometres both lines are far gentler than the separation behind a single dune.
+// Ground that rises and falls more gently than that, as most mountain country does at a kilometre,
+// the wind follows: it shelters nothing.
 constexpr float LeeTan = 0.105f;       // 6°
 constexpr float RampTan = 0.07f;       // 4°
-constexpr float RiverHalf = 3e7f;      // m³/yr of a stream that, running all year, catches half the sand blown across it
+constexpr float BreakTan = 0.36f;      // 20°: a fall or rise over a cell's width that the flow does not follow
+constexpr float RiverHalf = 3e7f;      // m³/yr of a stream that, while it runs, catches half the sand blown across it
 constexpr float Bombard = 0.02f;       // m of fines raised per m of sand that passes over them
 constexpr float DustReach = 1.0f;      // m of fines the passing sand can raise from a cell in one step
 constexpr float BarSilt = 0.2f;        // m of silt the dry bars of a river that lays down its load give the wind in one step
 constexpr float SandShield = 0.3f;     // m of wind-laid sand under which the fines of a cell are out of reach
+constexpr float PlantHold = 0.3f;      // rain over evaporation demand at which plants hold sand: some 300 mm in a hot desert
 
 Vec2 driftAt(const Domain& domain, size_t i) {
     const WindField& wind = domain.aeolian;
@@ -73,13 +77,20 @@ void routeSand(Domain& domain, const WindGraph& graph, std::vector<float>& raise
         const float ground = domain.ground.rock[i] + domain.sedimentAt(i);
         top[i] = lee[i] = ramp[i] = wet[i] ? std::max(domain.level[i], ground) + domain.ice[i] : ground;
     }
+    // A line goes on from a cell under it, and starts only at a break.
+    const float brink = BreakTan * cell;
     for (const int32_t at : graph.order)
         for (int k = 0; k < 2; ++k)
-            if (const int32_t next = graph.to[size_t(at) * 2 + size_t(k)]; next >= 0) lee[size_t(next)] = std::max(lee[size_t(next)], lee[size_t(at)] - LeeTan * cell);
+            if (const int32_t next = graph.to[size_t(at) * 2 + size_t(k)]; next >= 0) {
+                const size_t a = size_t(at), n = size_t(next);
+                if (lee[a] > top[a] || top[a] - top[n] >= brink) lee[n] = std::max(lee[n], lee[a] - LeeTan * cell);
+            }
     for (size_t step = graph.order.size(); step-- > 0;)
         for (int k = 0; k < 2; ++k)
-            if (const int32_t next = graph.to[size_t(graph.order[step]) * 2 + size_t(k)]; next >= 0)
-                ramp[size_t(graph.order[step])] = std::max(ramp[size_t(graph.order[step])], ramp[size_t(next)] - RampTan * cell);
+            if (const int32_t next = graph.to[size_t(graph.order[step]) * 2 + size_t(k)]; next >= 0) {
+                const size_t a = size_t(graph.order[step]), n = size_t(next);
+                if (ramp[n] > top[n] || top[n] - top[a] >= brink) ramp[a] = std::max(ramp[a], ramp[n] - RampTan * cell);
+            }
 
     raised.assign(cells, 0.0f);
     std::vector<uint8_t> done(cells, 0);
@@ -93,12 +104,17 @@ void routeSand(Domain& domain, const WindGraph& graph, std::vector<float>& raise
             // Sand blown into water joins its bed.
             if (free) domain.ground.sediment[Sand][i] += sand / area, wind.ledger.sandDrowned += sand, bookWind(domain, i, sand / area);
         } else {
-            // A stream catches the sand blown across it while it runs, and in dry country it runs a small part of the year.
+            // A stream catches the sand blown across it while it runs, and in dry country it runs a
+            // few days a year unless it brings the water of wetter ground.
             const float dry = float(dryShare(domain.rain[i], domain.warmthNow[i], wind.halfRange));
-            const float caught = sand * (1 - dry) * domain.discharge[i] / (domain.discharge[i] + RiverHalf);
+            const float runs = std::max(1.0f - aridityOf(domain.rain[i], domain.warmthNow[i]) * (1.0f - FloodShare), domain.discharge[i] / (domain.discharge[i] + PerennialFlow));
+            const float caught = sand * runs * domain.discharge[i] / (domain.discharge[i] + RiverHalf);
             if (free) domain.ground.sediment[Sand][i] += caught / area, wind.ledger.sandDrowned += caught, bookWind(domain, i, caught / area);
             sand -= caught;
-            const float carry = float(length(driftAt(domain, i))) * dry * dt * cell;
+            // Plants come in as the rain catches up with the air, and where they cover the ground
+            // sand stops: the dunes of a desert's wetter margin stand fixed.
+            const float bare = std::max(0.0f, 1.0f - (1.0f - aridityOf(domain.rain[i], domain.warmthNow[i])) / PlantHold);
+            const float carry = float(length(driftAt(domain, i))) * dry * bare * bare * dt * cell;
             const float room = std::max(0.0f, std::max(lee[i], ramp[i]) - top[i]) * area;
             const float own = mobileSand(domain, i) * area;
             // In shelter a cell keeps what arrives until its room is full and gives none of its own.

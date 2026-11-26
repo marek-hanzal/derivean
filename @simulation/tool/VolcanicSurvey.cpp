@@ -26,8 +26,8 @@ struct Row {
     double nextVolume{};
 };
 
-// Recurrence of eruptions of a VEI or more on Earth (Newhall and Self 1982, as the Global
-// Volcanism Program uses it): 2 weeks for VEI 2, 3 months, 18 months, 12 yr, about 75 yr, about
+// Recurrence of eruptions of a VEI or more on Earth (VEI of Newhall and Self 1982; recurrence as
+// compiled by Simkin and Siebert for the Global Volcanism Program): 2 weeks for VEI 2, 3 months, 18 months, 12 yr, about 75 yr, about
 // 750 yr. Per year, by class 2 to 7.
 constexpr double EarthAtLeast[6] = {365.25 / 14, 4.0, 1.0 / 1.5, 1.0 / 12, 1.0 / 75, 1.0 / 750};
 constexpr double EarthLand = 1.49e14;   // m²
@@ -59,6 +59,7 @@ void sizeFrequency(uint64_t seed, const std::vector<Row>& rows, double landArea)
             all += rate, brought += rate * outbreak.volume;
         }
     }
+    count[7] += count[8], volume[7] += volume[8];   // Earth's last class is VEI 7 or more
     const double share = landArea / EarthLand;
     std::printf("  eruptions on land a year by VEI (bulk tephra = %.1f x fragments; Earth scaled to this land, %.2f of its own):\n", Bulking, share);
     for (int vei = 0; vei <= 7; ++vei) {

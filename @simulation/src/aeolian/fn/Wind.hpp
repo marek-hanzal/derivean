@@ -52,16 +52,22 @@ struct WindGraph {
 WindGraph windGraph(const Domain& domain);
 void routeSand(Domain& domain, const WindGraph& graph, std::vector<float>& raised);
 
-// Dust.cpp — Region: fines raised this step travel with the same drift and settle with distance.
+// FarDust.cpp — Region: `WindField::farDust`, a closed form over the planet grid of the dust that
+// deserts beyond the domain raise and the annual mean wind brings to each cell. Called by `beginWind`.
+void readFarDust(Domain& domain, const Setting& setting);
+// 0..1: the share of what the air could take that the rain leaves it; 0 where rain keeps up.
+float aridityOf(float rain, float celsius);
+// 0..1: how much a ground raises dust as the driest deserts do.
+float dustSource(float rain, float celsius);
+
+// Dust.cpp — Region: fines raised this step travel with the same drift and settle with distance,
+// and the far dust settles on every cell of the tile's own.
 void settleDust(Domain& domain, const WindGraph& graph, const std::vector<float>& raised);
 
-// Soak.cpp — water that sinks into dry loose ground instead of running on; the groundwater takes
-// both as recharge. None on ice or on cells that are not Free, none where rain keeps up with the air.
-// Share of a cell's own runoff that sinks before it leaves the cell: all of it on wind-laid sand,
-// more on longer slopes of loose cover. Read with the cover the previous step left.
-float soakedShare(const Domain& domain, size_t i);
-// m³/yr of the `discharge` passing a cell that its loose bed takes in floods, at most `discharge`;
-// none under standing water. Called with the water that has reached the cell, its own yield included.
+// Soak.cpp — m³/yr of the `discharge` passing a cell that its loose bed takes in floods instead of
+// passing on, at most `discharge`: transmission losses of dry country, which the groundwater takes
+// as recharge. None under standing water or ice, on cells that are not Free, or where rain keeps up
+// with the air. Called with the water that has reached the cell, its own yield included.
 float sinkIntoBed(const Domain& domain, size_t i, float discharge);
 
 // Basin.cpp — Region: what a basin's water leaves where it leaves only as vapour.

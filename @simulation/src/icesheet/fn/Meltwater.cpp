@@ -3,6 +3,7 @@
 #include "icesheet/constant/Ice.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <numeric>
 
 namespace derivean::sim {
@@ -73,8 +74,10 @@ void spreadOutwash(Domain& domain, const SheetField& field, const std::vector<fl
         load[Coarse][portal] += moved[Coarse] * area, load[Sand][portal] += moved[Sand] * area;
         totals.dropped -= double(taken) * area;
         totals.left += double(moved[Fines]) * area;
-        domain.ledger.sedimentOut += double(moved[Fines]) * area;
-        if (domain.owned(int(portal % size_t(size)), int(portal / size_t(size)))) domain.ledger.deposited -= double(taken) * area;
+        if (domain.owned(int(portal % size_t(size)), int(portal / size_t(size)))) {
+            domain.ledger.sedimentOut += double(moved[Fines]) * area;
+            domain.ledger.deposited -= double(taken) * area;
+        }
         domain.deposited[portal] -= taken;
     }
 

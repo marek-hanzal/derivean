@@ -5,8 +5,6 @@
 namespace derivean::sim {
 namespace {
 
-constexpr int MostTubes = 24;   // tubes one vertical line is taken to cross
-
 // The stretch of a vertical line that lies inside one tube: every point within the radius of the
 // axis. The tube is convex, so the stretch is one interval; it is found on each of the three parts
 // of the axis a point can be nearest to (either end, or in between) and joined.
@@ -107,9 +105,9 @@ int caveSpans(const CaveField& field, Vec2 position, CaveSpan* spans, int capaci
     const uint32_t *item, *end;
     if (capacity <= 0 || !itemsAt(field, position, item, end)) return 0;
     // Sorted by their bottoms as they are found, then joined where they touch.
-    CaveSpan found[MostTubes];
+    CaveSpan found[MostCaveSpans];
     int tubes = 0;
-    for (; item != end && tubes < MostTubes; ++item) {
+    for (; item != end && tubes < MostCaveSpans; ++item) {
         CaveSpan span;
         if (!tubeSpan(field.conduits[*item], position.x, position.z, span.bottom, span.top)) continue;
         int at = tubes++;
@@ -128,7 +126,7 @@ int caveSpans(const CaveField& field, Vec2 position, CaveSpan* spans, int capaci
 int conduitAt(const CaveField& field, double x, double y, double z) {
     const uint32_t *item, *end;
     if (!itemsAt(field, {x, z}, item, end)) return -1;
-    for (int tube = 0; item != end && tube < MostTubes; ++item) {
+    for (int tube = 0; item != end && tube < MostCaveSpans; ++item) {
         float bottom, top;
         if (!tubeSpan(field.conduits[*item], x, z, bottom, top)) continue;
         if (y >= bottom && y < top) return int(*item);

@@ -1,19 +1,19 @@
 #include "coast/fn/Coast.hpp"
+#include "hydrology/constant/Water.hpp"
 
 #include <numbers>
 
 namespace derivean::sim {
 namespace {
 
-constexpr float FrictionReach = 5.0f;   // m: depth² under FrictionReach·width is where friction takes more than a hundredth of a wave
 constexpr float LooseBed = 0.1f;        // m of loose cover from which a bed is sand or mud to the waves, not rock
 constexpr float SmoothBed = 0.2f;       // friction of such a bed against a rock bench's
-constexpr float Gravity = 9.81f;
-// Growth over water of finite depth (Shore Protection Manual 1984, eq. 3-39):
-// g·H/U² = 0.283·tanh(0.530·(g·d/U²)^¾)·tanh(0.00565·(g·F/U²)^½ / tanh(0.530·(g·d/U²)^¾)).
-// Over a short fetch it is the deep-water growth of FetchGrowth (0.283 × 0.00565 = 0.0016); over a
-// long one it levels off at the highest sea the depth holds under that wind, where what the wind
-// gives and what the bed takes balance.
+// Fetch-limited growth over water of any depth (Shore Protection Manual 1984, eq. 3-39):
+// g·H/U² = 0.283·tanh(0.530·(g·d/U²)^¾)·tanh(0.00565·(g·F/U²)^½ / tanh(0.530·(g·d/U²)^¾)),
+// i.e. H = L·tanh(H_deep/L) with L the highest sea the depth holds under that wind, where what the
+// wind gives and what the bed takes balance, and H_deep the deep-water growth of FetchGrowth
+// (0.283 × 0.00565 = 0.0016). In deep water L is 0.283·U²/g, above the fully developed sea FullSea·U²
+// that caps every train.
 constexpr float ShallowSea = 0.283f;
 constexpr float ShallowDepth = 0.530f;
 // Height over deep-water wavelength of a wind sea (Hs/L0 ≈ 0.04, Tp ≈ 4·√Hs): it sets the period,
@@ -22,7 +22,7 @@ constexpr float Steepness = 0.04f;
 
 // m², the square of the highest wave a wind of square speed `gale` raises over water `depth` deep.
 float shallowSea(float depth, float gale) {
-    const float height = ShallowSea * std::tanh(ShallowDepth * std::pow(Gravity * depth / gale, 0.75f)) * gale / Gravity;
+    const float g = float(Gravity), height = ShallowSea * std::tanh(ShallowDepth * std::pow(g * depth / gale, 0.75f)) * gale / g;
     return height * height;
 }
 
@@ -76,22 +76,18 @@ void raiseWaves(const Domain& domain, Shore& shore) {
             float depth = water + swingOf(domain, water) - shore.top[i];
             if (depth <= 0 && energy > 0) depth += std::min(HighestBerm, Runup * std::sqrt(energy));
             if (depth <= 0) return;
-            const float gale = shore.gale[at], full = FullSea * FullSea * gale * gale, most = std::min(full, shallowSea(depth, gale));
-            if (energy < most && most < full) {
+            const float gale = shore.gale[at], limit = std::sqrt(shallowSea(depth, gale)), most = std::min(FullSea * gale, limit);
+            if (energy < most * most) {
                 // Along the curve of this depth, from the deep-water height that stands for the fetch behind.
-                const float limit = std::sqrt(most), fetched = limit * std::atanh(std::min(std::sqrt(energy) / limit, 0.999f));
-                const float grown = limit * std::tanh(std::sqrt(fetched * fetched + FetchGrowth * gale * run) / limit);
-                energy = grown * grown;
-            } else if (energy < full) {
-                energy = std::min(full, energy + FetchGrowth * gale * run);
-            }
-            // A sea higher than the depth holds (it came from deeper water) is worn down by the bed
-            // towards that height; the bed is only felt where the water is shallow against the width of the cell.
-            if (energy > most && depth * depth < FrictionReach * run) {
+                const float fetched = limit * std::atanh(std::min(std::sqrt(energy) / limit, 0.999f));
+                const float grown = std::min(most, limit * std::tanh(std::sqrt(fetched * fetched + FetchGrowth * gale * run) / limit));
+                energy = std::max(energy, grown * grown);
+            } else {
+                // A sea higher than the depth holds came from deeper water: the bed wears it down towards that height.
                 const float rough = shore.top[i] - domain.ground.rock[i] > LooseBed ? SmoothBed : 1.0f;
                 const float height = std::sqrt(energy), friction = rough * bedShare(height, depth) * BedFriction;
-                const float worn = height / (1.0f + friction * height * run / (depth * depth));
-                energy = std::max(most, worn * worn);
+                energy = std::max(most, height / (1.0f + friction * height * run / (depth * depth)));
+                energy *= energy;
             }
             shore.wave[at] = std::min(energy, Breaker * Breaker * depth * depth);
         });

@@ -1,5 +1,5 @@
 import { instancedArray, uniformArray } from "three/tsl";
-import { type StorageInstancedBufferAttribute, Vector4 } from "three/webgpu";
+import { type StorageInstancedBufferAttribute, type UniformArrayNode, Vector4 } from "three/webgpu";
 import type { Point, Quads, WorldInfo } from "../../../contract/GameBridge";
 import { HeightSide, NoHeight } from "../constant/land";
 import { LevelSlots } from "../constant/levels";
@@ -12,7 +12,8 @@ const Blocks = HeightSide / Square;
 // coarse cube stands for. Each level keeps a ring of HeightSide² columns on the world's lattice, held in square
 // blocks as the chunks bring them: a column's height is the highest top over it among the chunks held over its
 // square, in cubes of the level. The ring is a GPU buffer the surface reads (landNormal); a block goes up alone.
-// WebGPU only: the WebGL fallback reads no storage buffers in a fragment shader.
+// The coarsest level holds a little more than a ring's width: there two squares at opposite rims of the view
+// share a block, the last one brought keeps it, and the other rim reads its heights.
 export function createLevelHeights(world: WorldInfo) {
   const finest = world.cubes?.finestLevel ?? 0;
   const tiles = (world.cubes?.coarsestLevel ?? finest) - finest + 1;
@@ -20,19 +21,32 @@ export function createLevelHeights(world: WorldInfo) {
   const buffer = ring.value as StorageInstancedBufferAttribute;
   const data = buffer.array as Float32Array;
   // Per level: where the render origin lies in the ring (x, z columns), the level's first entry, and 1 if held.
-  const places = uniformArray(Array.from({ length: LevelSlots }, () => new Vector4()), "vec4");
+  const places: UniformArrayNode<"vec4"> = uniformArray(Array.from({ length: LevelSlots }, () => new Vector4(0, 0, 0, 0)), "vec4");
   const chunks = new Map<number, { square: string; tops: Float32Array }>();
-  const squares = new Map<string, { level: number; at: number; held: Set<number> }>();
+  const squares = new Map<string, { at: number; held: Set<number> }>();
+  // The square whose heights a block holds.
+  const owners = new Map<number, string>();
 
   function settle(key: string) {
     const square = squares.get(key);
     if (!square) return;
+    if (!square.held.size) squares.delete(key);
+    if (owners.get(square.at) !== key) return;
+    if (!square.held.size) {
+      // The block goes back to the square at the other rim, if one is held there.
+      owners.delete(square.at);
+      const heir = [...squares].find(([, other]) => other.at === square.at);
+      if (heir) {
+        owners.set(square.at, heir[0]);
+        settle(heir[0]);
+        return;
+      }
+    }
     const block = data.subarray(square.at, square.at + Square * Square).fill(NoHeight);
     for (const id of square.held) {
       const { tops } = chunks.get(id)!;
       for (let index = 0; index < block.length; index++) block[index] = Math.max(block[index], tops[index]);
     }
-    if (!square.held.size) squares.delete(key);
     buffer.addUpdateRange(square.at, Square * Square);
     buffer.needsUpdate = true;
   }
@@ -69,8 +83,9 @@ export function createLevelHeights(world: WorldInfo) {
       const wrap = (value: number) => ((value % Blocks) + Blocks) % Blocks;
       const key = `${level}:${x}:${z}`;
       const at = (level - finest) * HeightSide * HeightSide + (wrap(z) * Blocks + wrap(x)) * Square * Square;
-      const square = squares.get(key) ?? { level, at, held: new Set<number>() };
+      const square = squares.get(key) ?? { at, held: new Set<number>() };
       squares.set(key, square);
+      owners.set(at, key);
       square.held.add(id);
       chunks.set(id, { square: key, tops });
       settle(key);
@@ -87,6 +102,7 @@ export function createLevelHeights(world: WorldInfo) {
     dispose() {
       chunks.clear();
       squares.clear();
+      owners.clear();
       // Frees the GPU buffer: the renderer drops an attribute's buffer when the attribute is disposed.
       buffer.dispose();
     },

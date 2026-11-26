@@ -169,11 +169,15 @@ void flies(PlanetSession& session) {
     const double before = session.last.eye[1];
     expect(std::abs(run(session, command, 60).eye[1] - before) < 1e-3, "Flight must hold its height without gravity");
 
+    // Ten degrees above the horizon, so that ground rising ahead of a spawn on a shore does not stop it.
     command.boost = true;
     command.x = 1;
-    command.direction = {1, 0, 0};
+    command.direction = {0.98481, 0.17365, 0};
     const double from = session.last.eye[0];
-    const double flown = run(session, command, 60).eye[0] - from;
+    const Frame& boosted = run(session, command, 60);
+    const double flown = boosted.eye[0] - from;
+    if (flown <= 200 || flown >= 400)
+        std::cout << "boosted " << flown << " m along x, eye " << (boosted.ground ? boosted.eye[1] - *boosted.ground : -1) << " m above the ground\n";
     expect(flown > 200 && flown < 400, "Boosted flight should cover hundreds of metres a second");
     command.direction = {0.6, 0.8, 0};
     const double climbed = run(session, command, 30).eye[1] - before;

@@ -17,7 +17,7 @@ enum class Magma : uint8_t {
 struct Episode {
     double time{};       // yr, start of the step
     double volume{};     // m³ of rock that reaches the surface
-    double paroxysm{};   // m³ of the largest single eruption among them
+    double paroxysm{};   // m³ of those that emptied the chamber, together (calderas nest at the region's cells); the largest one where none did
     Vec2 site;           // m, where the conduit reaches the surface
 };
 

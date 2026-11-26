@@ -58,17 +58,17 @@ double retreat(const Domain& domain, bool east, int jointed = -1) {
 }
 
 // m, the height of the train travelling east that leaves cell `x` of the middle row of a flat
-// sea `depth` deep below its high water, under a storm wind of `storm` m/s from the west; the
-// last cell before the rim for a negative `x`.
-float flatSea(Level level, float depth, double storm, bool sand, int x) {
+// sea `depth` deep at high water (its mean depth is SeaSwing less), under a storm wind of `storm`
+// m/s from the west, with a swell of `swell` m arriving over the western rim; the last cell before
+// the eastern rim for a negative `x`.
+float flatSea(Level level, float depth, double storm, double swell, int x) {
     CoastSpec spec;
-    spec.level = level, spec.windFrom = 270, spec.swell = 0;
+    spec.level = level, spec.windFrom = 270, spec.swell = swell;
     spec.wind = storm / StormGain - StormCalm;
     Domain domain = coastDomain(spec);
     for (size_t i = 0; i < domain.cells(); ++i) {
-        // Still water reaches the bed at high water: the sea's swing is part of the depth.
-        domain.ground.rock[i] = -depth + SeaSwing - (sand ? 1.0f : 0.0f);
-        for (int c = 0; c < SedimentClasses; ++c) domain.ground.sediment[c][i] = c == Sand && sand ? 1.0f : 0.0f;
+        domain.ground.rock[i] = -depth + SeaSwing - 1.0f;
+        for (int c = 0; c < SedimentClasses; ++c) domain.ground.sediment[c][i] = c == Sand ? 1.0f : 0.0f;
     }
     FlowScratch scratch;
     floodLevels(domain, scratch);
@@ -78,14 +78,17 @@ float flatSea(Level level, float depth, double storm, bool sand, int x) {
     return std::sqrt(shore.wave[domain.index(x < 0 ? domain.size - 2 : x, domain.size / 2) * WaveDirections + 0]);
 }
 
-// Wave growth against the fetch-limited forecasts of the Shore Protection Manual (1984): 100 km of
-// deep water under 15 m/s raise 2.4 m; a lake 3.2 m deep and 20 km long under 20 m/s about 0.85 m
-// (Lake Balaton, 3.2 m deep, has storm waves of up to about a metre).
+// Wave growth against the fetch-limited forecast of the Shore Protection Manual (1984, eq. 3-39):
+// 100 km of deep water under 15 m/s raise 2.3 m; 20 km of water 3.2 m deep under 20 m/s 0.83 m (a
+// lake that shallow, as Balaton, sees storm waves of about a metre), and no more than the 0.90 m
+// such water holds however long its fetch. A swell from deeper water is worn down to that height.
 void waveGrowth() {
-    const float open = flatSea(Level::Region, 200, 15, false, 98);
-    expect(open > 2.2f && open < 2.7f, "100 km of deep sea under 15 m/s do not raise 2.4 m", open);
-    const float shallow = flatSea(Level::Local, 3.2f, 20, true, -1);
-    expect(shallow > 0.7f && shallow < 1.1f, "20 km of water 3.2 m deep under 20 m/s do not raise a metre", shallow);
+    const float open = flatSea(Level::Region, 200, 15, 0, 98);
+    expect(open > 2.2f && open < 2.5f, "100 km of deep sea under 15 m/s do not raise 2.3 m", open);
+    const float shallow = flatSea(Level::Local, 3.2f, 20, 0, -1);
+    expect(shallow > 0.78f && shallow < 0.88f, "20 km of water 3.2 m deep under 20 m/s do not raise 0.83 m", shallow);
+    const float worn = flatSea(Level::Local, 3.2f, 20, 3, -1), entering = flatSea(Level::Local, 3.2f, 20, 3, 4);
+    expect(worn > 0.88f && worn < 0.95f && entering > worn + 0.2f, "a swell over a shallow shelf is not worn down to what the depth holds", worn);
 }
 
 void rockCoasts() {
@@ -135,14 +138,15 @@ void spit() {
         }
     expect(sand > 100 && shoaled >= 20 && farthest >= 3, "oblique waves carried no sand into the mouth of the bay", sand);
     expect(emerged >= 1, "the sand in the mouth of the bay nowhere stands out of the water", emerged);
-    // The same waves square to the shore move it nowhere along it.
+    // The same waves square to the shore move little of it along: only their trains at half a right
+    // angle to either side, a quarter as strong, carry the western sand round the lip of the bay.
     spec.windFrom = 0;
     const Domain square = worked(spec, spec.steps);
     double across = 0;
     for (int z = middle - 6; z < middle + 40; ++z)
         for (int x = middle - 34; x < middle + 34; ++x)
             if (start.ground.rock[start.index(x, z)] + start.sedimentAt(start.index(x, z)) <= -1.0f) across += square.ground.sediment[Sand][square.index(x, z)];
-    expect(across < 0.2 * sand, "waves square to a shore drift its sand along it", across);
+    expect(across < 0.3 * sand, "waves square to a shore drift its sand along it", across / sand);
 }
 
 void lakeBeach() {

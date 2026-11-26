@@ -1,6 +1,7 @@
 #include "aeolian/fn/Dunes.hpp"
 #include "aeolian/fn/Measure.hpp"
 #include "aeolian/fn/Regime.hpp"
+#include "core/service/Workers.hpp"
 #include "landscape/fn/Process.hpp"
 
 #include <cstdlib>
@@ -83,10 +84,15 @@ void checkOneWind() {
     blowBed(later, wind, {20, 0.4f, 4});
     expect(shiftAlongX(bed, later) > 0, "dunes did not move downwind", shiftAlongX(bed, later));
 
-    // The same bed and seed give the same field, bit for bit.
+    // The same bed and seed give the same field, bit for bit, on the calling thread alone or spread over a pool.
     SandBed again = flatBed(5.0f);
     blowBed(again, wind, {300, 0.4f, 4});
     expect(again.sand == bed.sand, "the same bed gave two different fields");
+    Workers pool(3);
+    SandBed spread = flatBed(5.0f);
+    spread.workers = &pool;
+    blowBed(spread, wind, {300, 0.4f, 4});
+    expect(spread.sand == bed.sand, "a pool changed the field");
 }
 
 // Little sand under the same wind leaves separate dunes on a bare floor, not ridges.

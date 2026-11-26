@@ -61,7 +61,7 @@ void shapeDunes(Domain& domain) {
     }
 
     SandBed bed;
-    bed.size = size, bed.cell = domain.cell, bed.reposeTan = ReposeTan[Sand];
+    bed.size = size, bed.cell = domain.cell, bed.reposeTan = ReposeTan[Sand], bed.workers = wind.workers;
     bed.seed = hash(DuneStream, int64_t(domain.key.level), domain.key.x, domain.key.z);
     bed.base.resize(cells), bed.sand.resize(cells), bed.kind.resize(cells);
     double mobile = 0, dry = 0;

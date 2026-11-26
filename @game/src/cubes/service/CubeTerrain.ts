@@ -6,13 +6,14 @@ import { type Box, Everywhere, Nowhere, setLevel } from "../fn/levelTable";
 import type { Casting } from "../type/Casting";
 import type { LevelTable } from "../type/LevelTable";
 import { createFaceBatch, type FaceBatch } from "./FaceBatch";
+import type { LevelHeights } from "./LevelHeights";
 
 // The ground at every cube size: streamed voxel chunks, the far levels with the standing water they carry, and
 // detached pieces, all face lists drawn by one surface. Each cube size is one batch, and so one draw; a piece is
 // a batch of its own, posed as the body it is. The ground casts shadows, each level into the cascade `casting`
-// names for it; water does not.
+// names for it; water does not. `heights`, where given, keeps the far levels' ground heights for the surface.
 export function createCubeTerrain(content: Group, world: WorldInfo, levels: LevelTable, surface: Material, sheet: Material,
-  casting: (level: number) => Casting) {
+  casting: (level: number) => Casting, heights?: LevelHeights) {
   const side = world.cubes?.side ?? world.chunkMeters / world.voxelSize;
   const voxels = createFaceBatch(content, surface, 0, world.voxelSize, side, casting(0));
   const ground: (FaceBatch | undefined)[] = [];
@@ -28,6 +29,7 @@ export function createCubeTerrain(content: Group, world: WorldInfo, levels: Leve
     const chunk = far.get(id);
     if (!chunk) return;
     ground[chunk.level]?.remove(id);
+    heights?.remove(id);
     for (let index = 0; index < chunk.sheets; index++) water[chunk.level]?.remove(`${id}:${index}`);
     far.delete(id);
   }
@@ -54,6 +56,7 @@ export function createCubeTerrain(content: Group, world: WorldInfo, levels: Leve
     for (const { id, level, edge, origin, quads, water: sheets } of frame.cubes.added) {
       drop(id);
       (ground[level] ??= createFaceBatch(content, surface, level, edge, side, casting(level))).add(id, quads, origin);
+      heights?.add(id, level, edge, origin, quads);
       // A sheet lies at its water's level, whatever height its chunk is at.
       sheets.forEach(({ level: height, quads: wet }, index) => {
         const batch = water[level] ??= createFaceBatch(content, sheet, level, edge, side);
@@ -74,6 +77,7 @@ export function createCubeTerrain(content: Group, world: WorldInfo, levels: Leve
       for (const batch of [voxels, ...ground, ...water]) batch?.follow(origin);
       setLevel(levels, FreeLevel, origin, world.voxelSize, 0, Everywhere, Nowhere, Nowhere, -1);
       const all = [{ level: 0, edge: world.voxelSize, box: voxelBox }, ...boxes];
+      heights?.place(origin, boxes.reduce<number[]>((edges, { level, edge }) => { edges[level] = edge; return edges; }, []));
       const squares = levelSquares(all);
       let finerGround: Box = Nowhere;
       let finerWater: Box = Nowhere;

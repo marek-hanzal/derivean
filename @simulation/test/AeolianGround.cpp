@@ -60,11 +60,11 @@ void checkBudget() {
     cover(domain, 140, 150, 0.0f, 2.0f, 0.0f);    // sand under a lake
     for (int z = 1; z < domain.size - 1; ++z)
         for (int x = 140; x < 150; ++x) domain.level[domain.index(x, z)] = 105.0f, domain.discharge[domain.index(x, z)] = 1e9f;
-    // A ridge across the wind: the sand that reaches the stall before it stays there.
+    // An escarpment across the wind, too steep for sand to climb: what reaches the stall before it stays there.
     for (int z = 1; z < domain.size - 1; ++z)
         for (int x = 80; x < 83; ++x) {
             const size_t i = domain.index(x, z);
-            domain.ground.rock[i] = domain.surface[i] = domain.level[i] = 400.0f;
+            domain.ground.rock[i] = domain.surface[i] = domain.level[i] = 700.0f;
         }
     const int row = domain.size / 2;
     const auto at = [&](int x) { return domain.index(x, row); };
@@ -133,13 +133,28 @@ void checkBasin() {
 
     const WindLabels& labels = domain.aeolian.labels;
     const auto top = [&](size_t i) { return domain.ground.rock[i] + domain.sedimentAt(i); };
+    // The lake the salt lies in: its cells and the flooded ones they touch. Other pools are not its floor.
+    std::vector<uint8_t> lake(domain.cells(), 0);
+    std::vector<size_t> open;
+    for (size_t i = 0; i < domain.cells(); ++i)
+        if (labels.salt[i] > 0) lake[i] = 1, open.push_back(i);
+    while (!open.empty()) {
+        const size_t i = open.back();
+        open.pop_back();
+        for (int k = 0; k < 8; ++k) {
+            const int nx = int(i % size_t(domain.size)) + NeighborX[k], nz = int(i / size_t(domain.size)) + NeighborZ[k];
+            if (nx < 0 || nz < 0 || nx >= domain.size || nz >= domain.size) continue;
+            const size_t next = domain.index(nx, nz);
+            if (!lake[next] && underFlood(domain, next)) lake[next] = 1, open.push_back(next);
+        }
+    }
     float thickest = 0, step = 0, floor = -1e30f, bare = 1e30f;
     int pan = 0, astray = 0;
     for (int z = 1; z < domain.size - 1; ++z)
         for (int x = 1; x < domain.size - 1; ++x) {
             const size_t i = domain.index(x, z);
             if (labels.salt[i] <= 0) {
-                if (underFlood(domain, i)) bare = std::min(bare, top(i));
+                if (lake[i]) bare = std::min(bare, top(i));
                 continue;
             }
             ++pan, thickest = std::max(thickest, labels.salt[i]), floor = std::max(floor, top(i));

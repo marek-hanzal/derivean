@@ -3,7 +3,7 @@
 namespace derivean::sim {
 namespace {
 
-constexpr int Rounds = 2;         // the second only meets what the first left within its tolerance
+constexpr int Rounds = 6;         // later rounds only meet what cones laid behind the pass; most steps need one or two
 constexpr float Least = 1e-4f;    // m of loose cover below which a cell has nothing to shed
 constexpr float Passing = 0.95f;  // share of the angle of repose from which a slope passes moving debris on
 
@@ -60,7 +60,9 @@ void settleDebris(Domain& domain, FlowScratch& scratch) {
     for (auto& layer : scratch.moved) layer.assign(cells, 0.0f);
     for (int round = 0; round < Rounds; ++round) {
         for (size_t i = 0; i < cells; ++i) height[i] = domain.ground.rock[i] + domain.sedimentAt(i);
-        if (round > 0) orderByHeight(height, scratch.byHeight, scratch.spare);
+        // Lowest first by the surface as it is now: what broke off this step and what the water
+        // cut have both changed it since it was last sorted.
+        orderByHeight(height, scratch.byHeight, scratch.spare);
         bool any = false;
         for (const int32_t at : scratch.byHeight) {
             const size_t i = size_t(at);

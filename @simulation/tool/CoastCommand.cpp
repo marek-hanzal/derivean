@@ -82,7 +82,8 @@ int sceneCommand(const Arguments& arguments) {
 void printShore(const ShoreGrid& grid, const ShoreSurvey& s) {
     printKinds("sea", s.sea);
     printKinds("lake", s.lake);
-    std::printf("  waves at the shore: p50 %.2f m  p95 %.2f m  highest %.2f m\n", s.struck.p50, s.struck.p95, s.struck.high);
+    std::printf("  waves at the shore: p50 %.2f m  p95 %.2f m  highest %.2f m | offshore, %.0f-%.0f m deep: p50 %.2f m  p95 %.2f m  highest %.2f m (%zu cells)\n", s.struck.p50,
+                s.struck.p95, s.struck.high, OffshoreShallow, OffshoreDeep, s.offshore.p50, s.offshore.p95, s.offshore.high, s.offshore.count);
     std::printf("  cliffs (%zu shore cells): height p50 %.0f m  p95 %.0f m  highest %.0f m | platform before %.1f km of rock shore: width p50 %.0f m  p95 %.0f m  widest %.0f m\n",
                 s.cliffHeight.count, s.cliffHeight.p50, s.cliffHeight.p95, s.cliffHeight.high, s.benched / 1000, s.platformWidth.p50, s.platformWidth.p95, s.platformWidth.high);
     std::printf("  beach width: sea p50 %.0f m  p95 %.0f m (%zu) | lake p50 %.0f m  p95 %.0f m (%zu)\n", s.beachWidth[0].p50, s.beachWidth[0].p95, s.beachWidth[0].count,

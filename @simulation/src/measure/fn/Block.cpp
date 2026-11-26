@@ -93,6 +93,7 @@ void stepBlock(Domain& domain, FlowScratch& scratch, const BlockSpec& spec) {
         floodLevels(domain, scratch);
         routeWater(domain, scratch);
         cutAndFill(domain, scratch);
+        settleDebris(domain, scratch);
     }
     domain.time += domain.step;
     ++domain.taken;

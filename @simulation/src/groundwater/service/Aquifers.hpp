@@ -17,6 +17,7 @@ public:
     Aquifers& operator=(const Aquifers&) = delete;
 
     // Builds the nine local tiles the answer reads if they are missing; blocks until it is there.
+    // A build that throws passes the exception to its caller; whoever waited for it builds anew.
     std::shared_ptr<const GroundwaterTile> require(Atlas& atlas, TileKey local);
 
     // Finished or null; never blocks on a build.

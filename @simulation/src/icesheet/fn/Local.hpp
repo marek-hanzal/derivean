@@ -21,7 +21,7 @@ void layEskers(Domain& domain, SheetWork& work, const EskerFill& fill);
 
 // Lodge.cpp — the ice takes up the loose cover of the cells it slid over (as much as one glaciation
 // strips) and, where the parent's sheets wore rock, digs the weaker rock deeper than the stronger
-// around it, by up to BasinDepth (Local) or KnobRelief (Site): the rock basins of a shield.
+// around it, by up to BasinDepth (at Local only): the rock basins of a shield.
 SheetLoad takeUpBed(Domain& domain, SheetWork& work, const ParentSheet& parent);
 
 // Lodge.cpp — carries the load down the parent's ice surface and lodges it on the way, all the more

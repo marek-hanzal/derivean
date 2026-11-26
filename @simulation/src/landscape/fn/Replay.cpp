@@ -35,6 +35,9 @@ void stepDomain(Domain& domain, FlowScratch& scratch, const Setting& setting) {
     }
     sheetIce(domain, scratch, setting, IceStage::Step);
     cutAndFill(domain, scratch);
+    // Banks of loose cover the water has cut into slide in the same step; left standing they are
+    // walls of sand tens of metres high on a Site tile.
+    if (!dated && !ground) settleDebris(domain, scratch);
     workShores(domain, scratch);
     blowLoose(domain, scratch);
     domain.time += domain.step;

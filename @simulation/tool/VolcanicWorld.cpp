@@ -109,7 +109,7 @@ int volcanicWorld(const Arguments& arguments) {
         const EdificeShape shape = measureEdifice(grid, feeder.site, level == Level::Region ? 25e3 : 4e3);
         double largest = 0;
         for (const Episode& episode : vent.episodes) largest = std::max(largest, episode.paroxysm);
-        std::printf("    X %.0f Z %.0f %-8s %6.0f km3 in %2zu steps over %4.1f Myr, last %4.1f Myr ago, conduit used %4.1f to %4.1f Myr ago (%5.0f km3), largest single eruption %5.1f km3, now %.2f km3/kyr | "
+        std::printf("    X %.0f Z %.0f %-8s %6.0f km3 in %2zu steps over %4.1f Myr, last %4.1f Myr ago, conduit used %4.1f to %4.1f Myr ago (%5.0f km3), largest paroxysm of a step %5.1f km3, now %.2f km3/kyr | "
                     "%4.0f m over its foot, summit %5.0f m, radius %4.1f km, slopes %4.1f / %4.1f / %4.1f deg, pit %4.0f m\n",
                     feeder.site.x, feeder.site.z, vent.magma == Magma::Basalt ? "basalt" : "andesite", vent.erupted / Km3, vent.episodes.size(), (vent.until - vent.episodes.front().time) / 1e6,
                     (vent.until - vent.episodes.back().time - RegionStep) / 1e6, (vent.until - feeder.first) / 1e6, (vent.until - feeder.last) / 1e6, feeder.volume / Km3, largest / Km3,

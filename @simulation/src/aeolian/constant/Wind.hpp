@@ -27,4 +27,16 @@ inline constexpr double DampGain = 3.0;             // how fast the dry share of
 // Sand this close above standing or running water is held damp by it.
 inline constexpr float CapillaryRise = 0.5f;        // m
 
+// A stream of dry country runs a few days a year; one that gathers more than PerennialFlow comes
+// from wetter ground and runs most of the year wherever it is.
+inline constexpr float FloodShare = 0.02f;       // share of the year a stream of the driest country runs
+inline constexpr float PerennialFlow = 1e9f;     // m³/yr of a stream that runs half the year in any climate
+
+// Dust is two sizes: coarse silt that comes down within tens of kilometres and makes loess, and
+// fine dust that stays up for hundreds. Rain washes both out sooner.
+inline constexpr int DustSizes = 2;
+inline constexpr float DustShare[DustSizes] = {0.6f, 0.4f};
+inline constexpr float DustFall[DustSizes] = {60e3f, 600e3f};   // m of travel over which all but 1/e has settled in dry air
+inline constexpr float DustWashRain = 0.5f;                     // m/yr of rain that doubles the fall-out
+
 } // namespace derivean::sim

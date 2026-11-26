@@ -42,13 +42,18 @@ struct CaveField {
 // and the call only looks it up. Hold the pointer for a whole chunk of queries.
 std::shared_ptr<const CaveField> caveFieldAt(World& world, Vec2 position);
 
+// Tubes a vertical line is taken to cross, so also the most spans it can have. Beyond it the
+// tubes listed last for the line's index cell are left out, by `caveSpans` and `inCave` alike.
+inline constexpr int MostCaveSpans = 24;
+
 // Pure and cheap: no lock, no allocation. Void spans of the vertical line through a world
-// position, merged and sorted from the lowest up; writes at most `capacity` and returns how many.
-// `position` must lie in the field's tile.
+// position, merged and sorted from the lowest up; writes the lowest `capacity` and returns how
+// many it wrote. With `capacity` MostCaveSpans none is left out. `position` must lie in the
+// field's tile.
 int caveSpans(const CaveField& field, Vec2 position, CaveSpan* spans, int capacity);
 
 // The same test for one point; `inCave(f, x, y, z)` is true exactly where a span of
-// `caveSpans(f, {x, z}, …)` contains y.
+// `caveSpans(f, {x, z}, …, MostCaveSpans)` contains y.
 bool inCave(const CaveField& field, double x, double y, double z);
 
 } // namespace derivean::sim

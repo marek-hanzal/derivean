@@ -137,8 +137,8 @@ void testLimestoneBlock() {
         const Conduit& c = caves.conduits[i];
         for (const double part : {0.13, 0.5, 0.91}) {
             const double x = c.ax + (c.bx - c.ax) * part + 0.37 * c.radius, z = c.az + (c.bz - c.az) * part - 0.21 * c.radius, axis = c.ay + (c.by - c.ay) * part;
-            CaveSpan spans[8];
-            const int count = caveSpans(caves, {x, z}, spans, 8);
+            CaveSpan spans[MostCaveSpans];
+            const int count = caveSpans(caves, {x, z}, spans, MostCaveSpans);
             bool holds = false;
             for (int s = 0; s < count; ++s) {
                 holds = holds || (axis >= spans[s].bottom && axis < spans[s].top);

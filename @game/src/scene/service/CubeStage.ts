@@ -9,6 +9,7 @@ import { createCloudShadow } from "../../clouds/service/CloudShadow";
 import { cubeSurface } from "../../cubes/fn/cubeSurface";
 import { createLevelTable } from "../../cubes/fn/levelTable";
 import { createCubeTerrain } from "../../cubes/service/CubeTerrain";
+import { createLevelHeights } from "../../cubes/service/LevelHeights";
 import { createParticleScene } from "../../particles/service/ParticleScene";
 import { cascadeOf } from "../../shadow/constant/cascades";
 import { createSunShadow } from "../../shadow/service/SunShadow";
@@ -57,9 +58,10 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
   const shadow = createSunShadow(world, levels, cloudShadow.shade);
   const cloudPass = createCloudPass(clouds.nodes, sky, viewDistance);
   const snow = createSnowField(world);
-  const surface = cubeSurface({ sky, levels, palette, anchor, shadow: shadow.nodes, snow: snow.nodes });
+  const heights = createLevelHeights(world);
+  const surface = cubeSurface({ sky, levels, palette, anchor, shadow: shadow.nodes, snow: snow.nodes, land: heights.nodes });
   const sheet = sheetSurface(sky, levels, cloudShadow.shade);
-  const terrain = createCubeTerrain(content, world, levels, surface, sheet, shadow.casting);
+  const terrain = createCubeTerrain(content, world, levels, surface, sheet, shadow.casting, heights);
   const liquid = world.materials.find(({ matter }) => matter === "liquid")?.color ?? 0x2f939b;
   const wet = voxelWaterSurface(sky, cloudShadow.shade, new Color(liquid));
   const water = createVoxelWater(content, world, wet);
@@ -160,6 +162,7 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
       for (const part of [...parts, precipitation]) {
         part.dispose();
       }
+      heights.dispose();
       scene.backgroundNode = null;
       scene.remove(content, ambient, sun);
     },

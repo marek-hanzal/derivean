@@ -14,7 +14,7 @@ constexpr int StackCells = 16;            // cells a stack may cover
 struct Reader {
     const ShoreGrid& grid;
     ShoreSurvey& survey;
-    std::vector<float> cliffs, platforms, beaches[2], slopes[SedimentClasses], struck;
+    std::vector<float> cliffs, platforms, beaches[2], slopes[SedimentClasses], struck, offshore;
     std::vector<int32_t> behind;   // wet cells found behind a strip
     std::vector<float> calm;       // m, wave height under which the water behind each of them is its lagoon
 
@@ -131,13 +131,17 @@ ShoreSurvey surveyShore(const ShoreGrid& grid) {
     ShoreSurvey survey;
     survey.kind.assign(grid.rock.size(), uint8_t(ShoreKind::None));
     survey.flag.assign(grid.rock.size(), 0);
-    Reader reader{grid, survey, {}, {}, {}, {}, {}, {}, {}};
+    Reader reader{grid, survey, {}, {}, {}, {}, {}, {}, {}, {}};
     for (size_t i = 0; i < grid.rock.size(); ++i)
         if (reader.platform(i)) survey.flag[i] |= 1;
     for (int z = 0; z < grid.side; ++z) {
         for (int x = 0; x < grid.side; ++x) {
             const size_t i = grid.index(x, z);
-            if (grid.wet(i)) continue;
+            if (grid.wet(i)) {
+                const float deep = grid.water[i] + (grid.water[i] <= float(grid.seaLevel) + SeaBand ? SeaSwing : LakeSwing) - grid.top(i);
+                if (deep >= OffshoreShallow && deep <= OffshoreDeep) reader.offshore.push_back(grid.wave[i]);
+                continue;
+            }
             int edges = 0;
             float water = NoWater;
             for (const int k : Side)
@@ -165,6 +169,7 @@ ShoreSurvey surveyShore(const ShoreGrid& grid) {
     survey.cliffHeight = distributionOf(reader.cliffs);
     survey.platformWidth = distributionOf(reader.platforms);
     survey.struck = distributionOf(reader.struck);
+    survey.offshore = distributionOf(reader.offshore);
     for (int k = 0; k < 2; ++k) survey.beachWidth[k] = distributionOf(reader.beaches[k]);
     for (int c = 0; c < SedimentClasses; ++c) survey.beachSlope[c] = distributionOf(reader.slopes[c]);
     return survey;

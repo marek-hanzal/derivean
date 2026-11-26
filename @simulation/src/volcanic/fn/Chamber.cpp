@@ -19,7 +19,10 @@ constexpr uint64_t SequenceStream = 0x43484d42;
 // few of the largest carry much of the volume.
 constexpr double Overpressure = 5e6;                   // Pa
 constexpr double Compressibility[2] = {2e-10, 1e-9};   // /Pa, by Magma
-constexpr double Spread[2] = {1.8, 2.2};
+// The spread of one vent's eruptions; the breadth of a planet's comes mostly from its chambers'
+// sizes. A wider spread lets a large share of a big chamber's output go out in chamber-emptying
+// eruptions (above 60 % of it at 2.2), which arcs do not show.
+constexpr double Spread[2] = {1.3, 1.5};
 // The chamber stores the eruptible magma of this many years of the centre's supply (residence of
 // eruptible melt, 1e3 to 1e5 yr in crystal and U-series ages). A centre supplied at the typical
 // 0.06 km³ a thousand years holds 0.6 km³.

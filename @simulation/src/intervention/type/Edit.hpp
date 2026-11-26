@@ -65,6 +65,7 @@ inline Edit voidOpening(Vec2 at, double area, double mouth) {
 
 // The rectangle of the grid, `from` and `to` its corners.
 inline Edit deposit(std::shared_ptr<const Deposit> laid) {
+    if (!laid) return {0.0, EditKind::Deposit, {}, {}, 0.0, 0.0, 0.0, Sand, 0.0, nullptr};
     const Vec2 far = laid->origin + Vec2{laid->cell * laid->width, laid->cell * laid->height};
     return {0.0, EditKind::Deposit, laid->origin, far, 0.0, 0.0, 0.0, Sand, 0.0, std::move(laid)};
 }
