@@ -57,9 +57,10 @@ export interface WorldInfo {
   // a voxel chunk is. The box of a level reaches `reach` cubes from the eye and that of the coarsest level
   // `viewDistance` metres; a level's chunks cover at least `band` of its cubes beyond its box.
   cubes: { reach: number; side: number; band: number; finestLevel: number; coarsestLevel: number; viewDistance: number };
-  // Set only by a replay of recorded engine frames: when they were recorded and by which engine build, shown on
-  // the screen and in the window title so that a screenshot of a replay names its data. A live session leaves it out.
-  replay?: string;
+  // What drew the window, set by the desktop shell: the mode (LIVE, CAPTURE, or REPLAY with the recording's date),
+  // the engine addon's build time and commit, and the launching stream. Shown in the HUD line so that a screenshot
+  // names its build.
+  origin?: string;
 }
 
 export interface Command {

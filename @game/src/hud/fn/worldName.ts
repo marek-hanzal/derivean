@@ -3,5 +3,5 @@ import { formatAge } from "../../units/fn/age";
 
 export function worldName(world: WorldInfo) {
   const name = `SEED ${world.seed} · ${formatAge(world.age).toUpperCase()}`;
-  return world.replay ? `REPLAY ${world.replay} · ${name}` : name;
+  return world.origin ? `${world.origin} · ${name}` : name;
 }

@@ -13,10 +13,7 @@ export function createGameHud(hud: HTMLElement) {
   const cube = select(hud, "#cube");
 
   return {
-    world(world: WorldInfo) {
-      worldTag.textContent = worldName(world);
-      if (world.replay) document.title = `DeRivean · REPLAY ${world.replay}`;
-    },
+    world(world: WorldInfo) { worldTag.textContent = worldName(world); },
     paint(world: WorldInfo, frame: Frame, pilot: Pilot) {
       const material = frame.target ? world.materials[frame.target.material] : undefined;
       const strength = material?.matter === "granular" ? `${material.angleOfRepose}° repose` : `${material?.support} kg/face`;
