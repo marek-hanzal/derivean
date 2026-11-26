@@ -5,6 +5,7 @@
 #include <string>
 
 void testMaterials();
+void testGeometry();
 void testAeolian();
 void testClimate();
 void testClouds();
@@ -54,6 +55,7 @@ struct Test {
 // In the order they run.
 constexpr Test Tests[] = {
     {"testMaterials", testMaterials},
+    {"testGeometry", testGeometry},
     {"testAeolian", testAeolian},
     {"testClimate", testClimate},
     {"testClouds", testClouds},

@@ -1,21 +1,12 @@
 #pragma once
 
 #include "core/type/Vec.hpp"
+#include "geometry/type/Vec3.hpp"
 
 #include <cstdint>
 #include <vector>
 
 namespace derivean::sim {
-
-struct Vec3 {
-    double x{}, y{}, z{};
-};
-
-inline Vec3 operator+(Vec3 a, Vec3 b) { return {a.x + b.x, a.y + b.y, a.z + b.z}; }
-inline Vec3 operator-(Vec3 a, Vec3 b) { return {a.x - b.x, a.y - b.y, a.z - b.z}; }
-inline Vec3 operator*(Vec3 a, double s) { return {a.x * s, a.y * s, a.z * s}; }
-inline double dot(Vec3 a, Vec3 b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
-inline Vec3 normalized(Vec3 a) { return a * (1.0 / std::sqrt(std::max(1e-30, dot(a, a)))); }
 
 // What stands at the top of one cell, as a picture needs it. Colours are linear, 0..1.
 struct SceneCell {
