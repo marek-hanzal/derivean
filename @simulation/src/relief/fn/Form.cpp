@@ -178,9 +178,11 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
                 result = open && y >= floor && y < floor + fallen ? coverAt(ground, y - floor, floor + fallen - y) : Material::Air;
             } else if (solid && inPile) {
                 result = plug != Material::Air ? plug : member.rock;
-                // A thick flow parts into its columns within the skin of a bare face (volcanic/fn/Pile.cpp).
-                const float skin = ((base ? partingFace : face) - y) / std::sqrt(1.0f + ground.slope * ground.slope);
-                if (plug == Material::Air && bare > 0.5f && columnOpen(setting.seed, ground.pile, member, x, z, skin, float(step))) result = Material::Air;
+                // A thick flow parts into its columns within the skin of a bare face (volcanic/fn/Pile.cpp),
+                // only where the flow itself forms that face: under a bed above it nothing weathers.
+                const float faceHere = base ? partingFace : face, skin = (faceHere - y) / std::sqrt(1.0f + ground.slope * ground.slope);
+                const bool exposed = pileFloor + member.top >= faceHere - float(step);
+                if (plug == Material::Air && bare > 0.5f && exposed && columnOpen(setting.seed, ground.pile, member, x, z, skin, float(step))) result = Material::Air;
             } else if (solid) {
                 result = bed.rock;
                 if (seams) {
