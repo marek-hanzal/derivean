@@ -4,6 +4,7 @@
 #include <cctype>
 #include <string>
 
+void testBuildGraph();
 void testMaterials();
 void testGeometry();
 void testAeolian();
@@ -56,6 +57,7 @@ struct Test {
 
 // In the order they run.
 constexpr Test Tests[] = {
+    {"testBuildGraph", testBuildGraph},
     {"testMaterials", testMaterials},
     {"testGeometry", testGeometry},
     {"testAeolian", testAeolian},

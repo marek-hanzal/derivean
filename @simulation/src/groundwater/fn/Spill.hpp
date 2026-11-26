@@ -1,5 +1,6 @@
 #pragma once
 
+#include "groundwater/type/SpillStop.hpp"
 #include "landscape/type/Terrain.hpp"
 
 #include <vector>
@@ -15,6 +16,7 @@ namespace derivean::sim {
 // hollow it sinks no further this step: streams below take in only what reached them in the route.
 // Water only ever runs downhill or over a pass out of a catchment, so the spill settles; a queue that
 // does not is a fault and throws, rather than drop water.
-void spillHollows(Domain& domain, const std::vector<float>& share, std::vector<float>* gathered);
+void spillHollows(Domain& domain, const std::vector<float>& share, std::vector<float>* gathered,
+                  const QueueStop& stop = HollowSpillStop);
 
 } // namespace derivean::sim

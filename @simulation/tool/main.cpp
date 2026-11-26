@@ -13,6 +13,7 @@ int main(int count, char** words) {
     if (command == "slice") return sliceCommand(arguments);
     if (command == "find") return findCommand(arguments);
     if (command == "ground") return groundCommand(arguments);
+    if (command == "graph") return graphCommand(arguments);
     if (command == "atmosphere") return atmosphereCommand(arguments);
     if (command == "haze") return hazeCommand(arguments);
     if (command == "snow") return snowCommand(arguments);

@@ -1,10 +1,11 @@
 #pragma once
 
-#include "landscape/type/Level.hpp"
+#include "simulation/type/BuildKey.hpp"
 #include "voxel/type/Grid.hpp"
 
 #include <array>
 #include <atomic>
+#include <future>
 #include <memory>
 #include <vector>
 
@@ -16,12 +17,11 @@ struct Nature;
 // around the eye, and up to this clearance above the ground, above which nobody stands on the voxels soon.
 inline constexpr double GroundReach = 96.0, GroundCeiling = 150.0;   // m
 
-// One task on the simulation's pool: build landscape tile `key`, or with `water` the groundwater of
-// local tile `key`. Clearing `live` calls it off if it has not started.
+// Clearing live calls off the build if it has not started. Completion holds its error until the game thread polls.
 struct TileRequest {
-    sim::TileKey key;
-    bool water{};
+    sim::BuildKey key;
     std::shared_ptr<std::atomic<bool>> live;
+    std::future<void> completion;
 };
 
 // Simulation tiles the engine asked for and is still waiting on. Only tiles whose dependencies

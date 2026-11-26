@@ -4,6 +4,8 @@
 #include "ground/fn/Frost.hpp"
 #include "ground/fn/Hydrothermal.hpp"
 #include "ground/fn/Stones.hpp"
+#include "ground/type/SpringGround.hpp"
+#include "groundwater/fn/Query.hpp"
 
 namespace derivean::sim {
 namespace {
@@ -52,7 +54,7 @@ void indexStones(std::vector<Clast>& stones, GroundDetail& detail) {
 
 } // namespace
 
-void finishGround(Domain& domain, FlowScratch& scratch, const Setting& setting, const TileLookup& lookup, Tile& tile) {
+void finishGround(Domain& domain, FlowScratch& scratch, const Setting& setting, const TileLookup& lookup, const AquiferLookup& aquifers, Tile& tile) {
     auto detail = std::make_shared<GroundDetail>();
     const size_t cells = size_t(TileCells) * TileCells;
     detail->crust.assign(cells, 0.0f);
@@ -68,7 +70,7 @@ void finishGround(Domain& domain, FlowScratch& scratch, const Setting& setting, 
     };
     reroute();
     std::vector<uint8_t> sorted;
-    if (workFrozenGround(domain, scratch, sorted)) reroute();
+    if (workFrozenGround(domain, scratch, sorted, setting.frostMovement)) reroute();
 
     const SiteView sites = readSites(domain.key, lookup);
     StoneBed bed{domain, setting.seed, {}, std::vector<uint8_t>(domain.cells(), 0), {}, {}};
@@ -80,9 +82,11 @@ void finishGround(Domain& domain, FlowScratch& scratch, const Setting& setting, 
     // The one thing a tile asks of another model: the springs of the groundwater within reach of it.
     std::vector<Spring> springs;
     if (setting.world) {
-        const double span = TileCells * domain.cell;
-        const Vec2 corner{domain.origin.x + Halo * domain.cell, domain.origin.z + Halo * domain.cell};
-        springs = springsIn(*setting.world, {corner.x - SpringReach, corner.z - SpringReach}, {corner.x + span + SpringReach, corner.z + span + SpringReach});
+        if (aquifers) springs = groundSprings(domain.key, lookup, aquifers);
+        else {
+            const SpringBounds bounds = groundSpringBounds(domain.key);
+            springs = springsIn(*setting.world, bounds.low, bounds.high);
+        }
         // Where two deposits overlap the order they are laid in shows; it must not depend on the order of the answer.
         std::stable_sort(springs.begin(), springs.end(), [](const Spring& a, const Spring& b) { return a.id < b.id; });
     }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/type/Vec.hpp"
+#include "landscape/type/Level.hpp"
 
 #include <cstdint>
 #include <vector>
@@ -20,5 +20,16 @@ struct SpringGround {
 };
 
 inline constexpr double SpringReach = 24.0;   // m around a vent within which its deposit is followed
+
+struct SpringBounds {
+    Vec2 low, high;
+};
+
+inline SpringBounds groundSpringBounds(TileKey ground) {
+    const double span = tileSpan(ground.level);
+    const Vec2 corner{ground.x * span, ground.z * span};
+    return {{corner.x - SpringReach, corner.z - SpringReach},
+            {corner.x + span + SpringReach, corner.z + span + SpringReach}};
+}
 
 } // namespace derivean::sim

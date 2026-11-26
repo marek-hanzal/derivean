@@ -18,6 +18,9 @@ public:
     Workers(const Workers&) = delete;
     Workers& operator=(const Workers&) = delete;
 
+    // Join active workers before their owners go away. No external caller can still submit work.
+    void stop();
+
     unsigned threads() const { return unsigned(threads_.size()); }
 
     // Higher priority runs first; equal priorities run in submission order.

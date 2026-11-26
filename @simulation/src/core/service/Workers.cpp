@@ -12,9 +12,12 @@ Workers::Workers(unsigned threads) {
     for (unsigned index = 0; index < threads; ++index) threads_.emplace_back([this] { loop(); });
 }
 
-Workers::~Workers() {
+Workers::~Workers() { stop(); }
+
+void Workers::stop() {
     {
         std::lock_guard lock(mutex_);
+        if (stopping_) return;
         stopping_ = true;
     }
     wake_.notify_all();
