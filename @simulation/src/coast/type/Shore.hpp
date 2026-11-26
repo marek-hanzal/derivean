@@ -33,6 +33,7 @@ struct Shore {
     std::vector<float> before;    // m of loose cover when the step's work began
     std::vector<float> load[SedimentClasses];      // m of sand and gravel on its way through a cell in the current sweep
     std::vector<uint8_t> surf;    // 1 where some train can move the bed or runs over dry ground; 2 where a load waits in the current sweep
+    std::vector<uint8_t> stream;  // 1 where running water keeps the bed at still water: a river, a lake's sill, their path through the shallows
     int minX{}, maxX{-1}, minZ{}, maxZ{-1};        // box around every cell with still water, one cell wider
     CoastLedger ledger;
 };

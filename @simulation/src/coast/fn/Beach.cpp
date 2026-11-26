@@ -13,9 +13,12 @@ namespace {
 // waves and on finer grains. Medium sand is 0.064–0.134 under 1–0.05 m waves, gravel 0.16–0.34.
 // Below a few centimetres of wave the law runs off to the steepest faces beaches are seen with.
 constexpr float FaceGain = 0.12f;
-constexpr float SteepestFace[SedimentClasses] = {0.4f, 0.2f, 0.0f};
+constexpr float SteepestFace[SedimentClasses] = {0.4f, 0.2f, 0.0f};   // Fines: unused, mud has no face
+// Depth of the step at the foot of the face, over the breaker height. No source: a calibration that
+// keeps the steep face inside the swash at every level (a whole 64 m Local surf zone at the face
+// would drown a spit); storm beaches show steps of decimetres under metre waves.
+constexpr float StepDepth = 0.33f;
 // Mud forms no beach face: it holds a flat, a little steeper where the water over it is shallow.
-constexpr float StepDepth = 0.33f;     // of the breaker height
 constexpr float MudSlope = 0.004f;
 constexpr float MudDepth = 0.5f;        // m
 constexpr float Kinematic = 1.0e-6f;    // m²/s, water
@@ -29,8 +32,9 @@ float fallOf(float grain) {
 
 // Below the step the bed follows the equilibrium shoreface h = A·x^⅔, A = 0.067·w^0.44 (w in cm/s,
 // Dean 1991), whose slope at depth h is ⅔·A^1.5/√h. Dean fitted sand; for gravel it is an extrapolation.
+float shapeOf(int kind) { return 0.067f * std::pow(100.0f * fallOf(definitionOf(CoverRock[kind]).grainSize), 0.44f); }
 float deanOf(int kind) {
-    const float a = 0.067f * std::pow(100.0f * fallOf(definitionOf(CoverRock[kind]).grainSize), 0.44f);
+    const float a = shapeOf(kind);
     return 2.0f / 3.0f * a * std::sqrt(a);
 }
 
@@ -45,12 +49,20 @@ float faceSlope(int kind, float height) {
 
 float profileSlope(int kind, float depth, float height, float face) {
     if (kind == Fines) return MudSlope / std::sqrt(1.0f + std::max(0.0f, depth) / MudDepth);
-    // The face runs down to the step at the foot of the swash, where the breakers plunge: a third
-    // of their height deep. Below it lies the surf zone, as gentle as the equilibrium shoreface.
+    // The face runs down to the step at the foot of the swash, where the breakers plunge (StepDepth).
+    // Below it lies the surf zone, as gentle as the equilibrium shoreface.
     if (depth <= StepDepth * height) return face;
     static const float dean[SedimentClasses] = {deanOf(Coarse), deanOf(Sand), 0.0f};
     return std::min(face, dean[kind] / std::sqrt(depth));
 }
+
+float shorefaceReach(int kind, float depth) {
+    if (kind == Fines || depth <= 0) return 0.0f;
+    const float reach = depth / shapeOf(kind);
+    return reach * std::sqrt(reach);
+}
+
+float wavePeriod(float height) { return std::sqrt(2.0f * std::numbers::pi_v<float> * std::max(0.0f, height) / (float(Gravity) * WindSeaSteepness)); }
 
 float runUp(float height, float slope) {
     // Stockdon et al. 2006, 2 % exceedance: R = 1.1·(0.35·β·√(H·L0) + ½·√(H·L0·(0.563·β² + 0.004))),

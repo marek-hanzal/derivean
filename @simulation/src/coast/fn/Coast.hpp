@@ -44,10 +44,17 @@ float faceSlope(int kind, float height);
 float profileSlope(int kind, float depth, float height, float face);
 // m above still water the swash of such waves reaches on a face of `slope`, at most HighestBerm.
 float runUp(float height, float slope);
+// m from the waterline at which the equilibrium shoreface of the class lies `depth` m deep (Dean).
+float shorefaceReach(int kind, float depth);
+// s, the period of a wind sea of that height.
+float wavePeriod(float height);
 
 // Drift.cpp — marks the cells some train can work, then one pass of every train over the sand
-// and gravel within its reach.
+// and gravel within its reach, for `years` of the trains' work.
 void findSurf(const Domain& domain, Shore& shore);
-void moveSand(Domain& domain, Shore& shore, int round);
+void moveSand(Domain& domain, Shore& shore, int round, double years);
+// Shore.cpp — m up to which waves lay loose ground on a cell by water standing at `water`: high
+// water, or the still water where a stream runs through the cell and keeps its channel open.
+float layingLevel(const Domain& domain, const Shore& shore, size_t i, float water);
 
 } // namespace derivean::sim

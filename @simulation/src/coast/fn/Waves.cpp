@@ -6,6 +6,8 @@
 namespace derivean::sim {
 namespace {
 
+constexpr float Reformed = 0.5f;   // share of the energy a depth holds below which a train is no longer breaking
+
 constexpr float LooseBed = 0.1f;        // m of loose cover from which a bed is sand or mud to the waves, not rock
 constexpr float SmoothBed = 0.2f;       // friction of such a bed against a rock bench's
 // Fetch-limited growth over water of any depth (Shore Protection Manual 1984, eq. 3-39):
@@ -70,9 +72,11 @@ void raiseWaves(const Domain& domain, Shore& shore) {
                 energy = blend(shore.wave), crest = blend(shore.crest);
             }
             shore.arrive[at] = energy;
-            // Ground that stands out of high water is still crossed by a train whose swash runs over it:
-            // the broken train's own bore, as high as the run-up of what is left of it on the beach face
-            // of its breakers. (The berm stands at the run-up of the breakers themselves, Drift.cpp.)
+            // Ground that stands out of high water is still crossed by a train whose swash runs over it,
+            // taken as the run-up of what is left of the broken train on the beach face of its breakers.
+            // A calibration, not a bore law: it lies between no overwash and the breakers' own run-up
+            // (where the berm stands, Drift.cpp), which would sweep every low bar; real storms
+            // overwash crests lower than that run-up (Sallenger 2000).
             float depth = water + swingOf(domain, water) - shore.top[i];
             if (depth <= 0 && energy > 0) depth += runUp(std::sqrt(energy), faceSlope(Sand, std::sqrt(crest)));
             if (depth <= 0) return;
@@ -89,8 +93,14 @@ void raiseWaves(const Domain& domain, Shore& shore) {
                 energy = std::max(most, height / (1.0f + friction * height * run / (depth * depth)));
                 energy *= energy;
             }
-            shore.crest[at] = std::max(crest, energy);
-            shore.wave[at] = std::min(energy, Breaker * Breaker * depth * depth);
+            // A train well below what the depth holds is its own breaker height from here on: in the
+            // trough behind a bar or a spit the waves form again and break at their own height, and
+            // a swell worn down over a shallow flat breaks at what is left of it. One the depth
+            // breaks, or that runs on at the height a flat holds after breaking, keeps the height it
+            // reached the first breaking cell with.
+            const float holds = Breaker * Breaker * depth * depth;
+            shore.crest[at] = energy < Reformed * holds ? energy : std::max(crest, energy);
+            shore.wave[at] = std::min(energy, holds);
         });
     }
 }

@@ -1,11 +1,20 @@
 #include "coast/fn/Coast.hpp"
 
+#include "landscape/fn/Process.hpp"
+
 namespace derivean::sim {
 namespace {
 
-// Passes of the eight trains over the sand and gravel of a shore per step.
-constexpr int Rounds[LevelCount] = {0, 3, 4, 4, 0};
+// Years one pass of the eight trains over the sand and gravel of a shore stands for: a step takes
+// as many as its years hold, so a shore follows its years, not how they are cut into steps. A
+// region's steps of thousands of years take MostRounds, each standing for more.
+constexpr double SweepYears = 25.0;
+constexpr int MostRounds = 8;
 constexpr float RateWeight = 0.4f;
+// m before a lake's sill over which the path of its water under the lake is kept open: the
+// shallows where the swash of lake waves builds a bar. A calibration on the lake scene, whose
+// waves barred the approach within 60 m of its sill.
+constexpr double ApproachReach = 64.0;
 
 float looseAt(const Domain& domain, size_t i) { return domain.ground.sediment[0][i] + domain.ground.sediment[1][i] + domain.ground.sediment[2][i]; }
 
@@ -58,6 +67,7 @@ Shore& shoreOf(Domain& domain) {
                         &shore.load[1], &shore.load[2]})
         field->assign(cells, 0.0f);
     shore.stood.assign(cells, NoWater);
+    shore.stream.assign(cells, 0);
     shore.still.assign(cells, NoWater);
     shore.surf.assign(cells, 0);
     return shore;
@@ -117,7 +127,76 @@ bool spreadWater(const Domain& domain, Shore& shore) {
     return true;
 }
 
-void workShores(Domain& domain, FlowScratch&) {
+namespace {
+
+// Where running water keeps the bed open against the waves: a river the coarser level draws
+// (landscape/fn/Process.hpp: the water a cell gathers beyond the sheet of its slope, against that
+// level's channel head; a Site keeps such rivers on their course, Fluvial.cpp) on dry ground; the
+// sill a lake spills over and the channel below it (dry ground the flood left at or below the
+// lake's level that passes a channel of the level), whatever the size of the lake's basin; and
+// from a sill, the path its water takes to it under the lake within `ApproachReach`, where the
+// waves would bar the approach and the lake would rise with it. Only a lake's outlet raises its
+// water when barred: a river mouth barred by the waves raises no sea, and behind such a bar a
+// lagoon is the right outcome. The path is followed while it carries half of what the sill
+// passes, which keeps to the outlet's main branch; a heuristic, not a law. The level's own
+// channels elsewhere are rills a cell or two wide that the swash buries.
+// `gathered` is filled by routeWater at every level the coast works (Replay.cpp).
+void findStreams(const Domain& domain, Shore& shore, const FlowScratch& scratch) {
+    std::fill(shore.stream.begin(), shore.stream.end(), uint8_t(0));
+    if (scratch.gathered.size() != domain.cells()) return;
+    const Level level = domain.key.level;
+    const float river = channelHeadOf(level == Level::Region ? level : Level(uint8_t(level) - 1)), channel = channelHeadOf(level);
+    std::vector<int32_t> open;
+    std::vector<float> least;   // m³/yr the path to each open cell must carry
+    std::vector<int> away;      // cells from the sill
+    for (size_t i = 0; i < domain.cells(); ++i) {
+        const float still = shore.still[i], gathered = scratch.gathered[i];
+        const bool dry = shore.stood[i] == NoWater;
+        const bool sill = dry && still != NoWater && swingOf(domain, still) == LakeSwing && domain.surface[i] <= still + Film && gathered >= channel;
+        shore.stream[i] = sill || (dry && gathered >= river);
+        if (sill) open.push_back(int32_t(i)), least.push_back(0.5f * gathered), away.push_back(0);
+    }
+    // A path one cell wide moves as the bed changes: the approach is bounded by distance, not depth.
+    const int reach = std::max(1, int(ApproachReach / domain.cell));
+    for (size_t next = 0; next < open.size(); ++next) {
+        if (away[next] >= reach) continue;
+        const int x = open[next] % domain.size, z = open[next] / domain.size;
+        for (int k = 0; k < 8; ++k) {
+            const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
+            if (nx < 0 || nz < 0 || nx >= domain.size || nz >= domain.size) continue;
+            const size_t other = domain.index(nx, nz);
+            if (shore.stream[other] || shore.stood[other] == NoWater || scratch.gathered[other] < least[next]) continue;
+            shore.stream[other] = 1;
+            open.push_back(int32_t(other)), least.push_back(least[next]), away.push_back(away[next] + 1);
+        }
+    }
+}
+
+// A stream that runs out of standing water or into it keeps its channel at the level the water
+// spills at: the sand and gravel the waves laid on it above that this step wait in its surf
+// instead, and the mud goes with the current. Without it a lake's outlet is barred a little
+// higher every step and the lake rises with it.
+void keepChannels(Domain& domain, Shore& shore) {
+    for (int z = shore.minZ; z <= shore.maxZ; ++z)
+        for (int x = shore.minX; x <= shore.maxX; ++x) {
+            const size_t i = domain.index(x, z);
+            const float water = shore.still[i];
+            if (water == NoWater || domain.hold[i] != Free || !shore.stream[i]) continue;
+            const float loose = looseAt(domain, i), laid = std::min({shore.top[i] - water, loose - shore.before[i], loose});
+            if (laid <= 0) continue;
+            for (const int kind : {Fines, Sand, Coarse}) {
+                const float share = laid * domain.ground.sediment[kind][i] / loose;
+                domain.ground.sediment[kind][i] -= share;
+                if (kind == Fines) shore.ledger.left += double(share) * domain.cell * domain.cell;
+                else shore.pending[kind][i] += share;
+            }
+            shore.top[i] -= laid;
+        }
+}
+
+} // namespace
+
+void workShores(Domain& domain, FlowScratch& scratch) {
     if (domain.key.level == Level::Ground) return;
     const bool last = domain.time + 1.5 * domain.step > domain.endTime;
     if (!domain.shore) {
@@ -134,13 +213,19 @@ void workShores(Domain& domain, FlowScratch&) {
     for (size_t i = 0; i < domain.cells(); ++i) shore.before[i] = looseAt(domain, i);
     const std::vector<float> cutBefore = shore.cut;
     if (water) {
-        const int rounds = Rounds[size_t(domain.key.level)];
         const bool dated = domain.key.level == Level::Region;
         const double years = dated ? std::min(domain.step, StandTime) : StandTime * domain.step / std::max(domain.step, domain.endTime - domain.startTime);
+        const int rounds = std::clamp(int(std::ceil(years / SweepYears - 1e-9)), 1, MostRounds);
         raiseWaves(domain, shore);
+        findStreams(domain, shore, scratch);
         cutCliffs(domain, shore, years);
-        findSurf(domain, shore);
-        for (int round = 0; round < rounds; ++round) moveSand(domain, shore, round);
+        for (int round = 0; round < rounds; ++round) {
+            // The waves of each round run over the ground the last one left: a bank cut back lets them further in.
+            if (round > 0) raiseWaves(domain, shore);
+            findSurf(domain, shore);
+            moveSand(domain, shore, round, years / rounds);
+        }
+        keepChannels(domain, shore);
     }
     // Broken rock still in the surf when the replay ends is laid where it waits, up to high water
     // (all of it where the water has gone); the rest has gone beyond the reach of this domain's waves.
@@ -150,7 +235,7 @@ void workShores(Domain& domain, FlowScratch&) {
             for (const int kind : {Sand, Coarse}) {
                 float& waiting = shore.pending[kind][i];
                 if (waiting <= 0) continue;
-                const float laid = shore.still[i] == NoWater ? waiting : std::clamp(shore.still[i] + swingOf(domain, shore.still[i]) - shore.top[i], 0.0f, waiting);
+                const float laid = shore.still[i] == NoWater ? waiting : std::clamp(layingLevel(domain, shore, i, shore.still[i]) - shore.top[i], 0.0f, waiting);
                 domain.ground.sediment[kind][i] += laid, shore.top[i] += laid;
                 shore.ledger.left += double(waiting - laid) * area;
                 if (domain.owned(int(i % size_t(domain.size)), int(i / size_t(domain.size)))) domain.ledger.sedimentOut += double(waiting - laid) * area;
@@ -159,5 +244,7 @@ void workShores(Domain& domain, FlowScratch&) {
     }
     book(domain, shore, cutBefore);
 }
+
+float layingLevel(const Domain& domain, const Shore& shore, size_t i, float water) { return shore.stream[i] ? water : water + swingOf(domain, water); }
 
 } // namespace derivean::sim

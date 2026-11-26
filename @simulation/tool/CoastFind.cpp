@@ -21,6 +21,9 @@ constexpr float FrozenLake = 1.0f;     // °C of annual mean at the ground under
 // m a Region lake must be deep somewhere to stand at the Local level too: shallower hollows are
 // levelled as interpolation artefacts when a Local domain is built (landscape/fn/Build.cpp, levelHollows).
 constexpr float KeptLake = 50.0f;
+// Region cells from a Region tile edge within which a lake is not trusted: the seam blend between
+// tiles built dams there (consistency stream), and a lake that touches the band may be one.
+constexpr int EdgeBand = 8;
 
 bool sea(const Mosaic& m, int x, int z) { return m.contains(x, z) && !m.dry(x, z) && !m.lake(x, z); }
 
@@ -73,8 +76,20 @@ std::vector<Candidate> seaCoasts(const Mosaic& m, bool steep) {
     return found;
 }
 
-// Lakes of the Region large enough to raise waves that sort a beach, and warm enough to be open water.
-std::vector<Candidate> lakes(const Mosaic& m) {
+// Area of the Region's lakes by what keeps them from being a candidate, against its land (dry and lake).
+struct LakeShare {
+    double land{}, small{}, frozen{}, shallow{}, edge{}, kept{};
+};
+
+// Region cells from cell (x, z) of a mosaic to the nearest edge of the Region tile holding it.
+int edgeDistance(int x, int z) {
+    const int ax = x % TileCells, az = z % TileCells;
+    return std::min({ax, TileCells - 1 - ax, az, TileCells - 1 - az});
+}
+
+// Lakes of the Region large enough to raise waves that sort a beach, warm enough to be open water,
+// and clear of the tile edges.
+std::vector<Candidate> lakes(const Mosaic& m, LakeShare& share) {
     std::vector<Candidate> found;
     const int side = m.side();
     std::vector<uint8_t> seen(size_t(side) * size_t(side), 0);
@@ -84,13 +99,13 @@ std::vector<Candidate> lakes(const Mosaic& m) {
             if (seen[size_t(z) * size_t(side) + size_t(x)] || !m.lake(x, z)) continue;
             queue.assign(1, z * side + x);
             seen[size_t(z) * size_t(side) + size_t(x)] = 1;
-            int minX = x, maxX = x, minZ = z, maxZ = z;
+            int minX = x, maxX = x, minZ = z, maxZ = z, edge = TileCells;
             double sumX = 0, sumZ = 0, warmth = 0;
             float deepest = 0;
             for (size_t next = 0; next < queue.size(); ++next) {
                 const int cx = queue[next] % side, cz = queue[next] / side;
                 minX = std::min(minX, cx), maxX = std::max(maxX, cx), minZ = std::min(minZ, cz), maxZ = std::max(maxZ, cz);
-                sumX += cx, sumZ += cz, warmth += m.warmth.at(cx, cz);
+                sumX += cx, sumZ += cz, warmth += m.warmth.at(cx, cz), edge = std::min(edge, edgeDistance(cx, cz));
                 deepest = std::max(deepest, m.water.at(cx, cz) - m.ground.at(cx, cz));
                 for (int k = 0; k < 8; k += 2) {
                     const int nx = cx + NeighborX[k], nz = cz + NeighborZ[k];
@@ -101,7 +116,14 @@ std::vector<Candidate> lakes(const Mosaic& m) {
             }
             const double area = double(queue.size()) * m.cell * m.cell, across = std::hypot(maxX - minX + 1, maxZ - minZ + 1) * m.cell;
             warmth /= double(queue.size());
-            if (area < LeastLake || warmth < FrozenLake || deepest < KeptLake || minX == 0 || minZ == 0 || maxX == side - 1 || maxZ == side - 1) continue;
+            if (minX == 0 || minZ == 0 || maxX == side - 1 || maxZ == side - 1) continue;
+            double& kind = area < LeastLake ? share.small : warmth < FrozenLake ? share.frozen : deepest < KeptLake ? share.shallow : edge < EdgeBand ? share.edge : share.kept;
+            kind += area;
+            if (&kind != &share.kept) {
+                if (&kind == &share.edge)
+                    std::printf("  lake near a tile edge (%d cells), set aside: X %.0f Z %.0f  %.1f km2, %.0f m deep\n", edge, cellCentre(m, x, z).x, cellCentre(m, x, z).z, area / 1e6, deepest);
+                continue;
+            }
             // The lake cell nearest its middle, so the Local tiles around it hold the lake.
             const int mx = int(sumX / double(queue.size())), mz = int(sumZ / double(queue.size()));
             int best = queue.front();
@@ -111,7 +133,8 @@ std::vector<Candidate> lakes(const Mosaic& m) {
             c.at = cellCentre(m, best % side, best / side);
             // Kilometres of open water make the waves; a lake much larger than a Local tile is seen only in part.
             c.score = std::min(across, 20e3) / 1000.0 - 0.005 * std::max(0.0, double(m.water.at(best % side, best / side)) - m.seaLevel);
-            c.reason = formatText("lake %.1f km2, %.1f km across, %.0f m deep, surface %.0f m, ground %.1f C", area / 1e6, across / 1000, deepest, m.water.at(best % side, best / side), warmth);
+            c.reason = formatText("lake %.1f km2, %.1f km across, %.0f m deep, surface %.0f m, ground %.1f C, %d cells from a tile edge", area / 1e6, across / 1000, deepest,
+                                  m.water.at(best % side, best / side), warmth, edge);
             found.push_back(c);
         }
     return found;
@@ -146,7 +169,15 @@ int coastFind(const Arguments& arguments) {
     const Mosaic region = gatherAround(world, Level::Region, start, radius);
     std::printf("coast find  seed %llu  from X %.0f Z %.0f  radius %.0f km  region %d x %d tiles  sea level %.1f m  (%.0f s)\n", static_cast<unsigned long long>(arguments.seed()), start.x,
                 start.z, radius / 1000, region.tiles, region.tiles, region.seaLevel, lap());
-    const std::vector<Candidate> coasts = apart(seaCoasts(region, false), tries, 30e3), steeps = apart(seaCoasts(region, true), tries, 30e3), waters = apart(lakes(region), tries, 10e3);
+    LakeShare share;
+    const std::vector<Candidate> coasts = apart(seaCoasts(region, false), tries, 30e3), steeps = apart(seaCoasts(region, true), tries, 30e3), waters = apart(lakes(region, share), tries, 10e3);
+    for (int z = 0; z < region.side(); ++z)
+        for (int x = 0; x < region.side(); ++x) share.land += (region.dry(x, z) || region.lake(x, z)) ? region.cell * region.cell : 0.0;
+    const double lakeArea = share.small + share.frozen + share.shallow + share.edge + share.kept;
+    share.land = std::max(share.land, 1.0);
+    std::printf("  lakes %.2f %% of the land (%.0f km2 of %.0f km2): under %.0f km2 %.2f %%, frozen %.2f %%, under %.0f m deep %.2f %%, within %d cells of a tile edge %.2f %%, candidates %.2f %%\n",
+                100 * lakeArea / share.land, lakeArea / 1e6, share.land / 1e6, LeastLake / 1e6, 100 * share.small / share.land, 100 * share.frozen / share.land, KeptLake, 100 * share.shallow / share.land,
+                EdgeBand, 100 * share.edge / share.land, 100 * share.kept / share.land);
     for (size_t k = 0; k < coasts.size(); ++k) std::printf("  sea %zu  X %.0f Z %.0f  score %.2f  %s\n", k + 1, coasts[k].at.x, coasts[k].at.z, coasts[k].score, coasts[k].reason.c_str());
     for (size_t k = 0; k < steeps.size(); ++k) std::printf("  cliff %zu  X %.0f Z %.0f  score %.2f  %s\n", k + 1, steeps[k].at.x, steeps[k].at.z, steeps[k].score, steeps[k].reason.c_str());
     for (size_t k = 0; k < waters.size(); ++k) std::printf("  lake %zu  X %.0f Z %.0f  score %.2f  %s\n", k + 1, waters[k].at.x, waters[k].at.z, waters[k].score, waters[k].reason.c_str());

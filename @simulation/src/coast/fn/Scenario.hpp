@@ -29,6 +29,7 @@ struct CoastSpec {
     double upland{60};     // m the land rises to
     double shelf{15};      // m of water at which the sea floor levels off
     double bank{0.04};     // rise over run of a lake scene's ground out of the water
+    int cover{24};         // cells from a lake scene's shore, in and out, that its loose cover reaches
     int steps{0};          // 0 runs the settling time of the level
     uint64_t seed{42};
 };
