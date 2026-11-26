@@ -95,6 +95,7 @@ In-game captures with seed, date, coordinates and scale (coast with lowland, a r
 - A tile is a pure function of (seed, age, key); nothing may depend on request order, thread count or what was visited. Ledgers close. `sim::Workers::parallelFor` is safe inside a tile task; results must be bit-identical for any thread count.
 - Places are found by search (`findLanding`, `terra find`, `terra scout`, `--at landing|coast|peak|shore`), never by fixed coordinates: the planet changed several times.
 - The machine is shared and was heavily loaded (load 40–75); timings taken then are not baselines. Close every game instance you start; never kill a process you did not start.
+- The owner never launches the game; they screenshot windows the streams open. Every launch sets `DERIVEAN_STREAM=<stream>`; each window shows one origin line in its HUD and title (`LIVE|CAPTURE|REPLAY <date> · ADDON <build time> <commit> [dirty] · <stream>`), so a screenshot can be traced. Replays refuse recordings without `recording.json`; retired recordings sit in `.out/renderer-replay-retired/`.
 - Per `AGENTS.md`, substantial changes get an independent reviewer; several streams list late fixes that were not re-reviewed.
 
 ## Quick reference
