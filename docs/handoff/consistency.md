@@ -41,31 +41,69 @@ Region lakes are 0.71 % of land against Earth's 1.5–3 %. The lakes `keepCourse
 
 **Known failure:** the test's crossing check fails on one crossing, kept as it is until the trunk routing (section 4) lands; it runs last in the suite (`test/Main.cpp`), so the tests before it are still checked. Local tile (907, 584) takes a river of 9.2 × 10⁷ m³/yr from its pass-0 western neighbour at z ≈ 233; it joins the later tile's own river of 4.3 × 10⁸, which runs back west into the finished tile, where the record carries 1.4 × 10⁵. It predates this stream's changes (the same loss with them switched off). It is item 1 at Local: two tiles that simulated the same overlap put the river in different places, and the one finished first decides.
 
-The coast finder's lake1 (4928000, −6024704) and lake2 (4986368, −5981696) were dams of the old seam blend: they lie 4.5 and 5.5 cells from a Region tile edge, and with `keepCourses` off the Region holds them (21 km², 135 m deep; 108 km², 69 m deep), with it neither. The Site tiles at lake2 are bit-identical whether built alone or after the 4 × 4 block around them in reverse (`.out/consistency/order`): no build-order dependence.
+The loss has only moved on the uncommitted tree after a913f5b, it is not fixed. Bisected on mirrors (`.out/consistency/handon`): HEAD with only the volcanic changes (and the new materials) or only the coast changes no longer has it, HEAD with only groundwater, ice sheet or `Glacial.cpp` still does. Both change the ground upstream, so that river no longer crosses there (volcanic: a 3.1 × 10⁸ river enters at z = 224, carried whole; coast: no crossing on that seam). On the combined tree the pass-3 tile instead loses two rivers across its south seam (q 2.9 × 10⁶ and 6.3 × 10⁶, carried 0). The acceptance for item 1 is that no later tile's river runs back into a finished one at any seam of the 3 × 3.
 
-**Trunk field** (`landscape/type/Trunks.hpp`, `fn/Trunks.cpp`, `routeTrunks`; not yet called): the planet's rivers at PlanetCell / 16 (4.1 km, 4096² cells) over `pastElevation` with the Region's seeded roughness and rock quality, the planet's own yield shared over each planet cell's land, a priority flood, and the region window's erosion by stream power with the levels' exponent (one rock, no uplift) in 12 implicit steps. Deterministic with and without a worker pool. 55–80 s and about 0.2 GB per world under load.
+The test world is seed 42 at 1.2 Gyr (`testWorld`), the other measurements are at 4.6 Gyr.
+
+The coast finder's lake1 (4928000, −6024704) and lake2 (4986368, −5981696) were dams of the old seam blend: they lie 4.5 and 5.5 cells from a Region tile edge, and with `keepCourses` off the Region holds them (21 km², 135 m deep; 108 km², 69 m deep), with it neither. The Site tiles at lake2 are bit-identical whether built alone or after the 4 × 4 block around them in reverse (`.out/consistency/order`): no build-order dependence. The Local closure around (4712960, −6459904) with `keepCourses` (9 Local and 9 Region tiles, all threads against one thread asking last first) is bit-identical too (`terra measure determinism --finest 2 --order-level 2 --pass 3`, `.out/consistency/determinism`).
+
+**Seam-made lakes** (`probe5/seamadded`, mirror only; proposed to replace the test's seam-lake check, which compares the edge band with the tile's inside and fails or passes with the inside share). Each tile of passes 1–3 of a 3 × 3 is replayed a second time with no neighbours of its level (its parents only, as a pass-0 tile is built: only `adoptNeighbours` reads same-level tiles; wind, seas, volcanic and ice read parents and accept a missing tile). A lake cell of the built tile that the lone replay does not hold, and that no parent lake covers, is seam-made. Band: cells within 8 of a finished neighbour. Pooled over the five (Local) or seven (Region) tiles:
+
+| | band seam-made | deepest seam-made body at a seam |
+| --- | --- | --- |
+| Local test block, a913f5b | 1.20 % | 159 m (150 cells) |
+| Local, tree at 14:25 | 0.74 % | 253 m |
+| Local, same without `keepCourses` | 2.45 % | 333 m |
+| Region 3 × 3 from (17, −24), tree at 14:25 | 1.09 % | 1002 m |
+| same without `keepCourses` | 2.10 % | 973 m |
+
+Without `keepCourses` the measure flags both lake1 (tile (18, −23), body at (204, 4), 9 cells, 98 m) and lake2 (tile (19, −23), body at (9, 34), 194 cells, 48 m); with it neither is there. Of the near-seam lakes relief's lake caps raised on the 14:25 tree, the largest (57 cells at the pass-3 tile's seam, 41 m) lies under a Region lake for 46 cells; the deep ones (121, 184, 253 m) lie under none. What remains are the rivers of a later tile that meet a finished tile's ground and pond (item 1).
+
+Pass-0 tiles and lone replays hold almost no lakes at Local (0–0.03 %), and where a Region lake covers 1024 Local cells of the block, the built tiles hold 47 of them, lone replays none: parent lakes are not reaching Local here (goal 1), and the shallow interior lakes of later tiles (a 760-cell body 11 cells in, 14 m deep) exist only with neighbours.
+
+**Trunk field** (`landscape/type/Trunks.hpp`, `fn/Trunks.cpp`, `routeTrunks`; not yet called). In the tree (9c30423): the planet's rivers at PlanetCell / 16 (4.1 km, 4096² cells) over `pastElevation` with roughness and quality at the world position, a flood seeded with every sea cell, and the window's erosion with one rock and no uplift; 59–77 s per world.
+
+In the private mirror `cons/sim6` (not in the tree, awaiting the lead):
+- roughness and quality read in the crust's frame (`forcing.strata.material` plus the offset, as `materialOf`) and averaged over the 4 × 4 Region cells of a trunk cell;
+- a planet land cell with no land here yields at its highest cell (10.7 % of the planet's land yield was dropped); a planet sea cell yields only the rain on its land cells here (its ocean rain was spread over them, 6.5 times what falls there);
+- the flood starts at the coast only (71 k cells instead of 13.8 M);
+- the window's rock uplift as a Region gets it (`forcingAt` tectonic + residual at every trunk cell, 1.1 µs a call; from the planet grid the uplift is off by 437 m rms against a 916 m spread, from 8 km by 222 m) and the isostatic answer to erosion (`IsostaticSink` times the cut, two box passes matching the Region's spread, radius 3), the sea and coast found anew after each of the 12 steps at that step's sea level (`seaLevelAt`). The field deposits nothing, so its basins do not sink under fill.
+- The water over the ground (`fn/TrunkFlow.{hpp,cpp}`, `type/TrunkRouting.hpp`) is split from the sampling and the window (`fn/Trunks.cpp`, 170 lines).
+
+Bit-identical with and without a worker pool. 17–22 s per world with ten workers under a load average of 30 (sample 7.4 s, flood 7.4 s, erosion 2 s), 62–75 s alone; about 0.6 GB at peak.
 
 | network, channels above 1000 km² (100 km²) | side by side | sinuosity p50 | Hack | Rb | density km/km² |
 | --- | --- | --- | --- | --- | --- |
 | `Backdrop::drainage` (8.2 km, smooth) | 93 % (98 %) | 1.04 | 0.46 (0.97) | 20, 6.9 (27, 6.8) | 0.065 (0.158) |
-| trunk field | 2.5 % (19 %) | 1.26 | 0.60 (0.63) | 5.5, 6.3 (5.5, 5.2, 5.7) | 0.026 (0.070) |
+| trunk field in the tree | 2.4 % (19 %) | 1.26 | 0.60 (0.63) | 5.3, 5.8 (5.6, 5.1, 5.2) | 0.028 (0.070) |
+| crust frame, averaging, yield, coastal flood | 2.7 % (21 %) | 1.23 | 0.59 (0.61) | 5.4, 5.9 (5.6, 5.0, 5.5) | 0.028 (0.071) |
+| with uplift and rebound (mirror) | 1.7 % (14 %) | 1.23 | 0.63 (0.65) | 5.2, 5.9 (5.8, 5.0, 5.5) | 0.026 (0.063) |
 | Earth | – | about 1.1–1.5 at this scale | 0.5–0.6 | 3–5 | about 0.027 (0.085), from HydroRIVERS' 36 million km at 10 km² scaled by A^−½ |
 
-"Side by side": channel cells with a parallel channel of at least a third of their water beside them, which is the parallel-filament defect. The roughness removes most of it; the erosion tightens the network. Rb at the low orders stays 5.2–5.7 at either threshold, slightly above Earth's. Against the Region's own trunks on the 3 × 3 from (18, −25) the field places 3 of 31 edge-crossing trunks above 3 × 10⁹ within 8 Region cells with 0.7–1.5 of their water (water-weighted 0.13; drainage 0.22): the Region's settled trunks follow neither, which is what the wiring is to change.
+"Side by side": channel cells with a parallel channel of at least a third of their water beside them, which is the parallel-filament defect. Rb at the low orders stays 5–6, slightly above Earth's; Hack with the uplift is at the top of Earth's range.
+
+Against the Region's own trunks (diagnostic, not acceptance: the field decides and the Region is to conform), 3 × 3 from (18, −25), 35 edge-crossing trunks above 3 × 10⁹, the field holding 0.7–1.5 of their water within 8 (24) Region cells:
+
+| | within 8 | within 24 | Region minus field ground | local relief rms at 4 km, Region 281 m | correlation with the Region's |
+| --- | --- | --- | --- | --- | --- |
+| field in the tree | 3 (0.11) | 6 (0.61) | +1401 m | 4.3 m | 0.006 |
+| crust frame … coastal flood | 7 (0.13) | 9 (0.61) | +1401 m | 4.3 m | 0.005 |
+| with uplift | 1 (0.10) | 10 (0.66) | −462 m | 259 m | 0.002 |
+| drainage | 2 (0.05) | 3 (0.50) | | | |
+
+Without the uplift the field routed over the window's start, a surface 1.4 km lower and nearly flat at 4 km. The forcing's uplift alone correlates 0.18 with the Region's relief; with it the field has the Region's amount of relief but its own valleys: two networks cut independently over the same uplift do not put their valleys in the same 4 km cells, so the Region must take the field's crossings (wiring) rather than be predicted by it. The field cuts 462 m less than the Region (one rock, no hillslopes, no ice).
 
 ## 3. In progress
 
-- Nothing running.
+- The trunk field with uplift is in the tree, not wired (`fn/Trunks.cpp`, `fn/TrunkFlow.{hpp,cpp}`, `type/TrunkRouting.hpp`, `trunkNeighbour` in `type/Trunks.hpp`, `routeTrunks(const Setting&, Workers*)`; nothing calls it yet). A fresh copy of the tree builds the library, `terra` and `simulation-tests`, and gives the mirror's metrics. Wiring (item 1) and the seam-made check (item 2) are next, in the mirror; the file list goes to the lead first.
 
 ## 4. Next steps
 
-1. **Wire the trunk field** (decided: option A of the item 1 options) once the lead says relief's Region erosion change has landed: Region rim inflow and outlets at trunk crossings with the trunk's water, replacing `Backdrop::drainage` (one owner for the fact) and its call in `readBackdrop`. Before that:
-   - sample roughness and quality at the crust's material position as the Region does (`materialOf`, `strata/fn/Column.cpp` drift), and average them over the 4 × 4 Region cells of a trunk cell: `roughnessAt` has octaves down to 1.1 km, finer than the 4.1 km grid can hold;
-   - give a planet cell whose land all falls under the sea after roughness its yield somewhere (the drainage drops it too);
-   - cut the cost (the flood seeds every sea cell; 13 floods of 16.8 M cells), or solve it once per world off the start path;
-   - decide whether the region tiles' own trunks must also conform inside a tile, not only at its rim; measure with the position check above.
-2. Deep Region lakes in the later tile's first three cells (x edges 9 / 5 / 2 %, z edges 17 / 14 / 10 %, 130–340 m deep): rivers of a later tile that meet a finished tile's settled ground and pond. Item 1; expected to fall with the trunk routing.
-3. At Local the uplift blocks straddling a tile edge (relief, `Uplift.cpp`) left the later tile's edge column lower than its neighbours; relief's `followFinished` addresses it. Re-measure the edge band (`lakeprobe` `band` lines) after it settles.
+1. **Wire the trunk field** (decided: option A; the field decides, the Region conforms; no longer waiting for relief's Region erosion change): Region rim inflow and outlets at trunk crossings with the trunk's water, replacing `Backdrop::drainage` (one owner for the fact) and its call in `readBackdrop`. Acceptance: network metrics, determinism, under 20 s with workers, and no later tile's river running back into a finished one at any seam of the 3 × 3. Open: whether the region tiles' own trunks must also conform inside a tile, not only at its rim.
+2. **Seam-lake check**: replace the inside-share comparison with the seam-made measure above once the lead approves a cap (proposed: pooled band share of seam-made lake under 0.5 % and no seam-made body touching a seam deeper than the level's artefact limit, 45 m at Local). Every tree measured fails it today; it is to pass with item 1.
+3. **Parent lakes at Local**: trace why the test block holds 47 of 1024 parent-lake cells, and why a lone (pass-0) replay holds none.
+4. Deep Region lakes in the later tile's first three cells (x edges 9 / 5 / 2 %, z edges 17 / 14 / 10 %, 130–340 m deep): rivers of a later tile that meet a finished tile's settled ground and pond. Item 1; expected to fall with the trunk routing.
+5. At Local the uplift blocks straddling a tile edge (relief, `Uplift.cpp`) left the later tile's edge column lower than its neighbours; relief's `followFinished` addresses it. Re-measure the edge band (`lakeprobe` `band` lines) after it settles.
 
 ## 5. Decisions and why
 
@@ -86,12 +124,16 @@ The coast finder's lake1 (4928000, −6024704) and lake2 (4986368, −5981696) w
 
 ## 7. How to verify
 
-Private mirrors under the scratchpad `cons/`, each a copy of the shared tree with its own `XMAKE_CONFIGDIR` and build directory (`build4.sh`, `build5.sh`); `mk4.sh` builds a probe against the mirror's library.
+Private mirrors under the scratchpad `cons/`, each a copy of the shared tree with its own `XMAKE_CONFIGDIR` and build directory (`build<N>.sh`); a probe is built with `c++ -std=c++20 -O2 -Isim<N>/src [-Isim<N>/test …/LandscapeFixture.cpp] probe5/<p>.cpp build<N>/…/libderivean-simulation.a`.
 
 - `probe4/onetest/onedbg`: `testLevelConsistency` alone with one line per crossing.
 - `probe4/regionseam 5241344 -6100000 3 <out> 6`: Region seams, lake share, crossings, and `band` lines (lake, river, along-edge river share and depth by signed distance from the inner edges, positive into the later tile).
 - `probe4/lakeprobe 4712960 -6459904 2 0 <out> 0 4`: a Local 2 × 2 block from the Region; parent lakes (`[L2 start]` is the child's start), seams, bands, levels, crossings.
 - Outputs: `.out/consistency/t4` (mirror of the tree before relief's floor diff, with and without `keepCourses` and the floor), `t5` (the shared tree), `budget`, `approach` (item 1 analysis).
+- `probe5/trunkfield <threads>`: `routeTrunks` with and without workers (identity, timing), flood agreement, network metrics at 1000 and 100 km² (`.out/consistency/trunks/field*.txt`).
+- `probe5/regionmatch <threads> 18 -25 3` and `probe5/upliftmatch`: the field and drainage against a Region mosaic's crossing trunks and valleys (`region-*.txt`, `uplift.txt`); `probe5/forcingcost`: `forcingAt` cost and interpolation error.
+- `probe5/seamadded test` (the test's block) or `seamadded <level> <x> <z> <age>`: seam-made lakes per tile, bodies with depth, centre and parent-lake cover (`.out/consistency/seams`).
+- Mirrors `cons/sim6` (tree at 14:25 with the new field, `LAB_NOCOURSES` switch), `sim7` (9c30423), `sim8` (a913f5b), `sim9`–`sim14` (a913f5b plus one group of uncommitted changes each, for the 907,584 bisect, `.out/consistency/handon`).
 - Wider checks: `terra measure seams|levels|determinism`, the suite.
 
 ## 8. Open questions
