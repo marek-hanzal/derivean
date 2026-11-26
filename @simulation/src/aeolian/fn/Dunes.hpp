@@ -5,13 +5,14 @@
 
 namespace derivean::sim {
 
-// Dunes.cpp — the transport model: the slab model of Werner (1995) with the wind speed-up of Momiji
-// et al. (2000). Sand moves as slabs: a slab is lifted from a cell that has loose sand and lies in
-// the wind, travels a hop downwind (farther from high ground) and comes to rest or is passed on:
-// always in the calm lee of higher ground, more readily on sand than on a bare floor, and at the
-// foot of a step too steep to climb. Every move is followed by sliding wherever the sand then
+// Dunes.cpp — the transport model: the slab model of Werner (1995) in flux form. In every round
+// each cell that has loose sand and lies in the wind gives up a slab, more of it where it faces the
+// wind. What is in the air travels a hop downwind and comes to rest or is passed on: all of it in
+// the calm lee of higher ground, at the first shadowed cell it passes over; most of it on sand and
+// less on a bare floor; and none of it up a step too steep to climb. Then sand slides wherever it
 // stands steeper than it can rest. The winds of the rose take turns in proportion to the sand each
-// can carry. Dunes, their slip faces, their spacing and their kind are whatever this leaves; none is placed.
+// can carry. Dunes, their slip faces, their spacing and their kind are whatever this leaves; none is
+// placed. The result depends on the bed and its seed alone.
 void blowBed(SandBed& bed, const WindRegime& regime, const DuneRun& run);
 
 // Rounds each sector of the rose blows in one year of `year` rounds, in sector order; sectors too

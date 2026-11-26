@@ -3,6 +3,7 @@
 #include "Arguments.hpp"
 
 #include "volcanic/fn/Proving.hpp"
+#include "volcanic/fn/Volcanic.hpp"
 
 // VolcanicScene.cpp — a vent on a plane built by hand: numbers, a map and a view.
 int volcanicScene(const Arguments& arguments);

@@ -18,27 +18,33 @@ Wind direction and strength come from the model's climate, never from a constant
 
 Works, verified only on hand-built beds through a private dev harness (not yet in the module build, no tests, no tool):
 
-- `constant/Wind.hpp` — grain, thresholds, shadow and climb slopes, lag armour, damp constants.
+- `constant/Wind.hpp` — grain, thresholds, shadow slope (11°, the lee slope at which air separates), climb slope, lag armour, damp constants.
 - `type/Regime.hpp`, `fn/Regime.{hpp,cpp}` — the sand rose (16 sectors, m²/yr per metre of width a dry saturated flat bed passes per sector). `regimeAtLatitude` is closed form from `beltWind`, the seasonal belt shift, `Gustiness` and `storminess`; `regimeAt(seed, position, time)` reads it where the landscape reads the planet (`planetPoint`); `regimeOf` builds steady winds for hand-built beds; `dryShare` is the share of the year a bare surface can blow.
-- `type/SandBed.hpp`, `fn/Dunes.{hpp,cpp}`, `fn/Shadow.cpp`, `fn/Avalanche.cpp` — the transport model: a slab cellular model (Werner 1995) on a torus. A slab is lifted from an open, sand-bearing cell outside the wind shadow, hops downwind, stays in a shadow always, on sand with 0.6, on a bare floor with 0.4, and at the foot of a step steeper than 45°. Every move is followed by sliding to repose (`reposeTan`, to be fed from `ReposeTan[Sand]` = 0.62 in `landscape/fn/Process.hpp`). Winds of the rose take turns in proportion to their drift (`windTurns`). Cell kinds: Open, Held (finished neighbour: sends and takes, never changes), Wet (sink), Wall (domain ring).
-- Seen so far (320² cells of 4 m, one wind of 10 m/s, 250 rounds): 2 m of sand gives ridges across the wind up to 15 m high with 32 % bare floor; 0.4 m gives low isolated forms with 51 % bare floor. Sand is conserved to float rounding. Pictures: `.out/aeolian/dev-one.png`, `.out/aeolian/dev-thin.png` (not yet inspected after the last change).
+- `type/SandBed.hpp`, `fn/Dunes.{hpp,cpp}`, `fn/Shadow.cpp`, `fn/Avalanche.cpp` — the transport model: the slab model of Werner (1995) in flux form, on a torus. Per round: every open, sand-bearing cell outside the wind shadow gives a slab (more where it faces the wind over a hop's length, up to a slope of 0.2; more where it stands above its four neighbours; times a seeded gust); what is in the air moves one hop and comes down entirely at the first shadowed cell on its way, else 60 % on sand and 40 % on a bare floor, and not at all up a step steeper than 45°; then one sweep of sliding to repose (`reposeTan`, to be fed from `ReposeTan[Sand]` = 0.62 in `landscape/fn/Process.hpp`). Winds of the rose take turns in proportion to their drift (`windTurns`). Cell kinds: Open, Held (finished neighbour: sends and takes, never changes), Wet (sink), Wall (domain ring). Deterministic from the bed and its seed; no draw depends on sweep order.
+- Seen on 320² cells of 4 m, winds of 10 m/s (pictures in `.out/aeolian/dev-*.png`):
+  - one wind, 6 m of sand, 400 rounds: ridges across the wind with Y-junctions, up to 20 m, 23 % of the sand surface on slip faces, steepest 33.9°, windward mean 15°, 31 % bare floor (`dev-thick.png`);
+  - one wind, 1 m, 700 rounds of 0.2 m slabs: isolated mounds with a concave lee on a thin sheet, 41 % bare (`dev-scarce.png`);
+  - two winds 120° apart: ridges along the resultant (`dev-two120.png`); 150° likewise;
+  - four winds: short ridges and peaks without a preferred direction, anisotropy 0.17 (`dev-four.png`); not clean stars.
+  - Sand is conserved to float rounding. Cost: 4.5 ms of CPU per round.
 
-Not existing yet: everything under sections 3 and 4. No shared file has been touched.
+Not existing yet: everything under section 4. No shared file has been touched.
+
+**Which side of dust is built:** neither yet. This stream builds the geological side (loess laid during tile building from the climate's winds, section 4 step 5). The calendar side — a dust storm during play as an `AirSource` for `addSource` in `atmosphere/type/Plume.hpp` — is left; see section 6.
 
 ## 3. In progress
 
-Tuning the slab model on hand-built beds (`scratchpad/dev/dev.cpp`, private; rebuild it from this file's section 7 if it is gone). Last change: single hops stray ±0.2 rad (`GustSwing`), because without it lines of cells along the wind never trade sand and the bed grows streaks along the wind. Not yet checked: that the streaks are gone, two winds giving ridges along the resultant, many winds giving stars, migration direction.
+Nothing half-edited. `scratchpad/dev/` holds the private harness (`dev.cpp`) and two discarded variants of the model; none is needed.
 
 ## 4. Next steps
 
-1. Look at the pictures; tune until one wind gives crescents (thin sand) and transverse ridges (thick sand), two winds 120° apart give linear ridges along the resultant, four or more give stars.
-2. `fn/Measure.{hpp,cpp}`: dune height, spacing, slip-face share, stoss and lee angle, crest orientation against the resultant, from a bed or a tile.
-3. `type/Aeolian.hpp`: per-cell labels and ledger (see section 6); `fn/Wind.hpp` entry points.
-4. `fn/DuneField.cpp`: bed from a `Domain` (Local and Site), run, write back; `fn/Seed.cpp`: `beginWind`.
+1. `fn/Measure.{hpp,cpp}`: dune height, spacing, slip-face share, windward and lee angle, crest orientation against the resultant, from a bed or a tile.
+2. `type/Aeolian.hpp`: per-cell labels and ledger (section 6); `fn/Wind.hpp` entry points.
+3. `fn/DuneField.cpp`: bed from a `Domain` (Local and Site), run, write back; `fn/Seed.cpp`: `beginWind`.
+4. Hooks into shared files (section 6); tests `test/Aeolian*.cpp`; tool `tool/AeolianCommand.cpp` (`terra aeolian --x --z`).
 5. Region step: `fn/Budget.cpp` (sand routing along the resultant in topological order of the wind graph, supply-limited, traps), `fn/Dust.cpp` (emission and fall-out), `fn/Basin.cpp` (terminal basins: playa cells, salt).
-6. Hooks into shared files (section 6), tests `test/Aeolian*.cpp`, tool `tool/AeolianCommand.cpp` (`terra aeolian --x --z`).
-7. World verification at places found by search (dry with sand supply, a river plain, a coast), pictures with `terra view`, tile-time cost.
-8. Independent reviewer sub-agent, then the report with the rows for `docs/simulation.md`.
+6. World verification at places found by search (dry with sand supply, a river plain, a coast), pictures with `terra view`, tile-time cost.
+7. Independent reviewer sub-agent, then the report with the rows for `docs/simulation.md`.
 
 ## 5. Decisions and why
 
@@ -48,6 +54,8 @@ Tuning the slab model on hand-built beds (`scratchpad/dev/dev.cpp`, private; reb
 - **Free domain edges are a torus, finished neighbours are Held cells.** The torus conserves the stock exactly without tuning an inflow. Rejected: reservoir edges (the field gains sand, because a flat edge emits more than a duned interior passes).
 - **Known and accepted:** dunes migrate, so a later tile's crests cannot be in phase with a finished neighbour's. Heights meet (Held cells, repose, the existing 4-cell seam blend); crest lines can end at a seam. Rejected as unaffordable: recording a neighbour's edge history, wind-ordered tile dependencies, halos wide enough for agreement (dunes need several wavelengths of fetch).
 - **Rejected:** a continuum shear-stress dune model (Kroy/Sauermann) — more quantitative, far more delicate under several winds.
+- **Flux form, not single slabs.** Werner's model with drawn slabs works but costs four times as much per round and leaves a surface rough by one slab per cell. In flux form the same rules act on the mean. What the draws did for it has to be put back explicitly, and each piece was found by a failure: a seeded gust per round (without it a flat bed never starts); the windward-slope gain read over a hop's length (read from cell to cell it grows a ripple three cells long); the stall above a slope of 0.2 and the crest gain (without them both sides of a dune stand at repose); sand falling at the first shadowed cell of its path (without it small dunes get no slip face, because a hop is as long as their lee); hop length and heading varying from round to round (a fixed hop resonates; a fixed heading along a grid axis leaves lines of cells that never trade sand); all aiming done before the bed changes (aiming over a half-updated bed leaned every ridge 5° one way).
+- **Tried and dropped:** gain by height above the surrounding ground on the lifted slab (damps every swell); the same on hop length (grows a pattern five cells long).
 - **Lag armour** is state, not a function of the mixed cover: a mixed cover has no layers, so without a label every step would winnow it anew.
 - **Salt** is planned as a label on the Fines class (m of evaporite at the top), not a fourth class: every process measures the surface as rock plus three classes.
 - **Traps:** `BedRoughness` is taken by `hydrology/constant/Water.hpp`; all `@simulation` constants share one namespace. The evaporation demand `clamp(0.25 + 0.035·T, 0.05, 1.6)` is written inline in `Flow.cpp` and `Forcing.hpp`; `Regime.cpp` restates it a third time.
@@ -66,7 +74,8 @@ Nothing is added to a shared file yet. Planned, exact-match edits only:
 
 Needed from others:
 
-- **Atmosphere:** a public closed form of the seasonal belt wind (today `BeltShift` and `BeltLag` are private to `atmosphere/fn/Season.cpp` and restated in `Regime.cpp`); wind statistics per place from the stepped model (speed distribution and directional spread by month), which would replace the assumed Gaussian spread. The tracer interface being added for volcanic ash should carry desert dust: this stream can hand it an emission field.
+- **Atmosphere:** a public closed form of the seasonal belt wind (today `BeltShift` and `BeltLag` are private to `atmosphere/fn/Season.cpp` and restated in `Regime.cpp`); wind statistics per place from the stepped model (speed distribution and directional spread by month), which would replace the assumed Gaussian spread.
+- **Dust, two sides.** Geological: loess is laid while a Region tile is built, where no atmosphere runs; it is this stream's own steady transport along the regime's resultant (planned `fn/Dust.cpp`). Calendar: the atmosphere takes airborne mass through `addSource(Atmosphere&, const AirSource&)` (`atmosphere/type/Plume.hpp`; ash classes Lapilli 8 m/s, Grit 1 m/s, Dust 0.02 m/s; `ashFallAt` for what settles). A dust storm during play should be an `AirSource` whose Dust rate comes from the same cells the geological side emits from (dry, unarmoured Fines struck by moving sand, and fresh river silt) while the weather's wind there exceeds the threshold of `saturatedFlux`; Grit is saltating sand and stays near the ground. Not built. To keep the two consistent: same source cells (tile labels), same grain class (Fines), and the geological side's direction must stay the rose of `regimeAt`, which is the closed form of the wind the stepped atmosphere relaxes to.
 - **Routing owner:** runoff should vanish on thick sand (dune fields carry no channels); terminal lakes should pool at the basin floor at their balance level.
 - **Ground level:** must not rill wind-laid sand; could carry ripples from the tile's regime.
 - **Coasts:** dry beach sand is ordinary Sand in the cover; nothing else is needed.
@@ -95,7 +104,8 @@ OUT=.out/aeolian ./dev <name> <sand m> <rounds> [cell m] [winds] [degrees betwee
 
 ## 8. Open questions
 
-- How far the slab model's coarsening can be trusted as a clock: after about 200 yr of strong wind it has gathered a 2 m sheet into one ridge per domain width.
-- Cost: 250 rounds on 320² cells took 3.8 s on the loaded machine. A site tile's present cost is not yet measured.
+- How far the model's coarsening can be trusted as a clock; dune size at a given span of wind work is not calibrated against a dated field.
+- Thin sheets (under about half a metre) grow low domes without slip faces within the rounds tried.
+- A site tile's present cost without dunes is not yet measured; the dune pass will add about 4.5 ms of CPU per round.
 - Whether old shorelines are cut here or by the lake-shore stream from a high-stand level this stream supplies.
 - Whether a far-field dust source beyond a Region domain should be a closed form over the planet grid or wait for the atmosphere's tracer.

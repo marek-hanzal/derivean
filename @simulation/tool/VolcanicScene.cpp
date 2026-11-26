@@ -28,9 +28,9 @@ ProvingSpec sceneOf(const std::string& name) {
     } else if (name == "cone") {
         spec.magma = Magma::Andesite, spec.volume = 60 * Km3, spec.episodes = 6;
     } else if (name == "valley") {
-        // A trough 300 m deep runs down the plane; the vent stands at its head.
+        // A valley 350 m deep runs down the plane through the vent.
         spec.magma = Magma::Basalt, spec.volume = 12 * Km3, spec.episodes = 1;
-        spec.ground.slope = 0.006, spec.ground.swale = 300, spec.site = {-90e3, 0};
+        spec.ground.slope = 0.012, spec.valley = 350, spec.valleyWidth = 5000, spec.site = {-90e3, 0};
     } else if (name == "caldera") {
         spec.magma = Magma::Andesite, spec.volume = 70 * Km3, spec.episodes = 6, spec.paroxysm = 45 * Km3, spec.quiet = 1;
     } else if (name == "worn") {
@@ -110,7 +110,7 @@ int volcanicScene(const Arguments& arguments) {
     const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
     const Vent& vent = domain.volcanic.vents.front();
     const double reach = spec.ground.level == Level::Region ? 60e3 : 6e3;
-    const EdificeShape shape = measureEdifice(domain, vent.centre, reach);
+    const EdificeShape shape = measureEdifice(gridOf(domain), vent.centre, reach);
     const VolcanicLedger& ledger = domain.volcanic.ledger;
     std::printf("scene %s  %s  level %d  %d steps in %.1f s (%.2f s a step)\n", name.c_str(), vent.magma == Magma::Basalt ? "basalt" : "andesite", int(domain.key.level),
                 domain.taken, seconds, seconds / std::max(1, domain.taken));

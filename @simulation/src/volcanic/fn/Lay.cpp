@@ -4,6 +4,7 @@ namespace derivean::sim {
 namespace {
 
 constexpr float AshFloor = 0.01f;     // m of ash below which a blanket is not followed
+constexpr float Shortest = 0.2f;      // share of the cooling length that the most slowly fed flow of an eruption gets
 
 // Moves what the laws laid since the last call into `into` and marks whose it is; returns its volume in m³.
 double harvest(Emplacement& field, Laying& laying, std::vector<float>& into, int vent) {
@@ -81,8 +82,13 @@ void emplace(Domain& domain, Emplacement& field, Laying& laying, int vent, const
             buildCone(field, coneFall(site, outburst.fall / outburst.pulses), repose);
             ledger.cone += harvest(field, laying, laying.fall, vent);
         }
-        pour(outburst.current, outburst.flows / outburst.pulses, laying.fall, ledger.cone);
-        pour(outburst.rheology, outburst.lava / outburst.pulses, laying.lava, ledger.lava);
+        // Flows of one eruption differ in how fast they are fed, and so in how far they get before
+        // they set: the short ones pile up around the vent, the long ones make the foot.
+        const float reach = Shortest + (1.0f - Shortest) * float((pulse * 5) % outburst.pulses + 1) / float(outburst.pulses);
+        Rheology current = outburst.current, lava = outburst.rheology;
+        current.coolLength *= reach, lava.coolLength *= reach;
+        pour(current, outburst.flows / outburst.pulses, laying.fall, ledger.cone);
+        pour(lava, outburst.lava / outburst.pulses, laying.lava, ledger.lava);
     }
     if (outburst.ash > 0) {
         const double laid = layAsh(domain, field, laying, ashFall(site, outburst.ash, {domain.windX[near], domain.windZ[near]}), vent);

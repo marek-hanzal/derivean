@@ -30,6 +30,18 @@ Domain replayProving(const ProvingSpec& spec, Workers* workers) {
     Domain domain = planeDomain(ground);
     domain.workers = workers;
     domain.volcanic.vents.push_back(provingVent(spec, domain));
+    if (spec.valley > 0) {
+        const Vec2 fall{std::cos(ground.azimuth), std::sin(ground.azimuth)};
+        const Vec2 vent = domain.volcanic.vents.front().centre;
+        for (int z = 0; z < domain.size; ++z) {
+            for (int x = 0; x < domain.size; ++x) {
+                const size_t i = domain.index(x, z);
+                const float cut = float(spec.valley * std::max(0.0, 1.0 - std::abs(cross(fall, domain.center(x, z) - vent)) / spec.valleyWidth));
+                domain.ground.rock[i] -= cut, domain.ground.datum[i] -= cut, domain.trend[i] -= cut;
+            }
+        }
+        domain.settledFrom = domain.settledTo = domain.ground;
+    }
     // As measure/fn/PlaneDomain.cpp: a step asks the planet for the sea level and its date only.
     Planet planet;
     planet.seaLevel = domain.seaLevel;

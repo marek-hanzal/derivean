@@ -320,6 +320,12 @@ export interface CloudField {
   snowLine: Float32Array;
   // Metres against the datum.
   seaLevel: number;
+  // Visible optical depth of the veil of fine ash and sulphate over each cell: it dims and reddens the sun.
+  aerosolDepth: Float32Array;
+  // kg/m² of fine ash in the air over each cell, and the metres above `seaLevel` around which most of it floats:
+  // where there is an ash cloud to draw. All three are zero until something throws ash into the air.
+  ashAloft: Float32Array;
+  ashLevel: Float32Array;
 }
 
 // A square of the world to chart, north up: centre and edge in metres, `size` pixels along each edge (at most

@@ -13,11 +13,11 @@ Verified (seed 42, 4.6 Gyr, on the planet as it was on 25–26 Nov; the planet h
 - Slopes at Local on the humid range (5431296, 10199040, one tile, state before the last drainage change): mean 31.3°, above 30° / 45° / 60°: 58 / 8.8 / 1.0 % (before: 33.0°, 54 / 30 / 9.3 %). Site there: mean 40.6°, 10 % above 60° (before 55.6°, 54 %).
 - Hand-built blocks (`terra block`, Site level): massive granite (`--sound 4`) holds a 163 m face above 60° with scree cones at 34–35° under it (`.out/terra/relief/blocks/view-n4-granite-massive-L3.png`); granite left to its slopes sheds talus at p50 34.4°, p95 36.3°; shale holds no face above 45°.
 
-Not verified after the last edits (the shared tree did not compile for the last hour because of other streams' files; run `mise -C @simulation run test` first):
+Suite (`mise -C @simulation run test`, 26 Nov, 287 s under load): Materials, Climate, Clouds, Atmosphere, Regularity, `testLandscapePlane` and `testRelief` pass up to the bedded-rock case; what runs after `testRelief` (World determinism and budgets, Inspect, Chart, …) has not been seen green with these mechanics.
 
-- `testLandscapePlane` — last seen failing on "a site plane was cut into gullies (5.1)" with `BareCreepRate` 0.002. The rate is back at 0.02 (the old value) and the Local/Site drainage rules are the old ones; whether that makes it pass is unconfirmed.
-- `testRelief` (`test/Relief.cpp`, new) has never run to its end in the suite.
-- The reviewer's fixes of 26 Nov (stale `foot`, leftover moving debris, sheet margin spelled as it acts) compiled only in part.
+- `testRelief` (`test/Relief.cpp`) covers: the strength curve, a massive granite canyon that holds a wall and no face above what its rock holds, a replay twice giving one result, slope processes conserving ground to 0.2 % of what failed, talus with a median at repose, shale holding no wall.
+- `testReliefBeds` (same file) is NOT registered in `test/Main.cpp`: on sandstone over shale (24 m beds, `--sound 2`, 20 steps, river) its last check reads a steep run of 520 m on a block 200 m high. Something builds or leaves a spike there; first suspects are `heap` in Talus.cpp and the debris laid back at the end of a `settleDebris` round. Fix, then register it.
+- The steepest twentieth of talus cells stands at about 50° after a step (the median is 34°): debris the run-out leaves on cells the pass had already visited.
 
 Known defects, with status:
 
@@ -40,14 +40,15 @@ Nothing half-edited. The last change set was the reviewer's findings (see 5). Th
 
 ## 4. Next steps
 
-1. Build and run the suite. If the Site plane check fails, the lever is `BareCreepRate` (Hillslope.cpp) and `ChannelHeads[Site]` (Process.hpp); do not touch the test.
-2. Run `test/Relief.cpp` to the end; fix what it shows (thresholds were set from `terra block` runs listed in 7).
-3. Reviewer finding still open: `failFaces` judges the whole column by the bed at its top, so a thin weak bed behind a strong lip is cut through the strong bed under it (Stability.cpp, the `whole` term). Give the whole-slope term the same own-bed correction as the face term, and add a weak-over-strong block case to the test.
-4. Reviewer finding still open: `retreatFaces` drops the solute share at once while `failFaces` keeps it as fines; choose one.
-5. Cure the controller ribs (Uplift.cpp `raise`): hold the mean over a parent cell without lifting shoulders beside a cut, then switch Local to `gathersWater` and re-run `terra measure plane --levels 23`.
-6. Re-run the nine places (`before` set is old mechanics on the old planet): `terra relief --at <kind> --tiles 2 --out <dir>` for humid-range, cold-range, old-range, dry-plateau, flat-beds, fold-belt, granite, lowland, coast; then `terra view` at each.
-7. Timings: `terra measure performance --x … --z …` (baseline under load, one thread: Region 3.6 s, Local 4.6 s, Site 2.4 s per tile; the measure stream's idle figures 6.3 / 4.4 / 2.6 s). The new slope solve and debris cones cost; not measured on a quiet machine.
-8. Queued from the lead, not started: sub-cell relief tile field; lakes keep rock basins; rivers across tile edges; level consistency; braided valley floors (lateral planation by large rivers); canyon lands and old worn ranges present on seed 42; export the domain allocation from Build.cpp; inner parallelism with a 1-thread-versus-pool bitwise test.
+Order set by the lead on 26 Nov:
+
+1. The settling controller (`raise()` in Uplift.cpp). It is what ribs the ground at equal spacing and why Local and Site cannot use the Region's drainage rule. First direction to test: one correction per parent-cell footprint (16 × 16 fine cells), blended smoothly between parent cells, answering the mean over that footprint only, never an individual cut; the fine level may not move the mean of a parent cell or the bed of a river the parent has. If any controller keeps producing a wavelength, replace settling (e.g. base levels fixed along the parent's rivers, slopes rising from them at their limiting gradients) and say so. Regression: `terra measure plane --levels 23` (planes flat, a crease gathering into one valley, no comb), then `mise -C @simulation run test`. When it lands, send the lead the Local view of the landing range again (`terra view --x -2490000 --z -4600000 --above 2200 --to-x -2467328 --to-z -4625920 --site 0 --local 30000 --region 180000 --snow 0`) and one from a valley floor at eye height looking up at the range.
+2. Then `gathersWater` for Local and Site (channel initiation by gathered water, hidden-stream lowering — sizes tried: Local 1e5 and 1e4 m³/yr, Site 400), then `BareCreepRate` towards 0.002; plane test after each.
+3. Lakes: keep rock basins (rim of rock, outlet not cut down to the floor); today any lake whose outlet is cut below a cell loses that cell (Fluvial.cpp, `solveHeights`).
+4. Reviewer findings still open: (a) `failFaces` judges the whole column by the bed at its top, so a thin weak bed behind a strong lip is cut through the strong bed under it (Stability.cpp, the `whole` term; give it the own-bed correction the face term has) — this is the stepped-wall case; (b) `retreatFaces` drops the solute share at once while `failFaces` keeps it as fines; (c) creep discards `supply − wanted`; (d) `FlowScratch` owns replay state that belongs in `Domain`; (e) `Structure.cpp` reads the nearest strata node where `Units.cpp` blends four.
+5. `testReliefBeds` (see 2), then register it.
+6. Tile-edge rivers, level consistency, the sub-cell relief field, inner parallelism with a 1-thread-versus-pool bitwise test, the nine places on the present planet (`terra relief --at <kind> --tiles 2 --out <dir>`, then `terra view` at each; the `before` set is old mechanics on the old planet), timings on a quiet machine (`terra measure performance --x … --z …`; under load, one thread, before: Region 3.6 s, Local 4.6 s, Site 2.4 s per tile; the new slope solve and debris cones cost and are not yet measured).
+7. Also queued: braided valley floors, canyon lands and old worn ranges present on seed 42, kilometres of loose cover under Site, export of the domain allocation from Build.cpp.
 
 ## 5. Decisions and why
 
@@ -77,7 +78,7 @@ Added to shared files (all additive unless noted):
 - `landscape/fn/Hillslope.cpp`: `shapeSlopes` branches by level (ground path unchanged), `BareCreepRate`, `FrostCreep`, `frostShare` in `weather`.
 - `landscape/fn/Fluvial.cpp`, `Flow.cpp`: see 5; the ground level takes the same branches as Local and Site except lake draining and the free-fall cap, which are off at ground level.
 - `measure/type/Mosaic.hpp`: `coarse`; `measure/fn/Plane.hpp`: `allocateBare` (exported from PlaneDomain.cpp; it must list every per-cell `Domain` array).
-- `tool/main.cpp`, `Arguments.hpp`: commands `view`, `relief`, `block`. `test/Main.cpp`: `testRelief` before `testLandscapeWorld`.
+- `tool/main.cpp`, `Arguments.hpp`: commands `view`, `relief`, `block`. `test/Main.cpp`: `testRelief` before `testLandscapeWorld` (`testReliefBeds` is defined and not called).
 
 Step loop (`stepDomain`, Replay.cpp) is unchanged in structure: `followNeighbours`, `readClimate`, `raise`, units, `shapeSlopes`, `floodLevels`, `routeWater`, ice in cold phases, `cutAndFill`. Slope hooks of other streams belong before or after `shapeSlopes`; anything that moves loose cover should end with `settleDebris`.
 

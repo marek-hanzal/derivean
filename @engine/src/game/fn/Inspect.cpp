@@ -27,6 +27,9 @@ void describeWeather(Inspection& record, const Game& game, sim::Vec2 place, doub
     add("Pressure Pa", report.pressure);
     add("Rain mm/h", report.weather.rain);
     add("Snow mm/h", report.weather.snow);
+    add("Ash fallen kg/m²", report.ash.mass);
+    add("Ash falling kg/m²/s", report.ash.rate);
+    add("Veil optical depth", report.aerosolDepth);
     add("Snow lying kg/m²", report.weather.snowpack);
     add("Snow line m above the sea", report.snowLine);
     add("Snow is kept", std::string("per weather cell at a ladder of heights; every height gets the cell's precipitation, without wind drift, aspect or avalanches"));

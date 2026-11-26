@@ -15,6 +15,8 @@ struct ProvingSpec {
     int episodes{};          // region steps with an eruption, from the first on (local level: every fourth step)
     int quiet{};             // steps of weather alone after the last
     double paroxysm{};       // m³ of the largest single eruption of the last episode
+    double valley{};         // m, depth of a valley cut along the fall line through the vent
+    double valleyWidth{};    // m from its floor to its rim
 };
 
 // Proving.cpp
@@ -36,7 +38,16 @@ struct EdificeShape {
     double pile{};        // m³ of volcanic rock within `reach`
 };
 
+// Heights and pile thickness on a square grid: a domain, or finished tiles laid side by side.
+struct HeightGrid {
+    int width{}, height{};
+    double cell{};
+    Vec2 origin;                    // world position of the outer corner of cell (0, 0)
+    std::vector<float> top, pile;   // m
+};
+
 // Survey.cpp
-EdificeShape measureEdifice(const Domain& domain, Vec2 site, double reach);
+HeightGrid gridOf(const Domain& domain);
+EdificeShape measureEdifice(const HeightGrid& grid, Vec2 site, double reach);
 
 } // namespace derivean::sim

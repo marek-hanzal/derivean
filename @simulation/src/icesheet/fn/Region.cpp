@@ -1,0 +1,175 @@
+#include "icesheet/fn/Region.hpp"
+
+#include "core/service/Workers.hpp"
+#include "icesheet/constant/Ice.hpp"
+#include "icesheet/fn/Balance.hpp"
+#include "icesheet/fn/Flow.hpp"
+
+namespace derivean::sim {
+namespace {
+
+constexpr int Coarse = SheetCoarsening;
+constexpr int FirstRounds = 480;          // most a stage is relaxed for the first time it is solved
+constexpr int NextRounds = 48;            // and each later time, from where it was left
+constexpr float Settled = 2e-4f;          // share of the ice volume forty rounds may still move
+constexpr int SmoothRadius = 8;           // coarse cells over which the ground under the source's sheet is averaged
+constexpr float SteepestSurface = 0.3f;
+constexpr float SmallIce = 0.25f * LeastSheet;   // m of blended coarse ice below which a cell is beyond the sheet
+constexpr int LeastRows = 16;
+
+Vec2 nodeCentre(const Domain& domain, int x, int z) {
+    return {domain.origin.x + (x + 0.5) * Coarse * domain.cell, domain.origin.z + (z + 0.5) * Coarse * domain.cell};
+}
+
+float groundOf(const Domain& domain, size_t i) { return domain.ground.rock[i] + domain.sedimentAt(i); }
+
+// m of ice a finished neighbour recorded on a domain cell; negative where no finished tile owns it.
+float recordedIce(const Domain& domain, int x, int z, int stage) {
+    const int tx = x < Halo ? -1 : x >= Halo + TileCells ? 1 : 0, tz = z < Halo ? -1 : z >= Halo + TileCells ? 1 : 0;
+    const Tile* tile = tx || tz ? domain.finished[(tz + 1) * 3 + tx + 1] : nullptr;
+    if (!tile) return -1;
+    const size_t from = size_t(z - Halo - tz * TileCells) * TileCells + size_t(x - Halo - tx * TileCells);
+    return stage == IceNow ? tile->ice[from] : tile->iceAge[from];
+}
+
+// Mean of the square of half-width `radius` around every cell, clamped at the edge.
+std::vector<float> smoothed(const std::vector<float>& field, int n, int radius) {
+    std::vector<float> along(field.size()), both(field.size());
+    for (int pass = 0; pass < 2; ++pass) {
+        const std::vector<float>& from = pass ? along : field;
+        std::vector<float>& to = pass ? both : along;
+        for (int z = 0; z < n; ++z)
+            for (int x = 0; x < n; ++x) {
+                float sum = 0;
+                for (int d = -radius; d <= radius; ++d)
+                    sum += pass ? from[size_t(std::clamp(z + d, 0, n - 1)) * size_t(n) + size_t(x)] : from[size_t(z) * size_t(n) + size_t(std::clamp(x + d, 0, n - 1))];
+                to[size_t(z) * size_t(n) + size_t(x)] = sum / float(2 * radius + 1);
+            }
+    }
+    return both;
+}
+
+} // namespace
+
+bool iceReaches(const Domain& domain, const SheetSource& source) {
+    const int n = domain.size / Coarse, coldest = source.stages() - 1;
+    for (int z = 0; z < n; ++z) {
+        for (int x = 0; x < n; ++x) {
+            const Vec2 at = nodeCentre(domain, x, z);
+            if (source.thickness(coldest, at) > 0) return true;
+            const size_t i = domain.index(x * Coarse + Coarse / 2, z * Coarse + Coarse / 2);
+            const double above = groundOf(domain, i) - domain.seaLevel;
+            if (above > 0 && iceBalance(domain.warmth[i], source.cooling[size_t(coldest)], source.halfRange(at.z), domain.rain[i], above, above) > 0) return true;
+        }
+    }
+    return false;
+}
+
+void solveStage(const Domain& domain, SheetWork& work, int stage, int recorded, Workers* workers) {
+    const SheetSource& source = work.source;
+    const int n = domain.size / Coarse;
+    if (work.coarse.size() != size_t(source.stages())) work.coarse.resize(size_t(source.stages()));
+    IceGrid& grid = work.coarse[size_t(stage)];
+    const bool first = grid.width == 0;
+    if (first) shapeIce(grid, n, n, Coarse * domain.cell, false);
+    grid.seaLevel = float(domain.seaLevel);
+    grid.cooling = float(source.cooling[size_t(stage)]);
+
+    std::vector<float> given(grid.cells(), -1.0f);
+    for (int z = 0; z < n; ++z) {
+        for (int x = 0; x < n; ++x) {
+            const size_t to = grid.index(x, z);
+            float bed = 0, warmth = 0, rain = 0, ice = 0;
+            bool owned = recorded >= 0;
+            for (int k = 0; k < Coarse * Coarse; ++k) {
+                const int cx = x * Coarse + k % Coarse, cz = z * Coarse + k / Coarse;
+                const size_t from = domain.index(cx, cz);
+                bed += groundOf(domain, from), warmth += domain.warmth[from], rain += domain.rain[from];
+                const float theirs = owned ? recordedIce(domain, cx, cz, recorded) : -1.0f;
+                owned = owned && theirs >= 0;
+                ice += theirs;
+            }
+            const float share = 1.0f / float(Coarse * Coarse);
+            const Vec2 at = nodeCentre(domain, x, z);
+            grid.bed[to] = bed * share, grid.warmth[to] = warmth * share, grid.rain[to] = rain * share;
+            grid.heat[to] = source.heat(at), grid.sink[to] = source.sink(stage, at), grid.halfRange[to] = source.halfRange(at.z);
+            if (owned) given[to] = ice * share;
+        }
+    }
+    // The source's sheet lies on ground far smoother than a domain's; its thickness is taken over
+    // the domain's ground averaged as widely, which puts its surface, not its thickness, on every cell.
+    const std::vector<float> level = smoothed(grid.bed, n, SmoothRadius);
+    for (int z = 0; z < n; ++z) {
+        for (int x = 0; x < n; ++x) {
+            const size_t i = grid.index(x, z);
+            const float beyond = source.thickness(stage, nodeCentre(domain, x, z));
+            const float guess = beyond > 0 ? std::max(0.0f, level[i] + beyond - grid.bed[i]) : 0.0f;
+            const bool rim = x == 0 || z == 0 || x == n - 1 || z == n - 1;
+            grid.held[i] = given[i] >= 0 || (rim && beyond > 0);
+            if (given[i] >= 0) grid.thickness[i] = given[i];
+            else if (grid.held[i] || first) grid.thickness[i] = guess;
+        }
+    }
+    relaxIce(grid, workers, first ? FirstRounds : NextRounds, Settled, false);
+}
+
+SheetField readStage(const Domain& domain, const SheetWork& work, int stage, Workers* workers) {
+    const IceGrid& grid = work.coarse[size_t(stage)];
+    const int n = grid.width, size = domain.size;
+    const size_t cells = domain.cells();
+    SheetField field;
+    for (auto* each : {&field.thickness, &field.top, &field.fallX, &field.fallZ, &field.slide, &field.melt}) each->assign(cells, 0.0f);
+
+    // The surface with the crust's sink left out, and its slope: both smooth across the coarse cells.
+    std::vector<float> top(grid.cells()), fallX(grid.cells()), fallZ(grid.cells());
+    for (size_t i = 0; i < grid.cells(); ++i) top[i] = grid.bed[i] + grid.thickness[i];
+    for (int z = 0; z < n; ++z)
+        for (int x = 0; x < n; ++x) {
+            const int west = std::max(0, x - 1), east = std::min(n - 1, x + 1), north = std::max(0, z - 1), south = std::min(n - 1, z + 1);
+            fallX[grid.index(x, z)] = (top[grid.index(east, z)] - top[grid.index(west, z)]) / float((east - west) * grid.cell);
+            fallZ[grid.index(x, z)] = (top[grid.index(x, south)] - top[grid.index(x, north)]) / float((south - north) * grid.cell);
+        }
+
+    const float sea = float(domain.seaLevel);
+    const auto rows = [&](int begin, int end) {
+        for (int z = begin; z < end; ++z) {
+            const float gz = (z + 0.5f) / Coarse - 0.5f;
+            const int iz = std::clamp(int(std::floor(gz)), 0, n - 2);
+            const float tz = std::clamp(gz - float(iz), 0.0f, 1.0f);
+            for (int x = 0; x < size; ++x) {
+                const size_t i = domain.index(x, z);
+                const float ground = groundOf(domain, i);
+                field.top[i] = std::max(ground, sea);
+                const float gx = (x + 0.5f) / Coarse - 0.5f;
+                const int ix = std::clamp(int(std::floor(gx)), 0, n - 2);
+                const float tx = std::clamp(gx - float(ix), 0.0f, 1.0f);
+                const size_t corner[4] = {grid.index(ix, iz), grid.index(ix + 1, iz), grid.index(ix, iz + 1), grid.index(ix + 1, iz + 1)};
+                const float weight[4] = {(1 - tx) * (1 - tz), tx * (1 - tz), (1 - tx) * tz, tx * tz};
+                const auto blend = [&](const std::vector<float>& from) {
+                    return weight[0] * from[corner[0]] + weight[1] * from[corner[1]] + weight[2] * from[corner[2]] + weight[3] * from[corner[3]];
+                };
+                // Ice stands on a cell only within reach of coarse cells that hold some: a valley
+                // far outside the sheet is below its neighbours' ground, not under their ice.
+                if (blend(grid.thickness) < SmallIce) continue;
+                const float surface = blend(top), thickness = surface - ground;
+                if (thickness < LeastSheet) continue;
+                const float sink = blend(grid.sink);
+                if (ground < sea && float(IceToWater) * thickness < sea - (ground - sink)) continue;
+                field.thickness[i] = thickness;
+                field.top[i] = surface;
+                field.fallX[i] = blend(fallX), field.fallZ[i] = blend(fallZ);
+                const float slope = std::min(SteepestSurface, std::sqrt(field.fallX[i] * field.fallX[i] + field.fallZ[i] * field.fallZ[i]));
+                const double thaw = bedThaw(iceSurfaceWarmth(domain.warmth[i], grid.cooling, surface - sink - sea), thickness, blend(grid.balance), blend(grid.heat), slope);
+                const float stress = float(IceWeight) * thickness * slope;
+                field.slide[i] = std::min(FastestSlide, float(thaw) * float(SlideRate) * stress * stress);
+                // Summer melt drains to the bed through the ice; a thawed bed adds its own.
+                field.melt[i] = float(IceToWater) * std::max(0.0f, -blend(grid.balance)) + (thaw > 0.5 ? BasalMelt : 0.0f);
+            }
+        }
+    };
+    if (workers) workers->parallelFor(size, rows, LeastRows);
+    else rows(0, size);
+    return field;
+}
+
+} // namespace derivean::sim

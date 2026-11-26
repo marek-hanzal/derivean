@@ -14,7 +14,7 @@ ShoreGrid emptyGrid(int side, double cell, double seaLevel) {
 
 } // namespace
 
-ShoreGrid gridOf(const Domain& domain) {
+ShoreGrid shoreGridOf(const Domain& domain) {
     ShoreGrid grid = emptyGrid(domain.size, domain.cell, domain.seaLevel);
     const Shore* shore = domain.shore && domain.shore->top.size() == domain.cells() ? domain.shore.get() : nullptr;
     const float sea = float(domain.seaLevel) + SeaBand;
@@ -30,7 +30,7 @@ ShoreGrid gridOf(const Domain& domain) {
     return grid;
 }
 
-ShoreGrid gridOf(const std::vector<const Tile*>& tiles, int perSide) {
+ShoreGrid shoreGridOf(const std::vector<const Tile*>& tiles, int perSide) {
     const Tile& first = *tiles.front();
     ShoreGrid grid = emptyGrid(perSide * TileCells, specOf(first.key.level).cell, first.seaLevel);
     for (int tz = 0; tz < perSide; ++tz) {

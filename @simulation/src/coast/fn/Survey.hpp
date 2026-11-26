@@ -42,9 +42,9 @@ struct ShoreGrid {
     bool wet(size_t i) const { return water[i] != NoWater; }
 };
 
-ShoreGrid gridOf(const Domain& domain);
+ShoreGrid shoreGridOf(const Domain& domain);
 // `tiles` × `tiles` finished tiles of one level, row-major; none may be null.
-ShoreGrid gridOf(const std::vector<const Tile*>& tiles, int perSide);
+ShoreGrid shoreGridOf(const std::vector<const Tile*>& tiles, int perSide);
 
 struct ShoreSurvey {
     // Shoreline is counted in cell edges between a dry and a wet cell, so a shore that runs

@@ -35,7 +35,7 @@ Last checkpoint commit: `625fdda` (work in progress, not a verified state). Late
 | Stream | File | Owns | Status |
 | --- | --- | --- | --- |
 | Planet, strata, rock mass, ore, heat, spawn | [planet.md](planet.md) | `@simulation/src/{planet,strata,rockmass,ore,tectonics,core}`, `simulation/fn/Spawn.*`, `simulation/{type,service}/World.*`, `tool/PlanetCommand.cpp` | Lead's own; stable |
-| Relief of Region, Local, Site | [relief.md](relief.md) | behaviour of those levels in `@simulation/src/landscape/**`, `tool/{View,Relief}Command.cpp` | In progress; top priority |
+| Relief of Region, Local, Site | [relief.md](relief.md) | behaviour of those levels in `@simulation/src/landscape/**`, `tool/{View,Relief,Block}Command.cpp` | In progress, second run: Region and slope mechanics done; the settling controller at Local and Site is next; top priority |
 | Ground level and voxel forms | [ground.md](ground.md) | `@simulation/src/{ground,relief}`, `simulation/fn/{Query,Reader,Live}.*` | Finished; no active owner |
 | Groundwater, springs, caves, karst | [groundwater.md](groundwater.md) | `@simulation/src/groundwater/**` | In progress |
 | Interventions, hydrology, time | [interventions.md](interventions.md) | `@simulation/src/{hydrology,intervention}` | Finished; not wired into the game |

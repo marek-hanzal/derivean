@@ -44,6 +44,8 @@ Napi::Object cubeChunk(Napi::Env env, const CubeChunk& value) {
 }
 
 // Null in a game whose far terrain is patches.
+} // namespace
+
 Napi::Value farCubes(Napi::Env env, const Frame& frame) {
     if (frame.cubeLevels.empty()) return env.Null();
     auto cubes = Napi::Object::New(env);

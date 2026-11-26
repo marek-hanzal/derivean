@@ -75,7 +75,7 @@ function wellFormed(frame) {
         assert.ok(band[channel] instanceof Float32Array && band[channel].length === cells * cells, channel);
       assert.ok(band.genus instanceof Uint8Array && band.genus.length === cells * cells && band.genus.every((genus) => genus < 10));
     }
-    for (const channel of ["heaping", "rain", "snow", "snowpack", "snowLine"]) assert.ok(frame.clouds[channel] instanceof Float32Array && frame.clouds[channel].length === cells * cells);
+    for (const channel of ["heaping", "rain", "snow", "snowpack", "snowLine", "aerosolDepth", "ashAloft", "ashLevel"]) assert.ok(frame.clouds[channel] instanceof Float32Array && frame.clouds[channel].length === cells * cells);
     assert.ok(world.snowLadder.length > 1 && world.snowLadder.every((height, rung) => rung === 0 || height > world.snowLadder[rung - 1]));
     assert.ok(frame.clouds.snowLadder instanceof Float32Array && frame.clouds.snowLadder.length === cells * cells * world.snowLadder.length);
     assert.ok(Number.isFinite(frame.clouds.seaLevel) && frame.clouds.snowLadder.every((snow) => snow >= 0));

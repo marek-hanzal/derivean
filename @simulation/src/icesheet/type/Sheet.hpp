@@ -1,9 +1,11 @@
 #pragma once
 
+#include "core/type/Vec.hpp"
 #include "icesheet/type/Continental.hpp"
 #include "icesheet/type/IceGrid.hpp"
 #include "landscape/type/Level.hpp"
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -30,17 +32,32 @@ struct SheetField {
     std::vector<float> top;              // m, ice surface, or the ground (the sea over a sea floor) where there is none
     std::vector<float> fallX, fallZ;     // surface slope of the sheet, pointing uphill
     std::vector<float> slide;            // m/yr over the bed
+    std::vector<float> melt;             // m/yr of water reaching the bed
+};
+
+// What a domain cannot find for itself: the sheet beyond its rim, the sink of the crust under the
+// whole sheet and the heat from below. A world answers from its planet-wide stages
+// (icesheet/type/Continental.hpp); a hand-built domain is given functions of its own.
+struct SheetSource {
+    std::vector<double> cooling;                                 // °C against the present per stage, warmest first
+    std::function<float(int stage, Vec2 position)> thickness;    // m of ice the stage holds at a place
+    std::function<float(int stage, Vec2 position)> sink;         // m the crust has given way there
+    std::function<float(Vec2 position)> heat;                    // K/m in the rock
+    std::function<float(double z)> halfRange;                    // °C between the annual mean and the warmest month
+
+    int stages() const { return int(cooling.size()); }
 };
 
 // The ice of a domain while it is replayed.
 struct SheetWork {
-    std::shared_ptr<const ContinentalIce> ice;   // null where the planet has no relief to solve it on
+    SheetSource source;
     bool reached{};                      // some stage brings ice into the domain
     int worked{};                        // steps whose glaciations have been worked into the ground
     std::vector<IceGrid> coarse;         // per stage, on cells four domain cells wide; empty until first solved
     std::vector<float> worn;             // m of rock ground off so far, per domain cell
     std::vector<float> now, lastMaximum; // m of grounded ice per domain cell, once the last sheet has left its record
-    std::shared_ptr<SheetRecord> record;
+    // Per domain cell while the last sheet leaves its record; the tile's cells are read off at the end.
+    SheetRecord left;
 };
 
 inline constexpr int SheetCoarsening = 4;   // domain cells per side of a cell of the coarse relaxation

@@ -37,4 +37,25 @@ inline constexpr double ThawBand = 2.0;                              // °C belo
 
 inline constexpr float LeastSheet = 20.0f;                           // m of ice below which a cell counts as bare
 
+// What sliding ice does to its bed.
+inline constexpr float FastestSlide = 1500.0f;      // m/yr; faster ice rides on water and no longer grips its bed
+inline constexpr float WearRate = 1.0e-5f;          // m of granite ground off per metre the ice slides over it
+inline constexpr float GraniteErodibility = 1.2e-6f;   // the stream-power coefficient WearRate is stated for
+inline constexpr float LooseGain = 15.0f;           // times faster the ice takes loose cover than granite
+// Where the bed rises along the flow by more than this many times the fall of the ice surface, the
+// meltwater under the ice freezes on instead of flushing the debris out, and the ice stops cutting.
+// It is what bounds a rock basin: metres under a flat sheet, a kilometre behind a fjord's sill.
+inline constexpr float Overdeepening = 1.5f;
+inline constexpr float TillReach = 15e3f;           // m the ice carries debris before all but 1/e of it is lodged
+// Ground rock by transport class (blocks and gravel, sand, fines): the mix landscape/fn/Glacial.cpp
+// leaves at a glacier's front. The two must stay equal for sheet and valley ice to lay the same till.
+inline constexpr float TillSplit[3] = {0.5f, 0.2f, 0.3f};
+
+// Water under the ice.
+inline constexpr float BasalMelt = 0.01f;           // m/yr of water a thawed bed yields
+inline constexpr float EskerFlow = 2.0e8f;          // m³/yr above which a stream under the ice keeps a tunnel that fills with its bedload
+inline constexpr float EskerReach = 12e3f;          // m of such a tunnel over which it takes all but 1/e of the passing gravel and sand
+inline constexpr float PortalFlow = 1.0e9f;         // m³/yr at which a stream leaving the ice takes half of what the ice dropped there on with it
+inline constexpr float OutwashReach[2] = {6e3f, 22e3f};   // m gravel and sand travel beyond the ice before all but 1/e has settled
+
 } // namespace derivean::sim

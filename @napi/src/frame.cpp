@@ -52,6 +52,9 @@ Napi::Value clouds(Napi::Env env, const Frame& frame) {
     output["snowLadder"] = packed(env, field.snowLadder);
     output["snowLine"] = packed(env, field.snowLine);
     output["seaLevel"] = field.seaLevel;
+    output["aerosolDepth"] = packed(env, field.aerosolDepth);
+    output["ashAloft"] = packed(env, field.ashAloft);
+    output["ashLevel"] = packed(env, field.ashLevel);
     return output;
 }
 

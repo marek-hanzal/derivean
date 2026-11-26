@@ -8,14 +8,24 @@ The playable world on one simulated planet: voxels streamed from `@simulation` a
 
 ## 2. State now
 
-Written 2026-11-26 about 02:15 local.
+Written 2026-11-26 02:30 local.
 
 Works, last verified:
 - Native tests up to the far-patch checks: `engine-tests` ran green through `testWorld`, `testScenarios`, `testStreamedWorld`, `testWeather`, planet spawn (01:48 build).
-- Thread bench, old pools (`engine-bench 2e9 patches 5 plain quick`, 01:56, load average 31): planet and spawn 108 s; first far surface 0.0 s; far view whole 1.9 s; voxels to stand on 18.1 s; idle step mean 0.45 / p95 1.45 / p99 4.1 / max 9.4 ms; walking 0.43 / 1.5 / 5.8 / 16.9 ms. The "after" run and the cube run are not finished; logs are written next to this session's scratch files, not in the repository, so run the bench again (section 7).
+- Thread bench at age 2e9, far patches, 01:48 build (before own-place tile priority), quick mode. The machine's load average was about 30 during the first run and rose to 85 during the second, so the two are not a fair pair:
+
+  | | crew 5, frame thread plain | crew 12, frame thread favoured |
+  | --- | --- | --- |
+  | voxels to stand on after start | 18.1 s | 22.3 s |
+  | walking step mean / p95 / p99 / max | 0.43 / 1.52 / 5.81 / 16.9 ms | 0.34 / 1.35 / 4.08 / 6.6 ms |
+  | voxels whole after a 1.5 km teleport | 259.7 s | 615.3 s (load 85) |
+  | step while waiting there | 0.22 / 0.76 / 1.84 / 12.2 ms | 0.17 / 0.55 / 1.37 / 39.7 ms |
+  | boost flight of 103 km, step | 0.57 / 1.52 / 3.49 / 11.7 ms | 0.64 / 2.98 / 6.54 / 16.6 ms |
+
+  First far surface in the first frame and the far view whole after 1.5–1.9 s in both.
 
 Broken or unverified right now:
-- **The tree does not compile** since about 01:50: `@simulation/src/atmosphere/type/Plume.hpp:15` declares `enum AshClass { Lapilli, Sand, Dust }` in `derivean::sim`, which collides with `Sand` of the sediment classes in `@simulation/src/landscape/type/Terrain.hpp:17` in every engine file that sees both (all that include `game/type/Game.hpp`). Not ours to edit; the atmosphere/volcanism stream must rename or scope it.
+- `@simulation/src/atmosphere/type/Plume.hpp:15` declares `enum AshClass { Lapilli, Sand, Dust }` in `derivean::sim`, which collides with `Sand` of the sediment classes in `@simulation/src/landscape/type/Terrain.hpp:17` in every file that sees both. The simulation's own files do not, the engine's do. Worked around in `@engine/src/nature/type/Air.hpp`, the only place the engine includes the atmosphere: it renames the token with a macro. Delete that header's macro once the simulation scopes one of the two.
 - `engine-tests`, 01:48 build: fails in `streamsWithoutBlocking` with "A far patch shows water that is not a level sheet" at the new landing (spawn −364162, −990, 302470). Cause unknown; `@engine/test/PlanetSession.hpp` prints a `DIAG patch ...` block with the 5 × 5 neighbourhood right before the failing check. Remove the diagnostic once fixed.
 - `engine-tests`, 01:20 build: failed "The player must come to rest on the ground" (`@engine/test/Planet.cpp`), reported by the ground stream as the site surface lying 1.1 m above the ground level. `footingAt` already reads `sim::Level::Ground`; `@engine/test/Planet.cpp` prints a `DIAG feet ...` line before that check. Suspects: the player resting on a stone (stones are not part of `surfaceAt`), or the spawn found at site level. Not yet seen with the diagnostic.
 - `farColoursMatchVoxels` failed at 01:05 with 48 % agreement after the simulation changed its cover rule; `surfaceMaterial` was updated since (silt where fines are thin or drowned, `coarseAs`, spring deposits) and has not been measured again.
@@ -25,7 +35,7 @@ Broken or unverified right now:
 
 ## 3. In progress
 
-Waiting for the simulation tree to compile, then: build, run `engine-tests`, read the two `DIAG` outputs, fix, run the bridge tests, run the three bench configurations, update this file and the numbers in the report.
+Build and `engine-tests` are running on the current tree; then read the two `DIAG` outputs, fix, run the bridge tests, run the cube bench, update this file.
 
 Half-done things that look odd:
 - Two far-terrain paths exist. `PlanetOptions::cubes` (bridge: `WorldOptions.cubes`) picks cubes (`Game::cubes`, `@engine/src/horizon/type/FarCubes.hpp`) or patches (`Game::horizon`). The patch path (`Patch.*`, `Horizon.*`, `Select.cpp`, shading raster, `farPatch` in `@napi/src/far.cpp`, `FarPatch` in the contract, `checkPatch`/`farColoursMatchVoxels` in the tests) is to be deleted once the renderer draws cubes over the whole view. Do not invest in it.
@@ -69,8 +79,9 @@ Half-done things that look odd:
 - `CubeChunk { id, level, edge, origin, quads, water: { level, quads }[], dataLevel, wantedLevel }`; `CubeLevel { level, edge, wanted, shown, box }`; `Frame.cubes { added, removed, data, levels } | null`.
 - Readiness: `Frame.cubes.levels[k].wanted/shown` (squares of ground) and `box`; `Frame.tiles.{region,local,site,ground}.{wanted,finished}`; `Frame.pending.patches` counts missing far columns; `Frame.ready`; `CubeChunk.dataLevel/wantedLevel`; `Frame.cubes.data`.
 - `CloudField.snowLadder`, `snowLine`, `seaLevel`; `Frame.weather.snowpack` is snow at the player's height.
+- `CloudField.aerosolDepth`, `ashAloft`, `ashLevel` are forwarded unchanged from the simulation's cloud field (zero until a source exists); the inspector shows `WeatherReport::ash` and `aerosolDepth`. The atmosphere's side is in `docs/handoff/atmosphere.md`.
 - Nothing measured from the world origin is `float32`: particles are relative to `Frame.particleOrigin`, patch heights to `origin.y`, quads to their chunk.
-- Shared files: `@napi/src/addon.cpp` (`abandon`, `faceWords`, `cubes`, `snowLadder`, `favourCallingThread`; the map stream owns the chart lines), `@game/main/engine-worker.cjs` (transfer list entries for `quads`, cube chunks, `snowLadder`, `snowLine`; message kind `close`), `@game/main/engine.mjs` (`close`, addon pinned).
+- Shared files: `@napi/src/addon.cpp` (`abandon`, `faceWords`, `cubes`, `snowLadder`, `favourCallingThread`; the map stream owns the chart lines), `@game/main/engine-worker.cjs` (transfer list entries for `quads`, cube chunks, `snowLadder`, `snowLine`, `aerosolDepth`, `ashAloft`, `ashLevel`; message kind `close`), `@game/main/engine.mjs` (`close`, addon pinned).
 - Asked of the simulation: rename `AshClass::Sand`; top material and cover kinds in `SurfaceSample` at every level; a non-blocking bed-at-depth query; a revision stamp per tile; eviction (section 4); destroy order of `World`.
 
 ## 7. How to build, run and verify

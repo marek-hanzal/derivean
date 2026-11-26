@@ -11,8 +11,11 @@ namespace {
 constexpr float Least = 1e-3f;       // m of mobile layer below which a cell has nothing to pass on
 constexpr float Tolerance = 0.02f;   // share of a flow unit by which a surface may stand above its rest
 
+// Lava keeps running while its core is hot and stiffens fast once the crust has grown through it:
+// the yield strength stays near its hot value for most of the way and reaches the cold one at the end.
 float yieldAt(const Rheology& rheology, float heat) {
-    return rheology.yieldCold * std::pow(rheology.yieldHot / rheology.yieldCold, std::clamp(heat, 0.0f, 1.0f));
+    const float spent = 1.0f - std::clamp(heat, 0.0f, 1.0f);
+    return rheology.yieldHot * std::pow(rheology.yieldCold / rheology.yieldHot, spent * spent * spent);
 }
 
 } // namespace

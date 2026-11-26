@@ -59,7 +59,7 @@ int sceneCommand(const Arguments& arguments) {
     std::printf("coast scene %s  level %d  %.0f m cells  %d steps in %.1f s  rock %s / %s  wind %.0f m/s from %.0f deg  swell %.1f m\n", scene.c_str(), int(spec.level),
                 domain.cell, domain.taken, seconds, std::string(definitionOf(spec.rock).name).c_str(), std::string(definitionOf(spec.other).name).c_str(), spec.wind, spec.windFrom,
                 spec.swell);
-    const ShoreGrid grid = gridOf(domain);
+    const ShoreGrid grid = shoreGridOf(domain);
     const ShoreSurvey survey = surveyShore(grid);
     printShore(grid, survey);
     if (domain.shore) printCoastLedger(domain.shore->ledger, grid.cell * grid.cell * double(grid.rock.size()));
@@ -122,7 +122,7 @@ int coastCommand(const Arguments& arguments) {
             if (const ShoreRecord* shore = held.back()->shore.get())
                 ledger.cut += shore->ledger.cut, ledger.dissolved += shore->ledger.dissolved, ledger.entered += shore->ledger.entered, ledger.left += shore->ledger.left;
         }
-    const ShoreGrid grid = gridOf(tiles, count);
+    const ShoreGrid grid = shoreGridOf(tiles, count);
     const ShoreSurvey survey = surveyShore(grid);
     std::printf("coast  seed %llu  level %d  %d x %d tiles from X %.0f Z %.0f  %.1f km across  %.0f m cells  sea level %.1f m  (%zu tiles in %.0f s)\n",
                 static_cast<unsigned long long>(arguments.seed()), int(level), count, count, first.x * tileSpan(level), first.z * tileSpan(level), grid.side * grid.cell / 1000, grid.cell,

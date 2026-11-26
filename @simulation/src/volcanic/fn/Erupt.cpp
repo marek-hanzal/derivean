@@ -7,6 +7,8 @@ namespace {
 
 constexpr int MostPulses = 10;          // parts in which a step's fall and lava alternate
 constexpr double AshReach = 70000.0;    // m beyond a domain from which a vent's ash is still followed
+constexpr double FloodVolume = 1e9;     // m³ of lava in one part of an eruption above which its sheets inflate
+constexpr double MostInflation = 5.0;   // times the usual thickness of a flow unit
 
 Laying emptyLaying(const Domain& domain) {
     Laying laying;
@@ -38,6 +40,9 @@ void eruptEpisode(Domain& domain, Emplacement& field, Laying& laying, int index,
         outburst.rheology = lavaOf(vent.magma);
         outburst.current = BlockFlow;
         outburst.pulses = std::clamp(int(2.0 + std::log2(1.0 + volume / 1e9)), 2, MostPulses);
+        // Fluid melt that comes up fast travels as thick, inflated sheets and holds a gentler
+        // slope: great outpourings build plains, small ones shields.
+        if (vent.magma == Magma::Basalt) outburst.rheology.sheet *= float(std::clamp(std::sqrt(outburst.lava / outburst.pulses / FloodVolume), 1.0, MostInflation));
         emplace(domain, field, laying, index, outburst);
     }
     if (!empties) return;

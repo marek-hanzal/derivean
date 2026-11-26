@@ -23,8 +23,8 @@ function advance(command) {
     ...(frame.cubes ? frame.cubes.added.flatMap(({ quads, water }) => [quads.buffer, ...water.map((sheet) => sheet.quads.buffer)]) : []),
   ];
   if (frame.clouds) {
-    const { bands, heaping, rain, snow, snowpack, snowLadder, snowLine } = frame.clouds;
-    transfer.push(heaping.buffer, rain.buffer, snow.buffer, snowpack.buffer, snowLadder.buffer, snowLine.buffer, ...bands.flatMap((band) => Object.values(band).map(({ buffer }) => buffer)));
+    const { bands, heaping, rain, snow, snowpack, snowLadder, snowLine, aerosolDepth, ashAloft, ashLevel } = frame.clouds;
+    transfer.push(heaping.buffer, rain.buffer, snow.buffer, snowpack.buffer, snowLadder.buffer, snowLine.buffer, aerosolDepth.buffer, ashAloft.buffer, ashLevel.buffer, ...bands.flatMap((band) => Object.values(band).map(({ buffer }) => buffer)));
   }
   return { value: frame, transfer };
 }
