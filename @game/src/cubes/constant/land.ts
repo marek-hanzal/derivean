@@ -21,3 +21,12 @@ export const LandShare = 0.75;
 // Slopes, rise over run, between which the land stops being lit as a slope and its cubes keep their own light:
 // the engine takes ground steeper than 45° for rock that stands as a face (CubeChunk.quads), and so does this.
 export const Steep = [0.8, 1.2] as const;
+
+// Slopes, rise over run (40° to 45°), above which snow stops lying on the land. A riser on gentler ground is the
+// stair the lattice cuts into a slope the snow covers, so it is drawn with the snow its top carries; steeper, it
+// is a face of rock and stays bare.
+export const SnowHolds = [0.84, 1] as const;
+
+// Cubes, of the level the slope is measured on, that a riser's cube may lie below the top of its column and still
+// take the snow: a step at the surface is one cube high, or two where the slope steepens.
+export const SnowDepth = 1;

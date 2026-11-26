@@ -1,3 +1,5 @@
+// 261 lines: one state machine over a shot's phases, which share the shot's bookkeeping; split by phase, that
+// state would pass through a layer that only forwards it.
 import type { Frame, Point } from "../../../contract/GameBridge";
 import type { WorldClock } from "../../calendar/service/WorldClock";
 import type { WeatherSought } from "../../clouds/fn/findWeather";
@@ -60,6 +62,7 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
   let refined = 0;
   let lastHeight = Number.NaN;
   let lastArrival = 0;
+  let finished = "";
   let notes: Record<string, unknown> = {};
   let cruise: { from: Point; pendingChunks: number; pendingPatches: number; generationMs: number } | undefined;
   let strokes = 0;
@@ -122,7 +125,10 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
       radius: 1, shape: "sphere", dig: false, place: false, fly: false, boost: false, ascend: 0, teleport: null,
     };
     if (!current || !frame) return next;
-    if (frame.chunks.length || frame.far.added.length || frame.far.removed.length || frame.cubes?.added.length) lastArrival = time;
+    // A tile finished anywhere counts as an arrival as much as a chunk: the view is still coming in.
+    const tiles = Object.values(frame.tiles).map((tile) => tile.finished).join();
+    if (tiles !== finished || frame.chunks.length || frame.far.added.length || frame.far.removed.length || frame.cubes?.added.length) lastArrival = time;
+    finished = tiles;
     if (phase === "time") {
       // Skip the clock first, then wait for the weather of that moment before choosing where to stand in it.
       if (!skipped) {

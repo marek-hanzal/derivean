@@ -164,7 +164,7 @@ export function createChartFeed(bridge: Pick<GameBridge, "chart">, surface: Char
     // For a capture record: what is on screen and what it took.
     describe() {
       if (!shown) return undefined;
-      const byLevel = [0, 0, 0, 0];
+      const byLevel = ChartLevels.map(() => 0);
       for (const pane of shown.panes) for (const level of pane.level) byLevel[level]++;
       const pixels = byLevel.reduce((sum, count) => sum + count, 0);
       return {

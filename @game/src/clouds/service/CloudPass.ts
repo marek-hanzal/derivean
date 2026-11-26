@@ -3,8 +3,8 @@ import {
   type Scene, Vector2, Vector3, type WebGPURenderer,
 } from "three/webgpu";
 import {
-  Fn, abs, dot, float, floor, fract, log2, max, min, mix, perspectiveDepthToViewZ, sampler, screenCoordinate, select, texture, uniform,
-  uv, vec2, vec3, vec4,
+  Fn, abs, float, floor, fract, hash, log2, max, min, mix, perspectiveDepthToViewZ, sampler, screenCoordinate, select, texture, uint,
+  uniform, uv, vec2, vec3, vec4,
 } from "three/tsl";
 import type { SkyNodes } from "../../sky/type/SkyNodes";
 import { HazeDepth, MarchScale, Persistence } from "../constant/march";
@@ -57,7 +57,10 @@ export function createCloudPass(clouds: CloudNodes, sky: SkyNodes, viewDistance:
     const at = uv();
     const ray = viewRay(at);
     const limit = min(float(viewDistance * 1.6), ahead(at).mul(ray.length()));
-    const dither = fract(fract(dot(screenCoordinate.xy, vec2(0.06711056, 0.00583715))).mul(52.9829189).add(jitter));
+    // Each pixel starts the frames' golden-ratio sequence at a number of its own, white across the screen: a frame
+    // that is not averaged away (while turning) then shows grain with no direction. A gradient pattern over the
+    // screen drew a slanted hatch there.
+    const dither = fract(hash(uint(screenCoordinate.x).add(uint(screenCoordinate.y).mul(uint(65521)))).add(jitter));
     return marchNode({
       direction: direction(at), limit, dither, eye: clouds.eye, sun: sky.skySun, sunLight: sky.sunDisc, skyAmbient: sky.clearSky,
       groundAmbient: sky.groundLight, horizon: sky.skyHorizon, haze: float(HazeDepth / viewDistance), ...cloudArgs(clouds),

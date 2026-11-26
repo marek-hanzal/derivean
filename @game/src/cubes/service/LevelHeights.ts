@@ -89,7 +89,8 @@ export function createLevelHeights(world: WorldInfo) {
   }
 
   return {
-    nodes: { ring, owners, places, firsts, lift },
+    // `finest`: the finest level that keeps heights; finer ground is measured on it.
+    nodes: { ring, owners, places, firsts, lift, finest },
     remove,
     // A far chunk's tops: a top is a face of axis 1 that looks up (packQuads), its plane the height above the
     // chunk's floor in cubes. A chunk with no top adds nothing.

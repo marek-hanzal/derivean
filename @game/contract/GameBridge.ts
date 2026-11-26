@@ -1,7 +1,7 @@
-// The whole contract between the native engine (through the preload) and the renderer, about 410 lines.
+// The whole contract between the native engine (through the preload) and the renderer, about 350 lines.
 // It stays one file because it is one boundary: every type here crosses it in the same structured clone, a
 // change to it is agreed between the engine and renderer streams as one change, and either side reads it
-// whole to know what the other promises. FarPatch and Frame.far (about 50 lines) go when the far patches do.
+// whole to know what the other promises.
 export type Point = [number, number, number];
 export type BrushShape = "sphere" | "cube";
 
@@ -13,8 +13,7 @@ export interface WorldOptions {
   // X and Z in metres. Absent, the simulation picks the landing: a shore in a low country with a high range
   // rising over it.
   spawn?: [number, number];
-  // The far terrain as levels of cubes (Frame.cubes) instead of height-field patches (Frame.far); a world makes
-  // one of the two. With cubes the ground comes as packed quads, near and far alike.
+  // Ignored: every world's far terrain is levels of cubes (Frame.cubes). Accepted while the renderer still passes it.
   cubes?: boolean;
   // Cubes from the eye to the side of a level's box, 64 to 256, 128 when omitted. A cube at the side of its
   // level's box is 1 / cubeReach radians wide: pixels per cube there = focal length in pixels / cubeReach, and
@@ -40,12 +39,8 @@ export interface WorldInfo {
     dynamicViscosity: number;
     surfaceTension: number;
   }[];
-  // How far patches are chosen. A patch with cells of c metres is on screen no nearer than splitCells · c and,
-  // where its children would show, no farther than splitCells · 2c; it should have blended onto its `morph`
-  // heights over the last (1 − morphStart) of that range. Ground that refining would not visibly change stays
-  // coarser than that, and a patch already split stays split a tenth beyond its range. Distances run from the
-  // eye to the vertex.
-  far: { cells: number; splitCells: number; morphStart: number; viewDistance: number };
+  // cubes.viewDistance again, kept while the renderer still falls back on it.
+  far: { viewDistance: number };
   seed: number;
   age: number;
   // Metres against the datum y = 0. Below the world floor is the void, the only place matter is lost to.
@@ -55,14 +50,13 @@ export interface WorldInfo {
   planetSpan: number;
   // Metres above the sea of the rungs CloudField.snowLadder keeps snow at.
   snowLadder: number[];
-  // Shorts per quad in every Int16Array of faces: 9 in a world of cubes, 8 without the occlusion word in one of
-  // patches.
+  // Shorts per quad in every Int16Array of faces: 9.
   faceWords: number;
-  // Null in a world of patches. Level k holds cubes of voxelSize · 2^k metres on the voxels' own lattice, from
+  // Level k holds cubes of voxelSize · 2^k metres on the voxels' own lattice, from
   // finestLevel to coarsestLevel; the levels below are the voxels. A chunk is `side` cubes along every edge, as
   // a voxel chunk is. The box of a level reaches `reach` cubes from the eye and that of the coarsest level
   // `viewDistance` metres; a level's chunks cover at least `band` of its cubes beyond its box.
-  cubes: { reach: number; side: number; band: number; finestLevel: number; coarsestLevel: number; viewDistance: number } | null;
+  cubes: { reach: number; side: number; band: number; finestLevel: number; coarsestLevel: number; viewDistance: number };
 }
 
 export interface Command {
@@ -105,12 +99,12 @@ export type Quads = Uint32Array;
 export interface ChunkMesh {
   key: Point;
   origin: Point;
-  // WorldInfo.faceWords shorts per quad: axis, sign of the normal, plane, lowU, lowV, sizeU, sizeV, material and,
-  // in a world of cubes, occlusion, with the meanings they have in Quads. Water meshes come this way, in their
-  // own units and without occlusion, and so does the ground in a world of patches; in a world of cubes the
-  // ground's `faces` are empty and its quads are in `quads`. Debris faces share the layout, counted in voxels.
+  // WorldInfo.faceWords shorts per quad: axis, sign of the normal, plane, lowU, lowV, sizeU, sizeV, material and
+  // occlusion, with the meanings they have in Quads. Water meshes come this way, in their own units and without
+  // occlusion; the ground's `faces` are empty and its quads are in `quads`. Debris faces share the layout,
+  // counted in voxels.
   faces: Int16Array;
-  // The ground of a voxel chunk in a world of cubes; null in every other mesh.
+  // The ground of a voxel chunk; null in every other mesh.
   quads: Quads | null;
 }
 
@@ -137,9 +131,10 @@ export interface CubeChunk {
   // chunk is at; the highest chunk over a square carries them. Under a sheet the cubes end below the level, and
   // the dry columns beside it at or above it.
   water: { level: number; quads: Quads }[];
-  // As in FarPatch: the coarsest data level any column was read from, and the level the chunk is cut from once
-  // that is finished there. Below its wanted level a chunk shows coarse data; it is swapped when finer tiles
-  // arrive.
+  // The coarsest data level any column was read from, and the level the chunk is cut from once that is finished
+  // there: 0 is the planet's 65 km grid, then 1 region (1 km cells), 2 local (64 m), 3 site (4 m), 4 ground
+  // (0.25 m). Below its wanted level a chunk shows coarse data, not a coarse world; it is swapped when finer
+  // tiles arrive.
   dataLevel: number;
   wantedLevel: number;
 }
@@ -165,59 +160,6 @@ export interface CubeLevel {
   // box shrinks and the coarser level shows there, never a hole. A level is at full reach when its box reaches
   // WorldInfo.cubes.reach · edge from the eye, the coarsest WorldInfo.cubes.viewDistance.
   box: { min: Point; max: Point } | null;
-}
-
-// One height-field patch of the far terrain. Vertex arrays hold (cells + 1)² entries, row-major with Z as the
-// row. Cells split along the diagonal from their minimum to their maximum corner; `morph` assumes it. Every
-// per-vertex height is measured from `origin`, which alone carries the world position.
-export interface FarPatch {
-  id: number;
-  // 0 is the finest; cell size doubles per level.
-  level: number;
-  // World position of the minimum corner; its y is the elevation the patch's heights are measured from.
-  origin: Point;
-  // Edge length in metres.
-  size: number;
-  // Quads per side.
-  cells: number;
-  // Metres above origin.y.
-  heights: Float32Array;
-  // Metres above origin.y: the parent level's surface under the same vertex; equal to `heights` on the coarsest level.
-  morph: Float32Array;
-  // xyz per vertex, × 127.
-  normals: Int8Array;
-  // rgb per vertex, sRGB: the palette colour of the material the voxels put on top of the ground there, also under water.
-  colors: Uint8Array;
-  // Metres above origin.y: the flood level of a lake or of the sea, one value per water body, read from the
-  // finest data there is whatever the patch's level. It is carried across ground below it and one vertex into
-  // the dry shore, so the sheet meets the ground at its depth-zero contour. NaN everywhere else; running water
-  // is not a level and has no sheet.
-  water: Float32Array;
-  // Metres the border may be dropped by to cover what morphing cannot.
-  skirt: number;
-  // Which data the patch was built from, for diagnostics and a debug tint: the coarsest level any of its
-  // vertices was read from, and the level it reads once that is finished there. 0 is the planet's 65 km grid,
-  // then 1 region (1 km cells), 2 local (64 m), 3 site (4 m), 4 ground (0.25 m). A patch below its wanted
-  // level shows coarse data, not a coarse world; it is rebuilt when the finer tiles arrive.
-  dataLevel: number;
-  wantedLevel: number;
-  // A raster for shading only, finer than the geometry: a trick that lets coarse geometry read as ground. It
-  // lies over the same square as the height grid with (cells · shadeDetail + 1)² texels, row-major with Z as the
-  // row, texel (0, 0) on the patch origin, so texel (shadeDetail · i, shadeDetail · j) lies on vertex (i, j).
-  // shadeDetail is 1, 2 or 4 and may differ between levels.
-  shadeDetail: number;
-  // Four bytes per texel:
-  //   [0], [1] x and z of the unit surface normal as round(n · 127) + 128, so 128 is zero; y is rebuilt and
-  //            always up. From the finest data the simulation has there, with one-sided slopes: not averaged
-  //            across a cliff edge or a bench lip.
-  //   [2]      material id of the surface, an index into WorldInfo.materials: glacier ice where it lies more
-  //            than a metre thick, loose cover where it is thick enough for a voxel to show it, else the rock.
-  //            Where cover thins out the id is dithered by the share a voxel column would show, not blended.
-  //            Seasonal snow is not here; it changes with the calendar. Beds exposed inside one cell of the
-  //            simulation's data are not resolved yet.
-  //   [3]      how much sky the place sees, 255 on an open plain, lower in gullies and under walls; from the
-  //            heights including a ring beyond the patch, so it has no seam at the border.
-  shade: Uint8Array;
 }
 
 export interface Frame {
@@ -247,13 +189,13 @@ export interface Frame {
   debrisEscapedKg: number;
   excavatedKg: number;
   flying: boolean;
-  // A removed id is gone for good; a rebuilt patch arrives under a new id in the frame that removes the old one.
-  // `data` counts the patches the renderer now holds by their dataLevel, 0 to 4.
-  far: { added: FarPatch[]; removed: number[]; data: number[] };
-  // The far terrain as cubes; null in a world of patches, whose `far` is then the far terrain. `levels` runs from
-  // the finest and is sent every frame; `data` counts the held chunks by their dataLevel, 0 to 4.
-  cubes: { added: CubeChunk[]; removed: number[]; data: number[]; levels: CubeLevel[] } | null;
-  // Region in which voxel chunks, not far patches, are the ground to draw; null while there are none.
+  // Always empty; kept because the renderer's capture stall rule reads it.
+  far: { added: never[]; removed: number[] };
+  // The far terrain. A removed id is gone for good; a rebuilt chunk arrives under a new id in the frame that
+  // removes the old one. `levels` runs from the finest and is sent every frame; `data` counts the held chunks by
+  // their dataLevel, 0 to 4.
+  cubes: { added: CubeChunk[]; removed: number[]; data: number[]; levels: CubeLevel[] };
+  // Region in which voxel chunks, not far cubes, are the ground to draw; null while there are none.
   voxelBox: { min: Point; max: Point } | null;
   // Metres, simulated ground under the eye; null if unknown.
   ground: number | null;
@@ -264,15 +206,15 @@ export interface Frame {
   // A picture taken while `far` is false shows stand-in data somewhere.
   ready: { site: boolean; local: boolean; region: boolean; far: boolean };
   // The same as counts, for a progress display and for waiting until a view is whole: the tiles the view wants
-  // at each level (region over 330 km, local over 64 km, site over 3 km, ground around the feet; in a world of
-  // cubes the tiles its levels read instead; a level that is pointless from the player's height wants none) and
-  // how many of them are built. The wanted set is finite and
+  // at each level (the tiles the cube levels read, and ground tiles around the feet for the voxels; a level that
+  // is pointless from the player's height wants none) and how many of them are built. The wanted set is finite and
   // moves with the player; everything is built when finished equals wanted at every level.
   tiles: Record<"region" | "local" | "site" | "ground", { wanted: number; finished: number }>;
+  // Voxel chunks and columns of far cubes (`patches`) the view is short of.
   pending: { chunks: number; patches: number };
   // Background time spent on the voxel chunks that entered the world this frame.
   generationMs: number;
-  // Game-thread time this frame spent bringing the planet in: tiles, voxels, far patches. Part of nativeMs.
+  // Game-thread time this frame spent bringing the planet in: tiles, voxels, far cubes. Part of nativeMs.
   streamingMs: number;
   // The world clock: `era` is the planet's age in years, `seconds` the calendar time played since. dayOfYear runs
   // 0…365 and hour 0…24, both with fractions.
@@ -383,7 +325,9 @@ export interface Chart {
   bedrock: Uint8Array;
   // 0 dry, 1 sea, 2 lake, 3 stream.
   waters: Uint8Array;
-  // Level of detail the pixel was read from: 0 planet (65 km cells), 1 region (1 km), 2 local (64 m), 3 site (4 m).
+  // Level of detail the pixel was read from: 0 planet (65 km cells), 1 region (1 km), 2 local (64 m), 3 site (4 m),
+  // 4 ground (0.25 m). A pixel reads no level whose cells are less than a quarter of its width, so at 1 m a pixel
+  // or finer the chart and the inspector read the same level.
   level: Uint8Array;
 }
 

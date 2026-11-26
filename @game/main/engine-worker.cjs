@@ -17,10 +17,8 @@ function advance(command) {
     ...frame.waterMeshes.map(({ faces }) => faces.buffer),
     frame.particles.buffer,
     ...frame.spawned.map(({ faces }) => faces.buffer),
-    ...frame.far.added.flatMap(({ heights, morph, normals, colors, water, shade }) =>
-      [heights.buffer, morph.buffer, normals.buffer, colors.buffer, water.buffer, shade.buffer]),
     ...frame.chunks.flatMap(({ quads }) => quads ? [quads.buffer] : []),
-    ...(frame.cubes ? frame.cubes.added.flatMap(({ quads, water }) => [quads.buffer, ...water.map((sheet) => sheet.quads.buffer)]) : []),
+    ...frame.cubes.added.flatMap(({ quads, water }) => [quads.buffer, ...water.map((sheet) => sheet.quads.buffer)]),
   ];
   if (frame.clouds) {
     const { bands, heaping, rain, snow, snowpack, snowLadder, snowLine, aerosolDepth, ashAloft, ashLevel } = frame.clouds;
