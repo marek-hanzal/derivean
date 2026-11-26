@@ -31,7 +31,7 @@ On 26 Nov at about 03:00 every running stream stopped mid-work on a model usage 
 
 Starting the game builds the planet first: about 8 minutes at 08:54 and still unfinished after 25 minutes at 09:30 (load 35–52, other games running). Whether the tree got slower or only the machine is not established; a cached planet or a faster build is an engine item.
 
-The thin vertical columns in the owner's screenshot came from a stale replay (`.out/renderer-replay/rec-stills`, recorded 02:52–03:03 from a half-edited tree): one-cell needles of 2.2 km of loose cover from the old `settleDebris`, fixed by the relief stream; today's simulation and engine have none at that spot. The relief stream adds a test that loose cover cannot stand above its angle of repose.
+Thin vertical columns, one cell wide and up to hundreds of metres tall: first traced to a stale replay of 02:52–03:03 (one-cell needles of 2.2 km of loose cover from the old `settleDebris`, fixed in the relief stream), but the owner saw them again at 10:45 in a live game at the spawn (x −2521902, z −4671906) on a build after that fix. Open; under investigation with a scan of the whole view.
 
 The strata column is now the one at the start of the region window (`strata/fn/Window.cpp`); before, the Region read the planet's present cover and counted the window's erosion twice, so ranges showed basement only. See planet.md.
 
