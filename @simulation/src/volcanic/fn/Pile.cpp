@@ -8,10 +8,24 @@ namespace derivean::sim {
 namespace {
 
 constexpr uint64_t BedStream = 0x50494c45;
-constexpr float Pitch[2] = {14.0f, 34.0f};   // m from the base of one flow to the base of the next, by Magma
-// A pitch thinner than `Welding` holds no welded bed: a basalt pile's never does, as basalt's rarely do.
+constexpr float Pitch[2] = {14.0f, 34.0f};   // m from the base of one flow to the base of the next, by Magma, where no flow's thickness is recorded
+constexpr float ThinnestPitch = 1.0f; // m: no pitch is drawn thinner, so the parting at a bed's base (relief/fn/Form.cpp, 0.35 m) does not take a whole pitch
 constexpr float PillowShare = 0.6f;   // of a flow that reached water, the pillows at its foot; glass breccia lies over them
 constexpr float Uneven = 0.15f;       // a pitch's lava share lies within this of the cell's
+
+// m from the base of one flow to the base of the next: one flow at the thickness recorded for it,
+// and what an eruption of its magma throws out besides its lava (`Style`). It follows the flow
+// alone, not the cell's shares, so that a bed runs on where those change from cell to cell; the
+// flow drawn in it is the cell's share of the pitch, so it is drawn at the recorded thickness where
+// the cell holds lava in the style's share, thicker near the vent and thinner in the distal ash.
+// A pitch whose fragment part is thinner than `Welding` holds no welded bed, as the thin flows of
+// basalt shields and arc cones rarely do; where no lava reached, the fixed `Pitch` stands.
+float pitchOf(Material lava, const PileShares& shares) {
+    const bool andesite = lava == Material::Andesite;
+    const float unit = unitOf(shares);
+    if (unit <= 0) return Pitch[andesite ? 1 : 0];
+    return std::max(ThinnestPitch, unit / styleOf(andesite ? Magma::Andesite : Magma::Basalt).lava);
+}
 
 Material lavaOf(const VolcanicTile* tile, const std::vector<Vent>& vents, uint16_t vent) {
     const std::vector<Vent>& list = tile ? tile->vents : vents;
@@ -26,7 +40,7 @@ Material lavaOf(const VolcanicTile* tile, const std::vector<Vent>& vents, uint16
 // (`flowLaid`, fn/Settle.cpp) are a sheet where their bed is thick enough, and set columns as lava
 // does; the cone's fall and every current that did not weld are lapilli tuff; the rest is tuff.
 PileBed bedIn(uint64_t seed, uint64_t ventId, Material lava, const PileShares& shares, float height) {
-    const float pitch = Pitch[lava == Material::Andesite ? 1 : 0];
+    const float pitch = pitchOf(lava, shares);
     const int64_t number = int64_t(std::floor(std::max(0.0f, height) / pitch));
     const uint64_t key = stream(seed, BedStream) ^ ventId;
     const float uneven = 2.0f * Uneven * (float(unit(key, number)) - 0.5f);
@@ -59,7 +73,7 @@ std::array<Member, 6> membersOf(Material lava, const PileShares& shares) {
     const float wet = std::clamp(shares.wet, 0.0f, 1.0f), dry = 1.0f - wet, flowing = shares.lava;
     // A pitch's lava share is drawn ±`Uneven` about the cell's, so the share of pitches whose
     // fragment part reaches `Welding` falls off over that range of lava share instead of at one value.
-    const float pitch = Pitch[andesite ? 1 : 0];
+    const float pitch = pitchOf(lava, shares);
     const float welds = pitch < Welding ? 0.0f : std::clamp((1.0f - Welding / pitch - flowing + Uneven) / (2.0f * Uneven), 0.0f, 1.0f);
     const float welded = shares.flows * dry * welds;
     return {{
@@ -77,13 +91,13 @@ std::array<Member, 6> membersOf(Material lava, const PileShares& shares) {
 PileColumn pileColumn(const Tile& tile, size_t cell) {
     if (!tile.volcanic || tile.volcanic->pile.empty()) return {};
     const VolcanicTile& volcanic = *tile.volcanic;
-    return {volcanic.pile[cell], volcanic.laid[cell], volcanic.lava[cell], volcanic.vent[cell], volcanic.flows[cell], volcanic.fall[cell], volcanic.wet[cell]};
+    return {volcanic.pile[cell], volcanic.laid[cell], volcanic.lava[cell], volcanic.vent[cell], volcanic.flows[cell], volcanic.fall[cell], volcanic.wet[cell], volcanic.lavaUnit[cell]};
 }
 
 PileBed pileBedAt(uint64_t seed, const VolcanicTile& volcanic, const PileColumn& column, float height) {
     const uint64_t id = column.vent < volcanic.vents.size() ? volcanic.vents[column.vent].id : 0;
     const auto share = [](uint8_t parts) { return float(parts) / 255.0f; };
-    return bedIn(seed, id, lavaOf(&volcanic, {}, column.vent), {share(column.lava), share(column.flows), share(column.fall), share(column.wet)}, height);
+    return bedIn(seed, id, lavaOf(&volcanic, {}, column.vent), withUnit({share(column.lava), share(column.flows), share(column.fall), share(column.wet)}, column.lavaUnit), height);
 }
 
 PilePoint pilePoint(const Tile& tile, size_t cell) {
@@ -91,11 +105,11 @@ PilePoint pilePoint(const Tile& tile, size_t cell) {
     if (column.thickness <= 0) return {};
     const std::vector<Vent>& vents = tile.volcanic->vents;
     const PileShares shares = sharesOf(*tile.volcanic, cell);
-    return {column.thickness, shares.lava, lavaOf(tile.volcanic.get(), {}, column.vent), column.vent < vents.size() ? vents[column.vent].id : 0, shares.flows, shares.fall, shares.wet};
+    return {column.thickness, shares.lava, lavaOf(tile.volcanic.get(), {}, column.vent), column.vent < vents.size() ? vents[column.vent].id : 0, shares.flows, shares.fall, shares.wet, column.lavaUnit};
 }
 
 PileBed pileBed(uint64_t seed, const PilePoint& point, float height) {
-    return bedIn(seed, point.vent, point.rock, {point.lava, point.flows, point.fall, point.wet}, height);
+    return bedIn(seed, point.vent, point.rock, withUnit({point.lava, point.flows, point.fall, point.wet}, point.lavaUnit), height);
 }
 
 bool volcanicUnit(Domain& domain, size_t i, uint64_t seed) {
@@ -123,8 +137,7 @@ bool volcanicUnit(Domain& domain, size_t i, uint64_t seed) {
     } else {
         const Material lava = lavaOf(nullptr, volcanic.vents, volcanic.vent[i]);
         // As a finished tile keeps them, so that the bed the voxels draw is the one eroded here.
-        const auto parts = [](float share) { return float(partsOf(share)) / 255.0f; };
-        const PileShares laid = sharesAt(volcanic, i), shares{parts(laid.lava), parts(laid.flows), parts(laid.fall), parts(laid.wet)};
+        const PileShares shares = keptOf(sharesAt(volcanic, i));
         if (region) {
             // A region cell is far thicker than a flow: it meets all the pile's members together, in
             // their parts, and is named for the largest. Rates mix as the members' parts of the face.
@@ -183,6 +196,7 @@ std::shared_ptr<const VolcanicTile> volcanicOf(Domain& domain) {
     tile->pile.assign(cells, 0.0f);
     tile->laid.assign(cells, 0.0f);
     for (auto* share : {&tile->lava, &tile->flows, &tile->fall, &tile->wet}) share->assign(cells, 0);
+    tile->lavaUnit.assign(cells, 0);
     tile->vent.assign(cells, NoVent);
     const float span = float(domain.endTime - domain.startTime);
     for (int z = 0; z < TileCells; ++z) {
@@ -194,6 +208,7 @@ std::shared_ptr<const VolcanicTile> volcanicOf(Domain& domain) {
             tile->laid[to] = span - volcanic.laidAt[from];
             const PileShares shares = sharesAt(volcanic, from);
             tile->lava[to] = partsOf(shares.lava), tile->flows[to] = partsOf(shares.flows), tile->fall[to] = partsOf(shares.fall), tile->wet[to] = partsOf(shares.wet);
+            tile->lavaUnit[to] = unitOf(shares);
             tile->vent[to] = volcanic.vent[from];
         }
     }
@@ -210,6 +225,7 @@ std::shared_ptr<const VolcanicTile> volcanicOf(Domain& domain) {
     if (!beyond) return tile;
     tile->wide.assign(size_t(WideCells) * WideCells, 0.0f);
     for (auto* share : {&tile->wideLava, &tile->wideFlows, &tile->wideFall, &tile->wideWet}) share->assign(size_t(WideCells) * WideCells, 0);
+    tile->wideUnit.assign(size_t(WideCells) * WideCells, 0);
     for (int z = 0; z < WideCells; ++z) {
         for (int x = 0; x < WideCells; ++x) {
             const float height = heightAt(x, z);
@@ -218,6 +234,7 @@ std::shared_ptr<const VolcanicTile> volcanicOf(Domain& domain) {
             tile->wide[to] = height;
             const PileShares shares = sharesAt(volcanic, domain.index(x + Halo - Apron, z + Halo - Apron));
             tile->wideLava[to] = partsOf(shares.lava), tile->wideFlows[to] = partsOf(shares.flows), tile->wideFall[to] = partsOf(shares.fall), tile->wideWet[to] = partsOf(shares.wet);
+            tile->wideUnit[to] = unitOf(shares);
         }
     }
     return tile;

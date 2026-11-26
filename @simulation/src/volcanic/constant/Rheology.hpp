@@ -14,11 +14,19 @@ struct Rheology {
     float yieldCold{};     // m, once it has set
     float sheet{};         // m, thickness of a single flow unit
     float coolLength{};    // m of travel over which it sets
+    // m, the yield strength a single flow shows where it came to rest, which sets its thickness
+    // there (`flowThickness`). The emplacement laws above work on a level's cells, many flows to a
+    // cell; this is one flow's, as measured on stopped flows.
+    float stopped{};
 };
 
-inline constexpr Rheology BasaltLava{0.15f, 1.2f, 8.0f, 26000.0f};      // long thin sheets: a flank of one degree at the vent, eight at its far edge
-inline constexpr Rheology AndesiteLava{0.6f, 45.0f, 35.0f, 9000.0f};    // short thick tongues
-inline constexpr Rheology DomeLava{12.0f, 60.0f, 80.0f, 1500.0f};       // degassed, nearly solid: piles over its vent
+// Stopped flows (Hulme 1974, table 3; his density 2000 kg/m³): basalts at Etna 1966 7e2 Pa, Oo-sima 1951
+// 4.3e3, Mauna Loa 1942 8e3, 2.9e3 (0.15 m) in the geometric mean; andesites at Paricutin 1.3e4,
+// Tristan da Cunha 1.4e4 and 5e4, Hekla 1947 2e4, 2.1e4 (1.05 m). A dome's is not measured there: its
+// lava leaves the vent as stiff as it stops.
+inline constexpr Rheology BasaltLava{0.15f, 1.2f, 8.0f, 26000.0f, 0.15f};      // long thin sheets: a flank of one degree at the vent, eight at its far edge
+inline constexpr Rheology AndesiteLava{0.6f, 45.0f, 35.0f, 9000.0f, 1.05f};    // short thick tongues
+inline constexpr Rheology DomeLava{12.0f, 60.0f, 80.0f, 1500.0f, 12.0f};       // degassed, nearly solid: piles over its vent
 inline constexpr Rheology AshFlow{0.02f, 0.5f, 20.0f, 28000.0f};        // the current of ash and gas of a chamber emptying: runs far, ponds in valleys
 inline constexpr Rheology BlockFlow{0.05f, 1.2f, 20.0f, 14000.0f};      // the smaller currents of ash and blocks of an ordinary eruption
 inline constexpr float QuenchShare = 0.12f;   // share of its cooling length lava keeps once it runs under water

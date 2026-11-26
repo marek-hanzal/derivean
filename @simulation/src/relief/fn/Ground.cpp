@@ -129,6 +129,13 @@ GroundPoint GroundLattice::at(double x, double z) const {
         for (const size_t node : {a, b, c, d})
             if (point.pile.thickness <= 0 && pile[node].thickness > 0) point.pile = pile[node];
         point.pile.thickness = (pile[a].thickness * (1 - tx) + pile[b].thickness * tx) * (1 - tz) + (pile[c].thickness * (1 - tx) + pile[d].thickness * tx) * tz;
+        // The thickness of its flows blends as the pile's does, so the beds they set run on across nodes.
+        const size_t corners[4] = {a, b, c, d};
+        const float near[4] = {(1 - tx) * (1 - tz), tx * (1 - tz), (1 - tx) * tz, tx * tz};
+        float unit = 0, known = 0;
+        for (int k = 0; k < 4; ++k)
+            if (pile[corners[k]].lavaUnit > 0) unit += near[k] * pile[corners[k]].lavaUnit, known += near[k];
+        if (known > 0) point.pile.lavaUnit = unit / known;
         point.datum = std::max(point.rock - point.pile.thickness, blend(datum));
     }
     // The fall line belongs to the slope, not to the step a single ground cell makes on it.

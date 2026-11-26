@@ -31,7 +31,7 @@ void testRecords() {
         domain.seaLevel = sea ? 1e5 : -1e5;
         Emplacement field = fieldOf(domain);
         Laying laying;
-        for (auto* layer : {&laying.lava, &laying.fall, &laying.flows, &laying.ash, &laying.wet, &laying.drop, &laying.sink}) layer->assign(domain.cells(), 0.0f);
+        for (auto* layer : {&laying.lava, &laying.fall, &laying.flows, &laying.ash, &laying.wet, &laying.unit, &laying.drop, &laying.sink}) layer->assign(domain.cells(), 0.0f);
         laying.vent.assign(domain.cells(), NoVent);
         Outburst outburst;
         outburst.site = domain.volcanic.vents.front().centre;
@@ -46,6 +46,12 @@ void testRecords() {
         blast.site = outburst.site, blast.flows = 20 * Km3, blast.current = AshFlow, blast.founders = 0.2 * Km3;
         emplace(domain, field, laying, 0, blast);
         collapse(domain, field, laying, 0, blast);
+        // Each cell's lava rests at a flow's thickness: no thinner than on the steepest slope of
+        // the cone it builds, no thicker than one part of the outburst ponded.
+        double units = 0, poured = 0;
+        for (size_t i = 0; i < domain.cells(); ++i) units += laying.unit[i], poured += laying.lava[i];
+        const double unit = units / std::max(poured, 1e-9);
+        expect(unit > 1.0 && unit < flowThickness(AndesiteLava.stopped, 0, outburst.lava / outburst.pulses) + 1e-3, "lava does not rest at a flow's thickness", unit);
         double laid = 0, wet = 0, flows = 0, recorded = 0, all = 0, thick = 0;
         for (const float part : laying.flows) thick += part >= Welding ? part : 0.0f;
         for (size_t i = 0; i < domain.cells(); ++i) laid += laying.lava[i] + laying.fall[i] + laying.flows[i] + laying.ash[i], wet += laying.wet[i];
@@ -88,6 +94,61 @@ void testMembers() {
     const PilePoint cone{3400.0f, 0.0f, Material::Andesite, 7, 0.0f, 0.5f, 0.0f};
     const int lapilli = count(cone, Material::LapilliTuff), tuff = count(cone, Material::Tuff);
     expect(lapilli > 1000 && tuff > 1000, "fall and ash are not laid as lapilli tuff and tuff in their shares", double(lapilli) / std::max(1, tuff));
+    // Flows are drawn at the thickness recorded for them.
+    const auto mean = [](PilePoint point, Material rock) {
+        double sum = 0;
+        int beds = 0;
+        for (float height = 0.5f; height < point.thickness; height += 1.0f) {
+            const PileBed bed = pileBed(42, point, height);
+            if (bed.rock != rock || height - bed.bottom >= 1.0f) continue;
+            sum += bed.top - bed.bottom, ++beds;
+        }
+        return beds ? sum / beds : 0.0;
+    };
+    const PilePoint flood{3400.0f, 1.0f, Material::Basalt, 7, 0.0f, 0.0f, 0.0f, 60.0f};
+    expect(std::abs(mean(flood, Material::Basalt) - 60.0) < 3.0, "a flood basalt's flows are not drawn at their thickness", mean(flood, Material::Basalt));
+    const PilePoint arc{3400.0f, 0.4f, Material::Andesite, 7, 0.0f, 0.6f, 0.0f, 12.0f};
+    expect(std::abs(mean(arc, Material::Andesite) - 12.0) < 2.0, "an arc's flows between their fall are not drawn at their thickness", mean(arc, Material::Andesite));
+    // Beds run on where the shares change: the pitch follows the flow alone.
+    PilePoint distal = arc;
+    distal.lava = 0.15f, distal.fall = 0.85f;
+    const float pitch = 12.0f / AndesiteStyle.lava;
+    for (int number = 0; number * pitch < 3300.0f; number += 7) {
+        const float base = float(number) * pitch;
+        const float near = pileBed(42, arc, base + 0.01f).bottom, far = pileBed(42, distal, base + 0.01f).bottom;
+        expect(std::abs(near - base) < 1e-2f && std::abs(far - base) < 1e-2f, "the beds of a pile step where its share of lava changes", far - near);
+    }
+    // Hot currents between flows thick enough to leave room for a welded bed weld.
+    const PilePoint outflow{3400.0f, 0.1f, Material::Andesite, 7, 0.9f, 0.0f, 0.0f, 12.0f};
+    expect(count(outflow, Material::Ignimbrite, true) > 1500, "an outflow sheet between thick flows does not weld", count(outflow, Material::Ignimbrite));
+}
+
+// The thickness a flow comes to rest at, against flows measured where they stopped (Hulme 1974,
+// tables 2 and 3) and the sheets of the Columbia River basalts, 30–100 m, which ponded on a plain.
+void testFlowThickness() {
+    struct Flow {
+        const char* name;
+        float yield;
+        double degrees, volume, measured;
+    };
+    const double Degree = 0.017453292519943295;
+    const Flow flows[] = {
+        {"Mauna Loa 1942", BasaltLava.stopped, 3.5, 0.1 * Km3, 7},
+        {"Etna 1966", BasaltLava.stopped, 11.5, 0.01 * Km3, 1.8},
+        {"Hekla 1947", AndesiteLava.stopped, 4, 0.8 * Km3, 15},
+        {"Paricutin 1945", AndesiteLava.stopped, 6, 0.1 * Km3, 5},
+    };
+    for (const Flow& flow : flows) {
+        const double thickness = flowThickness(flow.yield, float(std::tan(flow.degrees * Degree)), flow.volume);
+        expect(thickness > flow.measured / 3 && thickness < flow.measured * 3, flow.name, thickness);
+    }
+    for (const double volume : {10.0, 100.0, 1000.0}) {
+        const double sheet = flowThickness(BasaltLava.stopped, 0.002f, volume * Km3);
+        expect(sheet > 30 && sheet < 100, "a flood basalt's sheet does not pond as thick as the Columbia River's", sheet);
+    }
+    // The same lava stops thinner on a steeper slope; stiffer lava stops thicker.
+    expect(flowThickness(BasaltLava.stopped, 0.3f, Km3) < flowThickness(BasaltLava.stopped, 0.1f, Km3), "a flow is thicker on a steeper slope");
+    expect(flowThickness(AndesiteLava.stopped, 0.1f, Km3) > 3 * flowThickness(BasaltLava.stopped, 0.1f, Km3), "andesite stops no thicker than basalt");
 }
 
 } // namespace
@@ -96,4 +157,5 @@ void testMembers() {
 void testVolcanicPile() {
     testRecords();
     testMembers();
+    testFlowThickness();
 }

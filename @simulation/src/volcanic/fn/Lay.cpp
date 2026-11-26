@@ -6,8 +6,23 @@ namespace {
 constexpr float AshFloor = 0.01f;     // m of ash below which a blanket is not followed
 constexpr float Shortest = 0.2f;      // share of the cooling length that the most slowly fed flow of an eruption gets
 
-// Moves what the laws laid since the last call into `into` and marks whose it is; returns its volume in m³.
-double harvest(Emplacement& field, Laying& laying, std::vector<float>& into, int vent) {
+// Rise over run of the surface at a cell, across its neighbours: over two cells of the level, so a
+// region's kilometre cells read a cone's flank gentler than its flows lie on.
+float slopeAt(const Emplacement& field, size_t i) {
+    const int x = int(i % size_t(field.width)), z = int(i / size_t(field.width));
+    const auto across = [&](int x0, int z0, int x1, int z1) {
+        x0 = std::max(x0, 0), z0 = std::max(z0, 0), x1 = std::min(x1, field.width - 1), z1 = std::min(z1, field.height - 1);
+        const int run = std::max(x1 - x0 + z1 - z0, 1);
+        return (field.ground[field.index(x1, z1)] - field.ground[field.index(x0, z0)]) / float(run * field.cell);
+    };
+    const float dx = across(x - 1, z, x + 1, z), dz = across(x, z - 1, x, z + 1);
+    return std::sqrt(dx * dx + dz * dz);
+}
+
+// Moves what the laws laid since the last call into `into` and marks whose it is; returns its volume
+// in m³. Lava, of a `lava` rheology, rests on the surface it built at its own thickness: thin on a
+// flank, as thick as one eruption of `eruption` m³ ponds where it filled low ground to a level.
+double harvest(Emplacement& field, Laying& laying, std::vector<float>& into, int vent, const Rheology* lava = nullptr, double eruption = 0) {
     double volume = 0;
     for (const int32_t at : field.fresh) {
         const size_t i = size_t(at);
@@ -18,6 +33,7 @@ double harvest(Emplacement& field, Laying& laying, std::vector<float>& into, int
             continue;
         }
         into[i] += field.laid[i];
+        if (lava) laying.unit[i] += field.laid[i] * flowThickness(lava->stopped, slopeAt(field, i), eruption);
         // What filled standing water up to its level was laid under it.
         laying.wet[i] += std::clamp(field.water[i] - (field.ground[i] - field.laid[i]), 0.0f, field.laid[i]);
         volume += field.laid[i];
@@ -56,6 +72,12 @@ double layAsh(const Domain& domain, Emplacement& field, Laying& laying, const Fa
 
 } // namespace
 
+float flowThickness(float yield, float slope, double volume) {
+    const float sine = slope / std::sqrt(1.0f + slope * slope);
+    const float ponded = float(std::pow(double(yield) * double(yield) * std::max(volume, 0.0), 0.2));
+    return sine * ponded > yield ? yield / sine : ponded;
+}
+
 Emplacement fieldOf(const Domain& domain) {
     Emplacement field;
     field.resize(domain.size, domain.size);
@@ -80,11 +102,12 @@ void emplace(Domain& domain, Emplacement& field, Laying& laying, int vent, const
     const double before = field.lost + field.passed;
     ledger.erupted += outburst.fall + outburst.lava + outburst.flows + outburst.ash;
     // Lava from a vent outside the domain is not followed: none of it can reach the tile's own cells.
-    const auto pour = [&](const Rheology& rheology, double part, std::vector<float>& into, double& booked) {
+    const auto pour = [&](const Rheology& rheology, double part, std::vector<float>& into, double& booked, bool lava) {
         if (part <= 0) return;
         if (inside) pourLava(field, rheology, x, z, part);
         else ledger.left += part;
-        booked += harvest(field, laying, into, vent);
+        const double eruption = std::min(outburst.eruption, outburst.lava);
+        booked += harvest(field, laying, into, vent, lava ? &rheology : nullptr, eruption > 0 ? eruption : part);
     };
     // Fall around the vent and lava in turn: that is what layers a cone.
     for (int pulse = 0; pulse < outburst.pulses; ++pulse) {
@@ -99,8 +122,8 @@ void emplace(Domain& domain, Emplacement& field, Laying& laying, int vent, const
         current.coolLength *= reach, lava.coolLength *= reach;
         // Only the currents of an eruption that empties its chamber are hot pumice that may weld;
         // the block-and-ash currents of the usual eruptions lie with the cone's fall.
-        pour(current, outburst.flows / outburst.pulses, outburst.founders > 0 ? laying.flows : laying.fall, ledger.cone);
-        pour(lava, outburst.lava / outburst.pulses, laying.lava, ledger.lava);
+        pour(current, outburst.flows / outburst.pulses, outburst.founders > 0 ? laying.flows : laying.fall, ledger.cone, false);
+        pour(lava, outburst.lava / outburst.pulses, laying.lava, ledger.lava, true);
     }
     if (outburst.ash > 0) {
         const double laid = layAsh(domain, field, laying, ashFall(site, outburst.ash, {domain.windX[near], domain.windZ[near]}), vent);

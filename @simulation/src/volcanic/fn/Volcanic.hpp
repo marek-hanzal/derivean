@@ -18,6 +18,7 @@ void allocateVolcanic(Domain& domain);
 struct Laying {
     std::vector<float> lava, fall, flows, ash;   // m
     std::vector<float> wet;                      // m of all of them laid under standing water
+    std::vector<float> unit;                     // m², of the lava: m laid times the thickness of its flow (`flowThickness`)
     std::vector<float> drop;              // m the surface of the cell founders
     std::vector<float> sink;              // m the layering under it goes down: the roof's block
     std::vector<uint16_t> vent;            // index of the vent the top of it came from
@@ -36,7 +37,14 @@ struct Outburst {
     Rheology rheology;   // of the lava
     Rheology current;    // of the currents of ash
     int pulses{1};       // parts in which fall and lava alternate
+    double eruption{};   // m³ of lava one eruption of it brings up; its parts' own where 0
 };
+// m a single flow of lava comes to rest at (Hulme 1974): a Bingham body stops where its depth no
+// longer drives it past its yield strength, `yield` as a length (τ/ρg). On a slope of rise over run
+// `slope` that is at `yield / sin α` (his eq. 14). On level ground a flow spreads until the depth
+// at its centre holds its width, h² = yield · w (eq. 12); one eruption's `volume` spread about as
+// wide as long, w = √(volume / h), ponds at its own level, (yield² · volume)^(1/5).
+float flowThickness(float yield, float slope, double volume);
 void emplace(Domain& domain, Emplacement& field, Laying& laying, int vent, const Outburst& outburst);
 // The roof going down once an outburst with `founders` has laid what it threw out.
 void collapse(Domain& domain, Emplacement& field, Laying& laying, int vent, const Outburst& outburst);
@@ -69,7 +77,7 @@ inline PileShares sharesAt(const VolcanicDomain& volcanic, size_t cell) {
     const float all = volcanic.allLaid[cell];
     if (all <= 0) return {};
     const auto share = [&](const std::vector<float>& part) { return std::clamp(part[cell] / all, 0.0f, 1.0f); };
-    return {share(volcanic.lavaLaid), share(volcanic.flowLaid), share(volcanic.fallLaid), share(volcanic.wetLaid)};
+    return {share(volcanic.lavaLaid), share(volcanic.flowLaid), share(volcanic.fallLaid), share(volcanic.wetLaid), std::max(0.0f, volcanic.unitLaid[cell] / all)};
 }
 inline float lavaShare(const VolcanicDomain& volcanic, size_t cell) { return sharesAt(volcanic, cell).lava; }
 // A pile `pile` thick of these shares, as if it had all been laid at once.
@@ -79,15 +87,29 @@ inline void setShares(VolcanicDomain& volcanic, size_t cell, float pile, const P
     volcanic.flowLaid[cell] = pile * shares.flows;
     volcanic.fallLaid[cell] = pile * shares.fall;
     volcanic.wetLaid[cell] = pile * shares.wet;
+    volcanic.unitLaid[cell] = pile * shares.lavaUnit;
 }
 inline uint8_t partsOf(float share) { return uint8_t(std::lround(255.0f * std::clamp(share, 0.0f, 1.0f))); }
+// m, thickness of one flow of the lava of these shares; 0 for none recorded.
+inline float unitOf(const PileShares& shares) { return shares.lava > 0 && shares.lavaUnit > 0 ? shares.lavaUnit / shares.lava : 0.0f; }
+// The same shares with flows `unit` m thick.
+inline PileShares withUnit(PileShares shares, float unit) {
+    shares.lavaUnit = shares.lava * unit;
+    return shares;
+}
+// The shares as a finished tile keeps them: each in parts of 255, the flow's thickness as it is.
+inline PileShares keptOf(const PileShares& shares) {
+    const auto parts = [](float share) { return float(partsOf(share)) / 255.0f; };
+    return withUnit({parts(shares.lava), parts(shares.flows), parts(shares.fall), parts(shares.wet)}, unitOf(shares));
+}
 // The same as a finished tile keeps them, at a cell of its own or, `wide`, of its record with the Apron.
 inline PileShares sharesOf(const VolcanicTile& tile, size_t cell, bool wide = false) {
     const auto& lava = wide ? tile.wideLava : tile.lava;
     const auto& flows = wide ? tile.wideFlows : tile.flows;
     const auto& fall = wide ? tile.wideFall : tile.fall;
     const auto& wet = wide ? tile.wideWet : tile.wet;
-    return {float(lava[cell]) / 255.0f, float(flows[cell]) / 255.0f, float(fall[cell]) / 255.0f, float(wet[cell]) / 255.0f};
+    const auto& unit = wide ? tile.wideUnit : tile.lavaUnit;
+    return withUnit({float(lava[cell]) / 255.0f, float(flows[cell]) / 255.0f, float(fall[cell]) / 255.0f, float(wet[cell]) / 255.0f}, unit[cell]);
 }
 // Readers of rock.
 PileColumn pileColumn(const Tile& tile, size_t cell);

@@ -49,7 +49,8 @@ bool changeLattice(const World& world, GroundLattice& lattice) {
                 // What stands of the untouched pile: less what the session cut from the rock before laying.
                 const float below = std::clamp(pile.thickness + change.rock - change.datum - change.pile.thickness, 0.0f, pile.thickness), total = below + change.pile.thickness;
                 const auto mean = [&](float was, float now) { return (was * below + now * change.pile.thickness) / total; };
-                pile = {total, mean(pile.lava, change.pile.lava), change.pile.rock, change.pile.vent, mean(pile.flows, change.pile.flows), mean(pile.fall, change.pile.fall), mean(pile.wet, change.pile.wet)};
+                // Play records no flow's thickness: what stands of the untouched pile keeps its own.
+                pile = {total, mean(pile.lava, change.pile.lava), change.pile.rock, change.pile.vent, mean(pile.flows, change.pile.flows), mean(pile.fall, change.pile.fall), mean(pile.wet, change.pile.wet), below > 0 ? pile.lavaUnit : 0.0f};
             }
             moved = true;
         }

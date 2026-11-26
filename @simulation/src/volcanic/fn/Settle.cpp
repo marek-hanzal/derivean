@@ -44,6 +44,7 @@ void allocateVolcanic(Domain& domain) {
     volcanic.flowLaid.assign(cells, 0.0f);
     volcanic.fallLaid.assign(cells, 0.0f);
     volcanic.wetLaid.assign(cells, 0.0f);
+    volcanic.unitLaid.assign(cells, 0.0f);
     volcanic.allLaid.assign(cells, 0.0f);
     volcanic.laidAt.assign(cells, 0.0f);
     volcanic.vent.assign(cells, NoVent);
@@ -96,6 +97,7 @@ void settleLaying(Domain& domain, const Laying& laying) {
             ground.rock[i] += loose + added;
             volcanic.allLaid[i] += loose + added;
             volcanic.lavaLaid[i] += lava;
+            volcanic.unitLaid[i] += laying.unit[i];
             // Hot currents weld where they lay thick enough at once above the water (all of the
             // cell's wet part is taken as theirs); the rest of them is pumice and ash as loose as the fall.
             const bool welds = laying.flows[i] - laying.wet[i] >= Welding;

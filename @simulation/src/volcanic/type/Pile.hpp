@@ -53,12 +53,14 @@ struct VolcanicTile {
     std::vector<uint8_t> flows;  // share of it the currents of hot ash laid, in parts of 255
     std::vector<uint8_t> fall;   // share of it that fell around the vents, in parts of 255
     std::vector<uint8_t> wet;    // share of it laid under standing water, sea or lake, in parts of 255
+    std::vector<float> lavaUnit; // m, thickness of one flow of its lava, in the mean by what each laid; 0 for none recorded
     std::vector<uint16_t> vent;   // index into `vents` of the vent that laid the top; NoVent for none
     std::vector<Vent> vents;     // every vent whose products or conduits reach the tile
     // Pile and its shares over the tile and the Apron cells beyond its edge, (TileCells + 2·Apron)²,
     // as its own replay left them: what a later neighbour blends its seam towards (fn/Seams.cpp).
     std::vector<float> wide;
     std::vector<uint8_t> wideLava, wideFlows, wideFall, wideWet;
+    std::vector<float> wideUnit;
     std::vector<Caldera> calderas;   // a region's: every caldera whose site lies in the tile
     VolcanicLedger ledger;
 };
@@ -73,6 +75,7 @@ struct VolcanicDomain {
     std::vector<float> fallLaid;   // m of it that fell around the vents, came in block-and-ash currents, or in hot ones
                                    // too thin or wet to weld; the rest of what is not lava is ash the wind carried
     std::vector<float> wetLaid;    // m of it laid under standing water
+    std::vector<float> unitLaid;   // m², of its lava: each flow's m laid times the thickness that flow came to rest at
     std::vector<float> allLaid;    // m of everything ever laid into it
     std::vector<float> laidAt;     // yr after the domain's start that the top was laid
     std::vector<uint16_t> vent;     // index into `vents`, NoVent for none
@@ -82,13 +85,16 @@ struct VolcanicDomain {
     VolcanicLedger ledger;
 };
 
-// What a pile is made of, as shares of all that was laid into it.
+// What a pile is made of, as shares of all that was laid into it. `lavaUnit` is the thickness of
+// one of its flows times the share of lava, so that it blends as the shares do: the thickness
+// itself is `lavaUnit / lava`, and none is recorded where it is 0.
 struct PileShares {
     float lava{1}, flows{}, fall{}, wet{};
+    float lavaUnit{};   // m
 };
-inline PileShares operator*(const PileShares& shares, float by) { return {shares.lava * by, shares.flows * by, shares.fall * by, shares.wet * by}; }
-inline PileShares operator+(const PileShares& a, const PileShares& b) { return {a.lava + b.lava, a.flows + b.flows, a.fall + b.fall, a.wet + b.wet}; }
-inline constexpr PileShares NoShares{0, 0, 0, 0};
+inline PileShares operator*(const PileShares& shares, float by) { return {shares.lava * by, shares.flows * by, shares.fall * by, shares.wet * by, shares.lavaUnit * by}; }
+inline PileShares operator+(const PileShares& a, const PileShares& b) { return {a.lava + b.lava, a.flows + b.flows, a.fall + b.fall, a.wet + b.wet, a.lavaUnit + b.lavaUnit}; }
+inline constexpr PileShares NoShares{0, 0, 0, 0, 0};
 
 inline constexpr float NoPile = -1e9f;   // a floor that far above the datum: nothing stands on it
 inline constexpr float ThinnestPile = 0.02f;   // m of pile a finer level inherits or a seam blends below which a cell has none
@@ -100,6 +106,7 @@ struct PileColumn {
     uint8_t lava{};      // parts of 255
     uint16_t vent{NoVent};
     uint8_t flows{}, fall{}, wet{};   // parts of 255, as `PileShares`
+    float lavaUnit{};    // m, thickness of one flow of its lava; 0 for none recorded
 };
 
 // The pile under one point of the ground, as a reader that crosses tile edges carries it: nothing
@@ -110,6 +117,7 @@ struct PilePoint {
     Material rock{Material::Basalt};   // what its lava is
     uint64_t vent{};     // the vent that laid its top
     float flows{}, fall{}, wet{};   // 0..1, as `PileShares`
+    float lavaUnit{};    // m, thickness of one flow of its lava; 0 for none recorded
 };
 
 // One member of a pile: a lava flow or a bed of what the eruptions threw out.

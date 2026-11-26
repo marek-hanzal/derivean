@@ -14,7 +14,7 @@ constexpr double MostInflation = 5.0;   // times the usual thickness of a flow u
 Laying emptyLaying(const Domain& domain) {
     Laying laying;
     const size_t cells = domain.cells();
-    for (auto* layer : {&laying.lava, &laying.fall, &laying.flows, &laying.ash, &laying.wet, &laying.drop, &laying.sink}) layer->assign(cells, 0.0f);
+    for (auto* layer : {&laying.lava, &laying.fall, &laying.flows, &laying.ash, &laying.wet, &laying.unit, &laying.drop, &laying.sink}) layer->assign(cells, 0.0f);
     laying.vent.assign(cells, NoVent);
     return laying;
 }
@@ -46,6 +46,8 @@ void eruptEpisode(Domain& domain, Emplacement& field, Laying& laying, int index,
         outburst.ash = volume * style.ash;
         outburst.rheology = lavaOf(vent.magma);
         outburst.current = BlockFlow;
+        // The step's eruptions are laid together, but each of its flows is one eruption's.
+        outburst.eruption = meanEruption(vent) * style.lava;
         outburst.pulses = std::clamp(int(2.0 + std::log2(1.0 + volume / 1e9)), 2, MostPulses);
         // Fluid melt that comes up fast travels as thick, inflated sheets and holds a gentler
         // slope: great outpourings build plains, small ones shields.
@@ -97,6 +99,7 @@ void erupt(Domain& domain, FlowScratch&, const Setting& setting) {
                 outburst.fall = event.fall;
                 outburst.lava = event.lava;
                 outburst.rheology = event.rheology;
+                outburst.eruption = event.lava;
                 emplace(domain, field, laying, int(index), outburst);
             }
             continue;
