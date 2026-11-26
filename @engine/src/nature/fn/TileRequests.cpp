@@ -6,6 +6,8 @@
 #include <cmath>
 #include <chrono>
 #include <exception>
+#include <memory>
+#include <utility>
 
 namespace derivean {
 namespace {
@@ -31,9 +33,8 @@ struct Wanted {
     bool own;
 };
 
-void collect(TileRequests& tiles) {
-    std::exception_ptr failure;
-    for (TileRequest& request : tiles.flying) {
+void collect(std::vector<TileRequest>& requests, std::exception_ptr& failure) {
+    for (TileRequest& request : requests) {
         if (request.completion.wait_for(std::chrono::seconds(0)) != std::future_status::ready) continue;
         try {
             request.completion.get();
@@ -41,8 +42,19 @@ void collect(TileRequests& tiles) {
             if (!failure) failure = std::current_exception();
         }
     }
-    std::erase_if(tiles.flying, [](const TileRequest& request) { return !request.completion.valid(); });
-    if (failure) std::rethrow_exception(failure);
+    std::erase_if(requests, [](const TileRequest& request) { return !request.completion.valid(); });
+}
+
+void retireUnwanted(TileRequests& tiles, const sim::BuildKeys& wanted, sim::Workers& workers) {
+    auto request = tiles.flying.begin();
+    while (request != tiles.flying.end()) {
+        if (wanted.contains(request->key)) {
+            ++request;
+            continue;
+        }
+        if (!workers.cancelQueued(request->ticket)) tiles.retired.push_back(std::move(*request));
+        request = tiles.flying.erase(request);
+    }
 }
 
 } // namespace
@@ -54,7 +66,11 @@ RequestBudget requestBudget(size_t workers) {
 
 void requestTiles(Nature& nature, Position eye, Position velocity, double clearance) {
     TileRequests& tiles = nature.tiles;
-    collect(tiles);
+    std::exception_ptr failure;
+    collect(tiles.flying, failure);
+    collect(tiles.retired, failure);
+    if (failure) std::rethrow_exception(failure);
+
     const double moved = std::hypot(eye[0] - tiles.planned[0], eye[2] - tiles.planned[2]);
     if (tiles.calls++ % ReplanCalls != 0 && moved < ReplanDistance) return;
     tiles.planned = eye;
@@ -101,21 +117,19 @@ void requestTiles(Nature& nature, Position eye, Position velocity, double cleara
         sim::buildFrontier(world, wanted.key, seen, ready);
         for (const sim::BuildKey node : ready) order.push_back({wanted.gain, node, wanted.own});
     }
-    for (const TileRequest& request : tiles.flying)
-        if (!seen.contains(request.key)) request.live->store(false);
+    retireUnwanted(tiles, seen, world.workers);
 
     const RequestBudget budget = requestBudget(world.workers.threads());
+    tiles.flying.reserve(budget.own);
     int priority = FirstPriority, ownPriority = OwnPriority;
     for (const Wanted& wanted : order) {
         if (tiles.flying.size() >= (wanted.own ? budget.own : budget.shared)) break;
-        if (std::any_of(tiles.flying.begin(), tiles.flying.end(), [&](const TileRequest& request) { return request.key == wanted.key; }))
-            continue;
-        const auto live = std::make_shared<std::atomic<bool>>(true);
-        const auto task = std::make_shared<std::packaged_task<void()>>([&world, key = wanted.key, live] {
-            if (live->load()) sim::buildReady(world, key);
-        });
-        tiles.flying.push_back({wanted.key, live, task->get_future()});
-        world.workers.submit([task] { (*task)(); }, wanted.own ? ownPriority-- : priority--);
+        const auto sameKey = [&](const TileRequest& request) { return request.key == wanted.key; };
+        if (std::ranges::any_of(tiles.flying, sameKey) || std::ranges::any_of(tiles.retired, sameKey)) continue;
+        const auto task = std::make_shared<std::packaged_task<void()>>([&world, key = wanted.key] { sim::buildReady(world, key); });
+        auto completion = task->get_future();
+        const uint64_t ticket = world.workers.submit([task] { (*task)(); }, wanted.own ? ownPriority-- : priority--);
+        tiles.flying.push_back({wanted.key, ticket, std::move(completion)});
     }
 }
 

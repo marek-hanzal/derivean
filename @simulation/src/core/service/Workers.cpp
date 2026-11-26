@@ -24,16 +24,32 @@ void Workers::stop() {
     for (auto& thread : threads_) thread.join();
 }
 
-void Workers::submit(std::function<void()> task, int priority) {
+uint64_t Workers::submit(std::function<void()> task, int priority) {
+    uint64_t ticket;
     {
         std::lock_guard lock(mutex_);
-        Entry entry{priority, submitted_++, std::move(task)};
+        ticket = submitted_++;
+        Entry entry{priority, ticket, std::move(task)};
         const auto position = std::find_if(queue_.begin(), queue_.end(), [&](const Entry& other) {
             return other.priority < entry.priority;
         });
         queue_.insert(position, std::move(entry));
     }
     wake_.notify_one();
+    return ticket;
+}
+
+bool Workers::cancelQueued(uint64_t ticket) {
+    // Release the task's captures outside the pool lock.
+    std::function<void()> canceled;
+    {
+        std::lock_guard lock(mutex_);
+        const auto target = std::find_if(queue_.begin(), queue_.end(), [ticket](const Entry& entry) { return entry.order == ticket; });
+        if (target == queue_.end()) return false;
+        canceled = std::move(target->task);
+        queue_.erase(target);
+    }
+    return true;
 }
 
 bool Workers::runOne(std::unique_lock<std::mutex>& lock) {

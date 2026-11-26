@@ -1,6 +1,7 @@
 #pragma once
 
 #include <condition_variable>
+#include <cstdint>
 #include <deque>
 #include <functional>
 #include <mutex>
@@ -24,7 +25,10 @@ public:
     unsigned threads() const { return unsigned(threads_.size()); }
 
     // Higher priority runs first; equal priorities run in submission order.
-    void submit(std::function<void()> task, int priority = 0);
+    uint64_t submit(std::function<void()> task, int priority = 0);
+
+    // Removes a queued task by its submission ticket. A claimed task keeps running.
+    bool cancelQueued(uint64_t ticket);
 
     // Runs queued tasks on the calling thread until `done` holds. Lets a task wait for the tasks
     // it depends on without parking a pool thread.
