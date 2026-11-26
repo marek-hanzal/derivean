@@ -8,8 +8,8 @@ import type { SkyNodes } from "../type/SkyNodes";
 const PlainAir = 0.35;
 const luminance = (color: Color) => 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
 
-// Sun, sky light, air and exposure, all following the simulated sun. Node materials light themselves from these
-// uniforms: no light object stands in the scene. Everything here lives in render space.
+// Sun, sky light, air and exposure, all following the simulated sun, as the uniforms node materials light
+// themselves from. Everything here lives in render space.
 export function createDaylight(viewDistance: number) {
   const light = createSkyLight();
   const nodes: SkyNodes = {

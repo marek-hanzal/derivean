@@ -35,6 +35,10 @@ WindRegime regimeAt(uint64_t seed, Vec2 position, double time);
 // +Z) for `shares[k]` of the year. For hand-built beds.
 WindRegime regimeOf(int winds, const double* headings, const double* speeds, const double* shares);
 
+// m/yr the air can take from open water or wet ground at an annual mean temperature in °C: the
+// demand the routing evaporates lakes with (landscape/fn/Flow.cpp).
+double evaporationDemand(double warmth);
+
 // Share of the year a bare loose surface is dry enough to blow, from rain (m/yr) and the annual
 // mean temperature at the ground (°C); ground that is both frozen and wet does not blow at all.
 double dryShare(double rain, double warmth, double halfRange);

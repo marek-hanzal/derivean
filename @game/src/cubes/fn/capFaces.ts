@@ -1,6 +1,6 @@
 import { packFace } from "./packFaces";
 
-// A square of ground in cubes from a batch's anchor: x and z from `low` up to `high`.
+// A square of ground in cubes from a batch's anchor: x from x0 up to x1, z from z0 up to z1.
 export interface Cut { x0: number; x1: number; z0: number; z1: number }
 
 // Cubes a cap hangs down from the top it closes.
@@ -19,7 +19,7 @@ export function capFaces(packed: Uint32Array, runs: Iterable<{ at: number; count
   const out: number[] = [];
   const riser = (axis: number, negative: boolean, plane: number, lowU: number, lowV: number, sizeU: number, sizeV: number, material: number) => {
     out.length += 4;
-    packFace(out, out.length - 4, axis, negative, plane, lowU, lowV, sizeU, sizeV, material, 0, level, 0);
+    packFace(out, out.length - 4, axis, negative, plane, lowU, lowV, sizeU, sizeV, material, 0, level, 0, true);
   };
   for (const { at, count, home: [x, , z] } of runs) {
     const besideX = (x < cut.x0 && x + Side >= cut.x0) || (x <= cut.x1 && x + Side > cut.x1);

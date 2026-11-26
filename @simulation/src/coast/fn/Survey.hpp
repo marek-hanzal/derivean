@@ -8,7 +8,7 @@ namespace derivean::sim {
 // What stands at the water's edge. A shore cell is a dry cell with water beside it.
 enum class ShoreKind : uint8_t {
     None,
-    Cliff,       // bare rock rising CliffRise or more at CliffSteep or steeper
+    Cliff,       // bare rock rising CliffRise or more, at CliffSteep or steeper or from a foot the waves have cut
     Rock,        // bare rock that does neither
     Gravel,      // loose cover of which blocks and gravel are a CoarseShare or more
     Sand,

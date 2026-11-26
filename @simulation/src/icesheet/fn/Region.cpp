@@ -8,17 +8,17 @@
 namespace derivean::sim {
 namespace {
 
-constexpr int Coarse = SheetCoarsening;
+constexpr int Fold = SheetCoarsening;   // domain cells per side of a coarse cell
 constexpr int FirstRounds = 480;          // most a stage is relaxed for the first time it is solved
 constexpr int NextRounds = 48;            // and each later time, from where it was left
-constexpr float Settled = 2e-4f;          // share of the ice volume forty rounds may still move
+constexpr float Steady = 2e-4f;          // share of the ice volume forty rounds may still move
 constexpr int SmoothRadius = 8;           // coarse cells over which the ground under the source's sheet is averaged
 constexpr float SteepestSurface = 0.3f;
 constexpr float SmallIce = 0.25f * LeastSheet;   // m of blended coarse ice below which a cell is beyond the sheet
 constexpr int LeastRows = 16;
 
 Vec2 nodeCentre(const Domain& domain, int x, int z) {
-    return {domain.origin.x + (x + 0.5) * Coarse * domain.cell, domain.origin.z + (z + 0.5) * Coarse * domain.cell};
+    return {domain.origin.x + (x + 0.5) * Fold * domain.cell, domain.origin.z + (z + 0.5) * Fold * domain.cell};
 }
 
 float groundOf(const Domain& domain, size_t i) { return domain.ground.rock[i] + domain.sedimentAt(i); }
@@ -52,14 +52,14 @@ std::vector<float> smoothed(const std::vector<float>& field, int n, int radius) 
 } // namespace
 
 bool iceReaches(const Domain& domain, const SheetSource& source) {
-    const int n = domain.size / Coarse, coldest = source.stages() - 1;
+    const int n = domain.size / Fold, coldest = source.stages() - 1;
     for (int z = 0; z < n; ++z) {
         for (int x = 0; x < n; ++x) {
             const Vec2 at = nodeCentre(domain, x, z);
             if (source.thickness(coldest, at) > 0) return true;
-            const size_t i = domain.index(x * Coarse + Coarse / 2, z * Coarse + Coarse / 2);
+            const size_t i = domain.index(x * Fold + Fold / 2, z * Fold + Fold / 2);
             const double above = groundOf(domain, i) - domain.seaLevel;
-            if (above > 0 && iceBalance(domain.warmth[i], source.cooling[size_t(coldest)], source.halfRange(at.z), domain.rain[i], above, above) > 0) return true;
+            if (above > 0 && iceBalance(domain.warmth[i], source.cooling[size_t(coldest)], source.halfRange(at), domain.rain[i], above, above) > 0) return true;
         }
     }
     return false;
@@ -67,11 +67,22 @@ bool iceReaches(const Domain& domain, const SheetSource& source) {
 
 void solveStage(const Domain& domain, SheetWork& work, int stage, int recorded, Workers* workers) {
     const SheetSource& source = work.source;
-    const int n = domain.size / Coarse;
-    if (work.coarse.size() != size_t(source.stages())) work.coarse.resize(size_t(source.stages()));
+    const int n = domain.size / Fold;
+    if (work.coarse.size() != size_t(source.stages())) work.coarse.resize(size_t(source.stages())), work.beyond.resize(size_t(source.stages()));
     IceGrid& grid = work.coarse[size_t(stage)];
+    std::vector<float>& beyond = work.beyond[size_t(stage)];
     const bool first = grid.width == 0;
-    if (first) shapeIce(grid, n, n, Coarse * domain.cell, false);
+    if (first) {
+        // What the source says of a place does not change while the domain is replayed.
+        shapeIce(grid, n, n, Fold * domain.cell, false);
+        beyond.resize(grid.cells());
+        for (int z = 0; z < n; ++z)
+            for (int x = 0; x < n; ++x) {
+                const size_t i = grid.index(x, z);
+                const Vec2 at = nodeCentre(domain, x, z);
+                beyond[i] = source.thickness(stage, at), grid.heat[i] = source.heat(at), grid.sink[i] = source.sink(stage, at), grid.halfRange[i] = source.halfRange(at);
+            }
+    }
     grid.seaLevel = float(domain.seaLevel);
     grid.cooling = float(source.cooling[size_t(stage)]);
 
@@ -81,18 +92,16 @@ void solveStage(const Domain& domain, SheetWork& work, int stage, int recorded, 
             const size_t to = grid.index(x, z);
             float bed = 0, warmth = 0, rain = 0, ice = 0;
             bool owned = recorded >= 0;
-            for (int k = 0; k < Coarse * Coarse; ++k) {
-                const int cx = x * Coarse + k % Coarse, cz = z * Coarse + k / Coarse;
+            for (int k = 0; k < Fold * Fold; ++k) {
+                const int cx = x * Fold + k % Fold, cz = z * Fold + k / Fold;
                 const size_t from = domain.index(cx, cz);
                 bed += groundOf(domain, from), warmth += domain.warmth[from], rain += domain.rain[from];
                 const float theirs = owned ? recordedIce(domain, cx, cz, recorded) : -1.0f;
                 owned = owned && theirs >= 0;
                 ice += theirs;
             }
-            const float share = 1.0f / float(Coarse * Coarse);
-            const Vec2 at = nodeCentre(domain, x, z);
+            const float share = 1.0f / float(Fold * Fold);
             grid.bed[to] = bed * share, grid.warmth[to] = warmth * share, grid.rain[to] = rain * share;
-            grid.heat[to] = source.heat(at), grid.sink[to] = source.sink(stage, at), grid.halfRange[to] = source.halfRange(at.z);
             if (owned) given[to] = ice * share;
         }
     }
@@ -102,15 +111,14 @@ void solveStage(const Domain& domain, SheetWork& work, int stage, int recorded, 
     for (int z = 0; z < n; ++z) {
         for (int x = 0; x < n; ++x) {
             const size_t i = grid.index(x, z);
-            const float beyond = source.thickness(stage, nodeCentre(domain, x, z));
-            const float guess = beyond > 0 ? std::max(0.0f, level[i] + beyond - grid.bed[i]) : 0.0f;
+            const float guess = beyond[i] > 0 ? std::max(0.0f, level[i] + beyond[i] - grid.bed[i]) : 0.0f;
             const bool rim = x == 0 || z == 0 || x == n - 1 || z == n - 1;
-            grid.held[i] = given[i] >= 0 || (rim && beyond > 0);
+            grid.held[i] = given[i] >= 0 || (rim && beyond[i] > 0);
             if (given[i] >= 0) grid.thickness[i] = given[i];
             else if (grid.held[i] || first) grid.thickness[i] = guess;
         }
     }
-    relaxIce(grid, workers, first ? FirstRounds : NextRounds, Settled, false);
+    relaxIce(grid, workers, first ? FirstRounds : NextRounds, Steady, false);
 }
 
 SheetField readStage(const Domain& domain, const SheetWork& work, int stage, Workers* workers) {
@@ -133,14 +141,14 @@ SheetField readStage(const Domain& domain, const SheetWork& work, int stage, Wor
     const float sea = float(domain.seaLevel);
     const auto rows = [&](int begin, int end) {
         for (int z = begin; z < end; ++z) {
-            const float gz = (z + 0.5f) / Coarse - 0.5f;
+            const float gz = (z + 0.5f) / Fold - 0.5f;
             const int iz = std::clamp(int(std::floor(gz)), 0, n - 2);
             const float tz = std::clamp(gz - float(iz), 0.0f, 1.0f);
             for (int x = 0; x < size; ++x) {
                 const size_t i = domain.index(x, z);
                 const float ground = groundOf(domain, i);
                 field.top[i] = std::max(ground, sea);
-                const float gx = (x + 0.5f) / Coarse - 0.5f;
+                const float gx = (x + 0.5f) / Fold - 0.5f;
                 const int ix = std::clamp(int(std::floor(gx)), 0, n - 2);
                 const float tx = std::clamp(gx - float(ix), 0.0f, 1.0f);
                 const size_t corner[4] = {grid.index(ix, iz), grid.index(ix + 1, iz), grid.index(ix, iz + 1), grid.index(ix + 1, iz + 1)};

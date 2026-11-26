@@ -9,6 +9,7 @@ namespace {
 // Points of a planet cell at which the nearest centre is asked for. No two centres lie closer
 // together than seven kilometres, so every centre inside the cell is the nearest one to some point.
 constexpr int Points = 16;
+constexpr double Apart = 45000.0;   // m: the spacing the planet seeds its centres with
 
 } // namespace
 
@@ -36,7 +37,17 @@ std::vector<Centre> centresIn(const Planet& planet, int cellX, int cellZ) {
             centres[known] = {found.position, found.vigor, hash(planet.seed, found.cellX, found.cellZ, 0x56454e54)};
         }
     }
-    return centres;
+    // STAND-IN, to delete once the planet's lattice of centres keeps its spacing where crust of
+    // different birth meets (there it is drawn out to several times its density): of the centres
+    // of a cell the most vigorous stay, none closer to another than `Apart`.
+    std::sort(centres.begin(), centres.end(), [](const Centre& a, const Centre& b) { return a.vigor != b.vigor ? a.vigor > b.vigor : a.id < b.id; });
+    std::vector<Centre> kept;
+    for (const Centre& centre : centres) {
+        bool crowded = false;
+        for (const Centre& other : kept) crowded = crowded || length(other.position - centre.position) < Apart;
+        if (!crowded) kept.push_back(centre);
+    }
+    return kept;
 }
 
 } // namespace derivean::sim

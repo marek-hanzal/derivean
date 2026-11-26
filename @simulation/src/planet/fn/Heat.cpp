@@ -3,6 +3,7 @@
 #include "core/fn/Hash.hpp"
 #include "core/fn/Noise.hpp"
 #include "planet/fn/Sample.hpp"
+#include "strata/type/Column.hpp"
 
 namespace derivean::sim {
 namespace {
@@ -16,14 +17,6 @@ constexpr float MagmaticGradient = 0.26f;     // K/m added directly above a body
 constexpr float BetweenCentres = 0.10f;       // share of the magmatic heat that reaches ground far from a centre
 
 constexpr float MeltForHeat = 600.0f;         // m of added crust that makes a full-strength heat source
-
-// Crust-attached coordinates of a position: where the rock under it was when its columns formed.
-Vec2 crustFrame(const Planet& planet, Vec2 position) {
-    const ColumnBlend around = blendColumns(planet, position);
-    double driftX = 0, driftZ = 0;
-    for (int corner = 0; corner < 4; ++corner) driftX += around.weight[corner] * around.column[corner]->driftX, driftZ += around.weight[corner] * around.column[corner]->driftZ;
-    return position - Vec2{driftX, driftZ} * PlanetCell;
-}
 
 CellularSite centreSite(const Planet& planet, Vec2 material) {
     return cellularNoise(stream(planet.seed, CentreStream), material.x / CentreSpacing, material.z / CentreSpacing, 0.85);

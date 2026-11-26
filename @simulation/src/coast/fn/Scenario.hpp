@@ -9,7 +9,7 @@ namespace derivean::sim {
 // level upland; a lake lies in a hollow of such an upland.
 enum class CoastScene : uint8_t {
     Straight,   // a straight shore; the eastern half of the land is of `other` rock, and joint zones cross both
-    Bay,        // the same shore with a bay between two headlands; loose cover lies west of the bay only
+    Bay,        // the same shore with a bay cut into it; loose cover lies west of the bay only
     Lake,       // a lake that fills a hollow, loose cover all round its shore
 };
 

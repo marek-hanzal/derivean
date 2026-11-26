@@ -19,7 +19,7 @@ Geotherm geothermAt(const Planet& planet, Vec2 position);
 
 // The magmatic centre `Geotherm::centre` is measured against: where melt gathers under a province.
 // Its lattice cell is its identity for the life of the crust it sits in. The position is exact while
-// the crust between the point and the centre has travelled together, which holds inside a plate.
+// the point and the centre stand on the same column of crust (`crustFrame`).
 struct MagmaticCentre {
     Vec2 position;             // m, where it is now
     int64_t cellX{}, cellZ{};  // lattice cell in the frame of the crust

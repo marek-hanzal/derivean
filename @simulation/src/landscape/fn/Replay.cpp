@@ -34,6 +34,8 @@ void stepDomain(Domain& domain, FlowScratch& scratch, const Setting& setting) {
         for (size_t i = 0; i < domain.cells(); ++i) domain.iceAge[i] = std::max(domain.iceAge[i], domain.ice[i]);
     }
     cutAndFill(domain, scratch);
+    workShores(domain, scratch);
+    blowLoose(domain, scratch);
     domain.time += domain.step;
     ++domain.taken;
 }

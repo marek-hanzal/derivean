@@ -60,6 +60,21 @@ int volcanicSurvey(const Arguments& arguments) {
         recorded += volume;
         if (land) recordedLand += volume;
     }
+    long meltLand = 0, nowLand = 0, sources[3] = {};
+    std::vector<double> perCell;
+    for (int z = 0; z < PlanetCells; ++z) {
+        for (int x = 0; x < PlanetCells; ++x) {
+            const CrustColumn& column = planet.columns.at(x, z);
+            if (planet.elevation.at(x, z) <= planet.seaLevel || planet.time <= window.start) continue;
+            if (column.erupted - planet.records.at(x, z).past[size_t(pastMarkIndex(window.start))].erupted <= 0) continue;
+            ++meltLand;
+            ++sources[size_t(column.meltSource)];
+            nowLand += double(column.meltTime) + PlanetStep >= planet.time - 1;
+            perCell.push_back(double(centresIn(planet, x, z).size()));
+        }
+    }
+    std::printf("  land cells of the planet: %ld, with melt at the surface in the window: %ld (arc %ld, rift %ld, plume %ld), still rising: %ld | centres found per such cell: p10 %.0f p50 %.0f p90 %.0f max %.0f\n",
+                landCells, meltLand, sources[0], sources[1], sources[2], nowLand, percentile(perCell, 0.1), percentile(perCell, 0.5), percentile(perCell, 0.9), percentile(perCell, 0.9999));
     std::vector<Row> rows;
     double dealt = 0;
     int land = 0, active = 0, activeLand = 0, standing = 0, byMagma[2] = {};
@@ -137,13 +152,15 @@ int volcanicSurvey(const Arguments& arguments) {
     else std::printf("; no supplied vent within 400 km\n");
 
     std::sort(rows.begin(), rows.end(), [](const Row& a, const Row& b) { return a.vent->erupted > b.vent->erupted; });
-    std::printf("  largest vents on land (X, Z of the centre in m):\n");
-    int listed = 0;
-    for (const Row& row : rows) {
-        if (!row.land || listed++ >= int(arguments.number("list", 12))) continue;
-        const Vent& vent = *row.vent;
-        std::printf("    X %.0f Z %.0f  %-8s  %.0f km3 in the window, last %.1f Myr ago, supplied now %.2f km3/kyr, %zu conduits, next eruption in %.0f yr\n", vent.centre.x, vent.centre.z,
-                    vent.magma == Magma::Basalt ? "basalt" : "andesite", vent.erupted / Km3, row.last / 1e6, vent.supply * 1000 / Km3, vent.feeders.size(), row.next > 1e29 ? -1.0 : row.next);
+    for (const Magma magma : {Magma::Andesite, Magma::Basalt}) {
+        std::printf("  largest %s vents on land (X, Z of the centre in m):\n", magma == Magma::Basalt ? "basalt" : "andesite");
+        int listed = 0;
+        for (const Row& row : rows) {
+            const Vent& vent = *row.vent;
+            if (!row.land || vent.magma != magma || listed++ >= int(arguments.number("list", 8))) continue;
+            std::printf("    X %.0f Z %.0f  %.0f km3 in the window, last %.1f Myr ago, supplied now %.2f km3/kyr, %zu conduits, next eruption in %.0f yr\n", vent.centre.x, vent.centre.z,
+                        vent.erupted / Km3, row.last / 1e6, vent.supply * 1000 / Km3, vent.feeders.size(), row.next > 1e29 ? -1.0 : row.next);
+        }
     }
     return 0;
 }

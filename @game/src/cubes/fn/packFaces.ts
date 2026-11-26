@@ -2,16 +2,17 @@ import type { Quads } from "../../../contract/GameBridge";
 
 // What the cube pipeline reads on the GPU (faceNodes): four 32-bit words a face.
 //   0  plane | lowU << 16            2  sizeV | material << 16 | occlusion << 24
-//   1  lowV | sizeU << 16            3  axis | negative << 2 | level << 3 | rise << 7
+//   1  lowV | sizeU << 16            3  axis | negative << 2 | level << 3 | rise << 7 | cap << 15
 // Plane, lowU and lowV are signed sixteen-bit counts of cubes from the anchor of the batch the face is drawn in,
 // so the place of its chunk is already in them. `rise` lifts the face by 256ths of a cube: a sheet of water lies
-// at its level, not on the lattice.
+// at its level, not on the lattice. A cap (capFaces) stands a sliver behind its plane, clear of a riser that lies
+// in it.
 export const packFace = (out: Uint32Array | number[], at: number, axis: number, negative: boolean, plane: number, lowU: number, lowV: number,
-  sizeU: number, sizeV: number, material: number, occlusion: number, level: number, rise: number) => {
+  sizeU: number, sizeV: number, material: number, occlusion: number, level: number, rise: number, cap = false) => {
   out[at] = (plane & 0xffff) | (lowU & 0xffff) << 16;
   out[at + 1] = (lowV & 0xffff) | (sizeU & 0xffff) << 16;
   out[at + 2] = (sizeV & 0xffff) | (material & 0xff) << 16 | (occlusion & 0xff) << 24;
-  out[at + 3] = axis | (negative ? 4 : 0) | level << 3 | rise << 7;
+  out[at + 3] = axis | (negative ? 4 : 0) | level << 3 | rise << 7 | (cap ? 1 << 15 : 0);
 };
 
 // The engine's quads of a chunk (Quads), `home` cubes from the anchor, into `out` from face `first` on.

@@ -32,13 +32,13 @@ Shape shapeOf(const CoastSpec& spec, double x, double z, double cell, double rou
         // A hollow with an outlet to the south, so the lake stands at the lip of that channel.
         const bool channel = std::abs(x) < 2.5 && z > 0;
         const double inland = radius - shoreAt;
-        return {float(channel && inland > 0 ? 0.02 - 0.001 * inland : inland >= 0 ? std::min(8.0, 0.4 + 0.08 * inland * cell) + rough : 0.03 * inland * cell - 0.3), std::abs(inland) < 24};
+        return {float(channel && inland > 0 ? 0.02 - 0.001 * inland : inland >= 0 ? 0.4 + 0.04 * inland * cell + rough : 0.03 * inland * cell - 0.3), std::abs(inland) < 24};
     }
     double shoreline = 0;
     if (spec.scene == CoastScene::Bay) {
-        // A rounded bay 70 cells wide and 60 deep, its mouth between two headlands that stand 12 cells out.
+        // A rounded bay 70 cells wide and 60 deep in an otherwise straight shore.
         const double across = std::abs(x) / 35.0;
-        shoreline = across < 1 ? 60.0 * std::sqrt(1.0 - across * across) : -12.0 * std::exp(-(across - 1) * (across - 1) * 6.0);
+        shoreline = across < 1 ? 60.0 * std::sqrt(1.0 - across * across) : 0.0;
     }
     const bool west = spec.scene != CoastScene::Bay || x < -38;
     return {float(profile(z - shoreline)), west && z - shoreline < 2 && z - shoreline > -25};

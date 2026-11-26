@@ -37,46 +37,39 @@ float rockFactor(const Domain& domain, size_t i) {
     return kind * domain.quality[i] * (1.0f + 2.5f * domain.weakness[i]);
 }
 
-void wearBed(Domain& domain, SheetWork& work, const SheetField& field, double years, double span, std::vector<float> debris[SedimentClasses], WearTotals& totals) {
+void wearBed(Domain& domain, SheetWork& work, const SheetField& field, const std::vector<int32_t>& downIce, double years, double span,
+             std::vector<float> debris[SedimentClasses], WearTotals& totals) {
     const int size = domain.size;
     const size_t cells = domain.cells();
     const float area = float(domain.cell * domain.cell);
     for (int c = 0; c < SedimentClasses; ++c) debris[c].assign(cells, 0.0f);
     if (work.worn.size() != cells) work.worn.assign(cells, 0.0f);
 
-    // Every cut is measured against the ground its neighbours had before this working, so a basin
-    // deepens by no more than its outlet allows however the cells are visited.
-    std::vector<float> loose(cells, 0.0f), rock(cells, 0.0f);
-    for (int z = 1; z < size - 1; ++z) {
-        for (int x = 1; x < size - 1; ++x) {
-            const size_t i = domain.index(x, z);
-            if (field.slide[i] <= 0 || domain.hold[i] != Free) continue;
-            const float room = groundOf(domain, i) - floorOf(domain, field, x, z);
-            if (room <= 0) continue;
-            float effort = WearRate * field.slide[i] * float(years);
-            loose[i] = std::min({domain.sedimentAt(i), effort * LooseGain, room});
-            effort -= loose[i] / LooseGain;
-            rock[i] = std::min(effort * rockFactor(domain, i), room - loose[i]);
+    // From the margin inwards: every cell is cut against the ground its down-ice neighbours are
+    // left with, so a floor that lowers as a whole is not held back and a basin is bounded by the
+    // lip that does not lower.
+    for (size_t step = cells; step-- > 0;) {
+        const size_t i = size_t(downIce[step]);
+        const int x = int(i % size_t(size)), z = int(i / size_t(size));
+        if (field.slide[i] <= 0 || domain.hold[i] != Free || x == 0 || z == 0 || x == size - 1 || z == size - 1) continue;
+        const float room = std::min(groundOf(domain, i) - floorOf(domain, field, x, z), DeepestCut * field.thickness[i]);
+        if (room <= 0) continue;
+        float effort = WearRate * field.slide[i] * float(years);
+        const float cover = domain.sedimentAt(i), loose = std::min({cover, effort * LooseGain, room});
+        effort -= loose / LooseGain;
+        const float rock = std::min(effort * rockFactor(domain, i), room - loose), cut = loose + rock;
+        if (cut <= 0) continue;
+        for (int c = 0; c < SedimentClasses; ++c) {
+            const float taken = cover > 0 ? loose * domain.ground.sediment[c][i] / cover : 0.0f;
+            domain.ground.sediment[c][i] -= taken;
+            debris[c][i] = (taken + rock * TillSplit[c]) * area;
         }
-    }
-    for (int z = 1; z < size - 1; ++z) {
-        for (int x = 1; x < size - 1; ++x) {
-            const size_t i = domain.index(x, z);
-            const float cut = loose[i] + rock[i];
-            if (cut <= 0) continue;
-            const float cover = domain.sedimentAt(i);
-            for (int c = 0; c < SedimentClasses; ++c) {
-                const float taken = cover > 0 ? loose[i] * domain.ground.sediment[c][i] / cover : 0.0f;
-                domain.ground.sediment[c][i] -= taken;
-                debris[c][i] = (taken + rock[i] * TillSplit[c]) * area;
-            }
-            domain.ground.rock[i] -= rock[i];
-            work.worn[i] += rock[i];
-            domain.eroded[i] += cut;
-            if (span > 0) domain.erosionRate[i] += RateShare * cut / float(span);
-            if (domain.owned(x, z)) domain.ledger.eroded += double(cut) * area;
-            totals.worn += double(cut) * area;
-        }
+        domain.ground.rock[i] -= rock;
+        work.worn[i] += rock;
+        domain.eroded[i] += cut;
+        if (span > 0) domain.erosionRate[i] += RateShare * cut / float(span);
+        if (domain.owned(x, z)) domain.ledger.eroded += double(cut) * area;
+        totals.worn += double(cut) * area;
     }
 }
 

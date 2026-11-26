@@ -20,6 +20,7 @@ int main(int count, char** words) {
     if (command == "view") return viewCommand(arguments);
     if (command == "relief") return reliefCommand(arguments);
     if (command == "block") return blockCommand(arguments);
+    if (command == "aeolian") return aeolianCommand(arguments);
     if (command == "coast") return coastCommand(arguments);
     if (command == "groundwater") return groundwaterCommand(arguments);
     if (command == "volcanic") return volcanicCommand(arguments);

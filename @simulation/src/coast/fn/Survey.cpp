@@ -25,13 +25,17 @@ struct Reader {
         const size_t i = grid.index(x, z);
         const float loose = grid.loose(i);
         if (loose >= BareCover) return grid.cover[Coarse][i] >= CoarseShare * loose ? ShoreKind::Gravel : grid.cover[Sand][i] >= grid.cover[Fines][i] ? ShoreKind::Sand : ShoreKind::Mud;
+        // A foot the waves have cut is a face, however wide the cell that holds it.
+        bool undercut = grid.notch[i] > 0;
+        for (const int k : Side)
+            if (inside(x + NeighborX[k], z + NeighborZ[k])) undercut = undercut || grid.cut[grid.index(x + NeighborX[k], z + NeighborZ[k])] > 0;
         const int reach = std::max(2, int(std::lround(CliffReach / grid.cell)));
         height = 0;
         for (int dz = -reach; dz <= reach; ++dz)
             for (int dx = -reach; dx <= reach; ++dx) {
                 if (!inside(x + dx, z + dz)) continue;
                 const float rise = grid.top(grid.index(x + dx, z + dz)) - water, run = (std::sqrt(float(dx * dx + dz * dz)) + 0.5f) * float(grid.cell);
-                if (rise >= CliffRise && rise >= CliffSteep * run) height = std::max(height, rise);
+                if (rise >= CliffRise && (undercut || rise >= CliffSteep * run)) height = std::max(height, rise);
             }
         return height > 0 ? ShoreKind::Cliff : ShoreKind::Rock;
     }

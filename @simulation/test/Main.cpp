@@ -1,6 +1,7 @@
 // Each domain defines its checks in its own translation unit. A failed check reports to stderr and
 // exits non-zero, so reaching the end of main means every check passed.
 void testMaterials();
+void testAeolian();
 void testClimate();
 void testClouds();
 void testAtmosphere();
@@ -25,6 +26,7 @@ void testGroundwaterTile();
 
 int main() {
     testMaterials();
+    testAeolian();
     testClimate();
     testClouds();
     testAtmosphere();

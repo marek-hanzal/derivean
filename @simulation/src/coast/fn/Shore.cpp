@@ -35,6 +35,8 @@ void book(Domain& domain, Shore& shore, const std::vector<float>& cutBefore) {
             if (broken == 0 && gained == 0) continue;
             const float lost = broken + std::max(0.0f, -gained), won = std::max(0.0f, gained);
             shore.laid[i] += gained;
+            // Invariant: `trend` follows every metre the waves cut or lay, or the uplift a finer
+            // level finds for itself (landscape/fn/Uplift.cpp) would raise the bench again.
             domain.trend[i] += gained - broken;
             domain.eroded[i] += lost;
             domain.deposited[i] += won;

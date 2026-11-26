@@ -10,9 +10,11 @@ namespace {
 
 constexpr uint64_t SequenceStream = 0x43484d42;
 // Fluid melt leaves its chamber often and in small parts; viscous melt holds until the roof gives,
-// rarely and then in bulk. Volumes are log-normal around the median with this spread.
-constexpr double MedianEruption[2] = {1.0e7, 3.0e7};   // m³, by Magma
-constexpr double Spread[2] = {1.3, 1.5};
+// more rarely and with a longer tail of great eruptions. Volumes are log-normal around the median
+// with this spread: most eruptions are small, and a few of the largest carry much of the volume.
+// These two numbers, with the planet's supply, are what sets how often a volcano erupts.
+constexpr double MedianEruption[2] = {5.0e5, 1.0e6};   // m³, by Magma
+constexpr double Spread[2] = {2.0, 2.2};
 // The sequence is cut into runs of this many eruptions whose volumes sum to exactly what the mean
 // says, so the eruptions around any supplied volume are found without counting from the start.
 constexpr int Run = 256;

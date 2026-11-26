@@ -7,7 +7,7 @@
 namespace derivean::sim {
 
 // The grounded ice of the whole planet in the steady state of one climate, on the planet grid.
-struct IceStage {
+struct PlanetStage {
     double cooling{};           // °C against the present, zero or negative
     Field<float> thickness;     // m; zero where there is none or it floats
     Field<float> sink;          // m the load has pressed the crust down
@@ -20,7 +20,7 @@ struct IceStage {
 // time its cycles spend near each stage (icesheet/fn/Dating.hpp), so a region never asks for a
 // sheet between two tiles: every tile reads the same planet-wide stages.
 struct ContinentalIce {
-    std::vector<IceStage> stages;
+    std::vector<PlanetStage> stages;
     Field<float> heat;          // K/m, temperature gradient in the rock, per planet cell
     double present{};           // yr, the end of the last termination: the date stage 0 stands for
 };

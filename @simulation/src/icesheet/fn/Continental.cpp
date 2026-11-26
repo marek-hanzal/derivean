@@ -14,7 +14,7 @@ namespace {
 constexpr double WidestGap = 1.5;     // °C at most between two stages
 constexpr int FirstRounds = 1600;     // most the first stage is relaxed for at each resolution, from bare ground
 constexpr int NextRounds = 800;       // and every colder one, from the stage before
-constexpr float Settled = 2e-4f;      // share of the ice volume forty rounds may still move in a stage that counts as steady
+constexpr float Steady = 2e-4f;      // share of the ice volume forty rounds may still move in a stage that counts as steady
 
 // The same planet at twice the cell: the sheet finds its outline there four times as fast.
 IceGrid halved(const IceGrid& fine) {
@@ -39,7 +39,7 @@ IceGrid halved(const IceGrid& fine) {
 void growFromBare(IceGrid& grid, double cooling, Workers* workers) {
     IceGrid coarse = halved(grid);
     coarse.cooling = grid.cooling = float(cooling);
-    relaxIce(coarse, workers, FirstRounds, Settled, true);
+    relaxIce(coarse, workers, FirstRounds, Steady, true);
     for (int z = 0; z < grid.height; ++z) {
         for (int x = 0; x < grid.width; ++x) {
             const size_t i = grid.index(x, z), from = coarse.index(x / 2, z / 2);
@@ -48,12 +48,12 @@ void growFromBare(IceGrid& grid, double cooling, Workers* workers) {
             grid.thaw[i] = coarse.thaw[from];
         }
     }
-    relaxIce(grid, workers, FirstRounds, Settled, true);
+    relaxIce(grid, workers, FirstRounds, Steady, true);
 }
 
 void coolTo(IceGrid& grid, double cooling, Workers* workers) {
     grid.cooling = float(cooling);
-    relaxIce(grid, workers, NextRounds, Settled, true);
+    relaxIce(grid, workers, NextRounds, Steady, true);
 }
 
 } // namespace
@@ -79,8 +79,8 @@ IceGrid planetIce(const Planet& planet) {
     return grid;
 }
 
-IceStage stageOf(const IceGrid& grid, const Planet& planet) {
-    IceStage stage;
+PlanetStage stageOf(const IceGrid& grid, const Planet& planet) {
+    PlanetStage stage;
     stage.cooling = grid.cooling;
     stage.thickness = Field<float>(grid.width, grid.height);
     stage.sink = Field<float>(grid.width, grid.height);

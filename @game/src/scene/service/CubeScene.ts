@@ -7,8 +7,9 @@ import type { createWorldScene } from "./WorldScene";
 
 // The WebGPU renderer and its camera, which outlive worlds; `load` swaps the stage. Depth is reversed in a float
 // buffer, because one view holds cubes 6 cm from the eye and mountains hundreds of kilometres away. Nothing is
-// drawn until the device is there; `backend` then says what three.js got, WebGPU or its WebGL 2 fallback.
-export function createCubeScene(canvas: HTMLCanvasElement): ReturnType<typeof createWorldScene> {
+// drawn until the device is there; `backend` then says what three.js got, WebGPU or its WebGL 2 fallback. A
+// device that cannot be had is reported through `failed`.
+export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unknown) => void): ReturnType<typeof createWorldScene> {
   const renderer = new WebGPURenderer({
     canvas, antialias: true, powerPreference: "high-performance", reversedDepthBuffer: true, trackTimestamp: true,
   });
@@ -33,7 +34,7 @@ export function createCubeScene(canvas: HTMLCanvasElement): ReturnType<typeof cr
 
   void renderer.init().then(() => {
     backend = (renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend ? "WebGPU" : "WebGL 2 (three.js fallback)";
-  });
+  }).catch(failed);
 
   return {
     get backend() { return backend; },

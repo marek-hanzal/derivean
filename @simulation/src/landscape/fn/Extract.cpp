@@ -1,5 +1,8 @@
 #include "landscape/fn/Build.hpp"
 
+#include "aeolian/fn/Wind.hpp"
+#include "coast/fn/Coast.hpp"
+
 namespace derivean::sim {
 namespace {
 
@@ -77,11 +80,13 @@ void extractTile(const Domain& domain, const FlowScratch& scratch, Tile& tile) {
     tile.time = domain.time;
     tile.seaLevel = domain.seaLevel;
     tile.ledger = domain.ledger;
+    tile.aeolian = windRecordOf(domain);
     copyGround(domain, tile.now, 0);
     for (auto* field : {&tile.water, &tile.discharge, &tile.load, &tile.iceAge, &tile.uplift, &tile.rebound, &tile.ice, &tile.erosionRate, &tile.depositionRate,
                         &tile.eroded, &tile.deposited, &tile.uplifted, &tile.rain, &tile.warmth, &tile.shed})
         field->resize(cells);
     tile.upIce = domain.upIce;
+    tile.shore = recordShore(domain);
     tile.flowTo.assign(cells, 255);
     tile.rock.assign(cells, uint8_t(Material::Bedrock));
     for (int z = 0; z < TileCells; ++z) {

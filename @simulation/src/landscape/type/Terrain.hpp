@@ -1,5 +1,6 @@
 #pragma once
 
+#include "aeolian/type/Aeolian.hpp"
 #include "landscape/type/Level.hpp"
 #include "ore/type/Ore.hpp"
 #include "strata/type/Column.hpp"
@@ -13,6 +14,8 @@ namespace derivean::sim {
 struct GroundDetail;
 struct Shore;
 struct ShoreRecord;
+struct SheetRecord;
+struct SheetWork;
 class Workers;
 
 // Loose sediment is tracked in three transport classes; solutes leave with the water.
@@ -72,6 +75,8 @@ struct Tile {
     std::shared_ptr<const GroundDetail> detail;   // ground tiles only: stones, mineral crusts and what the cover is made of
     std::shared_ptr<const ShoreRecord> shore;     // waves at every cell and what they cut and laid (coast/type/Shore.hpp); null where no water stands
     std::shared_ptr<const VolcanicTile> volcanic; // rock laid on top of the layering by eruptions, and the vents (volcanic/type/Pile.hpp); null where there is none
+    std::shared_ptr<const SheetRecord> sheet;     // what continental ice wore off and left (icesheet/type/Sheet.hpp); null where no sheet ever came
+    WindRecord aeolian;             // what wind and evaporation left in the cover (aeolian/type/Aeolian.hpp); its arrays are empty on ground tiles
     TileLedger ledger;
 };
 
@@ -149,6 +154,8 @@ struct Domain {
     TileLedger ledger;
     std::shared_ptr<Shore> shore;   // the coast's working state of this replay (coast/type/Shore.hpp); null until water stands in the domain
     VolcanicDomain volcanic;        // vents and the pile they lay (volcanic/type/Pile.hpp); its arrays stay empty until something volcanic touches the domain
+    std::shared_ptr<SheetWork> sheet;   // continental ice over the domain during this replay (icesheet/type/Sheet.hpp); null until first asked for
+    WindField aeolian;              // the wind's regime, what it has laid and left, and its sand kept aside (aeolian/type/Aeolian.hpp)
 
     // Ground level only.
     std::vector<Bed> bed;           // the bed each cell has cut into; `unit` then holds the parting inside it

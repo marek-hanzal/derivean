@@ -43,7 +43,7 @@ struct SheetSource {
     std::function<float(int stage, Vec2 position)> thickness;    // m of ice the stage holds at a place
     std::function<float(int stage, Vec2 position)> sink;         // m the crust has given way there
     std::function<float(Vec2 position)> heat;                    // K/m in the rock
-    std::function<float(double z)> halfRange;                    // °C between the annual mean and the warmest month
+    std::function<float(Vec2 position)> halfRange;               // °C between the annual mean and the warmest month
 
     int stages() const { return int(cooling.size()); }
 };
@@ -54,8 +54,10 @@ struct SheetWork {
     bool reached{};                      // some stage brings ice into the domain
     int worked{};                        // steps whose glaciations have been worked into the ground
     std::vector<IceGrid> coarse;         // per stage, on cells four domain cells wide; empty until first solved
+    std::vector<std::vector<float>> beyond;   // per stage and coarse cell: m of ice the source holds there
     std::vector<float> worn;             // m of rock ground off so far, per domain cell
     std::vector<float> now, lastMaximum; // m of grounded ice per domain cell, once the last sheet has left its record
+    std::vector<float> rest;             // m each cell's crust has still to rise since the last sheet left
     // Per domain cell while the last sheet leaves its record; the tile's cells are read off at the end.
     SheetRecord left;
 };

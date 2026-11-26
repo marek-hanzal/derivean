@@ -52,7 +52,7 @@ export function groundColor(base: Vec3, at: Vec3, loose: Float, range: Float, ed
     });
     return value;
   };
-  const stain = groundNoise(at.div(256), vec3(GroundRepeat / 256)).sub(0.5);
+  const stain = groundNoise(at.div(256), vec3(GroundRepeat / 256)).sub(0.5).mul(smoothstep(128, 384, edge).oneMinus());
   const mottle = octave(25.6, 3.7, 5000, 16000);
   const patchy = octave(6.4, 9.1, 1200, 4000);
   const fine = octave(1.6, 5.3, 120, 400);

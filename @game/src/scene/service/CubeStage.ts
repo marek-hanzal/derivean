@@ -28,10 +28,12 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
   const content = new Group();
   content.matrixAutoUpdate = false;
   scene.add(content);
-  camera.far = world.far.viewDistance * 2;
+  const viewDistance = world.cubes?.viewDistance ?? world.far.viewDistance;
+  camera.far = viewDistance * 2;
   camera.updateProjectionMatrix();
 
-  const daylight = createDaylight(world.far.viewDistance);
+  const daylight = createDaylight(viewDistance);
+  daylight.rebase(world.seaLevel);
   const sky = daylight.nodes;
   scene.backgroundNode = skyBackground(sky);
   // three.js's own materials, which the particles and the brush still use, are lit by these two.

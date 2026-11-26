@@ -39,6 +39,7 @@ float takeSand(Domain& domain, size_t i, float amount) {
     const float mixed = *cover[Sand] - std::min(labels.blown[i], *cover[Sand]), fromMixed = amount - fromBlown;
     labels.blown[i] = std::max(0.0f, labels.blown[i] - fromBlown);
     *cover[Sand] -= amount;
+    bookWind(domain, i, -amount);
     if (fromMixed <= 0 || mixed <= Trace) return 0;
     const float share = fromMixed / mixed;
     labels.lag[i] = std::min(*cover[Coarse], labels.lag[i] + share * std::max(0.0f, *cover[Coarse] - labels.lag[i]));
@@ -46,12 +47,20 @@ float takeSand(Domain& domain, size_t i, float amount) {
     const float crust = std::min(*cover[Fines], labels.loess[i] + labels.salt[i]);
     const float dust = share * (*cover[Fines] - crust);
     *cover[Fines] -= dust;
+    bookWind(domain, i, -dust);
     return dust;
 }
 
 void layBlown(Domain& domain, size_t i, float amount) {
     domain.ground.sediment[Sand][i] += amount;
     domain.aeolian.labels.blown[i] += amount;
+    bookWind(domain, i, amount);
+}
+
+void bookWind(Domain& domain, size_t i, float metres) {
+    (metres >= 0 ? domain.deposited : domain.eroded)[i] += std::abs(metres);
+    if (!domain.owned(int(i % size_t(domain.size)), int(i / size_t(domain.size)))) return;
+    (metres >= 0 ? domain.ledger.deposited : domain.ledger.eroded) += double(std::abs(metres)) * domain.cell * domain.cell;
 }
 
 void tidyLabels(Domain& domain) {

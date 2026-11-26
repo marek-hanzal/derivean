@@ -101,6 +101,20 @@ const RockTraits& traitsOf(Material material) {
     return table[size_t(material)];
 }
 
+// Kinds of crust do not blend. Their contact is read through a ragged seeded offset, so it
+// interfingers at every scale instead of following the edge of a planet cell.
+const CrustColumn& crustOwner(const Planet& planet, Vec2 position) {
+    const uint64_t ragged = stream(planet.seed, BasementStream) + 31;
+    const Vec2 offset{37e3 * fractalNoise(ragged, position.x / 83e3, position.z / 83e3, 5, 0.6),
+                      37e3 * fractalNoise(ragged + 1, position.x / 83e3, position.z / 83e3, 5, 0.6)};
+    return planetColumn(planet, position + offset);
+}
+
+Vec2 crustFrame(const Planet& planet, Vec2 position) {
+    const CrustColumn& owner = crustOwner(planet, position);
+    return position - Vec2{double(owner.driftX), double(owner.driftZ)} * PlanetCell;
+}
+
 StrataColumn strataAt(const Planet& planet, Vec2 position) {
     const ColumnBlend around = blendColumns(planet, position);
     StrataColumn column;
@@ -128,12 +142,7 @@ StrataColumn strataAt(const Planet& planet, Vec2 position) {
             column.older += added;
         }
     }
-    // Kinds of crust do not blend. Their contact is read through a ragged seeded offset, so it
-    // interfingers at every scale instead of following the edge of a planet cell.
-    const uint64_t ragged = stream(planet.seed, BasementStream) + 31;
-    const Vec2 offset{37e3 * fractalNoise(ragged, position.x / 83e3, position.z / 83e3, 5, 0.6),
-                      37e3 * fractalNoise(ragged + 1, position.x / 83e3, position.z / 83e3, 5, 0.6)};
-    const CrustColumn& owner = planetColumn(planet, position + offset);
+    const CrustColumn& owner = crustOwner(planet, position);
     (void)heaviest;
     column.melt = owner.melt, column.meltTime = owner.meltTime, column.orogenTime = owner.orogenTime;
     column.deformed = std::max({0.0, double(owner.meltTime), double(owner.orogenTime)});

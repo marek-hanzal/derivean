@@ -70,11 +70,21 @@ void wearDebris(Domain& domain);
 // Glacial.cpp — ice from the snow balance of a sinusoidal year, its erosion and its moraines.
 void glaciate(Domain& domain, FlowScratch& scratch, float seasonalHalfRange, float cooling, bool erode);
 
+// aeolian/fn/Budget.cpp — wind moves dry loose sand and dust and lays them down; dry basins keep their salt; at Local and Site the dune field (aeolian/fn/Wind.hpp).
+void blowLoose(Domain& domain, FlowScratch& scratch);
+
 // coast/fn/Shore.cpp — waves on seas and lakes cut rock back at the waterline and sort and carry sand and gravel (coast/fn/Coast.hpp).
 void workShores(Domain& domain, FlowScratch& scratch);
 
 // volcanic/fn/Erupt.cpp — the vents of the domain lay the lava, fall and ash of this step and found what they emptied (volcanic/fn/Volcanic.hpp).
 void erupt(Domain& domain, FlowScratch& scratch, const struct Setting& setting);
+
+// icesheet/fn/Sheet.cpp — continental ice (icesheet/fn/Sheet.hpp says what each stage does). Step: the sheets of the glaciations a region step
+// holds wear its bed and lay their debris. Leave: after the last step, what the last sheet stripped, cut and left. Present: the ice standing
+// now; returns the tile's record. `tiles` answers for the finished tiles a builder may ask for (the parents of a finer level).
+enum class IceStage : uint8_t { Step, Leave, Present };
+std::shared_ptr<const SheetRecord> sheetIce(Domain& domain, FlowScratch& scratch, const struct Setting& setting, IceStage stage,
+                                            const std::function<const Tile*(TileKey)>* tiles = nullptr);
 
 // Units.cpp — keeps the cached rock traits in step with how deep the surface has cut.
 void refreshUnits(Domain& domain, uint64_t seed);

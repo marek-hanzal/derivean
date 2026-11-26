@@ -50,7 +50,7 @@ inline constexpr double WindStretch = 8.0;       // m/s of wind that stretches t
 // A single eruption that brings up more than this empties its chamber faster than the roof can
 // follow: the roof goes down as one block by `CalderaDepth`, over as wide a ring as the volume that
 // left requires. The walls it leaves are the business of slope failure afterwards.
-inline constexpr double CalderaVolume[2] = {2e9, 12e9};      // m³, by Magma
+inline constexpr double CalderaVolume[2] = {4e9, 12e9};      // m³, by Magma
 inline constexpr double CalderaDepth[2] = {500.0, 1200.0};   // m
 
 } // namespace derivean::sim

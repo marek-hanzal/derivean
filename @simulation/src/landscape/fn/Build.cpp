@@ -1,5 +1,7 @@
 #include "landscape/fn/Build.hpp"
 
+#include "aeolian/fn/Wind.hpp"
+#include "coast/fn/Coast.hpp"
 #include "ground/fn/Stages.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "volcanic/fn/Volcanic.hpp"
@@ -179,7 +181,9 @@ Domain buildDomain(const Setting& setting, TileKey key, const TileLookup& lookup
     else seedFromParent(domain, setting, lookup);
     domain.rainBase = domain.rain;
     adoptNeighbours(domain, lookup);
+    beginWind(domain, setting, lookup);
     openRim(domain);
+    readSeas(domain, setting, lookup);
     beginVolcanic(domain, setting, lookup);
     if (key.level != Level::Ground) readStructure(domain, setting);
     if (key.level != Level::Region) levelHollows(domain);

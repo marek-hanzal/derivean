@@ -58,6 +58,14 @@ struct StrataUnit {
 
 StrataColumn strataAt(const Planet& planet, Vec2 position);
 
+// The column whose rock a position stands on, and the position in the frame of that crust: where
+// the rock was when its column formed. Every pattern attached to the crust is read in this frame.
+// It is whole inside one column's ragged footprint and steps where crust of different travel meets;
+// drifts are never blended, which would stretch or fold the frame between two columns.
+struct CrustColumn;
+const CrustColumn& crustOwner(const Planet& planet, Vec2 position);
+Vec2 crustFrame(const Planet& planet, Vec2 position);
+
 // `base` with the thicknesses of four columns around a point blended by weight. A slot `base` lacks
 // stays absent, since it has no facies of its own to give it. Layering read through this never
 // steps where the nearest column changes.

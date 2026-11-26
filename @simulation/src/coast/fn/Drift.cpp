@@ -14,12 +14,11 @@ constexpr float GravelLift = 0.25f;  // how readily waves lift gravel against sa
 // ten cells of sand and so does a weak one, so the drift of a shore follows the stronger of them.
 constexpr float Lift = 0.1f;
 // m of sand a train of one metre carries through a cell in one sweep, and the most m of bed any
-// sweep lifts. A sweep stands for a few years of a finer level's shore and a few centuries of a
-// region's: the drift of a metre-high sea, some 10^5 m³ a year, is then tens of metres over a
-// cell of either, and far more than a four-metre cell's own bed can supply, so a site's sand
-// goes wherever its waves let it lie.
-constexpr float Carry[LevelCount] = {0, 16.0f, 30.0f, 20.0f, 0};
-constexpr float Stir[LevelCount] = {0, 2.0f, 1.0f, 0.25f, 0};
+// sweep lifts. With Lift this makes a drift fill up over some ten cells of sandy shore, so that
+// beyond them a shore gains and loses only where its waves change. It is about a tenth of what
+// such a sea moves in the years a sweep stands for: spits here grow slowly.
+constexpr float Carry[LevelCount] = {0, 8.0f, 5.0f, 3.0f, 0};
+constexpr float Stir[LevelCount] = {0, 3.0f, 1.5f, 0.3f, 0};
 constexpr size_t Outside = ~size_t(0);
 
 float holds(int kind, float depth) { return SwashSlope[kind] / std::sqrt(1.0f + std::max(0.0f, depth) / ProfileDepth); }
@@ -54,7 +53,7 @@ struct Sweep {
     // rest left in its surf. A cell that does not evolve gives it back to where it came from.
     void strand(size_t i, int kind, float amount) {
         if (domain.hold[i] != Free) {
-            shore.ledger.left += double(amount) * area;
+            shore.ledger.entered -= double(amount) * area;
             return;
         }
         const float water = shore.still[i], laid = std::clamp(water + swingOf(domain, water) - shore.top[i], 0.0f, amount);
@@ -136,13 +135,23 @@ struct Sweep {
         const float water = shore.still[i], total = moving[Coarse] + moving[Sand];
         if (total > capacity) {
             // Waves that can carry less than they bring drop the difference, gravel first: on the
-            // bed up to high water, and what has no room there waits in the surf.
+            // bed up to high water, and what has no room there waits in the surf. Into water out of
+            // their reach it goes as a tongue, half ahead and a quarter to either side.
             float excess = total - capacity, room = std::max(0.0f, water + swingOf(domain, water) - shore.top[i]);
+            const size_t beside[2] = {toward(i, (train + 2) & 7), toward(i, (train + 6) & 7)};
             for (const int kind : {Coarse, Sand}) {
-                const float dropped = std::min(moving[kind], excess), laid = std::min(dropped, room);
+                float dropped = std::min(moving[kind], excess);
+                moving[kind] -= dropped, excess -= dropped;
+                for (const size_t side : beside) {
+                    if (capacity > 0 || side == Outside || domain.hold[side] != Free || !covered(side) || shore.top[side] > shore.top[i]) continue;
+                    const float aside = std::min(0.25f * dropped, std::max(0.0f, shore.still[side] + swingOf(domain, shore.still[side]) - shore.top[side]));
+                    lay(side, kind, aside);
+                    dropped -= aside;
+                }
+                const float laid = std::min(dropped, room);
                 lay(i, kind, laid);
                 shore.pending[kind][i] += dropped - laid;
-                moving[kind] -= dropped, excess -= dropped, room -= laid;
+                room -= laid;
             }
         } else {
             // Broken rock in the surf goes first; of the bed a sweep lifts only so much.

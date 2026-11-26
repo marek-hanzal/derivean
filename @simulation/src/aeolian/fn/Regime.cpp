@@ -23,10 +23,9 @@ constexpr double StormWind = 6.0;         // m/s
 constexpr int Months = 12;
 constexpr int Reach = 6;                  // quadrature points on either side of the mean, half a deviation apart
 
-// m/yr the air can take from open water or wet ground; the same demand the routing evaporates lakes with.
-double evaporationDemand(double warmth) { return std::clamp(0.25 + 0.035 * warmth, 0.05, 1.6); }
-
 } // namespace
+
+double evaporationDemand(double warmth) { return std::clamp(0.25 + 0.035 * warmth, 0.05, 1.6); }
 
 double thresholdFriction(double grain) { return 0.1 * std::sqrt((GrainDensity - NearGroundAir) / NearGroundAir * Gravity * grain); }
 

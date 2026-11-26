@@ -3,6 +3,8 @@
 #include "chronology/constant/Timeline.hpp"
 #include "climate/type/Climate.hpp"
 
+#include "core/type/Vec.hpp"
+
 #include <cmath>
 
 namespace derivean::sim {
@@ -30,20 +32,31 @@ double maximumCooling(uint64_t seed, double time, double present) {
     return interglacialCooling(seed, time, present) + deepest;
 }
 
-std::vector<float> stageShares(const ContinentalIce& ice, uint64_t seed, double time) {
-    std::vector<float> shares(ice.stages.size(), 0.0f);
-    const double end = cycleEnd(time), base = interglacialCooling(seed, time, ice.present);
+std::vector<float> stageShares(const std::vector<double>& stage, uint64_t seed, double time, double present) {
+    std::vector<float> shares(stage.size(), 0.0f);
+    if (stage.size() < 2) {
+        if (!shares.empty()) shares[0] = 1;
+        return shares;
+    }
+    const double end = cycleEnd(time), base = interglacialCooling(seed, time, present);
     for (int k = 0; k < Samples; ++k) {
         const double cooling = base + offsetAt(seed, end, (k + 0.5) / Samples);
         size_t colder = 1;
-        while (colder + 1 < ice.stages.size() && ice.stages[colder].cooling > cooling) ++colder;
-        const IceStage& warm = ice.stages[colder - 1];
-        const IceStage& cold = ice.stages[colder];
-        const double towards = warm.cooling > cold.cooling ? std::clamp((warm.cooling - cooling) / (warm.cooling - cold.cooling), 0.0, 1.0) : 0.0;
+        while (colder + 1 < stage.size() && stage[colder] > cooling) ++colder;
+        const double warm = stage[colder - 1], cold = stage[colder];
+        const double towards = warm > cold ? std::clamp((warm - cooling) / (warm - cold), 0.0, 1.0) : 0.0;
         shares[colder - 1] += float((1.0 - towards) / Samples);
         shares[colder] += float(towards / Samples);
     }
     return shares;
+}
+
+double sinceMaximum(uint64_t seed, double present) {
+    const double end = cycleEnd(present);
+    double deepest = 0, phase = 1;
+    for (int k = 0; k < Samples; ++k)
+        if (const double offset = offsetAt(seed, end, (k + 0.5) / Samples); offset < deepest) deepest = offset, phase = (k + 0.5) / Samples;
+    return GlacialCycle * (1.0 - phase);
 }
 
 } // namespace derivean::sim

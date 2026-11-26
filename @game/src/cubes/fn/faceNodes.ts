@@ -9,7 +9,6 @@ export function faceNodes() {
   const face = attribute("face", "uvec4");
   const short = (word: Node<"uint">, shift: number) => float(word.shiftRight(uint(shift)).bitAnd(uint(0xffff)));
   const signed = (value: Node<"float">) => select(value.greaterThanEqual(32768), value.sub(65536), value);
-  const plane = signed(short(face.x, 0));
   const lowU = signed(short(face.x, 16));
   const lowV = signed(short(face.y, 0));
   const sizeU = short(face.y, 16);
@@ -24,6 +23,8 @@ export function faceNodes() {
   const onX = axis.equal(uint(0));
   const onY = axis.equal(uint(1));
   const facing = select(negative, float(-1), float(1));
+  // A cap stands a sixty-fourth of a cube behind its plane.
+  const plane = signed(short(face.x, 0)).sub(facing.mul(float(face.w.shiftRight(uint(15)).bitAnd(uint(1)))).div(64));
   const normal = select(onX, vec3(facing, 0, 0), select(onY, vec3(0, facing, 0), vec3(0, 0, facing)));
   return {
     corner: select(onX, vec3(plane, u, v), select(onY, vec3(v, plane, u), vec3(u, v, plane))).add(vec3(0, rise, 0)),

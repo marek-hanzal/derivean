@@ -12,7 +12,7 @@ class Workers;
 IceGrid planetIce(const Planet& planet);
 
 // What a relaxed grid holds as one stage: grounded ice only.
-IceStage stageOf(const IceGrid& grid, const Planet& planet);
+PlanetStage stageOf(const IceGrid& grid, const Planet& planet);
 
 // The stages of a world of the given age: the present grown from bare ground, then the last
 // maximum and colder stages down to the coldest point of the region window, each by cooling on

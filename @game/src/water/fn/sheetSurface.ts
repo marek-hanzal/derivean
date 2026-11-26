@@ -22,7 +22,8 @@ export function sheetSurface(sky: SkyNodes, levels: LevelTable) {
   material.addEventListener("dispose", () => sceneDepth.dispose());
   material.positionNode = face.corner;
   material.colorNode = Fn(() => {
-    levelClip(levelRows(levels, face).row, positionWorld, 4);
+    // Sheets of two levels would blend twice where they overlapped, so a sheet ends at its square.
+    levelClip(levelRows(levels, face).row, positionWorld, 4, 0);
     const fromEye = positionWorld.sub(cameraPosition);
     const range = length(fromEye);
     const bed = cameraWorldMatrix.mul(vec4(getViewPosition(screenUV, new ViewportDepthTextureNode(screenUV, null, sceneDepth), cameraProjectionMatrixInverse), 1));
@@ -34,8 +35,8 @@ export function sheetSurface(sky: SkyNodes, levels: LevelTable) {
     const fresnel = min(pow(facing.oneMinus(), 5).mul(0.98).add(0.02), 0.85);
     const mirror = vec3(toEye.x.negate(), facing, toEye.z.negate());
     const body = mix(vec3(0.07, 0.2, 0.2), vec3(0.008, 0.04, 0.075), deepening)
-      .mul(sky.skyLight.mul(0.55).add(sky.sunLight.mul(max(sky.sunDirection.y, 0)).mul(0.4)));
-    const glint = sky.sunLight.mul(pow(max(dot(mirror, sky.sunDirection), 0), 500)).mul(0.5);
+      .mul(sky.skyLight.mul(0.55).add(sky.sunLight.mul(max(sky.skySun.y, 0)).mul(0.4)));
+    const glint = sky.sunLight.mul(pow(max(dot(mirror, sky.skySun), 0), 500)).mul(0.5);
     const natural = mix(body, airLight(sky, mirror, range), fresnel).add(glint);
     const relief = mix(vec3(0.2, 0.36, 0.52), vec3(0.07, 0.15, 0.3), deepening);
     // The shore needs no line drawn: the bed is cubes, and the sheet ends at the riser that rises through it.

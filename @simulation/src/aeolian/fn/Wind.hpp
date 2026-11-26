@@ -15,7 +15,8 @@ WindRecord windRecordOf(const Domain& domain);
 
 // Cover.cpp — how the cover meets the wind.
 // True where water or ice holds the ground: the sea, a lake its rivers still reach, a stream at
-// least half a cell wide, a glacier.
+// least half a cell wide, a glacier. Reads the flood of the step: `level` against the `surface` it
+// was found on, which a caller must therefore leave as the flood left it.
 bool heldByWater(const Domain& domain, size_t i);
 // m of sand the wind could take from a dry cell before the stones it leaves close the surface.
 float mobileSand(const Domain& domain, size_t i);
@@ -23,6 +24,9 @@ float mobileSand(const Domain& domain, size_t i);
 // mixed cover, whose stones stay as lag and whose fines leave as dust. Returns the dust in metres.
 float takeSand(Domain& domain, size_t i, float amount);
 void layBlown(Domain& domain, size_t i, float amount);
+// Enters metres the wind's side laid on a cell (positive) or took from it (negative) in the tile's
+// own record of deposition and erosion, so the tile's ledger still says where its ground went.
+void bookWind(Domain& domain, size_t i, float metres);
 void tidyLabels(Domain& domain);
 
 // DuneField.cpp — Local and Site: lays the parked sand back and lets the transport model work the
@@ -30,22 +34,22 @@ void tidyLabels(Domain& domain);
 void shapeDunes(Domain& domain);
 
 // Budget.cpp — Region: one step of the sand budget. Sand the wind can take moves along the resultant
-// drift, limited by what the wind can carry and by what the ground gives, into water, into the
-// shelter of relief and wherever the wind slackens. `passing` receives the m³ that crossed each cell.
-void routeSand(Domain& domain, FlowScratch& scratch, std::vector<float>& passing, std::vector<float>& raised);
-// Cells of a Region domain from upwind to downwind along the resultant drift, and for each cell the
-// two neighbours it hands on to with their shares.
+// drift, limited by what the wind can carry and by what the ground gives, into water and into the
+// shelter of relief. `raised` receives the metres of fines each cell sent up as dust on the way.
+// Cells from upwind to downwind along the resultant drift, and for each cell the two neighbours it
+// hands on to with their shares.
 struct WindGraph {
     std::vector<int32_t> order;
     std::vector<int32_t> to;        // cells × 2, -1 beyond the domain
     std::vector<float> share;       // cells × 2
 };
 WindGraph windGraph(const Domain& domain);
+void routeSand(Domain& domain, const WindGraph& graph, std::vector<float>& raised);
 
 // Dust.cpp — Region: fines raised this step travel with the same drift and settle with distance.
 void settleDust(Domain& domain, const WindGraph& graph, const std::vector<float>& raised);
 
-// Basin.cpp — Region to Site: what a basin's water leaves where it leaves only as vapour.
+// Basin.cpp — Region: what a basin's water leaves where it leaves only as vapour.
 void dryBasins(Domain& domain, FlowScratch& scratch);
 
 } // namespace derivean::sim

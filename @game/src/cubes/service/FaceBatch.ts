@@ -177,6 +177,7 @@ export function createFaceBatch(content: Group, material: Material, level: numbe
       mesh.geometry.dispose();
       mesh = undefined;
       runs.clear();
+      used = holes = 0;
     },
   };
 }

@@ -1,8 +1,7 @@
 #pragma once
 
-#include "icesheet/type/Continental.hpp"
-
 #include <cstdint>
+#include <vector>
 
 namespace derivean::sim {
 
@@ -16,8 +15,12 @@ double lastTermination(double age);
 double interglacialCooling(uint64_t seed, double time, double present);
 double maximumCooling(uint64_t seed, double time, double present);
 
-// Share of a glacial cycle ending at `time` that its climate spends nearest each stage; the shares
-// sum to one. A cooling between two stages counts towards both in proportion.
-std::vector<float> stageShares(const ContinentalIce& ice, uint64_t seed, double time);
+// Share of the glacial cycle ending at or before `time` that its climate spends nearest each stage
+// (`cooling` per stage, warmest first); the shares sum to one. A cooling between two stages counts
+// towards both in proportion.
+std::vector<float> stageShares(const std::vector<double>& cooling, uint64_t seed, double time, double present);
+
+// yr between the coldest point of a cycle and its end.
+double sinceMaximum(uint64_t seed, double present);
 
 } // namespace derivean::sim

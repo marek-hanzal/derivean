@@ -45,6 +45,8 @@ Builds; `testOre`, `testRockMass` and `testPlanetFuture` pass when linked alone 
 - Fixed mantle-frame plate outlines sliced continents into combs wherever crust crossed a boundary; ownership that travels with the crust removed that. Plates still move by whole cells along the axes and do not rotate, so rifted margins and collision fronts can run straight for a few hundred kilometres.
 - Carbonate from a solute pool rather than a facies label: mass stays conserved. A share of 0.18 gave Earth-like carbonate but filled shelves into vast flats (48 % of land below 200 m); 0.07 is the compromise.
 - Switched "modes" that stamp landforms were rejected: the owner forbids generated props; the rock-mass field gives the same processes different outcomes instead.
+- Every pattern attached to the crust (basement bodies, plutons, structural domains, veins, magmatic centres) is read in ONE frame, `crustFrame` in `strata/type/Column.hpp`: the position minus the travel of the single column that owns it (`crustOwner`, ragged footprint). Blending the travel of neighbouring columns was tried in the heat code and folded the frame wherever crust of different birth meets: a planet cell on an active margin held up to 165 magmatic centres instead of two.
+- The planet's melt reaching the surface on land is about half of Earth's per area (44 m per unit of land in 24 Myr against roughly 80 m). If volcanoes should be livelier, raise the supply here (`ArcYield`, `ArcSurfaceShare`, hotspot gain) and retune sea level, not the eruption schedule.
 - Changing a planet header needs a full rebuild; a stale object linked against a new `CrustColumn` layout gives silent nonsense.
 
 ## Next steps

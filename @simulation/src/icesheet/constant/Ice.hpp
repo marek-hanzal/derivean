@@ -39,14 +39,18 @@ inline constexpr float LeastSheet = 20.0f;                           // m of ice
 
 // What sliding ice does to its bed.
 inline constexpr float FastestSlide = 1500.0f;      // m/yr; faster ice rides on water and no longer grips its bed
-inline constexpr float WearRate = 1.0e-5f;          // m of granite ground off per metre the ice slides over it
+inline constexpr float WearRate = 4.0e-6f;          // m of granite ground off per metre the ice slides over it
 inline constexpr float GraniteErodibility = 1.2e-6f;   // the stream-power coefficient WearRate is stated for
 inline constexpr float LooseGain = 15.0f;           // times faster the ice takes loose cover than granite
 // Where the bed rises along the flow by more than this many times the fall of the ice surface, the
 // meltwater under the ice freezes on instead of flushing the debris out, and the ice stops cutting.
 // It is what bounds a rock basin: metres under a flat sheet, a kilometre behind a fjord's sill.
 inline constexpr float Overdeepening = 1.5f;
+// One working of the bed takes at most this share of the ice above it: beyond that the sheet it
+// was reckoned under is no longer the sheet that would be there, and must be solved again first.
+inline constexpr float DeepestCut = 0.25f;
 inline constexpr float TillReach = 15e3f;           // m the ice carries debris before all but 1/e of it is lodged
+inline constexpr float MoraineLimit = 60.0f;        // m of debris a front keeps where it drops it; the rest goes on with its meltwater
 // Ground rock by transport class (blocks and gravel, sand, fines): the mix landscape/fn/Glacial.cpp
 // leaves at a glacier's front. The two must stay equal for sheet and valley ice to lay the same till.
 inline constexpr float TillSplit[3] = {0.5f, 0.2f, 0.3f};

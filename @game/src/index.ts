@@ -67,7 +67,7 @@ function showError(error: unknown) {
 // renderer draws: `renderer=webgpu` the one of cubes, anything else the WebGL one of patches.
 function compose() {
   const cubes = new URLSearchParams(location.search).get("renderer") === "webgpu";
-  const scene = cubes ? createCubeScene(canvas) : createWorldScene(canvas);
+  const scene = cubes ? createCubeScene(canvas, showError) : createWorldScene(canvas);
   const metrics = createFrameMetrics(output);
   const hud = createGameHud(hudRoot);
   const inspector = createInspector(select(document, "#inspector"), window.derivean);
