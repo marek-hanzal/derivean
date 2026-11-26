@@ -10,14 +10,14 @@ const fract = (value: number) => value - Math.floor(value);
 // scene's depth hides drops behind ground, but nothing here knows a roof: under an overhang it still falls.
 export function createPrecipitation(scene: Scene, camera: Camera, sky: SkyNodes) {
   const quad = new PlaneGeometry(1, 1).translate(0, 0.5, 0);
-  const most = Math.max(Rain.drops, Snow.drops);
-  const seeds = new InstancedBufferAttribute(Float32Array.from({ length: most * 3 }, () => Math.random()), 3);
 
+  // Each kind's seeds are an attribute of its own geometry, so disposing the geometry frees their GPU buffer.
   function falling(fall: Fall) {
     const geometry = new InstancedBufferGeometry();
     geometry.index = quad.index;
     geometry.setAttribute("position", quad.getAttribute("position"));
-    const look = fallMaterial(fall, sky, seeds);
+    geometry.setAttribute("seed", new InstancedBufferAttribute(Float32Array.from({ length: fall.drops * 3 }, () => Math.random()), 3));
+    const look = fallMaterial(fall, sky);
     const mesh = new Mesh(geometry, look.material);
     mesh.frustumCulled = false;
     mesh.renderOrder = 2;
