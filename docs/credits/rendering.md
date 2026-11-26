@@ -44,4 +44,5 @@ Perlin, K. (2002). Improving noise. *ACM Transactions on Graphics* 21(3), 681–
 Worley, S. (1996). A cellular texture basis function. *Proceedings of SIGGRAPH 96*, ACM, 291–294. doi:10.1145/237170.237267
 - **Model:** tileable gradient and cellular noise for the structure below a weather cell (heaped domes, smooth and cellular channels, fine wisps).
 - **Used in:** `@game/src/clouds/constant/noise.ts:60`, `:61`, `:71` (cited by name only; which Perlin variant is not stated).
+- **Used in (Perlin 2002, S3b):** 3D gradient noise with the quintic fade and twelve edge gradients for the planet on the sphere (plate warp, swell, primordial plumes), `@simulation/src/core/fn/Noise.hpp:16`, `@simulation/src/core/fn/Noise.cpp:83`.
 - **Note:** the noise shapes cloud detail inside a simulated weather cell; where and how much cloud there is comes from the simulation (`docs/handoff/brief/clouds.md`).

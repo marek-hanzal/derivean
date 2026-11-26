@@ -11,6 +11,34 @@ Airy, G. B. (1855). On the computation of the effect of the attraction of mounta
 - **Model:** Airy isostasy: felsic crust (2800 kg/m³) floating on the mantle (3300 kg/m³), its roots below its mountains.
 - **Used in:** `@simulation/src/planet/constant/Scale.hpp:18`–`20` (cited by name only).
 
+## Plates on the sphere (S3b)
+
+The history on the cubed sphere (`@simulation/src/planet/{type/Globe.hpp,fn/{Pieces,Rotate,Coupling}.*}`, `@simulation/src/tectonics/{type,fn}/Euler.*`) is additive: nothing in the game reads it until S3e. Design: `.out/lead/handover/S3-design.md` §3–§4.
+
+### McKenzie and Parker 1967; Morgan 1968: plates as rotations about Euler poles
+McKenzie, D. P., Parker, R. L. (1967). The North Pacific: an example of tectonics on a sphere. *Nature* 216(5122), 1276–1280. doi:10.1038/2161276a0
+
+Morgan, W. J. (1968). Rises, trenches, great faults, and crustal blocks. *Journal of Geophysical Research* 73(6), 1959–1982. doi:10.1029/JB073i006p01959
+- **Model:** a plate is rigid and moves on the sphere as a rotation about its Euler pole; the surface velocity is R (ω × x) and the relative motion across a contact is that of the difference of the two vectors.
+- **Used in:** `@simulation/src/tectonics/type/Euler.hpp:10`, `@simulation/src/tectonics/fn/Euler.hpp`, `@simulation/src/planet/fn/Rotate.hpp`.
+- **Checked by:** `@simulation/test/GlobeKinematics.cpp` (v = R ω × x, the sign of convergence and shear).
+
+### Argus, Gordon and DeMets 2011: NNR-MORVEL56
+Argus, D. F., Gordon, R. G., DeMets, C. (2011). Geologically current motion of 56 plates relative to the no-net-rotation reference frame. *Geochemistry, Geophysics, Geosystems* 12(11), Q11001. doi:10.1029/2011GC003751
+- **Model:** the no-net-rotation frame as the mantle's frame; plate speeds: RMS of the whole lithosphere 43.9 mm/yr, the Pacific 65.5 mm/yr (0.651°/Myr) and Eurasia 22.8 mm/yr (0.223°/Myr) as the anchors of the fastest oceanic and slowest continental plate.
+- **Used in:** `@simulation/src/tectonics/type/Euler.hpp:24`, `@simulation/src/tectonics/fn/Euler.hpp:19`, `:41`, `@simulation/src/tectonics/fn/Euler.cpp:17`.
+- **Checked by:** `@simulation/test/GlobeKinematics.cpp` (no net rotation after damping); the RMS against 43.9 mm/yr in `terra globe` (`docs/handoff/planet-globe.md`).
+
+### Forsyth and Uyeda 1975: what drives plates
+Forsyth, D., Uyeda, S. (1975). On the relative importance of the driving forces of plate motion. *Geophysical Journal of the Royal Astronomical Society* 43(1), 163–200. doi:10.1111/j.1365-246X.1975.tb00631.x
+- **Model:** slab pull is about an order of magnitude stronger than the other forces and basal drag is stronger under continents, so plates with slabs move fast and continental plates slowly; a plate's speed falls with its continental share.
+- **Used in:** `@simulation/src/tectonics/type/Euler.hpp:25`, `@simulation/src/tectonics/fn/Euler.cpp` (`targetSpeed`).
+
+### White, McKenzie and O'Nions 1992: thickness of oceanic crust
+White, R. S., McKenzie, D., O'Nions, R. K. (1992). Oceanic crustal thickness from seismic measurements and rare earth element inversions. *Journal of Geophysical Research: Solid Earth* 97(B13), 19683–19715. doi:10.1029/92JB01749
+- **Reference data:** normal oceanic crust is 7.1 ± 0.8 km thick; new ocean floor takes 7 km of basalt from the interior and a trench returns it.
+- **Used in:** `@simulation/src/planet/constant/Globe.hpp:11`.
+
 ## Lithosphere (planned, planet slice S3)
 
 ### Kohlstedt, Evans and Mackwell 1995: strength of the lithosphere

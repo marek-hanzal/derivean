@@ -13,6 +13,12 @@ double fractalNoise(uint64_t seed, double x, double z, int octaves, double gain 
 double ridgedNoise(uint64_t seed, double x, double z, int octaves, double gain = 0.5, int period = 0);
 double valueNoise3(uint64_t seed, double x, double y, double z);
 
+// Gradient noise in three dimensions (Perlin 2002: quintic fade, twelve edge gradients), for patterns
+// that live on the sphere or in the 3D material space: no lattice axis of a face, no seam. Values
+// about in [-1, 1]; fractalNoise3 sums octaves like fractalNoise.
+double gradientNoise3(uint64_t seed, double x, double y, double z);
+double fractalNoise3(uint64_t seed, double x, double y, double z, int octaves, double gain = 0.5);
+
 struct CellularSite {
     double nearest{}, second{};   // distances in lattice units
     int64_t cellX{}, cellZ{};     // lattice cell that owns the nearest site
