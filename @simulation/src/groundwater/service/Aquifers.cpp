@@ -1,24 +1,25 @@
 #include "groundwater/service/Aquifers.hpp"
 
+#include "groundwater/fn/Reads.hpp"
 #include "groundwater/fn/Regional.hpp"
 #include "groundwater/fn/Stages.hpp"
 
-#include <algorithm>
+#include <stdexcept>
 
 namespace derivean::sim {
 namespace {
 
 // The nine tiles of a level around a key, row-major with the key in the middle; asked for ahead, so
 // the atlas's pool builds them side by side.
-void requireAround(Atlas& atlas, TileKey key, std::shared_ptr<const Tile> held[9], const Tile* around[9]) {
-    for (int dz = -1; dz <= 1; ++dz)
-        for (int dx = -1; dx <= 1; ++dx) atlas.request({key.level, key.x + dx, key.z + dz}, 1000 - int(key.level) * 100);
-    for (int dz = -1; dz <= 1; ++dz)
-        for (int dx = -1; dx <= 1; ++dx) {
-            const int at = (dz + 1) * 3 + dx + 1;
-            held[at] = atlas.require({key.level, key.x + dx, key.z + dz});
-            around[at] = held[at].get();
-        }
+void requireAround(Atlas& atlas, TileKey key, BuildMode mode, std::shared_ptr<const Tile> held[9], const Tile* around[9]) {
+    const auto reads = aquiferTerrain(key);
+    if (mode == BuildMode::Demand)
+        for (const TileKey tile : reads) atlas.request(tile, 1000 - int(key.level) * 100);
+    for (size_t i = 0; i < reads.size(); ++i) {
+        held[i] = mode == BuildMode::Prepared ? atlas.find(reads[i]) : atlas.require(reads[i]);
+        if (!held[i]) throw std::logic_error("missing prepared terrain input for aquifer");
+        around[i] = held[i].get();
+    }
 }
 
 } // namespace
@@ -27,6 +28,12 @@ std::shared_ptr<const GroundwaterTile> Aquifers::find(TileKey local) const {
     std::lock_guard lock(mutex_);
     const auto found = slots_.find(local);
     return found == slots_.end() ? nullptr : found->second.tile;
+}
+
+std::shared_ptr<const RegionalTile> Aquifers::findRegional(TileKey region) const {
+    std::lock_guard lock(mutex_);
+    const auto found = regional_.find(region);
+    return found == regional_.end() ? nullptr : found->second.tile;
 }
 
 template <class T, class Build>
@@ -70,33 +77,31 @@ std::shared_ptr<const T> Aquifers::once(Slots<T>& slots, TileKey key, Build&& bu
     return tile;
 }
 
-std::shared_ptr<const RegionalTile> Aquifers::requireRegional(Atlas& atlas, TileKey region) {
+std::shared_ptr<const RegionalTile> Aquifers::requireRegional(Atlas& atlas, TileKey region, BuildMode mode) {
     return once(regional_, region, [&] {
         std::shared_ptr<const Tile> held[9];
         const Tile* around[9];
-        requireAround(atlas, region, held, around);
+        requireAround(atlas, region, mode, held, around);
         return std::shared_ptr<const RegionalTile>(buildRegional(atlas.setting(), region, around));
     });
 }
 
-std::vector<std::shared_ptr<const RegionalTile>> Aquifers::regionsUnder(Atlas& atlas, TileKey local) {
-    // The field reaches WaterReach cells beyond the tile, less than a local tile: the region tiles
-    // under the corners of the nine local tiles around it hold it.
+std::vector<std::shared_ptr<const RegionalTile>> Aquifers::regionsUnder(Atlas& atlas, TileKey local, BuildMode mode) {
     std::vector<std::shared_ptr<const RegionalTile>> regions;
-    for (const int dz : {-1, 1})
-        for (const int dx : {-1, 1}) {
-            const TileKey key = parentOf({Level::Local, local.x + dx, local.z + dz});
-            if (std::none_of(regions.begin(), regions.end(), [&](const auto& tile) { return tile->key == key; })) regions.push_back(requireRegional(atlas, key));
-        }
+    for (const TileKey key : aquiferRegions(local)) {
+        auto region = mode == BuildMode::Prepared ? findRegional(key) : requireRegional(atlas, key);
+        if (!region) throw std::logic_error("missing prepared regional water input");
+        regions.push_back(std::move(region));
+    }
     return regions;
 }
 
-std::shared_ptr<const GroundwaterTile> Aquifers::require(Atlas& atlas, TileKey local) {
+std::shared_ptr<const GroundwaterTile> Aquifers::require(Atlas& atlas, TileKey local, BuildMode mode) {
     return once(slots_, local, [&] {
         std::shared_ptr<const Tile> held[9];
         const Tile* around[9];
-        requireAround(atlas, local, held, around);
-        const std::vector<std::shared_ptr<const RegionalTile>> regions = regionsUnder(atlas, local);
+        requireAround(atlas, local, mode, held, around);
+        const std::vector<std::shared_ptr<const RegionalTile>> regions = regionsUnder(atlas, local, mode);
         std::vector<const RegionalTile*> under;
         for (const auto& region : regions) under.push_back(region.get());
         return std::shared_ptr<const GroundwaterTile>(buildGroundwater(atlas.setting(), local, around, under));

@@ -51,7 +51,8 @@ void basin(const Domain& domain, const std::vector<float>& share, SinkWork& work
 // from the two together.
 int32_t pourOut(const Domain& domain, SinkWork& work, int32_t id) {
     const int size = domain.size;
-    while (true) {
+    // Each merge removes a distinct catchment. One final search must find an outlet.
+    for (size_t search = 0; search < work.lakes.size(); ++search) {
         float lowest = std::numeric_limits<float>::max(), beyond = 0;
         int32_t to = Unknown;
         for (const int32_t a : work.lakes[size_t(id)]) {
@@ -81,11 +82,12 @@ int32_t pourOut(const Domain& domain, SinkWork& work, int32_t id) {
         work.lakes[size_t(other)].clear();
         work.pour[size_t(other)] = Unknown;
     }
+    throw std::logic_error("spillHollows: catchment merge limit exhausted before finding an outlet");
 }
 
 } // namespace
 
-void spillHollows(Domain& domain, const std::vector<float>& share, std::vector<float>* gathered) {
+void spillHollows(Domain& domain, const std::vector<float>& share, std::vector<float>* gathered, const QueueStop& stop) {
     SinkWork& work = domain.sinking;
     work.spilled = 0, work.overEdge = 0;
     if (!work.active()) return;
@@ -129,9 +131,10 @@ void spillHollows(Domain& domain, const std::vector<float>& share, std::vector<f
     // Water passes only along the route's shares, downward in its order, and from a hollow over a
     // pass out of every catchment that drains to it: it cannot come back to a cell it left. A
     // queue that does not empty in this many passes is a fault, not water to drop.
-    const size_t bound = 64 * cells + 64;
-    for (size_t passes = 0; !due.empty(); ++passes) {
-        if (passes > bound) throw std::logic_error("spillHollows: water runs in a circle");
+    size_t remaining = stop.limit(cells);
+    while (!due.empty()) {
+        if (remaining == 0) throw std::logic_error("spillHollows: visit limit exhausted before the queue drained");
+        --remaining;
         const int32_t c = due.top().second;
         due.pop();
         const float water = extra[size_t(c)];

@@ -11,6 +11,8 @@
 
 namespace derivean::sim {
 
+enum class BuildMode { Demand, Prepared };
+
 // Finished tiles of every level, built on demand. A tile is a pure function of the setting and its
 // key; the atlas only decides when the work happens and makes sure it happens once.
 class Atlas {
@@ -23,7 +25,8 @@ public:
     std::shared_ptr<const Tile> find(TileKey key) const;
 
     // Builds the tile and everything it depends on; blocks until it is finished.
-    std::shared_ptr<const Tile> require(TileKey key);
+    // Prepared takes only finished dependencies and reports a missing input to its caller.
+    std::shared_ptr<const Tile> require(TileKey key, BuildMode mode = BuildMode::Demand);
 
     // Starts the build in the background; higher priority first.
     void request(TileKey key, int priority = 0);
@@ -37,6 +40,8 @@ public:
     void bind(World& world);
 
 private:
+    friend struct BuildGraphFixture;
+
     struct Slot {
         std::shared_ptr<const Tile> tile;
         bool claimed{};

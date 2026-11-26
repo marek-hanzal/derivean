@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ground/type/FrostMovement.hpp"
 #include "landscape/fn/Process.hpp"
 
 namespace derivean::sim {
@@ -13,7 +14,9 @@ namespace derivean::sim {
 //    so thick mantle overrides thin and stands as a lobe with a steep front.
 // `sorted` is set to 1 on the cells the frost sorted: their fine centres carry no soil. True if
 // either process moved anything.
-bool workFrozenGround(Domain& domain, FlowScratch& scratch, std::vector<uint8_t>& sorted);
+// PassThrough preserves the mantle and reports that none of its cells were sorted.
+bool workFrozenGround(Domain& domain, FlowScratch& scratch, std::vector<uint8_t>& sorted,
+                      FrostMovement mode = FrostMovement::Apply);
 
 // Share of the year the ground of one cell spends in the frost-cracking window, from its own
 // annual mean: what decides cell by cell where frost has left a block field.

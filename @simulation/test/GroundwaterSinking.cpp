@@ -10,6 +10,7 @@
 #include "relief/type/Form.hpp"
 #include "relief/type/Ground.hpp"
 
+#include <stdexcept>
 #include <cstdio>
 #include <queue>
 
@@ -149,7 +150,18 @@ void testSpillByHand() {
     const size_t pass = 3 * 7 + 6;
     Domain onward = bowl(Rim, false), finished = bowl(Settled, false), edge = bowl(Rim, true);
     std::vector<float> gathered(49, 0.0f);
-    spillHollows(onward, share, &gathered), spillHollows(finished, share, nullptr), spillHollows(edge, share, nullptr);
+    spillHollows(onward, share, &gathered, QueueStop{0, 1});
+    spillHollows(finished, share, nullptr);
+    // Spill directly to the edge with no visits. An empty queue is success at the limit.
+    spillHollows(edge, share, nullptr, QueueStop{0, 0});
+    Domain limited = bowl(Rim, false);
+    bool failed = false;
+    try {
+        spillHollows(limited, share, nullptr, QueueStop{0, 0});
+    } catch (const std::logic_error&) {
+        failed = true;
+    }
+    expectWater(failed, "spill returned a result with work still queued");
     expectWater(onward.sinking.spilled == 9999 && onward.discharge[pass] == 9999 && gathered[pass] == 9999 && onward.sinking.overEdge == 0, "a hollow's overflow does not reach the cell beyond its pass", onward.discharge[pass]);
     expectWater(finished.sinking.overEdge == 9999 && finished.discharge[pass] == 0, "overflow into a finished neighbour's cell stays in the domain", finished.sinking.overEdge);
     expectWater(edge.sinking.overEdge == 9999 && edge.discharge[pass] == 0, "a catchment whose lowest way out is the domain's edge does not run over it", edge.sinking.overEdge);
