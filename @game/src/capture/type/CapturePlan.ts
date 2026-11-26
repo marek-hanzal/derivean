@@ -48,7 +48,8 @@ export interface CapturePlan {
   // How long the surroundings must stay ready with nothing pending before a shot. A shot is also taken, and marked
   // `stalled`, once the world is playable and pending work has stopped delivering. Defaults: constant/timing.
   settleSeconds?: number;
-  // Upper bound on waiting for one shot; the shot is then taken anyway and marked `timedOut`.
+  // Upper bound on waiting for one shot once the world is playable where it stands; the shot is then taken anyway
+  // and marked `timedOut`.
   timeoutSeconds?: number;
   // Window content size in CSS pixels; the window's usual size when absent.
   size?: [number, number];

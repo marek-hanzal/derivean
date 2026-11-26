@@ -9,7 +9,7 @@
   },
   "out": ".out/playwright/renderer/live-s42-x-2521902-z-4671906-2026-11-26",
   "settleSeconds": 2,
-  "timeoutSeconds": 300,
+  "timeoutSeconds": 60,
   "shots": [
     {
       "name": "spawn-ground-n-h16",

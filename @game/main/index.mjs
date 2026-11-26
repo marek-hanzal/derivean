@@ -1,7 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu } from "electron";
-import { execFileSync } from "node:child_process";
-import { realpathSync, statSync } from "node:fs";
-import path from "node:path";
+import { readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { CaptureFlag, readCapturePlan, serveCapture } from "./capture.mjs";
@@ -11,23 +9,26 @@ app.setName("DeRivean");
 
 let quitting = false;
 
-// What drew a window, shown in its HUD line and title so that a screenshot names its build: the mode, when the
-// engine addon was built and the commit of the tree it sits in ("dirty" with uncommitted changes), and the stream
-// that launched it (DERIVEAN_STREAM). A replay (scratch tooling) sets the same line from its recording.
+// What drew a window, shown in its HUD line and title so that a screenshot names its build: the mode, the engine
+// addon's build from the stamp the native build writes beside it (time, commit, and "dirty" with the first digits
+// of the uncommitted diff's hash), and the stream that launched it (DERIVEAN_STREAM). A replay (scratch tooling)
+// sets the same line from its recording.
 function windowOrigin(capturing) {
+  const addon = fileURLToPath(new URL("../../.out/addon/derivean.node", import.meta.url));
   const two = (value) => String(value).padStart(2, "0");
-  let built = "?";
-  let commit = "?";
+  const at = (time) => `${two(time.getMonth() + 1)}-${two(time.getDate())} ${two(time.getHours())}:${two(time.getMinutes())}`;
+  let build;
   try {
-    const addon = realpathSync(fileURLToPath(new URL("../../.out/addon/derivean.node", import.meta.url)));
-    const time = statSync(addon).mtime;
-    built = `${two(time.getMonth() + 1)}-${two(time.getDate())} ${two(time.getHours())}:${two(time.getMinutes())}`;
-    const git = (...args) => execFileSync("git", ["-C", path.dirname(addon), ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
-    commit = `${git("rev-parse", "--short", "HEAD")}${git("status", "--porcelain", "--untracked-files=no") ? " dirty" : ""}`;
+    const stamp = JSON.parse(readFileSync(`${addon}.json`, "utf8"));
+    build = `${at(new Date(stamp.builtAt))} ${stamp.commit ? String(stamp.commit).slice(0, 7) : "NO COMMIT"}${stamp.dirty ? ` dirty ${String(stamp.diffHash).slice(0, 6)}` : ""}`;
   } catch {
-    // No addon or no Git: the line says what is unknown.
+    try {
+      build = `${at(statSync(addon).mtime)} UNSTAMPED`;
+    } catch {
+      build = "MISSING";
+    }
   }
-  return `${capturing ? "CAPTURE" : "LIVE"} · ADDON ${built} ${commit} · ${process.env.DERIVEAN_STREAM || "NO STREAM"}`;
+  return `${capturing ? "CAPTURE" : "LIVE"} · ADDON ${build} · ${process.env.DERIVEAN_STREAM || "NO STREAM"}`;
 }
 
 async function launch() {

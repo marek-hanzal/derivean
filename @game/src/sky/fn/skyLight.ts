@@ -6,8 +6,10 @@ import type { SkyLight } from "../type/SkyLight";
 
 // The sun's light outside the air.
 const SunStrength = 2.7;
-// What the night sky lights the ground with, against its own colour: enough to walk by.
-const NightLight = 0.5;
+// What the night sky lights the ground with, against its own colour: enough to walk by at the exposure's top.
+const NightLight = 0.35;
+// The dome's light against its colours, by day, dusk and night.
+const DomeLight = { day: 1.9, dusk: 1.1, night: 0.5 };
 const scratch = new Color();
 const smooth = (from: number, to: number, value: number) => {
   const t = Math.max(0, Math.min(1, (value - from) / (to - from)));
@@ -22,6 +24,7 @@ export function createSkyLight(): SkyLight {
     skyGlow: { value: new Color() },
     sunLight: { value: new Color() },
     skyAmbient: { value: new Color() },
+    domeLight: { value: new Color() },
   };
 }
 
@@ -50,9 +53,13 @@ export function setSkyLight(light: SkyLight, sun: Point, altitude: number) {
 
   const air = clearSky(light.skySun.value.y, altitude);
   light.sunLight.value.setRGB(...air.direct).multiplyScalar(SunStrength);
-  // The night sky, a blend of its zenith and horizon, under what the sun's light leaves in the air.
-  light.skyAmbient.value.set(NightSky.zenith).lerp(scratch.set(NightSky.horizon), 0.55).multiplyScalar(NightLight * nights);
-  light.skyAmbient.value.r += air.diffuse[0] * SunStrength;
-  light.skyAmbient.value.g += air.diffuse[1] * SunStrength;
-  light.skyAmbient.value.b += air.diffuse[2] * SunStrength;
+  // What the sun's light leaves in the air, down to the night sky's own (a blend of its zenith and horizon), which
+  // the twilight reaches with the sun about 1.5° down.
+  const night = light.skyAmbient.value.set(NightSky.zenith).lerp(scratch.set(NightSky.horizon), 0.55).multiplyScalar(NightLight);
+  night.setRGB(
+    Math.max(night.r, air.diffuse[0] * SunStrength), Math.max(night.g, air.diffuse[1] * SunStrength), Math.max(night.b, air.diffuse[2] * SunStrength),
+  );
+  // The dome's colours are still a palette rather than the radiance of that air, so the clouds drawn against them
+  // take the dome's light as drawn; lit by the air's, they would stand black against a bright dusk.
+  light.domeLight.value.copy(light.skyZenith.value).lerp(light.skyHorizon.value, 0.55).multiplyScalar(DomeLight.day * days + DomeLight.dusk * dusks + DomeLight.night * nights);
 }

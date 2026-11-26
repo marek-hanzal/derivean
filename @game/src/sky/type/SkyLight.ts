@@ -10,6 +10,8 @@ export interface SkyLight {
   skyGlow: { value: Color };
   // Direct sunlight after its path through the air, times its strength; black at night.
   sunLight: { value: Color };
-  // Light from the sky dome.
+  // Light from the clear sky onto level ground, from the air's own scattering.
   skyAmbient: { value: Color };
+  // Light from the dome as it is drawn (its zenith and horizon colours), which the clouds seen against it take.
+  domeLight: { value: Color };
 }

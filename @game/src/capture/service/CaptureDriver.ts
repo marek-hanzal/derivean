@@ -1,11 +1,11 @@
-// 261 lines: one state machine over a shot's phases, which share the shot's bookkeeping; split by phase, that
+// 267 lines: one state machine over a shot's phases, which share the shot's bookkeeping; split by phase, that
 // state would pass through a layer that only forwards it.
 import type { Frame, Point } from "../../../contract/GameBridge";
 import type { WorldClock } from "../../calendar/service/WorldClock";
 import type { WeatherSought } from "../../clouds/fn/findWeather";
 import type { Pilot, Steering } from "../../control/type/Pilot";
 import { worldSettled } from "../../session/fn/worldSettled";
-import { SettleSeconds, StallSeconds, TimeoutSeconds } from "../constant/timing";
+import { PlayableSeconds, SettleSeconds, StallSeconds, TimeoutSeconds } from "../constant/timing";
 import { until } from "../fn/until";
 import type { CaptureBridge, CapturePlan, CaptureShot } from "../type/CapturePlan";
 
@@ -62,6 +62,9 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
   let refined = 0;
   let lastHeight = Number.NaN;
   let lastArrival = 0;
+  // When the world was first playable where this shot stands: its timeout counts from then (PlayableSeconds), so a
+  // slow start is waited out while the tiles that keep finishing after it are not.
+  let playable: number | undefined;
   let finished = "";
   let notes: Record<string, unknown> = {};
   let cruise: { from: Point; pendingChunks: number; pendingPatches: number; generationMs: number } | undefined;
@@ -143,18 +146,20 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
       }
       const late = time - began > timeout;
       if (!late && (host.clock.skipping || frame.weather.lag > Caught)) return next;
+      if (late && frame.weather.lag > Caught) notes.weatherLagged = true;
       if (current.seek) {
         sought = host.findWeather(current.seek);
         if (!sought && !late) return next;
         if (!sought) notes.weatherNotFound = true;
       }
       began = time;
+      playable = undefined;
       phase = "place";
     }
     // Without a position a shot stays over where the player is; a height above ground then still applies.
     const here: [number, number | null, number] = [frame.eye[0], current.above === undefined ? frame.eye[1] : null, frame.eye[2]];
     const [x, y, z] = sought ? [sought[0], current.position?.[1] ?? null, sought[1]] : current.position ?? here;
-    const lost = time - began > timeout;
+    const lost = time - Math.min(playable ?? Infinity, began + PlayableSeconds * 1000) > timeout;
 
     if (phase === "place") {
       host.setPlain(current.plain ?? false);
@@ -182,6 +187,7 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
       }
     } else if (phase === "settle") {
       const posed = frame.flying === wantFlight && (frame.flying || Math.abs(frame.eye[1] - lastHeight) < StillMetres);
+      if (frame.streamingReady && posed) playable ??= time;
       if (worldSettled(frame) && posed && host.mapSettled()) quiet ??= time;
       else quiet = undefined;
       const settled = quiet !== undefined && time - quiet >= settle;

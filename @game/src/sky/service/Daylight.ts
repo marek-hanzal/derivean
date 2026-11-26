@@ -8,6 +8,9 @@ import type { SkyNodes } from "../type/SkyNodes";
 const PlainAir = 0.35;
 // Metres the ground under the eye may rise or fall before its light is worked out again.
 const AltitudeStep = 25;
+// Heights of the sun (sines) over which its beam is faded out: below the lower one the shadows and faces are lit as
+// if it stood overhead, so a beam left on there would light level ground in full.
+const Setting = [0.02, 0.05] as const;
 const luminance = (color: Color) => 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
 
 // Sun, sky light, air and exposure, all following the simulated sun, as the uniforms node materials light
@@ -20,7 +23,7 @@ export function createDaylight(viewDistance: number) {
     skyHorizon: uniform(light.skyHorizon.value),
     skyGlow: uniform(light.skyGlow.value),
     sunDisc: uniform(light.sunLight.value),
-    clearSky: uniform(light.skyAmbient.value),
+    clearSky: uniform(light.domeLight.value),
     sunDirection: uniform(new Vector3(0, 1, 0)),
     sunLight: uniform(new Color()),
     skyLight: uniform(new Color()),
@@ -62,9 +65,10 @@ export function createDaylight(viewDistance: number) {
     sky.g += light.sunLight.value.g * through;
     sky.b += light.sunLight.value.b * through;
     // The clouds' own shadows take the direct sun where they stand; it is not dimmed here as well.
-    nodes.sunLight.value.copy(light.sunLight.value);
+    const rising = Math.max(0, Math.min(1, (light.skySun.value.y - Setting[0]) / (Setting[1] - Setting[0])));
+    nodes.sunLight.value.copy(light.sunLight.value).multiplyScalar(rising * rising * (3 - 2 * rising));
     // Below the horizon the sun lights nothing.
-    if (light.skySun.value.y > 0.02) nodes.sunDirection.value.copy(light.skySun.value);
+    if (light.skySun.value.y > Setting[0]) nodes.sunDirection.value.copy(light.skySun.value);
     else nodes.sunDirection.value.set(0, 1, 0);
     // Under cloud the air between the eye and a far slope is lit by that cloud, not by blue sky.
     nodes.airVeil.value.set(sky.r / Math.PI, sky.g / Math.PI, sky.b / Math.PI, veil);

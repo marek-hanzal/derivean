@@ -5,7 +5,7 @@
   },
   "out": ".out/playwright/look",
   "settleSeconds": 2,
-  "timeoutSeconds": 240,
+  "timeoutSeconds": 60,
   "shots": [
     {
       "name": "high-ground-north",

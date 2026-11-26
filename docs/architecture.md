@@ -82,6 +82,8 @@ Voxel chunks and every far level are drawn by [one surface](../@game/src/cubes/f
 
 [Daylight](../@game/src/sky/service/Daylight.ts) owns sun, sky light, air and exposure. Standing water is drawn as level sheets from the far chunks; voxel water keeps the engine's own meshes.
 
+The sun's light on the ground and the clear sky's are what [the air the aerial perspective draws](../@game/src/sky/fn/clearSky.ts) leaves of the sun's: its transmittance along the sun's path and Bird and Hulstrom's sky light, both for the air above the ground under the eye. A low sun's shadows follow from that air: snow in shadow takes about 0.4 of the light of sunlit snow at a 10° sun at the sea, less higher up. Below a 1° sun the sky light follows Earth's twilight down to the night sky's.
+
 The scene is drawn into the [cloud pass](../@game/src/clouds/service/CloudPass.ts)'s multisampled target; the clouds are marched through the simulated bands at half size, built up over frames and laid over the scene by its depth on the way to the screen, where tone mapping happens once. Where a cloud is, how much of the sky it covers, how high and how thick it is and what form it has are the simulation's; [noise made once on the GPU](../@game/src/clouds/fn/noiseVolumes.ts) places only the structure below a weather cell, at exactly the simulated cover ([density](../@game/src/clouds/constant/density.ts)). [Rain and snow](../@game/src/weather/service/Precipitation.ts) fall at the simulated rates and wind. The cloud noise is written to storage textures, which three's WebGL 2 fallback cannot do, so there it draws no clouds and the sun is never dimmed by them.
 
 ## Map
@@ -93,6 +95,8 @@ The [overlay](../@game/src/map/service/WorldMap.ts) asks for a coarse chart of a
 ## Capture
 
 `DERIVEAN_CAPTURE=<plan.json> mise run play` starts the app without the launcher, walks the shots of a [capture plan](../@game/src/capture/type/CapturePlan.ts), writes a PNG and a JSON record per shot, and quits. It exits non-zero when the run fails or hangs.
+
+Every window names what drew it in its HUD line and title ([main process](../@game/main/index.mjs)): LIVE, CAPTURE or REPLAY with the recording's date; the engine addon's build time, commit and whether the tree was dirty, from the stamp the native build writes beside the addon (UNSTAMPED without one); and the stream that launched it, from `DERIVEAN_STREAM`. A screenshot of any window can so be traced to its build.
 
 A shot waits for the world to settle. When nothing has arrived for a while and the engine still reports unfinished tiles, it is taken anyway and its record says `stalled`. Every record carries `dataLevels`, the share of the ground round the eye that the simulation held at site, local and region detail; below 1 the picture shows coarser stand-ins somewhere. A shot can also fly a cruise for frame times, or hold the brush to dig or place before it is taken, for pieces, particles and voxel water.
 
