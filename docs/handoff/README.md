@@ -23,7 +23,9 @@ These are binding and are not in the original briefs.
 
 ## State of the tree
 
-Last checkpoint commit: `625fdda` (work in progress, not a verified state). Later work is uncommitted unless a newer commit exists.
+Last checkpoint commit: `c131234` (work in progress, not a verified state). Later work is uncommitted unless a newer commit exists.
+
+On 26 Nov at about 03:00 every running stream stopped mid-work on a model usage limit. Each was restarted by a fresh worker from its own file here and the checkpoint `c131234`; a stream's file can lag behind its code, so a successor first compares `git diff 54fdbd9 c131234` over the stream's directories and finishes or undoes half-done edits. The orphaned run `terra volcanic --x 13686236 --z 11027538 --level 2` (one Local tile at an arc, six hours of CPU without finishing) was stopped; its cost is an open volcanic defect.
 
 - `mise -C @simulation run build` builds when no stream is mid-save; streams share one working tree, so a failing build is usually someone's half-saved file — wait and retry before touching another owner's code.
 - `mise -C @simulation run test` stops at `testLandscapePlane` ("a site plane was cut into gullies"): a regression of the relief rework in progress. Tests registered after it do not run; streams run their own tests through small drivers linked against the library.
@@ -37,7 +39,7 @@ Last checkpoint commit: `625fdda` (work in progress, not a verified state). Late
 | Planet, strata, rock mass, ore, heat, spawn | [planet.md](planet.md) | `@simulation/src/{planet,strata,rockmass,ore,tectonics,core}`, `simulation/fn/Spawn.*`, `simulation/{type,service}/World.*`, `tool/PlanetCommand.cpp` | Lead's own; stable |
 | Relief of Region, Local, Site | [relief.md](relief.md) | behaviour of those levels in `@simulation/src/landscape/**`, `tool/{View,Relief,Block}Command.cpp` | In progress, second run: Region and slope mechanics done; the settling controller at Local and Site is next; top priority |
 | Ground level and voxel forms | [ground.md](ground.md) | `@simulation/src/{ground,relief}`, `simulation/fn/{Query,Reader,Live}.*` | Finished; no active owner |
-| Groundwater, springs, caves, karst | [groundwater.md](groundwater.md) | `@simulation/src/groundwater/**` | In progress |
+| Groundwater, springs, caves, karst | [groundwater.md](groundwater.md) | `@simulation/src/groundwater/**` | In progress; stand-in deleted, real springs and caves linked; world runs and second review next |
 | Interventions, hydrology, time | [interventions.md](interventions.md) | `@simulation/src/{hydrology,intervention}` | Finished; not wired into the game |
 | Atmosphere, climate, calendar | [atmosphere.md](atmosphere.md) | `@simulation/src/{atmosphere,climate,chronology}` | Finished: snow by elevation, sources for ash, gas and dust with transport and fallout; nothing emits yet |
 | Coasts and lake shores | [coast.md](coast.md) | `@simulation/src/coast/**` | Started |
