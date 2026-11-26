@@ -47,7 +47,7 @@ Last checkpoint commit: `625fdda` (work in progress, not a verified state). Late
 | Measurements, inspector, scouting | [measure.md](measure.md) | `@simulation/src/{measure,inspect}`, `tool/Measure*`, `tool/InspectCommand.cpp` | Finished a full pass; to be repeated |
 | Engine | [engine.md](engine.md) | `@engine/**`, `@napi/**`, `@game/main/engine*`, `@game/contract/GameBridge.ts`, `@game/preload/**` | In progress; long queue |
 | Renderer | [renderer.md](renderer.md) | `@game/src/**` except the map, `@game/main/{index,capture}.mjs`, `@game/capture/**` | Fresh run: cube pipeline and WebGPU port |
-| Map | [map.md](map.md) | `@game/src/map/**`, `@simulation/src/chart/**` | Unknown; no report received |
+| Map | [map.md](map.md) | `@game/src/map/**`, `@simulation/src/chart/**` | `M` works in the game (own canvas, independent of the terrain renderer); final measurement pending |
 
 A stream whose file is missing has not written it yet; its state is then only in the code.
 
