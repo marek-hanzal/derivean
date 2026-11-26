@@ -34,6 +34,7 @@ All of it is in the module build and hooked into the tile replay. `test/Aeolian*
 | `fn/FarDust.cpp` | `readFarDust` (called by `beginWind`): Region, `WindField::farDust`, a closed form over the planet grid of the dust upwind deserts send, a function of world position alone |
 | `fn/Soak.cpp` | `sinkIntoBed`: transmission losses of dry-country beds, called by the routing (section 6) |
 | `fn/Basin.cpp` | `dryBasins`: Region, salt in basins whose inflow the full lake surface evaporates, laid as a level floor over the whole flood, rising at most `EvaporiteRate` (1 mm/yr) |
+| `fn/Pools.cpp` | `poolEbb` (called by `windRecordOf`): Local and Site, `WindRecord::ebb`, how far a pool fed by a stream that runs part of the year stands below its spill for half the year |
 | `tool/AeolianCommand.cpp` | `terra aeolian --x --z [--level] [--span]` statistics and a map; `terra aeolian --find dry` |
 
 **The transport model** (`blowBed`) is the slab model of Werner (1995) in flux form, on a torus. Per round: every open, sand-bearing cell outside the wind shadow gives a slab (more where it faces the wind over a hop's length, up to a slope of 0.2; more where it stands above its four neighbours; times a seeded gust); what is in the air moves one hop and comes down entirely at the first shadowed cell on its way, else 60 % on sand and 40 % on a bare floor, and not at all up a step steeper than 45°; then one sweep of sliding to repose (`ReposeTan[Sand]` = 0.62 from `landscape/fn/Process.hpp`). Winds of the rose take turns in proportion to their drift. Cell kinds: Open, Held (finished neighbour: sends and takes, never changes), Wet (sink), Wall (domain ring: sand passes over it, none lands or lifts). Where no finished neighbour holds an edge, what leaves the bed downwind comes back over the upwind edge. Every read across an edge (shadow line, windward slope, crest, deflection) takes the far side's sand on this side's own edge ground, because the ground itself is not periodic. Deterministic from the bed and its seed.
@@ -77,16 +78,26 @@ Fourth run, 26 Nov, on the lead's list. Pictures and logs in `.out/aeolian/w/`; 
 
 With today's evaporation demand the rule changes almost nothing: nearly every lake gets more inflow than its spill area loses, most by 2–10× or more (rivers passing through, and Site pools on stream paths). The Local tile's pools are now 5.4 m deep on average, not 44 m: the world changed under the earlier count. With E doubled (`LAKE_E=2`; arid open water loses about 1–2 m/yr on Earth, e.g. Great Salt Lake and Lake Balkhash about 1 m/yr at mean temperatures where `evaporationDemand` gives 0.45–0.65) the Local tile loses 25 % of its wet cells and 51 % of its lake volume, its largest lake 102 → 60 cells; Region 24 12 loses 22 % of wet cells; the trade tile and lat-31° tile almost nothing. No lake dries completely in either case. So the rule is right but bites only with an arid-air evaporation (demand rising with dryness, not only with temperature), and the Site puddles are a matter of intermittent flow: their mean inflow exceeds evaporation, while real streams there run a few days a year.
 
+**Ephemeral pools at Local and Site (lead's last item this round).** A pool fed by a stream that runs a share `running` of the year (`runningShareOf`, or `Q / (Q + PerennialFlow)` for a river from wetter ground) is full while it runs and then sinks at the gross evaporation demand; the level it holds half the year or more is `demand · max(0, ½ − running)` below the spill. Recorded as `WindRecord::ebb` per cell, not applied to `level`: a first version lowered `Domain::level` before extraction, and the reviewer showed that `Tile::water` is what Site children read to keep a hollow from being filled with rock (`landscape/fn/Seed.cpp`, `levelHollows`), what Ground's `standWater` floods again to the spill, and what the live water starts from at rest. So `Tile::water` stays the mean-flow level and the half-year water is `water − ebb` (section 6). Measured (`.out/aeolian/w/pools/`, blue kept, orange dry most of the year):
+
+| Tile | aridity | running | largest ebb | inland water, mean flow → half the year | pools | mean depth |
+| --- | --- | --- | --- | --- | --- | --- |
+| Site 14680 11855 | 0.80 | 0.22 | 0.15 m | 564 → 182 cells (−68 %) | 163 → 65 | 0.15 → 0.20 m |
+| Site 14764 11899 | 0.75 | 0.27 | 0.11 m | 231 → 99 cells (−57 %) | 63 → 36 | 0.18 → 0.25 m |
+| Local 922 743 | 0.75 | 0.26 | 0.21 m | 497 → 471 cells (−5 %) | 96 → 89 | 5.4 → 5.6 m |
+
+What is left at the Sites is the deepest cells of pools on stream paths, up to 18 cells. `runningShareOf` gives these climates a stream running a quarter of the year; with the few flood days of the driest country (`FloodShare`, 2 %) the ebb would be about twice as large.
+
 **Relief's two notes.** `windRecordOf` clips every label to the cover the last step's `settleDebris` left (blown ≤ Sand, lag ≤ Coarse, salt ≤ Fines, loess ≤ Fines − salt), before and after the seam blend; the Region `tidyLabels` already clips at each step. `Budget.cpp` calls `runningShareOf`.
 
-**Tests with the final code:** the aeolian checks (`mytests`), `testLandscapePlane` and `testLandscapeWorld` (section 7). The rest of the suite was not run.
+**Tests with the final code** (unparked loess, loess taken first, `ebb`): the aeolian checks (`mytests`, now with `checkPools`), `testLandscapePlane` and `testLandscapeWorld` pass (section 7). The rest of the suite was not run.
 
 ## 4. Next steps
 
 1. Loess now goes with the water. Once relief decides on the Region cover wash, measure the loess margins again; they should then hold more than today's 0.3 m mean on the trade-wind tile.
 2. Once the planet keeps closed arid basins (section 3, planet finding) and the routing pools terminal lakes at their balance level (section 6): look for an erg again; an erg needs supply held on land.
 3. Once relief decides on the Region cover wash: the trade-wind desert and the lat-31° tile again; the routed dust is some 600 times weaker than the closed form for the same ground because of it.
-4. Once `Tile::seeped` is wired: check that Site dune hollows hold no ponds and that dry washes end in fans.
+4. Once the planet-side arid item lands (humidity-aware evaporation, closed basins, the balance level in `floodLevels`): measure ponds and pools again, and decide with the renderer and consistency owners whether `WindRecord::ebb` is read or folded into the water rule. Check that dry washes end in fans.
 5. Absent: yardangs; old shorelines; river bars as a renewing source during the dune pass; the calendar side of dust; glacial-age dust (the far dust uses today's planet climate for the whole window).
 
 ## 5. Decisions and why
@@ -135,7 +146,8 @@ Needed from others:
 - **Relief owner, Region cover wash (proposal, measured in a copy of `Fluvial.cpp`):** in `measurePower`, after `cover` is computed: `if (!ground && sweep.scratch.gathered[i] < channelHeadOf(domain.key.level)) cover *= 1.0f - aridityOf(domain.rain[i], domain.warmthNow[i]);`. Effect in section 3. It changes landscape budgets and their tests, which were not run with it.
 - **Routing owner:** runoff should vanish on thick sand (dune fields carry no channels; today Site dune hollows hold ponds in a hyper-arid desert); terminal lakes should pool at the basin floor at their balance level instead of filling to the spill (rule for `floodLevels`, owned by consistency, and its measured effect in section 3: it bites only with an evaporation that rises with dry air), and a lake should lose its whole surface's evaporation, not only along the path to its outlet. Once it does, `dryBasins` can read the outlet's flow again.
 - **Relief owner (Local):** a Local tile under a Region salt pan (x 15181000 z 12201000) ends with no cover at all; the pan's salt and fines go with it.
-- **Ground level:** must not rill wind-laid sand (`labels.blown`); could carry ripples from the tile's regime.
+- **Ground level:** must not rill wind-laid sand (`labels.blown`); could carry ripples from the tile's regime. Its `standWater` (`ground/fn/Water.cpp`) floods pools to the spill with the mean flow, so a Ground tile shows a pool its Site parent's `ebb` leaves dry most of the year; the same rule (`poolEbb`) would apply there.
+- **Renderer, queries and consistency: `WindRecord::ebb`** (Local and Site, TileCells², m, 0 outside pools fed by part-year streams): the water a player sees most of the year is `Tile::water − ebb`; where that is below the ground the floor is dry. `Tile::water` stays the mean-flow level that finer levels and the live water start from. A pool wider than the halo can be judged differently by two neighbouring tiles where only one sees the river through it.
 - **Coasts:** dry beach sand is ordinary Sand in the cover; sand within 0.5 m above water is held damp. Old shorelines need a high-stand level per basin, which nobody supplies.
 - **Renderer and queries:** materials for salt crust, loess and stone pavement, read from the tile labels.
 
@@ -181,6 +193,7 @@ Pictures and private outputs go to `.out/aeolian/` (this run: `.out/aeolian/w/`)
 - Whether real tiles hold terminal basins long enough for salt to stay: at Region yes (the lat-31° pan, 138 m after 24 Myr); at Local the pan's cover was gone.
 - `WindRecord::wide` is clipped against the ground after `settleSeams`, while `Tile::nowWide` (what neighbours blend the ground with) is taken before it, so a neighbour fades labels and ground from slightly different covers within the 4 seam cells; the final clip keeps labels within cover. `tidyLabels` before `settleSeams` in `Replay.cpp` (relief's file) would also keep the Region labels consistent through the blend.
 - `dryBasins` takes every connected standing cell as one basin, so a chain of touching lakes at different levels gets one rim and one floor.
+- Ephemeral pools assume one flood season a year and no water table under the pool; several short floods keep a semi-arid pool fuller, and a water table at the floor (oases, spring-fed pans) keeps it wet. Groundwater reads `Tile::water`, not the ebb.
 - Dune bed edges: a read across the torus edge takes this side's edge ground flat (`topAt`), not the slope continued. The edge lies 32 cells outside the tile, so the tile does not see it; not measured beyond the mosaic.
 - Far dust follows the annual mean wind; dust storms follow storm winds, which in monsoon and storm-track country blow elsewhere than the mean.
 - Whether old shorelines are cut here or by the lake-shore stream from a high-stand level this stream would supply.

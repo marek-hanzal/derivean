@@ -68,6 +68,11 @@ struct WindRecord {
     // beyond each edge, before any blending). A later neighbour fades its labels into these at the
     // shared edge, as its ground fades into `Tile::nowWide`.
     WindLabels wide;
+    // Local and Site (TileCells², m): how far below `Tile::water` a pool fed by a stream that runs
+    // only part of the year stands for at least half of it; 0 elsewhere. Where `water − ebb` is
+    // below the ground the floor is dry most of the year. `Tile::water` stays the level of the
+    // mean flow, which finer levels and the live water start from. Empty on Region and Ground tiles.
+    std::vector<float> ebb;
     WindRegime regime;
     double span{};
     int rounds{};

@@ -1,6 +1,7 @@
 #include "aeolian/constant/Wind.hpp"
 #include "aeolian/fn/Regime.hpp"
 #include "aeolian/fn/Wind.hpp"
+#include "hydrology/constant/Water.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "measure/fn/Plane.hpp"
 #include "planet/type/Planet.hpp"
@@ -199,9 +200,9 @@ void checkFarDust() {
     expect(least > 0 && most < 1e-4f, "far dust over a desert world is missing or more than deserts raise", least);
 }
 
-// Three pools at a Site: one fed by a desert wash, whose shallow rim is dry most of the year and
-// whose deep middle keeps water below its spill; one on a river from wetter ground and one in a wet
-// climate, both full to the spill.
+// Three pools at a Site: one fed by a desert wash, which stands `demand · (½ − running)` below its
+// spill for half the year (0.95 m/yr at 20 °C; the wash runs 7 % of the year); one on a river from
+// wetter ground and one in a wet climate, both full to the spill.
 void checkPools() {
     Domain domain = dryPlain();
     domain.key.level = Level::Site;
@@ -209,21 +210,22 @@ void checkPools() {
         for (int z = cx - 2; z <= cx + 2; ++z)
             for (int x = cx - 2; x <= cx + 2; ++x) {
                 const size_t i = domain.index(x, z);
-                const bool middle = x == cx && z == cx;
-                domain.surface[i] = domain.ground.rock[i] = middle ? 99.0f : 99.7f;
+                domain.surface[i] = domain.ground.rock[i] = x == cx && z == cx ? 99.0f : 99.7f;
                 domain.level[i] = 100.0f, domain.discharge[i] = discharge, domain.rain[i] = rain;
             }
     };
     pool(40, 1e3f, 0.05f);
     pool(80, 1e10f, 0.05f);
     pool(120, 1e3f, 1.5f);
-    lowerEphemeralPools(domain);
-    const auto depth = [&](int x, int z) { const size_t i = domain.index(x, z); return domain.level[i] - domain.surface[i]; };
-    expect(depth(41, 40) == 0, "the rim of a desert pool stays wet all year", depth(41, 40));
-    expect(depth(40, 40) > 0.3f && depth(40, 40) < 0.9f, "the middle of a desert pool does not keep what its wash leaves it", depth(40, 40));
-    expect(std::abs(depth(81, 80) - 0.3f) < 1e-4f && std::abs(depth(121, 120) - 0.3f) < 1e-4f, "a pool on a perennial stream or in a wet climate fell", depth(81, 80));
+    const std::vector<float> ebb = poolEbb(domain);
+    const float running = runningShareOf(0.05f, 20.0f), drop = evaporationDemand(20.0f) * (0.5f - running);
+    const auto at = [&](int x, int z) { return ebb[domain.index(x, z)]; };
+    expect(std::abs(at(40, 40) - drop) < 1e-5f && std::abs(at(41, 42) - drop) < 1e-5f && drop > 0.3f, "a desert pool does not sink between its floods", at(40, 40));
+    expect(at(80, 80) == 0 && at(120, 120) == 0, "a pool on a perennial stream or in a wet climate sank", at(80, 80) + at(120, 120));
+    expect(at(10, 10) == 0, "dry ground was given an ebb", at(10, 10));
+    domain.key.level = Level::Region;
+    expect(poolEbb(domain).empty(), "a Region tile was given an ebb");
 }
-
 } // namespace
 
 void testAeolianGround() {

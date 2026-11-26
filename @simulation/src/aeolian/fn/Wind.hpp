@@ -69,9 +69,9 @@ float sinkIntoBed(const Domain& domain, size_t i, float discharge);
 // Basin.cpp — Region: what a basin's water leaves where it leaves only as vapour.
 void dryBasins(Domain& domain, FlowScratch& scratch);
 
-// Pools.cpp — Local and Site, on the water a tile hands over: a pool fed by a stream that runs only
-// part of the year stands at the level it keeps for half the year against evaporation, not at its
-// spill. Cells it then leaves dry get `level` = `surface`. Called after the last routing.
-void lowerEphemeralPools(Domain& domain);
+// Pools.cpp — Local and Site, read off with the tile: per cell, m by which a pool fed by a stream
+// that runs only part of the year stands below its spill for at least half the year (`WindRecord::ebb`);
+// 0 outside such pools; empty at Region and Ground.
+std::vector<float> poolEbb(const Domain& domain);
 
 } // namespace derivean::sim

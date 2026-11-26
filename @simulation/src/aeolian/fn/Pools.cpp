@@ -11,17 +11,25 @@ namespace derivean::sim {
 
 // The flood fills a hollow to its spill with the year's mean flow. A stream of dry country runs
 // only a share of the year; the pool it feeds is full while it runs and then sinks at the rate the
-// air takes water. Its level is above any height for the share `running + (spill − height) / demand`
-// of the year, so the level it holds half the year or more stands `demand · (½ − running)` below
-// the spill. Cells above that are a dry floor most of the year and are left dry.
-void lowerEphemeralPools(Domain& domain) {
-    if (domain.key.level == Level::Region || domain.key.level == Level::Ground) return;
+// air takes water, one flood season a year. Its level is above any height for the share
+// `running + (spill − height) / demand` of the year, so the level it holds half the year or more
+// stands `demand · (½ − running)` below the spill. The demand is gross: in dry country the rain
+// comes with the floods, not between them. Not counted: a water table that holds a pool up (oases,
+// spring-fed pans), seepage through its floor, and several short floods a year, which keep a
+// semi-arid pool fuller than one season does.
+//
+// The routing is left as it is: its discharge and `Tile::water` describe the mean flow that finer
+// levels and the live water start from. A pool larger than the halo can be judged differently by
+// two neighbouring tiles where only one of them sees the river through it.
+std::vector<float> poolEbb(const Domain& domain) {
+    if (domain.key.level == Level::Region || domain.key.level == Level::Ground) return {};
     const size_t cells = domain.cells();
     const int size = domain.size;
-    const float sea = float(domain.seaLevel) + 0.5f;
+    const float sea = float(domain.seaLevel) + 0.5f;   // as `extractTile` tells the sea from a lake
     const auto pooled = [&](size_t i) {
         return domain.level[i] > domain.surface[i] + 1e-3f && domain.level[i] > sea && (domain.ice.empty() || domain.ice[i] <= 0);
     };
+    std::vector<float> ebb(cells, 0.0f);
     std::vector<uint8_t> seen(cells, 0);
     std::vector<size_t> pool, stack;
     for (size_t start = 0; start < cells; ++start) {
@@ -45,9 +53,9 @@ void lowerEphemeralPools(Domain& domain) {
         // A stream from wetter ground keeps running whatever the pool's own climate (as in `Budget.cpp`).
         const float running = std::max(runningShareOf(rain, warmth), flow / (flow + PerennialFlow));
         const float drop = evaporationDemand(warmth) * std::max(0.0f, 0.5f - running);
-        if (drop <= 0) continue;
-        for (const size_t i : pool) domain.level[i] = std::max(domain.surface[i], domain.level[i] - drop);
+        for (const size_t i : pool) ebb[i] = drop;
     }
+    return ebb;
 }
 
 } // namespace derivean::sim

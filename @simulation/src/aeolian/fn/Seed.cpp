@@ -155,6 +155,12 @@ WindRecord windRecordOf(const Domain& domain) {
             clipped(from, label(&WindLabels::blown), label(&WindLabels::lag), label(&WindLabels::salt), label(&WindLabels::loess), own, to);
         }
     }
+    const std::vector<float> ebb = poolEbb(domain);
+    if (!ebb.empty()) {
+        record.ebb.resize(size_t(TileCells) * TileCells);
+        for (int z = 0; z < TileCells; ++z)
+            for (int x = 0; x < TileCells; ++x) record.ebb[size_t(z) * TileCells + size_t(x)] = ebb[domain.index(x + Halo, z + Halo)];
+    }
     return record;
 }
 
