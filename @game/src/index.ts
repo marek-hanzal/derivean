@@ -21,7 +21,6 @@ import { streamingProgress } from "./launcher/fn/streamingProgress";
 import { createWorldLauncher } from "./launcher/service/WorldLauncher";
 import { createWorldMap } from "./map/service/WorldMap";
 import { createCubeScene } from "./scene/service/CubeScene";
-import { createWorldScene } from "./scene/service/WorldScene";
 import { cubeWorlds } from "./session/fn/cubeWorlds";
 import { createWorldSession } from "./session/service/WorldSession";
 import { formatAge } from "./units/fn/age";
@@ -63,11 +62,9 @@ function showError(error: unknown) {
   void window.deriveanCapture?.finish(message.textContent);
 }
 
-// Everything that needs the GPU. Throws when the canvas cannot give a context. The page's address says which
-// renderer draws: `renderer=webgpu` the one of cubes, anything else the WebGL one of patches.
+// Everything that needs the GPU. A device that cannot be had is reported as an error.
 function compose() {
-  const cubes = new URLSearchParams(location.search).get("renderer") === "webgpu";
-  const scene = cubes ? createCubeScene(canvas, showError) : createWorldScene(canvas);
+  const scene = createCubeScene(canvas, showError);
   const metrics = createFrameMetrics(output);
   const hud = createGameHud(hudRoot);
   const inspector = createInspector(select(document, "#inspector"), window.derivean);
@@ -83,7 +80,7 @@ function compose() {
   const map = createWorldMap(select(document, "#map"), window.derivean, { playing: () => controls.locked(), lock: () => controls.lock() });
   const clock = createWorldClock();
   const clockPanel = createClockPanel(menu, hudRoot, clock);
-  const session = createWorldSession(cubes ? cubeWorlds(window.derivean) : window.derivean, scene, metrics, clock, {
+  const session = createWorldSession(cubeWorlds(window.derivean), scene, metrics, clock, {
     starting(options) {
       enterable = false;
       broken = false;
@@ -164,8 +161,8 @@ function compose() {
     }
     hud.paint(world, frame, pilot);
     metrics.paint(time, frame, {
-      calls: scene.renderStats.calls, triangles: scene.renderStats.triangles, patches: scene.patchCounts(),
-      yaw: pilot.yaw, pitch: pilot.pitch, rate: clock.rate, cloudMs: scene.cloudCost(), openWaterCells: scene.openWaterCells(),
+      calls: scene.renderStats.calls, triangles: scene.renderStats.triangles, levels: scene.levelCounts(),
+      yaw: pilot.yaw, pitch: pilot.pitch, rate: clock.rate, cloudMs: scene.cloudCost(),
       backend: scene.backend, draw: scene.timings(),
     });
   }
@@ -194,9 +191,9 @@ async function boot() {
     mapSettled: map.settled,
     measure: (lap) => ({
       frameMs: lap ? metrics.endLap() : metrics.frames(), roundTripMs: metrics.roundTrips(),
-      drawCalls: scene.renderStats.calls, triangles: scene.renderStats.triangles, patchesByLevel: scene.patchCounts(),
+      drawCalls: scene.renderStats.calls, triangles: scene.renderStats.triangles, chunksByLevel: scene.levelCounts(),
       metresPerSecond: Number(metrics.speed.toFixed(1)), viewport: [canvas.clientWidth, canvas.clientHeight],
-      cloudGpuMs: scene.cloudCost(), map: map.describe(), openWaterCells: scene.openWaterCells(), backend: scene.backend,
+      cloudGpuMs: scene.cloudCost(), map: map.describe(), backend: scene.backend,
       drawMs: scene.timings(),
     }),
     survey: (x, z) => dataLevels(window.derivean, x, z),

@@ -44,11 +44,11 @@ inline constexpr float YieldStress = 1.5e5f;        // Pa
 // What sliding ice does to its bed.
 inline constexpr float FastestSlide = 1500.0f;      // m/yr; faster ice rides on water and no longer grips its bed
 // m of granite ground off per metre the ice slides over it. Rates measured under sheets on hard
-// beds are five to ten times higher. This one is set so that the tens of millions of years of
-// icehouse a region replays take what Earth's two and a half million took, some tens to a hundred
-// metres off a lowland: at measured rates a kilometre goes, and land the planet holds a few
-// hundred metres above the sea ends under it even with the plate floating back.
-inline constexpr float WearRate = 1.8e-7f;
+// beds are ten times higher. This one is set so that the tens of millions of years of icehouse a
+// region replays take what Earth's two and a half million took, some tens to a hundred metres off
+// a lowland (seed 42, a freed lowland: 1.8e-7 wore 209 m and drowned half of it; this rate about
+// 115 m). A fjord is still cut below its sill: its ice slides several times faster.
+inline constexpr float WearRate = 1.0e-7f;
 inline constexpr float GraniteErodibility = 1.2e-6f;   // the stream-power coefficient WearRate is stated for
 inline constexpr float LooseGain = 40.0f;           // times faster the ice takes loose cover than granite
 // Where the bed rises along the flow by more than this many times the fall of the ice surface, the
@@ -70,5 +70,20 @@ inline constexpr float EskerFlow = 2.0e8f;          // m³/yr above which a stre
 inline constexpr float EskerReach = 12e3f;          // m of such a tunnel over which it takes all but 1/e of the passing gravel and sand
 inline constexpr float PortalFlow = 1.0e9f;         // m³/yr at which a stream leaving the ice takes half of what the ice dropped there on with it
 inline constexpr float OutwashReach[2] = {6e3f, 22e3f};   // m gravel and sand travel beyond the ice before all but 1/e has settled
+
+// The last sheet at the finer levels (icesheet/fn/Local.hpp).
+inline constexpr float LastSheetYears = 20e3f;      // yr the last maximum's ice stood at its full extent, sliding and taking up the cover it found
+inline constexpr float BasinDepth = 50.0f;          // m a rock basin is dug below the ground around it at most (Local): the deepest lakes of a shield
+inline constexpr float KnobRelief = 10.0f;          // m the same digging leaves between plucked joints and the knobs beside them (Site)
+// Behind a rise of the bed the ice rides over a cavity of lower pressure, and till squeezed from
+// the rest of the bed fills it: up to a line falling from the rise at this slope, the gentle lee
+// of a drumlin or a crag's tail.
+inline constexpr float ShelterSlope = 0.05f;
+inline constexpr float LeastSlide = 1.0f;           // m/yr below which the bed counts as frozen: it keeps the cover it had
+inline constexpr float TillRepose = 0.45f;          // steepest slope (24°) till and moraine are laid at against a neighbour; what would stand steeper goes on
+// A tunnel's width grows with the water through it (a channel in ice melts its walls with the heat
+// of its flow): half-width EskerSpread · (discharge / 1e8 m³/yr)^0.4, within these bounds.
+inline constexpr float EskerSpread = 25.0f;         // m
+inline constexpr float EskerNarrowest = 30.0f, EskerWidest = 250.0f;   // m of half-width
 
 } // namespace derivean::sim

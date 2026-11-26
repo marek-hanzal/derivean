@@ -14,9 +14,12 @@ void allocateWind(Domain& domain);
 WindRecord windRecordOf(const Domain& domain);
 
 // Cover.cpp — how the cover meets the wind.
+// True where the step's flood stands above the ground. Reads `level` against the `surface` the flood
+// was found on, which a caller must therefore leave as the flood left it, or against the ground
+// with its parked sand where that stands higher.
+bool underFlood(const Domain& domain, size_t i);
 // True where water or ice holds the ground: the sea, a lake its rivers still reach, a stream at
-// least half a cell wide, a glacier. Reads the flood of the step: `level` against the `surface` it
-// was found on, which a caller must therefore leave as the flood left it.
+// least half a cell wide, a glacier. Reads the flood of the step through `underFlood`.
 bool heldByWater(const Domain& domain, size_t i);
 // m of sand the wind could take from a dry cell before the stones it leaves close the surface.
 float mobileSand(const Domain& domain, size_t i);
@@ -32,6 +35,9 @@ void tidyLabels(Domain& domain);
 // DuneField.cpp — Local and Site: lays the parked sand back and lets the transport model work the
 // tile for the span of its level.
 void shapeDunes(Domain& domain);
+
+// True during the last step of a domain's replay (stepDomain advances `time` after the hook runs).
+bool lastStep(const Domain& domain);
 
 // Budget.cpp — Region: one step of the sand budget. Sand the wind can take moves along the resultant
 // drift, limited by what the wind can carry and by what the ground gives, into water and into the

@@ -18,6 +18,7 @@ export function createDaylight(viewDistance: number) {
     skyHorizon: uniform(light.skyHorizon.value),
     skyGlow: uniform(light.skyGlow.value),
     sunDisc: uniform(light.sunLight.value),
+    clearSky: uniform(light.skyAmbient.value),
     sunDirection: uniform(new Vector3(0, 1, 0)),
     sunLight: uniform(new Color()),
     skyLight: uniform(new Color()),
@@ -56,7 +57,8 @@ export function createDaylight(viewDistance: number) {
     sky.r += light.sunLight.value.r * through;
     sky.g += light.sunLight.value.g * through;
     sky.b += light.sunLight.value.b * through;
-    nodes.sunLight.value.copy(light.sunLight.value).multiplyScalar(1 - veil);
+    // The clouds' own shadows take the direct sun where they stand; it is not dimmed here as well.
+    nodes.sunLight.value.copy(light.sunLight.value);
     // Below the horizon the sun lights nothing.
     if (light.skySun.value.y > 0.02) nodes.sunDirection.value.copy(light.skySun.value);
     else nodes.sunDirection.value.set(0, 1, 0);

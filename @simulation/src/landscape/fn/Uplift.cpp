@@ -8,9 +8,14 @@ namespace {
 
 constexpr int SinkRadius = 14;          // cells; two passes reach 28, inside the halo, so neighbours agree on the result
 constexpr float AscentToDouble = 0.3f;  // m/s of forced ascent that doubles the rain
-constexpr int TrendRadius = 12;         // cells over which a finer level is compared with its parent's surface
+constexpr int TrendRadius = 12;         // cells over which a ground tile is compared with its parent's surface
 constexpr float TrendGain = 0.5f;       // share of a drift from that surface taken back in one step
 constexpr float TrendLearn = 0.12f;     // share of it by which the sustained uplift is corrected each step
+// Parent cells per side of the block over which a Local or Site domain is held to its parent's
+// surface. It must be wider than the valleys the level cuts: a lift that answers a narrower
+// neighbourhood raises shoulders beside every cut, the shoulder turns the slope's water aside and
+// the next valley starts at its foot, so the level ribs itself at the width of its own average.
+constexpr int HeldParents = 4;
 
 // Two box passes: a cheap bell-shaped average with clamped edges.
 void blur(std::vector<float>& field, std::vector<float>& work, int size, int radius) {
@@ -33,6 +38,42 @@ void blur(std::vector<float>& field, std::vector<float>& work, int size, int rad
                 field[size_t(z) * size_t(size) + size_t(x)] = sum * scale;
                 sum += at(z + radius + 1) - at(z - radius);
             }
+        }
+    }
+}
+
+// Replaces `field` by a smooth surface through its means over the evolving cells of blocks of
+// `span` cells laid from the domain's corner. Cells a finished neighbour holds and the rim do not
+// move with the lift and are left out of the means; a block without evolving cells asks for nothing.
+// Between block centres the surface follows a smoothstep, which reads the two blocks on either side
+// only: a tile is a whole number of blocks wide and its halo half a block, so the owned cells of a
+// tile and of its neighbour read the same blocks and agree along their seam.
+void overBlocks(std::vector<float>& field, const std::vector<uint8_t>& hold, int size, int span) {
+    const int count = (size + span - 1) / span;
+    Field<double> mean(count, count), cells(count, count);
+    for (int z = 0; z < size; ++z)
+        for (int x = 0; x < size; ++x) {
+            const size_t i = size_t(z) * size_t(size) + size_t(x);
+            if (hold[i] != Free) continue;
+            mean.at(x / span, z / span) += field[i], cells.at(x / span, z / span) += 1;
+        }
+    for (size_t i = 0; i < mean.size(); ++i) mean.cells[i] = cells.cells[i] > 0 ? mean.cells[i] / cells.cells[i] : 0.0;
+    // Block below and weight of the block above, for every cell along one axis.
+    std::vector<int> below(static_cast<size_t>(size));
+    std::vector<double> weight(static_cast<size_t>(size));
+    for (int k = 0; k < size; ++k) {
+        const double at = std::clamp((k + 0.5) / span - 0.5, 0.0, double(count - 1));
+        below[size_t(k)] = std::min(int(at), std::max(0, count - 2));
+        weight[size_t(k)] = smoothstep(0.0, 1.0, at - below[size_t(k)]);
+    }
+    for (int z = 0; z < size; ++z) {
+        const int bz = below[size_t(z)], nz = std::min(bz + 1, count - 1);
+        const double wz = weight[size_t(z)];
+        for (int x = 0; x < size; ++x) {
+            const int bx = below[size_t(x)], nx = std::min(bx + 1, count - 1);
+            const double wx = weight[size_t(x)];
+            const double near = mix(mean.at(bx, bz), mean.at(nx, bz), wx), far = mix(mean.at(bx, nz), mean.at(nx, nz), wx);
+            field[size_t(z) * size_t(size) + size_t(x)] = float(mix(near, far, wz));
         }
     }
 }
@@ -80,16 +121,25 @@ void raise(Domain& domain, FlowScratch& scratch) {
     } else {
         // A finer level adds relief to its parent; it must not move the ground as a whole. Its rock
         // uplift is therefore not given but found: the rate that holds the surface, averaged over
-        // about a parent cell, on the parent's surface against the erosion of the finer level.
+        // blocks of parent cells, on the parent's surface against the erosion of the finer level.
         // High ground far above its outlet needs a fast rise and gets steep, dissected relief; ground
         // near its base level needs almost none and stays gentle. The parent's own rate is the start.
         scratch.blurA.resize(domain.cells());
         scratch.blurB.resize(domain.cells());
         for (size_t i = 0; i < domain.cells(); ++i) scratch.blurA[i] = domain.trend[i] - domain.ground.rock[i] - domain.sedimentAt(i);
-        blur(scratch.blurA, scratch.blurB, domain.size, TrendRadius);
+        const bool ground = domain.key.level == Level::Ground;
+        if (ground) blur(scratch.blurA, scratch.blurB, domain.size, TrendRadius);
+        else overBlocks(scratch.blurA, domain.hold, domain.size, Refinement * HeldParents);
+        // The rate found may hold ground up but never pull it down faster than the parent does: a
+        // block that stands above its parent's surface is brought down by its own water and slopes.
+        if (!ground && scratch.parentLift.size() != domain.cells()) scratch.parentLift = domain.tectonic;
         for (size_t i = 0; i < domain.cells(); ++i) {
             domain.tectonic[i] += TrendLearn * scratch.blurA[i] / dt;
             domain.rebound[i] = TrendGain * scratch.blurA[i] / dt;
+            if (ground) continue;
+            const float floor = std::min(0.0f, scratch.parentLift[i]);
+            domain.tectonic[i] = std::max(floor, domain.tectonic[i]);
+            domain.rebound[i] = std::max(floor - domain.tectonic[i], domain.rebound[i]);
         }
     }
     for (int z = 0; z < domain.size; ++z) {

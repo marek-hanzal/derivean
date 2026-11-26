@@ -25,8 +25,6 @@ constexpr int Reach = 6;                  // quadrature points on either side of
 
 } // namespace
 
-double evaporationDemand(double warmth) { return std::clamp(0.25 + 0.035 * warmth, 0.05, 1.6); }
-
 double thresholdFriction(double grain) { return 0.1 * std::sqrt((GrainDensity - NearGroundAir) / NearGroundAir * Gravity * grain); }
 
 double saturatedFlux(double speed) {
@@ -100,7 +98,7 @@ WindRegime regimeOf(int winds, const double* headings, const double* speeds, con
 }
 
 double dryShare(double rain, double warmth, double halfRange) {
-    const double dry = 1.0 / (1.0 + DampGain * std::max(0.0, rain) / evaporationDemand(warmth));
+    const double dry = 1.0 / (1.0 + DampGain * std::max(0.0, rain) / evaporationDemand(float(warmth)));
     return dry * (1.0 - shareOfYearBelow(0.0, warmth, halfRange) * (1.0 - dry));
 }
 

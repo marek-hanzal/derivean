@@ -9,6 +9,8 @@ export interface SkyNodes {
   skyHorizon: UniformNode<"color", Color>;
   skyGlow: UniformNode<"color", Color>;
   sunDisc: UniformNode<"color", Color>;
+  // The clear sky's own light, before any cloud: what lights the clouds themselves.
+  clearSky: UniformNode<"color", Color>;
   // What lights a surface: direct light and where it comes from, and the light of the sky above and of the
   // ground below, between which a surface takes its share by how far it faces up.
   sunDirection: UniformNode<"vec3", Vector3>;

@@ -63,13 +63,21 @@ sim::Level cubeSource(int level) {
     return edge <= 256.0 ? sim::Level::Local : sim::Level::Region;
 }
 
+double cubeReadMargin(int level) { return Ring * edgeOf(level) + EaseCells * sim::specOf(cubeSource(level)).cell; }
+
+bool cubeFinal(int level, uint64_t detail) {
+    for (int probe = 0; probe < 4; ++probe)
+        if (((detail >> (3 * probe)) & 7) < uint64_t(cubeSource(level))) return false;
+    return true;
+}
+
 uint64_t cubeDetail(const sim::World& world, CubeKey key) {
     const double edge = edgeOf(key.level), size = CubeSide * edge, x = key.x * size, z = key.z * size;
     const sim::Level source = cubeSource(key.level);
     SurfaceReader ground = surfaceReader(world, source), water = surfaceReader(world, sim::Level::Site);
     // The square the ground is read from, with the tiles easing looks at, is smaller than a tile of
     // the source level: its corners touch every tile it overlaps.
-    const double reach = Ring * edge + EaseCells * sim::specOf(source).cell, wide = size + 2 * Ring * edge;
+    const double reach = cubeReadMargin(key.level), wide = size + 2 * Ring * edge;
     uint64_t detail = 0;
     int probe = 0;
     for (double dz : {-reach, size + reach})

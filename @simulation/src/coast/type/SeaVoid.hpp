@@ -38,6 +38,8 @@ struct SeaVoids {
 // m around a rectangle within which a site cell can send a void into it: the longest cave, its
 // width and its mouth. A reader needs finished site tiles one cell farther, 40 m in all.
 inline constexpr double SeaVoidReach = 36.0;
+// The voxel query builds site tiles BlockSiteReach around a block (relief/type/Form.hpp); the voids
+// need them SeaVoidReach and one site cell farther. Checked where both are known: simulation/fn/Block.cpp.
 
 // A finished site tile by its index, or null.
 using SiteTiles = std::function<const Tile*(int32_t x, int32_t z)>;

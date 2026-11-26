@@ -92,6 +92,9 @@ void solveHeights(Sweep& sweep) {
     FlowScratch& scratch = sweep.scratch;
     const int size = domain.size;
     const bool drains = domain.key.level != Level::Ground;
+    // Only a domain led by its parent has a parent's rivers; a hand-built block has none.
+    const bool pinned = (domain.key.level == Level::Local || domain.key.level == Level::Site) && !scratch.parentLift.empty();
+    const float parentHead = pinned ? channelHeadOf(Level(int(domain.key.level) - 1)) : 0.0f;
     for (const int32_t cell : domain.order) {
         const size_t i = size_t(cell);
         const float before = domain.surface[i];
@@ -143,6 +146,11 @@ void solveHeights(Sweep& sweep) {
             return std::max(0.0f, top - (top + power * weighted) / (1 + power * pull));
         };
         scratch.next[i] = scratch.pool[i] = raised - lowering(domain.sedimentAt(i) + laid, scratch.coverPower[i], scratch.power[i], cutBy);
+        // A river the parent level has drawn already lies at the depth the parent cut it to: a
+        // finer level shapes its bed and its banks, not its descent. A river is the parent's where
+        // it has gathered the water the parent needs to draw a channel.
+        if (pinned && scratch.gathered[i] >= parentHead)
+            scratch.next[i] = scratch.pool[i] = std::max(scratch.next[i], std::min(raised, domain.trend[i]));
     }
 }
 

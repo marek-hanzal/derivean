@@ -1,4 +1,4 @@
-import { DataArrayTexture, FloatType, LinearFilter, RepeatWrapping, RGBAFormat } from "three";
+import { DataArrayTexture, FloatType, LinearFilter, RepeatWrapping, RGBAFormat } from "three/webgpu";
 import type { CloudField } from "../../../contract/GameBridge";
 import { BandLayers, Bands, encodeClouds } from "../fn/encodeClouds";
 

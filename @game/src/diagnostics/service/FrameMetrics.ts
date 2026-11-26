@@ -7,10 +7,11 @@ import { summary, type Summary } from "../fn/summary";
 const Window = 600;
 
 export interface ViewStats {
-  calls: number; triangles: number; patches: number[]; yaw: number; pitch: number;
-  // Clock rate asked for, and milliseconds of GPU time the clouds take (null where the browser cannot say).
-  rate: number; cloudMs: number | null; openWaterCells: number;
-  // What draws the world: WebGPU, three.js's WebGL 2 fallback of it, or the WebGL renderer.
+  // `levels`: chunks held by each level of cubes.
+  calls: number; triangles: number; levels: number[]; yaw: number; pitch: number;
+  // Clock rate asked for, and milliseconds of GPU time the clouds take (null while not drawn or untimed).
+  rate: number; cloudMs: number | null;
+  // What draws the world: WebGPU or three.js's WebGL 2 fallback of it.
   backend: string;
   // Milliseconds the draw takes on the CPU and on the GPU; null where that is not measured.
   draw: { cpuMs: number | null; gpuMs: number | null };
@@ -47,16 +48,15 @@ export function createFrameMetrics(output: HTMLOutputElement) {
       `${ms(summary(engineTimes).p95)} ms C++   ${ms(summary(bridgeTimes).p95)} ms round trip p95`,
       `Streaming  ${ms(frame.streamingMs)} ms on the game thread · ${ms(frame.generationMs)} ms generation behind it`,
       `${view.backend}   draw ${view.draw.cpuMs === null ? "—" : ms(view.draw.cpuMs)} ms CPU · ${view.draw.gpuMs === null ? "—" : ms(view.draw.gpuMs)} ms GPU`,
-      `${view.calls} draws   ${view.triangles.toLocaleString("en-US")} triangles   clouds ${view.cloudMs === null ? "untimed" : `${ms(view.cloudMs)} ms GPU`}`,
+      `${view.calls} draws   ${view.triangles.toLocaleString("en-US")} triangles   clouds ${view.cloudMs === null ? "—" : `${ms(view.cloudMs)} ms GPU`}`,
       `${frame.visibleChunks} chunks   ${frame.editedTiles} edited m³ tiles   ${frame.bodies} ${frame.bodies === 1 ? "body" : "bodies"}`,
       `World  seed ${info.seed} · ${formatAge(info.age)} · sea level ${info.seaLevel.toFixed(1)} m`,
       `LOD  site ${flag(frame.ready.site)} · local ${flag(frame.ready.local)} · region ${flag(frame.ready.region)}`,
       `Pending  ${frame.pending.chunks} chunks · ${frame.pending.patches} patches`,
-      `Patches  ${view.patches.reduce((sum, count) => sum + count, 0)}   by level ${view.patches.join(" ") || "—"}`,
+      `Cube chunks  ${view.levels.reduce((sum, count) => sum + count, 0)}   by level ${view.levels.join(" ") || "—"}`,
       `X ${metres(x)}   Y ${metres(y)}   Z ${metres(z)}`,
       `Ground  ${frame.ground === null ? "—" : `${metres(frame.ground)} m · eye ${distance(y - frame.ground)} above`}`
-        + `   Water level  ${frame.waterLevel === null ? "—" : `${metres(frame.waterLevel)} m`}`
-        + (view.openWaterCells ? `   ${view.openWaterCells} water cells not level, left open` : ""),
+        + `   Water level  ${frame.waterLevel === null ? "—" : `${metres(frame.waterLevel)} m`}`,
       `${frame.flying ? "Flying" : "Walking"}  ${speed >= 100 ? speed.toFixed(0) : speed.toFixed(1)} m/s`
         + `   Look ${view.yaw.toFixed(3)}  ${view.pitch.toFixed(3)} rad`,
       `${readClock(frame.calendar)} · ${readRate(view.rate)}`

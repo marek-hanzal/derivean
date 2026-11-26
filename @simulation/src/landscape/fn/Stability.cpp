@@ -119,6 +119,20 @@ void failFaces(Domain& domain, FlowScratch& scratch) {
 
         const float scale = scratch.soundScale[i], logScale = scratch.soundLog[i];
         const auto hold = [&](float run) { return run <= 0 ? 0.0f : flank * stableDrop(curve, logCell + std::log2(run), scale, logScale); };
+        // What a face shows below the cell's own bed is the rock at its foot. A face from `low` that
+        // stays within the bed holds what the bed's rock holds; one that reaches below it is two
+        // faces stacked: the rock under the bed up to what that rock holds, and on it the bed, up to
+        // its own thickness or what its rock holds. A thin weak bed behind a strong lip thus keeps the
+        // lip, and a thin strong cap rides on what the weak rock under it holds.
+        const UnitCache& bed = domain.unit[i];
+        const float own = std::max(0.0f, bed.bottom - std::max(0.0f, domain.ground.datum[i] - domain.ground.rock[i]));
+        const float bedBase = domain.ground.rock[i] - own;
+        const auto stack = [&](float low, float ownHold, float belowHold) {
+            return low >= bedBase ? low + ownHold : std::min(bedBase, low + belowHold) + std::min(here - bedBase, ownHold);
+        };
+        const auto holdOf = [&](size_t other, float run) {
+            return run <= 0 ? 0.0f : flank * stableDrop(strengthOf(domain.unit[other].traits.dominant), logCell + std::log2(run), scratch.soundScale[other], scratch.soundLog[other]);
+        };
         // Two things hold a cell down: the face it makes with each lower neighbour, as if that
         // neighbour were level ground, and the whole slope from the foot that neighbour stands on.
         float allowed = 1e30f, slope = 1e30f;
@@ -126,14 +140,10 @@ void failFaces(Domain& domain, FlowScratch& scratch) {
         for (int k = 0; k < 8; ++k) {
             const size_t lower = domain.index(x + NeighborX[k], z + NeighborZ[k]);
             if (height[lower] >= here) continue;
-            // What a face shows below the cell's own bed is the rock at its foot.
-            const UnitCache& bed = domain.unit[i];
-            const float own = std::max(0.0f, bed.bottom - std::max(0.0f, domain.ground.datum[i] - domain.ground.rock[i]));
-            const float face = std::min(hold(NeighborReach[k]), own + flank * stableDrop(strengthOf(domain.unit[lower].traits.dominant), logCell + 0.5f * float(k & 1),
-                                                                                         scratch.soundScale[lower], scratch.soundLog[lower]));
-            allowed = std::min(allowed, height[lower] + face);
+            allowed = std::min(allowed, stack(height[lower], hold(NeighborReach[k]), holdOf(lower, NeighborReach[k])));
             const int32_t from = foot[lower];
-            const float whole = height[size_t(from)] + hold(runTo(x, z, from));
+            const float run = runTo(x, z, from);
+            const float whole = stack(height[size_t(from)], hold(run), holdOf(size_t(from), run));
             if (whole < slope) slope = whole, base = from;
         }
         allowed = std::min(allowed, slope);

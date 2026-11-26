@@ -19,7 +19,26 @@ constexpr float ShortCooling = 1700.0f;
 
 } // namespace
 
-double minorShare(const Vent& vent, const Episode& episode) { return vent.until - episode.time <= specOf(Level::Local).span ? Share : 0.0; }
+// A small eruption keeps its size however productive the vent: a busier vent has more of them, up
+// to as many as the local level builds in one episode, and the region keeps the rest. A chamber-
+// emptying eruption is the region's whole; the share is of what the episode brings up besides it.
+double minorVolume(const Vent& vent, const Episode& episode) {
+    if (vent.until - episode.time > specOf(Level::Local).span) return 0.0;
+    const double usual = episode.volume - (episode.paroxysm >= CalderaVolume[size_t(vent.magma)] ? episode.paroxysm : 0.0);
+    return usual > 0 ? std::min(Share * usual, Most * Typical[size_t(vent.magma)]) : 0.0;
+}
+
+double minorSize(Magma magma) { return Typical[size_t(magma)]; }
+
+MinorStyle minorStyle(Magma magma, bool summit) {
+    MinorStyle style;
+    style.cone = ConeShare[size_t(magma)];
+    // Viscous melt that comes up beside the main conduit has lost its gas: a dome.
+    style.lava = magma == Magma::Andesite && !summit ? DomeLava : lavaOf(magma);
+    style.lava.coolLength = std::min(style.lava.coolLength, ShortCooling);
+    if (magma == Magma::Andesite && !summit) style.cone = 0;
+    return style;
+}
 
 void minorEvents(uint64_t seed, const Vent& vent, double from, double to, std::vector<MinorEvent>& into) {
     const uint64_t base = stream(seed, MinorStream) ^ vent.id;
@@ -27,7 +46,7 @@ void minorEvents(uint64_t seed, const Vent& vent, double from, double to, std::v
     const size_t first = into.size();
     for (const Episode& episode : vent.episodes) {
         if (episode.time > to || episode.time + RegionStep <= from) continue;
-        const double volume = episode.volume * minorShare(vent, episode);
+        const double volume = minorVolume(vent, episode);
         if (volume <= 0) continue;
         const int64_t step = int64_t(std::llround(episode.time / RegionStep));
         const int count = std::clamp(int(std::lround(volume / Typical[magma])), 1, Most);
@@ -41,12 +60,10 @@ void minorEvents(uint64_t seed, const Vent& vent, double from, double to, std::v
             const double along = summit ? 150.0 * (unit(base, step, k, 4) - 0.5) : FlankReach[magma] * (2.0 * unit(base, step, k, 4) - 1.0);
             const double across = (summit ? 150.0 : 500.0) * (unit(base, step, k, 5) - 0.5);
             event.site = episode.site + Vec2{std::cos(trend), std::sin(trend)} * along + Vec2{-std::sin(trend), std::cos(trend)} * across;
-            event.fall = volume / count * ConeShare[magma];
+            const MinorStyle style = minorStyle(vent.magma, summit);
+            event.fall = volume / count * style.cone;
             event.lava = volume / count - event.fall;
-            // Viscous melt that comes up beside the main conduit has lost its gas: a dome.
-            event.rheology = vent.magma == Magma::Andesite && !summit ? DomeLava : lavaOf(vent.magma);
-            event.rheology.coolLength = std::min(event.rheology.coolLength, ShortCooling);
-            if (vent.magma == Magma::Andesite && !summit) event.lava += event.fall, event.fall = 0;
+            event.rheology = style.lava;
             into.push_back(event);
         }
     }

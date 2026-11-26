@@ -22,6 +22,9 @@ bool iceReaches(const Domain& domain, const SheetSource& source);
 // what makes two tiles agree on their shared edge.
 void solveStage(const Domain& domain, SheetWork& work, int stage, double towards, int recorded, Workers* workers);
 
+// Mean of the square of half-width `radius` around every cell of an n × n grid, clamped at the edge.
+std::vector<float> boxMean(const std::vector<float>& field, int n, int radius);
+
 // The stage on the domain's own cells: its surface is the relaxed one, its thickness that surface
 // over each cell's own ground, so a valley under the sheet carries more ice than the ridge beside it.
 SheetField readStage(const Domain& domain, const SheetWork& work, int stage, Workers* workers);

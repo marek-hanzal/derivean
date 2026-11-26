@@ -1,6 +1,6 @@
 import {
   BoxGeometry, DynamicDrawUsage, type Group, InstancedMesh, Matrix4, MeshStandardMaterial,
-} from "three";
+} from "three/webgpu";
 import type { Point } from "../../../contract/GameBridge";
 
 interface ParticleGroup {

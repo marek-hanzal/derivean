@@ -14,3 +14,5 @@ export const SunSteps = [70, 110, 170] as const;
 export const MarchScale = 0.5;
 // Share of the accumulated picture a frame keeps where it can be found again.
 export const Persistence = 0.94;
+// The clouds' own fade with distance, squared-exponential: this over the view distance is its density.
+export const HazeDepth = 1.8;

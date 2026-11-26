@@ -84,6 +84,9 @@ void settleDebris(Domain& domain, FlowScratch& scratch) {
             any = true;
         }
         if (!any) break;
+        // Highest first by the surface as it now rests, so debris only ever runs on to cells the
+        // pass has still to visit.
+        orderByHeight(height, scratch.byHeight, scratch.spare);
         for (size_t step = scratch.byHeight.size(); step-- > 0;) {
             const int32_t at = scratch.byHeight[step];
             const size_t i = size_t(at);
@@ -119,15 +122,22 @@ void settleDebris(Domain& domain, FlowScratch& scratch) {
                 for (int c = 0; c < SedimentClasses; ++c) scratch.moved[c][other] += moving[c] * excess[k] / steep;
             }
         }
-        // The order is that of the surface before anything moved, so a share can land on a cell
-        // the pass has left behind. It rests there: nothing that moved may go missing.
-        for (size_t i = 0; i < cells; ++i)
-            for (int c = 0; c < SedimentClasses; ++c) {
-                if (scratch.moved[c][i] <= 0) continue;
-                if (domain.hold[i] == Free) domain.ground.sediment[c][i] += scratch.moved[c][i];
-                else scratch.left += double(scratch.moved[c][i]) * area;
-                scratch.moved[c][i] = 0;
+        // A cone raises cells around it, so a share can still land on a cell the pass has left
+        // behind. It comes to rest there as a cone of its own: nothing that moved may go missing.
+        for (size_t i = 0; i < cells; ++i) {
+            float moving[SedimentClasses] = {scratch.moved[0][i], scratch.moved[1][i], scratch.moved[2][i]};
+            const float total = moving[0] + moving[1] + moving[2];
+            if (total <= 0) continue;
+            for (auto& layer : scratch.moved) layer[i] = 0;
+            const int x = int(i % size_t(size)), z = int(i / size_t(size));
+            if (domain.hold[i] != Free || x < 1 || z < 1 || x >= size - 1 || z >= size - 1) {
+                if (domain.hold[i] == Free)
+                    for (int c = 0; c < SedimentClasses; ++c) domain.ground.sediment[c][i] += moving[c];
+                else scratch.left += double(total) * area;
+                continue;
             }
+            heap(domain, height, x, z, moving, total, (ReposeTan[0] * moving[0] + ReposeTan[1] * moving[1] + ReposeTan[2] * moving[2]) / total * cell);
+        }
     }
 }
 

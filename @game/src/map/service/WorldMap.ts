@@ -7,6 +7,7 @@ import { ClickSlack, MotionMs, OpeningSpan, RedrawShift, RestMs, TravelClearance
 import { readPoint } from "../fn/readPoint";
 import { contourInterval, lengthLabel, scaleBar } from "../fn/roundLength";
 import { chartSquare, scaleLimits, screenOf, worldAt, zoomAt } from "../fn/view";
+import { waitingPilot } from "../fn/waitingPilot";
 import type { Extent, MapView } from "../type/MapView";
 import { buildMapChrome } from "../ui/MapChrome";
 import { createChartFeed, type ChartFeed } from "./ChartFeed";
@@ -41,6 +42,8 @@ export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "char
   let texted = -Infinity;
   // The map was closed with Escape and the pointer waits for the key to come up.
   let escaping = false;
+  // The chart canvas lost its WebGL context and has not had it back.
+  let lost = false;
 
   // A map that closes without the pointer being captured again leaves the game unlocked with nothing on screen
   // saying so. The lock's own listeners decide what an unlocked game shows.
@@ -64,17 +67,35 @@ export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "char
     else if (resume === "never") unlocked();
   }
 
-  // Opens the map on the player, or turns an open one back to them. `span` is the metres across the shorter
-  // side of the viewport; without it the last zoom is kept.
-  function show(span?: number) {
-    if (!latest) return;
-    if (!drawing) {
+  // What the map draws with, built on first use and again after a lost context came back. A context that
+  // cannot be had, or is lost, leaves the map shut.
+  function draws() {
+    if (drawing || lost) return drawing;
+    try {
       const surface = createChartSurface(chrome.canvas);
       drawing = { surface, feed: createChartFeed(bridge, surface, (error) => {
         console.error("The map could not be charted", error);
         hide("never");
       }) };
+    } catch (error) {
+      console.error("The map cannot be drawn", error);
     }
+    return drawing;
+  }
+  // The browser gives a lost context back only when the loss is prevented; nothing built on it survives.
+  chrome.canvas.addEventListener("webglcontextlost", (event) => {
+    event.preventDefault();
+    lost = true;
+    drawing?.feed.rest();
+    drawing = undefined;
+    painted = undefined;
+  });
+  chrome.canvas.addEventListener("webglcontextrestored", () => { lost = false; });
+
+  // Opens the map on the player, or turns an open one back to them. `span` is the metres across the shorter
+  // side of the viewport; without it the last zoom is kept.
+  function show(span?: number) {
+    if (!latest || !draws()) return;
     open = true;
     escaping = false;
     following = true;
@@ -175,10 +196,15 @@ export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "char
     hide: () => hide("never"),
     // Call every frame something is on screen.
     paint(world: WorldInfo, frame: Frame, yaw: number, time: number) {
-      if (latest && latest.world !== world) drawing?.feed.reset();
+      if (latest && latest.world !== world) {
+        drawing?.feed.reset();
+        painted = undefined;
+      }
       latest = { world, frame };
-      if (!open || !drawing) return;
-      const { surface, feed } = drawing;
+      if (!open) return;
+      const made = draws();
+      if (!made) return hide("never");
+      const { surface, feed } = made;
       extent = [root.clientWidth, root.clientHeight];
       if (extent[0] < 1 || extent[1] < 1) return;
       const [closest, widest] = scaleLimits(extent, world.planetSpan);
@@ -203,24 +229,12 @@ export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "char
         write(world, frame);
       }
     },
-    // Wraps whoever steers the player. With the map open the world keeps running under a pilot that only waits,
-    // or travels where the map was shift-clicked.
-    steer(pilot: Pilot): Pilot {
-      return {
-        get yaw() { return pilot.yaw; },
-        get pitch() { return pilot.pitch; },
-        get radius() { return pilot.radius; },
-        get shape() { return pilot.shape; },
-        active: () => open || escaping || pilot.active(),
-        command(elapsed, time, frame) {
-          const command = pilot.command(elapsed, time, frame);
-          if (!open && !escaping) return command;
-          const teleport = travel;
-          travel = null;
-          return { ...command, active: true, x: 0, z: 0, jump: false, sprint: false, dig: false, place: false, fly: false, boost: false, ascend: 0, teleport };
-        },
-      };
-    },
+    // With the map open, and until Escape has come up, the player waits or travels where the map was shift-clicked.
+    steer: (pilot: Pilot) => waitingPilot(pilot, () => open || escaping, () => {
+      const teleport = travel;
+      travel = null;
+      return teleport;
+    }),
     // True when the map is closed, or open with the sharp chart of its view on screen.
     settled: () => !open || Boolean(drawing?.feed.settled(chartSquare(view, extent)) && painted && !painted.coarse),
     // For a capture record.

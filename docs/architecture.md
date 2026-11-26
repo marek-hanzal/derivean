@@ -49,7 +49,7 @@ The simulation owns the weather; the engine only [keeps its state](../@engine/sr
 
 ## Far terrain
 
-The far terrain is moving from height-field patches to cubes; a world makes one of the two, chosen when it starts, until the renderer draws cubes only.
+The far terrain is cubes. The engine can still make height-field patches instead, chosen when a world starts, but the game starts every world with cubes and draws nothing else.
 
 ### Cubes
 
@@ -73,28 +73,26 @@ Nothing measured from the world's origin crosses the bridge in single precision.
 
 ## Display
 
-The [stage](../@game/src/scene/service/WorldStage.ts) draws one world. World positions are doubles that can lie millions of metres from the origin, so everything hangs under a group offset by a render origin near the camera. Meshes carry positions relative to their own chunk or patch, and shaders, shadows, and uniforms only see small render-space numbers. The origin moves in whole repeats of the voxel grain, which keeps that pattern fixed to the world. The depth buffer is logarithmic, because one view holds voxels a few centimetres from the eye and terrain hundreds of kilometres away.
+The [scene](../@game/src/scene/service/CubeScene.ts) draws with three's WebGPU renderer and TSL node materials; the [stage](../@game/src/scene/service/CubeStage.ts) holds one world. World positions are doubles that can lie millions of metres from the origin, so everything hangs under a group offset by a render origin near the camera, and shaders, shadows and uniforms only see small render-space numbers. The origin moves in whole repeats of the voxel grain, which keeps the ground's variation fixed to the world. Depth is reversed in a float buffer, because one view holds voxels a few centimetres from the eye and ground hundreds of kilometres away.
 
-Voxel chunks own the ground inside `Frame.voxelBox` and [far patches](../@game/src/terrain/service/FarTerrain.ts) own it outside: patch fragments inside the box and chunk fragments outside its footprint are discarded. Patches blend onto their parent's heights over the distances `WorldInfo.far` gives, and a dropped border covers what blending cannot. The renderer never smooths a height. Plain shading (L) drops albedo, clouds and most of the air for judging geometry; the blue in it is natural water.
+Voxel chunks and every far level are drawn by [one surface](../@game/src/cubes/fn/cubeSurface.ts), one draw per cube size: faces are [packed](../@game/src/cubes/fn/packFaces.ts) into four words counted from a batch's anchor and expanded on the GPU. A level is drawn inside its square and outside the next finer one's ([level squares](../@game/src/cubes/fn/levelSquares.ts)); where a finer square is cut out of a coarser level, [cap risers](../@game/src/cubes/fn/capFaces.ts) close the cut, so the boundary shows the coarser ground's cross-section and never a hole. Plain shading (L) drops albedo and most of the air for judging geometry.
 
 ### What the ground's look is made of
 
 | Part | Where it comes from |
 | --- | --- |
-| Shape, material, standing water, sun direction, cloud field | Simulated; the renderer draws what the frame carries. |
-| Colour of a place | The palette colour of the simulated material, on voxels and on patches. Nothing colours ground by height or slope. |
-| Stains, mottling, specks, beds within one rock | Procedural: [one world-anchored variation](../@game/src/scene/constant/ground.ts) of that colour, the same on both sides of the hand-off. A voxel takes it at its middle, so a cube stays one piece. |
-| Wet ground | On patches, the engine's water level beside a shore vertex. Voxels have no such level near them and are drawn dry. |
-| Light on far slopes | The patch's shading raster. A texel blends only with neighbours facing much as it does, so a crease keeps both its slopes. Below a texel the variation tilts the light as a small relief. |
-| Mixed cover | The raster dithers two material ids; the [patch surface](../@game/src/terrain/fn/patchSurface.ts) weighs neighbouring texels evenly, which shows the mixture and no chequerboard. A trick on top: the border between two materials wanders by up to a texel instead of following the raster's steps. |
-| Hollows and creases | A trick, not light transport, kept under plain shading: patches darken by the raster's share of visible sky, voxels by a [volume of the solid cells](../@game/src/scene/service/VoxelOcclusion.ts) round the player, sampled half a voxel off each face. |
-| Shadows | Three maps, all from the simulated sun: the voxels' near the player, [the far terrain's on itself](../@game/src/terrain/service/TerrainShadow.ts) across 120 km, which is what makes relief read under a low sun, and the clouds'. |
-| Distance | [Aerial perspective](../@game/src/sky/constant/airFade.ts): light lost per colour along the path through air and haze that thin with height, replaced by the sky's. At the view distance the ground has become the horizon. |
+| Shape, material, standing water, sun direction, snow | Simulated; the renderer draws what the frame carries. |
+| Colour of a place | The palette colour of the simulated material. Nothing colours ground by height or slope. |
+| Stains, mottling, specks within one cube | Procedural: [one world-anchored variation](../@game/src/scene/fn/groundTone.ts) of that colour, taken at a cube's middle so a cube stays one piece, and left out below the size of the cube it is drawn on. |
+| Light | Flat per face: sky above, the bounce of level ground below, the sun ([face light](../@game/src/sky/fn/faceLight.ts)); corners darkened by the occlusion the engine counted. No normal is interpolated. |
+| Shadows | [Cascaded maps from the sun](../@game/src/shadow/service/SunShadow.ts) over the whole view, cast by the cube batches themselves, four levels of cubes to a cascade; and the clouds' own shadows, from [a map](../@game/src/clouds/service/CloudShadow.ts) of sunlight through the same density field the clouds are drawn from. |
+| Snow | [The simulation's snow ladder](../@game/src/snow/fn/snowMass.ts) on the tops of cubes above the snow line: small cubes covered whole or bare, larger ones taking the snow's share of their colour. |
+| Distance | [Aerial perspective](../@game/src/sky/fn/aerial.ts): light lost per colour along the path through air and haze that thin with height, replaced by the sky's. At the view distance the ground has become the horizon. |
 | Brightness | The exposure follows the light falling on level ground, part of the way, as an eye or a camera does. |
 
-The [sky](../@game/src/sky/service/Sky.ts) owns sun, sky light, air and exposure. Under cloud the ground is lit by what the cloud lets through instead of by blue sky, and the air near the eye takes the cloud's grey; the cloud is the one over the eye, so far ground still fades into the clear horizon the dome draws.
+[Daylight](../@game/src/sky/service/Daylight.ts) owns sun, sky light, air and exposure. Standing water is drawn as level sheets from the far chunks; voxel water keeps the engine's own meshes.
 
-Natural water is drawn from the patches' water levels with tint and opacity that grow with depth, a mirror of the sky where the view grazes it, and a thin line where the depth runs out. Standing water is level: a cell whose corners carry levels too far apart to be one surface is left open, and F3 counts those cells. Voxel water keeps its own meshes.
+The scene is drawn into the [cloud pass](../@game/src/clouds/service/CloudPass.ts)'s multisampled target; the clouds are marched through the simulated bands at half size, built up over frames and laid over the scene by its depth on the way to the screen, where tone mapping happens once. Where a cloud is, how much of the sky it covers, how high and how thick it is and what form it has are the simulation's; [noise made once on the GPU](../@game/src/clouds/fn/noiseVolumes.ts) places only the structure below a weather cell, at exactly the simulated cover ([density](../@game/src/clouds/constant/density.ts)). [Rain and snow](../@game/src/weather/service/Precipitation.ts) fall at the simulated rates and wind. Three's WebGL 2 fallback runs no compute shaders and draws neither clouds nor sun shadows.
 
 ## Map
 
@@ -106,6 +104,6 @@ The [overlay](../@game/src/map/service/WorldMap.ts) asks for a coarse chart of a
 
 `DERIVEAN_CAPTURE=<plan.json> mise run play` starts the app without the launcher, walks the shots of a [capture plan](../@game/src/capture/type/CapturePlan.ts), writes a PNG and a JSON record per shot, and quits. It exits non-zero when the run fails or hangs.
 
-A shot waits for the world to settle. When nothing has arrived for a while and the engine still reports unfinished tiles, it is taken anyway and its record says `stalled`. Every record carries `dataLevels`, the share of the ground round the eye that the simulation held at site, local and region detail; below 1 the picture shows coarser stand-ins somewhere.
+A shot waits for the world to settle. When nothing has arrived for a while and the engine still reports unfinished tiles, it is taken anyway and its record says `stalled`. Every record carries `dataLevels`, the share of the ground round the eye that the simulation held at site, local and region detail; below 1 the picture shows coarser stand-ins somewhere. A shot can also fly a cruise for frame times, or hold the brush to dig or place before it is taken, for pieces, particles and voxel water.
 
 [`@game/capture/look.json`](../@game/capture/look.json) is the set the ground's look is judged by against the [reference landscapes](reference-landscapes.md): one place from the ground and from 300 m, 2 km and 8 km, towards the four compass points, under a high and a low sun; one fixed view of a mountain range for comparing rounds; and two half-minute boost flights, with and without clouds, whose records carry the frame times.

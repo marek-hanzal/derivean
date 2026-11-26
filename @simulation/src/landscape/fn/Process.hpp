@@ -6,8 +6,9 @@
 
 namespace derivean::sim {
 
-// Working arrays of the steps of one replay, allocated once. `retreated`, `left` and the soundness
-// arrays carry over from step to step, so a scratch belongs to one domain for the whole replay.
+// Working arrays of the steps of one replay, allocated once. `retreated`, `left`, `parentLift` and
+// the soundness arrays carry over from step to step, so a scratch belongs to one domain for the
+// whole replay.
 struct FlowScratch {
     std::vector<float> share;                    // cells × 8: part of a cell's outflow that leaves towards each neighbour
     std::vector<float> next;                     // m, surface after cutting and filling
@@ -22,7 +23,7 @@ struct FlowScratch {
     std::vector<float> broke;                    // m of rock each cell lost to failure this step
     std::vector<float> blurA, blurB;
     std::vector<float> work;                     // m, surface the slope processes of a step work on
-    std::vector<int32_t> byHeight, spare;        // cells from the lowest up, as that surface stood before anything fell
+    std::vector<int32_t> byHeight, spare;        // cells from the lowest up, by the surface the pass that sorted them worked on
     std::vector<int32_t> foot;                   // cell at the foot of the slope each cell stands on
     std::vector<float> retreated;                // m the free face of each column has weathered back since the column last came down
     double left{};                               // m³ of debris that slid onto cells that do not evolve, over the whole replay and domain
@@ -32,6 +33,7 @@ struct FlowScratch {
     std::vector<float> travelled;                // routing only: the way a cell's inflow has come, summed over that inflow
     std::vector<float> gathered;                 // m³/yr of a cell's water beyond the sheet a plane of the same length would bring it
     std::vector<float> delivered[SedimentClasses];   // m of broken rock a cell hands to its water this step; empty where debris stays as talus
+    std::vector<float> parentLift;               // m/yr, a finer level's rock uplift as its parent handed it over; set at the first step of a led replay, empty otherwise
 };
 
 // Rows.cpp — runs `body(begin, end)` over the rows [0, count) of a domain: spread over its pool
@@ -95,24 +97,22 @@ inline constexpr float ChannelHead = 3000.0f;          // m³/yr below which run
 // A cell of the coarser levels is far wider than the rills on it and hides them; a ground cell is
 // a rill's width, so there the water of a few tens of square metres already cuts.
 inline constexpr float GroundChannelHead = 60.0f;
-// A level cuts only the valleys it can draw. Below the water of a few of its cells the ground is
-// slope, not channel: a Region cell of a square kilometre holds its headwater streams inside
-// itself, a Local cell its gullies, a Site cell its rills. Rock there is lowered by the slope
-// processes in step with the valley it falls to; the channels it hides belong to the next level.
-// Site: twice what the longest slope inside one tile gathers as a sheet. With the little creep bare
-// ground has, less would let the sheet itself rill a featureless slope.
-inline constexpr float ChannelHeads[LevelCount] = {0, 2.5e7f, ChannelHead, 2.0f * ChannelHead, GroundChannelHead};
+// A level cuts only the valleys it can draw. Below the water of a few tens of its cells the ground
+// is slope, not channel: a Region cell of a square kilometre holds its headwater streams inside
+// itself, a Local cell its gullies, a Site cell its rills. Rock there is lowered at the pace of the
+// largest stream it hides; the channels it hides belong to the next level. Region: about 28 km²
+// under a metre of runoff; Local: about 0.1 km², some 25 of its cells; Site: 400 m², 25 cells.
+inline constexpr float ChannelHeads[LevelCount] = {0, 2.5e7f, 1.0e5f, 400.0f, GroundChannelHead};
 inline constexpr float channelHeadOf(Level level) { return ChannelHeads[size_t(level)]; }
-// The Region level draws its valleys by the water a cell has gathered beyond the sheet any slope
-// carries, lowers the ground between them at the pace of the streams a cell hides, and lets a stream
-// keep to one drawn path. The Local and Site levels cut with all the water of a cell from one
-// cell's worth upwards: under the settling controller the gathered-water rule ribs a held plane at
-// the width of the controller's average (test/LandscapePlane.cpp), so it is not used there.
-inline constexpr bool gathersWater(Level level) { return level == Level::Region; }
-// m³/yr of the largest stream a Region cell holds inside itself where a metre of water runs off in
-// a year: a headwater stream. A cell that has gathered less water than a channel of the level is
-// lowered at the pace such a stream cuts on the cell's slope.
-inline constexpr float HiddenStreams[LevelCount] = {0, 2.5e7f, 0, 0, 0};
+// The Region, Local and Site levels draw their valleys by the water a cell has gathered beyond the
+// sheet any slope carries, lower the ground between them at the pace of the streams a cell hides,
+// and let a stream keep to one drawn path. Ground cuts with all the water of a cell.
+inline constexpr bool gathersWater(Level level) { return level != Level::Ground; }
+// m³/yr of the largest stream a cell holds inside itself where a metre of water runs off in a year:
+// a stream just short of a channel of the level. A cell that has gathered less water than that is
+// lowered at the pace such a stream cuts on the cell's slope. A Site cell is a few metres wide and
+// hides rills at most: its slopes are lowered by the weather, creep and failure alone.
+inline constexpr float HiddenStreams[LevelCount] = {0, 2.5e7f, 1.0e5f, 0, 0};
 // A ground cell also meets a slope's water as it comes: in storms, at many times the yearly mean
 // the discharge stands for. The less water a cell gathers the flashier it is; a stream of the size
 // the coarser levels cut with carries its mean most of the time, and the gain is gone.

@@ -1,4 +1,4 @@
-import { Euler, Vector3 } from "three";
+import { Euler, Vector3 } from "three/webgpu";
 import type { BrushShape, Frame, Point, WorldInfo } from "../../../contract/GameBridge";
 import type { Pilot, Steering } from "../type/Pilot";
 

@@ -4,7 +4,6 @@
 #include "PlanetSession.hpp"
 
 #include <cmath>
-#include <unordered_set>
 
 using namespace derivean;
 
@@ -110,6 +109,37 @@ int sideCubes(const std::vector<Quad>& quads, int sign, int z) {
     return cubes;
 }
 
+// On a slope gentle enough to hold its cover, the side of a step is that cover: a step between
+// columns stands for the slope, not for a cut into the beds under it. Returns the risers compared.
+size_t risersCarryCover(const sim::World& world, CubeKey key, const std::vector<Quad>& quads) {
+    const double edge = edgeOf(key.level);
+    std::vector<int> material(size_t(CubeSide) * CubeSide, 0);
+    for (const Quad& quad : quads)
+        if (quad.axis == 1 && quad.sign > 0)
+            for (int x = quad.v; x < quad.v + quad.height; ++x)
+                for (int z = quad.u; z < quad.u + quad.width; ++z) material[size_t(z) * CubeSide + x] = quad.material;
+    SurfaceReader reader = surfaceReader(world, cubeSource(key.level));
+    const auto ground = [&](int x, int z) { return surfaceEased(reader, {(key.x * CubeSide + x + 0.5) * edge, (key.z * CubeSide + z + 0.5) * edge}); };
+    size_t compared = 0;
+    for (const Quad& quad : quads) {
+        if (quad.axis == 1) continue;
+        // The solid cube behind a side face, and the column it stands in.
+        const int across = quad.plane - (quad.sign > 0 ? 1 : 0);
+        for (int along = 0; along < (quad.axis == 0 ? quad.height : quad.width); ++along) {
+            const int x = quad.axis == 0 ? across : quad.u + along, z = quad.axis == 0 ? quad.v + along : across;
+            if (x < 0 || z < 0 || x >= CubeSide || z >= CubeSide) continue;
+            const sim::SurfaceSample here = ground(x, z);
+            const double slope = std::hypot(ground(x + 1, z).ground - ground(x - 1, z).ground, ground(x, z + 1).ground - ground(x, z - 1).ground) / (2 * edge);
+            const Material top = Material(material[size_t(z) * CubeSide + x]);
+            const bool cover = top != Material::Ice && here.ground - here.rock > 0.1f;
+            if (slope > 0.9 || !cover) continue;
+            ++compared;
+            expect(quad.material == int(top), "A step on a covered gentle slope shows the beds instead of the cover");
+        }
+    }
+    return compared;
+}
+
 // Chunks are cut alone and must still fit: tops follow the rule, neighbours close the wall between
 // them, and water lies in its basin.
 void chunksFit(const sim::World& world, Position around) {
@@ -149,49 +179,18 @@ void chunksFit(const sim::World& world, Position around) {
                     }
                 }
         }
-        std::cout << "cubes of " << edge << " m: " << here.faces << " faces in " << here.chunks.size() << " chunks, " << water.size() << " sheets, built in "
+        const size_t risers = risersCarryCover(world, key, quads);
+        std::cout << "cubes of " << edge << " m: " << risers << " risers on covered gentle slopes, " << here.faces << " faces in " << here.chunks.size() << " chunks, " << water.size() << " sheets, built in "
                   << here.milliseconds << " ms from data level " << int(here.chunks.front().dataLevel) << "\n";
     }
 }
 
-struct Held {
-    std::unordered_map<uint32_t, CubeChunk> byId;   // without their faces
-    std::unordered_map<Cell, int, CellHash> keys;   // {x, level, z}: chunks held over that square of ground
-};
-
-// Applies a frame's delta as a renderer would and checks what the frame promises: no chunk twice,
-// boxes nested, and every level whole inside its box and a band beyond.
+// Applies a frame of a far view of the test's own as a renderer would, with the checks of a session's frames.
 void follow(FarCubes& far, Held& held, Nature& nature, Position eye, double clearance, double speed) {
     CubeDelta delta;
     advanceCubes(far, nature, eye, clearance, speed, delta);
-    for (uint32_t id : delta.removed) {
-        const auto chunk = held.byId.find(id);
-        expect(chunk != held.byId.end(), "A cube chunk was removed that was never added");
-        const Cell square{chunk->second.at.x, chunk->second.level, chunk->second.at.z};
-        if (--held.keys[square] == 0) held.keys.erase(square);
-        held.byId.erase(chunk);
-    }
-    // A square of ground is swapped whole: what was held over it is gone before the new chunks count.
-    std::unordered_set<Cell, CellHash> arrived;
-    for (const CubeChunk& chunk : delta.added) {
-        const Cell square{chunk.at.x, chunk.level, chunk.at.z};
-        expect(held.byId.emplace(chunk.id, CubeChunk{chunk.id, chunk.level, chunk.at, {}, {}, chunk.dataLevel}).second, "A cube chunk id was used twice");
-        if (arrived.insert(square).second) expect(!held.keys.contains(square), "Two builds of one square of ground are held at once");
-        for (const auto& [id, other] : held.byId) expect(id == chunk.id || other.level != chunk.level || !(other.at == chunk.at), "Two cube chunks fill the same place");
-        ++held.keys[square];
-        expect(chunk.dataLevel <= uint8_t(cubeSource(chunk.level)), "A cube chunk reads finer data than its cubes can show");
-    }
-    double outer = std::numeric_limits<double>::max();
-    for (int level = CoarsestCubes; level >= FinestCubes; --level) {
-        const CubeLevel& state = far.levels[size_t(level - FinestCubes)];
-        if (!state.box) { outer = 0; continue; }
-        const double side = state.box->max[0] - eye[0], size = CubeSide * edgeOf(level), reach = side + CubeBand * edgeOf(level);
-        expect(side <= outer + 1e-6, "The box of a finer level reaches beyond the coarser one");
-        outer = side;
-        for (int z = int(std::floor((eye[2] - reach) / size)); z <= int(std::floor((eye[2] + reach) / size)); ++z)
-            for (int x = int(std::floor((eye[0] - reach) / size)); x <= int(std::floor((eye[0] + reach) / size)); ++x)
-                expect(held.keys.contains({x, level, z}), "A level's box reaches over ground the renderer holds no chunk for");
-    }
+    hold(held, delta);
+    checkBoxes(far, held, eye);
 }
 
 template<typename Done>

@@ -1,5 +1,7 @@
 #include "aeolian/fn/Wind.hpp"
 
+#include "hydrology/constant/Water.hpp"
+
 namespace derivean::sim {
 namespace {
 
@@ -11,10 +13,11 @@ constexpr double Freeboard = 0.05;   // m the salt floor stays below the rim
 
 } // namespace
 
-// The flood fills every hollow to its spill and the routing then takes evaporation off the water
-// as it crosses the hollow, so a basin whose water never reaches the spill is known by an outlet
-// that passes none. What flowed in has left as vapour, and the salt it carried lies on the lowest
-// ground of the basin.
+// The flood fills every hollow to its spill. A basin is terminal when what flows into it is no more
+// than the whole of that surface gives back to the air: its real lake would stand lower, at the
+// level where the two balance, and never spill. The routing evaporates a lake only along the one
+// path its water takes to the outlet, so its outlet flow cannot say this. What flowed in has left as
+// vapour, and the salt it carried lies on the lowest ground of the basin.
 void dryBasins(Domain& domain, FlowScratch& scratch) {
     WindField& wind = domain.aeolian;
     const size_t cells = domain.cells();
@@ -24,7 +27,7 @@ void dryBasins(Domain& domain, FlowScratch& scratch) {
     std::vector<int32_t> basin(cells, -1), members, stack;
     std::vector<float> inflow;
     std::vector<int32_t> first;   // start of each basin's cells in `members`
-    const auto standing = [&](size_t i) { return domain.level[i] > domain.surface[i] + 1e-3f && domain.level[i] > sea + 0.5f; };
+    const auto standing = [&](size_t i) { return underFlood(domain, i) && domain.level[i] > sea + 0.5f; };
     // The ground as the step's cutting and filling left it; `surface` is still the one the flood ran on.
     const auto ground = [&](size_t i) { return domain.ground.rock[i] + domain.sedimentAt(i); };
     for (size_t seed = 0; seed < cells; ++seed) {
@@ -47,7 +50,9 @@ void dryBasins(Domain& domain, FlowScratch& scratch) {
     }
     first.push_back(int32_t(members.size()));
     inflow.assign(first.size(), 0.0f);
+    std::vector<float> vapour(first.size(), 0.0f);   // m³/yr the full lake surface can lose
     for (size_t i = 0; i < cells; ++i) {
+        if (basin[i] >= 0) vapour[size_t(basin[i])] += std::max(0.0f, evaporationDemand(domain.warmthNow[i]) - domain.rain[i]) * area;
         if (basin[i] >= 0) inflow[size_t(basin[i])] += domain.runoff[i] * area;
         for (int k = 0; k < 8; ++k) {
             if (scratch.share[i * 8 + size_t(k)] <= 0 || basin[i] >= 0) continue;
@@ -64,16 +69,23 @@ void dryBasins(Domain& domain, FlowScratch& scratch) {
             if (domain.rank[size_t(*it)] < domain.rank[size_t(outlet)]) outlet = *it;
         }
         // A basin that spills, or one this domain sees only part of, keeps its salt in solution.
-        if (!whole || domain.discharge[size_t(outlet)] > 0 || inflow[id] <= 0) continue;
+        if (!whole || inflow[id] > vapour[id] || inflow[id] <= 0) continue;
         // Brine stands level, so its salt builds a level floor from the lowest ground up: thin and
-        // wide rather than thick and narrow, and never above the rim the water would spill over.
+        // wide rather than thick and narrow. The lake that balances its inflow covers only the
+        // lowest ground of the hollow, so the floor stays inside it and below the ground that rises
+        // out of it; what does not fit stays in solution.
         std::sort(begin, end, [&](int32_t a, int32_t b) { return ground(size_t(a)) != ground(size_t(b)) ? ground(size_t(a)) < ground(size_t(b)) : a < b; });
+        long pan = 0;
+        for (float lost = 0; pan < end - begin && lost < inflow[id]; ++pan) {
+            const size_t i = size_t(begin[pan]);
+            lost += std::max(0.0f, evaporationDemand(domain.warmthNow[i]) - domain.rain[i]) * area;
+        }
         const double given = std::max(0.0, domain.ledger.dissolved - wind.ledger.salt);
         const double volume = std::min(given, double(SoluteLoad) * inflow[id] * dt) / area;   // m over one cell
-        const double rim = double(domain.level[size_t(outlet)]) - Freeboard;
+        const double rim = std::min(double(domain.level[size_t(outlet)]) - Freeboard, pan < end - begin ? double(ground(size_t(begin[pan]))) : 1e30);
         double floor = ground(size_t(*begin)), used = 0;
         long under = 1;
-        for (; under < end - begin; ++under) {
+        for (; under < pan; ++under) {
             const double step = (std::min(rim, double(ground(size_t(begin[under])))) - floor) * double(under);
             if (used + step > volume || step < 0) break;
             used += step, floor = std::min(rim, double(ground(size_t(begin[under]))));

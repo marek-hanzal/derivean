@@ -10,9 +10,11 @@ namespace {
 
 // A tile's dune field is the transport model run for this much wind work on the sand its parent
 // hands down: long enough for the forms of its own cell size to stand in balance with wind and
-// supply, far shorter than the time its water and slopes settle over. Dunes move on; the field is
-// one moment of a state that keeps its statistics.
-constexpr double Span[LevelCount] = {0, 0, 40e3, 100.0, 0};   // yr
+// supply (the model needs a few hundred rounds from a smooth start), far shorter than the time its
+// water and slopes settle over. Dunes move on; the field is one moment of a state that keeps its
+// statistics. A century, tried first, gave a Site field under a moderate wind under two hundred
+// rounds: cell-sized lumps where the field should have ridges.
+constexpr double Span[LevelCount] = {0, 0, 40e3, 3000.0, 0};   // yr
 constexpr int Hop = 4;                  // cells
 constexpr float SlabShare = 0.1f;       // of a cell: the slab of a thick field
 constexpr float SlabsDeep = 8.0f;       // slabs the sand of a thinner field is deep where it lies

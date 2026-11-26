@@ -136,12 +136,14 @@ void routeSand(Domain& domain, const WindGraph& graph, std::vector<float>& raise
     for (size_t i = 0; i < cells; ++i) wind.ledger.dustRaised += double(raised[i]) * area;
 }
 
+bool lastStep(const Domain& domain) { return domain.time + 1.5 * domain.step >= domain.endTime; }
+
 void blowLoose(Domain& domain, FlowScratch& scratch) {
     if (domain.key.level == Level::Ground) return;
     if (domain.aeolian.labels.blown.size() != domain.cells()) allocateWind(domain);
     if (domain.key.level != Level::Region) {
         // The finer levels settle; their wind works once, on what has settled.
-        if (domain.time + 1.5 * domain.step >= domain.endTime) shapeDunes(domain);
+        if (lastStep(domain)) shapeDunes(domain);
         return;
     }
     WindField& wind = domain.aeolian;
@@ -156,9 +158,16 @@ void blowLoose(Domain& domain, FlowScratch& scratch) {
     routeSand(domain, graph, raised);
     settleDust(domain, graph, raised);
     // Until the last step what the wind has laid waits beside the ground for the wind's next turn.
-    if (domain.time + 1.5 * domain.step >= domain.endTime) return;
+    // Not where water or ice holds it or a channel runs over it: there it is the water's to take, and
+    // what lies there is no longer the wind's.
+    if (lastStep(domain)) return;
+    const float channel = ChannelHeads[size_t(domain.key.level)];
     for (size_t i = 0; i < domain.cells(); ++i) {
         if (domain.hold[i] != Free) continue;
+        if (heldByWater(domain, i) || domain.discharge[i] >= channel) {
+            wind.labels.blown[i] = wind.labels.loess[i] = 0;
+            continue;
+        }
         wind.parked[i] = std::min(wind.labels.blown[i], std::max(0.0f, domain.ground.sediment[Sand][i]));
         wind.parkedLoess[i] = std::min(wind.labels.loess[i], std::max(0.0f, domain.ground.sediment[Fines][i] - wind.labels.salt[i]));
         domain.ground.sediment[Sand][i] -= wind.parked[i], domain.ground.sediment[Fines][i] -= wind.parkedLoess[i];

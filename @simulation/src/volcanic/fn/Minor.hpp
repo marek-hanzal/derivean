@@ -14,9 +14,20 @@ struct MinorEvent {
     Rheology rheology;   // of that lava
 };
 
-// Share of an episode that comes up in such eruptions; none of an episode older than the local
+// m³ of an episode that comes up in such eruptions; none of an episode older than the local
 // level's settling time, whose small cones no longer stand.
-double minorShare(const Vent& vent, const Episode& episode);
+double minorVolume(const Vent& vent, const Episode& episode);
+
+// m³ of one such eruption, in the mean.
+double minorSize(Magma magma);
+
+// How a small eruption divides: the share of fragments that build its cone, and its lava, which
+// sets within sight of its vent however fluid. `summit`: it comes up the main conduit.
+struct MinorStyle {
+    double cone{};
+    Rheology lava;
+};
+MinorStyle minorStyle(Magma magma, bool summit);
 
 // The minor eruptions of a vent dated after `from` and up to `to`, in order of time.
 void minorEvents(uint64_t seed, const Vent& vent, double from, double to, std::vector<MinorEvent>& into);

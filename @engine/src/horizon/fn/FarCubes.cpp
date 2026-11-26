@@ -15,6 +15,8 @@ constexpr size_t AuditSlice = 64;        // shown chunks compared with the finis
 constexpr int BelowVoxels = 64;          // what a build's priority lies under that of the voxels round the player
 
 double reachOf(const FarCubes& far, int level) { return level == CoarsestCubes ? CubeView : far.reach * edgeOf(level); }
+// Metres from the eye within which a column of chunks can show: the level's box at full reach and the band beyond it.
+double sightOf(const FarCubes& far, int level) { return reachOf(far, level) + CubeBand * edgeOf(level); }
 CubeLevel& levelOf(FarCubes& far, int level) { return far.levels[size_t(level - FinestCubes)]; }
 int ringOf(Cell a, Cell b) { return std::max(std::abs(a.x - b.x), std::abs(a.z - b.z)); }
 // Columns from the eye's own to the last one built: the level's reach and a margin.
@@ -152,6 +154,23 @@ void show(FarCubes& far, CubeDelta& delta) {
 
 } // namespace
 
+double cubeDataReach(const FarCubes& far, sim::Level source) {
+    double reach = 0;
+    for (int index = FinestCubes; index <= CoarsestCubes; ++index)
+        if (cubeSource(index) == source)
+            reach = std::max(reach, sightOf(far, index) + CubeSide * edgeOf(index) + cubeReadMargin(index));
+    // A finer level reads coarser data only where its own source is missing, and never as far out as
+    // the levels cut from that coarser source reach.
+    return reach;
+}
+
+double cubeCeiling(const FarCubes& far, sim::Level source) {
+    double ceiling = 0;
+    for (int index = FinestCubes; index <= CoarsestCubes; ++index)
+        if (cubeSource(index) == source) ceiling = std::max(ceiling, reachOf(far, index) * KeepFactor);
+    return ceiling;
+}
+
 void advanceCubes(FarCubes& far, Nature& nature, Position eye, double clearance, double speed, CubeDelta& delta) {
     receive(far);
     for (int index = CoarsestCubes; index >= FinestCubes; --index) {
@@ -173,13 +192,16 @@ void advanceCubes(FarCubes& far, Nature& nature, Position eye, double clearance,
         level.settled = level.held = level.wanted = 0;
         if (!level.active) { outer = 0; continue; }
         double side = std::min(outer, reachOf(far, index));
-        const int load = loadOf(far, index);
+        // What the level wants is what it can show at full reach; the margin built beyond that is
+        // there for an eye on the move and holds no readiness back.
+        const double sight = sightOf(far, index);
         for (const auto& [chunk, slot] : level.slots) {
-            if (slot.shown.empty()) side = std::min(side, squareDistance(eye, index, chunk) - CubeBand * edgeOf(index));
-            if (ringOf(chunk, level.centre) > load) continue;
+            const double distance = squareDistance(eye, index, chunk);
+            if (slot.shown.empty()) side = std::min(side, distance - CubeBand * edgeOf(index));
+            if (distance >= sight) continue;
             ++level.wanted;
             level.held += !slot.shown.empty();
-            level.settled += !slot.shown.empty() && slot.dataLevel >= uint8_t(cubeSource(index)) && !slot.stale && !slot.ticket && !slot.built;
+            level.settled += !slot.shown.empty() && cubeFinal(index, slot.detail) && !slot.stale && !slot.ticket && !slot.built;
         }
         far.missing += level.wanted - level.settled;
         outer = std::max(side, 0.0);

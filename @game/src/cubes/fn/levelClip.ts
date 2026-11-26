@@ -7,7 +7,7 @@ import type { FaceNodes } from "./faceNodes";
 
 // The rows of a fragment's level and the cube edge among them.
 export function levelRows(table: LevelTable, face: FaceNodes) {
-  const first = int(face.field(Face.level, 4)).mul(LevelRows);
+  const first = int(face.field(Face.level)).mul(LevelRows);
   const row = (index: number): Node<"vec4"> => table.node.element(first.add(index));
   return { row, edge: row(0).w };
 }

@@ -35,10 +35,10 @@ struct CubeLevel {
     Cell centre{};                                         // column {x, 0, z} the eye was in when the level was planned
     std::unordered_map<Cell, CubeSlot, CellHash> slots;    // every column the level wants, by {x, 0, z}
     std::vector<Cell> todo;                                // columns to build, the nearest last
-    size_t wanted{};                                       // columns within the level's reach and the margin built round it
+    size_t wanted{};                                       // columns reaching into the level's box at full reach and its band
     size_t shown{};                                        // columns the renderer holds
     size_t held{};                                         // of the wanted columns, those the renderer holds
-    size_t settled{};                                      // of those, cut from the data the level wants and not due for a rebuild
+    size_t settled{};                                      // of those, read from the level's source all over and not due for a rebuild
     std::optional<LevelBox> box;                           // where the level may be drawn this frame
     size_t builds{};                                       // chunks built so far, the time that took and their faces
     double buildMs{};
@@ -69,6 +69,14 @@ struct CubeDelta {
     std::vector<CubeChunk> added;
     std::vector<uint32_t> removed;
 };
+
+// Metres around the eye over which the levels cut from `source` read its tiles: every column whose
+// square reaches into a level's box at full reach, with the ring of cubes around a column that its
+// faces, shores and easing look at. Tiles asked for over this distance are all the view needs.
+double cubeDataReach(const FarCubes& far, sim::Level source);
+
+// Metres of clearance above the ground up to which a level cut from `source` can be in use.
+double cubeCeiling(const FarCubes& far, sim::Level source);
 
 // One frame of the far view around `eye`, which stands `clearance` metres above the ground and
 // moves at `speed` metres a second; fills `delta` with what the renderer must add and drop.

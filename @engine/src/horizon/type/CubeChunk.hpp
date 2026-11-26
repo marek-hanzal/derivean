@@ -67,6 +67,15 @@ sim::Level cubeSource(int level);
 // column's once finer tiles have finished anywhere the column reads.
 uint64_t cubeDetail(const sim::World& world, CubeKey key);
 
+// True when `detail` says the column's ground was read from its source level all over: the corners
+// of the square it reads touch every tile under it, and with all of them finished nothing is eased
+// towards coarser data.
+bool cubeFinal(int level, uint64_t detail);
+
+// Metres beyond its square that a column of chunks of `level` reads its source level's tiles over:
+// the cubes its faces, shores and water sample, and the cells easing looks across.
+double cubeReadMargin(int level);
+
 // Cuts a column of chunks from the finished tiles, and from the planet's own grid where there are
 // none yet; never blocks. Safe off the game thread. A column of cubes depends on the world alone,
 // so columns of chunks that share a border agree on it.

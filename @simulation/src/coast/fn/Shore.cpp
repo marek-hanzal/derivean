@@ -5,6 +5,7 @@ namespace {
 
 // Passes of the eight trains over the sand and gravel of a shore per step.
 constexpr int Rounds[LevelCount] = {0, 3, 4, 4, 0};
+constexpr float RateWeight = 0.4f;
 
 float looseAt(const Domain& domain, size_t i) { return domain.ground.sediment[0][i] + domain.ground.sediment[1][i] + domain.ground.sediment[2][i]; }
 
@@ -15,8 +16,9 @@ float looseAt(const Domain& domain, size_t i) { return domain.ground.sediment[0]
 void book(Domain& domain, Shore& shore, const std::vector<float>& cutBefore) {
     const float dt = float(domain.step);
     const double area = domain.cell * domain.cell;
-    for (int z = shore.minZ; z <= shore.maxZ; ++z) {
-        for (int x = shore.minX; x <= shore.maxX; ++x) {
+    // Over the whole domain: mud sinks wherever its cloud ends, which may lie outside the shore's box.
+    for (int z = 0; z < domain.size; ++z) {
+        for (int x = 0; x < domain.size; ++x) {
             const size_t i = domain.index(x, z);
             if (domain.hold[i] != Free) continue;
             const float broken = shore.cut[i] - cutBefore[i], gained = looseAt(domain, i) - shore.before[i];
@@ -28,8 +30,10 @@ void book(Domain& domain, Shore& shore, const std::vector<float>& cutBefore) {
             domain.trend[i] += gained - broken;
             domain.eroded[i] += lost;
             domain.deposited[i] += won;
-            domain.erosionRate[i] += 0.4f * lost / dt;
-            domain.depositionRate[i] += 0.4f * won / dt;
+            // The rates are moving averages (landscape/fn/Fluvial.cpp keeps them with the same share
+            // per step): the waves' work of one step enters them as that share of its rate.
+            domain.erosionRate[i] += RateWeight * lost / dt;
+            domain.depositionRate[i] += RateWeight * won / dt;
             if (!domain.owned(x, z)) continue;
             domain.ledger.eroded += double(lost) * area;
             domain.ledger.deposited += double(won) * area;
@@ -76,7 +80,12 @@ bool readStanding(const Domain& domain, Shore& shore) {
 bool spreadWater(const Domain& domain, Shore& shore) {
     const int size = domain.size;
     std::vector<int32_t> reached;
+    // Trains, surf and loads belong to the water of this step only: a cell outside its box must not
+    // keep what an earlier, larger water left there.
     std::fill(shore.still.begin(), shore.still.end(), NoWater);
+    for (auto* field : {&shore.wave, &shore.arrive}) std::fill(field->begin(), field->end(), 0.0f);
+    std::fill(shore.surf.begin(), shore.surf.end(), uint8_t(0));
+    for (auto& load : shore.load) std::fill(load.begin(), load.end(), 0.0f);
     for (size_t i = 0; i < domain.cells(); ++i)
         if (shore.stood[i] != NoWater && shore.stood[i] > shore.top[i]) shore.still[i] = shore.stood[i], reached.push_back(int32_t(i));
     if (reached.empty()) {
@@ -88,13 +97,16 @@ bool spreadWater(const Domain& domain, Shore& shore) {
         const int32_t cell = reached[next];
         const int x = cell % size, z = cell / size;
         minX = std::min(minX, x), maxX = std::max(maxX, x), minZ = std::min(minZ, z), maxZ = std::max(maxZ, z);
-        const float water = shore.still[size_t(cell)];
-        if (water + swingOf(domain, water) + HighestBerm <= shore.top[size_t(cell)]) continue;   // struck, never crossed
+        const float water = shore.still[size_t(cell)], swing = swingOf(domain, water);
+        if (water + swing + HighestBerm <= shore.top[size_t(cell)]) continue;   // struck, never crossed
         for (int k = 0; k < 8; ++k) {
             const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
             if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
             const size_t other = domain.index(nx, nz);
             if (shore.still[other] != NoWater) continue;
+            // Dry ground deeper under the water than its low stand lies beyond the water's sill,
+            // down the river it spills into: the water does not stand there.
+            if (shore.stood[other] == NoWater && shore.top[other] < water - swing) continue;
             shore.still[other] = water;
             reached.push_back(int32_t(other));
         }
@@ -106,6 +118,7 @@ bool spreadWater(const Domain& domain, Shore& shore) {
 
 void workShores(Domain& domain, FlowScratch&) {
     if (domain.key.level == Level::Ground) return;
+    const bool last = domain.time + 1.5 * domain.step > domain.endTime;
     if (!domain.shore) {
         // Most ground stands dry: nothing is set up until water is found.
         bool any = false;
@@ -113,27 +126,30 @@ void workShores(Domain& domain, FlowScratch&) {
         if (!any) return;
     }
     Shore& shore = shoreOf(domain);
-    if (!readStanding(domain, shore) || !spreadWater(domain, shore)) return;
+    readStanding(domain, shore);
+    const bool water = spreadWater(domain, shore);
+    // With the water gone a shore has nothing to do but lay down, in the last step, what still waits in its surf.
+    if (!water && !last) return;
     for (size_t i = 0; i < domain.cells(); ++i) shore.before[i] = looseAt(domain, i);
     const std::vector<float> cutBefore = shore.cut;
-    const int rounds = Rounds[size_t(domain.key.level)];
-    const bool dated = domain.key.level == Level::Region;
-    const double years = dated ? std::min(domain.step, StandTime) : StandTime * domain.step / std::max(domain.step, domain.endTime - domain.startTime);
-    // One sea for the whole step: within a step the waves work on what they found, and a face
-    // that comes down lays bare the next one for the step after.
-    raiseWaves(domain, shore);
-    findSurf(domain, shore);
-    cutCliffs(domain, shore, years);
-    for (int round = 0; round < rounds; ++round) moveSand(domain, shore, round);
-    // Broken rock still in the surf when the replay ends is laid where it waits, up to high
-    // water; the rest has gone beyond the reach of this domain's waves.
-    if (domain.time + 1.5 * domain.step > domain.endTime) {
+    if (water) {
+        const int rounds = Rounds[size_t(domain.key.level)];
+        const bool dated = domain.key.level == Level::Region;
+        const double years = dated ? std::min(domain.step, StandTime) : StandTime * domain.step / std::max(domain.step, domain.endTime - domain.startTime);
+        raiseWaves(domain, shore);
+        cutCliffs(domain, shore, years);
+        findSurf(domain, shore);
+        for (int round = 0; round < rounds; ++round) moveSand(domain, shore, round);
+    }
+    // Broken rock still in the surf when the replay ends is laid where it waits, up to high water
+    // (all of it where the water has gone); the rest has gone beyond the reach of this domain's waves.
+    if (last) {
         const double area = domain.cell * domain.cell;
         for (size_t i = 0; i < domain.cells(); ++i)
             for (const int kind : {Sand, Coarse}) {
                 float& waiting = shore.pending[kind][i];
                 if (waiting <= 0) continue;
-                const float laid = std::clamp(shore.still[i] + swingOf(domain, shore.still[i]) - shore.top[i], 0.0f, waiting);
+                const float laid = shore.still[i] == NoWater ? waiting : std::clamp(shore.still[i] + swingOf(domain, shore.still[i]) - shore.top[i], 0.0f, waiting);
                 domain.ground.sediment[kind][i] += laid, shore.top[i] += laid;
                 shore.ledger.left += double(waiting - laid) * area;
                 if (domain.owned(int(i % size_t(domain.size)), int(i / size_t(domain.size)))) domain.ledger.sedimentOut += double(waiting - laid) * area;

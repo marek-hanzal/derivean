@@ -152,6 +152,14 @@ Game::Game(const PlanetOptions& options) : nature(NatureOptions{options.seed, op
         cubes.emplace();
         cubes->reach = std::clamp(options.cubeReach, 64, 256);
         cubes->finished = std::make_shared<Mailbox<CubeColumn>>();
+        // The tiles the view wants are the ones its levels read; the ground level also feeds the voxels.
+        for (const sim::Level level : {sim::Level::Local, sim::Level::Site}) {
+            nature.tiles.reach[size_t(level)] = cubeDataReach(*cubes, level);
+            nature.tiles.ceiling[size_t(level)] = cubeCeiling(*cubes, level);
+        }
+        nature.tiles.reach[size_t(sim::Level::Region)] = cubeDataReach(*cubes, sim::Level::Region);
+        nature.tiles.reach[size_t(sim::Level::Ground)] = std::max(GroundReach, cubeDataReach(*cubes, sim::Level::Ground));
+        nature.tiles.ceiling[size_t(sim::Level::Ground)] = std::max(GroundCeiling, cubeCeiling(*cubes, sim::Level::Ground));
     }
     colliders.finished = std::make_shared<Mailbox<ShapeResult>>();
     spawn = findSpawn(nature.world, options.spawn);

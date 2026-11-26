@@ -60,11 +60,25 @@ void checkBudget() {
     cover(domain, 140, 150, 0.0f, 2.0f, 0.0f);    // sand under a lake
     for (int z = 1; z < domain.size - 1; ++z)
         for (int x = 140; x < 150; ++x) domain.level[domain.index(x, z)] = 105.0f, domain.discharge[domain.index(x, z)] = 1e9f;
+    // A ridge across the wind: the sand that reaches the stall before it stays there.
+    for (int z = 1; z < domain.size - 1; ++z)
+        for (int x = 80; x < 83; ++x) {
+            const size_t i = domain.index(x, z);
+            domain.ground.rock[i] = domain.surface[i] = domain.level[i] = 400.0f;
+        }
     const int row = domain.size / 2;
     const auto at = [&](int x) { return domain.index(x, row); };
     expect(mobileSand(domain, at(50)) == 2.0f && std::abs(mobileSand(domain, at(105)) - LagArmour * 2.0f / 0.5f) < 1e-5f, "the wind's share of a cover is wrong", mobileSand(domain, at(105)));
     expect(heldByWater(domain, at(145)) && !heldByWater(domain, at(50)), "water was not told from dry ground");
 
+    // Sand on the ground and parked beside it: it changes only by what crosses the edge.
+    const auto stock = [&] {
+        double sum = 0;
+        for (size_t i = 0; i < domain.cells(); ++i)
+            if (domain.hold[i] == Free) sum += double(domain.ground.sediment[Sand][i]) + domain.aeolian.parked[i];
+        return sum * domain.cell * domain.cell;
+    };
+    const double start = stock();
     blowLoose(domain, scratch);
     const WindLabels& labels = domain.aeolian.labels;
     expect(domain.ground.sediment[Sand][at(50)] < 0.01f, "clean dry sand in a strong wind stayed", domain.ground.sediment[Sand][at(50)]);
@@ -79,6 +93,10 @@ void checkBudget() {
     expect(labels.loess[at(70)] > 0.005f && labels.loess[at(70)] < 1.0f, "the loess next to its source is not a mantle", labels.loess[at(70)]);
 
     const WindLedger& ledger = domain.aeolian.ledger;
+    double parked = 0;
+    for (const float metres : domain.aeolian.parked) parked += metres;
+    expect(parked > 0, "a step before the last did not park the wind's sand", parked);
+    expect(std::abs(stock() - start - ledger.sandIn + ledger.sandOut) < 1e-4 * ledger.sandLifted, "parking made or lost sand", stock() - start);
     const double sand = ledger.sandIn + ledger.sandLifted - ledger.sandLaid - ledger.sandDrowned - ledger.sandOut;
     const double dust = ledger.dustRaised + ledger.dustIn - ledger.dustSettled - ledger.dustDrowned - ledger.dustOut;
     expect(ledger.sandLifted > 0 && std::abs(sand) < 1e-4 * ledger.sandLifted, "the sand ledger does not close", sand / ledger.sandLifted);
@@ -86,7 +104,7 @@ void checkBudget() {
 }
 
 // A hollow in dry country whose water never reaches its rim: what flows in leaves as vapour, and
-// its salt lies level on the lowest ground and nowhere else. One step is all the hollow has: the
+// its salt lies level on the lowest ground of the hollow and nowhere else. One step is all the hollow has: the
 // model lays the sediment of a whole step in it as if a lake stood to its rim, and it is full after that.
 void checkBasin() {
     PlaneSpec spec;
@@ -115,19 +133,23 @@ void checkBasin() {
 
     const WindLabels& labels = domain.aeolian.labels;
     const auto top = [&](size_t i) { return domain.ground.rock[i] + domain.sedimentAt(i); };
-    float thickest = 0, step = 0;
+    float thickest = 0, step = 0, floor = -1e30f, bare = 1e30f;
     int pan = 0, astray = 0;
     for (int z = 1; z < domain.size - 1; ++z)
         for (int x = 1; x < domain.size - 1; ++x) {
             const size_t i = domain.index(x, z);
-            if (labels.salt[i] <= 0) continue;
-            ++pan, thickest = std::max(thickest, labels.salt[i]);
-            astray += std::hypot(x - middle, z - middle) > 45.0;
+            if (labels.salt[i] <= 0) {
+                if (underFlood(domain, i)) bare = std::min(bare, top(i));
+                continue;
+            }
+            ++pan, thickest = std::max(thickest, labels.salt[i]), floor = std::max(floor, top(i));
+            astray += std::hypot(x - middle, z - middle) > 90.0;
             // Salt cells that touch lie in one pool and share its floor.
             for (const size_t next : {domain.index(x + 1, z), domain.index(x, z + 1)})
                 if (labels.salt[next] > 0) step = std::max(step, std::abs(top(next) - top(i)));
         }
     expect(pan >= 4 && astray == 0, "a drying basin left no salt on its floor, or left it outside", pan);
+    expect(floor <= bare + 0.01f, "salt lies above lake floor it left bare", floor - bare);
     expect(thickest > 0.01f, "the crust is a film", thickest);
     expect(step < 0.01f, "the salt floor is not level", step);
     expect(domain.aeolian.ledger.salt > 0 && domain.aeolian.ledger.salt <= domain.ledger.dissolved * 1.0001 + 1.0, "more salt was laid than rock gave to solution", domain.aeolian.ledger.salt);

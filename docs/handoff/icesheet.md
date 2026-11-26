@@ -17,38 +17,40 @@ Catalogue targets are in `docs/reference-landscapes.md` (A2, A3, F1–F4, G1). R
 
 ## 2. State now
 
-**Works (checked by the scratch programs named in section 7, not yet by tests in the suite):**
+**Works, with tests in the suite (`test/IceSheet.cpp`, `test/IceSheetLocal.cpp`, registered in `test/Main.cpp` before `testLandscapePlane`; both pass, 6 s and 0.2 s, run through scratch drivers because the suite currently stops earlier in `testAeolian`, another stream's):**
 
-- `fn/Flow.cpp` — shallow-ice relaxation on any square grid. A cold plateau of 600 m grows a dome 3 km thick, steep at the margin, flat inside, ending in the sea as a thin floating fringe. Same rounds and same cells with a pool of 4 threads and with none.
-- `fn/Continental.cpp`, `service/Glaciations.cpp`, `fn/Dating.cpp` — planet-wide stages for a world, memoised. Seed 42, age 4.6e9: five stages (present, last maximum at −2.16 °C, three colder down to −5.63 °C). Land under ice: **36.2 % now, 39.5 % at the last maximum, 44.9 % in the coldest stage** (Earth: 10 % and 32 %). Cost 1.3–8 s once per world, depending on how busy the pool is.
-- `fn/Region.cpp`, `fn/Wear.cpp`, `fn/Debris.cpp`, `fn/Meltwater.cpp`, `fn/Work.cpp`, `fn/Sheet.cpp` — the Region pipeline end to end; the hook is live in `Replay.cpp`. On a hand-built coastal range the ledger closes to 1e-8 of the volume moved, the valley through the range is cut far deeper than the ground beside it, the plateau stays frozen to its bed while the valley thaws, and the profile rises to a sill at the mouth.
-- `tool/IceSheetCommand.cpp` — `terra icesheet` prints the stages, writes a planet map and names places freed since the last maximum; with `--x --z` it builds the region tile and prints a census and two maps.
+- `fn/Flow.cpp` — shallow-ice relaxation on any square grid. Test: a cold plateau grows a dome kilometres thick, flat inside and steep at its margin; a warm one stays bare; pool of 4 = no pool, bit for bit.
+- `fn/Continental.cpp`, `service/Glaciations.cpp`, `fn/Dating.cpp` — planet-wide stages for a world, memoised. Seed 42, age 4.6e9: five stages (present, last maximum at −2.16 °C, three colder down to −5.63 °C). Land under ice: **36.2 % now, 39.5 % at the last maximum, 44.9 % in the coldest stage** (Earth: 10 % and 32 %). 1.3–8 s once per world.
+- Region pipeline (`fn/Region.cpp`, `Wear.cpp`, `Debris.cpp`, `Meltwater.cpp`, `Work.cpp`, `Sheet.cpp`), hook live in `Replay.cpp`. Tests on hand-built domains: a valley through a coastal range is cut 150 m below the sea with a sill at its mouth while the ridge beside it keeps 1 100 m and the frozen plateau is not worn; on a shield with fracture zones the zones become lakes in rock (9 % of the ground the sheet left, lake cells three times as weak as the mean), with end moraine, outwash and an esker; the ledger closes to 1e-8; pool = no pool.
+- Region on real land (seed 42). Inland freed lowland at `--x 7075912 --z 13325105`: rock worn 128 m on freed ground (mean), the ground 51 m lower than without ice, of which about 30 m is crust still to come back (e^(−13/5) of the last maximum's sink): half the freed lowland, 60 m above the sea without ice, is now under the sea, as Hudson Bay or the Baltic. Coastal range at `--x 11585794 --z 4285552`: the coast is more indented, ground under present ice 340 m lower (sink and wear). Pictures `.out/icesheet/probe2/` and `probe-coast/` (`probe-diff.png`: red lowered, hatched = under the last maximum).
+- **The last sheet at Local and Site** (`fn/Parent.cpp`, `Local.cpp`, `Lodge.cpp`, `Esker.cpp`, types in `type/Parent.hpp`). After a finer domain has settled, `Leave` reads the parent's record and ice through the `tiles` lookup; the cover is taken up (as much as one glaciation strips), weak rock is dug against the mean of a parent cell (up to 50 m at Local, 10 m at Site), till is carried down the parent's ice surface and lodged, filling the cavity behind every rise to a line falling at 5 %, so it piles in tails behind knobs; tunnel fills are set aside from the cover before and stand as ridges along the parent's meltwater path after; beyond the ice the load stays as moraine no steeper than till stands (24°). `Present` puts the parent's ice surface over the domain's own ground (valleys get more). Test on a hand-built plain: basin dug in a fracture zone, till twice as thick in the lee of each knob as on its stoss side and drawn out along the flow, a ridge along the stream, ledger closes, a tile whose up-ice halo a finished neighbour owns gets the same till within 10 %, ground the sheet never reached gets no record. Real Local tiles (2 × 2 at `--x 7052800 --z 13263360`, a freed till lowland): lakes 0.8 % → 5 %, till mean 6 m, streamlined till bodies aligned with the flow; pictures `.out/icesheet/local3/`, `local4/`.
+- `tool/IceSheetCommand.cpp` — `terra icesheet` (stages, planet map, freed places; with `--x --z [--level] [--tiles]` a census and two maps).
 
 **Not yet seen working:**
 
-- A real region tile on freed **land**. The two tried were sea (one because the first wear rate, 4e-6, ground a kilometre off and sank the lowland; the rate is now 7e-7 and the rebound feed is fixed, but no land tile has been rebuilt since).
-- Nothing below Region level: `sheetIce` returns at once for Local, Site and Ground.
-- No test of this stream is in the suite. `mise run test` has not been run with the hook live.
+- Site tiles with the last sheet: the code runs at Site (same functions, Local parent) but no Site tile has been built and looked at.
+- Eskers at Local in the real world: the inland tile has no tunnel fill on freed land; the coastal tile has (`--x 11582976 --z 4307456`, 4.3 m of fill), not yet built at Local.
+- Kettles and hummocky dead-ice ground: not modelled.
+- The full suite: it stops in `testAeolian` (another stream) before reaching these tests.
 
 **Broken or known wrong:**
 
-- Over many workings with no rebound and no rivers (the scratch rig), a thawed plateau is ground below sea level and its ice floats off. Whether the real replay (rebound 85 %, rivers, the lower rate) keeps land is the next thing to look at.
+- The lodging is excitable: wherever load enters a domain without its history (the rim, a halo with no finished neighbour) it sets off a train of till waves about 20 cells long that decays slowly. Inside the tile it is driven by the halo's 32 cells; with a finished neighbour the recorded `passing` load is taken up instead. Watch the 2 × 2 pictures for seams.
 - `Continental.cpp` reports a thickest cell of 8 131 m: a deep sea-floor cell enclosed by iced cells takes the coarse surface over its own bed when the half-resolution result is handed to the full grid. Harmless for extents, wrong as a number.
 - The shared build breaks whenever another stream's file is half-written; a silent failure leaves an old binary. Use the build script of section 7, which fails loudly.
 
 ## 3. In progress
 
-Waiting for the shared tree to compile again (groundwater was mid-edit), then: `terra icesheet --x … --z …` on an inland freed place whose region tile is of pass 0 (so one tile is built, not seventeen), to see land, ice, lakes and deposits with the new wear rate. No file of this stream is half-edited.
+Third run (Opus, 26 Nov). The reviewer's findings on the finer levels are fixed (seam feed from the neighbour's recorded `passing`, eskers per stretch and laid last, repose limit instead of 50 m one-cell walls, no record where no ice came). Left before delivery: the temporary `ICE_OFF` / `ICE_FINER_OFF` switches in `Sheet.cpp` (A/B runs only) must be removed; a second review of the fixes.
 
 ## 4. Next steps
 
-1. Region on real land: census and maps at two or three freed places (inland lowland; coast with relief). Tune `WearRate`, `LooseGain`, `Overdeepening` against trough depth and lake cover. Check the sheet across a tile edge on a 2 × 2 map.
-2. Hand-built region rigs for the other two cases: tilted shield with fracture zones (closed rock basins, kept as lakes by `floodLevels`/`routeWater`), lowland margin (moraine ridge, outwash beyond).
-3. Local `Leave` (in `fn/Sheet.cpp`, new files `fn/Local*.cpp`): read the parent's `SheetRecord`, `ice`, `iceAge` through the `tiles` lookup; differential scour along `Domain::weakness`/`quality` scaled by the parent's `worn`; loose cover under the last sheet rebuilt from the parent's `till`, `moraine`, `outwash`, `esker` as drumlins, a ridge along the esker course, hummocks with kettles. `Present`: `ice`/`iceAge` = parent's ice surface minus local ground, max with valley ice.
-4. Site `Leave`/`Present`: same reading of the Local parent; stoss-and-lee knobs, small kettles.
-5. Tests `test/IceSheet*.cpp` registered in `test/Main.cpp` (list in section 1 of the brief: plateau/warm plateau; trough deeper than the valley beside it and overdeepened; shield basins kept as lakes; moraine and outwash at a still-stand; drumlins aligned and not evenly spaced; two tiles agree on the shared edge; one thread equals the pool; ledger closes).
-6. `terra icesheet`: add counts and sizes of drumlins, eskers and kettles at Local.
-7. Pictures (`terra view`, maps) against the catalogue; rows for `docs/simulation.md`; independent reviewer; report.
+1. Look at Site tiles under the last sheet (flutes, knobs) and at an esker at Local on the coastal tile; tune `ShelterSlope`, `LodgeCells`, `BasinDepth` against F1/F3 (lakes 10–30 % on a shield, drumlins 250–1 000 m long, 5–50 m high, 300–1 000 m apart).
+2. Kettles and hummocky ground where the last sheet stagnated (moraine and outwash under thin, slow ice): buried ice melting out of the cover.
+3. `terra icesheet`: counts and sizes of drumlins, eskers and lakes at Local.
+4. A real 2 × 2 Local mosaic across a tile edge under ice: no step in till or eskers.
+5. Pictures with `terra view` against the catalogue (F1, F2, F3, G1); rows for `docs/simulation.md`; remove the temporary switches; reviewer; report.
+6. Region: stage-by-stage still-stands (recessional moraines) are still absent; the inland freed lowland is half drowned by the crust still to rebound, which is Earth-like but worth the owner's eye.
 
 ## 5. Decisions and why
 
@@ -64,13 +66,15 @@ Waiting for the shared tree to compile again (groundwater was mid-edit), then: `
 - Sea: a front loses 27·depth·thickness per metre of width and year, taken implicitly; only ground below the sea without load counts as sea floor (otherwise an island's ice cap sinks it, calves, rebounds and regrows for ever).
 - Bed: Robin's steady profile with the rock's heat (`planet/fn/Heat.hpp`) plus shear heating (basal stress × creep speed). Without the shear term fast margins came out frozen and only the thick interior thawed. The thaw eases 20 % of the way to each reading, or thawed cells run out, thin, refreeze and never settle.
 - Fine sliding: the ice a coarse cell would pass by sliding is shared among its 1 km cells by thickness cubed over the mean cube. **Do not go back to the local law (stress from fine thickness and coarse slope): a trough then speeds up as it deepens without limit and the bed runs away to tens of kilometres.** With the shared flux a trough carries no more than arrives and slows as it deepens.
-- Wear: 7e-7 m per metre slid × rock factor (`sqrt(erodibility/granite)` × `quality` × (1 + 2.5·`weakness`)), loose cover first and 40 times faster. Cells are worked from the margin inwards so a floor that lowers as a whole is not held back. One working takes at most a quarter of the ice thickness.
+- Wear: 1e-7 m per metre slid × rock factor (`sqrt(erodibility/granite)` × `quality` × (1 + 2.5·`weakness`)), loose cover first and 40 times faster. Cells are worked from the margin inwards so a floor that lowers as a whole is not held back. One working takes at most a quarter of the ice thickness.
 - Overdeepening: a cell is not cut below `ground(n) − 1.5·(S − S(n))` of its easiest down-ice neighbour; next to open water it is not cut below `sea − sqrt(slide·thickness·0.917/27)`, the depth a front can stand in. By induction from the lip that bounds every basin.
 - Debris: the last cycle's share is lodged with a reach of 15 km (at most 60 m a cell); the rest of a multi-cycle working goes to the margin. Bare ground keeps up to 60 m as end moraine (under the sea, up to the surface); the rest is booked as leaving with the meltwater. **Unbounded lodging or dumping builds towers of till that become nunataks and blow the next solve up.**
 - Meltwater: follows `ground + 0.917·thickness`, steepest neighbour. A stream above 2e8 m³/yr keeps gravel and sand in its tunnel (esker fill); at a portal it takes `flow/(flow + 1e9)` of the moraine on and spreads gravel (6 km) and sand (22 km) down the bare ground; mud leaves.
 - Crust: at `Leave` rock and layering are lowered by the present stage's sink plus what is still to come back of the last maximum's (e^(−13 kyr / 5 kyr)); `Tile::rebound` gets that rate.
 
 **Wear rate is a calibration, not a measurement.** Measured rates are several times higher. This world replays 24–32 Myr of icehouse at Region, ten times Earth's Quaternary; with measured rates a lowland lost a kilometre of rock and sank under the sea although the planet says it is land. The rate is set so the window does about what Earth's 2.6 Myr did.
+
+**The last sheet at the finer levels is one pass after settling, not a history.** Its parts act within a few cells (take-up per cell, digging against a box of one parent cell, lodging with a reach of 10 cells and a shelter search of 8, ridges within a tunnel's width), so a tile agrees with its neighbour wherever both see the same parent; where the ice comes out of a finished neighbour the neighbour's recorded `passing` load is fed in, else the load in balance with the bed. Drumlins are not seeded: till fills the cavity behind every rise of the bed, so their places come from the rock and relief the domain settled into, their direction from the parent's sliding and their size from the till supply. Eskers follow the parent's meltwater path (smoothed through the parent's cell centres; the path is a Region result, the parabolic section a tunnel fill's) and carry the parent's fill volume.
 
 **Finer levels are not dated.** Local settles for 6 Myr with twelve warm steps at the end, which fills or drains every lake and wears every fresh form. All sheet work at Local and Site therefore belongs in `Leave`, after settling. Forms wider than about 24 cells survive a child's settling because its averaged surface is held on the parent's (`TrendRadius` 12 in `Uplift.cpp`).
 
@@ -115,7 +119,11 @@ That scratch directory is session-local and may be gone. What it held, so it can
 
 - `build.sh`: `cd @simulation; export XMAKE_CONFIGDIR=$PWD/../.out/simulation/xmake-ice; xmake config --yes --mode=release --builddir=../.out/simulation/build-ice; xmake build --yes terra simulation-tests`, printing errors and exiting non-zero on failure. A private build directory keeps clear of other agents' builds in `.out/simulation/build`.
 - `mk.sh <name>`: compiles one scratch `.cpp` together with `src/icesheet/fn/*.cpp` and `service/*.cpp` against the last good `libderivean-simulation.a`; works while the shared tree is broken.
-- `plateau.cpp` (dome on a plateau, prints the profile), `conv.cpp` (rounds and time per stage on a cached copy of the planet's fields), `fjord.cpp` + `rig.hpp` (hand-built region domain: sea, coastal range with two valleys, plateau; `workSheets` fifteen times; prints the valley and ridge profiles and the ledger). These are the seeds of `test/IceSheet*.cpp`.
+- `plateau.cpp`, `conv.cpp`, `fjord.cpp`, `shield.cpp` + `rig.hpp`: the hand-built rigs now in `test/IceSheet.cpp`, with profiles and pictures.
+- `probe.cpp x z out`: builds the region tile there with `ICE_OFF` and without, prints heights, wear, erosion and uplift by class (under ice now / freed / never) and writes `probe-off/on/diff.png`.
+- `spots.cpp x z`: in the region tile there, freed cells with the most till, esker fill, wear and moraine, as `--x --z` arguments.
+- `localprobe.cpp x z out [tiles]`: a square of Local tiles with `ICE_FINER_OFF` and without; lakes, slope, till; `local-off/on/left/diff.png`.
+- Compile any of them: `c++ -std=c++20 -O2 -I@simulation/src <file> .out/simulation/build-ice/macosx/arm64/release/libderivean-simulation.a -o <name>` (rebuild the library first when a header changed).
 
 Real world, from the worktree root:
 
@@ -130,7 +138,7 @@ The shared tasks are `mise -C @simulation run build` and `mise -C @simulation ru
 
 ## 8. Open questions
 
-- Does land stay land under 24 Myr of sheets with the rate of 7e-7 and the plate's rebound? Not yet rebuilt.
+- A freed lowland 60 m above the sea is half drowned (crust still rebounding plus 20 m net wear): Earth-like (Hudson Bay, Baltic), but the owner may want to see it.
 - Does the 4 km relaxation agree across a tile edge well enough that the end moraine does not step at a seam?
-- Drumlins: an evolved bed process (till carried down-ice around stiff patches and sheltered in their lee, at most 28 rounds so its reach stays inside the halo) or the closed form (seeded nuclei; size, elongation and height from sliding speed and till supply). To be prototyped at Local.
+- Drumlins come out as till tails behind rises and as slowly decaying till waves; whether fields of separate egg-shaped hills appear needs Site pictures and a count.
 - Tile-time cost of a glaciated region tile against the 7–9 s of one without ice: not yet measured on land.

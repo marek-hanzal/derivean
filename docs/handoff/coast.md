@@ -8,35 +8,23 @@ Own `@simulation/src/coast/**` (+ `test/Coast*.cpp`, `tool/Coast*.cpp`): shores 
 
 ## 2. State now
 
-Written, **not yet compiled or run**:
+Every hook is in and compiles; the coast runs in every Region, Local and Site replay. Files: `coast/{constant/Waves.hpp, type/{Shore,SeaVoid}.hpp, fn/{Coast.hpp, Waves, Shore, Cliff, Drift, Seas, Grid, Survey, Scenario, SeaVoid}.cpp}`, `test/Coast.cpp`, `test/CoastVoid.cpp`, `tool/{Coast.hpp, CoastCommand, CoastMap, CoastFind, CoastShow}.cpp`.
 
-- `coast/constant/Waves.hpp` — every coefficient of the wave model and the retreat law.
-- `coast/type/Shore.hpp` — `Shore` (working state of a replay, hangs off `Domain::shore`), `ShoreRecord` (kept by a finished tile, `Tile::shore`), `CoastLedger`, `sweepDownwind`.
-- `coast/type/SeaVoid.hpp` — contract of the volumetric query (declared only).
-- `coast/fn/Coast.hpp` — declarations of the domain's functions.
-- `coast/fn/Waves.cpp` — `stormWind`, `raiseWaves`.
-- `coast/fn/Shore.cpp` — `shoreOf`, `spreadWater`, `workShores` (the step hook), booking into the tile ledger.
-- `coast/fn/Cliff.cpp` — `withstandOf`, `cutCliffs`.
-
-Nothing is verified. Nothing is hooked into the step loop yet.
+- `testCoast` (registered last in `test/Main.cpp`; the suite stops earlier at `testLandscapePlane`, so run it with the driver in section 7) passes on the tree of 26 Nov ~09:50: sea voids, rock coasts (cliffs, platforms p50 162 m on chalk, chalk faster than limestone, joints first, shelter), oblique-wave spit vs square waves, lake beach sorting, thread independence of the full step loop.
+- Second-run fixes (26 Nov): standing water judged against `Domain::surface` (the ground of the flood), so channels cut after the flood are not lakes; a water's level is not carried down its outlet; wave, surf and load state cleared each step (stale trains on dry ground); a face goes back by several cells in a step when its rate allows (time carried to the ground it lays bare, up to 8 cells, waves raised again in between); mud of fallen columns is put in the water after the waves are raised again and drifts across a level bench instead of burying it; the drift of a non-evolving cell is its capacity times its loose bed over 1 m (a film gives in proportion); undercut of a bluff is bounded by the train's spare capacity; surf rock waiting at the end of a replay is laid even where the water has gone; `book` covers the whole domain; sea caves only where the waves are cutting the face (`notch` ≥ 0.3 m), on master joints (spacing 8–60 m), as long as the cut along the crushed joint runs ahead of the face (no hash share any more).
+- Real world, seed 42: `terra coast --find 1` (section 7) ranks coasts and lakes on the Region and builds Local and Site tiles at the best of them. Results: section 3 / the final report of this run.
 
 ## 3. In progress
 
-Writing `coast/fn/Drift.cpp` (`moveSand`). Then `coast/fn/Seas.cpp` (`readSeas`, `recordShore`), hand-built scenarios, first compile.
-
-Shared-file edits already made: the three lines in `landscape/type/Terrain.hpp` listed in section 6. The other hooks are **not** in yet.
+Running `terra coast --find 1` on seed 42 with the fixed coast (`.out/coast/find2/`). Not half-done in code: every file compiles and the tests pass.
 
 ## 4. Next steps
 
-1. `Drift.cpp`: sand and gravel by train, as designed in section 5.
-2. `Seas.cpp`: open boundary from the planet (Region) or the parent's `ShoreRecord` (Local, Site); `recordShore`.
-3. `coast/fn/Scenario.{hpp,cpp}`: hand-built domains (straight rock coast with a river mouth; bay between headlands; lake), built like `measure/fn/PlaneDomain.cpp` on `allocateBare`.
-4. Compile the coast files alone against the existing static library (section 7), look at pictures of the scenarios, tune.
-5. Add the remaining hooks (section 6), build with mise, run the whole test suite.
-6. `test/Coast.cpp` (+ two lines in `test/Main.cpp`), `tool/CoastCommand.cpp` (+ one line each in `tool/main.cpp`, `tool/Arguments.hpp`).
-7. `coast/fn/SeaVoid.cpp`; wire it next to `caveSpans` in `simulation/fn/Block.cpp` / `relief/fn/Form.cpp` (the ground agent has finished; the lead asked this stream to do it); extend the block-alignment test with a point inside a sea void.
-8. Real world, seed 42: find coasts and lakes by search (`terra find|scout`, `terra coast`), look at `terra view` pictures against the catalogue's photographs, measure tile time.
-9. Independent reviewer sub-agent; rows for `docs/simulation.md` to the lead; final report.
+1. Judge the find2 pictures against the catalogue (G4, H1, H2) and report.
+2. Wave height on the real Local/Site shores is small (p50 0.05–0.3 m): shelves and lakes are a few metres deep over kilometres and bed friction takes the waves. Check against Balaton-like shallow lakes (storm waves ~1 m at 3 m depth) and decide whether `BedFriction`/`SmoothBed` are too strong.
+3. Lakes: Region lakes shallower than 45 m are levelled when a Local domain is built (`levelHollows`, landscape owner); the finder therefore only takes lakes at least 50 m deep. Raise with the landscape owner.
+4. Block alignment test (`test/GroundTile.cpp`) with a point in a sea void: needs a site with a wave-cut face in the test world; not done.
+5. Rows for `docs/simulation.md` to the lead (section 5 has the content).
 
 ## 5. Decisions and why
 
@@ -44,9 +32,12 @@ Shared-file edits already made: the three lines in `landscape/type/Terrain.hpp` 
 - **Waves as eight trains** (one per neighbour direction), state = H² in m². Carried cell to cell downwind (`sweepDownwind`), grown by fetch (SMB: `FetchGrowth·U²` per metre, capped at the fully developed sea), cut by depth (`H ≤ 0.5·depth at high water`) and by bed friction (`dH/dx = −0.0106·H²/h²`). Land lets nothing through, so shelter and exposure by the angle of the coast to the wind need no extra rule; a 20 % blend from each side stands for refraction and directional spread. Rejected: ray tracing per shore cell (cost, and no natural boundary from a parent level).
 - **Wind**: every quarter gets `StormGain·(|W|·cos² + StormCalm)`; trains are not weighted by frequency.
 - **Still water** (`spreadWater`): breadth-first from cells the flood left wet, through every cell covered at high water (`level + swing`), plus the land cells next to them. `swing` is `SpringTide` (1 m) for the sea and 0.25 m for a lake. `Shore::stood` is captured once per step because `Domain::level` of a cell the coast lowers is stale (it would read as a lake at the old cliff top).
-- **Rock**: threshold `Hc = 0.063·√(MPa·sound·(1 − 0.85·weakness)/quality)`, rate `0.02·(H − Hc)/Hc²` m/yr per train, averaged over the eight. `Shore::notch` is the cut-back of a column's foot; at cell width the column comes down to the bench (`still − ½·swing`, Region 2 m deeper). Self-limiting: a bench makes the waves break (`Breaker`) and lose height (`BedFriction`), so retreat stops at a width set by rock and waves, independent of the number of steps. At coarse levels the bench narrower than a cell lives in `notch` (sub-cell platform width). Time per step is `min(step, StandTime = 6 kyr)`, sliced so that at most one cell width is cut per round.
+- **Rock**: threshold `Hc = 0.063·√(MPa·sound·(1 − 0.85·weakness)/quality)`, rate `0.02·(H − Hc)/Hc²` m/yr per train, averaged over the eight. `Shore::notch` is the cut-back of a column's foot; at cell width the column comes down to the bench (`still − ½·swing`, Region 2 m deeper). Self-limiting: a bench makes the waves break (`Breaker`) and lose height (`BedFriction`), so retreat stops at a width set by rock and waves, independent of the number of steps. At coarse levels the bench narrower than a cell lives in `notch` (sub-cell platform width). Time per step is `min(step, StandTime = 6 kyr)`, cut in `CutSlices = 8` slices; a face cut through before its share of time is spent comes down and hands the rest of the time to the ground it laid bare (waves raised again between slices), so a weak face goes back by several cells in a step and a strong one by none.
+- **Mud** of a fallen column is suspended after the waves are raised again: the cloud walks down the bed (across a level bench, away from where it rose), sinks a share only in calm water, settles whole in a calm hollow and otherwise leaves the domain (`CoastLedger.left`). Rejected: laying it at the first local minimum, which buried the new bench.
+- **Sea caves** only where the face is being cut (`notch ≥ NotchLeast`), on master joints (spacing 8–60 m), as long as `min(CaveLongest, CaveReach·ln(struck/withstand), faster·notch)`, where `faster` is how much faster the crushed joint goes back than the face. Rejected: a hash share of joints (a stamp).
+- **Standing water** is judged against `Domain::surface` (the ground of the flood), and `spreadWater` does not cross into dry ground lower than the water's low stand (beyond its sill): a channel cut after the flood is not a lake, and a lake's level does not run down its outlet.
 - **Debris** of a fallen column goes to `Shore::pending` (surf debris, not in the height field), blocks ground down by the rock's `abrasion` over `SurfTravel`. Rejected: putting it on the cell as cover — a 60 m column would leave a 50 m rubble pile, while in nature the debris is removed far faster than a face crosses a cell.
-- **Sand** (to be written): per train, a load is carried downwind through cells within reach (closure depth 2.5·H); capacity `Carry·E^1.25·reach`; excess is laid (not above high water), deficit is picked up (`Stir` per sweep); a class may not climb a slope steeper than it holds (`SwashSlope / √(1 + depth/0.5)`: gravel 0.27, sand 0.08, fines 0.004), the blocked part is turned to the two cells 45° to either side — that is longshore drift; at the shore the swash lays sand then gravel up to the run-up height. Undertow moves a class back down where it lies steeper than it holds; fines only ever move that way. Rejected: pairwise slope relaxation (anti-diffusive for slopes below equilibrium, one cell per round), and a full CEM shoreline tracer (too large).
+- **Sand**: per train, a load is carried downwind through cells within reach (closure depth 2.5·H); capacity `Carry·E^1.25·reach`; excess is laid (not above high water), deficit is picked up (`Stir` per sweep); a class may not climb a slope steeper than it holds (`SwashSlope / √(1 + depth/0.5)`: gravel 0.27, sand 0.08, fines 0.004), the blocked part is turned to the two cells 45° to either side — that is longshore drift; at the shore the swash lays sand then gravel up to the run-up height. Undertow moves a class back down where it lies steeper than it holds; fines only ever move that way. Rejected: pairwise slope relaxation (anti-diffusive for slopes below equilibrium, one cell per round), and a full CEM shoreline tracer (too large).
 - **`Domain::trend` is moved by what waves cut and lay** (in `book`, `Shore.cpp`). Without it a finer level's found uplift (`landscape/fn/Uplift.cpp`) would heal a bench or a spit back onto the parent's surface. Approved by the lead.
 - **Traps**: every border cell of a domain must be `Rim` (`raiseWaves` reads three neighbours of every other cell). `Domain` copies share one `Shore` (`shared_ptr`). `workShores` returns before allocating anything when no water stands.
 
@@ -57,44 +48,42 @@ Volumetric query (`coast/type/SeaVoid.hpp`), approved by the lead:
 ```cpp
 struct SeaVoid { double ax, az, bx, bz; float y, wide, high, water; SeaVoidKind kind; };
 struct SeaVoids { std::vector<SeaVoid> voids; };
-inline constexpr double SeaVoidReach = 40.0;
-SeaVoids seaVoidsOver(TileReader& site, const Setting& setting, double minX, double minZ, double maxX, double maxZ);
+inline constexpr double SeaVoidReach = 36.0;   // plus one site cell; static_assert against BlockSiteReach in Block.cpp
+using SiteTiles = std::function<const Tile*(int32_t x, int32_t z)>;
+SeaVoids seaVoidsOver(const SiteTiles& tiles, const Setting& setting, double minX, double minZ, double maxX, double maxZ);
 int  seaVoidSpans(const SeaVoids&, Vec2 position, CaveSpan* spans, int capacity);
 bool inSeaVoid(const SeaVoids&, double x, double y, double z);
+void cutSeaVoids(const SeaVoids&, double x, double z, double bottom, double step, int count, Material* out, size_t stride);
 ```
 
-Lines in shared files — **in**:
+Lines in shared files, all **in**:
 
-- `landscape/type/Terrain.hpp`: `struct Shore;` and `struct ShoreRecord;` after `struct GroundDetail;`; `std::shared_ptr<const ShoreRecord> shore;` in `Tile` after `detail`; `std::shared_ptr<Shore> shore;` in `Domain` after `TileLedger ledger;`.
+- `landscape/type/Terrain.hpp`: `struct Shore;`, `struct ShoreRecord;`; `std::shared_ptr<const ShoreRecord> shore;` in `Tile`; `std::shared_ptr<Shore> shore;` in `Domain`.
+- `landscape/fn/Process.hpp`: `workShores` declaration. `landscape/fn/Replay.cpp`: `workShores(domain, scratch);` after `cutAndFill`. `landscape/fn/Build.cpp`: `readSeas(domain, setting, lookup);` after `openRim`. `landscape/fn/Extract.cpp`: `tile.shore = recordShore(domain);`.
+- `simulation/fn/Block.cpp`: `seaVoidsOver` once per block, `cutSeaVoids` after `formColumn` per column, and (26 Nov) `static_assert(BlockSiteReach >= SeaVoidReach + specOf(Level::Site).cell, ...)`.
+- `test/Main.cpp` (26 Nov): `void testCoast();` and `testCoast();` after `testVolcanicLaws`. `tool/main.cpp`, `tool/Arguments.hpp`: `coast` command.
 
-Lines in shared files — **still to add** (approved):
-
-- `landscape/fn/Process.hpp`: `void workShores(Domain& domain, FlowScratch& scratch);`
-- `landscape/fn/Replay.cpp`: `workShores(domain, scratch);` after `cutAndFill(domain, scratch);` in `stepDomain`.
-- `landscape/fn/Build.cpp`: include `coast/fn/Coast.hpp`; `readSeas(domain, setting, lookup);` in `buildDomain`.
-- `landscape/fn/Extract.cpp`: include; `tile.shore = recordShore(domain);` in `extractTile`.
-- `test/Main.cpp`, `tool/main.cpp`, `tool/Arguments.hpp`: declaration and dispatch of the coast test and command.
-- `simulation/fn/Block.cpp` / `relief/fn/Form.cpp`: sea void spans next to cave spans.
-
-Other owners: landscape and its stability rules ("relief" agent), `rockmass`/`strata`/`planet` (lead), `measure`, `groundwater`, wind and dunes (separate agent; dry beach sand above high water is ordinary Sand cover for it).
+Other owners: landscape and its stability rules (relief stream), `rockmass`/`strata`/`planet` (lead), `measure`, `groundwater`, wind and dunes (aeolian stream; dry beach sand above high water is ordinary Sand cover for it).
 
 ## 7. How to build, run and verify
 
 ```sh
-mise -C @simulation run build     # library, terra, tests (build directory is shared with other agents)
-mise -C @simulation run test
-.out/simulation/build/macosx/arm64/release/terra <command> ...
+mise -C @simulation run build     # library, terra, tests (build directory is shared with other streams)
+.out/simulation/build/macosx/arm64/release/terra coast --scene straight|bay|lake ...   # hand-built shores, map + view
+.out/simulation/build/macosx/arm64/release/terra coast --find 1 [--tries 4] [--pick lake1,cliff2,sea1] [--confirm 0] --out .out/coast/find
+.out/simulation/build/macosx/arm64/release/terra coast --x m --z m --level 2|3 --tiles 2 --out dir
 ```
 
-Fast loop for coast files only, without touching the shared build (objects go to `.out/coast/`):
+`--find` ranks lowland sea coasts (`sea`), steep ones (`cliff`) and lakes at least 50 m deep (`lake`) on the Region within 300 km of the landing, then for each picked one surveys 2 × 2 Local tiles, 2 × 2 Site tiles at its best sand beach (and highest cliff) and renders a picture from the water and one from the shore (`view-<tag>-<kind>-{water,shore}.png`). A fresh process rebuilds the planet and the Region (3–8 min under load).
 
-```sh
-clang++ -std=c++20 -O2 -I@simulation/src @simulation/src/coast/fn/*.cpp <driver>.cpp \
-  .out/simulation/build/macosx/arm64/release/libderivean-simulation.a -o .out/coast/dev
-```
+Fast loop without touching the shared build: compile `src/coast/fn/*.cpp` (and `tool/*.cpp` for terra) into a scratch directory and link them before a copy of `libderivean-simulation.a`; the coast tests need a `main` calling `testCoast()` linked with `test/Coast.cpp test/CoastVoid.cpp test/LandscapeFixture.cpp`.
 
 ## 8. Open questions
 
-- Whether barriers and spits emerge above water with the capacity rule as designed, or need a tuned `Carry`/`Stir`; to be settled on the bay scenario.
-- Cost per tile of the rounds (target: well under a fifth of a coastal tile's time; inland tiles pay one scan).
-- Glacial low stands of the sea are not in the levels' sea level; drowned valleys exist only where the Region's dated sea level rose. To be stated as absent unless the landscape owner wants a low-stand phase.
+- Wave spread (`WaveSpread`, 20 % to each side per cell) is a per-cell blend, so the lateral spread per metre depends on the cell size (independent review, 26 Nov). A directional spread in angle would need the trains' energy to be moved by distance, not by cells.
+- The rock threshold `Hc ∝ √(strength)` is a calibration in Sunamura's form, not his linear one; it compresses the chalk-to-granite contrast to about 5× (review). Kept because the rates it gives (chalk decimetres a year, granite nothing) match the catalogue; to be revisited with measured retreat rates.
+- `WaveQuantum` caps recorded heights at 12.75 m; a fully developed sea under a 10 m/s mean wind is higher. Only the Region's open rims can reach it.
+- `Carry` and `Stir` are per sweep, not per year: the drift of a level follows its step count. Spits grow slowly.
+- Drift handed in at the open rim and by Settled cells stands for the shore beyond as it is (capacity × loose bed over 1 m); it is booked in `CoastLedger.entered`, not in `TileLedger.sedimentIn` (which is the rivers'). Across tiles this is a boundary condition, not conserved mass.
+- Glacial low stands of the sea are not in the finer levels' sea level; drowned valleys exist only where the Region's dated sea level rose.
+- Survey: `platformWidth` takes the shortest platform run over a shore cell's wet sides, which along a shore-parallel strip can read kilometres (the "widest" figure); p50/p95 are the trustworthy ones.

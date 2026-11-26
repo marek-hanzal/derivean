@@ -1,33 +1,37 @@
 import type { Quads } from "../../../contract/GameBridge";
-import { Face, FaceWords } from "../constant/layout";
+import { Face, type FaceField, FaceWords, fieldMask } from "../constant/layout";
 
 // What the cube pipeline reads on the GPU (faceNodes): four 32-bit words a face, laid out as constant/layout says.
 // Plane, lowU and lowV are signed sixteen-bit counts of cubes from the anchor of the batch the face is drawn in,
 // so the place of its chunk is already in them. `rise` lifts the face by 256ths of a cube: a sheet of water lies
 // at its level, not on the lattice. A cap (capFaces) stands a sliver behind its plane, clear of a riser that lies
 // in it.
+const put = (field: FaceField, value: number) => (value & fieldMask(field)) << field.shift;
+
 export const packFace = (out: Uint32Array | number[], at: number, axis: number, negative: boolean, plane: number, lowU: number, lowV: number,
   sizeU: number, sizeV: number, material: number, occlusion: number, level: number, rise: number, cap = false) => {
-  out[at] = (plane & 0xffff) << Face.plane.shift | (lowU & 0xffff) << Face.lowU.shift;
-  out[at + 1] = (lowV & 0xffff) << Face.lowV.shift | (sizeU & 0xffff) << Face.sizeU.shift;
-  out[at + 2] = (sizeV & 0xffff) << Face.sizeV.shift | (material & 0xff) << Face.material.shift | (occlusion & 0xff) << Face.occlusion.shift;
-  out[at + 3] = axis << Face.axis.shift | Number(negative) << Face.negative.shift | level << Face.level.shift | rise << Face.rise.shift
-    | Number(cap) << Face.cap.shift;
+  out[at] = (put(Face.plane, plane) | put(Face.lowU, lowU)) >>> 0;
+  out[at + 1] = (put(Face.lowV, lowV) | put(Face.sizeU, sizeU)) >>> 0;
+  out[at + 2] = (put(Face.sizeV, sizeV) | put(Face.material, material) | put(Face.occlusion, occlusion)) >>> 0;
+  out[at + 3] = (put(Face.axis, axis) | put(Face.negative, Number(negative)) | put(Face.level, level) | put(Face.rise, rise)
+    | put(Face.cap, Number(cap))) >>> 0;
 };
 
-const signed = (word: number) => (word & 0xffff) << 16 >> 16;
+const get = (packed: Uint32Array, at: number, field: FaceField) => packed[at + field.word] >>> field.shift & fieldMask(field);
+// A sixteen-bit field read as a signed count.
+const signed = (value: number) => value << 16 >> 16;
 
 // A packed face read back, for the code that builds faces from faces (capFaces).
 export function readFace(packed: Uint32Array, at: number) {
   return {
-    axis: packed[at + Face.axis.word] >>> Face.axis.shift & 3,
-    negative: (packed[at + Face.negative.word] >>> Face.negative.shift & 1) === 1,
-    plane: signed(packed[at + Face.plane.word] >>> Face.plane.shift),
-    lowU: signed(packed[at + Face.lowU.word] >>> Face.lowU.shift),
-    lowV: signed(packed[at + Face.lowV.word] >>> Face.lowV.shift),
-    sizeU: packed[at + Face.sizeU.word] >>> Face.sizeU.shift & 0xffff,
-    sizeV: packed[at + Face.sizeV.word] >>> Face.sizeV.shift & 0xffff,
-    material: packed[at + Face.material.word] >>> Face.material.shift & 0xff,
+    axis: get(packed, at, Face.axis),
+    negative: get(packed, at, Face.negative) === 1,
+    plane: signed(get(packed, at, Face.plane)),
+    lowU: signed(get(packed, at, Face.lowU)),
+    lowV: signed(get(packed, at, Face.lowV)),
+    sizeU: get(packed, at, Face.sizeU),
+    sizeV: get(packed, at, Face.sizeV),
+    material: get(packed, at, Face.material),
   };
 }
 
@@ -55,7 +59,7 @@ export function packFaces(faces: Int16Array, words: number, level: number, out: 
 export function shiftFaces(out: Uint32Array, first: number, count: number, by: readonly number[]) {
   for (let at = first * FaceWords; at < (first + count) * FaceWords; at += FaceWords) {
     const { axis, plane, lowU, lowV } = readFace(out, at);
-    out[at] = ((plane + by[axis]) & 0xffff) << Face.plane.shift | ((lowU + by[(axis + 1) % 3]) & 0xffff) << Face.lowU.shift;
-    out[at + 1] = ((lowV + by[(axis + 2) % 3]) & 0xffff) << Face.lowV.shift | (out[at + 1] & 0xffff << Face.sizeU.shift);
+    out[at + Face.plane.word] = (put(Face.plane, plane + by[axis]) | put(Face.lowU, lowU + by[(axis + 1) % 3])) >>> 0;
+    out[at + Face.lowV.word] = (put(Face.lowV, lowV + by[(axis + 2) % 3]) | put(Face.sizeU, get(out, at, Face.sizeU))) >>> 0;
   }
 }

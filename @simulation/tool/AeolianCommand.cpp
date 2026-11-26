@@ -6,6 +6,7 @@
 #include "climate/type/Climate.hpp"
 #include "diagnostics/fn/Png.hpp"
 #include "diagnostics/fn/Relief.hpp"
+#include "hydrology/constant/Water.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "landscape/fn/Process.hpp"
 #include "planet/fn/Sample.hpp"

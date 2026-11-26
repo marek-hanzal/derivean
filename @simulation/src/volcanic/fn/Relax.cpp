@@ -10,6 +10,7 @@ namespace {
 
 constexpr float Least = 1e-3f;       // m of mobile layer below which a cell has nothing to pass on
 constexpr float Tolerance = 0.02f;   // share of a flow unit by which a surface may stand above its rest
+constexpr float Precision = 0.005f;  // share of the fall a layer holds over one cell by which it may stand above its rest
 
 // Lava keeps running while its core is hot and stiffens fast once the crust has grown through it:
 // the yield strength stays near its hot value for most of the way and reaches the cold one at the end.
@@ -36,7 +37,7 @@ void feed(Emplacement& field, Worklist& work, size_t cell, float thickness) {
 
 long relax(Emplacement& field, const Rheology& rheology, Worklist& work, long visits) {
     const int width = field.width;
-    const float cell = float(field.cell), area = cell * cell, slack = std::max(Least, Tolerance * rheology.sheet);
+    const float cell = float(field.cell), area = cell * cell, least = std::max(Least, Tolerance * rheology.sheet);
     long used = 0;
     while (!work.heap.empty() && used < visits) {
         std::pop_heap(work.heap.begin(), work.heap.end());
@@ -50,6 +51,9 @@ long relax(Emplacement& field, const Rheology& rheology, Worklist& work, long vi
         const float top = field.ground[i] + layer;
         // The fall over one cell's width that the layer just holds.
         const float holds = yieldAt(rheology, field.heat[i]) / std::min(layer, rheology.sheet) * cell;
+        // A surface may stand above its rest by a share of a flow unit, and by a share of the fall
+        // it holds over a cell: no finer than the grid draws a slope.
+        const float slack = std::max(least, Precision * holds);
         // For each neighbour the level this cell would have to sink to before it stopped feeding it.
         float level[8];
         int order[8], count = 0;

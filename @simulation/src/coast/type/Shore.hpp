@@ -51,8 +51,12 @@ struct ShoreRecord {
 inline constexpr float Film = 0.1f;
 
 // What a step's flood left standing over ground at `top`: the sea, and lakes their rivers still reach.
+// Standing is judged against `Domain::surface`, the ground the flood was computed on: rivers and ice
+// cut their beds after the flood within a step, and a bed cut below a level that has not been
+// flooded again is a channel, not a lake.
 inline bool standsOver(const Domain& domain, size_t i, float top) {
-    return domain.level[i] > top + Film && (domain.level[i] <= float(domain.seaLevel) + SeaBand || domain.discharge[i] > 0);
+    const float level = domain.level[i];
+    return level > top + Film && level > domain.surface[i] + Film && (level <= float(domain.seaLevel) + SeaBand || domain.discharge[i] > 0);
 }
 
 inline float swingOf(const Domain& domain, float water) { return water <= float(domain.seaLevel) + SeaBand ? SeaSwing : LakeSwing; }

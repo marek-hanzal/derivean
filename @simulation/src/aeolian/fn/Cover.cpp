@@ -11,9 +11,17 @@ constexpr float Trace = 1e-4f;        // m below which a class counts as absent
 
 } // namespace
 
+bool underFlood(const Domain& domain, size_t i) {
+    // The flood ran on the surface of the step's start. What the step laid since, and at Local and
+    // Site the wind's parked sand, can stand above the water it found: that hollow is full.
+    const std::vector<float>& parked = domain.aeolian.parked;
+    const float ground = domain.ground.rock[i] + domain.sedimentAt(i) + (parked.size() == domain.cells() ? parked[i] : 0.0f);
+    return domain.level[i] > std::max(domain.surface[i], ground) + 1e-3f;
+}
+
 bool heldByWater(const Domain& domain, size_t i) {
     if (domain.ice[i] > 0.5f) return true;
-    const bool flooded = domain.level[i] > domain.surface[i] + 1e-3f;
+    const bool flooded = underFlood(domain, i);
     // A hollow the flood fills on paper is dry where no water is left to reach it.
     if (flooded && (domain.discharge[i] > 0 || domain.level[i] <= float(domain.seaLevel) + 0.5f)) return true;
     const float width = StreamWidth * std::sqrt(domain.discharge[i] / float(YearSeconds));

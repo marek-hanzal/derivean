@@ -27,6 +27,7 @@ export function createSnowField(world: WorldInfo) {
     nodes,
     // Takes a snapshot.
     apply(clouds: CloudField) {
+      if (!nodes) return;
       const width = clouds.cells * (rungs + 1);
       if (!field || field.image.width !== width || field.image.height !== clouds.cells) {
         field?.dispose();
@@ -49,7 +50,9 @@ export function createSnowField(world: WorldInfo) {
       if (!grid) return;
       const x = (origin.x - grid.origin[0]) / grid.cell - 0.5;
       const z = (origin.z - grid.origin[1]) / grid.cell - 0.5;
-      place.value.set(x - Math.floor(x), z - Math.floor(z), Math.floor(x), Math.floor(z));
+      // Whole cells wrapped onto the grid, so the shader's own wrap only ever sees small negatives.
+      const wrap = (cell: number) => ((cell % cells.value) + cells.value) % cells.value;
+      place.value.set(x - Math.floor(x), z - Math.floor(z), wrap(Math.floor(x)), wrap(Math.floor(z)));
     },
     dispose() {
       field?.dispose();

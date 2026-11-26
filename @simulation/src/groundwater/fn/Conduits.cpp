@@ -14,6 +14,10 @@ constexpr float LevelRise = 8.0f;         // m at least between a passage and th
 constexpr float LeastIncision = 1.0e-6f;  // m/yr of valley cutting below which no level was ever left dry
 constexpr float LeastRoof = 2.0f;         // m of ground an abandoned level needs over it to have survived
 constexpr float WidestShaft = 4.0f;       // m radius
+// m above the local level's ground that a mouth rises to beside its spring. The finer levels put
+// the vent's ground within metres of the local level's, so the passage meets it there and opens;
+// above the ground the tube is air anyway.
+constexpr float MouthRise = 12.0f;
 
 float radiusOf(double flux) { return std::min(MostConduit, ConduitScale * std::pow(float(flux) / PerYear, 0.4f)); }
 
@@ -195,11 +199,12 @@ void growConduits(const WaterField& field, GroundwaterTile& tile) {
             if (!inside(making, parent)) continue;
             end = making.point[size_t(parent)].at, endHeight = making.point[size_t(parent)].height;
         } else if (out.spring >= 0) {
-            // The mouth: out to the spring and a little beyond, so that the passage reaches daylight whatever the finer ground does there.
+            // The mouth: out to the spring and a little beyond, rising, so that the passage reaches
+            // daylight whatever the finer ground does there.
             const Spring& vent = tile.springs[size_t(out.spring)];
             const Vec2 way = vent.position - here.at;
             end = vent.position + (length(way) > 1.0 ? normalized(way) * 12.0 : Vec2{});
-            endHeight = vent.elevation + 0.3f * here.radius;
+            endHeight = vent.elevation + MouthRise;
         } else {
             continue;
         }

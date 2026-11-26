@@ -2,7 +2,7 @@ import type { Frame, GameBridge, WorldInfo, WorldOptions } from "../../../contra
 import type { WorldClock } from "../../calendar/service/WorldClock";
 import type { Pilot } from "../../control/type/Pilot";
 import type { FrameMetrics } from "../../diagnostics/service/FrameMetrics";
-import type { createWorldScene } from "../../scene/service/WorldScene";
+import type { WorldView } from "../../scene/type/WorldView";
 import { worldSettled } from "../fn/worldSettled";
 
 export interface SessionEvents {
@@ -16,7 +16,7 @@ export interface SessionEvents {
 // One world at a time: starts it, exchanges one in-flight command for one frame, and draws. A restart drops the
 // frames of the world it replaces.
 export function createWorldSession(
-  bridge: GameBridge, scene: ReturnType<typeof createWorldScene>, metrics: FrameMetrics, clock: WorldClock,
+  bridge: GameBridge, scene: WorldView, metrics: FrameMetrics, clock: WorldClock,
   events: SessionEvents,
 ) {
   let pilot: Pilot | undefined;

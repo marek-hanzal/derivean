@@ -1,14 +1,12 @@
 #include "coast/type/SeaVoid.hpp"
 
 #include "coast/type/Shore.hpp"
-#include "core/fn/Hash.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "rockmass/type/RockMass.hpp"
 
 namespace derivean::sim {
 namespace {
 
-constexpr uint64_t CaveStream = 0x53454143;
 constexpr float FaceRise = 0.5f;        // m of rock over the water from which a shore cell is a face
 constexpr float FaceCover = 1.0f;       // m of loose cover over which the rock under it is no face
 constexpr float NotchLeast = 0.3f;      // m of cut from which a notch is drawn
@@ -18,10 +16,10 @@ constexpr float NotchDeepest = 3.5f;    // m; beyond that the cut is a bench wit
 // CaveReach metres for every e-fold of excess.
 constexpr float CaveReach = 6.0f;
 constexpr float CaveLeast = 2.0f, CaveLongest = 30.0f;
-constexpr double CaveShare = 0.6;       // share of such joints that have opened
-// Joints closer than this are the fabric of a face, not a cave; planes more than three site
-// cells apart are in the site surface already, as the coves the waves cut along them.
-constexpr float JointLeast = 2.5f;
+// Waves open caves along the master joints of a set, the order whose planes stand at least
+// JointLeast apart; closer joints are the fabric of a face and open clefts, not caves. Orders
+// spaced wider than JointMost do not reach a face often enough to be seen.
+constexpr float JointLeast = 8.0f, JointMost = 60.0f;
 constexpr int MostSpans = 8;
 
 struct SiteCell {
@@ -38,7 +36,10 @@ SiteCell cellAt(const SiteTiles& tiles, int64_t gx, int64_t gz) {
 }
 
 // The caves of one face: for each joint set, the plane that meets the face nearest its middle.
-void openCaves(const Setting& setting, int64_t gx, int64_t gz, int side, Vec2 from, Vec2 to, Vec2 inward, float water, float struck, float datum, std::vector<SeaVoid>& out) {
+// A cave grows from the face as far as the waves have had time for: the face itself has gone back
+// by `notch` since it was laid bare, and the crushed rock along the joint goes faster in proportion
+// to the excess of the waves over what each withstands (the retreat law of coast/fn/Cliff.cpp).
+void openCaves(const Setting& setting, int64_t gx, int64_t gz, Vec2 from, Vec2 to, Vec2 inward, float water, float struck, float notch, float datum, std::vector<SeaVoid>& out) {
     const double cell = specOf(Level::Site).cell;
     const Vec2 centre{(double(gx) + 0.5) * cell, (double(gz) + 0.5) * cell};
     const StrataColumn column = strataAt(*setting.planet, planetPoint(setting.seed, centre));
@@ -49,20 +50,22 @@ void openCaves(const Setting& setting, int64_t gx, int64_t gz, int side, Vec2 fr
     const MaterialDefinition& rock = definitionOf(bed.rock);
     const float sound = rock.massCohesion > 0 ? std::clamp(mass.cohesion / rock.massCohesion, 0.05f, 4.0f) : 1.0f;
     const float withstand = Withstand * std::sqrt(rock.compressiveStrength * sound * CrushedStrength);
+    const float face = Withstand * std::sqrt(rock.compressiveStrength * sound);
     if (struck <= withstand) return;
-    const float length = std::min(CaveLongest, CaveReach * std::log(struck / std::max(1e-3f, withstand)));
+    const auto rate = [&](float w) { return std::max(0.0f, struck - w) / (w * w); };
+    const float faster = struck > face ? rate(withstand) / rate(face) : CaveLongest / std::max(NotchLeast, notch);
+    const float length = std::min({CaveLongest, CaveReach * std::log(struck / std::max(1e-3f, withstand)), faster * notch});
     if (length < CaveLeast) return;
     const auto materialOf = [&](Vec2 p) { return column.material + (p - centre); };
     for (int set = 0; set < JointSets; ++set) {
         int order = 0;
         float spacing = mass.sets[set].spacing;
         while (order < JointOrders && spacing < JointLeast) spacing *= OrderStep, ++order;
-        if (order >= JointOrders || spacing > 3.0f * float(cell)) continue;
+        if (order >= JointOrders || spacing > JointMost) continue;
         Vec2 run{std::cos(mass.sets[set].strike), std::sin(mass.sets[set].strike)};
         const double into = dot(run, inward);
         if (std::abs(into) < 0.5) continue;   // a joint along the face parts a slab from it; it opens no cave
         if (into < 0) run = run * -1.0;
-        if (unit(hash(stream(setting.seed, CaveStream), gx, gz, side * JointSets + set)) >= CaveShare) continue;
         // Where the nearest broken plane of the set crosses the face, looked for along it a little inside the rock.
         Vec2 mouth{};
         float nearest = 1e9f;
@@ -144,7 +147,9 @@ SeaVoids seaVoidsOver(const SiteTiles& tiles, const Setting& setting, double min
                     made.push_back({from.x, from.z, to.x, to.z, water + 0.15f, std::min(shore.notch[here.at], NotchDeepest), std::clamp(0.4f * swing + 0.3f * struck, 0.4f, 1.6f), water,
                                     SeaVoidKind::Notch});
                 }
-                if (setting.planet && struck > 0) openCaves(setting, gx, gz, side, from, to, inward, water, struck, here.tile->now.datum[here.at], made);
+                // Only a face the waves are cutting has caves of their making.
+                if (setting.planet && struck > 0 && shore.notch[here.at] >= NotchLeast)
+                    openCaves(setting, gx, gz, from, to, inward, water, struck, shore.notch[here.at], here.tile->now.datum[here.at], made);
                 for (const SeaVoid& v : made)
                     if (std::max(v.ax, v.bx) + v.wide >= minX && std::min(v.ax, v.bx) - v.wide <= maxX && std::max(v.az, v.bz) + v.wide >= minZ && std::min(v.az, v.bz) - v.wide <= maxZ)
                         result.voids.push_back(v);

@@ -99,11 +99,12 @@ void printCoastLedger(const CoastLedger& ledger, double area) {
                 ledger.dissolved / area, ledger.entered / area, ledger.left / area);
 }
 
-// terra coast --x m --z m [--level 2|3] [--tiles n] [--out directory] [--name tag], or --scene (above).
+// terra coast --x m --z m [--level 2|3] [--tiles n] [--out directory] [--name tag], or --scene (above), or --find (CoastFind.cpp).
 // What the shores of n × n tiles around a place are made of: length by kind, cliff heights, platform
 // and beach widths, spits and lagoons; with --out a map of them.
 int coastCommand(const Arguments& arguments) {
     if (arguments.values.count("scene")) return sceneCommand(arguments);
+    if (arguments.values.count("find")) return coastFind(arguments);
     Lap lap;
     World world({arguments.seed(), arguments.number("age", 4.6e9), unsigned(arguments.number("threads", 0))});
     const Level level = Level(int(arguments.number("level", 2)));

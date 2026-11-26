@@ -16,7 +16,7 @@ struct DuneStats {
     double leeSlipShare{};   // share of the slip-face cells that face away from the wind
     double crestAngle{};     // degrees between the crest lines and the wind: 90 across it, 0 along it
     double order{};          // 0 when slopes face every way alike, 1 when all crests run one way
-    double height{}, tallest{};   // m from trough to crest across the crests: median and largest
+    double height{}, tallest{};   // m of sand from trough to crest across the crests: median and largest
     double spacing{};        // m from crest to crest across the crests, median
     int crests{};
     int patches{};           // separate bodies of sand

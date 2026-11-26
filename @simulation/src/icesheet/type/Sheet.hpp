@@ -24,6 +24,9 @@ struct SheetRecord {
     std::vector<float> esker;            // laid in a stream under the ice
     std::vector<float> meltwater;        // m³/yr of water under the ice of the last maximum
     std::vector<uint8_t> meltTo;         // neighbour index 0..7 that water leaves by, 255 for none
+    // Finer levels only: m of debris the last sheet carried on down-ice from each cell. A later
+    // neighbour's ice takes it up where it crosses into that neighbour, so the two agree at the seam.
+    std::vector<float> passing;
 };
 
 // One stage's sheet on the cells of a domain, read off the coarse relaxation over the domain's own ground.

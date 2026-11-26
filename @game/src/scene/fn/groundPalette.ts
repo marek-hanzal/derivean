@@ -1,4 +1,4 @@
-import { DataTexture, NearestFilter, RGBAFormat, SRGBColorSpace, UnsignedByteType } from "three";
+import { DataTexture, NearestFilter, RGBAFormat, SRGBColorSpace, UnsignedByteType } from "three/webgpu";
 import type { WorldInfo } from "../../../contract/GameBridge";
 
 // The world's materials as a strip the far terrain looks its surface up in by id: the material's colour, and in

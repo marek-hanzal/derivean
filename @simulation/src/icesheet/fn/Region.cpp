@@ -34,8 +34,9 @@ float recordedIce(const Domain& domain, int x, int z, int stage) {
     return stage == IceNow ? tile->ice[from] : tile->iceAge[from];
 }
 
-// Mean of the square of half-width `radius` around every cell, clamped at the edge.
-std::vector<float> smoothed(const std::vector<float>& field, int n, int radius) {
+} // namespace
+
+std::vector<float> boxMean(const std::vector<float>& field, int n, int radius) {
     std::vector<float> along(field.size()), both(field.size());
     for (int pass = 0; pass < 2; ++pass) {
         const std::vector<float>& from = pass ? along : field;
@@ -50,8 +51,6 @@ std::vector<float> smoothed(const std::vector<float>& field, int n, int radius) 
     }
     return both;
 }
-
-} // namespace
 
 bool iceReaches(const Domain& domain, const SheetSource& source) {
     const int n = domain.size / Fold, coldest = source.stages() - 1;
@@ -124,7 +123,7 @@ void solveStage(const Domain& domain, SheetWork& work, int stage, double towards
     }
     // The source's sheet lies on ground far smoother than a domain's; its thickness is taken over
     // the domain's ground averaged as widely, which puts its surface, not its thickness, on every cell.
-    const std::vector<float> level = smoothed(grid.bed, n, SmoothRadius);
+    const std::vector<float> level = boxMean(grid.bed, n, SmoothRadius);
     for (int z = 0; z < n; ++z) {
         for (int x = 0; x < n; ++x) {
             const size_t i = grid.index(x, z);

@@ -182,7 +182,7 @@ void testVolcanicLaws() {
     expect(std::abs(ledger.erupted - accounted) < 1e-6 * ledger.erupted, "the erupted volume is not the volume laid plus what left", (ledger.erupted - accounted) / Km3);
     // The region leaves the small eruptions of young episodes to the local level.
     double due = 0;
-    for (const Episode& episode : cone.volcanic.vents.front().episodes) due += episode.volume * (1.0 - minorShare(cone.volcanic.vents.front(), episode));
+    for (const Episode& episode : cone.volcanic.vents.front().episodes) due += episode.volume - minorVolume(cone.volcanic.vents.front(), episode);
     expect(std::abs(ledger.erupted - due) < 1e-6 * due, "a vent did not erupt what its episodes say", ledger.erupted / Km3);
     const TileLedger& land = cone.ledger;
     expect(high.pile <= ledger.lava + ledger.cone + ledger.sealed + 1.0, "the pile holds more than was laid", high.pile / Km3);
@@ -194,7 +194,10 @@ void testVolcanicLaws() {
     const Domain caldera = replayProving(spec);
     const EdificeShape pit = measureEdifice(gridOf(caldera), caldera.volcanic.vents.front().centre, 60e3);
     expect(std::abs(caldera.volcanic.ledger.foundered - 40 * Km3) < 1e-3 * 40 * Km3, "the roof did not go down by the volume that left the chamber", caldera.volcanic.ledger.foundered / Km3);
-    expect(pit.pit > 200 && pit.pitRadius >= 2000 && pit.pitRadius <= 10000, "a great eruption left no caldera", pit.pit);
+    // It founders at the end of its step and that step's erosion follows: at a region's kilometre
+    // cells slope failure widens the ring wall into a funnel and part of the pit fills. The wall as
+    // steep as rock holds is the local level's to draw.
+    expect(pit.pit > 100 && pit.pitRadius >= 2000 && pit.pitRadius <= 10000, "a great eruption left no caldera", pit.pit);
 
     // The pool only spreads what a replay may spread: the ground is the same to the last bit.
     spec.paroxysm = 0, spec.episodes = 2;

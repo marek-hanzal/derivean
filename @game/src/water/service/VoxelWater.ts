@@ -6,6 +6,7 @@ import { createFaceBatch, type FaceBatch } from "../../cubes/service/FaceBatch";
 // The engine's meshes of voxel water, one per chunk, in water units of a voxel. A unit is too small for a chunk
 // to be counted from anywhere but its own origin, so each chunk is a batch of its own.
 export function createVoxelWater(content: Group, world: WorldInfo, surface: Material) {
+  const edge = world.voxelSize / world.waterUnitsPerVoxel;
   const chunks = new Map<string, FaceBatch>();
 
   function remove(id: string) {
@@ -20,7 +21,7 @@ export function createVoxelWater(content: Group, world: WorldInfo, surface: Mate
         const id = key.join(",");
         remove(id);
         if (!faces.length) continue;
-        const chunk = createFaceBatch(content, surface, FreeLevel, world.voxelSize / world.waterUnitsPerVoxel);
+        const chunk = createFaceBatch(content, surface, FreeLevel, edge, world.chunkMeters / edge);
         chunk.fill(id, faces, world.faceWords, origin);
         if (chunk.mesh) chunk.mesh.renderOrder = 2;
         chunks.set(id, chunk);

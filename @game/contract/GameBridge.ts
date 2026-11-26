@@ -143,7 +143,8 @@ export interface CubeChunk {
 export interface CubeLevel {
   level: number;
   edge: number;
-  // Squares of ground of this level (columns of chunks) the view wants, how many of them the renderer holds, and
+  // Squares of ground of this level (columns of chunks) the view wants: those reaching into the level's box at full
+  // reach and its band, not the margin built beyond for an eye on the move. How many of them the renderer holds, and
   // how many of those are final: cut from the data the level wants (dataLevel = wantedLevel) and not about to be
   // swapped. The level is drawable where its box says, and final when settled equals wanted. A level rests,
   // wanting none, while the eye is too high above the ground or too fast for it.
@@ -259,8 +260,9 @@ export interface Frame {
   // A picture taken while `far` is false shows stand-in data somewhere.
   ready: { site: boolean; local: boolean; region: boolean; far: boolean };
   // The same as counts, for a progress display and for waiting until a view is whole: the tiles the view wants
-  // at each level (region over 330 km, local over 64 km, site over 3 km, ground around the feet; a level that is
-  // pointless from the player's height wants none) and how many of them are built. The wanted set is finite and
+  // at each level (region over 330 km, local over 64 km, site over 3 km, ground around the feet; in a world of
+  // cubes the tiles its levels read instead; a level that is pointless from the player's height wants none) and
+  // how many of them are built. The wanted set is finite and
   // moves with the player; everything is built when finished equals wanted at every level.
   tiles: Record<"region" | "local" | "site" | "ground", { wanted: number; finished: number }>;
   pending: { chunks: number; patches: number };

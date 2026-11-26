@@ -31,6 +31,10 @@ function checkShot(file, shot) {
   if (time !== undefined && !["dayOfYear", "hour", "rate"].every((key) => time?.[key] === undefined || (finite(time[key]) && time[key] >= 0))) reject(file, `shot ${shot.name} has a malformed time`);
   if (seek !== undefined && (typeof seek !== "object" || seek === null)) reject(file, `shot ${shot.name} has a malformed seek`);
   if (!flag(shot.clouds)) reject(file, `shot ${shot.name} needs clouds, if given, as true or false`);
+  const { brush } = shot;
+  if (brush !== undefined && !(Number.isInteger(brush?.frames) && brush.frames > 0 && flag(brush.place)
+    && (brush.radius === undefined || (Number.isInteger(brush.radius) && brush.radius > 0))
+    && (brush.seconds === undefined || (finite(brush.seconds) && brush.seconds >= 0)) && cruise === undefined)) reject(file, `shot ${shot.name} has a malformed brush or one with a cruise`);
   if (shot.map !== undefined && !(finite(shot.map?.span) && shot.map.span > 0)) reject(file, `shot ${shot.name} has a malformed map`);
 }
 

@@ -1,0 +1,276 @@
+{
+  "world": {
+    "seed": 42,
+    "age": 4600000000.0,
+    "spawn": [
+      -2521902,
+      -4671906
+    ]
+  },
+  "out": ".out/playwright/renderer/live-s42-x-2521902-z-4671906-2026-11-26",
+  "settleSeconds": 2,
+  "timeoutSeconds": 300,
+  "shots": [
+    {
+      "name": "spawn-ground-n-h16",
+      "above": 0,
+      "yaw": 0.0,
+      "pitch": -0.03,
+      "fly": false,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "dig-ground-n",
+      "above": 0,
+      "yaw": 0.0,
+      "pitch": -0.45,
+      "fly": false,
+      "time": {
+        "hour": 10.0,
+        "rate": 0
+      },
+      "brush": {
+        "frames": 90,
+        "radius": 4,
+        "seconds": 3
+      }
+    },
+    {
+      "name": "dig-ground-e",
+      "above": 0,
+      "yaw": -1.5708,
+      "pitch": -0.45,
+      "fly": false,
+      "time": {
+        "hour": 10.0,
+        "rate": 0
+      },
+      "brush": {
+        "frames": 90,
+        "radius": 4,
+        "seconds": 3
+      }
+    },
+    {
+      "name": "dig-ground-s",
+      "above": 0,
+      "yaw": 3.1416,
+      "pitch": -0.45,
+      "fly": false,
+      "time": {
+        "hour": 10.0,
+        "rate": 0
+      },
+      "brush": {
+        "frames": 90,
+        "radius": 4,
+        "seconds": 3
+      }
+    },
+    {
+      "name": "dig-ground-w",
+      "above": 0,
+      "yaw": 1.5708,
+      "pitch": -0.45,
+      "fly": false,
+      "time": {
+        "hour": 10.0,
+        "rate": 0
+      },
+      "brush": {
+        "frames": 90,
+        "radius": 4,
+        "seconds": 3
+      }
+    },
+    {
+      "name": "dig-ground-w-after",
+      "above": 0,
+      "yaw": 1.5708,
+      "pitch": -0.45,
+      "fly": false,
+      "time": {
+        "hour": 10.0,
+        "rate": 0
+      },
+      "brush": {
+        "frames": 1,
+        "radius": 1,
+        "seconds": 6
+      }
+    },
+    {
+      "name": "place-ground-n",
+      "above": 0,
+      "yaw": 0.0,
+      "pitch": -0.3,
+      "fly": false,
+      "time": {
+        "hour": 10.0,
+        "rate": 0
+      },
+      "brush": {
+        "frames": 40,
+        "place": true,
+        "seconds": 2
+      }
+    },
+    {
+      "name": "spawn-300m-n-h16",
+      "above": 300,
+      "yaw": 0.0,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "spawn-300m-n-h12",
+      "above": 300,
+      "yaw": 0.0,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 12.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "spawn-300m-s-h16",
+      "above": 300,
+      "yaw": 3.1416,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "spawn-2km-n-h16",
+      "above": 2000,
+      "yaw": 0.0,
+      "pitch": -0.25,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "spawn-8km-n-h16",
+      "above": 8000,
+      "yaw": 0.0,
+      "pitch": -0.3,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      }
+    },
+    {
+      "name": "move-40m-n-0",
+      "above": 40,
+      "yaw": 0.0,
+      "pitch": -0.08,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      },
+      "cruise": {
+        "seconds": 1
+      }
+    },
+    {
+      "name": "move-40m-n-1",
+      "above": 40,
+      "yaw": 0.0,
+      "pitch": -0.08,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      },
+      "cruise": {
+        "seconds": 1
+      }
+    },
+    {
+      "name": "move-40m-n-2",
+      "above": 40,
+      "yaw": 0.0,
+      "pitch": -0.08,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      },
+      "cruise": {
+        "seconds": 1
+      }
+    },
+    {
+      "name": "move-40m-n-3",
+      "above": 40,
+      "yaw": 0.0,
+      "pitch": -0.08,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      },
+      "cruise": {
+        "seconds": 1
+      }
+    },
+    {
+      "name": "move-40m-n-4",
+      "above": 40,
+      "yaw": 0.0,
+      "pitch": -0.08,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      },
+      "cruise": {
+        "seconds": 1
+      }
+    },
+    {
+      "name": "move-40m-n-5",
+      "above": 40,
+      "yaw": 0.0,
+      "pitch": -0.08,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      },
+      "cruise": {
+        "seconds": 1
+      }
+    },
+    {
+      "name": "boost-30s-300m",
+      "above": 300,
+      "yaw": 0.0,
+      "pitch": -0.12,
+      "fly": true,
+      "time": {
+        "hour": 16.0,
+        "rate": 0
+      },
+      "cruise": {
+        "seconds": 30,
+        "boost": true
+      }
+    }
+  ]
+}

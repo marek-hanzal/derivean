@@ -47,8 +47,7 @@ export function createChartFeed(bridge: Pick<GameBridge, "chart">, surface: Char
 
   // Reads `count`² panes of `size` pixels over the square into the surface's next sheet. `want` lets one
   // arrived pane through each frame to be handed on and measured, so no frame carries more than one.
-  async function read(square: Square, count: number, size: number) {
-    const mine = ++live;
+  async function read(square: Square, count: number, size: number, mine: number) {
     const span = square.span / count;
     const measures: PaneMeasure[] = [];
     surface.begin(count * size);
@@ -81,23 +80,27 @@ export function createChartFeed(bridge: Pick<GameBridge, "chart">, surface: Char
     for (const turn of arrived.splice(0)) turn();
   }
 
+  // A round is one reading: a drop at any point of it, the question for news included, cancels the rest, and
+  // a failure of a dropped round is nobody's concern.
   async function round(square: Square, kind: Round) {
     busy = true;
     const began = performance.now();
+    const mine = ++live;
     try {
-      if (kind === "news" && !await bridge.chart({ ...square, size: 1, unless: shown?.tiles })) return;
+      if (kind === "news" && (!await bridge.chart({ ...square, size: 1, unless: shown?.tiles }) || mine !== live)) return;
       if (kind === "fresh") {
-        const preview = await read(square, 1, PreviewSize);
+        const preview = await read(square, 1, PreviewSize, mine);
         if (!preview) return;
         show(square, preview, 1, false);
         // The view has moved on meanwhile, or is on its way out: the next round starts from where it is then.
         if (!wanted || !serves(square, wanted) || hurried(square)) return;
       }
-      const sharp = await read(square, PaneCount, PaneSize);
+      const sharp = await read(square, PaneCount, PaneSize, mine);
       if (!sharp) return;
       show(square, sharp, PaneCount, true);
       readMs = performance.now() - began;
     } catch (error) {
+      if (mine !== live) return;
       drop();
       failed(error);
     } finally {

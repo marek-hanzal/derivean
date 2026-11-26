@@ -1,127 +1,72 @@
 import {
-  LinearFilter, RepeatWrapping, RGBAFormat, ShaderMaterial, UnsignedByteType, WebGL3DRenderTarget, WebGLRenderTarget,
-  type WebGLRenderer,
-} from "three";
-import { fullscreen, fullscreenVertex } from "./fullscreen";
+  DataTexture, FloatType, LinearFilter, NearestFilter, RepeatWrapping, RGBAFormat, Storage3DTexture, UnsignedByteType, type WebGPURenderer,
+} from "three/webgpu";
+import { Fn, instanceIndex, instancedArray, textureStore, uvec3, vec3, wgsl, wgslFn } from "three/tsl";
+import { CoverSteps } from "../constant/density";
+import { NoiseWgsl } from "../constant/noise";
 
 const ShapeSize = 128;
 const DetailSize = 32;
-// Shares of the sky the cover levels are tabulated for.
-export const CoverSteps = 32;
+// Texels a side of the slices the cover levels are measured on, and where those slices lie.
+const LevelSize = 96;
+const LevelSlices = [0.11, 0.37, 0.63, 0.89];
 
-// Tileable noise for the structure below a weather cell. Shape holds three characters at four features a repeat:
-// r heaped (Perlin swollen and then bitten by Worley, which gives domes), g smooth (Perlin), b cellular (Worley);
-// a is fine Worley. Detail holds fine Worley for wisps.
-const noise = `
-  uniform float slice;
-  varying vec2 vUv;
-  uvec3 pcg(uvec3 v) {
-    v = v * 1664525u + 1013904223u;
-    v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y;
-    v ^= v >> 16u;
-    v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y;
-    return v;
-  }
-  vec3 hash(vec3 cell, float period) {
-    return vec3(pcg(uvec3(ivec3(mod(cell, period))))) / 4294967295.0;
-  }
-  float worley(vec3 p, float period) {
-    vec3 cell = floor(p * period);
-    vec3 inside = fract(p * period);
-    float nearest = 1.0;
-    for (int z = -1; z <= 1; z++) for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) {
-      vec3 offset = vec3(x, y, z);
-      vec3 point = hash(cell + offset, period) + offset - inside;
-      nearest = min(nearest, dot(point, point));
-    }
-    return 1.0 - min(sqrt(nearest), 1.0);
-  }
-  float perlin(vec3 p, float period) {
-    vec3 cell = floor(p * period);
-    vec3 inside = fract(p * period);
-    vec3 ease = inside * inside * inside * (inside * (inside * 6.0 - 15.0) + 10.0);
-    float sum = 0.0;
-    for (int z = 0; z <= 1; z++) for (int y = 0; y <= 1; y++) for (int x = 0; x <= 1; x++) {
-      vec3 corner = vec3(x, y, z);
-      vec3 slope = normalize(hash(cell + corner, period) * 2.0 - 1.0);
-      vec3 weight = mix(1.0 - ease, ease, corner);
-      sum += weight.x * weight.y * weight.z * dot(slope, inside - corner);
-    }
-    return sum;
-  }
-  float worleys(vec3 p, float period) {
-    return worley(p, period) * 0.625 + worley(p, period * 2.0) * 0.25 + worley(p, period * 4.0) * 0.125;
-  }
-  float perlins(vec3 p, float period) {
-    float sum = perlin(p, period) + perlin(p, period * 2.0) * 0.5 + perlin(p, period * 4.0) * 0.25;
-    return clamp(sum * 0.85 + 0.5, 0.0, 1.0);
-  }
-`;
+const noise = wgsl(NoiseWgsl);
+const shapeAt = wgslFn("fn shapeAt(p: vec3f) -> vec4f { return shapeNoise(p); }", [noise]);
+const detailAt = wgslFn("fn detailAt(p: vec3f) -> vec4f { return detailNoise(p); }", [noise]);
 
-const shape = `${noise}
-  void main() {
-    vec3 p = vec3(vUv, slice);
-    float soft = perlins(p, 4.0);
-    float cells = worleys(p, 4.0);
-    float swollen = cells + soft * (1.0 - cells);
-    float bite = (1.0 - worleys(p, 8.0)) * 0.5;
-    float heaped = clamp((swollen - bite) / (1.0 - bite), 0.0, 1.0);
-    gl_FragColor = vec4(heaped, soft, cells, worleys(p, 12.0));
-  }
-`;
-
-const detail = `${noise}
-  void main() {
-    vec3 p = vec3(vUv, slice);
-    gl_FragColor = vec4(worleys(p, 4.0), worleys(p, 8.0), perlins(p, 4.0), 1.0);
-  }
-`;
-
-function volume(renderer: WebGLRenderer, size: number, fragmentShader: string) {
-  const target = new WebGL3DRenderTarget(size, size, size, { format: RGBAFormat, type: UnsignedByteType, depthBuffer: false });
-  const material = new ShaderMaterial({ uniforms: { slice: { value: 0 } }, vertexShader: fullscreenVertex, fragmentShader });
-  target.texture.wrapS = target.texture.wrapT = target.texture.wrapR = RepeatWrapping;
-  target.texture.minFilter = target.texture.magFilter = LinearFilter;
-  for (let layer = 0; layer < size; layer++) {
-    material.uniforms.slice.value = (layer + 0.5) / size;
-    fullscreen(renderer, material, target, layer);
-  }
-  material.dispose();
+// The noise in a repeating 3D texture, one compute invocation a texel.
+function volume(renderer: WebGPURenderer, size: number, at: typeof shapeAt) {
+  const target = new Storage3DTexture(size, size, size);
+  target.format = RGBAFormat;
+  target.type = UnsignedByteType;
+  target.wrapS = target.wrapT = target.wrapR = RepeatWrapping;
+  target.minFilter = target.magFilter = LinearFilter;
+  const fill = Fn(() => {
+    const x = instanceIndex.mod(size);
+    const y = instanceIndex.div(size).mod(size);
+    const z = instanceIndex.div(size * size);
+    textureStore(target, uvec3(x, y, z), at(vec3(x, y, z).add(0.5).div(size)));
+  })().compute(size ** 3);
+  renderer.compute(fill);
+  fill.dispose();
   return target;
 }
 
-// For each of the three shape characters, the noise level above which a given share of the volume lies: entry
-// i of the result holds the levels for a cover of i / CoverSteps as r, g, b. Measured, so a cover of 0.3 really
-// leaves 30 % of a layer in cloud.
-function coverLevels(renderer: WebGLRenderer) {
-  const size = 96;
-  const target = new WebGLRenderTarget(size, size, { format: RGBAFormat, type: UnsignedByteType, depthBuffer: false });
-  const material = new ShaderMaterial({ uniforms: { slice: { value: 0 } }, vertexShader: fullscreenVertex, fragmentShader: shape });
-  const pixels = new Uint8Array(size * size * 4);
-  const samples: number[][] = [[], [], []];
-  for (const slice of [0.11, 0.37, 0.63, 0.89]) {
-    material.uniforms.slice.value = slice;
-    fullscreen(renderer, material, target);
-    renderer.readRenderTargetPixels(target, 0, 0, size, size, pixels);
-    for (let i = 0; i < pixels.length; i += 4) for (let k = 0; k < 3; k++) samples[k].push(pixels[i + k] / 255);
-  }
-  material.dispose();
-  target.dispose();
+// For each of the three shape characters, the noise level above which a given share of the volume lies: texel i
+// holds the levels for a cover of i / CoverSteps as r, g, b. Measured on slices of the same noise, rounded as the
+// volume's bytes round it, so a cover of 0.3 really leaves 30 % of a layer in cloud. The GPU answers later.
+async function coverLevels(renderer: WebGPURenderer) {
+  const each = LevelSize * LevelSize;
+  const samples = instancedArray(each * LevelSlices.length, "vec4");
+  const measure = Fn(() => {
+    const x = instanceIndex.mod(LevelSize);
+    const y = instanceIndex.div(LevelSize).mod(LevelSize);
+    const slice = instanceIndex.div(each);
+    const depth = slice.toFloat().mul(0.26).add(0.11);
+    samples.element(instanceIndex).assign(shapeAt(vec3(x.toFloat().add(0.5).div(LevelSize), y.toFloat().add(0.5).div(LevelSize), depth)));
+  })().compute(each * LevelSlices.length);
+  renderer.compute(measure);
+  const values = new Float32Array(await renderer.getArrayBufferAsync(samples.value));
+  measure.dispose();
+  samples.value.dispose?.();
   const levels = new Float32Array((CoverSteps + 1) * 4);
   for (let k = 0; k < 3; k++) {
-    const sorted = samples[k].sort((a, b) => a - b);
-    for (let i = 0; i <= CoverSteps; i++) {
-      levels[i * 4 + k] = sorted[Math.min(sorted.length - 1, Math.floor((1 - i / CoverSteps) * sorted.length))];
-    }
+    const sorted = Float32Array.from({ length: values.length / 4 }, (_, i) => Math.round(Math.min(1, Math.max(0, values[i * 4 + k])) * 255) / 255).sort();
+    for (let i = 0; i <= CoverSteps; i++) levels[i * 4 + k] = sorted[Math.min(sorted.length - 1, Math.floor((1 - i / CoverSteps) * sorted.length))];
   }
-  return levels;
+  const texture = new DataTexture(levels, CoverSteps + 1, 1, RGBAFormat, FloatType);
+  texture.minFilter = texture.magFilter = NearestFilter;
+  texture.needsUpdate = true;
+  return texture;
 }
 
-export function noiseVolumes(renderer: WebGLRenderer) {
-  const previous = renderer.getRenderTarget();
-  const shapes = volume(renderer, ShapeSize, shape);
-  const details = volume(renderer, DetailSize, detail);
-  const levels = coverLevels(renderer);
-  renderer.setRenderTarget(previous);
-  return { shapes, details, levels };
+// The noise the clouds' small structure is drawn from, made once on the GPU. `levels` resolves once the measured
+// cover levels are back.
+export function noiseVolumes(renderer: WebGPURenderer) {
+  return {
+    shapes: volume(renderer, ShapeSize, shapeAt),
+    details: volume(renderer, DetailSize, detailAt),
+    levels: coverLevels(renderer),
+  };
 }

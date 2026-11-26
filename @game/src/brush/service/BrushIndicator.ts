@@ -1,6 +1,6 @@
 import {
   BoxGeometry, EdgesGeometry, Group, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, SphereGeometry,
-} from "three";
+} from "three/webgpu";
 import type { BrushShape, Point, WorldInfo } from "../../../contract/GameBridge";
 
 export function createBrushIndicator(content: Group, world: WorldInfo) {

@@ -1,4 +1,3 @@
-#include "game/type/Player.hpp"
 #include "simulation/fn/Query.hpp"
 
 #include "PlanetSession.hpp"
@@ -12,28 +11,6 @@ namespace {
 constexpr double BlockedMs = 250.0;   // far beyond a frame even on a loaded machine; a blocking build takes seconds
 // Two billion years is about the youngest this seed offers a mainland coast to land on; older planets take longer to evolve.
 constexpr double Age = 2e9;
-
-// The checks need ground to stand on. Where the simulation's landing lies under water, the player
-// is put on the nearest dry ground a widening search finds, as a spawn the launcher asked for would be.
-void standOnLand(Game& game) {
-    sim::World& world = game.nature.world;
-    const auto dry = [&](sim::Vec2 place, sim::Level level) {
-        const sim::SurfaceSample ground = level == sim::Level::Ground ? sim::surveyAt(world, place, level) : sim::surfaceAt(world, place, level);
-        return ground.found && ground.ground > ground.water + (level == sim::Level::Ground ? 0.0f : 3.0f);
-    };
-    const sim::Vec2 landing{game.spawn[0], game.spawn[2]};
-    if (dry(landing, sim::Level::Ground)) return;
-    for (double reach = 250; reach < 200e3; reach *= 2)
-        for (int turn = 0; turn < 8; ++turn) {
-            const sim::Vec2 place{landing.x + reach * std::cos(turn * 0.785398), landing.z + reach * std::sin(turn * 0.785398)};
-            if (!dry(place, sim::Level::Site) || !dry(place, sim::Level::Ground)) continue;
-            game.spawn = findSpawn(world, std::array{place.x, place.z});
-            game.physics.returnPlayer(game.spawn);
-            std::cout << "the simulation's landing lies under water; the checks start on dry ground " << reach << " m from it\n";
-            return;
-        }
-    expect(false, "No dry ground within 200 km of the landing");
-}
 
 void spawnsOnDryLand(PlanetSession& session) {
     Game& game = session.game;
@@ -50,7 +27,7 @@ void streamsWithoutBlocking(PlanetSession& session) {
     const Position eye = first.eye;
     const bool waited = step(session, idle()).streamingReady == false && run(session, idle(), 4).streamingReady == false;
     if (waited) expect(session.last.eye == eye, "A waiting player must not fall");
-    expect(waitFor(session, idle(), [&](const Frame&) { return session.patches.size() >= 16; }, 10), "The far view must show a first surface at once");
+    expect(waitFor(session, idle(), [&](const Frame&) { return session.cubes.byId.size() >= 16; }, 10), "The far view must show a first surface at once");
     expect(waitFor(session, idle(), [](const Frame& frame) { return frame.streamingReady && frame.voxelBox; }), "Voxels never arrived at the spawn");
     expect(waitFor(session, idle(), [](const Frame& frame) { return frame.pendingChunks == 0; }), "The voxel region never completed");
     const Frame& frame = run(session, idle(), 120);
@@ -58,7 +35,7 @@ void streamsWithoutBlocking(PlanetSession& session) {
     expect(frame.voxelBox->min[0] < frame.eye[0] && frame.voxelBox->max[0] > frame.eye[0] && frame.voxelBox->min[2] < frame.eye[2] &&
            frame.voxelBox->max[2] > frame.eye[2] && frame.voxelBox->max[0] - frame.voxelBox->min[0] >= 80,
            "The voxel box must surround the player");
-    expect(!session.patches.empty(), "Far patches must arrive while voxels load");
+    expect(!session.cubes.byId.empty(), "Far cubes must arrive while voxels load");
     expect(session.slowestMs < BlockedMs, "advance must not wait for generation");
 }
 
@@ -81,33 +58,56 @@ void voxelsMatchSimulation(PlanetSession& session) {
     expect(solid > 50 && open > 50, "The compared chunks should hold the ground surface");
 }
 
-// Where the finest patches lie under loaded voxels, both must show the same material: the hand-off
-// between them is then one colour.
-void farColoursMatchVoxels(PlanetSession& session) {
+// Where the finest far cubes lie over loaded voxels, the top of a column of cubes must be made of
+// what the top voxel there is made of: the hand-off between them is then one colour.
+void cubesMatchVoxels(PlanetSession& session) {
     Game& game = session.game;
-    expect(waitFor(session, idle(), [](const Frame& frame) { return frame.pendingPatches == 0 && frame.siteReady; }), "The far view never settled");
-    int compared = 0, agreed = 0, shaded = 0;
-    for (const auto& [id, patch] : session.finest) {
-        const double size = sizeOf(0);
-        for (int j = 1; j < PatchCells; j += 3)
-            for (int i = 1; i < PatchCells; i += 3) {
-                const double x = patch.key.x * size + i * cellOf(0), z = patch.key.z * size + j * cellOf(0);
-                const size_t vertex = size_t(j) * PatchSide + i;
-                Cell cell = cellAt({x + 0.5 * VoxelSize, patch.base + patch.heights[vertex] + 1.0, z + 0.5 * VoxelSize});
-                if (!game.world.streamed->loaded.contains(chunkOf(cell))) continue;
-                while (materialAt(game.world, cell) == Material::Air) --cell.y;
-                if (!game.world.streamed->loaded.contains(chunkOf(cell))) continue;
-                const uint32_t color = materialInfo(materialAt(game.world, cell)).color;
-                const uint8_t* rgb = &patch.colors[vertex * 3];
-                ++compared;
-                agreed += color == (uint32_t(rgb[0]) << 16 | uint32_t(rgb[1]) << 8 | rgb[2]);
-                shaded += patch.shade[(size_t(j) * ShadeDensity * ShadeSide + size_t(i) * ShadeDensity) * 4 + 2] == uint8_t(materialAt(game.world, cell));
-            }
+    expect(waitFor(session, idle(), [](const Frame& frame) { return frame.cubeLevels.front().settled == frame.cubeLevels.front().wanted && frame.siteReady; }),
+           "The finest far cubes never settled");
+    const double edge = edgeOf(FinestCubes);
+    int compared = 0, agreed = 0;
+    for (const auto& [id, chunk] : session.cubes.byId) {
+        if (chunk.level != FinestCubes) continue;
+        for (size_t at = 0; at < chunk.faces.size(); at += FaceWords) {
+            const int16_t* face = &chunk.faces[at];
+            if (face[0] != 1 || face[1] < 0) continue;   // tops only
+            // A top face spans z along u and x along v; one sample in the middle of the quad.
+            const double x = (chunk.at.x * CubeSide + face[4] + 0.5 * face[6]) * edge, z = (chunk.at.z * CubeSide + face[3] + 0.5 * face[5]) * edge;
+            const double top = (chunk.at.y * CubeSide + face[2]) * edge;
+            Cell cell = cellAt({x, top + 1.0, z});
+            if (!game.world.streamed->loaded.contains(chunkOf(cell))) continue;
+            while (materialAt(game.world, cell) == Material::Air && cell.y > cellAt({x, top - 4.0, z}).y) --cell.y;
+            if (!game.world.streamed->loaded.contains(chunkOf(cell)) || materialAt(game.world, cell) == Material::Air) continue;
+            ++compared;
+            agreed += int(materialAt(game.world, cell)) == face[7];
+        }
     }
-    std::cout << "of " << compared << " far vertices over loaded voxels, " << agreed << " have the top voxel's colour and " << shaded
-              << " shading texels its material\n";
+    std::cout << "of " << compared << " finest cube tops over loaded voxels, " << agreed << " are of the top voxel's material\n";
     // The far view knows the cover's classes, not which stones or silts the ground level laid there; the rest must agree.
-    expect(compared > 200 && agreed >= compared * 3 / 4 && shaded >= compared * 7 / 10, "Far patches and voxels disagree about what the ground is made of");
+    expect(compared > 200 && agreed >= compared * 3 / 4, "Far cubes and voxels disagree about what the ground is made of");
+}
+
+// Standing still, every signal a capture waits for comes true: the tiles the view reads are all
+// built and every level of cubes is cut from them.
+void becomesReady(PlanetSession& session) {
+    const auto start = std::chrono::steady_clock::now();
+    expect(waitFor(session, idle(), [](const Frame& frame) {
+               return frame.farReady && frame.siteReady && frame.localReady && frame.regionReady && frame.streamingReady && frame.pendingChunks == 0;
+           }), "The view never became final at rest");
+    const Frame& frame = session.last;
+    for (const CubeLevelView& level : frame.cubeLevels) expect(level.settled == level.wanted, "A ready view holds a level that is not final");
+    // What a settled column was cut from is what a build now would read.
+    size_t final = 0;
+    for (int level = FinestCubes; level <= CoarsestCubes; ++level)
+        for (const auto& [square, slot] : session.game.cubes->levels[size_t(level - FinestCubes)].slots) {
+            if (slot.shown.empty() || !cubeFinal(level, slot.detail)) continue;
+            ++final;
+            expect(cubeDetail(session.game.nature.world, {level, square.x, square.z}) == slot.detail, "A ready view shows a column cut from data that has changed");
+        }
+    expect(final > 0, "A ready view must hold final columns");
+    std::cout << "view final " << std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count() << " s after the finest cubes settled; tiles";
+    for (size_t level = 1; level < sim::LevelCount; ++level) std::cout << " " << frame.tilesFinished[level];
+    std::cout << "\n";
 }
 
 // A day at an hour a second: the frame's clock, sun and weather stay sound, clouds arrive, and no
@@ -211,14 +211,16 @@ void flies(PlanetSession& session) {
 
 void testPlanet() {
     const auto start = std::chrono::steady_clock::now();
-    Game game(PlanetOptions{42, Age, std::nullopt, 0});
+    PlanetOptions options{42, Age, std::nullopt, 0};
+    options.cubes = true;
+    Game game(options);
     std::cout << "planet ready after " << std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count() << " s\n";
-    standOnLand(game);
-    PlanetSession session{game, {}, {}, {}, 0.0, 0};
+    PlanetSession session{game, {}, {}, 0.0, 0};
     spawnsOnDryLand(session);
     streamsWithoutBlocking(session);
     voxelsMatchSimulation(session);
-    farColoursMatchVoxels(session);
+    cubesMatchVoxels(session);
+    becomesReady(session);
     testCubes(session);
     keepsTime(session);
     testPlanetEdits(session);

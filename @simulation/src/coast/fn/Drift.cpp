@@ -1,3 +1,5 @@
+// About 255 lines, one owner: the pass of a wave train over loose bed (lift, drop, undertow, drift
+// along the shore, swash). Its parts share the sweep's state and are not used apart.
 #include "coast/fn/Coast.hpp"
 
 namespace derivean::sim {
@@ -20,6 +22,7 @@ constexpr float Lift = 0.1f;
 constexpr float Carry[LevelCount] = {0, 8.0f, 5.0f, 3.0f, 0};
 constexpr float Stir[LevelCount] = {0, 3.0f, 1.5f, 0.3f, 0};
 constexpr size_t Outside = ~size_t(0);
+constexpr float ActiveBed = 1.0f;    // m of loose bed from which a shore beyond the domain counts as sandy
 
 float holds(int kind, float depth) { return SwashSlope[kind] / std::sqrt(1.0f + std::max(0.0f, depth) / ProfileDepth); }
 
@@ -118,17 +121,18 @@ struct Sweep {
         const float within = height > 1e-3f ? std::clamp((Closure * height - shoal) / ((Closure - Breaking) * height), 0.0f, 1.0f) : 0.0f;
         const float capacity = within > 0 ? carry * std::pow(shore.wave[at], 1.25f) * within : 0.0f;
         if (domain.hold[i] != Free) {
-            // A cell that does not evolve takes what reaches it and, if its bed is loose, hands on
-            // all that its surf can carry: the shore goes on beyond the domain as it is there.
+            // A cell that does not evolve takes what reaches it and hands on what its surf carries
+            // over its own bed: the shore goes on beyond the domain as it is there. A sandy shore
+            // beyond gives all its waves can carry; a film of sand on rock gives in proportion.
             shore.ledger.left += double(moving[Coarse] + moving[Sand]) * area;
-            const float loose = domain.ground.sediment[Coarse][i] + domain.ground.sediment[Sand][i], given = loose > 0 ? capacity : 0.0f;
+            const float loose = domain.ground.sediment[Coarse][i] + domain.ground.sediment[Sand][i], given = capacity * std::min(1.0f, loose / ActiveBed);
             moving[Coarse] = loose > 0 ? given * domain.ground.sediment[Coarse][i] / loose : 0.0f;
             moving[Sand] = given - moving[Coarse];
             shore.ledger.entered += double(given) * area;
         } else {
             work(i, straight, depth, capacity, moving);
         }
-        pass(i, straight, depth, height, moving);
+        pass(i, straight, depth, height, capacity, moving);
     }
 
     void work(size_t i, size_t straight, float depth, float capacity, float moving[SedimentClasses]) {
@@ -189,14 +193,17 @@ struct Sweep {
     // Onward with the train. A class goes straight on while the bed ahead does not rise more
     // steeply than it holds; at the shore the swash takes it. What cannot go on is turned along
     // the shore, to the cells half a right angle to either side: the drift of oblique waves.
-    void pass(size_t i, size_t straight, float depth, float height, float moving[SedimentClasses]) {
+    void pass(size_t i, size_t straight, float depth, float height, float capacity, float moving[SedimentClasses]) {
         // Cells that do not evolve hand nothing to one another: what they give goes into the domain.
         const bool evolving = domain.hold[i] == Free;
         const auto open = [&](size_t n, int k, int kind) {
             return covered(n) && (evolving || domain.hold[n] == Free) && shore.top[n] - shore.top[i] <= holds(kind, depth) * float(domain.cell) * NeighborReach[k];
         };
         if (!covered(straight)) {
-            undercut(i, straight, std::min(stir, Lift * carry * std::pow(shore.arrive[i * WaveDirections + size_t(train)], 1.25f)), moving);
+            // What the surf takes from the bluff is bounded like what it lifts from the bed: the
+            // train never leaves a cell carrying more than it can.
+            const float room = std::max(0.0f, capacity - moving[Coarse] - moving[Sand]);
+            undercut(i, straight, std::min({stir, room, Lift * carry * std::pow(shore.arrive[i * WaveDirections + size_t(train)], 1.25f)}), moving);
             swash(i, height, moving);
         }
         const int sides[2] = {(train + 1) & 7, (train + 7) & 7};

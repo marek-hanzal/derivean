@@ -21,11 +21,11 @@ How verified:
 - `@napi/test/chart.test.cjs`: promise returns before the chart is read, shape of the answer, `unless`, positions to ±1e12 m, bad requests refused, restart with 12 charts in flight, and a worker thread terminated with 12 charts in flight (child process `chart-teardown.cjs`). All five passed; the last one was run alone after its fix (it caught a real abort, fixed in `ChartWork::OnOK`).
 - Captures under `.out/playwright/map/` from `@game/capture/map.json`: `map-5km.png`, `map-200km.png`, `map-1000km.png` (refined tiles against hatched planet-scale ground), `map-planet.png`, `map-closed.png` (the game after closing), each with a `.json` record.
 - Real input, driven through `webContents.sendInputEvent` by a scratch script (not in the repository): `keys-map-open.png`, `keys-map-zoomed.png`, `keys-map-travelled.png`, `keys-map-closed.png`, `keys.json`, `keys-lock.json` in the same folder. 12 of 12 and 5 of 5 checks passed. These runs need the window to hold the focus; other windows on the machine taking it makes them fail for reasons that are not the map's.
-- Frame times, 20 s boosted flight at 700 m/s over the same path on a 120 Hz display, map closed against open at a 5 km span (`@game/capture/map-flight.json`, records `flight-*.json`; legs closed, open, closed, open after a warm-up leg): p50 8.30 ms in all four; p95 9.0, 9.0, 9.0, 9.1; p99 9.3, 9.3, 9.3, 9.5; worst frame 9.4, 16.6, 9.4, 17.5; frames in 20 s 2401, 2400, 2401, 2394. The open legs brought 26 and 65 charts on screen. So the percentiles match and the map costs at most a handful of single missed refreshes in 20 s. The machine was under heavy load from other work throughout; the closed warm-up leg had a 25 ms frame of its own.
+- Frame times, 20 s boosted flight at 528 m/s over the same path on a 120 Hz display, map closed against open at a 5 km span (`@game/capture/map-flight.json`, records `flight-*.json`; legs closed, open, closed, open after a warm-up leg), taken 26 Nov 09:03–09:06 with the WebGL renderer, which now skips the 3D scene while the map is open (`scene.covered`): p50 8.30 ms in all four; p95 8.9, 8.5, 8.8, 8.4; p99 10.4, 9.3, 9.3, 9.0; worst frame 17.3, 25.0, 16.8, 9.4; frames in 20 s 2378, 2399, 2392, 2401. The open legs brought 15 and 32 charts on screen (all from local tiles). So the open map is no dearer than the closed game; the single long frames occur in both. The machine was not quiet: load average 60 at the start of the legs, 135 at the worst, 99 at the end (other streams' builds and runs, and another game instance of another stream). The run before (load 30–50, scene still drawn under the map) is kept in `.out/playwright/map/prev/`.
 
 Broken or weak:
 
-- Nothing known broken in the map. An independent review found no blocker; its findings are fixed except those listed under 8.
+- Nothing known broken in the map. Three independent reviews found no blocker; their findings are fixed except those listed under 8. The last one's three fixes (a "news" read is cancelled by a close or a world change that lands while its question is out; a world change redraws at once instead of leaving the old world on screen; a lost WebGL context is prevented, the surface is rebuilt when it comes back, and a surface that cannot be built leaves the map shut with the error in the console) are type-checked and in the build the key run used, but the context-loss path itself was not provoked.
 - The simulation's levels disagree with each other (a lake at local level that is dry land at site level, a step in height at the edge of a finer tile). The map shows what is there, so tile-shaped rectangles appear at mixed levels. Relief and contours are drawn flat across such an edge.
 
 ## 3. In progress
@@ -34,8 +34,8 @@ Nothing half-done.
 
 ## 4. Next steps
 
-1. Run `@game/capture/map-flight.json` again on a quiet machine; the figures in section 2 were taken at a load average of 30–50.
-2. Ask the renderer's owner to skip drawing the 3D scene while `map.open` is true: the map is opaque, the scene under it costs the whole frame budget, and that is what leaves no room for the map's own work.
+1. Run `@game/capture/map-flight.json` once more on a quiet machine and on the WebGPU renderer after the flip; the figures in section 2 were taken at a load average of 60–135 on WebGL.
+2. Provoke a context loss once (`WEBGL_lose_context` on the map canvas from a driver script) to see the map shut and open again.
 3. If the simulation gains a planet fallback and an eased surface of its own (the engine has `surfaceOrPlanet` and `surfaceEased` in `@engine/src/nature/type/SurfaceReader.hpp`), call them from `chartOf` and drop its own planet read and the shader's seam flattening.
 4. Optional: a graticule with coordinates; place names once the world has any.
 
@@ -52,7 +52,7 @@ Nothing half-done.
 - **No rivers from the planet level**: a planet cell knows the river that leaves it, not where in 65 km it runs.
 - **Esc recaptures the pointer on key up.** Chromium ends a pointer lock that is in force when Escape comes up; locking on key down sent the player to the menu.
 - **Moving views are drawn at one pixel per CSS pixel** into a framebuffer and stretched, and sharply once at rest: a quarter of the fill on a 2× display, without resizing the canvas.
-- **`steer` wraps the pilot** so the session keeps simulating under the map with a command that only waits; this needed no change to the session.
+- **`steer` wraps the pilot** (`fn/waitingPilot.ts`) so the session keeps simulating under the map with a command that only waits; this needed no change to the session.
 
 ## 6. Contracts
 
@@ -65,7 +65,7 @@ Lines added to files other streams own:
 - `@game/contract/GameBridge.ts`: `planetSpan`, `ChartRequest`, `Chart`, `chart(...)`.
 - `@game/preload/index.cjs`: `chart: (request) => ipcRenderer.invoke("derivean:chart", request),`. `@game/main/engine.mjs`: `chart: (request) => send("chart", request),`. `@game/main/index.mjs`: `handle("derivean:chart", (request) => engine.chart(request));`. `@game/main/engine-worker.cjs`: the `kind === "chart"` branch. `@game/main/capture.mjs`: the `shot.map` check.
 - `@game/index.html`: `<span><kbd>M</kbd> Map</span>` in the HUD legend; `<section id="map" class="map layer" data-ui="WorldMap" aria-label="Map" hidden></section>`.
-- `@game/src/index.ts`: the session's `failed: showError` became `failed(error) { map.hide(); showError(error); }`, so an engine failure does not leave the map over the error; `import "./map/ui/map.css";`; `import { createWorldMap } ...`; `if (map.open) return;` in the pointer-lock callback; `const map = createWorldMap(select(document, "#map"), window.derivean, { playing: () => controls.locked(), lock: () => controls.lock() });`; `map.paint(world, frame, pilot.yaw, time);` in `draw`; `map` in `compose()`'s return and in `boot()`'s destructuring; `session.steer(map.steer(controls.pilot));`; in the capture host `setMap`, `mapSettled`, and `map: map.describe()` in `measure`.
+- `@game/src/index.ts`: the session's `failed: showError` became `failed(error) { map.hide(); showError(error); }`, so an engine failure does not leave the map over the error; `import "./map/ui/map.css";`; `import { createWorldMap } ...`; `if (map.open) return;` in the pointer-lock callback; `const map = createWorldMap(select(document, "#map"), window.derivean, { playing: () => controls.locked(), lock: () => controls.lock() });`; `map.paint(world, frame, pilot.yaw, time);` in `draw`; `scene.covered = map.open;` in `draw` (the renderer's owner's line: the scene is not drawn under the opaque map); `map` in `compose()`'s return and in `boot()`'s destructuring; `session.steer(map.steer(controls.pilot));`; in the capture host `setMap`, `mapSettled`, and `map: map.describe()` in `measure`.
 - `@game/src/capture/type/CapturePlan.ts`: `map?: { span: number }`. `@game/src/capture/service/CaptureDriver.ts`: `setMap` and `mapSettled` in `CaptureHost`, `host.setMap(current.map?.span);`, `&& host.mapSettled()` in the settle condition.
 - `@game/src/diagnostics/fn/summary.ts`: `p50`.
 - `README.md`: the `M` row. `docs/architecture.md`: section "Map". `docs/simulation.md`: the `chartOf` paragraph.

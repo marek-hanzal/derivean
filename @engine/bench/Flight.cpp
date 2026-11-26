@@ -1,6 +1,7 @@
 // Measures what streaming a planet costs the game thread: a walk along the ground, then a minute of
 // fast flight into ground that was never loaded, both paced at 60 frames a second of real time so
 // that tile builds, voxel columns and far patches compete with the frames the way they do in play.
+#include "Ready.hpp"
 #include "game/type/Game.hpp"
 #include "nature/type/TileRequests.hpp"
 #include "simulation/fn/Query.hpp"
@@ -84,7 +85,8 @@ struct Fill {
 void report(const char* phase, const Fill& fill, const Game& game) {
     std::printf("%-6s first far surface %.1f s, far view whole %.1f s, voxels to stand on %.1f s, %.0f km at 64 m data %.1f s, %.0f km at 1 km data %.1f s; "
                 "%.1f of %u simulation workers held a tile request while tiles were owed\n",
-                phase, fill.surface, fill.far, fill.voxels, LocalReach / 1000, fill.local, RegionReach / 1000, fill.region,
+                phase, fill.surface, fill.far, fill.voxels, game.nature.tiles.reach[size_t(sim::Level::Local)] / 1000, fill.local,
+                game.nature.tiles.reach[size_t(sim::Level::Region)] / 1000, fill.region,
                 double(fill.busy) / double(std::max<size_t>(1, fill.samples)), game.nature.world.workers.threads());
 }
 
@@ -131,12 +133,12 @@ struct Arrive {
 
 } // namespace
 
-// engine-bench [age] [patches|cubes] [engine workers, 0 for the machine's] [plain|favoured: the frame thread] [quick: no waiting for the far rings]
+// engine-bench [age] [patches|cubes] [engine workers, 0 for the machine's] [plain|favoured: the frame thread] [quick: no waiting for the far rings | ready [seconds, 300]: watch the readiness signals standing still]
 int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IOLBF, 0);
     const double age = argc > 1 ? std::atof(argv[1]) : 2e9;
     const bool cubes = argc > 2 && !std::strcmp(argv[2], "cubes"), plain = argc > 4 && !std::strcmp(argv[4], "plain");
-    const bool quick = argc > 5 && !std::strcmp(argv[5], "quick");
+    const bool quick = argc > 5 && !std::strcmp(argv[5], "quick"), ready = argc > 5 && !std::strcmp(argv[5], "ready");
     if (!plain) favourCallingThread();
     auto start = Clock::now();
     PlanetOptions options{42, age, std::nullopt, 0};
@@ -146,6 +148,10 @@ int main(int argc, char** argv) {
     std::printf("seed 42 age %g, far %s, frame thread %s: planet and spawn after %.1f s, %u simulation workers, %u engine workers\n", age,
                 cubes ? "cubes" : "patches", plain ? "plain" : "favoured", seconds(start), game.nature.world.workers.threads(), game.nature.crew->threads());
 
+    if (ready) {
+        watchReadiness(game, argc > 6 ? std::atof(argv[6]) : 300, 5);
+        return 0;
+    }
     Fill spawn{game, quick};
     const Series waiting = play(game, 900, spawn);
     report("spawn", spawn, game);

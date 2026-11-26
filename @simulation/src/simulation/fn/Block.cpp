@@ -45,6 +45,7 @@ void sampleBlock(World& world, const Block& block, Material* materials) {
             exposure[size_t(z) * size_t(openCountX) + size_t(x)] = exposureAt(site, {double(openX + x) * ExposureLattice, double(openZ + z) * ExposureLattice});
 
     // What the sea opened at the waterline, from the site tiles already required above.
+    static_assert(BlockSiteReach >= SeaVoidReach + specOf(Level::Site).cell, "sea voids need site tiles beyond the block's reach");
     const SeaVoids sea = seaVoidsOver([&](int32_t tx, int32_t tz) { return site.tile(tx, tz); }, setting, block.originX, block.originZ, maxX, maxZ);
     // A void is a property of a point; each column asks the field of the local tile it stands in.
     TileKey caveKey = tileAt(Level::Local, {block.originX, block.originZ});

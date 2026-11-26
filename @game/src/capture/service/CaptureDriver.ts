@@ -33,7 +33,7 @@ export interface CaptureHost {
   survey(x: number, z: number): Promise<Record<string, number>>;
 }
 
-type Phase = "time" | "place" | "ground" | "settle" | "cruise" | "save";
+type Phase = "time" | "place" | "ground" | "settle" | "cruise" | "brush" | "save";
 
 // Calendar seconds behind the clock at which the weather counts as caught up.
 const Caught = 60;
@@ -73,6 +73,7 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
   let lastArrival = 0;
   let notes: Record<string, unknown> = {};
   let cruise: { from: Point; pendingChunks: number; pendingPatches: number; generationMs: number } | undefined;
+  let strokes = 0;
 
   const shot = (): CaptureShot | undefined => plan.shots[index];
 
@@ -195,6 +196,9 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
           cruise = { from: frame.eye, pendingChunks: 0, pendingPatches: 0, generationMs: 0 };
           host.startLap();
           enter("cruise", time);
+        } else if (current.brush) {
+          strokes = 0;
+          enter("brush", time);
         } else {
           save(current, frame, host.measure(false));
         }
@@ -220,6 +224,16 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
           },
         });
       }
+    } else if (phase === "brush" && current.brush) {
+      const { frames, place = false, radius = 1, seconds = 2 } = current.brush;
+      next.radius = radius;
+      if (strokes < frames) {
+        strokes++;
+        next.dig = !place;
+        next.place = place;
+      } else if (time - since >= seconds * 1000) {
+        save(current, frame, { ...host.measure(false), brush: { strokes, place, radius, seconds } });
+      }
     }
     if (phase === "ground" || phase === "settle") next.fly = frame.flying !== wantFlight;
     lastHeight = frame.eye[1];
@@ -231,7 +245,8 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
     active: () => true,
     get yaw() { return shot()?.yaw ?? 0; },
     get pitch() { return shot()?.pitch ?? 0; },
-    radius: 1,
+    // The brush shown is the one the shot holds.
+    get radius() { return shot()?.brush?.radius ?? 1; },
     shape: "sphere",
   };
 }

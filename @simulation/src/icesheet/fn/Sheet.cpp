@@ -1,6 +1,7 @@
 #include "icesheet/fn/Sheet.hpp"
 
 #include "icesheet/fn/Dating.hpp"
+#include "icesheet/fn/Local.hpp"
 #include "icesheet/fn/Region.hpp"
 #include "icesheet/service/Glaciations.hpp"
 #include "landscape/fn/Process.hpp"
@@ -82,11 +83,22 @@ std::shared_ptr<const SheetRecord> presentRegion(Domain& domain, const Setting& 
     return record;
 }
 
+// A finer level reads what its parent recorded once it has settled, and is left by the last sheet.
+std::shared_ptr<const SheetRecord> sheetFiner(Domain& domain, IceStage stage, const std::function<const Tile*(TileKey)>& tiles) {
+    if (stage == IceStage::Step || std::getenv("ICE_FINER_OFF")) return nullptr;   // TEMPORARY switch: baseline runs while tuning
+    const ParentSheet parent = readParentSheet(domain, tiles);
+    if (!parent.any) return nullptr;
+    if (!domain.sheet) domain.sheet = std::make_shared<SheetWork>();
+    if (stage == IceStage::Leave) leaveFiner(domain, *domain.sheet, parent, parentTunnels(domain, tiles));
+    return stage == IceStage::Present ? presentFiner(domain, *domain.sheet, parent) : nullptr;
+}
+
 } // namespace
 
-std::shared_ptr<const SheetRecord> sheetIce(Domain& domain, FlowScratch&, const Setting& setting, IceStage stage, const std::function<const Tile*(TileKey)>*) {
-    if (domain.key.level != Level::Region) return nullptr;
+std::shared_ptr<const SheetRecord> sheetIce(Domain& domain, FlowScratch&, const Setting& setting, IceStage stage, const std::function<const Tile*(TileKey)>* tiles) {
+    if (domain.key.level == Level::Ground) return nullptr;
     if (std::getenv("ICE_OFF")) return nullptr;   // TEMPORARY: baseline runs while tuning
+    if (domain.key.level != Level::Region) return tiles ? sheetFiner(domain, stage, *tiles) : nullptr;
     if (stage == IceStage::Step) stepRegion(domain, setting);
     if (stage == IceStage::Leave) leaveRegion(domain, setting);
     return stage == IceStage::Present ? presentRegion(domain, setting) : nullptr;

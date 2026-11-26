@@ -21,7 +21,9 @@ bool awaitsGround(const Game& game);
 // Lifts a player whose body overlaps solid voxels straight up to the first place it fits.
 void resolveOverlap(Game& game);
 
-// Where a new player stands: at the wished x and z, else at a shore. Blocks on the simulation tiles it reads.
+// Where a new player stands: at the wished x and z, else at the simulation's landing on a shore, or,
+// where that lies under water, on the first dry ground a widening search round it finds. Blocks on
+// the simulation tiles it reads.
 Position findSpawn(sim::World& world, const std::optional<std::array<double, 2>>& wish);
 
 } // namespace derivean

@@ -1,7 +1,4 @@
-import { Vector3 } from "three";
-
-// The clouds' own fade with distance, squared-exponential: this over the engine's view distance is its density.
-export const HazeDepth = 1.8;
+import { Vector3 } from "three/webgpu";
 
 // What the air takes from light per metre at sea level: clean air by colour (Rayleigh scattering), and the dust
 // and droplets in it, which take all colours alike. Together they let a dark ridge be told from the sky about

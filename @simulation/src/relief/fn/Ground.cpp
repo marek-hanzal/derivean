@@ -124,7 +124,10 @@ GroundPoint GroundLattice::at(double x, double z) const {
     point.bare = bare[nearest] != 0;
     if (!pile.empty()) {
         // Under a volcanic pile the layering keeps its own top: only the pile's floor bounds it.
+        // Its kinds come from the nearest node that holds one, so a margin reads as its pile.
         point.pile = pile[nearest];
+        for (const size_t node : {a, b, c, d})
+            if (point.pile.thickness <= 0 && pile[node].thickness > 0) point.pile = pile[node];
         point.pile.thickness = (pile[a].thickness * (1 - tx) + pile[b].thickness * tx) * (1 - tz) + (pile[c].thickness * (1 - tx) + pile[d].thickness * tx) * tz;
         point.datum = std::max(point.rock - point.pile.thickness, blend(datum));
     }

@@ -6,14 +6,67 @@
 
 #include <chrono>
 #include <functional>
+#include <limits>
 #include <thread>
 #include <unordered_map>
+#include <unordered_set>
 
-// One planet game shared by the planet checks, with every frame's far-terrain delta validated on the way.
+// Far cube chunks as a renderer would hold them, by id: without their faces except at the finest level.
+struct Held {
+    std::unordered_map<uint32_t, derivean::CubeChunk> byId;
+    std::unordered_map<derivean::Cell, int, derivean::CellHash> keys;   // {x, level, z}: chunks held over that square of ground
+};
+
+// Applies a frame's delta as a renderer would and checks what the frame promises: no chunk twice, a
+// square of ground swapped whole, faces inside their chunk. The chunks are moved out of the delta.
+inline void hold(Held& held, derivean::CubeDelta& delta) {
+    using namespace derivean;
+    for (uint32_t id : delta.removed) {
+        const auto chunk = held.byId.find(id);
+        expect(chunk != held.byId.end(), "A cube chunk was removed that was never added");
+        const Cell square{chunk->second.at.x, chunk->second.level, chunk->second.at.z};
+        if (--held.keys[square] == 0) held.keys.erase(square);
+        held.byId.erase(chunk);
+    }
+    std::unordered_set<Cell, CellHash> arrived;
+    for (CubeChunk& chunk : delta.added) {
+        const Cell square{chunk.at.x, chunk.level, chunk.at.z};
+        expect(chunk.faces.size() % FaceWords == 0 && !chunk.faces.empty(), "A cube chunk must hold whole quads and at least one");
+        for (size_t at = 0; at < chunk.faces.size(); at += FaceWords) {
+            const int16_t* face = &chunk.faces[at];
+            expect(face[7] > 0 && size_t(face[7]) < Materials.size(), "A cube face names no material");
+            expect(face[2] >= 0 && face[2] <= CubeSide && face[3] >= 0 && face[4] >= 0 && face[3] + face[5] <= CubeSide && face[4] + face[6] <= CubeSide,
+                   "A cube face leaves its chunk");
+        }
+        if (arrived.insert(square).second) expect(!held.keys.contains(square), "Two builds of one square of ground are held at once");
+        expect(chunk.dataLevel <= uint8_t(cubeSource(chunk.level)), "A cube chunk reads finer data than its cubes can show");
+        ++held.keys[square];
+        if (chunk.level != FinestCubes) chunk.faces.clear();
+        chunk.water.clear();
+        expect(held.byId.emplace(chunk.id, std::move(chunk)).second, "A cube chunk id was used twice");
+    }
+}
+
+// Every level is whole inside its box and a band beyond, and boxes are nested.
+inline void checkBoxes(const derivean::FarCubes& far, const Held& held, derivean::Position eye) {
+    using namespace derivean;
+    double outer = std::numeric_limits<double>::max();
+    for (int level = CoarsestCubes; level >= FinestCubes; --level) {
+        const CubeLevel& state = far.levels[size_t(level - FinestCubes)];
+        if (!state.box) { outer = 0; continue; }
+        const double side = state.box->max[0] - eye[0], size = CubeSide * edgeOf(level), reach = side + CubeBand * edgeOf(level);
+        expect(side <= outer + 1e-6, "The box of a finer level reaches beyond the coarser one");
+        outer = side;
+        for (int z = int(std::floor((eye[2] - reach) / size)); z <= int(std::floor((eye[2] + reach) / size)); ++z)
+            for (int x = int(std::floor((eye[0] - reach) / size)); x <= int(std::floor((eye[0] + reach) / size)); ++x)
+                expect(held.keys.contains({x, level, z}), "A level's box reaches over ground the renderer holds no chunk for");
+    }
+}
+
+// One planet game of cubes shared by the planet checks, with every frame's far delta validated on the way.
 struct PlanetSession {
     derivean::Game& game;
-    std::unordered_map<uint32_t, derivean::PatchKey> patches;   // what a renderer would hold
-    std::unordered_map<uint32_t, derivean::FarPatch> finest;    // its patches of the finest level, kept whole
+    Held cubes;   // what a renderer would hold
     derivean::Frame last;
     double slowestMs{};
     size_t frames{};
@@ -27,68 +80,15 @@ inline derivean::Command idle() {
     return command;
 }
 
-inline bool overlap(derivean::PatchKey a, derivean::PatchKey b) {
-    if (a.level > b.level) std::swap(a, b);
-    const int shift = b.level - a.level;
-    return (a.x >> shift) == b.x && (a.z >> shift) == b.z;
-}
-
-// A patch may only show what the simulation and the voxel palette hold: a material's own colour,
-// heights measured from its base, and water only as a level sheet with its shore.
-inline void checkPatch(const derivean::FarPatch& patch) {
-    using namespace derivean;
-    const auto palette = [](const uint8_t* rgb) {
-        const uint32_t color = uint32_t(rgb[0]) << 16 | uint32_t(rgb[1]) << 8 | rgb[2];
-        return std::any_of(Materials.begin(), Materials.end(), [color](const MaterialInfo& info) { return info.color == color; });
-    };
-    expect(patch.shade.size() == size_t(ShadeSide) * ShadeSide * 4, "The shading raster must cover the patch at its density");
-    for (size_t texel = 0; texel < patch.shade.size(); texel += 4)
-        expect(patch.shade[texel + 2] < Materials.size() && Material(patch.shade[texel + 2]) != Material::Air, "A shading texel names no material");
-    expect(*std::min_element(patch.heights.begin(), patch.heights.end()) < 1, "Far patch heights must be measured from the patch's base");
-    for (int j = 0; j < PatchSide; ++j)
-        for (int i = 0; i < PatchSide; ++i) {
-            const size_t vertex = size_t(j) * PatchSide + i;
-            expect(palette(&patch.colors[vertex * 3]), "A far patch colour is not a material's colour");
-            expect(patch.heights[vertex] >= 0 && patch.heights[vertex] < 30000, "Far patch heights must be measured from the patch's base");
-            const float water = patch.water[vertex];
-            if (std::isnan(water) || water - patch.heights[vertex] <= 0.03f || i == 0 || j == 0 || i == PatchCells || j == PatchCells) continue;
-            bool level = false;
-            for (int dj = -1; dj <= 1; ++dj)
-                for (int di = -1; di <= 1; ++di)
-                    level |= (di || dj) && std::abs(patch.water[size_t(j + dj) * PatchSide + i + di] - water) < 1e-3f;
-            if (!level) {
-                std::cout << "water alone at a vertex of patch level " << patch.key.level << " x " << patch.key.x << " z " << patch.key.z << " vertex " << i << "," << j << " base " << patch.base << " data " << int(patch.dataLevel) << "\n";
-                for (int dj = -2; dj <= 2; ++dj) {
-                    for (int di = -2; di <= 2; ++di) {
-                        const int a = std::clamp(i + di, 0, PatchCells), b = std::clamp(j + dj, 0, PatchCells);
-                        std::cout << "  w " << patch.water[size_t(b) * PatchSide + a] << " h " << patch.heights[size_t(b) * PatchSide + a];
-                    }
-                    std::cout << "\n";
-                }
-            }
-            expect(level, "A far patch shows water that is not a level sheet");
-        }
-}
-
 inline const derivean::Frame& step(PlanetSession& session, const derivean::Command& command) {
     using namespace derivean;
     session.last = advance(session.game, command);
-    const Frame& frame = session.last;
+    Frame& frame = session.last;
     session.slowestMs = std::max(session.slowestMs, frame.nativeMs);
     ++session.frames;
-    for (uint32_t id : frame.far.removed) {
-        expect(session.patches.erase(id) == 1, "A far patch was removed that was never added");
-        session.finest.erase(id);
-    }
-    for (const FarPatch& patch : frame.far.added) {
-        expect(patch.heights.size() == PatchVertices && patch.morph.size() == PatchVertices && patch.water.size() == PatchVertices &&
-               patch.normals.size() == size_t(PatchVertices) * 3 && patch.colors.size() == size_t(PatchVertices) * 3,
-               "Far patch arrays must match its cell count");
-        checkPatch(patch);
-        if (patch.key.level == 0) session.finest.emplace(patch.id, patch);
-        for (const auto& [id, key] : session.patches) expect(!overlap(key, patch.key), "Two far patches cover the same ground");
-        expect(session.patches.emplace(patch.id, patch.key).second, "A far patch id was used twice");
-    }
+    expect(frame.far.added.empty() && frame.far.removed.empty(), "A world of cubes sent far patches");
+    hold(session.cubes, frame.cubes);
+    checkBoxes(*session.game.cubes, session.cubes, frame.eye);
     return frame;
 }
 

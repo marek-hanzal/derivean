@@ -24,7 +24,7 @@ Unrest ventUnrest(uint64_t seed, const Vent& vent, double time) {
     if (!nextEruption(seed, vent, next)) return unrest;
     unrest.supplied = true;
     double held = vent.held, from = vent.until;
-    for (int64_t number = vent.count; next.time <= time; ++number) {
+    for (int64_t number = vent.count; next.time < time; ++number) {
         // It has erupted since the record ended: the chamber starts to fill again from there.
         unrest.sinceLast = time - next.time, unrest.lastVolume = next.volume;
         held = 0, from = next.time;
@@ -66,7 +66,7 @@ VolcanicRecord volcanicAt(World& world, Vec2 position, double calendarYears, dou
         record.site = vent.feeders.back().site;
         record.distance = distance;
     }
-    if (record.found) record.unrest = ventUnrest(world.atlas.setting().seed, record.vent, record.vent.until + calendarYears);
+    if (record.found) record.unrest = ventUnrest(world.atlas.setting().seed, record.vent, world.atlas.setting().age + calendarYears);
     return record;
 }
 

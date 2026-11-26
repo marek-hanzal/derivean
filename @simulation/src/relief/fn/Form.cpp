@@ -122,6 +122,16 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     bool seams = false;
     double laidDown = 0;
     float face = ground.rock, partingFace = ground.rock;
+    // The faces of a bed: the site surface moved along the fall line by the bed's recess. The base
+    // of a bed is a parting that weathers a little deeper.
+    const auto faceFor = [&](Material rock) {
+        face = partingFace = ground.rock;
+        if (steep <= 0.02f) return;
+        const float recess = recessOf(traitsOf(rock)) * steep, parting = recess + 0.7f * steep;
+        face = ground.rock + lattice.lieAt(x + ground.fall.x * recess, z + ground.fall.z * recess) - lie;
+        partingFace = ground.rock + lattice.lieAt(x + ground.fall.x * parting, z + ground.fall.z * parting) - lie;
+    };
+    PileBed member{1, 0};   // the member of the pile last met, by height above its floor
     for (int k = count - 1; k >= 0; --k) {
         const float y = float(bottom + (k + 0.5) * step);
         Material& result = out[size_t(k) * stride];
@@ -130,29 +140,33 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
         else if (y < MantleTop) result = Material::Peridotite;
         else {
             const float depth = std::max(0.0f, ground.datum - y);
-            if (depth < bed.top || depth >= bed.bottom) {
+            const bool inPile = ground.pile.thickness > 0 && y >= pileFloor;
+            if (inPile) {
+                // A flow or an ash bed of the pile stands back by its own recess, as a bed does.
+                const float height = y - pileFloor;
+                if (height < member.bottom || height >= member.top) {
+                    member = pileBed(setting.seed, ground.pile, height);
+                    faceFor(member.rock);
+                    bed = {1, 0, Material::Bedrock};
+                }
+            } else if (depth < bed.top || depth >= bed.bottom) {
                 const StrataUnit unit = unitAt(setting.strata, depth, fold);
                 bed = bedAt(setting.seed, setting.strata, unit, depth, material);
                 laidDown = unit.laidDown;
                 layer = {1, 0};
                 seams = hasSeams(bed.rock);
-                const RockTraits& rock = traitsOf(bed.rock);
-                // The face of this bed: the site surface moved along the fall line by the bed's
-                // recess. The base of a bed is a parting that weathers a little deeper.
-                face = partingFace = ground.rock;
-                if (steep > 0.02f) {
-                    const float recess = recessOf(rock) * steep, parting = recess + 0.7f * steep;
-                    face = ground.rock + lattice.lieAt(x + ground.fall.x * recess, z + ground.fall.z * recess) - lie;
-                    partingFace = ground.rock + lattice.lieAt(x + ground.fall.x * parting, z + ground.fall.z * parting) - lie;
-                }
+                faceFor(bed.rock);
             }
-            bool solid = y < (depth > bed.bottom - 0.35f ? partingFace : face);
+            const bool base = inPile ? y - pileFloor < member.bottom + 0.35f : depth > bed.bottom - 0.35f;
+            bool solid = y < (base ? partingFace : face);
             bool sand = false;
             if (solid && city.strength > 0.05f && y >= city.floor) solid = !cityOpens(city, material, y, depth, ground.rock, sand);
             bool hollow = false;
             for (int v = 0; v < voids && !hollow; ++v) hollow = y >= spans[v].bottom && y < spans[v].top;
             if (hollow || (open && y >= ground.rock)) {
                 result = open && y >= floor && y < floor + fallen ? coverAt(ground, y - floor, floor + fallen - y) : Material::Air;
+            } else if (solid && inPile) {
+                result = plug != Material::Air ? plug : member.rock;
             } else if (solid) {
                 result = bed.rock;
                 if (seams) {
@@ -163,7 +177,6 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
                     const Material body = cuttingRock(setting.seed, setting.ore, material, depth, laidDown);
                     if (body != Material::Air) result = body;
                 }
-                if (ground.pile.thickness > 0 && y >= pileFloor) result = pileBed(setting.seed, ground.pile, y - pileFloor).rock;
                 if (plug != Material::Air) result = plug;
             } else if (sand) result = Material::Sand;
             else if (y + sunk < ground.ground && y + sunk >= ground.rock) result = coverAt(ground, y + sunk - ground.rock, ground.ground - y - sunk);

@@ -66,7 +66,6 @@ export function createSunShadow(world: WorldInfo, levels: LevelTable) {
   const up = new Vector3();
   const centre = new Vector3();
   let frame = 0;
-  let draws = 0;
 
   // The square of ground a cascade's own levels fill: that of the coarsest of them that is drawn.
   function squareOf(index: number, drawn: ShadowView["squares"]) {
@@ -97,7 +96,6 @@ export function createSunShadow(world: WorldInfo, levels: LevelTable) {
     renderer.setRenderTarget(cascade.target);
     renderer.render(casters, camera);
     renderer.setRenderTarget(null);
-    draws++;
     // The renderer has given the camera its reversed projection by now.
     const clip = new Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
       .multiply(scratch.makeTranslation(-origin.x, -origin.y, -origin.z));
@@ -108,12 +106,13 @@ export function createSunShadow(world: WorldInfo, levels: LevelTable) {
     nodes,
     // Where the cube batches put their second meshes, and what draws them.
     casting: (level: number) => ({ group, material, layer: cascadeOf(level) }),
-    // Maps drawn since the world began.
-    get draws() { return draws; },
     // Draws the cascades that are due and places every map for this frame's render origin. Call it before the
     // view is drawn, once the levels are placed.
     cast(renderer: WebGPURenderer, state: ShadowView) {
       frame++;
+      // The maps and their test assume reversed depth, which a WebGL 2 fallback without clip control lacks: there
+      // every square stays empty and nothing is shadowed.
+      if (!renderer.reversedDepthBuffer) return;
       group.position.copy(state.origin).negate();
       group.updateMatrix();
       let next = -1;

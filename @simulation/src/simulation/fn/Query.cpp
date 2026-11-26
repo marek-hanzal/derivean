@@ -51,7 +51,7 @@ bool readSurface(TileReader& reader, Vec2 position, SurfaceSample& sample) {
         cubicWeights(tx, wx);
         cubicWeights(tz, wz);
     }
-    double rock = 0, datum = 0, cover[SedimentClasses] = {};
+    double rock = 0, datum = 0, cover[SedimentClasses] = {}, pile = 0;
     float low = 1e30f, high = -1e30f;
     for (int j = 0; j < 4; ++j) {
         for (int i = 0; i < 4; ++i) {
@@ -64,6 +64,7 @@ bool readSurface(TileReader& reader, Vec2 position, SurfaceSample& sample) {
             high = std::max(high, tile->now.rock[at]);
             const double weight = (i == 1 ? 1 - tx : tx) * (j == 1 ? 1 - tz : tz);
             for (int c = 0; c < SedimentClasses; ++c) cover[c] += weight * tile->now.sediment[c][at];
+            pile += weight * pileColumn(*tile, at).thickness;
         }
     }
     sample.rock = std::clamp(float(rock), low, high);
@@ -76,7 +77,7 @@ bool readSurface(TileReader& reader, Vec2 position, SurfaceSample& sample) {
     const Tile* tile;
     const size_t at = tap(nearX, nearZ, tile);
     // Under a volcanic pile the layering keeps its own top: only the pile's floor bounds it.
-    sample.datum = std::max(sample.rock - pileColumn(*tile, at).thickness, float(datum));
+    sample.datum = std::max(sample.rock - float(pile), float(datum));
     sample.water = tile->water[at];
     sample.discharge = tile->discharge[at];
     // Running water: the depth a stream of this size has by the usual hydraulic geometry

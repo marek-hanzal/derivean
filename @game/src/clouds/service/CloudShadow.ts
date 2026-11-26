@@ -1,78 +1,72 @@
-import {
-  LinearFilter, RGBAFormat, ShaderMaterial, UnsignedByteType, Vector3, Vector4, type WebGLRenderer, WebGLRenderTarget,
-} from "three";
-import { cloudDensity } from "../constant/density";
+import { LinearFilter, type Node, NodeMaterial, QuadMesh, RenderTarget, UnsignedByteType, Vector3, Vector4, type WebGPURenderer } from "three/webgpu";
+import { uniform, uv, vec4, wgsl, wgslFn } from "three/tsl";
+import { DensityWgsl } from "../constant/density";
 import { ShadowMs, ShadowSize, ShadowSpan } from "../constant/shadow";
-import { fullscreen, fullscreenVertex } from "../fn/fullscreen";
-import type { CloudShade } from "../type/CloudShade";
-import type { CloudUniforms } from "../type/CloudUniforms";
+import { CloudParams, CloudSkyOf, CloudTextures, cloudArgs } from "../fn/cloudArgs";
+import type { CloudShade } from "../fn/cloudShadow";
+import type { CloudNodes } from "../type/CloudNodes";
 
 const Texel = ShadowSpan / ShadowSize;
 
-// The shadows the clouds cast, as a map of sunlight reaching a level plane around the eye. Each texel looks up
-// the sun's ray through the three bands of the same density field the clouds are drawn from, so the shadows are
-// the clouds' own and move with them. The map is anchored to the world on whole texels and redrawn a few times
-// a second.
-export function createCloudShadow(clouds: CloudUniforms, sun: { value: Vector3 }) {
-  const target = new WebGLRenderTarget(ShadowSize, ShadowSize, { format: RGBAFormat, type: UnsignedByteType, depthBuffer: false });
+// Each texel looks up the sun's ray through the three bands of the same density field the clouds are drawn from.
+// The straight beam dies off as Beer and Lambert say; light scattered forward keeps thin cloud bright, and some
+// always comes out of the base of the thickest.
+const throughNode = wgslFn(`
+fn cloudThrough(at: vec2f, place: vec4f, sun: vec3f, ${CloudParams}) -> f32 {
+  let c = ${CloudSkyOf};
+  let foot = vec3f(place.x + (at.x - 0.5) * place.z, place.w, place.y + (at.y - 0.5) * place.z);
+  let slant = 1.0 / max(sun.y, 0.12);
+  var depth = 0.0;
+  for (var band = 0; band < 3; band++) {
+    let range = cloudRange(c, band);
+    if (range.z <= 0.0) { continue; }
+    // The layer's own base and top where the ray crosses the middle of the band.
+    let middle = foot + sun * ((0.5 * (range.x + range.y) - c.datum - foot.y) * slant);
+    let shape = textureSampleLevel(bands, bandSampler, cloudCell(c, middle), band * 2, 0.0);
+    if (shape.x < 0.01) { continue; }
+    for (var i = 0; i < 3; i++) {
+      let height = mix(shape.y, shape.z, (f32(i) + 0.5) / 3.0) - c.datum;
+      let p = foot + sun * ((height - foot.y) * slant);
+      depth += bandCloud(c, ${CloudTextures}, band, p, cloudCell(c, p), false).x * (shape.z - shape.y) / 3.0 * slant;
+    }
+  }
+  return 0.12 + 0.88 * mix(exp(-depth), exp(-depth * 0.25), 0.3);
+}
+`, [wgsl(DensityWgsl)]);
+
+// The shadows the clouds cast, as a map of sunlight reaching a level plane around the eye, so the shadows are the
+// clouds' own and move with them. The map is anchored to the world on whole texels and redrawn a few times a
+// second.
+export function createCloudShadow(clouds: CloudNodes, sun: Node<"vec3">) {
+  const target = new RenderTarget(ShadowSize, ShadowSize, { type: UnsignedByteType, depthBuffer: false });
   target.texture.minFilter = target.texture.magFilter = LinearFilter;
-  const place = { value: new Vector4() };
-  const uniforms: CloudShade = { cloudShadowMap: { value: target.texture }, cloudShadowPlace: { value: new Vector4() } };
-  const material = new ShaderMaterial({
-    uniforms: { ...clouds, skySun: sun, shadowPlace: place },
-    depthTest: false,
-    depthWrite: false,
-    vertexShader: fullscreenVertex,
-    fragmentShader: `
-      uniform vec4 shadowPlace;
-      uniform vec3 skySun;
-      varying vec2 vUv;
-      ${cloudDensity}
-      void main() {
-        vec3 foot = vec3(shadowPlace.x + (vUv.x - 0.5) * shadowPlace.z, shadowPlace.w, shadowPlace.y + (vUv.y - 0.5) * shadowPlace.z);
-        float slant = 1.0 / max(skySun.y, 0.12);
-        float depth = 0.0;
-        for (int band = 0; band < 3; band++) {
-          vec4 range = cloudRange[band];
-          if (range.z <= 0.0) continue;
-          // The layer's own base and top where the ray crosses the middle of the band.
-          vec3 middle = foot + skySun * ((0.5 * (range.x + range.y) - cloudDatum - foot.y) * slant);
-          vec4 shape = texture(cloudBands, vec3(cloudCell(middle), float(band * 2)));
-          if (shape.x < 0.01) continue;
-          for (int i = 0; i < 3; i++) {
-            float height = mix(shape.y, shape.z, (float(i) + 0.5) / 3.0) - cloudDatum;
-            vec3 p = foot + skySun * ((height - foot.y) * slant);
-            float ice;
-            depth += bandCloud(band, p, cloudCell(p), false, ice) * (shape.z - shape.y) / 3.0 * slant;
-          }
-        }
-        // The straight beam dies off as Beer and Lambert say; light scattered forward keeps thin cloud bright, and
-        // some always comes out of the base of the thickest.
-        gl_FragColor = vec4(0.12 + 0.88 * mix(exp(-depth), exp(-depth * 0.25), 0.3), 0.0, 0.0, 1.0);
-      }
-    `,
-  });
+  const drawn = uniform(new Vector4());
+  const shade: CloudShade = { map: target.texture, place: uniform(new Vector4()), sun };
+  const material = new NodeMaterial();
+  material.fragmentNode = vec4(throughNode({ at: uv(), place: drawn, sun, ...cloudArgs(clouds) }) as Node<"float">, 0, 0, 1);
+  const quad = new QuadMesh(material);
   const centre = new Vector3();
-  let drawn = -Infinity;
+  let last = -Infinity;
 
   return {
-    uniforms,
+    shade,
     // Redraws the map when it is due. `origin` and `eye` are world metres, `ground` the height to lay the plane at.
-    update(renderer: WebGLRenderer, origin: Vector3, eye: Vector3, ground: number, lit: boolean, now: number) {
+    update(renderer: WebGPURenderer, origin: Vector3, eye: Vector3, ground: number, lit: boolean, now: number) {
       if (!lit) {
-        uniforms.cloudShadowPlace.value.setScalar(0);
+        shade.place.value.setScalar(0);
         return;
       }
-      if (now - drawn >= ShadowMs) {
-        drawn = now;
+      if (now - last >= ShadowMs) {
+        last = now;
         centre.set(Math.round(eye.x / Texel) * Texel, Math.round(ground / 50) * 50, Math.round(eye.z / Texel) * Texel);
-        place.value.set(centre.x - origin.x, centre.z - origin.z, ShadowSpan, centre.y - origin.y);
+        drawn.value.set(centre.x - origin.x, centre.z - origin.z, ShadowSpan, centre.y - origin.y);
         const previous = renderer.getRenderTarget();
-        fullscreen(renderer, material, target);
+        renderer.setRenderTarget(target);
+        quad.render(renderer);
         renderer.setRenderTarget(previous);
       }
       // The map stays where it was drawn in the world while the render origin moves under it.
-      uniforms.cloudShadowPlace.value.set(centre.x - origin.x, centre.z - origin.z, ShadowSpan, centre.y - origin.y);
+      shade.place.value.set(centre.x - origin.x, centre.z - origin.z, ShadowSpan, centre.y - origin.y);
     },
     dispose() {
       target.dispose();

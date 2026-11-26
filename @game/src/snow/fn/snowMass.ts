@@ -4,13 +4,14 @@ import type { SnowNodes } from "../type/SnowNodes";
 
 // kg/m² of snow on ground at a point in render space, `sea` being the sea's height there, read as the simulation
 // reads it (packAt and snowAt in @simulation/src/atmosphere/fn/Snow.cpp): within a weather cell nothing below
-// its snow line, linear from the line to the first rung above it and between the rungs further up, the highest
-// rung held beyond the ladder; then bilinear between the four cells around the point. Nothing below the sea.
+// its snow line, linear from the line to the first rung above it and between the rungs further up, the end
+// rungs held beyond the ladder; then bilinear between the four cells around the point. Nothing below the sea:
+// the renderer's choice, as ground there lies under water.
 export function snowMass(snow: SnowNodes, position: Node<"vec3">, sea: Node<"float">): Node<"float"> {
   return Fn(() => {
     const last = snow.rungs - 1;
     const top = snow.heights.element(int(last));
-    const above = clamp(position.y.sub(sea), 0, top);
+    const above = clamp(position.y.sub(sea), snow.heights.element(int(0)), top);
     // The first rung at or above the point, from the second rung on: the rungs' heights are the same in every cell.
     const upper = int(1).toVar();
     for (let rung = 1; rung < last; rung++) upper.addAssign(int(snow.heights.element(int(rung)).lessThan(above)));

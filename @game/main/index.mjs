@@ -13,8 +13,6 @@ async function launch() {
   const capturing = capture !== null;
   const engine = startEngine();
   const renderer = new URL("../dist/index.html", import.meta.url);
-  // DERIVEAN_RENDERER=webgpu draws the world of cubes with WebGPU; the page reads the choice from its address.
-  if (process.env.DERIVEAN_RENDERER === "webgpu") renderer.search = "renderer=webgpu";
   const [width, height] = capture?.size ?? [1440, 900];
   const window = new BrowserWindow({
     title: "DeRivean · Fable",

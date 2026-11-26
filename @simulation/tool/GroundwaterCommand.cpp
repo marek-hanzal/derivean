@@ -90,13 +90,13 @@ void printCaves(const WaterBlock& block, double land) {
             if (record.level > 0) abandoned += run;
             else if (record.order == 0 && std::abs(c.bx - c.ax) + std::abs(c.bz - c.az) < 1e-6) shafts += run;
             else length[c.radius < Bounds[0] ? 0 : c.radius < Bounds[1] ? 1 : c.radius < Bounds[2] ? 2 : c.radius < Bounds[3] ? 3 : 4] += run;
-            thinnest = std::min(thinnest, double(record.cover));
+            if (record.cover >= 0) thinnest = std::min(thinnest, double(record.cover));   // mouths rise out of the ground on purpose
         }
     }
     std::printf("caves: soluble ground that drains by conduits %.1f km2 (%.1f %% of the land), %zu cells where a stream sinks\n", karst / 1e6, land > 0 ? 100 * karst / land : 0.0, swallows);
     std::printf("  %zu conduits; km of passage carrying water by radius: <0.5 m %.1f, 0.5-1 m %.1f, 1-2 m %.1f, 2-5 m %.1f, >5 m %.1f; abandoned levels %.1f km; shafts %.2f km\n", count,
                 length[0] / 1000, length[1] / 1000, length[2] / 1000, length[3] / 1000, length[4] / 1000, abandoned / 1000, shafts / 1000);
-    std::printf("  void %.3g m3 = %.4f %% of the top 100 m of that ground; thinnest roof %.1f m\n", volume, karst > 0 ? 100 * volume / (karst * 100.0) : 0.0, count ? thinnest : 0.0);
+    std::printf("  void %.3g m3 = %.4f %% of the top 100 m of that ground; thinnest roof %.1f m\n", volume, karst > 0 ? 100 * volume / (karst * 100.0) : 0.0, thinnest < 1e8 ? thinnest : 0.0);
 }
 
 // What the inspector would be told about the largest spring and the widest passage of the block.

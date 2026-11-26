@@ -28,7 +28,7 @@ bool within(const Domain& domain, Vec2 site, double reach) {
 void eruptEpisode(Domain& domain, Emplacement& field, Laying& laying, int index, const Episode& episode) {
     const Vent& vent = domain.volcanic.vents[size_t(index)];
     const bool empties = episode.paroxysm >= CalderaVolume[size_t(vent.magma)];
-    const double volume = episode.volume * (1.0 - minorShare(vent, episode)) - (empties ? episode.paroxysm : 0.0);
+    const double volume = episode.volume - minorVolume(vent, episode) - (empties ? episode.paroxysm : 0.0);
     if (volume > 0) {
         const Style& style = styleOf(vent.magma);
         Outburst outburst;

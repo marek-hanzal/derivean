@@ -20,13 +20,15 @@ void testLandscapePlane() {
         expectLandscape(std::abs(site.lowered) < 0.5, "a site plane left the surface it is held to", site.lowered);
     }
 
-    // The local level does cut valleys into a plane; what it may not do is run them along the grid.
+    // The local level draws valleys where water gathers, as the region does: a featureless slope
+    // stays one, and water that runs in paths on it keeps to the fall line, not to a grid direction.
     PlaneSpec local;
     local.level = Level::Local;
     local.azimuth = 22.5 / DegreesPerRadian;
     local.steps = 20;
     const PlaneReport plane = measurePlane(local, replayPlane(local));
-    expectLandscape(plane.paths > 200 && plane.headingError < 15, "water on a plane at 22.5 degrees leaves the fall line for a grid direction", plane.headingError);
+    expectLandscape(plane.gully.p95 <= NotchDepth * specOf(Level::Local).cell, "a local plane was cut into gullies", plane.gully.p95);
+    expectLandscape(plane.paths < 200 || plane.headingError < 15, "water on a plane at 22.5 degrees leaves the fall line for a grid direction", plane.headingError);
     expectLandscape(plane.gridShare <= 0.05, "a local plane carries a pattern at the grid scale", plane.gridShare);
     expectLandscape(std::abs(plane.lowered) < 2, "a local plane left the surface it is held to", plane.lowered);
 

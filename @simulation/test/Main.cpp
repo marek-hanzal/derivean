@@ -7,10 +7,13 @@ void testClouds();
 void testAtmosphere();
 void testSnow();
 void testPlume();
+void testIceSheet();
+void testIceSheetLocal();
 void testLandscapeRegularity();
 void testLandscapePlane();
 void testLandscapeWorld();
 void testRelief();
+void testReliefBeds();
 void testInspect();
 void testChart();
 void testPlanetFuture();
@@ -24,6 +27,8 @@ void testGroundwaterBlock();
 void testGroundwaterEdge();
 void testGroundwaterTile();
 void testVolcanicLaws();
+void testVolcanicLive();
+void testCoast();
 
 int main() {
     testMaterials();
@@ -33,9 +38,12 @@ int main() {
     testAtmosphere();
     testSnow();
     testPlume();
+    testIceSheet();
+    testIceSheetLocal();
     testLandscapeRegularity();
     testLandscapePlane();
     testRelief();
+    testReliefBeds();
     testLandscapeWorld();
     testInspect();
     testChart();
@@ -50,5 +58,7 @@ int main() {
     testGroundwaterEdge();
     testGroundwaterTile();
     testVolcanicLaws();
+    testVolcanicLive();
+    testCoast();
     return 0;
 }

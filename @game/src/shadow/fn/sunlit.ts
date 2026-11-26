@@ -1,5 +1,6 @@
 import { Fn, abs, float, max, min, mix, select, smoothstep, step, texture, vec2, vec4 } from "three/tsl";
 import type { Node } from "three/webgpu";
+import { cloudShadow } from "../../clouds/fn/cloudShadow";
 import { EdgeFade } from "../constant/cascades";
 import type { ShadowNodes } from "../type/ShadowNodes";
 
@@ -10,7 +11,7 @@ type Float = Node<"float">;
 const leaves = (towards: Float, low: Float, high: Float, at: Float) =>
   select(towards.greaterThanEqual(0), high.sub(at).div(max(towards, 1e-4)), low.sub(at).div(min(towards, -1e-4)));
 
-// Share of the sun's light that reaches a point in render space, 0 in shadow. A map holds the faces that look
+// Share of the sun's light that reaches a point in render space, 0 in shadow, and less under cloud. A map holds the faces that look
 // away from the sun, so a lit face never shadows itself and needs no slope bias: the point is lit where it lies
 // nearer the sun than the first such face on its ray.
 //
@@ -33,6 +34,7 @@ export function sunlit(shadow: ShadowNodes, position: Node<"vec3">): Float {
       const out = min(leaves(ray.x, square.x, square.z, position.x), leaves(ray.z, square.y, square.w, position.z));
       answered.assign(max(answered, out.mul(held)));
     });
+    if (shadow.clouds) lit.mulAssign(cloudShadow(shadow.clouds, position));
     return lit;
   })();
 }

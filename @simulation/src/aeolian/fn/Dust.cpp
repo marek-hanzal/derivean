@@ -31,9 +31,9 @@ void settleDust(Domain& domain, const WindGraph& graph, const std::vector<float>
             wind.ledger.dustOut += settled;
             return;
         }
+        const bool water = heldByWater(domain, i);
         domain.ground.sediment[Fines][i] += settled / area;
         bookWind(domain, i, settled / area);
-        const bool water = heldByWater(domain, i);
         if (!water) wind.labels.loess[i] += settled / area;
         (water ? wind.ledger.dustDrowned : wind.ledger.dustSettled) += settled;
     };

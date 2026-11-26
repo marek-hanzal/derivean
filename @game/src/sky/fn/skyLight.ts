@@ -1,4 +1,4 @@
-import { Color, Vector3 } from "three";
+import { Color, Vector3 } from "three/webgpu";
 import type { Point } from "../../../contract/GameBridge";
 import { AirDepth, DaySky, DuskSky, NightSky } from "../constant/air";
 import type { SkyLight } from "../type/SkyLight";
@@ -18,7 +18,6 @@ export function createSkyLight(): SkyLight {
     skyGlow: { value: new Color() },
     sunLight: { value: new Color() },
     skyAmbient: { value: new Color() },
-    groundAmbient: { value: new Color() },
   };
 }
 
@@ -53,5 +52,4 @@ export function setSkyLight(light: SkyLight, sun: Point) {
   // The dome lights the ground with a blend of its zenith and horizon; the night keeps enough to walk by.
   const ambient = 1.9 * days + 1.1 * dusks + 0.5 * nights;
   light.skyAmbient.value.copy(light.skyZenith.value).lerp(light.skyHorizon.value, 0.55).multiplyScalar(ambient);
-  light.groundAmbient.value.set("#8b6952").multiplyScalar(0.75 * days + 0.3 * dusks + 0.04 * nights);
 }

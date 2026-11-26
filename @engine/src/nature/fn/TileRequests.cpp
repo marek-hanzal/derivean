@@ -7,18 +7,7 @@
 namespace derivean {
 namespace {
 
-struct Reach {
-    sim::Level level;
-    double radius;      // m around the eye
-    double ceiling;     // m of clearance above which the level is not worth building
-};
-
-constexpr Reach Reaches[]{
-    {sim::Level::Region, RegionReach, 1e9},
-    {sim::Level::Local, LocalReach, 90e3},
-    {sim::Level::Site, SiteReach, 3000.0},
-    {sim::Level::Ground, GroundReach, 150.0},
-};
+constexpr sim::Level Levels[]{sim::Level::Region, sim::Level::Local, sim::Level::Site, sim::Level::Ground};
 constexpr double ReplanDistance = 64.0;   // m
 constexpr double FootingGain = 8.0;       // the ground under the feet is worth this much more: without it nobody can stand
 constexpr int FirstPriority = 500;        // of the best request of a plan; below the 600 and more the atlas gives a tile's own dependencies
@@ -65,31 +54,33 @@ void requestTiles(Nature& nature, Position eye, Position velocity, double cleara
     sim::World& world = nature.world;
     std::erase_if(tiles.flying, [&](sim::TileKey key) { return finished(world, key); });
     std::vector<Wanted> missing;
-    for (const Reach& reach : Reaches) {
-        tiles.ready[size_t(reach.level)] = true;
-        tiles.wanted[size_t(reach.level)] = tiles.finished[size_t(reach.level)] = 0;
-        if (clearance > reach.ceiling) continue;
-        const double span = sim::tileSpan(reach.level);
-        // What the eye is about to fly over matters as much as what it is over now.
-        const double ahead = std::min(1.0, 0.5 * reach.radius / std::max(1.0, LookAhead * std::hypot(velocity[0], velocity[2]))) * LookAhead;
+    for (const sim::Level level : Levels) {
+        tiles.ready[size_t(level)] = true;
+        tiles.wanted[size_t(level)] = tiles.finished[size_t(level)] = 0;
+        if (clearance > tiles.ceiling[size_t(level)]) continue;
+        const double radius = tiles.reach[size_t(level)];
+        const double span = sim::tileSpan(level);
+        // What the eye is about to fly over matters as much as what it is over now; what lies round
+        // the eye is still wanted, so the square spans both.
+        const double ahead = std::min(1.0, 0.5 * radius / std::max(1.0, LookAhead * std::hypot(velocity[0], velocity[2]))) * LookAhead;
         const sim::Vec2 center{eye[0] + velocity[0] * ahead, eye[2] + velocity[2] * ahead};
-        const sim::TileKey low = sim::tileAt(reach.level, {center.x - reach.radius, center.z - reach.radius});
-        const sim::TileKey high = sim::tileAt(reach.level, {center.x + reach.radius, center.z + reach.radius});
+        const sim::TileKey low = sim::tileAt(level, {std::min(center.x, eye[0]) - radius, std::min(center.z, eye[2]) - radius});
+        const sim::TileKey high = sim::tileAt(level, {std::max(center.x, eye[0]) + radius, std::max(center.z, eye[2]) + radius});
         // The coarser data a tile replaces and how near it lies decide what the eye gains from it.
-        const double replaced = reach.level == sim::Level::Region ? sim::PlanetCell
-                              : sim::specOf(sim::Level(int(reach.level) - 1)).cell * (reach.level == sim::Level::Ground ? FootingGain : 1.0);
+        const double replaced = level == sim::Level::Region ? sim::PlanetCell
+                              : sim::specOf(sim::Level(int(level) - 1)).cell * (level == sim::Level::Ground ? FootingGain : 1.0);
         for (int z = low.z; z <= high.z; ++z)
             for (int x = low.x; x <= high.x; ++x) {
-                const sim::TileKey key{reach.level, x, z};
-                ++tiles.wanted[size_t(reach.level)];
+                const sim::TileKey key{level, x, z};
+                ++tiles.wanted[size_t(level)];
                 if (finished(world, key)) {
-                    ++tiles.finished[size_t(reach.level)];
+                    ++tiles.finished[size_t(level)];
                     continue;
                 }
-                tiles.ready[size_t(reach.level)] = false;
+                tiles.ready[size_t(level)] = false;
                 const double dx = std::max({x * span - center.x, center.x - (x + 1) * span, 0.0});
                 const double dz = std::max({z * span - center.z, center.z - (z + 1) * span, 0.0});
-                const bool own = clearance <= reach.ceiling && std::max(dx, dz) < OwnPlace && clearance < Reaches[3].ceiling;
+                const bool own = std::max(dx, dz) < OwnPlace && clearance < tiles.ceiling[size_t(sim::Level::Ground)];
                 missing.push_back({replaced / std::max(std::hypot(dx, dz, clearance), 0.5 * span), key, own});
             }
     }

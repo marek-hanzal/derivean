@@ -7,8 +7,6 @@ namespace {
 
 constexpr uint64_t BedStream = 0x50494c45;
 constexpr float Pitch[2] = {14.0f, 34.0f};   // m from the base of one flow to the base of the next, by Magma
-constexpr double LavaSealing = 0.5e6;        // yr after which half of the rain runs off a lava surface instead of sinking into it
-constexpr double AshSealing = 0.03e6;        // yr, the same for ash and scoria
 
 Material lavaOf(const VolcanicTile* tile, const std::vector<Vent>& vents, uint8_t vent) {
     const std::vector<Vent>& list = tile ? tile->vents : vents;
@@ -97,23 +95,21 @@ bool volcanicUnit(Domain& domain, size_t i, uint64_t seed) {
             own = height - bed.bottom;
         }
     }
-    if (!plug) {
-        // Fresh lava and scoria swallow the rain: little water runs on them, and little cuts them,
-        // until weathering has sealed their surface. Ash seals within tens of thousands of years,
-        // lava within hundreds of thousands. The age is that of the middle of the step. A finer
-        // level besides settles for a fixed span whatever the age of the ground: rock laid within
-        // that span is given only its own share of the span's erosion.
-        const float share = volcanic.allLaid[i] > 0 ? volcanic.lavaLaid[i] / volcanic.allLaid[i] : 1.0f;
+    if (!plug && !region) {
+        // A finer level settles for a fixed span whatever the age of the ground: rock laid within
+        // that span is given only its own share of the span's erosion. A region lives through the
+        // dates themselves and needs no such share.
         const double span = domain.endTime - domain.startTime;
-        const double age = std::max(0.0, (region ? domain.time - domain.startTime : span) - double(volcanic.laidAt[i])) + 0.5 * domain.step;
-        const double sealing = share * LavaSealing + (1 - share) * AshSealing;
-        const float worked = float(age / (age + sealing) * (region ? 1.0 : std::min(1.0, age / span)));
+        const double age = std::max(0.0, span - double(volcanic.laidAt[i])) + 0.5 * domain.step;
+        const float worked = float(std::min(1.0, age / span));
         traits.erodibility *= worked;
         traits.weathering *= worked;
     }
     domain.unit[i] = {depth, depth + std::max(own, 1e-3f), traits};
-    // The ground level keeps the bed itself besides its traits (ground/fn/Settle.cpp).
+    // The ground level keeps the bed itself and its date besides its traits (ground/fn/Settle.cpp):
+    // the rock mass of a pile is dated by the top the pile was last laid at.
     if (!domain.bed.empty()) domain.bed[i] = Bed{depth, depth + std::max(own, 1e-3f), kind};
+    if (!domain.laidDown.empty()) domain.laidDown[i] = domain.startTime + double(volcanic.laidAt[i]);
     return true;
 }
 

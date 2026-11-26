@@ -74,7 +74,9 @@ DuneStats measureDunes(int size, double cell, const std::vector<float>& top, con
     const Vec2 across{std::cos(axis), std::sin(axis)};
     stats.crestAngle = 90.0 - std::acos(std::min(1.0, std::abs(dot(across, heading)))) * 57.29577951;
 
-    // Lines across the crests, four cells apart, read at the nearest cell.
+    // Lines across the crests, four cells apart, read at the nearest cell. They read the sand's
+    // thickness, not the top: on a real tile the ground under a field rises and falls, and a dune's
+    // height is what it stands above its own floor.
     std::vector<double> heights, spacings;
     std::vector<float> line;
     const Vec2 side = perpendicular(across);
@@ -86,7 +88,7 @@ DuneStats measureDunes(int size, double cell, const std::vector<float>& top, con
                 if (!line.empty()) break;
                 continue;
             }
-            line.push_back(top[at(x, z)]);
+            line.push_back(sand[at(x, z)]);
         }
         walkLine(line, cell, LeastDune * cell, heights, spacings);
     }
