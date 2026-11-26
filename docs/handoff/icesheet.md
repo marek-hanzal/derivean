@@ -42,6 +42,7 @@ Catalogue targets are in `docs/reference-landscapes.md` (A2, A3, F1–F4, G1). R
   - `passing` is a total, so the grain mix steps at a seam.
   - Digging only lowers, so the Local mean sinks a few metres below the parent's.
   - At Site, `iceThen` is the Local tile's `iceAge`, which includes Local's own valley glaciers.
+- Moraine and outwash beyond the ice: a hollow beyond the ice keeps everything that reaches it, however high (as at Region), so outwash can mound above a spill point.
 - Done since: digging reads only the rock-mass field (`pluckFactor` in `Lodge.cpp`: rock kind, `weakness` from `fractureShare`, `sound` from the jointed mass's cohesion), not the seeded `quality`. Beyond the ice, the moraine surplus no longer vanishes: gravel and sand run on as outwash through `washBeyond` (shared with Region, `Meltwater.cpp`), and mud leaves. Outwash is now in the finer record.
 - Region ledger (`Debris.cpp`): ice debris moving between the tile's cells and its halo is not booked as crossing, and `sedimentOut` is booked for halo cells too. `WearTotals` close (tested), but the Region `TileLedger` over owned cells probably does not. `washBeyond` books crossings correctly now. Check it with a ledger test on a Region rig.
 - The lodging is excitable: wherever load enters a domain without its history (the rim, a halo with no finished neighbour) it sets off a train of till waves about 20 cells long that decays slowly. Inside the tile it is driven by the halo's 32 cells; with a finished neighbour the recorded `passing` load is taken up instead. Watch the 2 × 2 pictures for seams.
@@ -50,7 +51,10 @@ Catalogue targets are in `docs/reference-landscapes.md` (A2, A3, F1–F4, G1). R
 
 ## 3. In progress
 
-Nothing half-done. Third run (Opus, 26 Nov) ended after: first review's findings fixed; second review done (findings listed under "Broken"; two small ones fixed: negative cover no longer books erosion, a cell whose flow points at no lower surface passes its load down the surface instead of keeping it all); the temporary `ICE_OFF` / `ICE_FINER_OFF` switches removed, so A/B probes now need a local patch (one early `return nullptr` in `sheetIce` / `sheetFiner`).
+Nothing half-done. Third run (Opus, 26 Nov), after the lead's commit 08f5a7e:
+- The `testChart` failure is not this stream's. `count.cpp` finds the same 3 tiles either way. Then: digging moved to the rock-mass field; Site no longer digs; the moraine surplus runs on as outwash (`washBeyond`); and the review findings on these changes are fixed. The Region portal Fines are now booked only for owned cells. The surplus starts from the lower bare neighbours, never settling on the moraine. Site does not compute the box means. The margin test checks that the ground changed by the ledger.
+- Site tiles at `--x 7042816 --z 13263360` (`.out/icesheet/site3/local-on.png`, ice only): lakes 13.8 % (4.7 % without the pass, `site2/local-off.png`), mean slope 2.7°, till 1.2 m. The trench grid is gone. Ice lobes of till run with the flow, and lakes lie between them. Tile seams show as straight lines, but they are already in the baseline without the pass (`site2/local-off.png`, which also repeats the same rough patch in every Site tile): another owner's.
+- Both ice tests pass through the drivers. The full suite stopped at `testAeolian` (another stream) on the last run; on the run before, it passed these tests and stopped at `testChart`.
 
 ## 4. Next steps
 
