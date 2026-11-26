@@ -44,7 +44,8 @@ void testTide() {
 // z ≥ 0.5 under both bodies at their mean distances holds +0.1955 m of the planet-wide shape on
 // average (Codex, DREV-CLAUDE-002-03), so adding it would make water. `wetTide` gives every mask a
 // zero volume and keeps the shape: the cap, and two uneven masks at two instants, the second larger.
-// Water carried between masks (wetting and drying) is the sea owner's solve and S4's test.
+// Water carried between masks (wetting and drying) is the sea owner's solve and S4's test. A mask is
+// one connected body: two cut-off lakes called together trade water, called apart keep it.
 void testWetTide() {
     struct Cell {
         Vec3 at;
@@ -96,6 +97,20 @@ void testWetTide() {
     expect(std::abs(mean) > 1e-3 && std::abs(volume) < 1e-12 && shape < 1e-12, "the uneven sea's tide changes its volume", volume);
     sea(skyOn(2460409.26 + 0.25), ocean(0.2), mean, volume, shape);
     expect(std::abs(mean) > 1e-3 && std::abs(volume) < 1e-12 && shape < 1e-12, "the larger sea's tide changes its volume", volume);
+
+    // Two lakes not joined by water, of 2 and 5 km², one at the pole and one on the equator (Codex,
+    // DREV-CLAUDE-002-04). Called together, the common correction moves about 1.1 × 10⁶ m³ from one to
+    // the other; called once per lake, each keeps its water.
+    const std::vector<Vec3> lakes{observerAt(90, 0), observerAt(0, 0)};
+    const std::vector<double> lakeAreas{2e6, 5e6};
+    std::vector<double> together(2), pole(1), equator(1);
+    wetTide(overhead, lakes, lakeAreas, together);
+    wetTide(overhead, std::span(lakes).first(1), std::span(lakeAreas).first(1), pole);
+    wetTide(overhead, std::span(lakes).last(1), std::span(lakeAreas).last(1), equator);
+    const double moved = together[0] * lakeAreas[0];
+    expect(std::abs(std::abs(moved) / 1.124e6 - 1) < 0.01 && std::abs(moved + together[1] * lakeAreas[1]) < 1e-6 * std::abs(moved),
+           "one call for two cut-off lakes does not move Codex's water between them (m³)", moved);
+    expect(std::abs(pole[0]) < 1e-15 && std::abs(equator[0]) < 1e-15, "a lake called on its own changes its volume (m)", pole[0]);
 
     std::vector<double> one(1);
     bool threw = false;

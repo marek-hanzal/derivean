@@ -129,8 +129,9 @@ Present-day validity:
   - The sea takes `tidePotential` as the forcing of its own flow, or, in the equilibrium approximation, `wetTide` over its wet cells with their true areas, × 0.69 against the yielding sea floor. Either replaces `tideHeight`.
   - Never add `equilibriumTide` to a sea level. Its mean is zero only over the whole sphere. Over an ocean it is not: +0.20 m over the cap z ≥ 0.5 with both bodies overhead.
   - With a fixed mask, `wetTide` subtracts the area-weighted mean over the wet cells, which is enough.
+  - Call `wetTide` once per hydraulically connected body. One call for lakes cut off from each other closes the planet's sum but moves water between them. Codex measured ±1.124 × 10⁶ m³ for basins of 2 and 5 km², one at the pole and one on the equator, called together, and 0 called apart (DREV-CLAUDE-002-04; `AstronomyTide.cpp` repeats it).
   - Where cells wet and dry with the tide, the common level correction comes from the volume over the real bathymetry. That is the sea owner's equilibrium solve: find the level at which the volume filled equals the volume held.
-  - S4's or the coast's closed-budget test must include an uneven wet mask, and preferably cells that wet and dry. A uniform or whole-sphere sea passes even with the wrong contract.
+  - S4's or the coast's closed-budget test must include an uneven wet mask, and preferably cells that wet and dry. A uniform or whole-sphere sea passes even with the wrong contract. It checks the budget of every cut-off body on its own, not only the planet's sum.
   - The dynamic response is later work.
 - Deep time: `sky.deep` carries the day, month and luminosity of the age. A climate that runs through geological time calls `deepTimeAt(age)` per epoch, without building a sky.
 

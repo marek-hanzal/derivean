@@ -1,6 +1,6 @@
 # Credits: astronomy and the geometry of the sphere
 
-Part of [Credits](../credits.md); the entry format is explained there. Both domains are new (planet slices S1 and S2, 26 Nov 2026) and still in progress; the entries follow the Sources sections of `docs/handoff/geometry.md` (S1, commit `cb87997`; its lines and the geometry source lines as of S1's follow-up to Codex's DREV-CLAUDE-002-03) and `docs/handoff/astronomy.md:183` (S2, commits `e3ed117` and `56c2ef1`), with the bibliographic data checked again here. Astronomy line numbers are as of `56c2ef1`.
+Part of [Credits](../credits.md); the entry format is explained there. Both domains are new (planet slices S1 and S2, 26 Nov 2026) and still in progress; the entries follow the Sources sections of `docs/handoff/geometry.md` (S1, commit `cb87997`; its lines and the geometry source lines as of S1's follow-up to Codex's DREV-CLAUDE-002-03) and `docs/handoff/astronomy.md:184` (S2, commits `e3ed117`, `56c2ef1` and the tide's one-body contract), with the bibliographic data checked again here. Astronomy line numbers are as of the one-body tide contract (DREV-CLAUDE-002-04).
 
 ## The Sun, the Earth and the Moon today
 
@@ -48,8 +48,8 @@ Yoder, C. F. (1995). Astrometric and geodetic properties of Earth and the solar 
 ### Cartwright and Tayler 1971: the tide-generating potential
 Cartwright, D. E., Tayler, R. J. (1971). New computations of the tide-generating potential. *Geophysical Journal of the Royal Astronomical Society* 23(1), 45–73. doi:10.1111/j.1365-246X.1971.tb01803.x
 - **Model:** the expansion of the tide-generating potential in degrees 2 and 3; the equilibrium tide. The tide is a force that moves water: over a fixed wet mask, the planet-wide shape is shifted by its area-weighted mean over the wet cells, so the volume does not change (`wetTide`).
-- **Used in:** `@simulation/src/astronomy/fn/Tide.hpp:11`, `:34`.
-- **Checked by:** `@simulation/test/AstronomyTide.cpp:20`, `:48`: zero mean over the whole sphere; +0.1956 m over the cap z ≥ 0.5 with both bodies overhead (Codex, DREV-CLAUDE-002-03), brought to zero volume over that cap and over two uneven masks at two instants, the second larger.
+- **Used in:** `@simulation/src/astronomy/fn/Tide.hpp:11`, `:37`.
+- **Checked by:** `@simulation/test/AstronomyTide.cpp:20`, `:49`: zero mean over the whole sphere; +0.1956 m over the cap z ≥ 0.5 with both bodies overhead (Codex, DREV-CLAUDE-002-03), brought to zero volume over that cap and over two uneven masks at two instants, the second larger.
 - **Limits:** the ocean's dynamic response is later work. Where the coast follows the bathymetry, the common level correction comes from the volume over the real bathymetry, owned by the sea (`Tide.hpp:31`).
 
 ### Chauvenet 1863: the enlarged shadow of the Earth
@@ -122,7 +122,7 @@ Laskar, J., Fienga, A., Gastineau, M., Manche, H. (2011). La2010: a new orbital 
 
 Milankovitch, M. (1941). *Kanon der Erdbestrahlung und seine Anwendung auf das Eiszeitenproblem*. Königlich Serbische Akademie, Belgrade. (unverified: publisher series)
 - **Model:** eccentricity, obliquity and precession cycles (41 kyr, 19/23 kyr, 100/405 kyr) pacing the ice; La2010 is an exact ephemeris only to about 50 Myr, so they are left as cycles to S4b.
-- **Used in:** `@simulation/src/astronomy/type/DeepTime.hpp:16`, `:17` (why they are not there yet); `docs/handoff/astronomy.md:58`, `:204`; `.out/lead/handover/PLANET.md:77`.
+- **Used in:** `@simulation/src/astronomy/type/DeepTime.hpp:16`, `:17` (why they are not there yet); `docs/handoff/astronomy.md:58`, `:205`; `.out/lead/handover/PLANET.md:77`.
 
 ## The sphere and its grid
 
@@ -164,11 +164,11 @@ Rodrigues, O. (1840). Des lois géométriques qui régissent les déplacements d
 do Carmo, M. P. (1976). *Differential Geometry of Curves and Surfaces*. Prentice-Hall, §4-5 (Gauss–Bonnet).
 - **Model:** the rotation about from × to that carries a vector along, in Rodrigues' unit-axis form beyond a right angle so it stays finite up to the antipode; parallel transport round a loop turns by area / R².
 - **Used in:** `@simulation/src/geometry/fn/Frame.hpp:32`, `:37`; `@simulation/src/geometry/fn/Frame.cpp:62`.
-- **Checked by:** `@simulation/test/GeometryFrame.cpp:77` (finite and reversible near and at the antipode), `:145` (holonomy against the enclosed solid angle).
+- **Checked by:** `@simulation/test/GeometryFrame.cpp:77` (finite and reversible near and at the antipode), `:149` (holonomy against the enclosed solid angle).
 
 ### Sinnott 1984: haversine distance
 Sinnott, R. W. (1984). Virtues of the haversine. *Sky and Telescope* 68(2), 159.
-- **Checked by:** `@simulation/test/GeometryFrame.cpp:159`, the independent distance `distanceBetween` is compared with (`docs/handoff/geometry.md:105`).
+- **Checked by:** `@simulation/test/GeometryFrame.cpp:163`, the independent distance `distanceBetween` is compared with (`docs/handoff/geometry.md:105`).
 
 ### Karney 2013: ellipsoidal geodesics (for later)
 Karney, C. F. F. (2013). Algorithms for geodesics. *Journal of Geodesy* 87, 43–55. doi:10.1007/s00190-012-0578-z

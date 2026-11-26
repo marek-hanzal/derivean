@@ -31,6 +31,8 @@ double equilibriumTide(const Sky& sky, Vec3 observer);
 //   that mask; the water that newly wet or dried cells gain or lose is the sea owner's volume solve.
 // - Where the coast follows the bathymetry instead of a fixed mask, the common level correction comes
 //   from the volume over the real bathymetry. That belongs to the sea's owner, not here.
+// - The mask is one hydraulically connected body of water. Called once for lakes that are cut off
+//   from each other, it closes the planet's sum but moves water between them; call it once per body.
 // - The sizes must match, or it throws std::invalid_argument.
 void wetTide(const Sky& sky, std::span<const Vec3> wet, std::span<const double> areas, std::span<double> heights);
 
