@@ -1,6 +1,6 @@
 # Hand-over
 
-This directory lets a person or model with none of the original context continue the work on the branch `claude/derivean-landscape-engine-e64dc8`. It describes the present state; history is in Git. The lead keeps this file; every workstream keeps its own file next to it and updates it at each milestone.
+This directory lets a person or model with none of the original context continue the work on the branch `main`. On 26 Nov the owner chose this implementation as the game's main line. `main` now carries it, and everyone works from `main`. The competing implementations stay on their own branches: Codex's on `codex` (76f5864), Gemini's on `neon` (3168a9d). The shared working tree is still the worktree `.claude/worktrees/derivean-landscape-engine-e64dc8`, now on `main`. It describes the present state; history is in Git. The lead keeps this file; every workstream keeps its own file next to it and updates it at each milestone.
 
 Read in this order: [AGENTS.md](../../AGENTS.md), the owner's briefs in [brief/](brief/) ([world simulation](brief/world-simulation.md), [clouds](brief/clouds.md)), this file, then the file of the stream you continue. The model itself is described in [simulation.md](../simulation.md); what real ground looks like, with numbers, in [reference-landscapes.md](../reference-landscapes.md).
 
