@@ -97,7 +97,7 @@ std::shared_ptr<const ShoreRecord> recordShore(const Domain& domain) {
     const size_t cells = domain.cells(), trains = cells * WaveDirections;
     Shore look;
     look.gale = shore.gale, look.beyond = shore.beyond;
-    look.wave.resize(trains), look.arrive.resize(trains);
+    look.wave.resize(trains), look.arrive.resize(trains), look.crest.resize(trains);
     for (auto* field : {&look.top, &look.stood, &look.still, &look.load[0], &look.load[1], &look.load[2]}) field->resize(cells);
     look.surf.resize(cells);
     if (!readStanding(domain, look) || !spreadWater(domain, look)) return nullptr;

@@ -37,7 +37,7 @@ void cutCliffs(Domain& domain, Shore& shore, double years);
 // m, the wave height a cell's rock withstands.
 float withstandOf(const Domain& domain, size_t cell);
 
-// Beach.cpp — the profile loose ground takes under breaking waves of `height` m.
+// Beach.cpp — the profile loose ground takes under waves that break at `height` m (Shore::crest).
 // Rise over run of the beach face of a class (Fines: of a mud flat).
 float faceSlope(int kind, float height);
 // Rise over run the class holds `depth` m below still water, on a beach whose face holds `face`.

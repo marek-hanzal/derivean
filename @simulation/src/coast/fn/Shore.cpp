@@ -50,6 +50,7 @@ Shore& shoreOf(Domain& domain) {
     const size_t cells = domain.cells();
     shore.wave.assign(cells * WaveDirections, 0.0f);
     shore.arrive.assign(cells * WaveDirections, 0.0f);
+    shore.crest.assign(cells * WaveDirections, 0.0f);
     shore.gale.resize(cells * WaveDirections);
     for (size_t i = 0; i < cells; ++i)
         for (int k = 0; k < WaveDirections; ++k) shore.gale[i * WaveDirections + size_t(k)] = stormWind(domain, i, k) * stormWind(domain, i, k);
@@ -83,7 +84,7 @@ bool spreadWater(const Domain& domain, Shore& shore) {
     // Trains, surf and loads belong to the water of this step only: a cell outside its box must not
     // keep what an earlier, larger water left there.
     std::fill(shore.still.begin(), shore.still.end(), NoWater);
-    for (auto* field : {&shore.wave, &shore.arrive}) std::fill(field->begin(), field->end(), 0.0f);
+    for (auto* field : {&shore.wave, &shore.arrive, &shore.crest}) std::fill(field->begin(), field->end(), 0.0f);
     std::fill(shore.surf.begin(), shore.surf.end(), uint8_t(0));
     for (auto& load : shore.load) std::fill(load.begin(), load.end(), 0.0f);
     for (size_t i = 0; i < domain.cells(); ++i)

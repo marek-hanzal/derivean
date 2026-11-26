@@ -58,20 +58,23 @@ void raiseWaves(const Domain& domain, Shore& shore) {
         const ptrdiff_t backLeft = -(ptrdiff_t(NeighborZ[left]) * size + NeighborX[left]), backRight = -(ptrdiff_t(NeighborZ[right]) * size + NeighborX[right]);
         sweepDownwind(shore, k, [&](int x, int z) {
             const size_t i = domain.index(x, z), at = i * WaveDirections + size_t(k);
-            shore.wave[at] = shore.arrive[at] = 0;
+            shore.wave[at] = shore.arrive[at] = shore.crest[at] = 0;
             const float water = shore.still[i];
             if (water == NoWater) return;
-            float energy;
+            float energy, crest;
             if (domain.hold[i] == Rim) {
-                energy = open ? shore.beyond[at] : 0.0f;
+                energy = crest = open ? shore.beyond[at] : 0.0f;
             } else {
-                const auto from = [&](ptrdiff_t offset) { return shore.wave[size_t(ptrdiff_t(i) + offset) * WaveDirections + size_t(k)]; };
-                energy = (1.0f - 2.0f * WaveSpread) * from(back) + WaveSpread * (from(backLeft) + from(backRight));
+                const auto from = [&](const std::vector<float>& field, ptrdiff_t offset) { return field[size_t(ptrdiff_t(i) + offset) * WaveDirections + size_t(k)]; };
+                const auto blend = [&](const std::vector<float>& field) { return (1.0f - 2.0f * WaveSpread) * from(field, back) + WaveSpread * (from(field, backLeft) + from(field, backRight)); };
+                energy = blend(shore.wave), crest = blend(shore.crest);
             }
             shore.arrive[at] = energy;
-            // Ground that stands out of high water is still crossed by a train whose swash runs over it.
+            // Ground that stands out of high water is still crossed by a train whose swash runs over it:
+            // the broken train's own bore, as high as the run-up of what is left of it on the beach face
+            // of its breakers. (The berm stands at the run-up of the breakers themselves, Drift.cpp.)
             float depth = water + swingOf(domain, water) - shore.top[i];
-            if (depth <= 0 && energy > 0) depth += runUp(std::sqrt(energy), faceSlope(Sand, std::sqrt(energy)));
+            if (depth <= 0 && energy > 0) depth += runUp(std::sqrt(energy), faceSlope(Sand, std::sqrt(crest)));
             if (depth <= 0) return;
             const float gale = shore.gale[at], limit = std::sqrt(shallowSea(depth, gale)), most = std::min(FullSea * gale, limit);
             if (energy < most * most) {
@@ -86,6 +89,7 @@ void raiseWaves(const Domain& domain, Shore& shore) {
                 energy = std::max(most, height / (1.0f + friction * height * run / (depth * depth)));
                 energy *= energy;
             }
+            shore.crest[at] = std::max(crest, energy);
             shore.wave[at] = std::min(energy, Breaker * Breaker * depth * depth);
         });
     }

@@ -182,37 +182,47 @@ void lakeBeach() {
             into[0] += coarse, into[1] += loose;
         }
     expect(waterline[1] > 0 && below[1] > 0 && calm[1] > 0, "a lake has no shore to measure", waterline[1]);
-    // Gravel's face under these 0.26 m waves is twice as steep as sand's (Beach.cpp), so the swash keeps it higher.
-    expect(waterline[0] / waterline[1] > below[0] / below[1] + 0.02, "gravel does not lie above sand on a lake beach", waterline[0] / waterline[1] - below[0] / below[1]);
+    // Gravel's face stands 40^¼ ≈ 2.5 times as steep as sand's under any wave (Beach.cpp); the swash
+    // keeps it at the waterline by about 0.025 of the cover more than below it.
+    expect(waterline[0] / waterline[1] > below[0] / below[1] + 0.015, "gravel does not lie above sand on a lake beach", waterline[0] / waterline[1] - below[0] / below[1]);
     expect(std::abs(calm[0] / calm[1] - 0.375) < 0.01, "the upwind shore of a lake was sorted by waves it does not have", calm[0] / calm[1]);
     float highest = 0;
     for (size_t i = 0; i < lake.cells() * WaveDirections; ++i) highest = std::max(highest, lake.shore->wave[i]);
     expect(highest > 0.01f && highest < 0.25f, "a lake 560 m across carries waves of the open sea", std::sqrt(highest));
 }
 
-// A sandy lake shore under its own waves: a beach face as steep as sand under such waves stands
-// (2–10°, not the slope of the ground it was laid on), down to a step, and a berm at the run-up.
-// Measured along a row beside the outlet channel on the downwind shore.
+// The beach laws against their sources: Sunamura's face, flatter under higher waves and steeper on
+// coarser grains, and Stockdon's run-up.
+void beachLaws() {
+    const float sand = faceSlope(Sand, 0.3f), high = faceSlope(Sand, 1.0f), gravel = faceSlope(Coarse, 0.3f);
+    expect(std::abs(sand - 0.0859f) < 0.002f && std::abs(high - 0.0638f) < 0.002f, "the face of sand is not Sunamura's", sand);
+    expect(std::abs(gravel / sand - std::pow(40.0f, 0.25f)) < 0.01f, "gravel's face does not stand steeper by the fourth root of its grain over sand's", gravel / sand);
+    expect(std::abs(runUp(1.0f, 0.05f) - 0.298f) < 0.005f, "the run-up of a metre of sea on a gentle beach is not Stockdon's", runUp(1.0f, 0.05f));
+    expect(profileSlope(Sand, 0.09f, 0.3f, sand) == sand && profileSlope(Sand, 2.0f, 0.3f, sand) < 0.5f * sand, "a beach face does not end at its step", profileSlope(Sand, 2.0f, 0.3f, sand));
+}
+
+// A steep sandy lake bank under the lake's own waves: they cut its foot down to a berm at the
+// run-up and lay the sand below it as a concave face, steepest at the step. Measured along a row
+// beside the outlet channel on the downwind shore; the untouched bank passes none of it.
 void lakeProfile() {
     CoastSpec spec;
     spec.scene = CoastScene::Lake, spec.level = Level::Site;
     spec.rock = Material::Granite;
-    spec.sand = 3.0, spec.steps = 30;
+    spec.sand = 3.0, spec.bank = 0.25, spec.steps = 30;
     const Domain start = coastDomain(spec);
     const Domain lake = worked(spec, spec.steps);
     const int x = lake.size / 2 + 20;
     const float water = lake.shore->still[lake.index(lake.size / 2, lake.size / 2)];
     const auto top = [&](const Domain& d, int z) { return d.ground.rock[d.index(x, z)] + d.sedimentAt(d.index(x, z)); };
     int line = lake.size / 2;
-    while (line < lake.size - 1 && top(lake, line) <= water) ++line;
+    while (line < lake.size - 1 && top(start, line) <= water) ++line;
     float height = 0;
-    for (int k = 0; k < WaveDirections; ++k) height = std::max(height, std::sqrt(lake.shore->wave[lake.index(x, line - 3) * WaveDirections + size_t(k)]));
-    const float face = (top(lake, line) - top(lake, line - 3)) / (3.0f * float(lake.cell));
-    expect(face > 0.035f && face < 0.18f, "a lake's sand beach has no face as steep as sand stands under its waves", std::atan(face) * 57.3f);
-    int worked = line;
-    while (worked < lake.size - 1 && std::abs(top(lake, worked + 1) - top(start, worked + 1)) > 0.01f) ++worked;
-    const float highWater = water + swingOf(lake, water), berm = top(lake, worked);
+    for (int k = 0; k < WaveDirections; ++k) height = std::max(height, std::sqrt(lake.shore->crest[lake.index(x, line - 3) * WaveDirections + size_t(k)]));
+    const float highWater = water + swingOf(lake, water), berm = top(lake, line);
+    expect(berm < top(start, line) - 0.2f, "the waves did not cut the foot of a sandy bank", top(start, line) - berm);
     expect(berm > highWater - 0.1f && berm < highWater + runUp(height, faceSlope(Sand, height)) + 0.1f, "a lake beach's berm stands away from the run-up of its waves", berm - highWater);
+    const float upper = (top(lake, line - 1) - top(lake, line - 2)) / float(lake.cell), lower = (top(lake, line - 2) - top(lake, line - 3)) / float(lake.cell);
+    expect(upper > lower + 0.01f && upper > 0.035f && upper < 0.18f, "the sand below a lake beach's berm lies as no concave face", std::atan(upper) * 57.3f);
 }
 
 // The whole step loop, rivers and slopes included, gives the same shore whatever pool its rows are spread over.
@@ -241,6 +251,7 @@ void testCoast() {
     rockCoasts();
     spit();
     lakeBeach();
+    beachLaws();
     lakeProfile();
     threads();
 }

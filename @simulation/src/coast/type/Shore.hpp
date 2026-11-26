@@ -23,6 +23,7 @@ struct Shore {
     std::vector<float> beyond;    // m², per train: what arrives at a Rim cell from outside the domain; empty where none does
     std::vector<float> wave;      // m², per train: what leaves a cell
     std::vector<float> arrive;    // m², per train: what reaches a cell, before the cell's own depth acts on it
+    std::vector<float> crest;     // m², per train: the highest it was on its way to the cell, before the depth broke it (the breaker height of the beach laws)
     std::vector<float> top;       // m, rock plus loose cover as the coast works on it
     std::vector<float> stood;     // m, water surface where water stood when the step was flooded; NoWater elsewhere
     std::vector<float> still;     // m, still water that waves ride on to reach a cell; NoWater where none can
