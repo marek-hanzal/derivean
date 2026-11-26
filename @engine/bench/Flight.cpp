@@ -134,7 +134,8 @@ struct Arrive {
 } // namespace
 
 // engine-bench [age] start: what a game's start waits for, step by step
-// engine-bench [age] at x z height [seconds, 300]: the readiness signals in flight `height` m above the ground there
+// engine-bench age at|jump x z height [seconds, 300]: the readiness signals in flight `height` m above the ground there, the
+//   game started there (at) or at its own spawn and teleported (jump)
 // engine-bench [age] [engine workers, 0 for the machine's] [plain|favoured: the frame thread] [quick: no waiting for the far rings | ready [seconds, 300]: watch the readiness signals standing still]
 int main(int argc, char** argv) {
     setvbuf(stdout, nullptr, _IOLBF, 0);
@@ -143,9 +144,13 @@ int main(int argc, char** argv) {
         timeStart(age);
         return 0;
     }
-    if (argc > 5 && !std::strcmp(argv[2], "at")) {
+    if (argc > 2 && (!std::strcmp(argv[2], "at") || !std::strcmp(argv[2], "jump"))) {
+        if (argc < 6) {
+            std::fprintf(stderr, "engine-bench age %s x z height [seconds]\n", argv[2]);
+            return 1;
+        }
         favourCallingThread();
-        watchPlace(age, std::atof(argv[3]), std::atof(argv[4]), std::atof(argv[5]), argc > 6 ? std::atof(argv[6]) : 300);
+        watchPlace(age, std::atof(argv[3]), std::atof(argv[4]), std::atof(argv[5]), argc > 6 ? std::atof(argv[6]) : 300, !std::strcmp(argv[2], "jump"));
         return 0;
     }
     const bool plain = argc > 3 && !std::strcmp(argv[3], "plain");

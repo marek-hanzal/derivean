@@ -1,8 +1,11 @@
+#include "ground/fn/Stamp.hpp"
 #include "horizon/type/Beds.hpp"
 #include "horizon/type/CubeChunk.hpp"
 #include "horizon/type/StandingWater.hpp"
 #include "horizon/type/Tint.hpp"
 #include "nature/type/SurfaceReader.hpp"
+#include "simulation/fn/Live.hpp"
+#include "simulation/fn/Reader.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -54,6 +57,23 @@ sim::Material top(Filling& filling) {
     return iceAt(filling.reader, filling.sample, filling.place) > GlacierDepth ? sim::Material::Ice : under(filling, TopVoxel);
 }
 
+// The stones of the ground tiles over a lattice of cubes, Air elsewhere: a cube is a stone's where
+// its centre lies in the stone, as a voxel is (ground/fn/Stamp.hpp), and moves with edited ground
+// as the voxels' stones do (simulation/fn/Block.cpp).
+std::vector<sim::Material> stoneCubes(const sim::World& world, const sim::CubeLattice& lattice) {
+    std::vector<sim::Material> stamped(size_t(lattice.countX) * size_t(lattice.countY) * size_t(lattice.countZ), sim::Material::Air);
+    const bool edited = !world.interventions.overlay.tiles.empty();
+    const std::function<float(double, double)> lift = [&](double x, double z) { return sim::changeAt(world, x, z).ground(); };
+    sim::TileReader fine{world.atlas, sim::Level::Ground};
+    const double maxX = lattice.originX + lattice.countX * lattice.step, maxZ = lattice.originZ + lattice.countZ * lattice.step;
+    const sim::TileKey low = sim::tileAt(sim::Level::Ground, {lattice.originX - sim::ClastReach, lattice.originZ - sim::ClastReach});
+    const sim::TileKey high = sim::tileAt(sim::Level::Ground, {maxX + sim::ClastReach, maxZ + sim::ClastReach});
+    for (int z = low.z; z <= high.z; ++z)
+        for (int x = low.x; x <= high.x; ++x)
+            if (const sim::Tile* tile = fine.tile(x, z)) sim::stampClasts(*tile, lattice, stamped.data(), edited ? &lift : nullptr);
+    return stamped;
+}
+
 } // namespace
 
 sim::Level cubeSource(int level) {
@@ -63,7 +83,9 @@ sim::Level cubeSource(int level) {
     return edge <= 256.0 ? sim::Level::Local : sim::Level::Region;
 }
 
-double cubeReadMargin(int level) { return Ring * edgeOf(level) + EaseCells * sim::specOf(cubeSource(level)).cell; }
+double cubeReadMargin(int level) {
+    return Ring * edgeOf(level) + EaseCells * sim::specOf(cubeSource(level)).cell + (cubeSource(level) == sim::Level::Ground ? sim::ClastReach : 0.0);
+}
 
 bool cubeFinal(int level, uint64_t detail) {
     for (int probe = 0; probe < 4; ++probe)
@@ -134,12 +156,23 @@ CubeColumn buildCubes(const sim::World& world, CubeKey key) {
             dataLevel = std::min(dataLevel, uint8_t(here.sample.level));
         }
 
+    // Stones lie on the ground the levels cut from the ground level show, as on the voxels; the
+    // coarser levels' data has none.
+    const int below = lowest - 2;
+    std::vector<sim::Material> stones;
+    if (cubeSource(key.level) == sim::Level::Ground) {
+        const sim::CubeLattice lattice{originX - Halo * edge, below * edge, originZ - Halo * edge, edge, Side, highest + int(std::ceil(sim::ClastReach / edge)) - below, Side};
+        stones = stoneCubes(world, lattice);
+        for (size_t at = 0; at < stones.size(); ++at)
+            if (stones[at] != sim::Material::Air) highest = std::max(highest, below + int(at / (size_t(Side) * Side)) + 1);
+    }
+
     // Solid from two cubes under the lowest top, so no face is made that no neighbour could show.
-    Voxels cubes({{-Halo, lowest - 2, -Halo}, {CubeSide + Halo, highest + 1, CubeSide + Halo}});
+    Voxels cubes({{-Halo, below, -Halo}, {CubeSide + Halo, highest + 1, CubeSide + Halo}});
     for (int j = -Halo; j < CubeSide + Halo; ++j)
         for (int i = -Halo; i < CubeSide + Halo; ++i) {
             const Column& here = column(i, j);
-            for (int y = lowest - 2; y < here.top; ++y) cubes[{i, y, j}] = Material::Bedrock;
+            for (int y = below; y < here.top; ++y) cubes[{i, y, j}] = Material::Bedrock;
             if (i < 0 || j < 0 || i >= CubeSide || j >= CubeSide) continue;
             Filling filling{world, reader, centre(i, j), here.sample, std::nullopt};
             const Material surface = top(filling);
@@ -153,6 +186,9 @@ CubeColumn buildCubes(const sim::World& world, CubeKey key) {
             for (int y = open; y < here.top - 1; ++y)
                 cubes[{i, y, j}] = covered ? surface : under(filling, float(std::max(0.0, here.sample.ground - (y + 0.5) * edge)));
         }
+    for (size_t at = 0; at < stones.size(); ++at)
+        if (stones[at] != sim::Material::Air)
+            cubes[{int(at % Side) - Halo, below + int(at / (size_t(Side) * Side)), int(at / Side % Side) - Halo}] = stones[at];
 
     // Chunks are cut where their lattice lies; a face keeps to its chunk, counted from its corner.
     for (int level = floorDiv(lowest - 1, CubeSide); level <= floorDiv(highest - 1, CubeSide); ++level) {

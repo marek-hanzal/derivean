@@ -18,6 +18,7 @@ const Bytes = ["bedrock", "waters", "level"];
 let session;
 let info;
 let eye;
+let planet; // the whole planet's chart, from the first test
 
 function wellFormed(chart, request) {
   const pixels = request.size ** 2;
@@ -59,16 +60,40 @@ test("a chart is promised at once and read while the session goes on advancing",
   assert.ok(chart.level.every((level) => level === 0), "the whole planet is drawn from the planet");
   assert.ok(chart.waters.every((kind, pixel) => (kind === 1) === (chart.ground[pixel] < info.seaLevel)), "the planet is sea exactly below sea level");
   assert.ok(chart.water.every((level) => Number.isNaN(level) || Math.abs(level - info.seaLevel) < 0.01), "the planet's only water is the sea");
+  planet = chart;
 });
 
+// [0, 0] is deep sea at this age, and over deep sea no ground tile is wanted: the player is taken to
+// the dry land nearest it, once over the planet's ground and again onto the site level's.
+async function standOnLand() {
+  let best = -1;
+  let nearest = Infinity;
+  for (let pixel = 0; pixel < planet.ground.length; pixel++) {
+    if (planet.ground[pixel] < info.seaLevel + 200) continue;
+    const distance = Math.hypot((pixel % planet.size) + 0.5 - planet.size / 2, Math.floor(pixel / planet.size) + 0.5 - planet.size / 2);
+    if (distance < nearest) [best, nearest] = [pixel, distance];
+  }
+  assert.ok(best >= 0, "the planet has dry land");
+  const x = planet.origin[0] + ((best % planet.size) + 0.5) * planet.pitch;
+  const z = planet.origin[1] + (Math.floor(best / planet.size) + 0.5) * planet.pitch;
+  session.advance({ ...controls, teleport: [x, planet.ground[best] + 100, z] });
+  while (!["site", "ground"].includes(session.inspect(x, z).level)) {
+    session.advance(controls);
+    await sleep(50);
+  }
+  session.advance({ ...controls, teleport: [x, session.inspect(x, z).ground + 2, z] });
+  return [x, z];
+}
+
 test("a chart around the player reads the tiles under them, and the same tiles give the same chart", { timeout: 900_000 }, async () => {
-  // The ground tile under the player is built after the start, with the voxels: minutes on a busy machine.
-  while (session.inspect(eye[0], eye[2]).level !== "ground") {
+  const [x, z] = await standOnLand();
+  // The ground tile under the player is built after they arrive, with the voxels: minutes on a busy machine.
+  while (session.inspect(x, z).level !== "ground") {
     session.advance(controls);
     await sleep(50);
   }
   // Half a metre a pixel reads the ground level: what the voxels are cut from and the inspector reads.
-  const request = { x: eye[0], z: eye[2], span: 64, size: 128 };
+  const request = { x, z, span: 64, size: 128 };
   const chart = await session.chart(request);
   wellFormed(chart, request);
   assert.ok(chart.finest === 4 && chart.level[64 * 128 + 64] === 4, "the player stands on a finished ground tile");
@@ -76,7 +101,7 @@ test("a chart around the player reads the tiles under them, and the same tiles g
   assert.equal(record.level, "ground", "the inspector reads the level the chart reads");
   assert.ok(Math.abs(record.ground - chart.ground[64 * 128 + 64]) < 1e-3, "the chart and the inspector agree on the ground");
   // A pixel wider than four ground cells reads the site level, which is all a map at that pitch can show.
-  const wide = { x: eye[0], z: eye[2], span: 800, size: 128 };
+  const wide = { x, z, span: 800, size: 128 };
   const map = await session.chart(wide);
   wellFormed(map, wide);
   assert.ok(map.finest === 3 && map.level[64 * 128 + 64] === 3, "a wide chart reads the site tile under the player");
@@ -114,8 +139,9 @@ test("a world is not torn down under charts that are still being read", { timeou
 // Run in a process of its own: the session lives on a worker thread, as it does in the game, and that thread is
 // terminated while charts are being read. A world freed under a reader, or a teardown that waits for one that
 // never comes, would crash or hang the child.
-test("a session thread that is terminated with charts in flight ends cleanly", { timeout: 600_000 }, () => {
-  const child = spawnSync(process.execPath, [path.join(__dirname, "chart-teardown.cjs")], { encoding: "utf8", timeout: 540_000 });
+test("a session thread that is terminated with charts in flight ends cleanly", { timeout: 960_000 }, () => {
+  // A planet and twelve whole-planet charts: 7–12 minutes on a busy machine.
+  const child = spawnSync(process.execPath, [path.join(__dirname, "chart-teardown.cjs")], { encoding: "utf8", timeout: 900_000 });
   assert.equal(child.signal, null, child.stderr);
   assert.equal(child.status, 0, child.stderr);
 });

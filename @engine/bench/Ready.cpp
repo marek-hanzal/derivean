@@ -21,9 +21,10 @@ void line(double time, const Game& game, const Frame& frame) {
                 frame.farReady, frame.streamingReady);
     for (size_t level = 1; level < sim::LevelCount; ++level) std::printf(" %u/%u", frame.tilesFinished[level], frame.tilesWanted[level]);   // region, local, site, ground
     std::array<int, sim::LevelCount> flying{};
-    for (const sim::TileKey& key : game.nature.tiles.flying) ++flying[size_t(key.level)];
-    std::printf("  flying %zu (%d %d %d %d)  pending chunks %zu cubes %zu", game.nature.tiles.flying.size(), flying[1], flying[2], flying[3], flying[4],
-                frame.pendingChunks, frame.pendingCubes);
+    int water = 0;
+    for (const TileRequest& request : game.nature.tiles.flying) request.water ? ++water : ++flying[size_t(request.key.level)];
+    std::printf("  flying %zu (%d %d %d %d water %d)  pending chunks %zu cubes %zu", game.nature.tiles.flying.size(), flying[1], flying[2], flying[3],
+                flying[4], water, frame.pendingChunks, frame.pendingCubes);
     std::printf("  audit %zu seen %zu of %zu |", game.cubes.audit.size(), game.cubes.tilesSeen, game.nature.world.atlas.finished());
     for (const CubeLevelView& level : frame.cubeLevels) {
         if (level.wanted == level.settled) continue;
@@ -66,17 +67,20 @@ void watchReadiness(Game& game, double duration, double every) {
     }
 }
 
-void watchPlace(double age, double x, double z, double height, double duration) {
+void watchPlace(double age, double x, double z, double height, double duration, bool jump) {
     const auto start = Clock::now();
-    Game game(PlanetOptions{42, age, std::array{x, z}, 0});
+    Game game(PlanetOptions{42, age, jump ? std::nullopt : std::optional{std::array{x, z}}, 0});
     Command lift;
     lift.elapsed = 1.0 / 60.0;
     lift.active = true;
     lift.fly = true;
     lift.direction = {1, 0, 0};
-    lift.teleport = Position{x, sim::surveyAt(game.nature.world, {x, z}).ground + height, z};
+    // A jump must not build the place before it arrives: its height is over what is known there now.
+    const double ground = jump ? sim::surfaceAt(game.nature.world, {x, z}).ground : sim::surveyAt(game.nature.world, {x, z}).ground;
+    lift.teleport = Position{x, ground + height, z};
     advance(game, lift);
-    std::printf("seed 42 age %g at x %.0f z %.0f, %.0f m above the ground, flying %d, after %.1f s\n", age, x, z, height, int(game.flying), since(start));
+    std::printf("seed 42 age %g %s x %.0f z %.0f, %.0f m above the ground, flying %d, after %.1f s\n", age, jump ? "jumped to" : "at", x, z, height,
+                int(game.flying), since(start));
     watchReadiness(game, duration, 5);
 }
 

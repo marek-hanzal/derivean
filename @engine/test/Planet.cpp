@@ -1,10 +1,15 @@
+// 279 lines, one owner: the checks of one evolved planet's session, in the order the session lives
+// them (spawn, streaming, voxels, cubes, readiness, time, flight). The planet takes minutes to evolve,
+// so they share it rather than split into files that each evolve their own.
 #include "simulation/fn/Query.hpp"
 
 #include "PlanetSession.hpp"
 
 #include <algorithm>
+#include <array>
 #include <map>
 #include <random>
+#include <string>
 #include <vector>
 
 using namespace derivean;
@@ -38,6 +43,12 @@ void streamsWithoutBlocking(PlanetSession& session) {
     expect(waitFor(session, idle(), [](const Frame& frame) { return frame.streamingReady && frame.voxelBox; }), "Voxels never arrived at the spawn");
     expect(waitFor(session, idle(), [](const Frame& frame) { return frame.pendingChunks == 0; }), "The voxel region never completed");
     const Frame& frame = run(session, idle(), 120);
+    if (!frame.ground || std::abs(frame.eye[1] - PlayerEyeHeight - *frame.ground) >= 0.4) {
+        const double feet = frame.eye[1] - PlayerEyeHeight;
+        const sim::StoneSample stone = sim::stoneAt(game.nature.world, frame.eye[0], feet - 0.1, frame.eye[2]);
+        std::cout << "player at " << frame.eye[0] << " " << feet << " " << frame.eye[2] << " (feet), ground " << frame.ground.value_or(NAN)
+                  << ", water " << frame.waterLevel.value_or(NAN) << ", stone under the feet " << (stone.found ? stone.height : NAN) << "\n";
+    }
     expect(frame.ground && std::abs(frame.eye[1] - PlayerEyeHeight - *frame.ground) < 0.4, "The player must come to rest on the ground");
     const sim::SurfaceSample finest = sim::surfaceAt(game.nature.world, {frame.eye[0], frame.eye[2]}, sim::Level::Ground);
     expect(finest.found && finest.level == sim::Level::Ground, "The player must stand on the ground level once the voxels are in");
@@ -68,14 +79,21 @@ void voxelsMatchSimulation(PlanetSession& session) {
 }
 
 // Where the finest far cubes lie over loaded voxels, the top of a column of cubes must be made of
-// what the top voxel there is made of: the hand-off between them is then one colour.
+// what the top voxel there is made of, a stone lying on the ground included: the hand-off between
+// them is then one colour. What disagrees is told by cause and by how far the tops lie apart.
 void cubesMatchVoxels(PlanetSession& session) {
     Game& game = session.game;
     expect(waitFor(session, idle(), [](const Frame& frame) { return frame.cubeLevels.front().settled == frame.cubeLevels.front().wanted && frame.siteReady; }),
            "The finest far cubes never settled");
     const double edge = edgeOf(FinestCubes);
-    int compared = 0, agreed = 0;
+    int compared = 0, agreed = 0, stones = 0;
+    const auto stone = [&](Cell cell) {
+        return sim::stoneAt(game.nature.world, (cell.x + 0.5) * VoxelSize, (cell.y + 0.5) * VoxelSize, (cell.z + 0.5) * VoxelSize).found;
+    };
+    const auto rock = [](int material) { return sim::definitionOf(sim::Material(material)).phase == sim::Phase::Solid; };
     std::map<std::pair<int, int>, int> differ;   // (voxel, cube) materials where they disagree
+    std::map<std::string, int> causes;           // of the disagreements
+    std::array<int, 4> apart{};                  // of the disagreements: tops within 1/8, 1/4, 1/2 m and farther
     for (const auto& [id, chunk] : session.cubes.byId) {
         if (chunk.level != FinestCubes) continue;
         for (size_t at = 0; at < chunk.faces.size(); at += FaceWords) {
@@ -86,28 +104,35 @@ void cubesMatchVoxels(PlanetSession& session) {
             const double top = (chunk.at.y * CubeSide + face[2]) * edge;
             Cell cell = cellAt({x, top + 1.0, z});
             if (!game.world.streamed->loaded.contains(chunkOf(cell))) continue;
-            while (materialAt(game.world, cell) == Material::Air && cell.y > cellAt({x, top - 4.0, z}).y) --cell.y;
+            const int floor = cellAt({x, top - 4.0, z}).y;
+            while (materialAt(game.world, cell) == Material::Air && cell.y > floor) --cell.y;
             if (!game.world.streamed->loaded.contains(chunkOf(cell)) || materialAt(game.world, cell) == Material::Air) continue;
             ++compared;
             const int voxel = int(materialAt(game.world, cell));
+            const bool onStone = stone(cell);
+            stones += onStone;
             agreed += voxel == face[7];
-            if (voxel != face[7]) ++differ[{voxel, face[7]}];
-            if (voxel != face[7] && differ[{voxel, face[7]}] <= 3) {
-                const sim::SurfaceSample here = sim::surfaceAt(game.nature.world, {x, z}, sim::Level::Ground);
-                std::cout << "  at " << x << " " << z << " cube top " << top << " voxel top " << (cell.y + 1) * VoxelSize << " sample level "
-                          << int(here.level) << " ground " << here.ground << " rock " << here.rock << " cover " << here.sediment[0] << "/"
-                          << here.sediment[1] << "/" << here.sediment[2] << " water " << here.water << "\n";
-            }
+            if (voxel == face[7]) continue;
+            ++differ[{voxel, face[7]}];
+            const double gap = std::abs((cell.y + 1) * VoxelSize - top);
+            ++apart[gap <= 0.125 ? 0 : gap <= 0.25 ? 1 : gap <= 0.5 ? 2 : 3];
+            // A stone the far cubes missed or made up, else the cover's kinds the far view cannot know.
+            const bool cubeStone = sim::stoneAt(game.nature.world, x, top - 0.5 * edge, z).found;
+            ++causes[onStone && !cubeStone ? "stone in the voxels only" : !onStone && cubeStone ? "stone in the cubes only" : onStone ? "on a stone"
+                     : rock(voxel) != rock(face[7]) ? "rock against cover" : "cover of another kind"];
         }
     }
-    std::cout << "of " << compared << " finest cube tops over loaded voxels, " << agreed << " are of the top voxel's material\n";
+    std::cout << "of " << compared << " finest cube tops over loaded voxels, " << agreed << " are of the top voxel's material; " << stones
+              << " tops are stones\n  disagreeing tops lie apart by at most 1/8 m: " << apart[0] << ", 1/4 m: " << apart[1] << ", 1/2 m: " << apart[2]
+              << ", more: " << apart[3] << "\n";
+    for (const auto& [cause, count] : causes) std::cout << "  " << cause << ": " << count << "\n";
     std::vector<std::pair<int, std::pair<int, int>>> worst;
     for (const auto& [pair, count] : differ) worst.push_back({count, pair});
     std::sort(worst.rbegin(), worst.rend());
     for (size_t at = 0; at < std::min<size_t>(worst.size(), 6); ++at)
         std::cout << "  voxel " << sim::definitionOf(sim::Material(worst[at].second.first)).name << " under a cube of "
                   << sim::definitionOf(sim::Material(worst[at].second.second)).name << ": " << worst[at].first << "\n";
-    // The far view knows the cover's classes, not which stones or silts the ground level laid there; the rest must agree.
+    // The far view knows the cover's classes, not which silts or gravels the ground level laid there; the rest must agree.
     expect(compared > 200 && agreed >= compared * 3 / 4, "Far cubes and voxels disagree about what the ground is made of");
 }
 

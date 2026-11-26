@@ -73,7 +73,8 @@ uint64_t cubeDetail(const sim::World& world, CubeKey key);
 bool cubeFinal(int level, uint64_t detail);
 
 // Metres beyond its square that a column of chunks of `level` reads its source level's tiles over:
-// the cubes its faces, shores and water sample, and the cells easing looks across.
+// the cubes its faces, shores and water sample, the cells easing looks across and, for the levels
+// cut from the ground level, how far a stone reaches beyond the tile that holds it.
 double cubeReadMargin(int level);
 
 // Cuts a column of chunks from the finished tiles, and from the planet's own grid where there are

@@ -59,7 +59,12 @@ function apply(frame) {
     quads(chunk.quads, ({ plane, u, v, width, height, axis, material }) => {
       assert.ok(axis < 3 && plane <= info.cubes.side && u + width <= info.cubes.side && v + height <= info.cubes.side, "a quad keeps to its chunk");
       assert.ok(material > 0 && material < info.materials.length, "a cube face names a material");
-      tops.set(place, (tops.get(place) ?? 0) + (axis === 1 ? width * height : 0));
+      const top = tops.get(place) ?? { edge: chunk.edge, area: 0, columns: new Set() };
+      tops.set(place, top);
+      if (axis === 1) {
+        top.area += width * height;
+        for (let du = 0; du < width; du++) for (let dv = 0; dv < height; dv++) top.columns.add((u + du) * info.cubes.side + v + dv);
+      }
     });
     for (const sheet of chunk.water) {
       assert.ok(Number.isFinite(sheet.level));
@@ -68,7 +73,12 @@ function apply(frame) {
     held.set(chunk.id, place);
     places.set(place, (places.get(place) ?? 0) + 1);
   }
-  for (const [place, area] of tops) assert.equal(area, info.cubes.side ** 2, `every column over ${place} has one top`);
+  for (const [place, top] of tops) {
+    assert.equal(top.columns.size, info.cubes.side ** 2, `every column over ${place} has a top`);
+    // Levels cut from ground tiles carry its stones, whose rims overhang the ground as the voxels' do;
+    // only there does a column show a second top.
+    if (top.edge >= 1) assert.equal(top.area, info.cubes.side ** 2, `every column over ${place} has one top`);
+  }
   assert.equal(cubes.data.reduce((sum, count) => sum + count, 0), held.size);
   assert.equal(cubes.levels.length, info.cubes.coarsestLevel - info.cubes.finestLevel + 1);
   let inner = 0;
