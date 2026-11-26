@@ -147,6 +147,7 @@ Putman, W. M., Lin, S.-J. (2007). Finite-volume transport on various cubed-spher
 Lin, S.-J. (2004). A "vertically Lagrangian" finite-volume dynamical core for global models. *Monthly Weather Review* 132(10), 2293–2307. doi:10.1175/1520-0493(2004)132<2293:AVLFDC>2.0.CO;2; GFDL FV3: https://www.gfdl.noaa.gov/fv3/
 - **Model:** great-circle cell edges and orthonormal vector components; the equiangular grid FV3 uses, which the atmosphere slice S4 will follow; the grid's non-orthogonality, why a flux crosses an edge along the edge's own normal rather than the centre-to-centre direction.
 - **Used in:** `@simulation/src/geometry/fn/Edge.hpp:7`; `docs/handoff/geometry.md:20`, `:52`, `:91`, `:99`, `:100`; `.out/lead/handover/PLANET.md:11`, `:371`.
+- **Used in (atmosphere on the sphere):** the dual-basis edge gradient, `@simulation/src/atmosphere/type/SphereGrid.hpp:31`; `docs/handoff/atmosphere-sphere.md:16`.
 
 ### O'Neill and Laubscher 1976; PROJ: QSC (considered, not taken)
 O'Neill, E. M., Laubscher, R. E. (1976). *Extended studies of a quadrilateralized spherical cube Earth data base*. Naval Environmental Prediction Research Facility, Tech. Report NEPRF 3-76 (CSC). PROJ implementation: https://proj.org/en/stable/operations/projections/qsc.html
@@ -190,6 +191,7 @@ Morton, G. M. (1966). *A computer oriented geodetic data base and a new techniqu
 Williamson, D. L., Drake, J. B., Hack, J. J., Jakob, R., Swarztrauber, P. N. (1992). A standard test set for numerical approximations to the shallow water equations in spherical geometry. *Journal of Computational Physics* 102(1), 211–224. doi:10.1016/S0021-9991(05)80016-6
 - **Model:** the standard test cases the atmosphere's operator on the cubed sphere is to pass, after the degree-1 harmonic and the closed-mesh divergence sum.
 - **Used in:** planned, `docs/handoff/geometry.md:90`, `:109`.
+- **Checked by (atmosphere on the sphere):** case 1 (cosine bell) `@simulation/test/AtmosphereSphereFlow.cpp:25`, `:158`; case 6 (Rossby–Haurwitz wave) `:51`; cases 2 and 5 need the shallow-water equations (`docs/handoff/atmosphere-sphere.md:129`).
 
 ### Jones 1999: conservative remapping (planned, S3)
 Jones, P. W. (1999). First- and second-order conservative remapping schemes for grids in spherical coordinates. *Monthly Weather Review* 127(9), 2204–2210. doi:10.1175/1520-0493(1999)127<2204:FASOCR>2.0.CO;2
