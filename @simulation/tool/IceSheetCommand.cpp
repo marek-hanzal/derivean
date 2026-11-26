@@ -114,12 +114,42 @@ void writeMaps(const Mosaic& mosaic, World& world, const std::string& out, const
     }
 }
 
+// Finer-tile squares holding ground of the kind, chosen from the region tiles' own ice record: the
+// planet's places of that kind, cheapest region tiles first, each region tile built and searched.
+void printSquares(World& world, const ContinentalIce& ice, PlaceKind kind, int regions, int limit) {
+    // The planet's own places of the kind, then its inland ones, one per region tile; within each,
+    // the cheapest region tiles first.
+    const PlaceKind planetKind = kind == PlaceKind::Shield ? PlaceKind::Inland : kind;
+    std::vector<IcePlace> places;
+    std::vector<TileKey> seen;
+    for (const PlaceKind search : {planetKind, PlaceKind::Inland}) {
+        if (search == PlaceKind::Inland && planetKind == PlaceKind::Inland && !places.empty()) break;
+        std::vector<IcePlace> found = freedPlaces(world.planet, ice, search, 4 * regions);
+        std::stable_sort(found.begin(), found.end(), [](const IcePlace& a, const IcePlace& b) { return passOf(tileAt(Level::Region, a.at)) < passOf(tileAt(Level::Region, b.at)); });
+        for (const IcePlace& place : found)
+            if (const TileKey key = tileAt(Level::Region, place.at); std::find(seen.begin(), seen.end(), key) == seen.end()) seen.push_back(key), places.push_back(place);
+    }
+    if (int(places.size()) > regions) places.resize(size_t(regions));
+    for (const IcePlace& place : places) {
+        const TileKey key = tileAt(Level::Region, place.at);
+        gatherMosaic(world, Level::Region, place.at, 1);
+        const auto tile = world.atlas.find(key);
+        if (!tile) continue;
+        std::printf("region tile %d %d (pass %d) around the planet's place --x %.0f --z %.0f:\n", key.x, key.z, passOf(key), place.at.x, place.at.z);
+        for (const IcePlace& square : freedSquares(*tile, kind, limit))
+            std::printf("  --x %.0f --z %.0f   %.0f %% of the square, %.0f m above the sea, %.0f m of ice at the maximum (local tile of pass %d)\n", square.at.x, square.at.z,
+                        100 * square.freed, square.height, square.thickness, passOf(tileAt(Level::Local, square.at)));
+    }
+}
+
 } // namespace
 
 // terra icesheet [--seed n] [--age years] [--out directory] [--x m --z m [--level 1|2] [--tiles n]]
+//                [--find inland|shield|coast|margin [--regions n] [--limit n]]
 // Without a place: the stages of the planet's ice, how much of the land each covers, a map, and
 // places freed since the last maximum to look at. With one: what the tiles around it hold of the
-// ice and of what it left, and two maps.
+// ice and of what it left, and two maps. With --find: finer-tile squares of that kind of freed
+// ground, from the record of `regions` region tiles.
 int iceSheetCommand(const Arguments& arguments) {
     Lap lap;
     World world({arguments.seed(), arguments.number("age", 4.6e9), unsigned(arguments.number("threads", 0))});
@@ -129,6 +159,16 @@ int iceSheetCommand(const Arguments& arguments) {
     std::printf("icesheet  seed %llu  age %.3g yr  sea level %.0f m  planet %.1f s  its ice %.1f s\n", static_cast<unsigned long long>(arguments.seed()), world.options.age,
                 world.planet.seaLevel, planetSeconds, lap());
     const std::string out = arguments.text("out", ".");
+    if (arguments.values.count("find")) {
+        const std::string kind = arguments.text("find", "inland");
+        if (kind != "inland" && kind != "shield" && kind != "coast" && kind != "margin") {
+            std::fprintf(stderr, "--find takes inland, shield, coast or margin\n");
+            return 1;
+        }
+        const PlaceKind asked = kind == "shield" ? PlaceKind::Shield : kind == "coast" ? PlaceKind::Coastal : kind == "margin" ? PlaceKind::Margin : PlaceKind::Inland;
+        printSquares(world, *ice, asked, std::max(1, int(arguments.number("regions", 3))), std::max(1, int(arguments.number("limit", 5))));
+        return 0;
+    }
     if (!arguments.values.count("x")) {
         printPlanet(world, *ice, out);
         return 0;

@@ -9,6 +9,7 @@ void testSnow();
 void testPlume();
 void testIceSheet();
 void testIceSheetLocal();
+void testIceSheetSeam();
 void testLandscapeRegularity();
 void testLandscapePlane();
 void testLandscapeWorld();
@@ -46,6 +47,7 @@ int main() {
     testPlume();
     testIceSheet();
     testIceSheetLocal();
+    testIceSheetSeam();
     testLandscapeRegularity();
     testLandscapePlane();
     testRelief();

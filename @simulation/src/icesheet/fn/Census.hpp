@@ -33,6 +33,7 @@ struct IcePlace {
     Vec2 at;
     double height{};      // m above the sea, of the planet cell
     double thickness{};   // m of ice over it at the last maximum
+    double freed{};       // share of the square that is ground of the kind asked for (region squares only)
 };
 
 // Planet cells the present ice does not cover and the last sheet did: where fresh glacial country
@@ -40,7 +41,18 @@ struct IcePlace {
 // near, the lowest ground first. Coastal: open sea beside, the highest first. Margin: inland, thin
 // ice (where it stagnated as it withdrew) with ground the sheet never reached within two cells,
 // the lowest first.
-enum class PlaceKind : uint8_t { Inland, Coastal, Margin };
+// Shield: inland on crystalline rock; on the planet map, which knows no rock at the surface, as inland.
+enum class PlaceKind : uint8_t { Inland, Coastal, Margin, Shield };
 std::vector<IcePlace> freedPlaces(const Planet& planet, const ContinentalIce& ice, PlaceKind kind, int limit);
+
+// The squares of one finer tile inside a finished region tile whose own record holds most ground of
+// the kind, judged on its own 1 km cells: covered at the last maximum, bare now, above the sea
+// (ground at or below sea level counts as sea), with sea or never-iced ground looked for within
+// two cells inside the tile only. Unlike the planet search, any ice at the maximum counts, a
+// coastal cell needs only sea beside it, and Margin means ice under PressingIce, where hollows
+// stay open as kettles. The planet map is too coarse for this: on seed 42 the region's own
+// present ice covers 90 % of the tile around a planet margin place. At the centre of each square;
+// `height` and `thickness` are means over the cells counted.
+std::vector<IcePlace> freedSquares(const Tile& region, PlaceKind kind, int limit);
 
 } // namespace derivean::sim

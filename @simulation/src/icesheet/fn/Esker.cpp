@@ -27,12 +27,11 @@ EskerFill setAsideEskers(Domain& domain, const ParentSheet& parent, const std::v
     if (tunnels.empty()) return fill;
     // Each stretch holds as much of its fill as a ridge as wide as its tunnel takes, no steeper at
     // its foot than gravel stands; the rest stays spread in the cover. Its section is set by its own
-    // fill over its own length, lowered by the share of that fill the parent's cover still holds,
-    // so every domain that holds the stretch draws the same ridge; narrower than a cell, it is drawn
-    // over the cells its path crosses with the same section. Only where this domain's own cover has
-    // less than its ridges take is the ridge lowered further, by this domain's own ratio.
+    // fill over its own length, lowered by the share of that fill the parent's cover still holds:
+    // parent fields alone, so every domain that holds the stretch draws the same ridge. Narrower
+    // than a cell, it is drawn over the cells its path crosses with the same section.
     const size_t count = tunnels.size();
-    std::vector<double> section(count, 0.0), drawn(count, 0.0), fits(count, 0.0);
+    std::vector<double> section(count, 0.0), drawn(count, 0.0);
     for (size_t s = 0; s < count; ++s) {
         const Tunnel& tunnel = tunnels[s];
         const double reach = length(tunnel.to - tunnel.from);
@@ -40,13 +39,13 @@ EskerFill setAsideEskers(Domain& domain, const ParentSheet& parent, const std::v
         const double half = std::clamp(EskerSpread * std::pow(std::max(0.0, double(tunnel.discharge)) / 1e8, 0.4), double(EskerNarrowest), double(EskerWidest));
         const double crest = std::min(double(EskerTallest), 0.5 * ReposeTan[Coarse] * half);
         const double volume = std::min(tunnel.fill, 4.0 / 3.0 * crest * half * reach);
-        section[s] = volume / reach * std::min(1.0, tunnel.supply / tunnel.fill), drawn[s] = std::max(half, domain.cell), fits[s] = volume / tunnel.fill;
+        section[s] = volume / reach * std::min(1.0, tunnel.supply / tunnel.fill), drawn[s] = std::max(half, domain.cell);
     }
     // Each track's ridge over the cells within its width of an open step, the nearest step's
-    // stretch setting its section; where tracks meet, the higher ridge.
-    std::vector<int32_t> owner(cells, -1);
+    // stretch setting its section; where tracks meet, the higher ridge. It is drawn over cells a
+    // finished neighbour holds too, for what it takes, and laid only on the domain's own.
     std::vector<float> closest(cells, 1e30f);
-    std::vector<int32_t> nearestStretch(cells, -1);
+    std::vector<int32_t> nearestStretch(cells, -1), owner(cells, -1);
     std::vector<size_t> touched;
     for (const EskerTrack& track : traceEskers(domain, parent, tunnels)) {
         touched.clear();
@@ -62,7 +61,7 @@ EskerFill setAsideEskers(Domain& domain, const ParentSheet& parent, const std::v
             for (int z = z0; z <= z1; ++z)
                 for (int x = x0; x <= x1; ++x) {
                     const size_t i = domain.index(x, z);
-                    if (domain.hold[i] != Free) continue;
+                    if (domain.hold[i] == Rim) continue;
                     double t = 0;
                     const float d = float(distanceToSegment(domain.center(x, z), a, b, t));
                     if (d >= float(reach) || d >= closest[i]) continue;
@@ -78,45 +77,61 @@ EskerFill setAsideEskers(Domain& domain, const ParentSheet& parent, const std::v
             closest[i] = 1e30f;
         }
     }
-    // The gravel and sand come out of the cover the parent spread them in: from each cell the share
-    // of what the parent spread there that the nearest stretch's ridge holds.
-    std::vector<int32_t> nearest(cells, -1);
-    std::vector<float> offered(cells, 0.0f);
-    std::vector<double> wanted(count, 0.0), available(count, 0.0);
-    for (size_t i = 0; i < cells; ++i)
+    // The gravel and sand of each stretch's ridge come out of the cover of the parent cell it starts
+    // in, where the parent spread them: in proportion to what the parent spread over each of this
+    // domain's cells there, as far as the cell's cover holds it, the cells with cover to spare
+    // giving what the bare ones cannot. The tile that owns that cell takes for the whole ridge,
+    // also where a finished neighbour laid it, and books what lies off the tile as leaving; a ridge
+    // laid here from a stretch whose cell a finished neighbour owns was taken there. What no cover
+    // can give is laid all the same and booked as arriving along the tunnel, unmatched.
+    std::vector<double> wanted(count, 0.0), spread(count, 0.0), owed(count, 0.0), spare(count, 0.0);
+    for (size_t i = 0; i < cells; ++i) {
         if (owner[i] >= 0) wanted[size_t(owner[i])] += fill.ridge[i];
+        if (domain.hold[i] != Free) fill.ridge[i] = 0;
+    }
+    const double parentCell = domain.cell * Refinement;
+    const int64_t baseX = int64_t(std::floor(domain.origin.x / parentCell)), baseZ = int64_t(std::floor(domain.origin.z / parentCell));
+    const int span = int(std::ceil(domain.size / double(Refinement))) + 2;
+    std::vector<int32_t> stretchOf(size_t(span) * size_t(span), -1);
+    for (size_t s = 0; s < count; ++s) {
+        const int64_t px = int64_t(std::floor(tunnels[s].from.x / parentCell)) - baseX, pz = int64_t(std::floor(tunnels[s].from.z / parentCell)) - baseZ;
+        if (px >= 0 && pz >= 0 && px < span && pz < span) stretchOf[size_t(pz) * size_t(span) + size_t(px)] = int32_t(s);
+    }
+    std::vector<int32_t> source(cells, -1);
     for (int z = 0; z < domain.size; ++z)
         for (int x = 0; x < domain.size; ++x) {
             const size_t i = domain.index(x, z);
             if (domain.hold[i] != Free || parent.esker[i] <= 0) continue;
             const Vec2 centre = domain.center(x, z);
-            double closest = 1e30;
-            for (size_t s = 0; s < count; ++s)
-                if (const double d = length((tunnels[s].from + tunnels[s].to) * 0.5 - centre); d < closest) closest = d, nearest[i] = int32_t(s);
-            const size_t s = size_t(nearest[i]);
-            if (fits[s] <= 0) continue;
-            offered[i] = std::min(domain.ground.sediment[Coarse][i] + domain.ground.sediment[Sand][i], parent.esker[i] * float(fits[s]));
-            available[s] += offered[i];
+            const int64_t px = int64_t(std::floor(centre.x / parentCell)) - baseX, pz = int64_t(std::floor(centre.z / parentCell)) - baseZ;
+            source[i] = stretchOf[size_t(pz) * size_t(span) + size_t(px)];
+            if (source[i] >= 0) spread[size_t(source[i])] += parent.esker[i];
         }
-    // Where the cover holds less than a stretch's ridge, its ridge is lower; otherwise it takes only what its ridge holds.
+    std::vector<float> taken(cells, 0.0f);
     for (size_t i = 0; i < cells; ++i) {
-        if (owner[i] < 0) continue;
-        const size_t s = size_t(owner[i]);
-        fill.ridge[i] = available[s] > 0 ? fill.ridge[i] * float(std::min(1.0, available[s] / wanted[s])) : 0.0f;
+        if (source[i] < 0) continue;
+        const size_t s = size_t(source[i]);
+        const float cover = std::max(0.0f, domain.ground.sediment[Coarse][i] + domain.ground.sediment[Sand][i]);
+        const float share = float(wanted[s] * parent.esker[i] / spread[s]);
+        taken[i] = std::min(cover, share);
+        owed[s] += share - taken[i], spare[s] += cover - taken[i];
     }
     double coarse = 0, sand = 0, owned = 0;
     for (int z = 0; z < domain.size; ++z)
         for (int x = 0; x < domain.size; ++x) {
             const size_t i = domain.index(x, z);
-            if (offered[i] <= 0) continue;
-            const size_t s = size_t(nearest[i]);
+            if (source[i] < 0) continue;
+            const size_t s = size_t(source[i]);
             float& gravel = domain.ground.sediment[Coarse][i];
             float& grit = domain.ground.sediment[Sand][i];
-            const float taken = offered[i] * float(std::min(1.0, wanted[s] / available[s])), part = taken / (gravel + grit);
+            const float cover = std::max(0.0f, gravel + grit);
+            if (spare[s] > 0) taken[i] += (cover - taken[i]) * float(std::min(1.0, owed[s] / spare[s]));
+            if (taken[i] <= 0 || cover <= 0) continue;
+            const float part = std::min(1.0f, taken[i] / cover), removed = cover * part;
             coarse += gravel * part, sand += grit * part;
             gravel -= gravel * part, grit -= grit * part;
-            domain.eroded[i] += taken;
-            if (domain.owned(x, z)) owned += taken;
+            domain.eroded[i] += removed;
+            if (domain.owned(x, z)) owned += removed;
         }
     domain.ledger.eroded += owned * area;
     fill.ownedTaken = owned;
@@ -138,7 +153,7 @@ void layEskers(Domain& domain, SheetWork& work, const EskerFill& fill) {
             work.left.esker[i] += height;
             if (domain.owned(x, z)) owned += height;
         }
-    // Set aside and laid match over the domain; what moved between the tile's cells and its halo crossed its edge.
+    // Laid on the tile's cells and set aside from them differ by what the tunnel brought across its edge.
     domain.ledger.deposited += owned * area;
     if (owned > fill.ownedTaken) domain.ledger.sedimentIn += (owned - fill.ownedTaken) * area;
     else domain.ledger.sedimentOut += (fill.ownedTaken - owned) * area;

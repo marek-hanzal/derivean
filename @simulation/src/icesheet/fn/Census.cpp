@@ -105,4 +105,49 @@ std::vector<IcePlace> freedPlaces(const Planet& planet, const ContinentalIce& ic
     return places;
 }
 
+std::vector<IcePlace> freedSquares(const Tile& region, PlaceKind kind, int limit) {
+    constexpr int Side = TileCells / Refinement;
+    const auto groundOf = [&](int x, int z) {
+        const size_t i = size_t(z) * TileCells + size_t(x);
+        return region.now.rock[i] + region.now.sediment[0][i] + region.now.sediment[1][i] + region.now.sediment[2][i];
+    };
+    const auto sea = [&](int x, int z) { return groundOf(x, z) <= region.seaLevel; };
+    const auto counts = [&](int x, int z) {
+        const size_t i = size_t(z) * TileCells + size_t(x);
+        if (region.iceAge[i] < LeastSheet || region.ice[i] >= LeastSheet || sea(x, z)) return false;
+        bool beside = false, near = false, beyond = false;
+        for (int dz = -2; dz <= 2; ++dz)
+            for (int dx = -2; dx <= 2; ++dx) {
+                const int nx = std::clamp(x + dx, 0, TileCells - 1), nz = std::clamp(z + dz, 0, TileCells - 1);
+                const bool wet = sea(nx, nz);
+                near = near || wet, beside = beside || (wet && std::abs(dx) <= 1 && std::abs(dz) <= 1);
+                beyond = beyond || (!wet && region.iceAge[size_t(nz) * TileCells + size_t(nx)] < LeastSheet);
+            }
+        const Material rock = Material(region.rock[i]);
+        const bool crystalline = rock == Material::Granite || rock == Material::Gneiss || rock == Material::Schist || rock == Material::Quartzite;
+        switch (kind) {
+        case PlaceKind::Coastal: return beside;
+        case PlaceKind::Margin: return !near && beyond && region.iceAge[i] < PressingIce;
+        case PlaceKind::Shield: return !near && crystalline;
+        case PlaceKind::Inland: return !near;
+        }
+        return false;
+    };
+    const double cell = specOf(Level::Region).cell;
+    std::vector<IcePlace> squares;
+    for (int sz = 0; sz < Refinement; ++sz)
+        for (int sx = 0; sx < Refinement; ++sx) {
+            double found = 0, height = 0, thickness = 0;
+            for (int z = sz * Side; z < (sz + 1) * Side; ++z)
+                for (int x = sx * Side; x < (sx + 1) * Side; ++x)
+                    if (counts(x, z)) ++found, height += groundOf(x, z) - region.seaLevel, thickness += region.iceAge[size_t(z) * TileCells + size_t(x)];
+            if (found <= 0) continue;
+            const Vec2 centre{(double(region.key.x) * TileCells + (sx + 0.5) * Side) * cell, (double(region.key.z) * TileCells + (sz + 0.5) * Side) * cell};
+            squares.push_back({centre, height / found, thickness / found, found / (Side * Side)});
+        }
+    std::stable_sort(squares.begin(), squares.end(), [](const IcePlace& a, const IcePlace& b) { return a.freed > b.freed; });
+    if (int(squares.size()) > limit) squares.resize(size_t(limit));
+    return squares;
+}
+
 } // namespace derivean::sim
