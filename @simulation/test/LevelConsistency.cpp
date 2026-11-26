@@ -92,7 +92,9 @@ void checkSeamLakes(const Tile& later) {
 
 // m³/yr a row's river carries down the row across the line in front of along-cell `cell` of tile
 // `k`; with cell 0 the line is the seam in front of tile k. What the cells behind the line send
-// across it, less what the cells in front send back, each by its own tile's record.
+// across it, less what the cells in front send back, each by its own tile's record. A cell's whole
+// discharge goes along `flowTo`, the main of its shares: exact for a channel, a main-direction
+// estimate for split sheet flow.
 double carriedAcross(const SeamRow& row, int k, int cell) {
     const Tile& front = *row.tiles[k];
     const Tile& behind = cell > 0 ? front : *row.tiles[k - 1];
@@ -115,7 +117,7 @@ double carriedAcross(const SeamRow& row, int k, int cell) {
 // line 64 to line 192 inside each tile. What a stretch loses, as a share of the river entering the
 // row, is held against the stretches inside the tiles, which see the same valley and gain the same
 // flank water: the seams' mean may exceed the interior's by two standard errors of the difference
-// of the two means (about 2 % of blocks would by chance), and no seam may lose more than two
+// of the two means (a heuristic for four deterministic rows), and no seam may lose more than two
 // interior standard deviations of the river, which a lost river would. The rows run both ways and
 // at both parities: a row shifted by one tile has each seam finished from the other side, so every
 // seam is crossed once from the tile solved first and once from the later one.

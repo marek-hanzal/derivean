@@ -92,7 +92,7 @@ Catalogue targets are in `docs/reference-landscapes.md` (A2, A3, F1–F4, G1). R
 
 ## 3. In progress
 
-**Half-done: dead-ice melt-out, in the private mirror only** (scratch `mirror/sim`; nothing in the shared tree). Ninth run (after 25fa428): drumlins on the rig only, then parked (section 8).
+**Half-done: dead-ice melt-out, in the private mirror only** (`.out/icesheet/mirror/sim`; nothing in `@simulation`). Ninth run (after 25fa428): drumlins on the rig only, then parked (section 8).
 
 - **Dead ice (lead's item, 26 Nov), built and measured in the mirror, not promoted, no test yet, not reviewed.**
   - What it does:
@@ -156,9 +156,9 @@ Catalogue targets are in `docs/reference-landscapes.md` (A2, A3, F1–F4, G1). R
 
 ## 4. Next steps
 
-1. The full suite on the shared tree with the hold-back and the record chain: every glaciated Local and Site tile changes. Running at hand-over on the shared tree as it stood (HEAD in `.out/icesheet/suite-head.txt`, output `.out/icesheet/suite.txt`).
+1. The full suite on the shared tree with the hold-back and the record chain (old worktree at 8ee5a3e plus other streams' uncommitted work; `.out/icesheet/suite.txt`, `suite-head.txt`) ended exit 1 after 1 h 08 min (3289 s user). It stops in `testReliefGlaciatedSite`: "a glaciated Site tile carries a column of loose cover (207.583)", limit 100 m, tile Site 5605504 10105024, the same tile as the earlier "Columns at Site" bug fixed in `lodgeTill` (section 3, eighth run). The repose check before it passed on this build; the failure has moved. Relief sees the same column (211.1 m on 98868ae; the parent-ice flux does not cure it, relief.md section 3). Next: run the tile alone from a main-repo build with and without `LAB_HOLD_OFF=1` (`mirror/tools/hold-ab.sh`, plus `reliefsite.cpp` for this tile). Column gone with hold-back off → icesheet's (the hold-back puts the parent's last-sheet deposits back after settling); otherwise relief's. After that the stream holds behind the planet (README). Before any mirror work run `mb.sh` to bring `mirror/sim` (on the pre-move tree) to ca7534a or later, then reapply `dead/src/`.
 2. The record chain stops at Site: a Site whose Local parents were all unreached has no `parent.any`, so it writes no record of its own laid-back deposits. Nothing below Site reads them (Ground has no hold-back); add it if Ground ever does.
-3. When relief's glaciated Site fix lands: `testReliefGlaciatedSite` (`test/Relief.cpp:212`) on the shared tree with and without this run's esker rule (scratch `reliefab.sh tag`: the mirror library, and the same with 45a7c8c's `Esker.cpp` linked over it), both results to the lead. Not chased here: it is relief's known failure.
+3. When relief's glaciated Site fix lands: `testReliefGlaciatedSite` (`test/Relief.cpp:212`) on the shared tree with and without this run's esker rule (`.out/icesheet/mirror/tools/reliefab.sh tag`: the mirror library, and the same with 45a7c8c's `Esker.cpp` linked over it), both results to the lead. Not chased here: it is relief's known failure.
 4. **Drumlins: parked** (lead, 26 Nov; reasons in section 8). Nothing of them is in the source tree.
 5. **Dead-ice hummocks and kettles** (lead's next item, in progress, section 3). Then scoured rock basins (need a weathering-depth field).
 6. **Soft-bed sliding** (recorded defect, section 2 "Broken"; the lead starts it after relief's parent-ice flux lands, since it changes the ice that flux carries).
@@ -242,11 +242,7 @@ Needed from other owners:
 
 ## 7. How to build, run and verify
 
-```sh
-S=/private/tmp/claude-501/-Users-marekhanzal-Project-marek-hanzal-derivean--claude-worktrees-derivean-landscape-engine-e64dc8/632cc3b3-3ddb-45d4-9dc7-715e32a5db02/scratchpad
-```
-
-That scratch directory is session-local and may be gone. What it held, so it can be rebuilt in minutes:
+The private mirror and its scripts live in `.out/icesheet/mirror/` (moved there 26 Nov from a session scratchpad): `sim/` is the mirror of `@simulation` as of the move to the main repo, with the dead-ice edits and the lab switches; `mb.sh`, `mbl.sh`, `promote.sh`, `build.sh`, `mk.sh` point at the main repo; `tools/` holds the probe sources and the older scripts (paths repointed, not all re-run). Build directories are not kept: the first `mbl.sh` rebuilds `mirror/build`. `mb.sh` syncs from `@simulation` with `--delete` and so drops the dead-ice edits; re-apply them from `.out/icesheet/dead/src/` after a sync.
 
 - `build.sh`: `cd @simulation; export XMAKE_CONFIGDIR=$PWD/../.out/simulation/xmake-ice; xmake config --yes --mode=release --builddir=../.out/simulation/build-ice; xmake build --yes terra simulation-tests`, printing errors and exiting non-zero on failure. A private build directory keeps clear of other agents' builds in `.out/simulation/build`.
 - `mk.sh <name>`: compiles one scratch `.cpp` together with `src/icesheet/fn/*.cpp` and `service/*.cpp` against the last good `libderivean-simulation.a`; works while the shared tree is broken.
