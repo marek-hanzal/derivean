@@ -100,6 +100,8 @@ In-game captures with seed, date, coordinates and scale (coast with lowland, a r
 - The owner never launches the game; they screenshot windows the streams open. Every launch sets `DERIVEAN_STREAM=<stream>`; each window shows one origin line in its HUD and title (`LIVE|CAPTURE|REPLAY <date> · ADDON <build time> <commit> [dirty] · <stream>`), so a screenshot can be traced. Replays refuse recordings without `recording.json`; retired recordings sit in `.out/renderer-replay-retired/`.
 - Per `AGENTS.md`, substantial changes get an independent reviewer; several streams list late fixes that were not re-reviewed.
 
+- `simulation-tests <word>...` runs only the tests whose name contains one of the words (case ignored); with no word it runs the whole suite in order, `testLevelConsistency` last. A new test needs its declaration and a row in the `Tests` table of `test/Main.cpp`.
+
 ## Quick reference
 
 ```bash
