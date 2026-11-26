@@ -33,7 +33,7 @@ Evolved in the settle: rills, ledges over strong layers, knobs between joints, p
 
 ## Contracts other streams add here
 
-Other streams wire their volumetric results into the voxel answer by exact-match edits next to the cave spans: the coast stream's `seaVoidsOver` / `seaVoidSpans` (`coast/type/SeaVoid.hpp`), the volcanic stream's `pileColumn` / `pileBedAt` / `neckAt` (`volcanic/type/Pile.hpp`), the groundwater stream's karst slots. Each must extend the alignment test: `materialAt` equals what `sampleBlock` returns for any block size and alignment.
+Other streams wire their volumetric results into the voxel answer by exact-match edits next to the cave spans: the coast stream's `seaVoidsOver` / `seaVoidSpans` (`coast/type/SeaVoid.hpp`), the volcanic stream's `pileColumn` / `pileBedAt` / `neckOf` (`volcanic/type/Pile.hpp`, `volcanic/fn/Volcanic.hpp`), the groundwater stream's karst slots. Each must extend the alignment test: `materialAt` equals what `sampleBlock` returns for any block size and alignment.
 
 ## For the engine
 
