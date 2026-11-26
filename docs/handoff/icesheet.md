@@ -29,7 +29,7 @@ Catalogue targets are in `docs/reference-landscapes.md` (A2, A3, F1–F4, G1). R
 **Not yet seen working:**
 
 - Site tiles with the last sheet. They run: a 2 × 2 Site mosaic was built at `--x 7042816 --z 13263360`. With rock dug at Site too (10 m against an 8 m plucking box), the joint planes became a city-block grid of trenches: 40 % of cells steeper than 15°, lakes 32 % (`.out/icesheet/site2/local-on.png`). Digging is now Local only. The rerun (`site3/`) is in section 3.
-- Kettles in the real world: the rule is tested on a rig only; no real tile near the last maximum's margin has been looked at.
+- Kettles in the real world and a freed shield: still not seen. `landforms` on Local 2 × 2 squares at the margin place `5103533 6312605` (planet cell with 66 m of ice at the maximum) and at the low inland places `10369485 15967003` and `1769090 7825004` found 0 %, 0 % and 0.7 % of the square freed (`.out/icesheet/count/margin.txt`, `low70.txt`, `low79.txt`); the last is 99 % crystalline but only a few cells. The planet map's freed and margin cells do not carry into the Region's ice there, or the place coordinates point beside them. Which one is not found yet.
 - Hummocky dead-ice ground and ice blocks buried in outwash: need the retreat stage by stage, not modelled.
 - The full suite on the current tree: not run this round.
 
@@ -51,7 +51,7 @@ Catalogue targets are in `docs/reference-landscapes.md` (A2, A3, F1–F4, G1). R
 
 ## 3. In progress
 
-Nothing half-done. Fifth run (Opus, 26 Nov, on the lead's list after 8073c64), all built and tested in the private mirror (section 7); `test/IceSheetLocal.cpp` and `test/IceSheet.cpp` pass there. The full suite was not run.
+Nothing half-done. After the fifth run, a review of the supply ratio, `PlaceKind` and `printColumns` (one must-fix left open, section 2; the margin test now counts ice under `LeastSheet` as bare and treats a cell at sea level as sea; `Census.hpp` includes `<cstdint>`); both ice tests pass in the mirror after it. Fifth run (Opus, 26 Nov, on the lead's list after 8073c64), all built and tested in the private mirror (section 7); `test/IceSheetLocal.cpp` and `test/IceSheet.cpp` pass there. The full suite was not run.
 
 - **Columns at Site (lead, urgent): fixed.** `lodgeTill` let a cell with no lower neighbour on the parent's ice surface keep all the load passing over it. At Site tile 5474 9868 (`--x 5605504 --z 10105024`) that was till of 1 070 m, 605 m and 359 m on single cells. Now such a hollow keeps what till stands in and the meltwater takes the rest (section 5). With relief's `settleDebris` guard absent (the mirror has none), the same tile has no loose cell more than 20 m above its neighbours; the 48 cells that stand more than 20 m above all neighbours are bare rock, up to 61 m, and the tile without the pass has 50 such cells up to 76 m (`.out/icesheet/column/site.txt` before, `site-fixed.txt` after). Every Leave in the tests goes through `leaveChecked`; a bowl in the ice surface gave a 1 548 m column on the old rule.
 - **Eskers follow the domain's own head** (`EskerPath.cpp`, section 5). Coast, Local 2 × 2 at `--x 11582976 --z 4307456` (`eskerstat`):
@@ -89,8 +89,9 @@ Nothing half-done. Fifth run (Opus, 26 Nov, on the lead's list after 8073c64), a
 ## 4. Next steps
 
 1. **The proposal in section 8** (drumlins by streamlining, dead-ice hummocks, etch stripping, lakes kept at Site), once the lead decides.
-2. Re-check the 2 × 2 seams with eskers on the coast, now that the ridge follows the parent's supply.
-3. **Region**: no recessional moraines yet. The Region `TileLedger` books halo cells (`Debris.cpp`). The 2 × 2 Region map across a tile edge is not made.
+2. Close the esker seam item of section 2 and re-check the 2 × 2 seams with eskers on the coast.
+3. Find why the planet's freed and margin places (`terra icesheet`) give no freed ground at Local (section 2), then count a freed shield and kettles under thin ice there. Pick places from the Region ice record, not from the planet map.
+4. **Region**: no recessional moraines yet. The Region `TileLedger` books halo cells (`Debris.cpp`). The 2 × 2 Region map across a tile edge is not made.
 
 ## 5. Decisions and why
 
