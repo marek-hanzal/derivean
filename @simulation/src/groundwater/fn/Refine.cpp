@@ -10,13 +10,12 @@ float groundOf(const Tile& tile, size_t cell) {
     return tile.now.rock[cell] + tile.now.sediment[Coarse][cell] + tile.now.sediment[Sand][cell] + tile.now.sediment[Fines][cell];
 }
 
-// Global index of the local cell a spring left the ground in.
+} // namespace
+
 void cellOf(const GroundwaterTile& tile, size_t index, int64_t& x, int64_t& z) {
     const int32_t cell = tile.records[index].cell;
     x = int64_t(tile.key.x) * TileCells + cell % TileCells, z = int64_t(tile.key.z) * TileCells + cell / TileCells;
 }
-
-} // namespace
 
 bool ventNear(const GroundwaterTile& tile, size_t index, Vec2 low, Vec2 high, double margin) {
     int64_t x, z;

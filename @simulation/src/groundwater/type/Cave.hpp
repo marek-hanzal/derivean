@@ -22,14 +22,14 @@ struct Conduit {
     uint32_t id{};             // stable for a world
 };
 
-// One span of void on a vertical line.
+// One span of void on a vertical line, its bottom included and its top not.
 struct CaveSpan {
     float bottom{}, top{};     // m, elevation
 };
 
-// Every conduit of one local tile, with an index for point queries. No tube comes within a cell of
-// the tile's edge (fn/Conduits.cpp), so the field of the tile a point lies in is all a reader
-// needs. A field is a pure function of the world's setting and the tile key.
+// Every conduit of one local tile, with an index for point queries. No tube reaches past the
+// tile's edge: conduit nodes stay a cell inside it (fn/Conduits.cpp), so the field of the tile a
+// point lies in is all a reader needs. A field is a pure function of the world's setting and the tile key.
 struct CaveField {
     TileKey key;                         // Level::Local
     std::vector<Conduit> conduits;
@@ -42,8 +42,9 @@ struct CaveField {
 // and the call only looks it up. Hold the pointer for a whole chunk of queries.
 std::shared_ptr<const CaveField> caveFieldAt(World& world, Vec2 position);
 
-// Tubes a vertical line is taken to cross, so also the most spans it can have. Beyond it the
-// tubes listed last for the line's index cell are left out, by `caveSpans` and `inCave` alike.
+// Tubes a vertical line is taken to cross, so also the most spans it can have. Tubes past the
+// first MostCaveSpans that cross the line, in the order its index cell lists them, are left out,
+// by `caveSpans` and `inCave` alike.
 inline constexpr int MostCaveSpans = 24;
 
 // Pure and cheap: no lock, no allocation. Void spans of the vertical line through a world

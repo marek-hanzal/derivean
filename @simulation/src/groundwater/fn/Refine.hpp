@@ -11,6 +11,9 @@ namespace derivean::sim {
 // Builds the site tile under that cell. The answer depends on the spring and that tile alone.
 Spring refineVent(World& world, const GroundwaterTile& tile, size_t index);
 
+// Global index of the local cell a spring of the tile left the ground in.
+void cellOf(const GroundwaterTile& tile, size_t index, int64_t& x, int64_t& z);
+
 // Whether the local cell a spring of the tile left the ground in reaches into a rectangle grown by
 // `margin`: only then can its vent lie inside it.
 bool ventNear(const GroundwaterTile& tile, size_t index, Vec2 low, Vec2 high, double margin = 0);

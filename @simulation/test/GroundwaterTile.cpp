@@ -66,20 +66,17 @@ double passedEast(const WaterField& field, int x) {
     return total;
 }
 
-// Global index of the local cell a spring of the tile left the ground in.
-void cellOf(const GroundwaterTile& tile, size_t index, int64_t& x, int64_t& z) {
-    x = int64_t(tile.key.x) * TileCells + tile.records[index].cell % TileCells, z = int64_t(tile.key.z) * TileCells + tile.records[index].cell / TileCells;
-}
+int64_t floorDiv(int64_t a, int64_t b) { return a / b - (a % b != 0 && (a < 0) != (b < 0)); }
 
 // The springs `springsIn` gives for a rectangle of whole local cells are those of the tiles' springs
 // whose cells it covers, each once, and each vent lies in its cell. The rectangle is cut at every
 // cell edge a vent's cell has, across and along, and the two parts give the springs of the whole.
-// Returns how many springs the rectangle has.
-size_t checkRectangle(World& world, const std::vector<const GroundwaterTile*>& tiles, int64_t x0, int64_t z0, int64_t x1, int64_t z1) {
+// `cutsX` are further cell edges across which it is cut. Returns how many springs it has.
+size_t checkRectangle(World& world, const std::vector<const GroundwaterTile*>& tiles, int64_t x0, int64_t z0, int64_t x1, int64_t z1, std::vector<int64_t> edgesX = {}) {
     const Vec2 low{double(x0) * WaterCell, double(z0) * WaterCell}, high{double(x1) * WaterCell, double(z1) * WaterCell};
     const std::vector<Spring> whole = springsIn(world, low, high);
     size_t owned = 0;
-    std::vector<int64_t> edgesX, edgesZ;
+    std::vector<int64_t> edgesZ;
     for (const GroundwaterTile* tile : tiles)
         for (size_t index = 0; index < tile->springs.size(); ++index) {
             int64_t x, z;
@@ -134,16 +131,13 @@ void checkVents(World& world, const GroundwaterTile& tile) {
     std::vector<int> count(size_t(Refinement) * Refinement, 0);
     for (size_t index = 0; index < tile.springs.size(); ++index) {
         const int cellX = tile.records[index].cell % TileCells, cellZ = tile.records[index].cell / TileCells;
-        const int64_t siteX = (int64_t(tile.key.x) * TileCells + cellX) / PerSite, siteZ = (int64_t(tile.key.z) * TileCells + cellZ) / PerSite;
+        const int64_t siteX = floorDiv(int64_t(tile.key.x) * TileCells + cellX, PerSite), siteZ = floorDiv(int64_t(tile.key.z) * TileCells + cellZ, PerSite);
         if ((siteX & 1) || (siteZ & 1) || cellX < PerSite || cellZ < PerSite || cellX >= TileCells - PerSite || cellZ >= TileCells - PerSite) continue;
         if (cellX % PerSite == 0 || cellZ % PerSite == 0 || cellX % PerSite == PerSite - 1 || cellZ % PerSite == PerSite - 1) continue;
         int& here = count[size_t(cellZ / PerSite) * Refinement + size_t(cellX / PerSite)];
         if (++here > most) most = here, bestX = siteX, bestZ = siteZ;
     }
-    if (most == 0) {
-        std::printf("ground water: no spring on a first-pass site tile inside local tile %d %d; vents not checked\n", tile.key.x, tile.key.z);
-        return;
-    }
+    expectWater(most > 0, "the test tile has no spring on a first-pass site tile to check", tile.key.x);
     // One cell in from the site tile's edges, so that no vent asks for a site tile beside it.
     const int64_t x0 = bestX * PerSite + 1, z0 = bestZ * PerSite + 1, x1 = (bestX + 1) * PerSite - 1, z1 = (bestZ + 1) * PerSite - 1;
     const size_t found = checkRectangle(world, {&tile}, x0, z0, x1, z1);
@@ -179,12 +173,9 @@ void checkEdge(World& world, const GroundwaterTile& west, const GroundwaterTile&
             cellOf(*tile, index, x, z);
             if (x >= edge - 2 && x < edge + 2) first = std::min(first, z), last = std::max(last, z);
         }
-    if (first > last) {
-        std::printf("ground water: no spring within two cells of the edge of local tiles %d and %d; the strip was not checked\n", west.key.x, east.key.x);
-        return;
-    }
-    last = std::min(last, first + 31);   // at most two site tiles along the edge
-    const size_t count = checkRectangle(world, {&west, &east}, edge - 2, first, edge + 2, last + 1);
+    expectWater(first <= last, "the test tiles have no spring within two cells of their shared edge", west.key.x);
+    last = std::min(last, first + 31);   // 32 rows: two or three site tiles along the edge
+    const size_t count = checkRectangle(world, {&west, &east}, edge - 2, first, edge + 2, last + 1, {edge});
     std::printf("ground water: %zu springs within two cells of the shared edge, rows %lld to %lld, each answered once\n", count, static_cast<long long>(first),
                 static_cast<long long>(last));
 }
