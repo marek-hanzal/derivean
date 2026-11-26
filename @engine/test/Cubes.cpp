@@ -210,7 +210,8 @@ void levelsFollowTheEye(Nature& nature, Position eye) {
     far.finished = std::make_shared<Mailbox<CubeColumn>>();
     Held held;
     const auto coarsest = [&] { return far.levels.back().box.has_value(); };
-    const auto whole = [&] { return far.missing == 0 && far.levels.front().box && far.levels.front().box->max[0] - eye[0] > far.reach * edgeOf(FinestCubes) - 1e-6; };
+    const auto complete = [&] { return std::all_of(far.levels.begin(), far.levels.end(), [](const CubeLevel& level) { return level.held == level.wanted; }); };
+    const auto whole = [&] { return complete() && far.levels.front().box && far.levels.front().box->max[0] - eye[0] > far.reach * edgeOf(FinestCubes) - 1e-6; };
     expect(settle(far, held, nature, eye, 1.7, 20, coarsest), "The coarsest cubes must cover the view within moments");
     expect(settle(far, held, nature, eye, 1.7, 300, whole), "The levels of far cubes never became whole");
     for (const CubeLevel& level : far.levels)

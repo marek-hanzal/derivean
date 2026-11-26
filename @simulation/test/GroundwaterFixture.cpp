@@ -22,7 +22,7 @@ WaterField fieldOf(TileKey key, int margin, const std::function<HandColumn(int, 
             AquiferColumn& column = field.column[field.index(x, z)];
             column.ground = column.bedrock = column.stage = hand.ground;
             column.rain = hand.rain, column.warmth = 8.0f;
-            column.recharge = hand.rain * CellArea;
+            column.recharge = hand.rain * WaterCellArea;
             column.base = hand.layers[hand.count - 1].bottom;
             column.shallowBase = hand.ground - 10.0f;
             column.heat.gradient = 0.022f;
@@ -35,10 +35,10 @@ WaterField fieldOf(TileKey key, int margin, const std::function<HandColumn(int, 
 
 WaterField handField(const std::function<HandColumn(int, int)>& describe) { return fieldOf({Level::Local, 0, 0}, 0, describe); }
 
-WaterField handTile(TileKey key, const std::function<HandColumn(int, int)>& describe) { return fieldOf(key, Reach, describe); }
+WaterField handTile(TileKey key, const std::function<HandColumn(int, int)>& describe) { return fieldOf(key, WaterReach, describe); }
 
-Layer handLayer(Material rock, float top, float bottom, float metresPerSecond, uint32_t unit) {
-    Layer layer;
+WaterLayer handLayer(Material rock, float top, float bottom, float metresPerSecond, uint32_t unit) {
+    WaterLayer layer;
     layer.top = top, layer.bottom = bottom;
     layer.along = metresPerSecond * PerYear, layer.through = 0.1f * layer.along;
     layer.porosity = definitionOf(rock).porosity;

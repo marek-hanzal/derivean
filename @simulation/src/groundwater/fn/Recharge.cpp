@@ -23,7 +23,7 @@ float infiltrationShare(const Soak& soak) {
     for (int c = SedimentClasses - 1; c >= 0; --c) {
         const MaterialDefinition& layer = definitionOf(CoverRock[c]);
         store += layer.porosity * soak.cover[c];
-        if (entry < 0 && soak.cover[c] >= ThinLayer) entry = layer.conductivity / (layer.conductivity + intensity);
+        if (entry < 0 && soak.cover[c] >= ThinCover) entry = layer.conductivity / (layer.conductivity + intensity);
     }
     if (entry < 0)
         entry = rock.conductivity / (rock.conductivity + intensity) +

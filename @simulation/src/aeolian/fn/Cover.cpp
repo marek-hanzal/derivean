@@ -71,8 +71,8 @@ void tidyLabels(Domain& domain) {
         const float fines = std::max(0.0f, domain.ground.sediment[Fines][i]);
         labels.salt[i] = std::min(labels.salt[i], fines);
         labels.loess[i] = std::min(labels.loess[i], fines - labels.salt[i]);
-        // Water that reworks a bed turns its stones over: an armour lasts only where none cuts or lays.
-        if (domain.erosionRate[i] * float(domain.step) > LagArmour || domain.depositionRate[i] * float(domain.step) > LagArmour) labels.lag[i] = 0;
+        // Water that lays fresh sediment on an armour buries it; the wind starts on the new cover.
+        if (domain.depositionRate[i] * float(domain.step) > LagArmour) labels.lag[i] = 0;
     }
 }
 

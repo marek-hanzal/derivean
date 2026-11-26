@@ -22,6 +22,11 @@ std::vector<Centre> centresIn(const Planet& planet, int cellX, int cellZ) {
             const Vec2 point{cellX * PlanetCell + (x + 0.5) * pitch, cellZ * PlanetCell + (z + 0.5) * pitch};
             const MagmaticCentre found = centreNear(planet, point);
             if (std::floor(found.position.x / PlanetCell) != cellX || std::floor(found.position.z / PlanetCell) != cellZ) continue;
+            // The lattice steps where crust of different travel meets. A site reckoned from one side
+            // of such a step may fall on ground of the other side, where it is nobody's centre: a
+            // centre is one only if the ground it stands on names it too.
+            const MagmaticCentre there = centreNear(planet, found.position);
+            if (there.cellX != found.cellX || there.cellZ != found.cellZ) continue;
             const double distance = length(found.position - point);
             size_t known = 0;
             while (known < centres.size() && lattice[known] != std::pair{found.cellX, found.cellZ}) ++known;

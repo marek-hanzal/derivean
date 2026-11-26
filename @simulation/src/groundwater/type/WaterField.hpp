@@ -11,7 +11,7 @@ namespace derivean::sim {
 class Workers;
 
 // One run of ground that treats water alike down a column: the loose cover, or one bed.
-struct Layer {
+struct WaterLayer {
     float top{}, bottom{};      // m, elevation
     float along{}, through{};   // m/yr, conductivity along the layering and across it
     float porosity{};
@@ -78,7 +78,7 @@ struct AquiferColumn {
 inline constexpr int Upper = 0, Lower = 1;
 
 // What the water arriving at a point brings with it, as flow-weighted means over where it came from.
-struct Carried {
+struct Borne {
     float lime{};     // kg/m³ of dissolved carbonate
     float far{};      // m travelled underground
     float high{};     // m, elevation of the ground it entered
@@ -96,13 +96,13 @@ struct NodeFate {
     float lag{};       // m³/yr still on its way after RouteSweeps: longer paths than the model follows
 };
 
-// A tile with Reach cells of its neighbours while its ground water is worked out. Arrays hold
+// A tile with WaterReach cells of its neighbours while its ground water is worked out. Arrays hold
 // size² cells, row-major; per-node arrays hold two entries per cell, upper storey first.
 struct WaterField {
     TileKey key;
     uint64_t seed{};
     int size{FieldCells};
-    int margin{Reach};              // cells around the tile's own
+    int margin{WaterReach};              // cells around the tile's own
     int64_t firstX{}, firstZ{};     // global index of cell (0, 0)
     float seaLevel{};
     Workers* workers{};
@@ -119,13 +119,13 @@ struct WaterField {
 
     std::vector<float> flux;        // m³/yr arriving at a node
     std::vector<float> sideways;    // m³/yr leaving it towards its neighbours
-    std::vector<Carried> carried;   // of the water leaving a node
+    std::vector<Borne> carried;   // of the water leaving a node
     std::vector<NodeFate> fate;
 
     size_t cells() const { return size_t(size) * size_t(size); }
     size_t index(int x, int z) const { return size_t(z) * size_t(size) + size_t(x); }
     bool owned(int x, int z) const { return x >= margin && z >= margin && x < size - margin && z < size - margin; }
-    Vec2 centre(int x, int z) const { return {(double(firstX + x) + 0.5) * LocalCell, (double(firstZ + z) + 0.5) * LocalCell}; }
+    Vec2 centre(int x, int z) const { return {(double(firstX + x) + 0.5) * WaterCell, (double(firstZ + z) + 0.5) * WaterCell}; }
 };
 
 // Where the upper storey's water goes when it leaves a cell in one direction.
@@ -138,7 +138,7 @@ enum class Way : uint8_t {
 
 // m, elevation at which a column's tight bed lies under the neighbour in direction k, by its dip.
 inline float sheetToward(const AquiferColumn& column, int k) {
-    return column.floor - float(LocalCell) * (column.dipX * float(NeighborX[k]) + column.dipZ * float(NeighborZ[k]));
+    return column.floor - float(WaterCell) * (column.dipX * float(NeighborX[k]) + column.dipZ * float(NeighborZ[k]));
 }
 
 } // namespace derivean::sim

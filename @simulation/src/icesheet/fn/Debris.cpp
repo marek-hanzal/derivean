@@ -17,7 +17,7 @@ void lay(Domain& domain, size_t i, const float volume[SedimentClasses], double s
     if (all <= 0) return;
     for (int c = 0; c < SedimentClasses; ++c) domain.ground.sediment[c][i] += volume[c] / area;
     domain.deposited[i] += all / area;
-    if (span > 0) domain.depositionRate[i] += RateShare * all / area / float(span);
+    if (span > 0) domain.depositionRate[i] += RateShare * all / area / float(domain.step);
     if (kind) (*kind)[i] += all / area;
     if (domain.owned(int(i % size_t(domain.size)), int(i / size_t(domain.size)))) domain.ledger.deposited += all;
     booked += all;

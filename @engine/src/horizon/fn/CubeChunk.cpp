@@ -4,10 +4,10 @@
 #include "horizon/type/Tint.hpp"
 #include "nature/type/SurfaceReader.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <limits>
-#include <map>
 #include <optional>
 
 namespace derivean {
@@ -21,7 +21,8 @@ constexpr int Read = CubeSide + 2 * Ring;
 constexpr float TopVoxel = 0.5f * VoxelSize;     // m under the ground at which the middle of the top voxel lies
 constexpr float GlacierDepth = 1.0f;             // m of ice from which the ground reads as a glacier
 constexpr float RockSkin = 0.05f;                // m into bare rock at which its bed is read
-constexpr double SheetGrain = 100.0;             // water levels per metre that count as different sheets
+constexpr float SheetGap = 0.02f;                // m between water levels from which they are two water bodies
+constexpr float HeldSlope = 1.0f;                // rise over run up to which loose cover lies on a slope
 constexpr int WaterProbes = 3;                   // per axis; closer than a site tile is wide at every level whose water shows near the eye
 
 struct Column {
@@ -133,9 +134,16 @@ CubeColumn buildCubes(const sim::World& world, CubeKey key) {
             for (int y = lowest - 2; y < here.top; ++y) cubes[{i, y, j}] = Material::Bedrock;
             if (i < 0 || j < 0 || i >= CubeSide || j >= CubeSide) continue;
             Filling filling{world, reader, centre(i, j), here.sample, std::nullopt};
-            cubes[{i, here.top - 1, j}] = top(filling);
+            const Material surface = top(filling);
+            cubes[{i, here.top - 1, j}] = surface;
+            // A step between columns stands for the slope the cubes were cut from. Where that slope
+            // holds its cover the side of the step is that cover too; only a face too steep for it,
+            // or bare, shows the beds.
+            const float slope = float(std::hypot(sampled(i + 1, j).ground - sampled(i - 1, j).ground, sampled(i, j + 1).ground - sampled(i, j - 1).ground) / (2 * edge));
+            const bool covered = slope <= HeldSlope && here.sample.ground - here.sample.rock > TopVoxel;
             const int open = std::min({column(i - 1, j).top, column(i + 1, j).top, column(i, j - 1).top, column(i, j + 1).top});
-            for (int y = open; y < here.top - 1; ++y) cubes[{i, y, j}] = under(filling, float(std::max(0.0, here.sample.ground - (y + 0.5) * edge)));
+            for (int y = open; y < here.top - 1; ++y)
+                cubes[{i, y, j}] = covered ? surface : under(filling, float(std::max(0.0, here.sample.ground - (y + 0.5) * edge)));
         }
 
     // Chunks are cut where their lattice lies; a face keeps to its chunk, counted from its corner.
@@ -148,23 +156,26 @@ CubeColumn buildCubes(const sim::World& world, CubeKey key) {
         if (!chunk.faces.empty()) result.chunks.push_back(std::move(chunk));
     }
 
-    // One sheet per water level, at the highest level its columns report: every one of them ends below it.
-    std::map<int64_t, WaterSheet> sheets;
-    std::map<int64_t, std::vector<int32_t>> masks;
+    // One sheet per water body: levels closer than SheetGap are one, drawn at the highest of them,
+    // which every column under it ends below.
+    std::vector<float> levels;
     for (int j = 0; j < CubeSide; ++j)
-        for (int i = 0; i < CubeSide; ++i) {
-            if (!wet(i, j)) continue;
-            const int64_t grain = std::llround(double(levelAt(i, j)) * SheetGrain);
-            sheets[grain].level = std::max(sheets.contains(grain) ? sheets[grain].level : -1e30, double(levelAt(i, j)));
-            masks[grain].resize(size_t(CubeSide) * CubeSide);
-            masks[grain][size_t(i) * CubeSide + j] = 1;
-        }
+        for (int i = 0; i < CubeSide; ++i)
+            if (wet(i, j)) levels.push_back(levelAt(i, j));
+    std::sort(levels.begin(), levels.end());
     const auto always = [](int32_t) { return true; };
-    for (auto& [grain, sheet] : sheets) {
-        mergeMask(masks[grain], CubeSide, CubeSide, always, always, [&](int u, int v, int width, int height, int32_t) {
+    for (size_t first = 0; first < levels.size();) {
+        size_t last = first;
+        while (last + 1 < levels.size() && levels[last + 1] - levels[last] < SheetGap) ++last;
+        WaterSheet sheet{double(levels[last]), {}};
+        std::vector<int32_t> mask(size_t(CubeSide) * CubeSide);
+        for (int j = 0; j < CubeSide; ++j)
+            for (int i = 0; i < CubeSide; ++i) mask[size_t(i) * CubeSide + j] = wet(i, j) && levelAt(i, j) >= levels[first] && levelAt(i, j) <= levels[last];
+        mergeMask(mask, CubeSide, CubeSide, always, always, [&](int u, int v, int width, int height, int32_t) {
             sheet.faces.insert(sheet.faces.end(), {1, 1, 0, int16_t(u), int16_t(v), int16_t(width), int16_t(height), int16_t(Material::Water), 0});
         });
         result.chunks.back().water.push_back(std::move(sheet));
+        first = last + 1;
     }
     result.milliseconds = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
     return result;

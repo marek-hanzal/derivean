@@ -35,7 +35,10 @@ struct CubeLevel {
     Cell centre{};                                         // column {x, 0, z} the eye was in when the level was planned
     std::unordered_map<Cell, CubeSlot, CellHash> slots;    // every column the level wants, by {x, 0, z}
     std::vector<Cell> todo;                                // columns to build, the nearest last
+    size_t wanted{};                                       // columns within the level's reach and the margin built round it
     size_t shown{};                                        // columns the renderer holds
+    size_t held{};                                         // of the wanted columns, those the renderer holds
+    size_t settled{};                                      // of those, cut from the data the level wants and not due for a rebuild
     std::optional<LevelBox> box;                           // where the level may be drawn this frame
     size_t builds{};                                       // chunks built so far, the time that took and their faces
     double buildMs{};
@@ -55,7 +58,8 @@ struct FarCubes {
     std::vector<CubeKey> audit;           // shown columns still to be compared with the tiles now finished
     size_t tilesSeen{};                   // finished simulation tiles when `audit` was last filled
     size_t flying{};
-    size_t missing{};                     // columns inside the levels' reach that the renderer does not hold yet
+    size_t missing{};                     // columns the levels want that the renderer does not hold as they will finally be
+    bool whole{};                         // nothing is missing and every finished tile has been looked at
     uint64_t tickets{};
     uint32_t ids{};
     std::array<size_t, sim::LevelCount> shownByData{};   // chunks the renderer holds, by their data level

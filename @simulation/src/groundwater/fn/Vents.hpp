@@ -1,6 +1,6 @@
 #pragma once
 
-#include "groundwater/type/Aquifer.hpp"
+#include "groundwater/type/WaterField.hpp"
 #include "groundwater/type/Groundwater.hpp"
 
 namespace derivean::sim {
@@ -11,7 +11,7 @@ struct VentWater {
     Vec2 position;
     float elevation{};       // m
     float flow{};            // m³/yr
-    Carried carried;
+    Borne carried;
     int32_t cell{};          // own cell of the tile
     uint8_t storey{};
     Material aquifer{Material::Air}, floor{Material::Air};

@@ -110,7 +110,10 @@ function compose() {
       playLabel.textContent = "Enter world";
       if (game.dataset.mode === "boot") game.dataset.mode = "menu";
     },
-    failed: showError,
+    failed(error) {
+      map.hide();
+      showError(error);
+    },
   });
   start = session.start;
 

@@ -12,7 +12,7 @@ namespace {
 // separation behind a single dune.
 constexpr float LeeTan = 0.105f;       // 6°
 constexpr float RampTan = 0.07f;       // 4°
-constexpr float RiverHalf = 3e7f;      // m³/yr of a stream that catches half the sand blown across it
+constexpr float RiverHalf = 3e7f;      // m³/yr of a stream that, running all year, catches half the sand blown across it
 constexpr float Bombard = 0.02f;       // m of fines raised per m of sand that passes over them
 constexpr float DustReach = 1.0f;      // m of fines the passing sand can raise from a cell in one step
 constexpr float BarSilt = 0.2f;        // m of silt the dry bars of a river that lays down its load give the wind in one step
@@ -93,10 +93,12 @@ void routeSand(Domain& domain, const WindGraph& graph, std::vector<float>& raise
             // Sand blown into water joins its bed.
             if (free) domain.ground.sediment[Sand][i] += sand / area, wind.ledger.sandDrowned += sand, bookWind(domain, i, sand / area);
         } else {
-            const float caught = sand * domain.discharge[i] / (domain.discharge[i] + RiverHalf);
+            // A stream catches the sand blown across it while it runs, and in dry country it runs a small part of the year.
+            const float dry = float(dryShare(domain.rain[i], domain.warmthNow[i], wind.halfRange));
+            const float caught = sand * (1 - dry) * domain.discharge[i] / (domain.discharge[i] + RiverHalf);
             if (free) domain.ground.sediment[Sand][i] += caught / area, wind.ledger.sandDrowned += caught, bookWind(domain, i, caught / area);
             sand -= caught;
-            const float carry = float(length(driftAt(domain, i)) * dryShare(domain.rain[i], domain.warmthNow[i], wind.halfRange)) * dt * cell;
+            const float carry = float(length(driftAt(domain, i))) * dry * dt * cell;
             const float room = std::max(0.0f, std::max(lee[i], ramp[i]) - top[i]) * area;
             const float own = mobileSand(domain, i) * area;
             // In shelter a cell keeps what arrives until its room is full and gives none of its own.
@@ -113,7 +115,7 @@ void routeSand(Domain& domain, const WindGraph& graph, std::vector<float>& raise
                 const float fines = std::max(0.0f, domain.ground.sediment[Fines][i] - labels.salt[i]);
                 const float struck = open ? std::min(std::min(fines, DustReach), Bombard * out / area) : 0.0f;
                 const bool bars = domain.depositionRate[i] > 0 && domain.discharge[i] >= ChannelHeads[size_t(domain.key.level)];
-                const float given = bars ? float(dryShare(domain.rain[i], domain.warmthNow[i], wind.halfRange)) * std::min(fines - struck, BarSilt) : 0.0f;
+                const float given = bars ? dry * std::min(fines - struck, BarSilt) : 0.0f;
                 domain.ground.sediment[Fines][i] -= struck + given;
                 bookWind(domain, i, -(struck + given));
                 raised[i] += struck + given;

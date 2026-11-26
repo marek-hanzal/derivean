@@ -12,7 +12,8 @@ constexpr double StandOff = 0.1;       // m above the ground
 
 Position findSpawn(sim::World& world, const std::optional<std::array<double, 2>>& wish) {
     const sim::Vec2 place = wish ? sim::Vec2{(*wish)[0], (*wish)[1]} : sim::findLanding(world, {0, 0});
-    const sim::SurfaceSample ground = sim::surveyAt(world, place);
+    // The ground level is what the voxels are cut from; a coarser surface can lie a metre off it.
+    const sim::SurfaceSample ground = sim::surveyAt(world, place, sim::Level::Ground);
     const double feet = ground.water > ground.ground ? std::max(double(ground.ground), ground.water - FloatingFeet) : ground.ground;
     return {place.x, feet + StandOff, place.z};
 }

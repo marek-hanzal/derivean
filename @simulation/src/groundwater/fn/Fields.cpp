@@ -90,7 +90,7 @@ void readFields(const WaterField& field, GroundwaterTile& tile) {
             const int fx = x + field.margin, fz = z + field.margin;
             const size_t i = field.index(fx, fz), own = size_t(z) * TileCells + size_t(x);
             const AquiferColumn& column = field.column[i];
-            tile.recharge[own] = column.recharge / CellArea;
+            tile.recharge[own] = column.recharge / WaterCellArea;
             tile.deepTable[own] = tableOf(field, i, Lower);
             const bool wet = column.perched && field.flux[i * 2 + Upper] > LeastSeep;
             tile.table[own] = wet ? tableOf(field, i, Upper) : tile.deepTable[own];
@@ -98,8 +98,8 @@ void readFields(const WaterField& field, GroundwaterTile& tile) {
                                       (column.drain != Drain::None ? Drained : 0) | (column.sunk > 0 ? Swallows : 0));
             tile.rock[Lower][own] = uint8_t(column.lowerRock);
             if (column.perched) tile.rock[Upper][own] = uint8_t(column.upperRock);
-            budget.rain += double(column.rain) * CellArea;
-            budget.runoff += double(runoffOf(column.rain, column.warmth)) * CellArea;
+            budget.rain += double(column.rain) * WaterCellArea;
+            budget.runoff += double(runoffOf(column.rain, column.warmth)) * WaterCellArea;
             budget.recharge += column.recharge, budget.sunk += column.sunk;
             for (int storey = column.perched ? Upper : Lower; storey <= Lower; ++storey) {
                 const NodeFate& fate = field.fate[i * 2 + size_t(storey)];

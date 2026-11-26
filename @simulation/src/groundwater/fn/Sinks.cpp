@@ -15,7 +15,7 @@ void sinkStreams(WaterField& field) {
     std::vector<float> kept(cells, 1.0f), next(cells, 1.0f);
     const auto lostAt = [&](size_t i, float share) {
         const AquiferColumn& column = field.column[i];
-        return column.drain == Drain::None ? swallowed(column.swallow, column.stream * share, float(LocalCell)) : 0.0f;
+        return column.drain == Drain::None ? swallowed(column.swallow, column.stream * share, float(WaterCell)) : 0.0f;
     };
     for (int sweep = 0; sweep < SinkSweeps; ++sweep) {
         forRows(field, [&](int begin, int end) {

@@ -52,7 +52,7 @@ struct LocalWeather {
 // One level of far cubes this frame: what of it the view wants, what the renderer holds, and where it may be drawn.
 struct CubeLevelView {
     int level{};
-    size_t wanted{}, shown{};
+    size_t wanted{}, shown{}, settled{};
     std::optional<LevelBox> box;
 };
 
@@ -84,6 +84,7 @@ struct Frame {
     std::optional<double> ground;            // m, simulated ground under the eye
     std::optional<double> waterLevel;        // m, natural water standing over that ground
     bool siteReady{true}, localReady{true}, regionReady{true};   // simulation tiles the view wants are finished
+    bool farReady{true};                     // the far terrain is whole and cut from the data it wants
     std::array<uint32_t, sim::LevelCount> tilesWanted{}, tilesFinished{};   // by sim::Level: what the view wants and how much of it is built
     size_t pendingChunks{}, pendingPatches{};
     double generationMs{};                   // background time of the voxel columns that entered this frame

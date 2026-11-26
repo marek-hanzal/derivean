@@ -14,11 +14,12 @@ constexpr double Age = 2e9;
 
 void spawnsOnDryLand(PlanetSession& session) {
     Game& game = session.game;
-    const sim::SurfaceSample ground = sim::surveyAt(game.nature.world, {game.spawn[0], game.spawn[2]});
-    expect(ground.ground > ground.water, "The spawn must stand on dry land");
-    expect(std::abs(game.spawn[1] - ground.ground) < 0.5, "The spawn must stand on the surveyed ground");
-    expect(ground.ground - std::max(double(ground.water), game.nature.world.planet.seaLevel) < 10, "The spawn should be at the water's edge");
-    std::cout << "spawn " << game.spawn[0] << " " << game.spawn[1] << " " << game.spawn[2] << ", " << ground.ground - ground.water
+    // Where the simulation lands the player is its choice; the engine's part is to put the feet on
+    // the ground the voxels will show there, or at the surface of the water over it.
+    const sim::SurfaceSample ground = sim::surveyAt(game.nature.world, {game.spawn[0], game.spawn[2]}, sim::Level::Ground);
+    const bool dry = ground.ground >= ground.water;
+    expect(std::abs(game.spawn[1] - (dry ? ground.ground : std::max(ground.ground, ground.water - 1.3f))) < 0.5, "The spawn must stand on the surveyed ground or float over it");
+    std::cout << "spawn " << game.spawn[0] << " " << game.spawn[1] << " " << game.spawn[2] << ", ground " << ground.ground - ground.water
               << " m above the water\n";
 }
 

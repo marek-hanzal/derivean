@@ -1,8 +1,8 @@
 import type { Chart, GameBridge } from "../../../contract/GameBridge";
 import { ChartLevels } from "../constant/chart";
-import { ChartDrift, PaneCount, PaneSize, PreviewSize, SharpWorthMs, StaleMs } from "../constant/map";
+import { PaneCount, PaneSize, PreviewSize, SharpWorthMs, StaleMs } from "../constant/map";
 import { chartLook, measurePane } from "../fn/chartLook";
-import { serves } from "../fn/view";
+import { chartReach, serves } from "../fn/view";
 import type { ChartLook, PaneMeasure } from "../type/ChartLook";
 import type { ChartPoint } from "../type/ChartPoint";
 import type { Square } from "../type/MapView";
@@ -31,8 +31,9 @@ export function createChartFeed(bridge: Pick<GameBridge, "chart">, surface: Char
   let shown: Shown | undefined;
   let wanted: Square | undefined;
   let busy = false;
-  // Bumped when the world changes: answers that were asked of an earlier one are dropped.
-  let world = 0;
+  // The reading whose panes may still be handed on. Bumped to drop one: on a failure, when the world
+  // changes, when the map closes.
+  let live = 0;
   let asked = -Infinity;
   // Where the wanted square was a frame ago, and how fast its centre moves, in metres per millisecond.
   let before: { x: number; z: number; time: number } | undefined;
@@ -46,7 +47,8 @@ export function createChartFeed(bridge: Pick<GameBridge, "chart">, surface: Char
 
   // Reads `count`² panes of `size` pixels over the square into the surface's next sheet. `want` lets one
   // arrived pane through each frame to be handed on and measured, so no frame carries more than one.
-  async function read(square: Square, count: number, size: number, mine: number) {
+  async function read(square: Square, count: number, size: number) {
+    const mine = ++live;
     const span = square.span / count;
     const measures: PaneMeasure[] = [];
     surface.begin(count * size);
@@ -54,8 +56,9 @@ export function createChartFeed(bridge: Pick<GameBridge, "chart">, surface: Char
       const column = index % count;
       const row = Math.floor(index / count);
       const pane = await bridge.chart({ x: square.x + (column - (count - 1) / 2) * span, z: square.z + (row - (count - 1) / 2) * span, span, size });
+      if (!pane || mine !== live) return null;
       await new Promise<void>((turn) => arrived.push(turn));
-      if (!pane || mine !== world) return null;
+      if (mine !== live) return null;
       surface.put(pane, column * size, row * size);
       measures.push(measurePane(pane));
       return pane;
@@ -70,27 +73,33 @@ export function createChartFeed(bridge: Pick<GameBridge, "chart">, surface: Char
     shows[sharp ? "sharp" : "preview"]++;
   }
 
-  const hurried = (square: Square) => speed * SharpWorthMs > ChartDrift * square.span;
+  const hurried = (square: Square) => speed * SharpWorthMs > chartReach(square.span, square.span);
+
+  // Drops the reading in flight: its panes are not handed on, and those that wait for a turn get it now.
+  function drop() {
+    live++;
+    for (const turn of arrived.splice(0)) turn();
+  }
 
   async function round(square: Square, kind: Round) {
     busy = true;
-    const mine = world;
     const began = performance.now();
     try {
       if (kind === "news" && !await bridge.chart({ ...square, size: 1, unless: shown?.tiles })) return;
       if (kind === "fresh") {
-        const preview = await read(square, 1, PreviewSize, mine);
+        const preview = await read(square, 1, PreviewSize);
         if (!preview) return;
         show(square, preview, 1, false);
         // The view has moved on meanwhile, or is on its way out: the next round starts from where it is then.
         if (!wanted || !serves(square, wanted) || hurried(square)) return;
       }
-      const sharp = await read(square, PaneCount, PaneSize, mine);
+      const sharp = await read(square, PaneCount, PaneSize);
       if (!sharp) return;
       show(square, sharp, PaneCount, true);
       readMs = performance.now() - began;
     } catch (error) {
-      if (mine === world) failed(error);
+      drop();
+      failed(error);
     } finally {
       busy = false;
     }
@@ -125,8 +134,11 @@ export function createChartFeed(bridge: Pick<GameBridge, "chart">, surface: Char
     // True when a sharp chart that serves the square is on screen. A newer reading of the same square may be
     // on its way; it replaces the one on screen whole.
     settled: (square: Square) => Boolean(shown?.sharp) && serves(shown!.square, square),
+    // The map closed: nothing in flight is worth handing on.
+    rest: drop,
+    // The world changed: nothing held is of it.
     reset() {
-      world++;
+      drop();
       shown = undefined;
       surface.clear();
     },

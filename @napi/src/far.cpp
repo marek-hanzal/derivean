@@ -58,6 +58,7 @@ Napi::Value farCubes(Napi::Env env, const Frame& frame) {
         level["edge"] = edgeOf(value.level);
         level["wanted"] = double(value.wanted);
         level["shown"] = double(value.shown);
+        level["settled"] = double(value.settled);
         level["box"] = levelBox(env, value.box);
         return level;
     });

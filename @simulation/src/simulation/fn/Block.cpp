@@ -1,5 +1,6 @@
 #include "simulation/fn/Query.hpp"
 
+#include "coast/type/SeaVoid.hpp"
 #include "ground/fn/Stamp.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "relief/type/Form.hpp"
@@ -43,6 +44,8 @@ void sampleBlock(World& world, const Block& block, Material* materials) {
         for (int x = 0; x < openCountX; ++x)
             exposure[size_t(z) * size_t(openCountX) + size_t(x)] = exposureAt(site, {double(openX + x) * ExposureLattice, double(openZ + z) * ExposureLattice});
 
+    // What the sea opened at the waterline, from the site tiles already required above.
+    const SeaVoids sea = seaVoidsOver([&](int32_t tx, int32_t tz) { return site.tile(tx, tz); }, setting, block.originX, block.originZ, maxX, maxZ);
     // A void is a property of a point; each column asks the field of the local tile it stands in.
     TileKey caveKey = tileAt(Level::Local, {block.originX, block.originZ});
     std::shared_ptr<const CaveField> caves = caveFieldAt(world, {block.originX, block.originZ});
@@ -68,6 +71,7 @@ void sampleBlock(World& world, const Block& block, Material* materials) {
                 caves = caveFieldAt(world, {x, z});
             }
             formColumn(here, ground, open, caves.get(), x, z, block.originY, block.step, block.countY, materials + size_t(iz) * size_t(block.countX) + size_t(ix), layer);
+            cutSeaVoids(sea, x, z, block.originY, block.step, block.countY, materials + size_t(iz) * size_t(block.countX) + size_t(ix), layer);
         }
     }
 

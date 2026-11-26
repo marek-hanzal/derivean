@@ -1,6 +1,6 @@
 #pragma once
 
-#include "groundwater/type/Aquifer.hpp"
+#include "groundwater/type/WaterField.hpp"
 
 namespace derivean::sim {
 

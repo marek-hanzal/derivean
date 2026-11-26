@@ -96,7 +96,7 @@ void growConduits(const WaterField& field, GroundwaterTile& tile) {
     struct Outflow {
         int32_t node{};
         double flux{};
-        Carried sum;
+        Borne sum;
         float passages{}, grew{};
         int32_t spring{-1};   // index into the tile's springs
     };
@@ -111,7 +111,7 @@ void growConduits(const WaterField& field, GroundwaterTile& tile) {
     for (const int32_t node : net.order) {
         Outflow& out = outflows[size_t(slot[size_t(net.root[size_t(node)])])];
         const float taken = field.fate[size_t(node)].captured;
-        const Carried& from = field.carried[size_t(node)];
+        const Borne& from = field.carried[size_t(node)];
         out.flux += taken;
         out.sum.lime += taken * from.lime, out.sum.far += taken * (from.far + net.run[size_t(node)]), out.sum.high += taken * from.high;
         out.sum.rate += taken * from.rate, out.sum.age += taken * from.age, out.sum.deep += taken * from.deep;

@@ -3,6 +3,7 @@
 #include "landscape/fn/Strength.hpp"
 #include "measure/constant/Angle.hpp"
 #include "measure/fn/Block.hpp"
+#include "measure/fn/Plane.hpp"
 #include "measure/fn/ReliefStats.hpp"
 
 using namespace derivean::sim;
@@ -40,6 +41,9 @@ double worstFace(const Domain& domain, double sound) {
     return worst;
 }
 
+// m of ground the water took off the tile's own cells, as a mean over them.
+double erodedFrom(const Domain& domain) { return domain.ledger.eroded / (domain.cell * domain.cell * TileCells * TileCells); }
+
 BlockSpec canyon(Material rock, double sound, int steps) {
     BlockSpec spec;
     spec.level = Level::Site, spec.rock = rock, spec.sound = sound;
@@ -67,6 +71,17 @@ void testRelief() {
         // One cell of the Local level cannot stand at more than the angle its height allows.
         expectLandscape(degreesOver(Material(id), 64, 4) < 82, "a 64 m cell of the strongest rock stands near vertical", degreesOver(Material(id), 64, 4));
     }
+
+    // Ground that has gathered no channel is lowered by the water it has. A plane without rain keeps
+    // its rock; gentle granite under rain loses metres to tens of metres in a million years, and its
+    // mantle never lends the rock under it its own erodibility.
+    PlaneSpec gentle;
+    gentle.level = Level::Region, gentle.rock = Material::Granite, gentle.slope = 0.002, gentle.steps = 5, gentle.rain = 0;
+    const double dry = erodedFrom(replayPlane(gentle));
+    expectLandscape(dry < 0.01, "a plane without rain was lowered", dry);
+    gentle.rain = 0.9;
+    const double perMyr = erodedFrom(replayPlane(gentle)) / (gentle.steps * RegionStep / Myr);
+    expectLandscape(perMyr > 1 && perMyr < 40, "gentle granite under rain is lowered at the wrong pace", perMyr);
 
     // Massive granite cut by a river: a wall stands, and no bare cell stands higher above a neighbour
     // than a fresh face of its rock holds.

@@ -25,7 +25,7 @@ void testGroundwaterEdge() {
             for (int x = 0; x < field.size; ++x) {
                 AquiferColumn& column = field.column[field.index(x, z)];
                 const int cellX = int(field.firstX) + x, cellZ = int(field.firstZ) + z;
-                column.dipX = -0.2f / float(LocalCell), column.dipZ = 0.1f / float(LocalCell);
+                column.dipX = -0.2f / float(WaterCell), column.dipZ = 0.1f / float(WaterCell);
                 column.flowTo = uint8_t((cellX * 7 + cellZ * 3) & 7);
                 column.stream = column.ground < 340.0f ? 4.0e5f : 2.0e3f;
                 if (column.ground < 330.0f) column.drain = Drain::Stream;
@@ -41,13 +41,13 @@ void testGroundwaterEdge() {
     int compared = 0;
     for (int column = TileCells - 1; column <= TileCells; ++column)
         for (int z = 0; z < TileCells; ++z) {
-            const size_t a = west.index(Reach + column, Reach + z), b = east.index(Reach + column - TileCells, Reach + z);
+            const size_t a = west.index(WaterReach + column, WaterReach + z), b = east.index(WaterReach + column - TileCells, WaterReach + z);
             for (size_t node = 0; node < 2; ++node) {
                 const NodeFate &f = west.fate[a * 2 + node], &g = east.fate[b * 2 + node];
                 const bool same = west.level[a * 2 + node] == east.level[b * 2 + node] && west.flux[a * 2 + node] == east.flux[b * 2 + node] &&
                                   west.sideways[a * 2 + node] == east.sideways[b * 2 + node] && f.emerges == g.emerges && f.outcrop == g.outcrop && f.lost == g.lost &&
                                   f.captured == g.captured && f.lag == g.lag && west.column[a].sunk == east.column[b].sunk &&
-                                  std::memcmp(&west.carried[a * 2 + node], &east.carried[b * 2 + node], sizeof(Carried)) == 0;
+                                  std::memcmp(&west.carried[a * 2 + node], &east.carried[b * 2 + node], sizeof(Borne)) == 0;
                 expectWater(same, "two tiles disagree about the ground water of a cell on their shared edge", z);
                 compared += west.flux[a * 2 + node] > 0;
             }
@@ -58,7 +58,7 @@ void testGroundwaterEdge() {
     for (int z = 0; z < TileCells; ++z)
         for (int storey = Upper; storey <= Lower; ++storey)
             for (const int k : {7, 0, 1}) {
-                const size_t a = west.index(Reach + TileCells - 1, Reach + z), b = east.index(Reach - 1, Reach + z);
+                const size_t a = west.index(WaterReach + TileCells - 1, WaterReach + z), b = east.index(WaterReach - 1, WaterReach + z);
                 if (z + NeighborZ[k] < 0 || z + NeighborZ[k] >= TileCells) continue;
                 if (storey == Lower || Way(west.way[a * 8 + size_t(k)]) != Way::Outcrop) out += double(west.sideways[a * 2 + size_t(storey)]) * west.share[(a * 2 + size_t(storey)) * 8 + size_t(k)];
                 if (storey == Lower || Way(east.way[b * 8 + size_t(k)]) != Way::Outcrop) in += double(east.sideways[b * 2 + size_t(storey)]) * east.share[(b * 2 + size_t(storey)) * 8 + size_t(k)];

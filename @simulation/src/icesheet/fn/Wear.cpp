@@ -5,7 +5,9 @@
 namespace derivean::sim {
 namespace {
 
-constexpr float RateShare = 2.0f / 3.0f;   // of a working's rate taken into the tile's recent mean: the fluvial step that follows takes it by 0.4 and keeps 0.6 of this
+// The tile's recent mean rates move 0.4 of the way to each step's rate, so a working that stands
+// for several steps enters as if all of it were one step's: the mean then carries it across them.
+constexpr float RateShare = 2.0f / 3.0f;
 
 float groundOf(const Domain& domain, size_t i) { return domain.ground.rock[i] + domain.sedimentAt(i); }
 
@@ -67,7 +69,7 @@ void wearBed(Domain& domain, SheetWork& work, const SheetField& field, const std
         domain.ground.rock[i] -= rock;
         work.worn[i] += rock;
         domain.eroded[i] += cut;
-        if (span > 0) domain.erosionRate[i] += RateShare * cut / float(span);
+        if (span > 0) domain.erosionRate[i] += RateShare * cut / float(domain.step);
         if (domain.owned(x, z)) domain.ledger.eroded += double(cut) * area;
         totals.worn += double(cut) * area;
     }

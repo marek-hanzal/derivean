@@ -20,11 +20,11 @@ struct Run {
 
 } // namespace
 
-void fillStoreys(AquiferColumn& column, const Layer* layers, int count) {
+void fillStoreys(AquiferColumn& column, const WaterLayer* layers, int count) {
     // A bed holds water up when it passes less than a share of what arrives. Cover and basement
     // are not beds: one soaks, the other is the same rock all the way down.
     // Where nothing soaks in the same beds still hold up what arrives from the side.
-    const float rate = std::max(LeastRecharge, column.recharge / CellArea);
+    const float rate = std::max(LeastRecharge, column.recharge / WaterCellArea);
     int tight = -1;
     for (int i = 0; i < count && tight < 0; ++i)
         if (layers[i].unit != 0 && layers[i].through < PerchShare * rate && layers[i].top - layers[i].bottom >= 1.0f) tight = i;
@@ -45,7 +45,7 @@ void fillStoreys(AquiferColumn& column, const Layer* layers, int count) {
             if (thickness > thickest) thickest = thickness, column.upperRock = layers[i].rock;
         }
         column.floor = layers[tight].top;
-        column.floorLeak = layers[tight].through * CellArea;
+        column.floorLeak = layers[tight].through * WaterCellArea;
         column.sheet = layers[tight].unit, column.sheetOffset = layers[tight].offset;
         column.floorRock = layers[tight].rock;
         column.roof = layers[tight].bottom;
@@ -72,7 +72,7 @@ void fillStoreys(AquiferColumn& column, const Layer* layers, int count) {
     }
     run.close(column);
     // Under a tight bed with nothing below it that the model reads, what leaks through is gone.
-    column.baseLeak = last >= 0 ? layers[last].through * DeepGradient * CellArea : column.floorLeak;
+    column.baseLeak = last >= 0 ? layers[last].through * DeepGradient * WaterCellArea : column.floorLeak;
 }
 
 } // namespace derivean::sim

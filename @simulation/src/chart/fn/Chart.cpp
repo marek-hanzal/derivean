@@ -37,23 +37,31 @@ float flowAcross(TileReader& reader, Vec2 centre, double pitch) {
     return flow;
 }
 
-// A cell wider than a pixel is not a stream that wide. The water takes the straight path from each
-// cell centre to the centre of the cell it flows into, and a pixel carries the largest flow whose
-// path passes it. Such a path starts in the pixel's own cell or in one next to it.
-float flowAlong(TileReader& reader, Vec2 centre, double pitch, int64_t cellX, int64_t cellZ) {
+// The largest stream whose path passes a pixel, and the cell that path starts in.
+struct PathFlow {
+    float flow{};
+    const Tile* tile{};
+    size_t at{};
+    Vec2 from;
+};
+
+// A cell wider than a pixel is not a stream that wide. The water of a cell takes the straight path
+// from its centre to the centre of the cell it flows into, and stays that cell's stream all the
+// way. A path that passes a pixel starts in the pixel's own cell or in one next to it.
+PathFlow flowAlong(TileReader& reader, Vec2 centre, double pitch, int64_t cellX, int64_t cellZ) {
     const double cell = specOf(reader.level).cell;
-    float flow = 0;
+    PathFlow largest;
     for (int dz = -1; dz <= 1; ++dz)
         for (int dx = -1; dx <= 1; ++dx) {
             size_t at;
             const Tile* tile = tileOf(reader, cellX + dx, cellZ + dz, at);
-            if (!tile || tile->flowTo[at] > 7) continue;
+            if (!tile || tile->flowTo[at] > 7 || tile->discharge[at] <= largest.flow) continue;
             const Vec2 from{(double(cellX + dx) + 0.5) * cell, (double(cellZ + dz) + 0.5) * cell};
             const Vec2 path{NeighborX[tile->flowTo[at]] * cell, NeighborZ[tile->flowTo[at]] * cell};
             const double along = std::clamp(dot(centre - from, path) / dot(path, path), 0.0, 1.0);
-            if (length(centre - (from + path * along)) <= StreamReach * pitch) flow = std::max(flow, tile->discharge[at]);
+            if (length(centre - (from + path * along)) <= StreamReach * pitch) largest = {tile->discharge[at], tile, at, from};
         }
-    return flow;
+    return largest;
 }
 
 // m, the level of the water standing in a cell; NoWater where it is dry. A dry cell stores a level
@@ -93,17 +101,27 @@ bool readTiles(TileReader& reader, Vec2 centre, double pitch, float sea, Chart& 
     chart.ice[pixel] = home->ice[at];
     chart.bedrock[pixel] = uint8_t(sample.bedrock);
     chart.level[pixel] = uint8_t(reader.level);
-    chart.discharge[pixel] = magnified ? flowAlong(reader, centre, pitch, cellX, cellZ) : pitch > cell ? flowAcross(reader, centre, pitch) : sample.discharge;
+    const PathFlow path = magnified ? flowAlong(reader, centre, pitch, cellX, cellZ) : PathFlow{};
+    chart.discharge[pixel] = magnified ? path.flow : pitch > cell ? flowAcross(reader, centre, pitch) : sample.discharge;
     float standing = standingLevel(*home, at);
     if (magnified && standing <= sample.ground + Wet) standing = shoreLevel(reader, cellX, cellZ);
     if (standing > sample.ground + Wet) {
         chart.water[pixel] = standing;
         chart.waters[pixel] = uint8_t(standing <= sea + SeaReach ? ChartWater::Sea : ChartWater::Lake);
-    } else if (sample.water > sample.ground + Wet && (!magnified || chart.discharge[pixel] >= sample.discharge)) {
-        // Not standing water: the depth readSurface gives the cell's running stream. In a cell wider
-        // than a pixel that is the path of that stream, not the whole cell and not a lesser path into it.
-        chart.water[pixel] = sample.water;
-        chart.waters[pixel] = uint8_t(ChartWater::Stream);
+    } else if (!magnified) {
+        // Not standing water: the depth readSurface gives a running stream.
+        if (sample.water > sample.ground + Wet) {
+            chart.water[pixel] = sample.water;
+            chart.waters[pixel] = uint8_t(ChartWater::Stream);
+        }
+    } else if (path.tile && standingLevel(*path.tile, path.at) == NoWater) {
+        // On a path: the running water of the cell the path starts in, as deep as readSurface finds it there.
+        SurfaceSample source = sample;
+        if (path.tile != home || path.at != at) readSurface(reader, path.from, source);
+        if (source.water > source.ground + Wet) {
+            chart.water[pixel] = sample.ground + (source.water - source.ground);
+            chart.waters[pixel] = uint8_t(ChartWater::Stream);
+        }
     }
     return true;
 }

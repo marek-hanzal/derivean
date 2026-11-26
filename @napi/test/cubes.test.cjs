@@ -73,7 +73,9 @@ function apply(frame) {
   assert.equal(cubes.levels.length, info.cubes.coarsestLevel - info.cubes.finestLevel + 1);
   let inner = 0;
   for (const level of cubes.levels) {
-    assert.ok(level.shown <= level.wanted);
+    assert.ok(level.settled <= level.shown && level.shown <= level.wanted);
+    assert.equal(typeof frame.ready.far, "boolean");
+    if (frame.ready.far) assert.ok(frame.pending.patches === 0 && frame.cubes.levels.every((each) => each.settled === each.wanted));
     if (!level.box) continue;
     const side = level.box.max[0] - frame.eye[0], size = info.cubes.side * level.edge, reach = side + info.cubes.band * level.edge;
     assert.ok(side >= inner - 1e-6, "boxes are nested from the finest level outwards");
@@ -108,7 +110,7 @@ test("a world of cubes describes its levels", () => {
 test("the levels of cubes fill from the coarsest and stay whole inside their boxes", { timeout: 900_000 }, async () => {
   const far = (frame) => frame.cubes.levels.at(-1);
   await until((frame) => far(frame).box !== null, 30);
-  const whole = (frame) => frame.pending.patches === 0 && frame.cubes.levels.every((level) => level.box && level.shown === level.wanted);
+  const whole = (frame) => frame.cubes.levels.every((level) => level.box && level.shown === level.wanted);
   const frame = await until(whole, 300);
   assert.ok(far(frame).box.max[0] - frame.eye[0] >= info.cubes.viewDistance - 1e-6, "the coarsest level reaches the view distance");
   assert.ok(Math.abs(frame.cubes.levels[0].box.max[0] - frame.eye[0] - info.cubes.reach * frame.cubes.levels[0].edge) < 1e-6);

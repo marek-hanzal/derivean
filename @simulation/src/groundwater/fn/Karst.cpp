@@ -32,7 +32,7 @@ struct Paths {
     // m of head the step from a node towards neighbour k uses up.
     float loss(size_t from, int storey, size_t to, int k) const {
         int set = 0;
-        return float(LocalCell) * NeighborReach[k] * Fall / (PlaneEase[planeAlong(field, from, to, k, set)] + grown(used[(from * 2 + size_t(storey)) * 8 + size_t(k)]));
+        return float(WaterCell) * NeighborReach[k] * Fall / (PlaneEase[planeAlong(field, from, to, k, set)] + grown(used[(from * 2 + size_t(storey)) * 8 + size_t(k)]));
     }
 
     // m: the lowest a node's water can stand: on the tight bed it runs on, for the upper storey.
@@ -62,7 +62,7 @@ struct Paths {
 int planeAlong(const WaterField& field, size_t from, size_t to, int k, int& set) {
     if (field.column[from].fissures < 0 || field.column[to].fissures < 0) return 0;
     const Fissures &here = field.fissures[from], &there = field.fissures[to];
-    const float stepX = float(NeighborX[k]) * float(LocalCell), stepZ = float(NeighborZ[k]) * float(LocalCell), length = float(LocalCell) * NeighborReach[k];
+    const float stepX = float(NeighborX[k]) * float(WaterCell), stepZ = float(NeighborZ[k]) * float(WaterCell), length = float(WaterCell) * NeighborReach[k];
     int best = 0;
     for (int s = 0; s < 2; ++s) {
         const float c = std::cos(here.strike[s]), n = std::sin(here.strike[s]);
@@ -150,7 +150,7 @@ KarstNet drainKarst(const WaterField& field) {
     for (size_t at = net.order.size(); at-- > 0;) {
         const int32_t node = net.order[at], parent = net.parent[size_t(node)];
         net.root[size_t(node)] = parent < 0 ? node : net.root[size_t(parent)];
-        net.run[size_t(node)] = parent < 0 ? 0.0f : net.run[size_t(parent)] + float(LocalCell) * NeighborReach[net.toward[size_t(node)]];
+        net.run[size_t(node)] = parent < 0 ? 0.0f : net.run[size_t(parent)] + float(WaterCell) * NeighborReach[net.toward[size_t(node)]];
     }
     return net;
 }

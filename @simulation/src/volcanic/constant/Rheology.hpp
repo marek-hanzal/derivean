@@ -22,6 +22,9 @@ inline constexpr Rheology DomeLava{12.0f, 60.0f, 80.0f, 1500.0f};       // degas
 inline constexpr Rheology AshFlow{0.02f, 0.5f, 20.0f, 28000.0f};        // the current of ash and gas of a chamber emptying: runs far, ponds in valleys
 inline constexpr Rheology BlockFlow{0.05f, 1.2f, 20.0f, 14000.0f};      // the smaller currents of ash and blocks of an ordinary eruption
 inline constexpr float QuenchShare = 0.12f;   // share of its cooling length lava keeps once it runs under water
+// Rise over run above which set lava does not stand where it stopped: quenched under water or
+// stalled on a steep front, it breaks up and its rubble slides to rest.
+inline constexpr float RubbleRest = 0.6f;
 
 inline constexpr const Rheology& lavaOf(Magma magma) { return magma == Magma::Basalt ? BasaltLava : AndesiteLava; }
 

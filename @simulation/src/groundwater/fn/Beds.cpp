@@ -12,7 +12,7 @@ constexpr uint64_t UnitStream = 0x47574154;
 
 // The loose cover as one layer: its classes lie on one another, so water runs along the most
 // open of them and has to pass the tightest on its way down.
-bool coverLayer(const BedColumn& column, Layer& layer) {
+bool coverLayer(const BedColumn& column, WaterLayer& layer) {
     float thickness = 0, along = 0, across = 0, pores = 0, thickest = 0;
     for (int c = 0; c < SedimentClasses; ++c) {
         const float part = column.cover[c];
@@ -70,7 +70,7 @@ void walkBeds(const BedColumn& column, BedWalk& walk) {
         const float opened = std::clamp((walk.mass.openDepth - (top - surface)) / (bottom - top), 0.0f, 1.0f);
         const float joints = jointConductivity(rock, 0.5f * (top + bottom) - surface, opened);
         const float fault = FaultConductivity * walk.mass.crush * walk.mass.crush;
-        Layer& layer = walk.layers[walk.count++];
+        WaterLayer& layer = walk.layers[walk.count++];
         layer.top = column.datum - top, layer.bottom = column.datum - bottom;
         layer.along = (rock.conductivity + joints + fault) * PerYear;
         layer.through = (rock.conductivity * acrossBedding(rock) + joints + fault) * PerYear;
@@ -96,8 +96,8 @@ void walkBeds(const BedColumn& column, BedWalk& walk) {
     if (last && walk.base < walked) {
         const float middle = 0.5f * (column.rockTop - walk.base + WalkDepth);
         const float fault = FaultConductivity * walk.mass.crush * walk.mass.crush;
-        Layer& layer = walk.layers[walk.count++];
-        layer = Layer{};
+        WaterLayer& layer = walk.layers[walk.count++];
+        layer = WaterLayer{};
         layer.top = walked, layer.bottom = walk.base;
         layer.along = (last->conductivity + jointConductivity(*last, middle, 0) + fault) * PerYear;
         layer.through = (last->conductivity * acrossBedding(*last) + jointConductivity(*last, middle, 0) + fault) * PerYear;

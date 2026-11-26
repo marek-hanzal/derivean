@@ -1,6 +1,6 @@
 #pragma once
 
-#include "groundwater/type/Aquifer.hpp"
+#include "groundwater/type/WaterField.hpp"
 #include "rockmass/type/RockMass.hpp"
 
 namespace derivean::sim {
@@ -18,7 +18,7 @@ struct BedColumn {
 
 // What reading it finds.
 struct BedWalk {
-    Layer layers[WalkBeds + 2];
+    WaterLayer layers[WalkBeds + 2];
     int count{};
     RockMass mass;           // of the bed at the top of the rock
     Material top{Material::Bedrock};

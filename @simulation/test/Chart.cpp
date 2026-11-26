@@ -1,27 +1,16 @@
+#include "ChartExpect.hpp"
 #include "LandscapeFixture.hpp"
 
-#include "chart/fn/Chart.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "planet/fn/Sample.hpp"
 #include "simulation/fn/Query.hpp"
+#include "simulation/fn/Reader.hpp"
 
-#include <cstdlib>
 #include <cstring>
-#include <iostream>
 
 using namespace derivean::sim;
 
 namespace {
-
-void expect(bool passed, const char* message, double value = 0) {
-    if (passed) return;
-    std::cerr << "Chart: " << message << " (" << value << ")\n";
-    std::exit(1);
-}
-
-Vec2 centreOf(const Chart& chart, int i, int j) {
-    return {chart.origin.x + (i + 0.5) * chart.pitch, chart.origin.z + (j + 0.5) * chart.pitch};
-}
 
 bool same(const Chart& a, const Chart& b) {
     const auto equal = [](const auto& left, const auto& right) {
@@ -31,8 +20,19 @@ bool same(const Chart& a, const Chart& b) {
            equal(a.warmth, b.warmth) && equal(a.cover, b.cover) && equal(a.bedrock, b.bedrock) && equal(a.waters, b.waters) && equal(a.level, b.level);
 }
 
-// Every pixel is surfaceAt at its centre where a tile the pitch may read is finished, and the planet elsewhere.
-// Returns how many pixels came from each level.
+// The untouched surface at a point from the finest finished level up to `finest`: what the tiles hold, without
+// anything the session has changed.
+SurfaceSample untouchedAt(const World& world, Vec2 position, Level finest) {
+    SurfaceSample sample;
+    for (int level = int(finest); level >= int(Level::Region); --level) {
+        TileReader reader{world.atlas, Level(level)};
+        if (readSurface(reader, position, sample)) break;
+    }
+    return sample;
+}
+
+// Every pixel is that surface at its centre where a tile the pitch may read is finished, and the planet
+// elsewhere. Returns how many pixels came from each level.
 std::array<int, 4> checkAgainstSurface(const World& world, const Chart& chart) {
     std::array<int, 4> byLevel{};
     Level finest{};
@@ -41,7 +41,7 @@ std::array<int, 4> checkAgainstSurface(const World& world, const Chart& chart) {
         for (int i = 0; i < chart.size; ++i) {
             const size_t at = size_t(j) * size_t(chart.size) + size_t(i);
             const Vec2 centre = centreOf(chart, i, j);
-            const SurfaceSample sample = tiles ? surfaceAt(world, centre, finest) : SurfaceSample{};
+            const SurfaceSample sample = tiles ? untouchedAt(world, centre, finest) : SurfaceSample{};
             ++byLevel[chart.level[at]];
             expect((chart.waters[at] == uint8_t(ChartWater::Dry)) == std::isnan(chart.water[at]), "a pixel's water level and water kind disagree", double(at));
             if (!sample.found) {
@@ -51,109 +51,17 @@ std::array<int, 4> checkAgainstSurface(const World& world, const Chart& chart) {
                 expect(std::isnan(chart.water[at]) == (chart.ground[at] >= world.planet.seaLevel), "a planet pixel is wet above sea level or dry below it", chart.ground[at]);
                 continue;
             }
-            expect(chart.level[at] == uint8_t(sample.level), "a pixel names another level than surfaceAt", chart.level[at]);
-            expect(chart.ground[at] == sample.ground, "a pixel's ground differs from surfaceAt", chart.ground[at] - sample.ground);
-            expect(chart.cover[at] == sample.ground - sample.rock && chart.bedrock[at] == uint8_t(sample.bedrock), "a pixel's cover or rock differs from surfaceAt", chart.cover[at]);
-            expect(chart.warmth[at] == sample.warmth, "a pixel's warmth differs from surfaceAt", chart.warmth[at] - sample.warmth);
+            expect(chart.level[at] == uint8_t(sample.level), "a pixel names another level than the surface", chart.level[at]);
+            expect(chart.ground[at] == sample.ground, "a pixel's ground differs from the surface", chart.ground[at] - sample.ground);
+            expect(chart.cover[at] == sample.ground - sample.rock && chart.bedrock[at] == uint8_t(sample.bedrock), "a pixel's cover or rock differs from the surface", chart.cover[at]);
+            expect(chart.warmth[at] == sample.warmth, "a pixel's warmth differs from the surface", chart.warmth[at] - sample.warmth);
+            // Finer than the cells it reads, a chart draws water by rules of its own; checkMagnified holds it to them.
+            if (chart.pitch < specOf(sample.level).cell) continue;
             const bool wet = sample.water > sample.ground + 0.01f;
-            if (chart.pitch >= specOf(sample.level).cell) {
-                expect(wet ? chart.water[at] == sample.water : std::isnan(chart.water[at]), "a pixel's water differs from surfaceAt", chart.water[at]);
-                expect(chart.discharge[at] >= sample.discharge, "a pixel lost the flow through its own centre", chart.discharge[at] - sample.discharge);
-                continue;
-            }
-            // Finer than the cells it reads, a chart keeps surfaceAt's water except that a stream is its path
-            // and not its cell, and that water standing next door reaches in; checkMagnified holds it to that.
-            const ChartWater kind = ChartWater(chart.waters[at]);
-            if (kind == ChartWater::Stream) expect(wet && chart.water[at] == sample.water && chart.discharge[at] >= sample.discharge, "a stream pixel is not surfaceAt's running water on its path", chart.water[at]);
-            if (kind == ChartWater::Dry) expect(!wet || chart.discharge[at] < sample.discharge, "a pixel on the path of its cell's stream is dry", chart.discharge[at]);
+            expect(wet ? chart.water[at] == sample.water : std::isnan(chart.water[at]), "a pixel's water differs from the surface", chart.water[at]);
+            expect(chart.discharge[at] >= sample.discharge, "a pixel lost the flow through its own centre", chart.discharge[at] - sample.discharge);
         }
     return byLevel;
-}
-
-struct CellOf {
-    const Tile* tile{};
-    size_t at{};
-};
-
-CellOf cellOf(const World& world, Level level, int64_t x, int64_t z) {
-    const int32_t tileX = int32_t(std::floor(double(x) / TileCells)), tileZ = int32_t(std::floor(double(z) / TileCells));
-    const std::shared_ptr<const Tile> tile = world.atlas.find({level, tileX, tileZ});
-    return {tile.get(), size_t(z - int64_t(tileZ) * TileCells) * TileCells + size_t(x - int64_t(tileX) * TileCells)};
-}
-
-float standingIn(const CellOf& cell) {
-    if (!cell.tile) return -1e30f;
-    const Ground& now = cell.tile->now;
-    const float surface = now.rock[cell.at] + now.sediment[Coarse][cell.at] + now.sediment[Sand][cell.at] + now.sediment[Fines][cell.at];
-    return cell.tile->water[cell.at] > surface ? cell.tile->water[cell.at] : -1e30f;
-}
-
-struct Magnified {
-    int onPath{}, reached{};
-};
-
-// A chart finer than the cells of `level`, checked against those cells themselves: a pixel carries
-// the largest flow whose straight path from cell centre to cell centre passes within half a pixel of
-// it and none otherwise, and it stands in water exactly when its own cell's level, or failing that
-// the highest level standing in the cells around, lies above its ground.
-Magnified checkMagnified(const World& world, const Chart& chart, Level level) {
-    Magnified found;
-    const double cell = specOf(level).cell;
-    expect(chart.pitch < cell, "the magnified chart is not finer than its cells", chart.pitch);
-    for (int j = 0; j < chart.size; ++j)
-        for (int i = 0; i < chart.size; ++i) {
-            const size_t at = size_t(j) * size_t(chart.size) + size_t(i);
-            if (chart.level[at] != uint8_t(level)) continue;
-            const Vec2 centre = centreOf(chart, i, j);
-            const int64_t cellX = int64_t(std::floor(centre.x / cell)), cellZ = int64_t(std::floor(centre.z / cell));
-            float flow = 0, around = -1e30f;
-            for (int dz = -1; dz <= 1; ++dz)
-                for (int dx = -1; dx <= 1; ++dx) {
-                    const CellOf other = cellOf(world, level, cellX + dx, cellZ + dz);
-                    around = std::max(around, standingIn(other));
-                    if (!other.tile || other.tile->flowTo[other.at] > 7) continue;
-                    const Vec2 from{(double(cellX + dx) + 0.5) * cell, (double(cellZ + dz) + 0.5) * cell};
-                    const Vec2 path{NeighborX[other.tile->flowTo[other.at]] * cell, NeighborZ[other.tile->flowTo[other.at]] * cell};
-                    const double along = std::clamp(dot(centre - from, path) / dot(path, path), 0.0, 1.0);
-                    if (length(centre - (from + path * along)) <= 0.5 * chart.pitch) flow = std::max(flow, other.tile->discharge[other.at]);
-                }
-            expect(chart.discharge[at] == flow, "a magnified pixel does not carry the flow of the path through it", chart.discharge[at] - flow);
-            found.onPath += flow > 0;
-
-            const float own = standingIn(cellOf(world, level, cellX, cellZ));
-            const float standing = own > chart.ground[at] + 0.01f ? own : around;
-            const bool flooded = standing > chart.ground[at] + 0.01f;
-            const bool drawn = chart.waters[at] == uint8_t(ChartWater::Sea) || chart.waters[at] == uint8_t(ChartWater::Lake);
-            expect(flooded == drawn && (!drawn || chart.water[at] == standing), "a magnified pixel does not stand in the water that reaches it", chart.water[at]);
-            found.reached += drawn && !(own > chart.ground[at] + 0.01f);
-        }
-    return found;
-}
-
-// Charts finer than region cells around the region's greatest river and around a shore, if it has one.
-void checkMagnifiedWater(const World& world, Vec2 focus) {
-    const TileKey key = tileAt(Level::Region, focus);
-    const std::shared_ptr<const Tile> tile = world.atlas.find(key);
-    expect(tile != nullptr, "the region tile under the focus is not finished");
-    const double cell = specOf(Level::Region).cell;
-    const auto centreOfCell = [&](int x, int z) { return Vec2{(double(key.x) * TileCells + x + 0.5) * cell, (double(key.z) * TileCells + z + 0.5) * cell}; };
-    int river = -1, shore = -1;
-    for (int z = 1; z < TileCells - 1; ++z)
-        for (int x = 1; x < TileCells - 1; ++x) {
-            const int at = z * TileCells + x;
-            const bool wet = standingIn({tile.get(), size_t(at)}) > -1e29f;
-            if (!wet && tile->flowTo[size_t(at)] <= 7 && (river < 0 || tile->discharge[size_t(at)] > tile->discharge[size_t(river)])) river = at;
-            if (wet && shore < 0 && standingIn({tile.get(), size_t(at + 1)}) < -1e29f) shore = at;
-        }
-    // 512 m pixels read the region alone, whatever finer tiles other checks have built.
-    expect(river >= 0, "the region tile has no running water to chart");
-    const Chart along = chartOf(world, {centreOfCell(river % TileCells, river / TileCells), 24576, 48});
-    checkAgainstSurface(world, along);
-    expect(checkMagnified(world, along, Level::Region).onPath > 0, "no pixel lies on the path of the region's greatest river");
-    if (shore < 0) return;
-    const Chart beside = chartOf(world, {centreOfCell(shore % TileCells, shore / TileCells), 24576, 48});
-    checkAgainstSurface(world, beside);
-    checkMagnified(world, beside, Level::Region);
 }
 
 // The four quarters of a square, asked for one by one, are the square: a map may be put together from parts.
@@ -223,7 +131,7 @@ void testChart() {
     checkQuarters(world, {corner, 2048, 128});
     checkQuarters(world, {corner, 32768, 128});
     checkSeam(world);
-    checkMagnifiedWater(world, focus);
+    checkChartWater(world, focus, site, local);
 
     expect(world.atlas.finished() == before, "reading charts built a tile", double(world.atlas.finished() - before));
 }

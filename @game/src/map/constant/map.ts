@@ -15,10 +15,8 @@ export const RestMs = 150;
 
 // A chart covers the viewport and this much more, so a short pan does not run off its edge.
 export const ChartMargin = 1.3;
-// How far the view may leave the chart on screen before another is asked for: its centre by this share of the
-// chart's span, its zoom to these ratios of the chart's. Inside the margin above.
-export const ChartDrift = 0.1;
-export const ChartZoom: [number, number] = [0.72, 1.4];
+// A view zoomed in until it wants less than this share of the span of the chart on screen is charted anew.
+export const ChartClosest = 0.72;
 // The first chart of a new view is this many pixels a side: quick to read, soon replaced.
 export const PreviewSize = 240;
 // The sharp chart is PaneCount² squares of PaneSize pixels, asked for side by side: each answer stays small

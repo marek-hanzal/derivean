@@ -95,7 +95,7 @@ void projectNature(Game& game, Frame& frame) {
         advanceCubes(*game.cubes, game.nature, frame.eye, clearance, std::hypot(velocity[0], velocity[1], velocity[2]), frame.cubes);
         for (int level = FinestCubes; level <= CoarsestCubes; ++level) {
             const CubeLevel& held = game.cubes->levels[size_t(level - FinestCubes)];
-            frame.cubeLevels.push_back({level, held.slots.size(), held.shown, held.box});
+            frame.cubeLevels.push_back({level, held.wanted, held.held, held.settled, held.box});
         }
     } else {
         advanceHorizon(game.horizon, game.nature, frame.eye, clearance, frame.far);
@@ -112,6 +112,7 @@ void projectNature(Game& game, Frame& frame) {
     frame.tilesFinished = game.nature.tiles.finished;
     frame.pendingChunks = game.stream.missing + game.stream.arrived.size() + game.view.queue.size();
     frame.pendingPatches = game.cubes ? game.cubes->missing : game.horizon.missing;
+    frame.farReady = game.cubes ? game.cubes->whole : game.horizon.missing == 0 && game.horizon.settled;
     frame.farData = game.cubes ? game.cubes->shownByData : game.horizon.shownByData;
     frame.streamingReady = !game.held;
     projectSky(game, frame, footing.ground);

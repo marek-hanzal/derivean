@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/service/Workers.hpp"
-#include "groundwater/type/Aquifer.hpp"
+#include "groundwater/type/WaterField.hpp"
 #include "groundwater/type/Groundwater.hpp"
 #include "landscape/type/Setting.hpp"
 
@@ -16,7 +16,7 @@ inline void forRows(const WaterField& field, const std::function<void(int, int)>
 
 // Storeys.cpp — the two storeys of a column from its layers, top first. The caller has set the
 // column's ground, recharge, base and shallowBase.
-void fillStoreys(AquiferColumn& column, const Layer* layers, int count);
+void fillStoreys(AquiferColumn& column, const WaterLayer* layers, int count);
 
 // Columns.cpp — sizes the field for a local tile and reads its columns from the nine finished
 // tiles around it, row-major with the tile itself in the middle.

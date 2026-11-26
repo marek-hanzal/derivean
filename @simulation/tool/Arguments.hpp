@@ -51,4 +51,5 @@ int aeolianCommand(const Arguments& arguments);
 int coastCommand(const Arguments& arguments);
 int groundwaterCommand(const Arguments& arguments);
 int volcanicCommand(const Arguments& arguments);
+int iceSheetCommand(const Arguments& arguments);
 int interventionCommand(const std::string& scenario, const Arguments& arguments);

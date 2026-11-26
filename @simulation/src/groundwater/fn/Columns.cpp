@@ -71,7 +71,7 @@ void readColumns(const Setting& setting, TileKey key, const Tile* const around[9
     const int nodes = size / Stride + 2;
     const int64_t nodeX = floorDiv(field.firstX, Stride), nodeZ = floorDiv(field.firstZ, Stride);
     std::vector<Node> node(size_t(nodes) * size_t(nodes));
-    const auto nodeCentre = [](int64_t x, int64_t z) { return Vec2{(double(x * Stride) + 0.5) * LocalCell, (double(z * Stride) + 0.5) * LocalCell}; };
+    const auto nodeCentre = [](int64_t x, int64_t z) { return Vec2{(double(x * Stride) + 0.5) * WaterCell, (double(z * Stride) + 0.5) * WaterCell}; };
     const auto readNodes = [&](int begin, int end) {
         for (int n = begin; n < end; ++n) {
             const Vec2 point = planetPoint(setting.seed, nodeCentre(nodeX + n % nodes, nodeZ + n / nodes));
@@ -93,7 +93,7 @@ void readColumns(const Setting& setting, TileKey key, const Tile* const around[9
                 const auto beside = [&](const std::vector<float>& values, int dx, int dz) {
                     return values[field.index(std::clamp(x + dx, 0, size - 1), std::clamp(z + dz, 0, size - 1))];
                 };
-                const float slopeX = (beside(top, 1, 0) - beside(top, -1, 0)) / float(2 * LocalCell), slopeZ = (beside(top, 0, 1) - beside(top, 0, -1)) / float(2 * LocalCell);
+                const float slopeX = (beside(top, 1, 0) - beside(top, -1, 0)) / float(2 * WaterCell), slopeZ = (beside(top, 0, 1) - beside(top, 0, -1)) / float(2 * WaterCell);
 
                 // Layering under the cell: its node's, with thicknesses blended from the four around it.
                 const int nx = int(floorDiv(cellX, Stride) - nodeX), nz = int(floorDiv(cellZ, Stride) - nodeZ);
@@ -120,18 +120,18 @@ void readColumns(const Setting& setting, TileKey key, const Tile* const around[9
                 const bool flooded = tile.water[from] > column.ground + 1e-3f;
                 const bool soluble = fissuredBySolution(definitionOf(walk.top));
                 column.drain = flooded ? (tile.water[from] <= field.seaLevel + 0.5f ? Drain::Sea : Drain::Lake)
-                             : column.stream >= (soluble ? SwallowLimit : StreamFlow) ? Drain::Stream : Drain::None;
+                             : column.stream >= (soluble ? SwallowLimit : DrainingFlow) ? Drain::Stream : Drain::None;
                 column.stage = flooded ? tile.water[from] : column.ground;
                 Soak soak{column.rain, column.warmth, std::hypot(slopeX, slopeZ), {bed.cover[0], bed.cover[1], bed.cover[2]}, tile.ice[from], Material(tile.rock[from])};
-                column.recharge = flooded ? 0.0f : runoffOf(column.rain, column.warmth) * infiltrationShare(soak) * CellArea;
+                column.recharge = flooded ? 0.0f : runoffOf(column.rain, column.warmth) * infiltrationShare(soak) * WaterCellArea;
                 column.base = walk.base, column.shallowBase = walk.shallowBase;
                 column.crush = walk.mass.crush;
                 fillStoreys(column, walk.layers, walk.count);
 
                 spreadOf(walk.mass, definitionOf(walk.top), column.spread);
                 const float fall = std::tan(walk.mass.dip);
-                column.dipX = fall * float(std::cos(walk.mass.dipDirection)) - (beside(datum, 1, 0) - beside(datum, -1, 0)) / float(2 * LocalCell);
-                column.dipZ = fall * float(std::sin(walk.mass.dipDirection)) - (beside(datum, 0, 1) - beside(datum, 0, -1)) / float(2 * LocalCell);
+                column.dipX = fall * float(std::cos(walk.mass.dipDirection)) - (beside(datum, 1, 0) - beside(datum, -1, 0)) / float(2 * WaterCell);
+                column.dipZ = fall * float(std::sin(walk.mass.dipDirection)) - (beside(datum, 0, 1) - beside(datum, 0, -1)) / float(2 * WaterCell);
                 const auto blend = [&](float Geotherm::*member) {
                     return weight[0] * (corner[0].heat.*member) + weight[1] * (corner[1].heat.*member) + weight[2] * (corner[nodes].heat.*member) + weight[3] * (corner[nodes + 1].heat.*member);
                 };
@@ -142,7 +142,7 @@ void readColumns(const Setting& setting, TileKey key, const Tile* const around[9
                 }
                 // What the rock alone says a stream loses here; Sinks.cpp works out how much of the stream is left to lose.
                 if (soluble) {
-                    const float broken = fractureShare(setting.seed, walk.mass, bed.material, std::max(0.0f, bed.datum - bed.rockTop), float(LocalCell));
+                    const float broken = fractureShare(setting.seed, walk.mass, bed.material, std::max(0.0f, bed.datum - bed.rockTop), float(WaterCell));
                     column.swallow = swallowRate({walk.top, bed.cover[0] + bed.cover[1] + bed.cover[2], broken, walk.mass.openDepth, walk.mass.dip});
                 }
             }

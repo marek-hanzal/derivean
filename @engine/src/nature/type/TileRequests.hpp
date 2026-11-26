@@ -23,7 +23,7 @@ struct TileRequests {
 
 // How far around the eye each level is wanted, in metres: the region level over all that can be
 // seen, each finer level over what its cells can still be told apart in.
-inline constexpr double RegionReach = 300e3, LocalReach = 64e3, SiteReach = 2500.0, GroundReach = 96.0;
+inline constexpr double RegionReach = 330e3, LocalReach = 64e3, SiteReach = 3000.0, GroundReach = 96.0;
 
 // Asks for the tiles the view around `eye` gains most from. `velocity` is the eye's in m/s: what
 // lies ahead of a fast flight counts as nearer. `clearance` is the height above ground in metres;

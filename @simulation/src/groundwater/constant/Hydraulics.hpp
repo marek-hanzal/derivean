@@ -5,28 +5,28 @@
 
 namespace derivean::sim {
 
-// Ground water is worked out on the cells of a local tile and `Reach` cells of its neighbours. Every
+// Ground water is worked out on the cells of a local tile and `WaterReach` cells of its neighbours. Every
 // step of the model is a sweep in which a cell reads its eight neighbours as they stood before the
 // sweep, so after n sweeps a cell knows only what lies within n cells of it. The sweeps of a build
-// add up to less than `Reach`: what a tile says about its own cells and the ring around them is,
+// add up to less than `WaterReach`: what a tile says about its own cells and the ring around them is,
 // to the bit, what every other tile says about those cells, and no tile reads another's result.
-inline constexpr int Reach = 64;
-inline constexpr int FieldCells = TileCells + 2 * Reach;
+inline constexpr int WaterReach = 64;
+inline constexpr int FieldCells = TileCells + 2 * WaterReach;
 inline constexpr int LevelSweeps = 24;   // cells over which the level of a valley is felt under the ground beside it
 inline constexpr int SinkSweeps = 24;    // cells a sinking stream's losses are followed down its course
 inline constexpr int RouteSweeps = 34;   // cells ground water is followed; what travels farther is booked as underflow
 // Levels and sinking streams both feed the routing; neither feeds the other.
-static_assert((LevelSweeps > SinkSweeps ? LevelSweeps : SinkSweeps) + RouteSweeps + 5 < Reach);
+static_assert((LevelSweeps > SinkSweeps ? LevelSweeps : SinkSweeps) + RouteSweeps + 5 < WaterReach);
 
-inline constexpr double LocalCell = 64.0;                       // m
-inline constexpr float CellArea = float(LocalCell * LocalCell);  // m²
+inline constexpr double WaterCell = 64.0;                       // m
+inline constexpr float WaterCellArea = float(WaterCell * WaterCell);  // m²
 inline constexpr float PerYear = float(YearSeconds);             // m/s to m/yr
 
 // Recharge: the share of the water left after evaporation that enters the ground.
 inline constexpr float WetShare = 0.06f;        // share of the year in which the rain of a year falls
 inline constexpr float StormDepth = 0.025f;     // m of rain one storm brings where a metre falls in a year, and in proportion elsewhere
 inline constexpr float StormLength = 2.0e4f;    // s a storm lasts
-inline constexpr float ThinLayer = 0.05f;       // m of a cover layer under which rain meets what lies below it
+inline constexpr float ThinCover = 0.05f;       // m of a cover layer under which rain meets what lies below it
 inline constexpr float SteepShed = 0.9f;        // slope at which half the water has run off before it could soak in
 inline constexpr float MostRecharge = 0.95f;
 
@@ -56,7 +56,7 @@ inline constexpr float MostGradient = 4.0f;
 inline constexpr float SameSheet = 1.0f;          // m by which the depth of one bed may differ between two columns' reading of it
 
 // Surface water that takes ground water in: a stream of the local level, or any standing water.
-inline constexpr float StreamFlow = 1.0e5f;       // m³/yr
+inline constexpr float DrainingFlow = 1.0e5f;       // m³/yr
 inline constexpr float SwallowLimit = 6.0e7f;     // m³/yr; a stream larger than this keeps its bed across soluble rock
 
 // Vents.

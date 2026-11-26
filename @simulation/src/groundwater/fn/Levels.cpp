@@ -17,7 +17,7 @@ float lowerT(const AquiferColumn& column) { return column.shallowT + column.deep
 // Least gradient a storey's water table takes: what carries the recharge of a hillside through it.
 float leastGradient(const AquiferColumn& column, float transmissivity) {
     if (transmissivity <= 0) return MostGradient;
-    return std::clamp(column.recharge / CellArea * HillLength / transmissivity, LeastGradient, MostGradient);
+    return std::clamp(column.recharge / WaterCellArea * HillLength / transmissivity, LeastGradient, MostGradient);
 }
 
 float harmonic(float a, float b) { return a + b > 0 ? 2.0f * a * b / (a + b) : 0.0f; }
@@ -88,7 +88,7 @@ void spreadLevels(WaterField& field) {
                         if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
                         const size_t j = field.index(nx, nz);
                         const AquiferColumn& other = field.column[j];
-                        const float run = float(LocalCell) * NeighborReach[k] * 0.5f;
+                        const float run = float(WaterCell) * NeighborReach[k] * 0.5f;
                         lower = std::min(lower, field.level[j * 2 + Lower] + run * (lowerOwn / ease(column, k) + leastGradient(other, lowerT(other)) / ease(other, k)));
                         if (Way(field.way[i * 8 + size_t(k)]) == Way::Along)
                             upper = std::min(upper, field.level[j * 2 + Upper] + run * (upperOwn / ease(column, k) + leastGradient(other, other.upperT) / ease(other, k)));

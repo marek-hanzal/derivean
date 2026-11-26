@@ -31,8 +31,8 @@ export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "char
   let open = false;
   let following = true;
   let view: MapView = { x: 0, z: 0, scale: 0 };
-  // The view the chart canvas shows, when it was drawn, and whether at reduced sharpness.
-  let painted: { view: MapView; extent: Extent; time: number; coarse: boolean } | undefined;
+  // The view the chart canvas shows, at which pixel ratio and when it was drawn, and whether at reduced sharpness.
+  let painted: { view: MapView; extent: Extent; ratio: number; time: number; coarse: boolean } | undefined;
   let extent: Extent = [1, 1];
   let latest: { world: WorldInfo; frame: Frame } | undefined;
   let cursor: [number, number] | undefined;
@@ -58,6 +58,7 @@ export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "char
     cursor = undefined;
     travel = null;
     delete root.dataset.dragging;
+    drawing?.feed.rest();
     escaping = resume === "released";
     if (resume === "now") capture();
     else if (resume === "never") unlocked();
@@ -69,7 +70,10 @@ export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "char
     if (!latest) return;
     if (!drawing) {
       const surface = createChartSurface(chrome.canvas);
-      drawing = { surface, feed: createChartFeed(bridge, surface, () => hide("never")) };
+      drawing = { surface, feed: createChartFeed(bridge, surface, (error) => {
+        console.error("The map could not be charted", error);
+        hide("never");
+      }) };
     }
     open = true;
     escaping = false;
@@ -183,12 +187,12 @@ export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "char
       feed.want(chartSquare(view, extent), time);
       const ratio = window.devicePixelRatio;
       const moved = !painted || painted.view.scale !== view.scale || painted.extent[0] !== extent[0] || painted.extent[1] !== extent[1]
-        || Math.hypot(view.x - painted.view.x, view.z - painted.view.z) * ratio >= RedrawShift * view.scale;
+        || painted.ratio !== ratio || Math.hypot(view.x - painted.view.x, view.z - painted.view.z) * ratio >= RedrawShift * view.scale;
       const coarse = moved && painted !== undefined && time - painted.time < MotionMs;
       const rested = !moved && painted !== undefined && painted.coarse && time - painted.time >= RestMs;
       if (feed.takeFresh() || moved || rested) {
         surface.draw(view, extent, { seaLevel: world.seaLevel, interval: contourInterval(view.scale) }, !coarse);
-        painted = { view, extent, time, coarse };
+        painted = { view, extent, ratio, time, coarse };
       }
       const [px, py] = screenOf(view, extent, frame.eye[0], frame.eye[2]);
       chrome.player.style.visibility = px >= 0 && py >= 0 && px <= extent[0] && py <= extent[1] ? "visible" : "hidden";
@@ -207,10 +211,10 @@ export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "char
         get pitch() { return pilot.pitch; },
         get radius() { return pilot.radius; },
         get shape() { return pilot.shape; },
-        active: () => open || pilot.active(),
+        active: () => open || escaping || pilot.active(),
         command(elapsed, time, frame) {
           const command = pilot.command(elapsed, time, frame);
-          if (!open) return command;
+          if (!open && !escaping) return command;
           const teleport = travel;
           travel = null;
           return { ...command, active: true, x: 0, z: 0, jump: false, sprint: false, dig: false, place: false, fly: false, boost: false, ascend: 0, teleport };

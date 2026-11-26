@@ -122,7 +122,11 @@ export interface CubeChunk {
   edge: number;
   // World position of the minimum corner, a multiple of 32 · edge on every axis.
   origin: Point;
-  // Top faces carry the surface material, risers the cover or the bed at that depth.
+  // Top faces carry the material that covers the surface. A riser is mostly the step a slope turns into when it
+  // is cut into cubes, so it carries that same cover wherever the ground there is a slope its loose cover lies
+  // on, up to 45°; where the ground is steeper than that, or bare, it carries the bed at its depth, and a cliff
+  // shows its strata as bands. Only faces between a solid cube and air are sent: no bottoms, nothing between
+  // two cubes of a level, nothing under the surface, no face twice at a border between chunks.
   quads: Quads;
   // Standing water over this chunk's square of ground: one sheet per water level, a lake or the sea. `quads` are
   // top faces over the wet columns with plane 0, to be drawn at `level` metres (world) whatever height the
@@ -139,15 +143,19 @@ export interface CubeChunk {
 export interface CubeLevel {
   level: number;
   edge: number;
-  // Squares of ground of this level (columns of chunks) the view wants and how many of them the renderer holds:
-  // the level is whole when they are equal. A level rests, wanting none, while the eye is too high above the
-  // ground or too fast for it.
+  // Squares of ground of this level (columns of chunks) the view wants, how many of them the renderer holds, and
+  // how many of those are final: cut from the data the level wants (dataLevel = wantedLevel) and not about to be
+  // swapped. The level is drawable where its box says, and final when settled equals wanted. A level rests,
+  // wanting none, while the eye is too high above the ground or too fast for it.
   wanted: number;
   shown: number;
+  settled: number;
   // Where the level may be drawn this frame, world metres, a cube centred on the eye; null while it cannot be.
   // A level is drawn inside its box and outside the box of the next finer level that has one, the finest far
-  // level outside voxelBox. Boxes are nested. Every level is whole inside its box, also under the finer levels,
-  // and its chunks reach at least WorldInfo.cubes.band cubes beyond it: the renderer may dither across a
+  // level outside voxelBox. Boxes are nested. Every level is whole inside its box, also under the finer levels:
+  // over each square of ground in the box's footprint the renderer holds every chunk of the level that has a
+  // face, at any height, so the top and bottom of the box cut nothing off. A chunk that lies wholly inside the
+  // next finer box need not be drawn. The chunks reach at least WorldInfo.cubes.band cubes beyond the box: the renderer may dither across a
   // boundary, or sink a coarser level under the finer one instead of clipping it. While chunks are missing the
   // box shrinks and the coarser level shows there, never a hole. A level is at full reach when its box reaches
   // WorldInfo.cubes.reach · edge from the eye, the coarsest WorldInfo.cubes.viewDistance.
@@ -246,10 +254,12 @@ export interface Frame {
   ground: number | null;
   // Metres, natural water surface standing over that ground; null when dry.
   waterLevel: number | null;
-  // Every simulation tile the view wants at that level of detail is finished.
-  ready: { site: boolean; local: boolean; region: boolean };
+  // Every simulation tile the view wants at that level of detail is finished; `far` says the far terrain is
+  // final: every level holds all it wants, cut from the data it wants, and nothing is waiting to be swapped.
+  // A picture taken while `far` is false shows stand-in data somewhere.
+  ready: { site: boolean; local: boolean; region: boolean; far: boolean };
   // The same as counts, for a progress display and for waiting until a view is whole: the tiles the view wants
-  // at each level (region over 300 km, local over 64 km, site over 2.5 km, ground around the feet; a level that is
+  // at each level (region over 330 km, local over 64 km, site over 3 km, ground around the feet; a level that is
   // pointless from the player's height wants none) and how many of them are built. The wanted set is finite and
   // moves with the player; everything is built when finished equals wanted at every level.
   tiles: Record<"region" | "local" | "site" | "ground", { wanted: number; finished: number }>;

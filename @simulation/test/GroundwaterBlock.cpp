@@ -16,7 +16,7 @@ constexpr uint32_t ShaleUnit = 9;
 void testContactSprings() {
     constexpr int Lip = 128;
     WaterField field = handField([](int x, int) {
-        const float east = (Lip - x - 0.5f) * float(LocalCell);
+        const float east = (Lip - x - 0.5f) * float(WaterCell);
         HandColumn hand;
         hand.ground = 500.0f + 0.3f * east;
         hand.rain = x >= Lip - 28 && x < Lip ? 0.3f : 0.0f;
@@ -36,10 +36,10 @@ void testContactSprings() {
         const SpringRecord& record = tile->records[i];
         if (record.kind != SpringKind::Contact) continue;
         ++contact, yield += spring.discharge;
-        expectWater(std::abs(spring.position.x - Lip * LocalCell) < LocalCell, "a contact spring lies away from the outcrop of the tight bed", spring.position.x);
+        expectWater(std::abs(spring.position.x - Lip * WaterCell) < WaterCell, "a contact spring lies away from the outcrop of the tight bed", spring.position.x);
         expectWater(std::abs(spring.elevation - 500.0f) < 12.0f, "a contact spring is not at the height of the tight bed's lip", spring.elevation);
         expectWater(record.aquifer == Material::Sandstone && record.floor == Material::Shale, "a contact spring does not name its aquifer and the bed that turns it out");
-        expectWater(record.path > 300 && record.catchment > 10 * CellArea, "a contact spring has no catchment above it", record.catchment);
+        expectWater(record.path > 300 && record.catchment > 10 * WaterCellArea, "a contact spring has no catchment above it", record.catchment);
     }
     const WaterBudget& budget = tile->budget;
     expectWater(contact >= TileCells - 4, "the outcrop of a tight bed under an aquifer is not a line of springs", contact);
@@ -100,7 +100,7 @@ void testLimestoneBlock() {
         const ConduitRecord& record = tile->passages[i];
         const double run = std::hypot(c.bx - c.ax, c.bz - c.az);
         widest = std::max(widest, double(c.radius));
-        if (run < 1e-6 && std::abs(c.ax - field.centre(SinkX, SinkZ).x) < LocalCell && std::abs(c.az - field.centre(SinkX, SinkZ).z) < LocalCell) shaft = &record;
+        if (run < 1e-6 && std::abs(c.ax - field.centre(SinkX, SinkZ).x) < WaterCell && std::abs(c.az - field.centre(SinkX, SinkZ).z) < WaterCell) shaft = &record;
         if (c.radius < 0.5f || run < 1.0 || record.level) continue;
         trunk += run;
         // Along a joint zone a passage keeps the zone's direction.
@@ -114,9 +114,9 @@ void testLimestoneBlock() {
     for (size_t i = 0; i < tile->springs.size(); ++i)
         if (shaft && tile->springs[i].id == shaft->spring) rising = &tile->springs[i], why = &tile->records[i];
     expectWater(rising && why->kind == SpringKind::Karst, "the stream that sinks does not come out again at a karst spring");
-    expectWater(rising->position.x > (Valley - 2) * LocalCell, "the karst spring is not at the river", rising->position.x);
+    expectWater(rising->position.x > (Valley - 2) * WaterCell, "the karst spring is not at the river", rising->position.x);
     expectWater(rising->discharge * PerYear > 3.0e6, "the karst spring yields less than the stream that sank", rising->discharge * PerYear);
-    expectWater(why->passages > (Valley - SinkX) * LocalCell, "no passage runs through from the sink to the spring", why->passages);
+    expectWater(why->passages > (Valley - SinkX) * WaterCell, "no passage runs through from the sink to the spring", why->passages);
     expectWater(widest > 1.0 && trunk > 20e3, "flow has not gathered into conduits a person could walk", trunk);
     expectWater(straight > 0.6 * trunk, "passages do not follow the joint zones", straight / std::max(1.0, trunk));
 
@@ -162,7 +162,7 @@ Spring faultSpring(float gradient, float magmatic, SpringRecord& why) {
     WaterField field = handField([](int x, int z) {
         const float away = float(std::hypot(x - Middle, z - Middle));
         HandColumn hand;
-        hand.ground = 500.0f + 0.15f * float(LocalCell) * away;
+        hand.ground = 500.0f + 0.15f * float(WaterCell) * away;
         hand.rain = away < 30 ? 0.3f : 0.0f;
         hand.layers[hand.count++] = handLayer(Material::Tuff, hand.ground, hand.ground - 100.0f, 1e-4f);
         hand.layers[hand.count++] = handLayer(Material::Andesite, hand.ground - 100.0f, hand.ground - (away < 1.5f ? 3000.0f : 220.0f), away < 1.5f ? 2e-6f : 1e-8f);

@@ -1,6 +1,6 @@
 #include "groundwater/fn/Caves.hpp"
 #include "groundwater/fn/Refine.hpp"
-#include "groundwater/type/Aquifer.hpp"
+#include "groundwater/type/WaterField.hpp"
 #include "simulation/type/World.hpp"
 
 namespace derivean::sim {

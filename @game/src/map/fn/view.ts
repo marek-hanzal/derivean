@@ -1,4 +1,4 @@
-import { ChartDrift, ChartMargin, ChartZoom, ClosestSpan, PaneCount, PaneSize, SpanRungs } from "../constant/map";
+import { ChartClosest, ChartMargin, ClosestSpan, PaneCount, PaneSize, SpanRungs } from "../constant/map";
 import type { Extent, MapView, Square } from "../type/MapView";
 
 // World X and Z under a viewport pixel. North is up: Z grows down the screen.
@@ -32,9 +32,15 @@ export function chartSquare(view: MapView, [width, height]: Extent): Square {
   return { x: Math.round(view.x / pitch) * pitch, z: Math.round(view.z / pitch) * pitch, span };
 }
 
-// True while a chart read for `shown` still serves a view that wants `wanted`.
+// How far the centre of a view that wants `wanted` may lie from the centre of a chart of `span` before the
+// viewport reaches past the chart's edge. A wanted square is at least ChartMargin times the viewport.
+export function chartReach(span: number, wanted: number) {
+  return (span - wanted / ChartMargin) / 2;
+}
+
+// True while a chart read for `shown` still serves a view that wants `wanted`: it covers the viewport and is
+// not magnified too far.
 export function serves(shown: Square, wanted: Square) {
-  const ratio = wanted.span / shown.span;
-  return Math.abs(wanted.x - shown.x) <= ChartDrift * shown.span && Math.abs(wanted.z - shown.z) <= ChartDrift * shown.span
-    && ratio >= ChartZoom[0] && ratio <= ChartZoom[1];
+  const reach = chartReach(shown.span, wanted.span);
+  return Math.abs(wanted.x - shown.x) <= reach && Math.abs(wanted.z - shown.z) <= reach && wanted.span >= ChartClosest * shown.span;
 }

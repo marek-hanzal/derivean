@@ -68,6 +68,7 @@ export function createChartSurface(canvas: HTMLCanvasElement) {
   let front = sheet();
   let back = sheet();
   let spare = sheet();
+  let charted = false;
 
   // A view in motion is drawn into this buffer at one pixel per CSS pixel and stretched onto the canvas, which
   // keeps its size: on a dense display that is a fraction of the work, and resizing a canvas costs frames.
@@ -100,8 +101,10 @@ export function createChartSurface(canvas: HTMLCanvasElement) {
     show(place: SheetPlace) {
       Object.assign(back, place);
       [front, back, spare] = [back, spare, front];
+      charted = true;
     },
-    clear() { front.size = 0; },
+    // Nothing is on screen until the next `show`.
+    clear() { charted = false; },
 
     // Draws the chart on screen for a view. `sharp` fills every pixel of the canvas; otherwise one in each CSS pixel.
     draw(view: MapView, [width, height]: Extent, style: ChartStyle, sharp: boolean) {
@@ -128,7 +131,7 @@ export function createChartSurface(canvas: HTMLCanvasElement) {
         (view.z - height / 2 * view.scale - front.origin[1]) / front.pitch);
       gl.uniform1f(uniform.uTexelPerPixel, view.scale / ratio / front.pitch);
       gl.uniform2f(uniform.uResolution, w, h);
-      gl.uniform1i(uniform.uSize, front.size);
+      gl.uniform1i(uniform.uSize, charted ? front.size : 0);
       gl.uniform1f(uniform.uPitch, front.pitch);
       gl.uniform1f(uniform.uSeaLevel, style.seaLevel);
       gl.uniform1f(uniform.uInterval, style.interval);

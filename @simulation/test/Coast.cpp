@@ -145,7 +145,10 @@ void threads() {
 
 } // namespace
 
+void testCoastVoid();   // CoastVoid.cpp
+
 void testCoast() {
+    testCoastVoid();
     rockCoasts();
     spit();
     lakeBeach();

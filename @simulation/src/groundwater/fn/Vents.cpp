@@ -45,7 +45,7 @@ void lipOf(const WaterField& field, int x, int z, Vec2& position, float& elevati
         const float above = std::max(0.0f, column.ground - column.floor), below = std::max(0.01f, sheet - other.ground);
         const float along = std::clamp(above / (above + below), 0.05f, 0.49f);
         weight += part;
-        offsetX += part * along * NeighborX[k] * LocalCell, offsetZ += part * along * NeighborZ[k] * LocalCell;
+        offsetX += part * along * NeighborX[k] * WaterCell, offsetZ += part * along * NeighborZ[k] * WaterCell;
         height += part * (column.ground + (other.ground - column.ground) * along);
     }
     position = weight > 0 ? centre + Vec2{offsetX / weight, offsetZ / weight} : centre;
@@ -58,10 +58,10 @@ void addSpring(const WaterField& field, const AquiferColumn& column, const VentW
     spring.position = water.position;
     spring.elevation = water.elevation;
     spring.discharge = water.flow / PerYear;
-    const int64_t cellX = int64_t(std::floor(water.position.x / LocalCell)), cellZ = int64_t(std::floor(water.position.z / LocalCell));
+    const int64_t cellX = int64_t(std::floor(water.position.x / WaterCell)), cellZ = int64_t(std::floor(water.position.z / WaterCell));
     spring.id = hash(stream(field.seed, SpringStream), cellX, cellZ, int64_t(water.kind) * 2 + water.storey);
 
-    const Carried& carried = water.carried;
+    const Borne& carried = water.carried;
     const float reservoir = std::min(HottestRock, rockTemperature(column.heat, column.warmth, carried.deep));
     const float kept = std::exp(-CoolingFlow * carried.deep / std::max(1e-9f, spring.discharge));
     const float arriving = column.warmth + (reservoir - column.warmth) * kept;

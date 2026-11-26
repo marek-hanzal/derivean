@@ -17,6 +17,8 @@ constexpr int BelowVoxels = 64;          // what a build's priority lies under t
 double reachOf(const FarCubes& far, int level) { return level == CoarsestCubes ? CubeView : far.reach * edgeOf(level); }
 CubeLevel& levelOf(FarCubes& far, int level) { return far.levels[size_t(level - FinestCubes)]; }
 int ringOf(Cell a, Cell b) { return std::max(std::abs(a.x - b.x), std::abs(a.z - b.z)); }
+// Columns from the eye's own to the last one built: the level's reach and a margin.
+int loadOf(const FarCubes& far, int level) { return int(std::ceil(reachOf(far, level) / (CubeSide * edgeOf(level)))) + Margin; }
 
 // Metres from the eye to the nearest point of a chunk's square, along the axis it is further on.
 double squareDistance(Position eye, int level, Cell chunk) {
@@ -47,7 +49,7 @@ void plan(FarCubes& far, int index, Position eye, CubeDelta& delta) {
     if (level.active && centre == level.centre) return;
     level.active = true;
     level.centre = centre;
-    const int load = int(std::ceil(reachOf(far, index) / size)) + Margin;
+    const int load = loadOf(far, index);
     for (auto slot = level.slots.begin(); slot != level.slots.end();) {
         if (ringOf(slot->first, centre) <= load + 1) { ++slot; continue; }
         forget(far, level, slot->second, delta);
@@ -168,17 +170,22 @@ void advanceCubes(FarCubes& far, Nature& nature, Position eye, double clearance,
     for (int index = CoarsestCubes; index >= FinestCubes; --index) {
         CubeLevel& level = levelOf(far, index);
         level.box.reset();
+        level.settled = level.held = level.wanted = 0;
         if (!level.active) { outer = 0; continue; }
         double side = std::min(outer, reachOf(far, index));
+        const int load = loadOf(far, index);
         for (const auto& [chunk, slot] : level.slots) {
-            if (!slot.shown.empty()) continue;
-            const double distance = squareDistance(eye, index, chunk);
-            far.missing += distance < reachOf(far, index);
-            side = std::min(side, distance - CubeBand * edgeOf(index));
+            if (slot.shown.empty()) side = std::min(side, squareDistance(eye, index, chunk) - CubeBand * edgeOf(index));
+            if (ringOf(chunk, level.centre) > load) continue;
+            ++level.wanted;
+            level.held += !slot.shown.empty();
+            level.settled += !slot.shown.empty() && slot.dataLevel >= uint8_t(cubeSource(index)) && !slot.stale && !slot.ticket && !slot.built;
         }
+        far.missing += level.wanted - level.settled;
         outer = std::max(side, 0.0);
         if (side > 0) level.box = LevelBox{{eye[0] - side, eye[1] - side, eye[2] - side}, {eye[0] + side, eye[1] + side, eye[2] + side}};
     }
+    far.whole = far.missing == 0 && far.audit.empty() && far.tilesSeen == nature.world.atlas.finished();
 }
 
 } // namespace derivean

@@ -99,6 +99,7 @@ Napi::Object natural(Napi::Env env, const Frame& frame, Napi::Object output) {
     ready["site"] = frame.siteReady;
     ready["local"] = frame.localReady;
     ready["region"] = frame.regionReady;
+    ready["far"] = frame.farReady;
     output["ready"] = ready;
     auto tiles = Napi::Object::New(env);
     constexpr std::array names{"region", "local", "site", "ground"};

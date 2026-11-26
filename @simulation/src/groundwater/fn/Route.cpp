@@ -14,9 +14,9 @@ constexpr float HottestRock = 350.0f;    // °C
 // Flow-weighted sum of what arriving water carries.
 struct Mixing {
     float flux{};
-    Carried sum;
+    Borne sum;
 
-    void take(float flow, const Carried& from, float step) {
+    void take(float flow, const Borne& from, float step) {
         if (flow <= 0) return;
         flux += flow;
         sum.lime += flow * from.lime, sum.far += flow * (from.far + step), sum.high += flow * from.high;
@@ -25,10 +25,10 @@ struct Mixing {
 };
 
 // What the water takes on in the node it has reached.
-Carried passedThrough(const WaterField& field, size_t cell, int storey, const Mixing& mix) {
+Borne passedThrough(const WaterField& field, size_t cell, int storey, const Mixing& mix) {
     const AquiferColumn& column = field.column[cell];
     const float inverse = 1.0f / mix.flux;
-    Carried out{mix.sum.lime * inverse, mix.sum.far * inverse, mix.sum.high * inverse, mix.sum.rate * inverse, mix.sum.age * inverse, mix.sum.deep * inverse};
+    Borne out{mix.sum.lime * inverse, mix.sum.far * inverse, mix.sum.high * inverse, mix.sum.rate * inverse, mix.sum.age * inverse, mix.sum.deep * inverse};
     const float depth = flowDepth(field, cell, storey, out.high);
     out.deep = std::max(out.deep, depth);
     // Carbonate: up to what the rock's temperature and the gas in the water allow, as far as the
@@ -40,7 +40,7 @@ Carried passedThrough(const WaterField& field, size_t cell, int storey, const Mi
     out.lime += std::max(0.0f, calciteLoad(gas, warm) - out.lime) * std::min(1.0f, 4.0f * soluble);
     const float level = field.level[cell * 2 + size_t(storey)];
     const float wet = storey == Upper ? 0.3f : std::clamp((level - column.base) / std::max(1.0f, column.roof - column.base), 0.05f, 1.0f);
-    out.age = std::min(OldestWater, out.age + (storey == Upper ? column.upperStore : column.lowerStore) * wet * CellArea * inverse);
+    out.age = std::min(OldestWater, out.age + (storey == Upper ? column.upperStore : column.lowerStore) * wet * WaterCellArea * inverse);
     return out;
 }
 
@@ -80,9 +80,9 @@ void routeGroundWater(WaterField& field) {
     const int size = field.size;
     const size_t cells = field.cells();
     std::vector<float> side(cells * 2, 0.0f), sideNext(cells * 2, 0.0f), down(cells, 0.0f), downNext(cells, 0.0f), fluxNext(cells * 2, 0.0f);
-    std::vector<Carried> carriedNext(cells * 2);
+    std::vector<Borne> carriedNext(cells * 2);
     field.flux.assign(cells * 2, 0.0f);
-    field.carried.assign(cells * 2, Carried{});
+    field.carried.assign(cells * 2, Borne{});
     field.fate.assign(cells * 2, NodeFate{});
 
     // Every sweep a node gathers what its neighbours passed on in the sweep before, so water moves
@@ -98,13 +98,13 @@ void routeGroundWater(WaterField& field) {
                     for (int storey = column.perched ? Upper : Lower; storey <= Lower; ++storey) {
                         const size_t node = i * 2 + size_t(storey);
                         Mixing mix;
-                        if (storey == Upper || !column.perched) mix.take(column.recharge + column.sunk, Carried{0, 0, column.ground, column.recharge / CellArea, 0, 0}, 0);
+                        if (storey == Upper || !column.perched) mix.take(column.recharge + column.sunk, Borne{0, 0, column.ground, column.recharge / WaterCellArea, 0, 0}, 0);
                         else mix.take(down[i], field.carried[i * 2 + Upper], 0);
                         for (int k = 0; k < 8; ++k) {
                             const int nx = x - NeighborX[k], nz = z - NeighborZ[k];
                             if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
                             const size_t j = field.index(nx, nz), upper = j * 2 + Upper, lower = j * 2 + Lower;
-                            const float step = float(LocalCell) * NeighborReach[k];
+                            const float step = float(WaterCell) * NeighborReach[k];
                             const Way way = Way(field.way[j * 8 + size_t(k)]);
                             if (storey == Lower) {
                                 mix.take(side[lower] * field.share[lower * 8 + size_t(k)], field.carried[lower], step);
@@ -121,7 +121,7 @@ void routeGroundWater(WaterField& field) {
                         fluxNext[node] = mix.flux;
                         sideNext[node] = split.side;
                         if (storey == Upper) downNext[i] = split.down;
-                        carriedNext[node] = mix.flux > 0 ? passedThrough(field, i, storey, mix) : Carried{};
+                        carriedNext[node] = mix.flux > 0 ? passedThrough(field, i, storey, mix) : Borne{};
                     }
                 }
         });
