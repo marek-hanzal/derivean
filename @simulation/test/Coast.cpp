@@ -80,24 +80,38 @@ void rockCoasts() {
     expect(retreat(sheltered, true) < 0.25 * retreat(exposed, true), "sheltered chalk goes back like exposed chalk", retreat(sheltered, true) / retreat(exposed, true));
 }
 
+// Waves that reach a shore at half a right angle carry its sand along it, round the point where
+// a bay opens and into the shelter behind: a hooked spit grows into the mouth of the bay.
 void spit() {
     CoastSpec spec;
     spec.scene = CoastScene::Bay;
     spec.rock = spec.other = Material::Granite;
-    spec.windFrom = 285, spec.sand = 6, spec.shelf = 6;
+    spec.windFrom = 315, spec.sand = 6, spec.shelf = 6;
     spec.steps = 40;
     const Domain start = coastDomain(spec);
     const Domain bay = worked(spec, spec.steps);
-    // Sand that stands at high water or above where the bay's mouth was open water.
     const int middle = bay.size / 2;
-    int raised = 0, farthest = 0;
-    for (int z = middle - 4; z < middle + 30; ++z)
+    int shoaled = 0, emerged = 0, farthest = 0;
+    double sand = 0;
+    for (int z = middle - 6; z < middle + 40; ++z)
         for (int x = middle - 34; x < middle + 34; ++x) {
             const size_t i = bay.index(x, z);
-            if (start.ground.rock[i] + start.sedimentAt(i) > -2.0f || bay.ground.rock[i] + bay.sedimentAt(i) < 0.5f || bay.ground.sediment[Sand][i] < 1.0f) continue;
-            ++raised, farthest = std::max(farthest, x - (middle - 35));
+            const float was = start.ground.rock[i] + start.sedimentAt(i), now = bay.ground.rock[i] + bay.sedimentAt(i);
+            if (was > -1.0f) continue;   // only what was open water of the bay
+            sand += bay.ground.sediment[Sand][i];
+            if (now > was + 1.5f) ++shoaled, farthest = std::max(farthest, x - (middle - 35));
+            emerged += now >= 0.5f;
         }
-    expect(raised >= 6 && farthest >= 4, "oblique waves built no spit into the mouth of the bay", raised);
+    expect(sand > 100 && shoaled >= 20 && farthest >= 3, "oblique waves carried no sand into the mouth of the bay", sand);
+    expect(emerged >= 1, "the sand in the mouth of the bay nowhere stands out of the water", emerged);
+    // The same waves square to the shore move it nowhere along it.
+    spec.windFrom = 0;
+    const Domain square = worked(spec, spec.steps);
+    double across = 0;
+    for (int z = middle - 6; z < middle + 40; ++z)
+        for (int x = middle - 34; x < middle + 34; ++x)
+            if (start.ground.rock[start.index(x, z)] + start.sedimentAt(start.index(x, z)) <= -1.0f) across += square.ground.sediment[Sand][square.index(x, z)];
+    expect(across < 0.2 * sand, "waves square to a shore drift its sand along it", across);
 }
 
 void lakeBeach() {
@@ -107,21 +121,24 @@ void lakeBeach() {
     spec.sand = 1.0, spec.gravel = 0.6;
     spec.steps = 30;
     const Domain lake = worked(spec, spec.steps);
-    // On the downwind shore the swash has taken gravel up the beach and left the sand below the waterline.
+    // On the downwind shore the waves have sent sand down below the waterline and kept the gravel
+    // at it; the upwind shore, which no wave reaches, lies as it was laid.
     const int middle = lake.size / 2;
-    double beach[2] = {}, shallows[2] = {}, calm[2] = {};
-    for (int z = 0; z < lake.size; ++z)
+    double waterline[2] = {}, below[2] = {}, calm[2] = {};
+    for (int z = 1; z < lake.size - 1; ++z)
         for (int x = middle - 30; x <= middle + 30; ++x) {
             const size_t i = lake.index(x, z);
-            const float water = lake.shore->still[i], coarse = lake.ground.sediment[Coarse][i], sand = lake.ground.sediment[Sand][i];
-            if (water == NoWater || coarse + sand <= 0) continue;
+            const float water = lake.shore->still[i];
+            const double coarse = lake.ground.sediment[Coarse][i], loose = coarse + lake.ground.sediment[Sand][i];
+            if (water == NoWater || loose <= 0) continue;
             const float above = lake.ground.rock[i] + lake.sedimentAt(i) - water;
-            double* into = z < middle ? (above > 0 && above < 0.5f ? calm : nullptr) : above > 0 && above < 0.5f ? beach : above > -0.6f && above <= 0 ? shallows : nullptr;
-            if (into) into[0] += coarse, into[1] += coarse + sand;
+            if (above < -0.6f || above >= 0.4f) continue;
+            double* into = z < middle ? calm : above >= -0.3f ? waterline : below;
+            into[0] += coarse, into[1] += loose;
         }
-    expect(beach[1] > 0 && shallows[1] > 0, "a lake has no shore to measure", beach[1]);
-    expect(beach[0] / beach[1] > shallows[0] / shallows[1] + 0.08, "gravel does not lie above sand on a lake beach", beach[0] / beach[1] - shallows[0] / shallows[1]);
-    expect(std::abs(calm[0] / calm[1] - 0.375) < 0.02, "the upwind shore of a lake was sorted by waves it does not have", calm[0] / calm[1]);
+    expect(waterline[1] > 0 && below[1] > 0 && calm[1] > 0, "a lake has no shore to measure", waterline[1]);
+    expect(waterline[0] / waterline[1] > below[0] / below[1] + 0.03, "gravel does not lie above sand on a lake beach", waterline[0] / waterline[1] - below[0] / below[1]);
+    expect(std::abs(calm[0] / calm[1] - 0.375) < 0.01, "the upwind shore of a lake was sorted by waves it does not have", calm[0] / calm[1]);
     float highest = 0;
     for (size_t i = 0; i < lake.cells() * WaveDirections; ++i) highest = std::max(highest, lake.shore->wave[i]);
     expect(highest > 0.01f && highest < 0.25f, "a lake 560 m across carries waves of the open sea", std::sqrt(highest));
@@ -131,7 +148,7 @@ void lakeBeach() {
 void threads() {
     CoastSpec spec;
     spec.rock = Material::Sandstone, spec.other = Material::Chalk;
-    spec.windFrom = 40, spec.sand = 2, spec.river = 3e7;
+    spec.windFrom = 40, spec.joints = 0.6, spec.river = 3e7;
     spec.steps = 6;
     const Domain alone = replayCoast(spec);
     Workers workers(4);

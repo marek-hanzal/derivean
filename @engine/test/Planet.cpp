@@ -1,3 +1,4 @@
+#include "game/type/Player.hpp"
 #include "simulation/fn/Query.hpp"
 
 #include "PlanetSession.hpp"
@@ -12,13 +13,32 @@ constexpr double BlockedMs = 250.0;   // far beyond a frame even on a loaded mac
 // Two billion years is about the youngest this seed offers a mainland coast to land on; older planets take longer to evolve.
 constexpr double Age = 2e9;
 
+// The checks need ground to stand on. Where the simulation's landing lies under water, the player
+// is put on the nearest dry ground a widening search finds, as a spawn the launcher asked for would be.
+void standOnLand(Game& game) {
+    sim::World& world = game.nature.world;
+    const auto dry = [&](sim::Vec2 place, sim::Level level) {
+        const sim::SurfaceSample ground = level == sim::Level::Ground ? sim::surveyAt(world, place, level) : sim::surfaceAt(world, place, level);
+        return ground.found && ground.ground > ground.water + (level == sim::Level::Ground ? 0.0f : 3.0f);
+    };
+    const sim::Vec2 landing{game.spawn[0], game.spawn[2]};
+    if (dry(landing, sim::Level::Ground)) return;
+    for (double reach = 250; reach < 200e3; reach *= 2)
+        for (int turn = 0; turn < 8; ++turn) {
+            const sim::Vec2 place{landing.x + reach * std::cos(turn * 0.785398), landing.z + reach * std::sin(turn * 0.785398)};
+            if (!dry(place, sim::Level::Site) || !dry(place, sim::Level::Ground)) continue;
+            game.spawn = findSpawn(world, std::array{place.x, place.z});
+            game.physics.returnPlayer(game.spawn);
+            std::cout << "the simulation's landing lies under water; the checks start on dry ground " << reach << " m from it\n";
+            return;
+        }
+    expect(false, "No dry ground within 200 km of the landing");
+}
+
 void spawnsOnDryLand(PlanetSession& session) {
     Game& game = session.game;
-    // Where the simulation lands the player is its choice; the engine's part is to put the feet on
-    // the ground the voxels will show there, or at the surface of the water over it.
     const sim::SurfaceSample ground = sim::surveyAt(game.nature.world, {game.spawn[0], game.spawn[2]}, sim::Level::Ground);
-    const bool dry = ground.ground >= ground.water;
-    expect(std::abs(game.spawn[1] - (dry ? ground.ground : std::max(ground.ground, ground.water - 1.3f))) < 0.5, "The spawn must stand on the surveyed ground or float over it");
+    expect(ground.ground > ground.water && std::abs(game.spawn[1] - ground.ground) < 0.5, "The spawn must stand on the surveyed dry ground");
     std::cout << "spawn " << game.spawn[0] << " " << game.spawn[1] << " " << game.spawn[2] << ", ground " << ground.ground - ground.water
               << " m above the water\n";
 }
@@ -193,6 +213,7 @@ void testPlanet() {
     const auto start = std::chrono::steady_clock::now();
     Game game(PlanetOptions{42, Age, std::nullopt, 0});
     std::cout << "planet ready after " << std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count() << " s\n";
+    standOnLand(game);
     PlanetSession session{game, {}, {}, {}, 0.0, 0};
     spawnsOnDryLand(session);
     streamsWithoutBlocking(session);

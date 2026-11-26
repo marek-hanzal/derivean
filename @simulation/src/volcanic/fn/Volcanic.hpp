@@ -50,6 +50,9 @@ std::shared_ptr<const VolcanicTile> volcanicOf(const Domain& domain);
 PileColumn pileColumn(const Tile& tile, size_t cell);
 // `height` is metres above the pile's floor, which lies `column.thickness` under the rock surface.
 PileBed pileBedAt(uint64_t seed, const VolcanicTile& volcanic, const PileColumn& column, float height);
+// The same for a reader that crosses tile edges (the voxel column).
+PilePoint pilePoint(const Tile& tile, size_t cell);
+PileBed pileBed(uint64_t seed, const PilePoint& point, float height);
 // The plug of a conduit: it cuts the pile and the old beds alike, at any depth. Air outside every conduit.
 Material neckAt(const VolcanicTile& volcanic, Vec2 position);
 

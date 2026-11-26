@@ -9,12 +9,13 @@ namespace {
 // Share of a storey's full transmissivity that lies under a water level.
 float wetShare(const AquiferColumn& column, int storey, float level) {
     if (storey == Upper) return float(saturate((level - column.floor) / std::max(0.1f, column.ground - column.floor)));
-    const float through = column.shallowT + column.deepT;
+    const float through = lowerT(column);
     if (through <= 0) return 0;
-    const float seam = std::min(column.roof, column.shallowBase);
-    const float deep = float(saturate((level - column.base) / std::max(0.1f, seam - column.base)));
+    const float seam = std::min(column.roof, column.shallowBase), middle = 0.5f * (seam + column.base);
+    const float low = float(saturate((level - column.base) / std::max(0.1f, middle - column.base)));
+    const float high = float(saturate((level - middle) / std::max(0.1f, seam - middle)));
     const float shallow = float(saturate((level - column.shallowBase) / std::max(0.1f, column.roof - column.shallowBase)));
-    return (column.deepT * deep + column.shallowT * shallow) / through;
+    return (column.deepT[1] * low + column.deepT[0] * high + column.shallowT * shallow) / through;
 }
 
 // m, where a storey's water stands: the lowest stand between its resting level and its top at
@@ -95,7 +96,7 @@ void readFields(const WaterField& field, GroundwaterTile& tile) {
             const bool wet = column.perched && field.flux[i * 2 + Upper] > LeastSeep;
             tile.table[own] = wet ? tableOf(field, i, Upper) : tile.deepTable[own];
             tile.state[own] = uint8_t((column.perched ? HasPerched : 0) | (field.karst[i * 2 + Upper] ? UpperKarst : 0) | (field.karst[i * 2 + Lower] ? LowerKarst : 0) |
-                                      (column.drain != Drain::None ? Drained : 0) | (column.sunk > 0 ? Swallows : 0));
+                                      (column.drain != Drain::None ? Drained : 0) | (column.sunk >= LeastSpring ? Swallows : 0));
             tile.rock[Lower][own] = uint8_t(column.lowerRock);
             if (column.perched) tile.rock[Upper][own] = uint8_t(column.upperRock);
             budget.rain += double(column.rain) * WaterCellArea;

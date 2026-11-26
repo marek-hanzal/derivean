@@ -5,11 +5,13 @@
 #include "groundwater/fn/Recharge.hpp"
 #include "groundwater/fn/Swallow.hpp"
 #include "landscape/fn/Forcing.hpp"
+#include "volcanic/fn/Volcanic.hpp"
 
 namespace derivean::sim {
 namespace {
 
-// Cells between layering nodes: the local landscape's own, so a cell reads the beds it was cut in.
+// Cells between layering nodes. It has to be the local landscape's own spacing (StrataStride in
+// landscape/fn/Build.cpp), or a cell would read other beds than the ones its surface was cut in.
 constexpr int Stride = 8;
 
 int64_t floorDiv(int64_t value, int64_t by) { return value >= 0 ? value / by : -((-value + by - 1) / by); }
@@ -34,7 +36,7 @@ struct Node {
 // How much easier water moves along the two joint sets than across them, as a tensor of trace 2.
 void spreadOf(const RockMass& mass, const MaterialDefinition& rock, float spread[3]) {
     const float joints = jointConductivity(rock, 0.5f * mass.openDepth, 0.5f);
-    const float share = joints / (joints + rock.conductivity);
+    const float share = joints > 0 ? joints / (joints + rock.conductivity) : 0.0f;
     float weight[JointSets], total = 0;
     for (int set = 0; set < JointSets; ++set) total += weight[set] = mass.sets[set].persistence / mass.sets[set].spacing;
     spread[0] = spread[2] = 1.0f - share, spread[1] = 0;
@@ -109,21 +111,25 @@ void readColumns(const Setting& setting, TileKey key, const Tile* const around[9
                 bed.fold = foldAt(setting.seed, corner[0].strata, bed.material);
                 bed.rockTop = tile.now.rock[from], bed.datum = tile.now.datum[from];
                 for (int c = 0; c < SedimentClasses; ++c) bed.cover[c] = tile.now.sediment[c][from];
+                const PileColumn pile = pileColumn(tile, from);
+                bed.pile = pile.thickness, bed.lava = float(pile.lava) / 255.0f;
                 walk = BedWalk{};
                 walkBeds(bed, walk);
 
                 column.ground = top[i], column.bedrock = bed.rockTop;
                 column.rain = tile.rain[from], column.warmth = tile.warmth[from];
-                column.stream = tile.discharge[from];
                 column.incision = std::max(0.0f, tile.erosionRate[from] - tile.depositionRate[from]);
                 column.flowTo = tile.flowTo[from];
                 const bool flooded = tile.water[from] > column.ground + 1e-3f;
                 const bool soluble = fissuredBySolution(definitionOf(walk.top));
-                column.drain = flooded ? (tile.water[from] <= field.seaLevel + 0.5f ? Drain::Sea : Drain::Lake)
-                             : column.stream >= (soluble ? SwallowLimit : DrainingFlow) ? Drain::Stream : Drain::None;
-                column.stage = flooded ? tile.water[from] : column.ground;
                 Soak soak{column.rain, column.warmth, std::hypot(slopeX, slopeZ), {bed.cover[0], bed.cover[1], bed.cover[2]}, tile.ice[from], Material(tile.rock[from])};
-                column.recharge = flooded ? 0.0f : runoffOf(column.rain, column.warmth) * infiltrationShare(soak) * WaterCellArea;
+                const float share = flooded ? 0.0f : infiltrationShare(soak);
+                column.recharge = runoffOf(column.rain, column.warmth) * share * WaterCellArea;
+                // The landscape routes all the runoff over the surface. The share that soaked in is
+                // not in its streams: a stream is taken to have lost what the ground here takes.
+                column.stream = tile.discharge[from] * (1.0f - share);
+                column.drain = flooded ? Drain::Still : column.stream >= (soluble ? SwallowLimit : DrainingFlow) ? Drain::Stream : Drain::None;
+                column.stage = flooded ? tile.water[from] : column.ground;
                 column.base = walk.base, column.shallowBase = walk.shallowBase;
                 column.crush = walk.mass.crush;
                 fillStoreys(column, walk.layers, walk.count);
@@ -137,7 +143,7 @@ void readColumns(const Setting& setting, TileKey key, const Tile* const around[9
                 };
                 column.heat = {blend(&Geotherm::gradient), blend(&Geotherm::magmatic), blend(&Geotherm::sinceMelt), blend(&Geotherm::centre)};
                 if (walk.soluble) {
-                    column.fissures = int32_t(i);
+                    column.fissured = true;
                     field.fissures[i] = fissuresAt(setting.seed, walk.solubleMass, bed.material, std::max(0.0f, walk.solubleDepth - 2.0f));
                 }
                 // What the rock alone says a stream loses here; Sinks.cpp works out how much of the stream is left to lose.

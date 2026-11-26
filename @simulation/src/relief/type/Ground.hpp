@@ -17,6 +17,7 @@ struct GroundPoint {
     Crust crustKind{Crust::None};
     Material coarse{Material::Gravel}, fine{Material::Silt};   // what the coarse and the fine layer read as
     bool bare{};     // the fine layer carries no soil
+    PilePoint pile;  // volcanic rock under the rock surface: it fills (rock − pile.thickness, rock]; the layering is read below it
 };
 
 // The finest finished surface on a world-anchored lattice over a rectangle: the ground level's own
@@ -30,6 +31,7 @@ struct GroundLattice {
     std::vector<float> rock, datum, cover[SedimentClasses], crust;
     std::vector<float> lie;         // m, the rock surface as a slope has it: its mean over SmoothReach to every side
     std::vector<uint8_t> crustKind, coarseKind, fineKind, bare;
+    std::vector<PilePoint> pile;    // empty where no tile under the lattice holds volcanic rock
 
     GroundPoint at(double x, double z) const;
     // The slope's own surface: what the fall line and the faces of beds are read from. A ledge or a

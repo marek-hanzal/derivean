@@ -5,7 +5,6 @@
 namespace derivean::sim {
 namespace {
 
-constexpr Material CoverRock[SedimentClasses] = {Material::Gravel, Material::Sand, Material::Silt};
 constexpr float BareCatch = 0.35f;      // share of the rain on bare jointed rock that finds a joint before it has run off
 constexpr float OpenedDepth = 2.0f;     // m of bare rock whose pores and joints a storm can fill
 

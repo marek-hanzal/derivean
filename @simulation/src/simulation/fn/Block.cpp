@@ -60,7 +60,9 @@ void sampleBlock(World& world, const Block& block, Material* materials) {
             const StrataColumn* corner[4] = {&node[0].strata, &node[1].strata, &node[strataCountX].strata, &node[strataCountX + 1].strata};
             const float weight[4] = {(1 - ux) * (1 - uz), ux * (1 - uz), (1 - ux) * uz, ux * uz};
             const FormSetting& nearest = node[(uz > 0.5f ? strataCountX : 0) + (ux > 0.5f ? 1 : 0)];
-            const FormSetting here{setting.seed, blendThickness(nearest.strata, corner, weight), nearest.strataCentre, nearest.ore, &nearest.strata, nearest.masses};
+            FormSetting here{setting.seed, blendThickness(nearest.strata, corner, weight), nearest.strataCentre, nearest.ore, &nearest.strata, nearest.masses};
+            const TileKey under = tileAt(Level::Ground, {x, z});
+            if (const Tile* tile = fine.tile(under.x, under.z)) here.volcanic = tile->volcanic.get();
             const double ex = x / ExposureLattice - double(openX), ez = z / ExposureLattice - double(openZ);
             const int ox = std::clamp(int(ex), 0, openCountX - 2), oz = std::clamp(int(ez), 0, openCountZ - 2);
             const float tx = float(ex - ox), tz = float(ez - oz);

@@ -24,6 +24,9 @@ inline float jointConductivity(const MaterialDefinition& rock, float depth, floa
     return JointConductivity * brittle * close * (1.0f + (OpenJointGain - 1.0f) * open) * std::exp(-depth / JointDecay);
 }
 
+// What the three classes of loose cover are to water: coarse, sand, fines.
+inline constexpr Material CoverRock[3] = {Material::Gravel, Material::Sand, Material::Silt};
+
 // Share of a bed's matrix conductivity that is left across its bedding.
 inline float acrossBedding(const MaterialDefinition& rock) { return 1.0f - 0.9f * std::clamp(rock.bedding, 0.0f, 1.0f); }
 

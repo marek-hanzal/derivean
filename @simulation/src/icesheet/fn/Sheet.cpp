@@ -5,10 +5,13 @@
 #include "icesheet/service/Glaciations.hpp"
 #include "landscape/fn/Process.hpp"
 
+#include <cstdlib>
+
 namespace derivean::sim {
 namespace {
 
 constexpr int Stride = 4;              // region steps whose glaciations are worked into the ground together
+constexpr int Places = 4;              // places between two stages a stage's margin stands at in turn
 constexpr double ReboundTime = 5000;   // yr over which unloaded crust comes back by all but 1/e
 
 SheetWork& workOf(Domain& domain, const Setting& setting) {
@@ -37,15 +40,19 @@ void stepRegion(Domain& domain, const Setting& setting) {
     if (!reached(domain, work)) return;
     const double span = steps * domain.step, years = span - (last ? GlacialCycle : 0.0);
     if (years <= 0) return;
-    const double middle = domain.time + domain.step - 0.5 * span;
-    workSheets(domain, work, stageShares(work.source.cooling, setting.seed, middle, lastTermination(setting.age)), years, span, false, setting.workers);
+    // A stage stands for every climate between itself and the next. Working after working it is
+    // taken a different part of the way there, so its margin does not wear one line into the
+    // ground for the whole window.
+    const double towards = double((done / Stride) % Places) / Places, middle = domain.time + domain.step - 0.5 * span;
+    const std::vector<float> shares = stageShares(shiftedLadder(work.source, towards), setting.seed, middle, lastTermination(setting.age));
+    workSheets(domain, work, shares, towards, years, span, false, setting.workers);
 }
 
 void leaveRegion(Domain& domain, const Setting& setting) {
     SheetWork& work = workOf(domain, setting);
     if (!reached(domain, work)) return;
     const double present = lastTermination(setting.age);
-    workSheets(domain, work, stageShares(work.source.cooling, setting.seed, present, present), GlacialCycle, 0.0, true, setting.workers);
+    workSheets(domain, work, stageShares(work.source.cooling, setting.seed, present, present), 0.0, GlacialCycle, 0.0, true, setting.workers);
     work.rest = sinkCrust(domain, work, std::exp(-sinceMaximum(setting.seed, present) / ReboundTime));
 }
 
@@ -79,6 +86,7 @@ std::shared_ptr<const SheetRecord> presentRegion(Domain& domain, const Setting& 
 
 std::shared_ptr<const SheetRecord> sheetIce(Domain& domain, FlowScratch&, const Setting& setting, IceStage stage, const std::function<const Tile*(TileKey)>*) {
     if (domain.key.level != Level::Region) return nullptr;
+    if (std::getenv("ICE_OFF")) return nullptr;   // TEMPORARY: baseline runs while tuning
     if (stage == IceStage::Step) stepRegion(domain, setting);
     if (stage == IceStage::Leave) leaveRegion(domain, setting);
     return stage == IceStage::Present ? presentRegion(domain, setting) : nullptr;

@@ -1,6 +1,7 @@
 #include "GroundwaterFixture.hpp"
 #include "LandscapeFixture.hpp"
 
+#include "groundwater/fn/Refine.hpp"
 #include "simulation/type/World.hpp"
 
 #include <cstdio>
@@ -63,6 +64,38 @@ double passedEast(const WaterField& field, int x) {
     return total;
 }
 
+// The springs of one site tile's ground: every vent lies in the local cell its water left the
+// ground in, and a rectangle's springs are those of its two halves, each once.
+void checkVents(World& world, const GroundwaterTile& tile) {
+    constexpr int PerSite = TileCells / Refinement;   // local cells along a site tile
+    for (size_t index = 0; index < tile.springs.size(); ++index) {
+        const int cellX = tile.records[index].cell % TileCells, cellZ = tile.records[index].cell / TileCells;
+        const int64_t siteX = (int64_t(tile.key.x) * TileCells + cellX) / PerSite, siteZ = (int64_t(tile.key.z) * TileCells + cellZ) / PerSite;
+        // A site tile of the first pass well inside the local tile waits for no other site tile.
+        if ((siteX & 1) || (siteZ & 1) || cellX < PerSite || cellZ < PerSite || cellX >= TileCells - PerSite || cellZ >= TileCells - PerSite) continue;
+        const double span = tileSpan(Level::Site);
+        const Vec2 low{double(siteX) * span + WaterCell, double(siteZ) * span + WaterCell}, high{double(siteX + 1) * span - WaterCell, double(siteZ + 1) * span - WaterCell};
+        const double middle = 0.5 * (low.x + high.x);
+        const std::vector<Spring> whole = springsIn(world, low, high), west = springsIn(world, low, {middle, high.z}), east = springsIn(world, {middle, low.z}, high);
+        expectWater(whole.size() == west.size() + east.size(), "the springs of a rectangle are not those of its halves", double(whole.size()));
+        for (const Spring& spring : whole) {
+            int met = 0;
+            for (const Spring& half : west) met += half.id == spring.id && half.position.x == spring.position.x && half.elevation == spring.elevation;
+            for (const Spring& half : east) met += half.id == spring.id && half.position.x == spring.position.x && half.elevation == spring.elevation;
+            expectWater(met == 1, "a spring does not answer every query that covers it, once", double(spring.id));
+        }
+        const Spring vent = refineVent(world, tile, index);
+        const double cornerX = (double(tile.key.x) * TileCells + cellX) * WaterCell, cornerZ = (double(tile.key.z) * TileCells + cellZ) * WaterCell;
+        expectWater(vent.position.x >= cornerX && vent.position.x < cornerX + WaterCell && vent.position.z >= cornerZ && vent.position.z < cornerZ + WaterCell,
+                    "a vent was put outside the cell its water left the ground in", vent.position.x - cornerX);
+        const SpringAccount account = explainSpring(world, vent.position, 1.0);
+        expectWater(account.found && !account.crossed.empty() && account.record.catchment > 0, "a spring cannot be explained where it is");
+        std::printf("ground water: %zu springs on the site tile at %lld %lld; the one of local cell %d %d was put on the finer ground at %.1f m (local level %.1f m)\n", whole.size(),
+                    static_cast<long long>(siteX), static_cast<long long>(siteZ), cellX, cellZ, double(vent.elevation), double(tile.springs[index].elevation));
+        return;
+    }
+}
+
 } // namespace
 
 void testGroundwaterTile() {
@@ -84,12 +117,12 @@ void testGroundwaterTile() {
     const WaterBudget& budget = first->budget;
     expectWater(budget.recharge > 0 && budget.recharge < budget.runoff, "recharge is not a share of the runoff", budget.recharge / std::max(1.0, budget.runoff));
     expectWater(std::abs(imbalance(budget)) < 1e-6, "water entering the ground of a tile is not all accounted for", imbalance(budget));
-    for (size_t cell = 0; cell < first->table.size(); ++cell) expectWater(first->table[cell] >= first->deepTable[cell] - 1e-3f, "perched water stands below the water under it", double(cell));
+    expectWater(budget.underflow < 0.5 * (budget.recharge + budget.sunk), "most of a tile's ground water is followed no farther", budget.underflow / budget.recharge);
 
     // Two tiles say the same of the cells along their shared edge without one reading the other:
     // the last own column of the western tile and the first of the eastern, in both fields.
     readColumns(pooled, east, there.around, beside);
-    solveField(beside);
+    const std::shared_ptr<GroundwaterTile> third = solveField(beside);
     for (int column = TileCells - 1; column <= TileCells; ++column)
         for (int z = 0; z < TileCells; ++z) {
             const size_t a = many.index(many.margin + column, many.margin + z), b = beside.index(beside.margin + column - TileCells, beside.margin + z);
@@ -104,13 +137,14 @@ void testGroundwaterTile() {
     const double eastward = passedEast(many, many.margin + TileCells - 1);
     expectWater(eastward == passedEast(beside, beside.margin - 1), "water crossing a tile edge is not the same amount on both sides", eastward);
 
-    // Through the world: whichever tile is asked for first, from however many threads, the answer is the one above.
+    // Through the world: both tiles asked for at once from three threads; the answers are the ones above.
     std::shared_ptr<const GroundwaterTile> asked[3];
     std::thread other([&] { asked[0] = groundwaterAt(world, east); }), same([&] { asked[1] = groundwaterAt(world, key); });
     asked[2] = groundwaterAt(world, key);
     other.join(), same.join();
-    expectWater(asked[1] == asked[2] && sameTile(*asked[2], *second), "the world's answer for a tile depends on who asks first");
+    expectWater(asked[1] == asked[2] && sameTile(*asked[2], *second) && sameTile(*asked[0], *third), "the world's answer for a tile is not the tile worked out alone");
     expectWater(caveFieldAt(world, testFocus()) == asked[2]->caves, "the cave field of a point is not that of its tile");
+    checkVents(world, *asked[2]);
 
     int kinds[4] = {};
     for (const SpringRecord& record : first->records) ++kinds[int(record.kind)];

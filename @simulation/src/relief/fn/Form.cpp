@@ -3,6 +3,7 @@
 #include "ground/fn/Partings.hpp"
 #include "planet/constant/Scale.hpp"
 #include "relief/type/City.hpp"
+#include "volcanic/fn/Volcanic.hpp"
 
 namespace derivean::sim {
 namespace {
@@ -56,6 +57,10 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     const float fold = foldAt(setting.seed, setting.strata, material);
     const float loose = ground.ground - ground.rock;
     const float top = ground.ground + ground.crust;
+    // Rock that eruptions laid on the layering fills the column from the pile's floor up; the plug
+    // of a conduit cuts pile and layering alike (volcanic/type/Pile.hpp).
+    const float pileFloor = ground.rock - ground.pile.thickness;
+    const Material plug = setting.volcanic ? neckAt(*setting.volcanic, {x, z}) : Material::Air;
 
     // A void that comes within a thin roof of the rock surface is open: the cover over it has
     // fallen in and lies on its floor, `fallen` thick from `floor` up.
@@ -90,7 +95,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
         float depth = std::max(0.0f, ground.datum - ground.rock) + 0.1f;
         const StrataUnit unit = unitAt(setting.strata, depth, fold);
         Bed top = bedAt(setting.seed, setting.strata, unit, depth, material);
-        city.strength = massive(traitsOf(top.rock)) * exposure * bare;
+        city.strength = ground.pile.thickness > 0 ? 0.0f : massive(traitsOf(top.rock)) * exposure * bare;
         if (city.strength > 0.05f) {
             city.seed = setting.seed;
             city.mass = massFor(setting, top, unit.laidDown);
@@ -158,6 +163,8 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
                     const Material body = cuttingRock(setting.seed, setting.ore, material, depth, laidDown);
                     if (body != Material::Air) result = body;
                 }
+                if (ground.pile.thickness > 0 && y >= pileFloor) result = pileBed(setting.seed, ground.pile, y - pileFloor).rock;
+                if (plug != Material::Air) result = plug;
             } else if (sand) result = Material::Sand;
             else if (y + sunk < ground.ground && y + sunk >= ground.rock) result = coverAt(ground, y + sunk - ground.rock, ground.ground - y - sunk);
             else if (y + sunk < top && y + sunk >= ground.ground) result = ground.crustKind == Crust::Travertine ? Material::Travertine : Material::Sinter;

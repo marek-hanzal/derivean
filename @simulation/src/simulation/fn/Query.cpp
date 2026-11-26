@@ -2,6 +2,7 @@
 
 #include "simulation/fn/Live.hpp"
 #include "simulation/fn/Reader.hpp"
+#include "volcanic/fn/Volcanic.hpp"
 
 namespace derivean::sim {
 
@@ -74,6 +75,8 @@ bool readSurface(TileReader& reader, Vec2 position, SurfaceSample& sample) {
     }
     const Tile* tile;
     const size_t at = tap(nearX, nearZ, tile);
+    // Under a volcanic pile the layering keeps its own top: only the pile's floor bounds it.
+    sample.datum = std::max(sample.rock - pileColumn(*tile, at).thickness, float(datum));
     sample.water = tile->water[at];
     sample.discharge = tile->discharge[at];
     // Running water: the depth a stream of this size has by the usual hydraulic geometry

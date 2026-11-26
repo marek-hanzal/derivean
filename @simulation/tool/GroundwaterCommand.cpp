@@ -1,5 +1,6 @@
 #include "Groundwater.hpp"
 
+#include "groundwater/constant/Hydraulics.hpp"
 #include "simulation/fn/Query.hpp"
 #include "simulation/fn/Spawn.hpp"
 
@@ -28,8 +29,7 @@ void printBudget(const WaterBudget& b, double area) {
     line("out as baseflow", b.baseflow);
     line("lost through the base", b.deep);
     line("followed no farther (underflow)", b.underflow);
-    line("across the edge, in", b.lateralIn);
-    line("across the edge, out", b.lateralOut);
+    line("net in across the outer edge", b.lateralIn - b.lateralOut);
     std::printf("  unaccounted: %.2e of what enters; rock leaving in solution %.3g m3/yr\n", imbalance(b), b.dissolved);
     // Until the landscape takes the recharge out of the runoff it routes (groundwater/fn/Recharge.hpp),
     // that water is on the surface in its streams and comes out of the ground again here.
@@ -81,7 +81,7 @@ void printCaves(const WaterBlock& block, double land) {
     double length[5] = {}, abandoned = 0, shafts = 0, volume = 0, karst = 0, thinnest = 1e9;
     size_t count = 0, swallows = 0;
     for (const auto& tile : block.tiles) {
-        for (const uint8_t state : tile->state) karst += (state & (UpperKarst | LowerKarst)) && !(state & Drained) ? 4096.0 : 0.0, swallows += state & Swallows ? 1 : 0;
+        for (const uint8_t state : tile->state) karst += (state & (UpperKarst | LowerKarst)) && !(state & Drained) ? double(WaterCellArea) : 0.0, swallows += state & Swallows ? 1 : 0;
         for (size_t i = 0; i < tile->caves->conduits.size(); ++i) {
             const Conduit& c = tile->caves->conduits[i];
             const ConduitRecord& record = tile->passages[i];
@@ -155,13 +155,13 @@ int groundwaterCommand(const Arguments& arguments) {
             const WaterBudget& b = tile.budget;
             budget.rain += b.rain, budget.runoff += b.runoff, budget.recharge += b.recharge, budget.sunk += b.sunk, budget.springs += b.springs, budget.seepage += b.seepage;
             budget.baseflow += b.baseflow, budget.deep += b.deep, budget.underflow += b.underflow, budget.dissolved += b.dissolved;
-            // Water that crosses between two tiles of the block stays inside it: only the outer edge counts.
-            budget.lateralIn += b.lateralIn - b.lateralOut;
+            // Water that crosses between two tiles of the block is one tile's gain and the other's loss, to the bit.
+            budget.lateralIn += b.lateralIn, budget.lateralOut += b.lateralOut;
             for (int cz = 0; cz < TileCells; ++cz)
                 for (int cx = 0; cx < TileCells; ++cx) {
                     const size_t cell = size_t(cz) * TileCells + size_t(cx);
                     if (tile.state[cell] & Drained) continue;
-                    land += 4096.0;
+                    land += WaterCellArea;
                     depths.push_back(block.ground.ground.at(x * TileCells + cx, z * TileCells + cz) - tile.table[cell]);
                     depth += depths.back();
                 }

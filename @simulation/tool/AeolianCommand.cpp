@@ -82,6 +82,7 @@ int aeolianCommand(const Arguments& arguments) {
     const TileKey centre = tileAt(level, at), first{level, centre.x - (span - 1) / 2, centre.z - (span - 1) / 2};
     Lap lap;
     std::vector<float> top(size_t(side) * size_t(side)), sand(top.size()), loess(top.size()), lag(top.size()), salt(top.size()), water(top.size());
+    double cover[SedimentClasses] = {}, dryCells = 0;
     WindRecord middle;
     for (int tz = 0; tz < span; ++tz)
         for (int tx = 0; tx < span; ++tx) world.atlas.request({level, first.x + tx, first.z + tz});
@@ -94,6 +95,10 @@ int aeolianCommand(const Arguments& arguments) {
                     const size_t from = size_t(z) * TileCells + size_t(x), to = size_t(tz * TileCells + z) * size_t(side) + size_t(tx * TileCells + x);
                     top[to] = tile->now.rock[from] + tile->now.sediment[0][from] + tile->now.sediment[1][from] + tile->now.sediment[2][from];
                     water[to] = tile->water[from] - top[to];
+                    if (water[to] <= 0) {
+                        dryCells += 1;
+                        for (int c = 0; c < SedimentClasses; ++c) cover[c] += tile->now.sediment[c][from];
+                    }
                     if (tile->aeolian.labels.blown.empty()) continue;
                     sand[to] = tile->aeolian.labels.blown[from], loess[to] = tile->aeolian.labels.loess[from];
                     lag[to] = tile->aeolian.labels.lag[from], salt[to] = tile->aeolian.labels.salt[from];
@@ -106,6 +111,8 @@ int aeolianCommand(const Arguments& arguments) {
     printRegime(middle.regime);
     if (middle.rounds > 0) std::printf("  dune field: %d rounds of the transport model, standing for %.0f yr of this wind\n", middle.rounds, middle.span);
 
+    std::printf("  cover of the dry ground, mean m: coarse %.2f  sand %.2f  fines %.2f  (%.0f %% of the square is dry)\n", cover[Coarse] / std::max(1.0, dryCells),
+                cover[Sand] / std::max(1.0, dryCells), cover[Fines] / std::max(1.0, dryCells), 100 * dryCells / double(top.size()));
     const DuneStats dunes = measureDunes(side, cell, top, sand, middle.regime.resultant, ReposeTan[Sand]);
     std::printf("  wind-laid sand: on %.1f %% of the ground, %.2f m as a mean over all of it, in %d bodies\n", 100 * dunes.sandShare, dunes.meanSand, dunes.patches);
     if (dunes.crests > 0 && level != Level::Region)
@@ -117,10 +124,11 @@ int aeolianCommand(const Arguments& arguments) {
         double sum = 0, share = 0;
         size_t most = 0;
         for (size_t i = 0; i < field.size(); ++i) {
+            if (water[i] > 0) continue;
             sum += field[i], share += field[i] >= least;
-            if (field[i] > field[most]) most = i;
+            if (field[i] > field[most] || water[most] > 0) most = i;
         }
-        std::printf("  %s: mean %.3f m, at least %.2f m on %.1f %%, thickest %.2f m at x %.0f z %.0f\n", what, sum / double(field.size()), least, 100 * share / double(field.size()),
+        std::printf("  %s on dry ground: mean %.3f m over the square, at least %.2f m on %.1f %% of it, thickest %.2f m at x %.0f z %.0f\n", what, sum / double(field.size()), least, 100 * share / double(field.size()),
                     field[most], origin.x + (double(most % size_t(side)) + 0.5) * cell, origin.z + (double(most / size_t(side)) + 0.5) * cell);
     };
     report("sand", sand, 1.0f), report("loess", loess, 1.0f), report("stone lag", lag, 0.9f * LagArmour), report("salt", salt, 0.02f);

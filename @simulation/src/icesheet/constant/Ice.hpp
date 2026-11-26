@@ -37,13 +37,18 @@ inline constexpr double ThawBand = 2.0;                              // °C belo
 
 inline constexpr float LeastSheet = 20.0f;                           // m of ice below which a cell counts as bare
 
+// Ice yields before its bed carries more than about a bar and a half: where the thin-slab stress
+// of a steep margin says more, the slope is the grid's, not the ice's.
+inline constexpr float YieldStress = 1.5e5f;        // Pa
+
 // What sliding ice does to its bed.
 inline constexpr float FastestSlide = 1500.0f;      // m/yr; faster ice rides on water and no longer grips its bed
-// m of granite ground off per metre the ice slides over it. Measured rates are several times
-// higher; this one is set so that the tens of millions of years a region replays under a long
-// icehouse take about what Earth's two and a half million took: metres to tens of metres off a
-// shield per glaciation would otherwise sum to kilometres and sink the land the planet says is there.
-inline constexpr float WearRate = 7.0e-7f;
+// m of granite ground off per metre the ice slides over it. Rates measured under sheets on hard
+// beds are five to ten times higher. This one is set so that the tens of millions of years of
+// icehouse a region replays take what Earth's two and a half million took, some tens to a hundred
+// metres off a lowland: at measured rates a kilometre goes, and land the planet holds a few
+// hundred metres above the sea ends under it even with the plate floating back.
+inline constexpr float WearRate = 1.8e-7f;
 inline constexpr float GraniteErodibility = 1.2e-6f;   // the stream-power coefficient WearRate is stated for
 inline constexpr float LooseGain = 40.0f;           // times faster the ice takes loose cover than granite
 // Where the bed rises along the flow by more than this many times the fall of the ice surface, the

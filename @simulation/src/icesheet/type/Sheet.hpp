@@ -55,6 +55,7 @@ struct SheetWork {
     int worked{};                        // steps whose glaciations have been worked into the ground
     std::vector<IceGrid> coarse;         // per stage, on cells four domain cells wide; empty until first solved
     std::vector<std::vector<float>> beyond;   // per stage and coarse cell: m of ice the source holds there
+    std::vector<std::vector<float>> sunk;     // per stage and coarse cell: m the source's crust has given way there
     std::vector<float> worn;             // m of rock ground off so far, per domain cell
     std::vector<float> now, lastMaximum; // m of grounded ice per domain cell, once the last sheet has left its record
     std::vector<float> rest;             // m each cell's crust has still to rise since the last sheet left

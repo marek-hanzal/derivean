@@ -7,7 +7,6 @@
 namespace derivean::sim {
 namespace {
 
-constexpr Material CoverRock[SedimentClasses] = {Material::Gravel, Material::Sand, Material::Silt};
 constexpr uint64_t UnitStream = 0x47574154;
 
 // The loose cover as one layer: its classes lie on one another, so water runs along the most
@@ -26,6 +25,20 @@ bool coverLayer(const BedColumn& column, WaterLayer& layer) {
     layer.along = along / thickness * PerYear, layer.through = thickness / across * PerYear;
     layer.porosity = pores / thickness;
     return true;
+}
+
+// A rock as one layer between two depths below the rock surface.
+WaterLayer rockLayer(const MaterialDefinition& rock, Material kind, float rockTop, float top, float bottom, float openDepth, float crush) {
+    const float opened = std::clamp((openDepth - top) / (bottom - top), 0.0f, 1.0f);
+    const float joints = jointConductivity(rock, 0.5f * (top + bottom), opened), fault = FaultConductivity * crush * crush;
+    WaterLayer layer;
+    layer.top = rockTop - top, layer.bottom = rockTop - bottom;
+    layer.along = (rock.conductivity + joints + fault) * PerYear;
+    layer.through = (rock.conductivity * acrossBedding(rock) + joints + fault) * PerYear;
+    layer.porosity = rock.porosity;
+    layer.soluble = rock.solubility;
+    layer.rock = kind;
+    return layer;
 }
 
 // Signed metres along a set's normal to its nearest plane of one order.
@@ -53,57 +66,51 @@ void walkBeds(const BedColumn& column, BedWalk& walk) {
     walk.count = 0;
     if (coverLayer(column, walk.layers[0])) walk.count = 1;
 
-    const float surface = std::max(0.0f, column.datum - column.rockTop);   // m below the datum
-    float at = surface;
-    const MaterialDefinition* last = nullptr;
-    for (int bedCount = 0; bedCount < WalkBeds && at < surface + WalkDepth; ++bedCount) {
+    // The layering starts under the pile, at the surface the first lava buried. Its first bed
+    // says how the ground is broken, whatever lies on it.
+    const float first = std::max(0.0f, column.datum - (column.rockTop - column.pile));   // m below the datum
+    const StrataUnit under = unitAt(column.strata, first, column.fold);
+    const Bed buried = bedAt(column.seed, column.strata, under, first, column.material);
+    walk.top = buried.rock;
+    walk.mass = rockMassAt(column.seed, *column.node, buried, under.laidDown, column.material);
+    walk.shallowBase = column.rockTop - walk.mass.openDepth;
+    walk.base = column.rockTop - (CirculationDepth + walk.mass.crush * walk.mass.crush * FaultDepth);
+    const MaterialDefinition* last = &definitionOf(buried.rock);
+    Material lastKind = buried.rock;
+    if (column.pile > 0.5f) {
+        // Lava flows with ash between them: jointed and open along the flows, no more open across them than their ash.
+        walk.top = column.lava >= 0.5f ? Material::Basalt : Material::Tuff;
+        WaterLayer& pile = walk.layers[walk.count++];
+        pile = rockLayer(definitionOf(walk.top), walk.top, column.rockTop, 0, column.pile, walk.mass.openDepth, walk.mass.crush);
+        pile.through = std::min(pile.through, 10.0f * definitionOf(Material::Tuff).conductivity * PerYear);
+    }
+
+    float at = first;
+    for (int beds = 0; beds < WalkBeds && at - first + column.pile < WalkDepth; ++beds) {
         const StrataUnit unit = unitAt(column.strata, at, column.fold);
         const Bed bed = bedAt(column.seed, column.strata, unit, at, column.material);
         const MaterialDefinition& rock = definitionOf(bed.rock);
-        if (bedCount == 0) {
-            walk.top = bed.rock;
-            walk.mass = rockMassAt(column.seed, *column.node, bed, unit.laidDown, column.material);
-            walk.shallowBase = column.rockTop - walk.mass.openDepth;
-            walk.base = column.rockTop - (CirculationDepth + walk.mass.crush * walk.mass.crush * FaultDepth);
-        }
-        const float top = std::max(bed.top, surface), bottom = std::min(std::max(bed.bottom, top + 0.25f), surface + WalkDepth);
-        const float opened = std::clamp((walk.mass.openDepth - (top - surface)) / (bottom - top), 0.0f, 1.0f);
-        const float joints = jointConductivity(rock, 0.5f * (top + bottom) - surface, opened);
-        const float fault = FaultConductivity * walk.mass.crush * walk.mass.crush;
+        // Depths below the rock surface.
+        const float top = std::max(bed.top, first) - first + column.pile, bottom = std::min(std::max(bed.bottom, at + 0.25f) - first + column.pile, WalkDepth);
         WaterLayer& layer = walk.layers[walk.count++];
-        layer.top = column.datum - top, layer.bottom = column.datum - bottom;
-        layer.along = (rock.conductivity + joints + fault) * PerYear;
-        layer.through = (rock.conductivity * acrossBedding(rock) + joints + fault) * PerYear;
-        layer.porosity = rock.porosity;
-        layer.soluble = rock.solubility;
-        layer.rock = bed.rock;
+        layer = rockLayer(rock, bed.rock, column.rockTop, top, bottom, walk.mass.openDepth, walk.mass.crush);
         // Basement is one rock all the way down and a pluton has no beds: neither is a sheet that
         // could hold water up along its top.
-        const bool bedded = unit.slot != BasementUnit && !(bed.rock == Material::Granite && bed.bottom >= unit.bottom);
+        const bool bedded = unit.slot != BasementUnit && bed.rock != Material::Granite;
         layer.unit = bedded ? uint32_t(hash(UnitStream, unit.slot, int64_t(unit.laidDown / StrataSlotYears)) | 1) : 0;
         layer.offset = bed.top - unit.top;
         if (!walk.soluble && solubleRock(rock) && bed.bottom - bed.top >= 2.0f) {
             walk.soluble = true;
-            walk.solubleMass = rockMassAt(column.seed, *column.node, Bed{0, canonicalThickness(bed), bed.rock}, unit.laidDown, column.material);
-            walk.solubleDepth = std::min(bed.bottom, surface + WalkDepth);
+            walk.solubleMass = massOf(column.seed, *column.node, bed, unit.laidDown);
+            walk.solubleDepth = std::min(bed.bottom, first + WalkDepth);
         }
-        last = &rock;
+        last = &rock, lastKind = bed.rock;
         at = std::max(bed.bottom, at + 0.25f) + 0.01f;
     }
-    // Below the beds read one by one, the last rock goes on to where circulation ends. In the
+    // Below what was read bed by bed, the last rock goes on to where circulation ends. In the
     // crushed rock of a fault that is kilometres down, and the fault is what conducts there.
-    const float walked = column.rockTop - WalkDepth;
-    if (last && walk.base < walked) {
-        const float middle = 0.5f * (column.rockTop - walk.base + WalkDepth);
-        const float fault = FaultConductivity * walk.mass.crush * walk.mass.crush;
-        WaterLayer& layer = walk.layers[walk.count++];
-        layer = WaterLayer{};
-        layer.top = walked, layer.bottom = walk.base;
-        layer.along = (last->conductivity + jointConductivity(*last, middle, 0) + fault) * PerYear;
-        layer.through = (last->conductivity * acrossBedding(*last) + jointConductivity(*last, middle, 0) + fault) * PerYear;
-        layer.porosity = last->porosity;
-        layer.rock = walk.layers[walk.count - 2].rock;
-    }
+    const float reached = column.rockTop - std::max(column.pile, std::min(WalkDepth, at - first + column.pile));
+    if (walk.base < reached) walk.layers[walk.count++] = rockLayer(*last, lastKind, column.rockTop, column.rockTop - reached, column.rockTop - walk.base, 0, walk.mass.crush);
 }
 
 } // namespace derivean::sim

@@ -23,6 +23,7 @@ void testRockMass();
 void testGroundwaterBlock();
 void testGroundwaterEdge();
 void testGroundwaterTile();
+void testVolcanicLaws();
 
 int main() {
     testMaterials();
@@ -48,5 +49,6 @@ int main() {
     testGroundwaterBlock();
     testGroundwaterEdge();
     testGroundwaterTile();
+    testVolcanicLaws();
     return 0;
 }

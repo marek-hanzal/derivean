@@ -36,6 +36,7 @@ struct FormSetting {
     // A mass is asked with the node's column, so it does not depend on which column met the bed first.
     const StrataColumn* node{};
     std::vector<BedMass>* masses{};
+    const VolcanicTile* volcanic{};   // vents whose plugs may cut the column (volcanic/type/Pile.hpp); null where there are none
 };
 
 // Materials of one vertical run of `count` points, `step` apart upwards from `bottom`, written to

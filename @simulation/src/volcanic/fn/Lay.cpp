@@ -11,6 +11,11 @@ double harvest(Emplacement& field, Laying& laying, std::vector<float>& into, int
     double volume = 0;
     for (size_t i = 0; i < field.cells(); ++i) {
         if (field.laid[i] <= 0) continue;
+        if (field.rest[i] != Rest::Open) {
+            field.passed += double(field.laid[i]) * field.cell * field.cell;
+            field.laid[i] = 0;
+            continue;
+        }
         into[i] += field.laid[i];
         volume += field.laid[i];
         laying.vent[i] = uint8_t(vent);

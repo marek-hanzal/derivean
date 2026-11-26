@@ -26,13 +26,14 @@ export function createLevelTable(): LevelTable {
 }
 
 // Places a level: its own box and the boxes it leaves to finer ground and finer water, in world metres, seen from
-// a render origin.
-export function setLevel(table: LevelTable, level: number, origin: Vector3, edge: number, band: number, own: Box, ground: Box, water: Box) {
+// a render origin. `finer` is the level that draws the ground it leaves.
+export function setLevel(table: LevelTable, level: number, origin: Vector3, edge: number, band: number, own: Box, ground: Box, water: Box,
+  finer: number) {
   const at = level * LevelRows;
   const put = (row: number, [x, y, z]: Point, w: number) => table.rows[at + row].set(x - origin.x, y - origin.y, z - origin.z, w);
   put(0, own.min, edge);
   put(1, own.max, band);
-  put(2, ground.min, 0);
+  put(2, ground.min, finer);
   put(3, ground.max, 0);
   put(4, water.min, 0);
   put(5, water.max, 0);

@@ -2,6 +2,7 @@
 
 #include "core/fn/Hash.hpp"
 #include "groundwater/fn/Chemistry.hpp"
+#include "groundwater/fn/Route.hpp"
 #include "groundwater/fn/Stages.hpp"
 
 namespace derivean::sim {
@@ -9,9 +10,11 @@ namespace {
 
 constexpr uint64_t SpringStream = 0x5350524e;
 constexpr float CoolingFlow = 2.0e-6f;     // m³/s per metre of rise at which rising water keeps 1/e of its heat
-constexpr float HottestRock = 350.0f;      // °C
 constexpr float DeepWater = 150.0f;        // m of circulation from which rising water is a fault's and not the slope's
 constexpr float RockDensity = 2600.0f;     // kg/m³
+constexpr float HottestQuartz = 250.0f;    // °C up to which the silica held against quartz is known
+constexpr float CoolEnough = 15.0f;        // °C: silica comes out of water down to about this, however cold the air
+constexpr float Charged = 1.5f;            // times the carbonate the air's own gas holds from which water counts as charged with more
 
 // Whether surface water already runs into the cell from above: then what emerges in it feeds a
 // stream that exists, and the head of that stream is the spring.
@@ -24,7 +27,7 @@ bool gaining(const WaterField& field, int x, int z) {
         if (donor.flowTo != ((k + 4) & 7)) continue;
         if (donor.drain != Drain::None) return true;
         const NodeFate &upper = field.fate[j * 2 + Upper], &lower = field.fate[j * 2 + Lower];
-        if (upper.emerges + upper.outcrop + lower.emerges >= LeastSeep) return true;
+        if (upper.emerges + upper.outcrop + lower.emerges >= LeastSpring) return true;
     }
     return false;
 }
@@ -61,35 +64,40 @@ void addSpring(const WaterField& field, const AquiferColumn& column, const VentW
     const int64_t cellX = int64_t(std::floor(water.position.x / WaterCell)), cellZ = int64_t(std::floor(water.position.z / WaterCell));
     spring.id = hash(stream(field.seed, SpringStream), cellX, cellZ, int64_t(water.kind) * 2 + water.storey);
 
-    const Borne& carried = water.carried;
-    const float reservoir = std::min(HottestRock, rockTemperature(column.heat, column.warmth, carried.deep));
-    const float kept = std::exp(-CoolingFlow * carried.deep / std::max(1e-9f, spring.discharge));
+    // Water takes the temperature of the rock it stands in, so what arrives is as warm as the last
+    // rock it left; silica is slow to come out and stays what the hottest rock on its way gave it.
+    const Borne& borne = water.borne;
+    const float reservoir = std::min(HottestRock, rockTemperature(column.heat, column.warmth, water.depth));
+    const float kept = std::exp(-CoolingFlow * water.depth / std::max(1e-9f, spring.discharge));
     const float arriving = column.warmth + (reservoir - column.warmth) * kept;
     const float boiling = boilingPoint(water.elevation - field.seaLevel);
     spring.steamShare = arriving > boiling ? flashShare(arriving, boiling) : 0.0f;
     spring.temperature = std::min(arriving, boiling);
     // Silica comes out of water that held more at depth than it can keep once cool; steam leaving
-    // concentrates what stays. Carbonate comes out as the gas that held it escapes to the air.
-    record.dissolvedSilica = quartzSilica(reservoir);
-    record.dissolvedCarbonate = carried.lime;
-    const float open = std::max(15.0f, column.warmth);
-    spring.silica = kept * std::max(0.0f, record.dissolvedSilica / (1.0f - spring.steamShare) - glassSilica(open));
-    spring.carbonate = std::max(0.0f, carried.lime - calciteLoad(AirCarbonDioxide, std::max(open, spring.temperature)));
+    // concentrates what stays. Carbonate comes out as the gas that held it escapes to the air: water
+    // that only ever met the air's own gas holds no more than it keeps.
+    const float hottest = std::min(HottestQuartz, rockTemperature(column.heat, column.warmth, borne.deep));
+    record.dissolvedSilica = quartzSilica(hottest);
+    record.dissolvedCarbonate = borne.lime;
+    spring.silica = kept * std::max(0.0f, record.dissolvedSilica / (1.0f - spring.steamShare) - glassSilica(std::max(CoolEnough, column.warmth)));
+    // Water that warmed a little on its way holds a trace more than balance too; that is not a charge of gas.
+    const bool charged = borne.lime > Charged * calciteLoad(AirCarbonDioxide, column.warmth);
+    spring.carbonate = charged ? std::max(0.0f, borne.lime - calciteLoad(AirCarbonDioxide, spring.temperature)) : 0.0f;
 
     record.kind = water.kind;
-    record.recharge = carried.rate;
-    record.catchment = water.flow / std::max(1e-4f, carried.rate);
-    record.path = carried.far;
-    record.drop = carried.high - water.elevation;
-    record.depth = carried.deep;
-    record.years = carried.age;
+    record.recharge = borne.rate;
+    record.catchment = water.flow / std::max(1e-4f, borne.rate);
+    record.path = borne.far;
+    record.drop = borne.high - water.elevation;
+    record.depth = std::max(borne.deep, water.depth);
+    record.years = borne.age;
     record.aquifer = water.aquifer, record.floor = water.floor;
     record.heat = column.heat;
     record.reservoir = reservoir;
     record.crush = column.crush;
     record.cell = water.cell, record.storey = water.storey;
     tile.budget.springs += water.flow;
-    tile.budget.dissolved += double(water.flow) * (carried.lime + record.dissolvedSilica) / RockDensity;
+    tile.budget.dissolved += double(water.flow) * (borne.lime + record.dissolvedSilica) / RockDensity;
     tile.springs.push_back(spring);
     tile.records.push_back(record);
 }
@@ -112,8 +120,9 @@ void findVents(const WaterField& field, GroundwaterTile& tile) {
             } else if (emerging >= least) {
                 const int storey = lower.emerges >= upper.emerges ? Lower : Upper;
                 VentWater water;
-                water.carried = field.carried[i * 2 + size_t(storey)];
-                water.kind = storey == Lower && column.crush >= FaultShare && water.carried.deep >= DeepWater ? SpringKind::Fault : SpringKind::Table;
+                water.borne = field.borne[i * 2 + size_t(storey)];
+                water.depth = flowDepth(field, i, storey, water.borne.high);
+                water.kind = storey == Lower && column.crush >= FaultShare && water.depth >= DeepWater ? SpringKind::Fault : SpringKind::Table;
                 water.position = field.centre(fx, fz), water.elevation = column.ground;
                 water.flow = emerging;
                 water.cell = int32_t(own), water.storey = uint8_t(storey);
@@ -128,7 +137,8 @@ void findVents(const WaterField& field, GroundwaterTile& tile) {
                 water.kind = SpringKind::Contact;
                 lipOf(field, fx, fz, water.position, water.elevation);
                 water.flow = upper.outcrop;
-                water.carried = field.carried[i * 2 + Upper];
+                water.borne = field.borne[i * 2 + Upper];
+                water.depth = flowDepth(field, i, Upper, water.borne.high);
                 water.cell = int32_t(own), water.storey = Upper;
                 water.aquifer = column.upperRock, water.floor = column.floorRock;
                 addSpring(field, column, water, tile);

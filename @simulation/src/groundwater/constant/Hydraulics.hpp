@@ -5,22 +5,29 @@
 
 namespace derivean::sim {
 
-// Ground water is worked out on the cells of a local tile and `WaterReach` cells of its neighbours. Every
-// step of the model is a sweep in which a cell reads its eight neighbours as they stood before the
-// sweep, so after n sweeps a cell knows only what lies within n cells of it. The sweeps of a build
-// add up to less than `WaterReach`: what a tile says about its own cells and the ring around them is,
-// to the bit, what every other tile says about those cells, and no tile reads another's result.
+// Ground water is worked out on the cells of a local tile and `WaterReach` cells of its neighbours.
+// Every step of the model is a sweep in which a cell reads its eight neighbours as they stood
+// before the sweep, so each sweep lets the wrong values at the field's edge creep one cell inwards
+// and no farther. What a tile says about its own cells and the ring around them is then, to the
+// bit, what every other tile says about those cells, and no tile reads another's result.
+//
+// Rings a build spoils from the field's edge: 1 (slope and lie of the beds, clamped at the edge),
+// 1 (ways and outlets read the neighbour's column), LevelSweeps, 1 (shares read the neighbour's
+// level), RouteSweeps, 1 (the sweep that finds what is still under way), 1 (a vent asks its
+// neighbours whether water already runs in from above). The streams that sink take SinkSweeps + 2
+// before the routing instead of the levels' LevelSweeps + 3. A stage that adds a read of a
+// neighbour adds a ring.
 inline constexpr int WaterReach = 64;
 inline constexpr int FieldCells = TileCells + 2 * WaterReach;
 inline constexpr int LevelSweeps = 24;   // cells over which the level of a valley is felt under the ground beside it
 inline constexpr int SinkSweeps = 24;    // cells a sinking stream's losses are followed down its course
 inline constexpr int RouteSweeps = 34;   // cells ground water is followed; what travels farther is booked as underflow
-// Levels and sinking streams both feed the routing; neither feeds the other.
 static_assert((LevelSweeps > SinkSweeps ? LevelSweeps : SinkSweeps) + RouteSweeps + 5 < WaterReach);
 
-inline constexpr double WaterCell = 64.0;                       // m
+inline constexpr double WaterCell = 64.0;                             // m
 inline constexpr float WaterCellArea = float(WaterCell * WaterCell);  // m²
-inline constexpr float PerYear = float(YearSeconds);             // m/s to m/yr
+static_assert(WaterCell == LevelSpecs[size_t(Level::Local)].cell);
+inline constexpr float PerYear = float(YearSeconds);                  // m/s to m/yr
 
 // Recharge: the share of the water left after evaporation that enters the ground.
 inline constexpr float WetShare = 0.06f;        // share of the year in which the rain of a year falls
@@ -40,6 +47,7 @@ inline constexpr float SolutionGain = 30.0f;          // how much more the joint
 inline constexpr float FaultConductivity = 2.0e-6f;   // m/s along the crushed rock of a domain fault, at any depth it reaches
 inline constexpr float FaultDepth = 3000.0f;          // m a fault's crushed rock stays open to
 inline constexpr float DriveRatio = 6.0f;             // m of depth water is driven down a fault per metre its catchment stands above the vent
+inline constexpr float HottestRock = 300.0f;          // °C beyond which the model follows no water
 
 // Storeys.
 inline constexpr float WalkDepth = 160.0f;        // m below the rock surface the beds are read one by one
@@ -56,7 +64,7 @@ inline constexpr float MostGradient = 4.0f;
 inline constexpr float SameSheet = 1.0f;          // m by which the depth of one bed may differ between two columns' reading of it
 
 // Surface water that takes ground water in: a stream of the local level, or any standing water.
-inline constexpr float DrainingFlow = 1.0e5f;       // m³/yr
+inline constexpr float DrainingFlow = 1.0e5f;     // m³/yr
 inline constexpr float SwallowLimit = 6.0e7f;     // m³/yr; a stream larger than this keeps its bed across soluble rock
 
 // Vents.
@@ -69,7 +77,7 @@ inline constexpr float FaultShare = 0.4f;         // crush above which rising wa
 inline constexpr float SolubleEnough = 20.0f;     // m/Myr per m/yr of runoff: limestone, chalk, marble, salt
 inline constexpr float KarstThickness = 8.0f;     // m of soluble rock that holds a conduit system
 inline constexpr float KarstReach = 10.0f;        // m the water table may stand above soluble rock and still drain through it
-inline constexpr float HangingStream = 5.0f;      // m the water table lies under a bed for its stream to sink
+inline constexpr float PlaneReach = 45.0f;        // m from a cell's centre within which a joint plane passes through the cell
 inline constexpr float LeastConduit = 0.25f;      // m radius below which a passage is a fissure and is not listed
 inline constexpr float MostConduit = 9.0f;        // m radius
 inline constexpr float ConduitScale = 3.0f;       // m radius of the passage 1 m³/s keeps open; radius grows with flow^0.4

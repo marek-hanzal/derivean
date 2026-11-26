@@ -109,9 +109,9 @@ inline constexpr float channelHeadOf(Level level) { return ChannelHeads[size_t(l
 // cell's worth upwards: under the settling controller the gathered-water rule ribs a held plane at
 // the width of the controller's average (test/LandscapePlane.cpp), so it is not used there.
 inline constexpr bool gathersWater(Level level) { return level == Level::Region; }
-// m³/yr of the largest stream a Region cell holds inside itself: a headwater stream. A cell that
-// has gathered less water than a channel of the level is lowered at the pace such a stream cuts on
-// the cell's slope.
+// m³/yr of the largest stream a Region cell holds inside itself where a metre of water runs off in
+// a year: a headwater stream. A cell that has gathered less water than a channel of the level is
+// lowered at the pace such a stream cuts on the cell's slope.
 inline constexpr float HiddenStreams[LevelCount] = {0, 2.5e7f, 0, 0, 0};
 // A ground cell also meets a slope's water as it comes: in storms, at many times the yearly mean
 // the discharge stands for. The less water a cell gathers the flashier it is; a stream of the size

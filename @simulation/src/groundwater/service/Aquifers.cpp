@@ -16,8 +16,9 @@ std::shared_ptr<const GroundwaterTile> Aquifers::require(Atlas& atlas, TileKey l
         Slot& slot = slots_[local];
         if (slot.tile) return slot.tile;
         if (slot.claimed) {
-            // The thread that claimed it waits for landscape tiles only, and no landscape tile
-            // waits for ground water: sleeping here cannot close a circle.
+            // The thread that claimed it waits for local tiles only, and the local and site tiles
+            // ground water asks the atlas for never ask for ground water: sleeping here cannot
+            // close a circle. Only a ground tile asks, and nothing here waits for one.
             done_.wait(lock, [&] { return slots_[local].tile != nullptr; });
             return slots_[local].tile;
         }

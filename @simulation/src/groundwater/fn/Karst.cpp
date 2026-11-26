@@ -7,60 +7,75 @@ namespace {
 
 constexpr int Rounds = 5;
 constexpr float PlaneEase[3] = {1.0f, 3.0f, 12.0f};   // how much easier water follows a joint corridor and a joint zone than unbroken rock
-constexpr float PlaneReach = 45.0f;       // m from a cell's centre within which a plane passes through the cell
 constexpr float Fall = 0.02f;             // m of head a metre of unbroken rock uses up
 constexpr float FlowUnit = 3.0e5f;        // m³/yr (10 l/s) of use that makes a step as easy again as a joint zone made it
 constexpr float FlowEase = 12.0f;
 constexpr float EntryHead = 3.0f;         // m of head it takes to open a way out to the surface where a joint zone meets it
 constexpr float OffZone = 4.0f;           // times as much where none does
-constexpr float OpenWater = 0.25f;        // share of it into a stream, a lake or the sea, and over the lip of a bed
+constexpr float OpenWater = 0.25f;        // share of it into a stream or standing water, and over the lip of a bed
 constexpr float Thin = 0.3f;              // m of water running on a tight bed
 
 float grown(float used) { return FlowEase * std::pow(used / FlowUnit, 0.8f); }
 
 bool onZone(const WaterField& field, size_t cell) {
-    if (field.column[cell].fissures < 0) return false;
+    if (!field.column[cell].fissured) return false;
     const Fissures& fissures = field.fissures[cell];
     return std::min(std::abs(fissures.zone[0]), std::abs(fissures.zone[1])) <= PlaneReach;
 }
 
-struct Paths {
-    const WaterField& field;
-    std::vector<float> used;        // nodes × 8: m³/yr each step carried in the round before
-    std::vector<float> usedOut;     // per node: what left through it as an outlet
+// What the round before left behind.
+struct Use {
+    std::vector<float> step;     // nodes × 8: m³/yr each step carried
+    std::vector<float> outlet;   // per node: m³/yr that left through it
+};
 
-    // m of head the step from a node towards neighbour k uses up.
-    float loss(size_t from, int storey, size_t to, int k) const {
-        int set = 0;
-        return float(WaterCell) * NeighborReach[k] * Fall / (PlaneEase[planeAlong(field, from, to, k, set)] + grown(used[(from * 2 + size_t(storey)) * 8 + size_t(k)]));
-    }
+// Whether the water of a node can go on to the node (to, toStorey) in direction k.
+bool joined(const WaterField& field, size_t from, int storey, int toStorey, int k) {
+    if (storey == Lower) return toStorey == Lower;
+    const Way way = Way(field.way[from * 8 + size_t(k)]);
+    return toStorey == Upper ? way == Way::Along : way == Way::Under;
+}
 
-    // m: the lowest a node's water can stand: on the tight bed it runs on, for the upper storey.
-    float least(size_t node) const { return node & 1 ? -1e30f : field.column[node / 2].floor + Thin; }
+// m of head the step from a node towards neighbour k uses up.
+float lossOf(const WaterField& field, const Use& use, size_t from, int storey, size_t to, int k) {
+    int set = 0;
+    return float(WaterCell) * NeighborReach[k] * Fall / (PlaneEase[planeAlong(field, from, to, k, set)] + grown(use.step[(from * 2 + size_t(storey)) * 8 + size_t(k)]));
+}
 
-    // The level at which a node's water gets out on its own, and how.
-    float wayOut(size_t node, Outlet& outlet) const {
-        const size_t cell = node / 2;
-        const AquiferColumn& column = field.column[cell];
-        const float entry = EntryHead * (onZone(field, cell) ? 1.0f : OffZone) / (1.0f + grown(usedOut[node]));
-        outlet = Outlet::Rising;
-        float level = column.ground + entry;
-        if (column.drain != Drain::None) level = std::min(level, column.stage + OpenWater * entry);
-        if (node & 1) return level;
-        for (int k = 0; k < 8; ++k) {
-            if (Way(field.way[cell * 8 + size_t(k)]) != Way::Outcrop) continue;
-            const int x = int(cell % size_t(field.size)) + NeighborX[k], z = int(cell / size_t(field.size)) + NeighborZ[k];
-            const float lip = std::min(sheetToward(column, k), field.column[field.index(x, z)].ground) + OpenWater * entry;
+// m: the lowest a node's water can stand: on the tight bed it runs on, for the upper storey.
+float leastHead(const WaterField& field, size_t node) { return node & 1 ? -1e30f : field.column[node / 2].floor + Thin; }
+
+// The level at which a node's water gets out without passing another node of the tile, and how.
+float wayOut(const WaterField& field, const Use& use, size_t node, Outlet& outlet) {
+    const size_t cell = node / 2;
+    const int storey = int(node & 1), x = int(cell % size_t(field.size)), z = int(cell / size_t(field.size));
+    const AquiferColumn& column = field.column[cell];
+    const float entry = EntryHead * (onZone(field, cell) ? 1.0f : OffZone) / (1.0f + grown(use.outlet[node]));
+    outlet = Outlet::Rising;
+    float level = column.ground + entry;
+    if (column.drain != Drain::None) level = std::min(level, column.stage + OpenWater * entry);
+    for (int k = 0; k < 8; ++k) {
+        const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
+        if (nx < 0 || nz < 0 || nx >= field.size || nz >= field.size) continue;
+        const size_t other = field.index(nx, nz);
+        if (storey == Upper && Way(field.way[cell * 8 + size_t(k)]) == Way::Outcrop) {
+            const float lip = std::min(sheetToward(column, k), field.column[other].ground) + OpenWater * entry;
             if (lip < level) level = lip, outlet = Outlet::Lip;
         }
-        return level;
+        // Beyond the edge the water table of the same rock, as both tiles know it, takes the water on.
+        for (int toStorey = storey; toStorey <= Lower; ++toStorey) {
+            if (field.owned(nx, nz) || !field.karst[other * 2 + size_t(toStorey)] || !joined(field, cell, storey, toStorey, k)) continue;
+            const float beyond = field.level[other * 2 + size_t(toStorey)] + lossOf(field, use, cell, storey, other, k);
+            if (beyond < level) level = beyond, outlet = Outlet::Underflow;
+        }
     }
-};
+    return level;
+}
 
 } // namespace
 
 int planeAlong(const WaterField& field, size_t from, size_t to, int k, int& set) {
-    if (field.column[from].fissures < 0 || field.column[to].fissures < 0) return 0;
+    if (!field.column[from].fissured || !field.column[to].fissured) return 0;
     const Fissures &here = field.fissures[from], &there = field.fissures[to];
     const float stepX = float(NeighborX[k]) * float(WaterCell), stepZ = float(NeighborZ[k]) * float(WaterCell), length = float(WaterCell) * NeighborReach[k];
     int best = 0;
@@ -89,33 +104,35 @@ KarstNet drainKarst(const WaterField& field) {
                 if (field.karst[field.index(x, z) * 2 + size_t(storey)]) members.push_back(int32_t(field.index(x, z) * 2 + size_t(storey)));
     if (members.empty()) return net;
 
-    Paths paths{field, std::vector<float>(nodes * 8, 0.0f), std::vector<float>(nodes, 0.0f)};
+    Use use{std::vector<float>(nodes * 8, 0.0f), std::vector<float>(nodes, 0.0f)};
+    std::vector<uint8_t> settled(nodes);
     using Reached = std::pair<float, int32_t>;
     for (int round = 0; round < Rounds; ++round) {
-        // Lowest stand for every node, found from the lowest outlets upward.
+        // Lowest stand for every node, found from the lowest outlets upward. A node is settled when
+        // it is first taken at its final stand; the node it drains to was settled before it.
         std::priority_queue<Reached, std::vector<Reached>, std::greater<Reached>> open;
         for (const int32_t node : members) {
-            net.parent[size_t(node)] = -1, net.toward[size_t(node)] = 255;
-            net.head[size_t(node)] = std::max(paths.least(size_t(node)), paths.wayOut(size_t(node), net.outlet[size_t(node)]));
+            net.parent[size_t(node)] = -1, net.toward[size_t(node)] = 255, settled[size_t(node)] = 0;
+            net.head[size_t(node)] = std::max(leastHead(field, size_t(node)), wayOut(field, use, size_t(node), net.outlet[size_t(node)]));
             open.push({net.head[size_t(node)], node});
         }
+        net.order.clear();
         while (!open.empty()) {
             const auto [reached, node] = open.top();
             open.pop();
-            if (reached > net.head[size_t(node)]) continue;
+            if (reached > net.head[size_t(node)] || settled[size_t(node)]) continue;
+            settled[size_t(node)] = 1;
+            net.order.push_back(node);
             const size_t to = size_t(node) / 2;
             const int toStorey = node & 1, tx = int(to % size_t(size)), tz = int(to / size_t(size));
             for (int k = 0; k < 8; ++k) {
                 const int fx = tx - NeighborX[k], fz = tz - NeighborZ[k];
                 if (!field.owned(fx, fz)) continue;
                 const size_t from = field.index(fx, fz);
-                const Way way = Way(field.way[from * 8 + size_t(k)]);
                 for (int storey = Upper; storey <= Lower; ++storey) {
                     const size_t source = from * 2 + size_t(storey);
-                    if (!field.karst[source]) continue;
-                    const bool joined = storey == Lower ? toStorey == Lower : (toStorey == Upper ? way == Way::Along : way == Way::Under);
-                    if (!joined) continue;
-                    const float through = std::max(paths.least(source), reached + paths.loss(from, storey, to, k));
+                    if (!field.karst[source] || settled[source] || !joined(field, from, storey, toStorey, k)) continue;
+                    const float through = std::max(leastHead(field, source), reached + lossOf(field, use, from, storey, to, k));
                     if (through >= net.head[source]) continue;
                     net.head[source] = through;
                     net.parent[source] = node, net.toward[source] = uint8_t(k), net.outlet[source] = Outlet::None;
@@ -123,28 +140,19 @@ KarstNet drainKarst(const WaterField& field) {
                 }
             }
         }
-        // What each node took in runs down its way; every step remembers what it carried. A node
-        // that stands level with the one it drains to (water ponded on a tight bed) comes after
-        // it in the search, so it is taken before it here.
-        std::vector<int32_t> settled(nodes, 0);
-        net.order = members;
-        for (const int32_t node : members) {
-            int32_t depth = 0;
-            for (int32_t at = net.parent[size_t(node)]; at >= 0; at = net.parent[size_t(at)]) ++depth;
-            settled[size_t(node)] = depth;
-        }
-        std::sort(net.order.begin(), net.order.end(), [&](int32_t a, int32_t b) { return settled[size_t(a)] != settled[size_t(b)] ? settled[size_t(a)] > settled[size_t(b)] : a < b; });
-        std::fill(paths.used.begin(), paths.used.end(), 0.0f);
-        std::fill(paths.usedOut.begin(), paths.usedOut.end(), 0.0f);
+        // What each node took in runs down its way, the last settled first; every step remembers what it carried.
+        std::reverse(net.order.begin(), net.order.end());
+        std::fill(use.step.begin(), use.step.end(), 0.0f);
+        std::fill(use.outlet.begin(), use.outlet.end(), 0.0f);
         for (const int32_t node : members) net.flux[size_t(node)] = field.fate[size_t(node)].captured;
         for (const int32_t node : net.order) {
             const int32_t parent = net.parent[size_t(node)];
             if (parent < 0) {
-                paths.usedOut[size_t(node)] = float(net.flux[size_t(node)]);
+                use.outlet[size_t(node)] = float(net.flux[size_t(node)]);
                 continue;
             }
             net.flux[size_t(parent)] += net.flux[size_t(node)];
-            paths.used[size_t(node) * 8 + net.toward[size_t(node)]] = float(net.flux[size_t(node)]);
+            use.step[size_t(node) * 8 + net.toward[size_t(node)]] = float(net.flux[size_t(node)]);
         }
     }
     for (size_t at = net.order.size(); at-- > 0;) {

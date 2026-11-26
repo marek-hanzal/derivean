@@ -35,7 +35,7 @@ void routeGroundWater(WaterField& field);
 // Vents.cpp — the springs of the tile's own cells and the per-cell fields a tile keeps.
 void findVents(const WaterField& field, GroundwaterTile& tile);
 
-// Karst.cpp — the conduit systems of the tile's soluble rock, their outlets and their voids.
+// Conduits.cpp — the conduit systems of the tile's soluble rock, their outlets and their voids.
 void growConduits(const WaterField& field, GroundwaterTile& tile);
 
 // Solve.cpp — everything after the columns are set, for a tile of the world or a field built by hand.

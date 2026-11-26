@@ -7,9 +7,8 @@ namespace {
 
 constexpr uint64_t BedStream = 0x50494c45;
 constexpr float Pitch[2] = {14.0f, 34.0f};   // m from the base of one flow to the base of the next, by Magma
-constexpr double LavaSealing = 2.0e6;        // yr after which half of the rain runs off a lava surface instead of sinking into it
-constexpr double AshSealing = 0.3e6;         // yr, the same for ash and scoria
-constexpr float Freshest = 0.01f;            // share of its usual erosion that even the freshest surface takes
+constexpr double LavaSealing = 0.5e6;        // yr after which half of the rain runs off a lava surface instead of sinking into it
+constexpr double AshSealing = 0.03e6;        // yr, the same for ash and scoria
 
 Material lavaOf(const VolcanicTile* tile, const std::vector<Vent>& vents, uint8_t vent) {
     const std::vector<Vent>& list = tile ? tile->vents : vents;
@@ -41,6 +40,15 @@ PileBed pileBedAt(uint64_t seed, const VolcanicTile& volcanic, const PileColumn&
     return bedIn(seed, id, lavaOf(&volcanic, {}, column.vent), float(column.lava) / 255.0f, height);
 }
 
+PilePoint pilePoint(const Tile& tile, size_t cell) {
+    const PileColumn column = pileColumn(tile, cell);
+    if (column.thickness <= 0) return {};
+    const std::vector<Vent>& vents = tile.volcanic->vents;
+    return {column.thickness, float(column.lava) / 255.0f, lavaOf(tile.volcanic.get(), {}, column.vent), column.vent < vents.size() ? vents[column.vent].id : 0};
+}
+
+PileBed pileBed(uint64_t seed, const PilePoint& point, float height) { return bedIn(seed, point.vent, point.rock, point.lava, height); }
+
 Material neckAt(const VolcanicTile& volcanic, Vec2 position) {
     for (const Vent& vent : volcanic.vents)
         for (const Feeder& feeder : vent.feeders)
@@ -56,7 +64,10 @@ bool volcanicUnit(Domain& domain, size_t i, uint64_t seed) {
     const uint8_t plug = volcanic.plug.empty() ? 0 : volcanic.plug[i];
     if (!plug && height <= 0) {
         // Cut through: the next reader of the cache must not find the pile's traits in it.
-        if (volcanic.inside[i]) domain.unit[i] = UnitCache{}, volcanic.inside[i] = 0;
+        if (volcanic.inside[i]) {
+            domain.unit[i] = UnitCache{}, volcanic.inside[i] = 0;
+            if (!domain.bed.empty()) domain.bed[i] = Bed{1, 0, Material::Bedrock};
+        }
         return false;
     }
     volcanic.inside[i] = 1;
@@ -64,8 +75,9 @@ bool volcanicUnit(Domain& domain, size_t i, uint64_t seed) {
     const float depth = std::max(0.0f, datum - rock);
     RockTraits traits;
     float own = 1e9f;
+    Material kind = Material::Tuff;
     if (plug) {
-        traits = traitsOf(lavaOf(nullptr, volcanic.vents, uint8_t(plug - 1)));
+        traits = traitsOf(kind = lavaOf(nullptr, volcanic.vents, uint8_t(plug - 1)));
     } else {
         const Material lava = lavaOf(nullptr, volcanic.vents, volcanic.vent[i]);
         const float share = volcanic.allLaid[i] > 0 ? volcanic.lavaLaid[i] / volcanic.allLaid[i] : 1.0f;
@@ -81,23 +93,27 @@ bool volcanicUnit(Domain& domain, size_t i, uint64_t seed) {
         } else {
             const uint64_t id = volcanic.vent[i] < volcanic.vents.size() ? volcanic.vents[volcanic.vent[i]].id : 0;
             const PileBed bed = bedIn(seed, id, lava, share, height - 1e-3f);
-            traits = traitsOf(bed.rock);
+            traits = traitsOf(kind = bed.rock);
             own = height - bed.bottom;
         }
     }
     if (!plug) {
-        // Fresh lava and scoria swallow the rain: no water runs on them, and none cuts them, until
-        // weathering has sealed their surface. Ash seals within a few hundred thousand years, lava
-        // takes millions. A finer level besides settles for a fixed span whatever the age of the
-        // ground: rock laid within that span is given only its own share of the span's erosion.
+        // Fresh lava and scoria swallow the rain: little water runs on them, and little cuts them,
+        // until weathering has sealed their surface. Ash seals within tens of thousands of years,
+        // lava within hundreds of thousands. The age is that of the middle of the step. A finer
+        // level besides settles for a fixed span whatever the age of the ground: rock laid within
+        // that span is given only its own share of the span's erosion.
         const float share = volcanic.allLaid[i] > 0 ? volcanic.lavaLaid[i] / volcanic.allLaid[i] : 1.0f;
-        const double span = domain.endTime - domain.startTime, age = std::max(0.0, (region ? domain.time - domain.startTime : span) - double(volcanic.laidAt[i]));
+        const double span = domain.endTime - domain.startTime;
+        const double age = std::max(0.0, (region ? domain.time - domain.startTime : span) - double(volcanic.laidAt[i])) + 0.5 * domain.step;
         const double sealing = share * LavaSealing + (1 - share) * AshSealing;
         const float worked = float(age / (age + sealing) * (region ? 1.0 : std::min(1.0, age / span)));
-        traits.erodibility *= std::max(worked, Freshest);
-        traits.weathering *= std::max(worked, Freshest);
+        traits.erodibility *= worked;
+        traits.weathering *= worked;
     }
     domain.unit[i] = {depth, depth + std::max(own, 1e-3f), traits};
+    // The ground level keeps the bed itself besides its traits (ground/fn/Settle.cpp).
+    if (!domain.bed.empty()) domain.bed[i] = Bed{depth, depth + std::max(own, 1e-3f), kind};
     return true;
 }
 

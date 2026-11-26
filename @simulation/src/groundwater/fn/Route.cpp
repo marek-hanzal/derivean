@@ -9,20 +9,19 @@ namespace {
 constexpr float MagmaticGas = 4000.0f;   // times the air's carbon dioxide that cooling melt gives deep water above it
 constexpr float GasDepth = 400.0f;       // m of circulation depth at which water meets that gas in full
 constexpr float OldestWater = 1.0e6f;    // yr
-constexpr float HottestRock = 350.0f;    // °C
 
 // Flow-weighted sum of what arriving water carries.
 struct Mixing {
     float flux{};
     Borne sum;
-
-    void take(float flow, const Borne& from, float step) {
-        if (flow <= 0) return;
-        flux += flow;
-        sum.lime += flow * from.lime, sum.far += flow * (from.far + step), sum.high += flow * from.high;
-        sum.rate += flow * from.rate, sum.age += flow * from.age, sum.deep += flow * from.deep;
-    }
 };
+
+void take(Mixing& mix, float flow, const Borne& from, float step) {
+    if (flow <= 0) return;
+    mix.flux += flow;
+    mix.sum.lime += flow * from.lime, mix.sum.far += flow * (from.far + step), mix.sum.high += flow * from.high;
+    mix.sum.rate += flow * from.rate, mix.sum.age += flow * from.age, mix.sum.deep += flow * from.deep;
+}
 
 // What the water takes on in the node it has reached.
 Borne passedThrough(const WaterField& field, size_t cell, int storey, const Mixing& mix) {
@@ -49,9 +48,9 @@ Borne passedThrough(const WaterField& field, size_t cell, int storey, const Mixi
 float flowDepth(const WaterField& field, size_t cell, int storey, float high) {
     const AquiferColumn& column = field.column[cell];
     if (storey == Upper) return std::max(0.0f, column.ground - column.floor);
-    const float level = std::min(field.level[cell * 2 + Lower], column.ground), through = column.shallowT + column.deepT;
+    const float level = std::min(field.level[cell * 2 + Lower], column.ground), through = lowerT(column);
     float depth = column.ground - level;
-    if (through > 0) depth += column.deepT / through * std::min(60.0f, 0.5f * std::max(0.0f, std::min(level, column.shallowBase) - column.base));
+    if (through > 0) depth += (column.deepT[0] + column.deepT[1]) / through * std::min(60.0f, 0.5f * std::max(0.0f, std::min(level, column.shallowBase) - column.base));
     // Down a fault water goes as deep as the head of its catchment drives it and the fault stays open.
     return depth + std::min(column.crush * column.crush * FaultDepth, DriveRatio * std::max(0.0f, high - column.ground));
 }
@@ -80,9 +79,9 @@ void routeGroundWater(WaterField& field) {
     const int size = field.size;
     const size_t cells = field.cells();
     std::vector<float> side(cells * 2, 0.0f), sideNext(cells * 2, 0.0f), down(cells, 0.0f), downNext(cells, 0.0f), fluxNext(cells * 2, 0.0f);
-    std::vector<Borne> carriedNext(cells * 2);
+    std::vector<Borne> borneNext(cells * 2);
     field.flux.assign(cells * 2, 0.0f);
-    field.carried.assign(cells * 2, Borne{});
+    field.borne.assign(cells * 2, Borne{});
     field.fate.assign(cells * 2, NodeFate{});
 
     // Every sweep a node gathers what its neighbours passed on in the sweep before, so water moves
@@ -98,8 +97,8 @@ void routeGroundWater(WaterField& field) {
                     for (int storey = column.perched ? Upper : Lower; storey <= Lower; ++storey) {
                         const size_t node = i * 2 + size_t(storey);
                         Mixing mix;
-                        if (storey == Upper || !column.perched) mix.take(column.recharge + column.sunk, Borne{0, 0, column.ground, column.recharge / WaterCellArea, 0, 0}, 0);
-                        else mix.take(down[i], field.carried[i * 2 + Upper], 0);
+                        if (storey == Upper || !column.perched) take(mix, column.recharge + column.sunk, Borne{0, 0, column.ground, column.recharge / WaterCellArea, 0, 0}, 0);
+                        else take(mix, down[i], field.borne[i * 2 + Upper], 0);
                         for (int k = 0; k < 8; ++k) {
                             const int nx = x - NeighborX[k], nz = z - NeighborZ[k];
                             if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
@@ -107,10 +106,10 @@ void routeGroundWater(WaterField& field) {
                             const float step = float(WaterCell) * NeighborReach[k];
                             const Way way = Way(field.way[j * 8 + size_t(k)]);
                             if (storey == Lower) {
-                                mix.take(side[lower] * field.share[lower * 8 + size_t(k)], field.carried[lower], step);
-                                if (way == Way::Under) mix.take(side[upper] * field.share[upper * 8 + size_t(k)], field.carried[upper], step);
+                                take(mix, side[lower] * field.share[lower * 8 + size_t(k)], field.borne[lower], step);
+                                if (way == Way::Under) take(mix, side[upper] * field.share[upper * 8 + size_t(k)], field.borne[upper], step);
                             } else if (way == Way::Along) {
-                                mix.take(side[upper] * field.share[upper * 8 + size_t(k)], field.carried[upper], step);
+                                take(mix, side[upper] * field.share[upper * 8 + size_t(k)], field.borne[upper], step);
                             }
                         }
                         if (beyond) {
@@ -121,12 +120,12 @@ void routeGroundWater(WaterField& field) {
                         fluxNext[node] = mix.flux;
                         sideNext[node] = split.side;
                         if (storey == Upper) downNext[i] = split.down;
-                        carriedNext[node] = mix.flux > 0 ? passedThrough(field, i, storey, mix) : Borne{};
+                        borneNext[node] = mix.flux > 0 ? passedThrough(field, i, storey, mix) : Borne{};
                     }
                 }
         });
         if (beyond) break;
-        field.flux.swap(fluxNext), side.swap(sideNext), down.swap(downNext), field.carried.swap(carriedNext);
+        field.flux.swap(fluxNext), side.swap(sideNext), down.swap(downNext), field.borne.swap(borneNext);
     }
 
     field.sideways = side;

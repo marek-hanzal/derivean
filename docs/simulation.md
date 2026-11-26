@@ -110,7 +110,7 @@ A ground tile spreads the parts of its own replay whose rows are independent ove
 
 The atlas keeps every tile it has built. A ground tile holds about 7 MB, so a long walk needs a bound that does not exist yet.
 
-[`chartOf`](../@simulation/src/chart/fn/Chart.hpp) reads a whole square at once for maps: per pixel the answer of `surfaceAt` at its centre from the finest level the pixel pitch can show, the planet where no tile is finished, and water drawn to be read at that pitch: the largest stream a wide pixel covers, a stream as its path and a lake up to its shore where pixels are narrower than cells. Like `surfaceAt` it never blocks or builds, and it only reads what cannot change, so any thread may call it while tiles are being built.
+[`chartOf`](../@simulation/src/chart/fn/Chart.hpp) reads a whole square at once for maps: per pixel what the finished tiles hold at its centre (`readSurface`) from the finest level the pixel pitch can show, the planet where no tile is finished, and water drawn to be read at that pitch: the largest stream a wide pixel covers, a stream as its path and a lake up to its shore where pixels are narrower than cells. It never blocks or builds, and it only reads what cannot change, so any thread may call it while tiles are being built and the session runs. For that reason it is the untouched world: what the session has changed (`overlayLive`) is not in a chart.
 
 ## Known weaknesses
 

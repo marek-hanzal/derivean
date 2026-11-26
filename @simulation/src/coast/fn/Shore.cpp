@@ -8,18 +8,6 @@ constexpr int Rounds[LevelCount] = {0, 3, 4, 4, 0};
 
 float looseAt(const Domain& domain, size_t i) { return domain.ground.sediment[0][i] + domain.ground.sediment[1][i] + domain.ground.sediment[2][i]; }
 
-// What the step's flood left standing: the sea, and lakes their rivers still reach.
-bool readStanding(const Domain& domain, Shore& shore) {
-    bool any = false;
-    const float sea = float(domain.seaLevel) + SeaBand;
-    for (size_t i = 0; i < domain.cells(); ++i) {
-        shore.top[i] = domain.ground.rock[i] + looseAt(domain, i);
-        const bool stands = domain.level[i] > shore.top[i] + 1e-3f && (domain.level[i] <= sea || domain.discharge[i] > 0);
-        shore.stood[i] = stands ? domain.level[i] : NoWater;
-        any = any || stands;
-    }
-    return any;
-}
 
 // Entries in the tile's ledger and its per-cell totals for what the waves did this step, and the
 // surface a finer level is held to moved by the same: a bench or a spit is relief of the level's
@@ -74,6 +62,17 @@ Shore& shoreOf(Domain& domain) {
 // the swash of the highest waves can run over, however far that is from where it stands at its
 // mean level: across a bench that dries at low tide, over a bar. The ground next to such cells is
 // given its level too: that is what its waves strike.
+bool readStanding(const Domain& domain, Shore& shore) {
+    bool any = false;
+    for (size_t i = 0; i < domain.cells(); ++i) {
+        shore.top[i] = domain.ground.rock[i] + looseAt(domain, i);
+        const bool stands = standsOver(domain, i, shore.top[i]);
+        shore.stood[i] = stands ? domain.level[i] : NoWater;
+        any = any || stands;
+    }
+    return any;
+}
+
 bool spreadWater(const Domain& domain, Shore& shore) {
     const int size = domain.size;
     std::vector<int32_t> reached;
@@ -110,9 +109,7 @@ void workShores(Domain& domain, FlowScratch&) {
     if (!domain.shore) {
         // Most ground stands dry: nothing is set up until water is found.
         bool any = false;
-        const float sea = float(domain.seaLevel) + SeaBand;
-        for (size_t i = 0; i < domain.cells() && !any; ++i)
-            any = domain.level[i] > domain.ground.rock[i] + looseAt(domain, i) + 1e-3f && (domain.level[i] <= sea || domain.discharge[i] > 0);
+        for (size_t i = 0; i < domain.cells() && !any; ++i) any = standsOver(domain, i, domain.ground.rock[i] + looseAt(domain, i));
         if (!any) return;
     }
     Shore& shore = shoreOf(domain);

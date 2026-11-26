@@ -38,11 +38,13 @@ void measurePower(Sweep& sweep) {
             // Where a level cuts with all of a cell's water, it cuts once that is more than a channel
             // head's worth. The coarser levels cut with the water a cell has gathered, not with the
             // sheet that any long slope carries. A cell that has gathered less than a channel's worth
-            // still holds streams of its own inside it, the largest about `hidden` or all the water the
-            // cell has, where that is less: its ground is lowered at the pace such a stream cuts on the
-            // cell's slope. Ground without water is not lowered.
+            // still holds streams of its own inside it; the largest carries `hidden` where a metre of
+            // water runs off in a year and less in proportion where less does, and the cell's ground is
+            // lowered at the pace such a stream cuts on the cell's slope. Ground that sheds no water is
+            // not lowered. The pace follows the cell's own runoff, never the water routed through it:
+            // lowering that grew with the sheet a slope carries would rill every slope at a cell's width.
             const float wash = ground ? std::max(0.0f, std::pow(working[i], float(StreamExponent)) - head)
-                                      : std::pow(std::max(sweep.scratch.gathered[i], std::min(hidden, domain.discharge[i])), float(StreamExponent));
+                                      : std::pow(std::max(sweep.scratch.gathered[i], hidden * std::min(1.0f, domain.runoff[i])), float(StreamExponent));
             if (wash > 0) {
                 // What is about to settle here is as easy to pick up again as what already lies here.
                 // Storms count for loose cover only: rock is cut by what runs over it year in, year out.

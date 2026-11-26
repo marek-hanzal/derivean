@@ -16,14 +16,17 @@ namespace {
 constexpr double Lattice = 16384.0;   // m between the places looked at
 constexpr float Looked = 150.0f;      // m of rock under the surface that counts
 
-// Share of the top of a column that is carbonate rock.
+// Share of the top of a column that is limestone or chalk of the dated cover: beds, not the marble
+// of a basement. Nothing where the cover was folded: what is sought lies flat.
 float carbonateShare(const Planet& planet, Vec2 point) {
     const StrataColumn column = strataAt(planet, point);
+    if (column.foldSpan > QuietFoldSpan) return 0;
     float soluble = 0, at = 0;
     while (at < Looked) {
-        const Bed bed = bedAt(planet.seed, column, unitAt(column, at, 0), at, column.material);
+        const StrataUnit unit = unitAt(column, at, 0);
+        const Bed bed = bedAt(planet.seed, column, unit, at, column.material);
         const float bottom = std::min(std::max(bed.bottom, at + 0.5f), Looked);
-        if (fissuredBySolution(definitionOf(bed.rock))) soluble += bottom - at;
+        if (unit.slot >= 0 && fissuredBySolution(definitionOf(bed.rock))) soluble += bottom - at;
         at = bottom + 0.01f;
     }
     return soluble / Looked;
@@ -56,11 +59,11 @@ Vec2 seekWaterPlace(World& world, const std::string& kind) {
                 const float share = carbonateShare(planet, point);
                 if (share < 0.6f) continue;
                 score = share * std::min(rain, 2.0) * std::clamp(above / 800.0, 0.2, 1.5);
-                std::snprintf(reason, sizeof reason, "%.0f %% of the top %.0f m is carbonate rock; rain %.2f m/yr, %.0f m above the sea, %.0f C", 100.0 * share, double(Looked), rain, above, warmth);
+                std::snprintf(reason, sizeof reason, "%.0f %% of the top %.0f m is flat-lying limestone or chalk; rain %.2f m/yr, %.0f m above the sea, %.0f C", 100.0 * share, double(Looked), rain, above, warmth);
             }
             if (score > most) most = score, best = at, why = reason;
         }
-    std::printf("sought %s over the planet on a lattice of %.0f km: X %.0f Z %.0f | %s\n", hot ? "the hottest ground with rain" : "carbonate rock standing in the rain", Lattice / 1000, best.x, best.z,
+    std::printf("sought %s over the planet on a lattice of %.0f km: X %.0f Z %.0f | %s\n", hot ? "the hottest ground with rain" : "flat-lying limestone standing in the rain", Lattice / 1000, best.x, best.z,
                 most < 0 ? "none found" : why.c_str());
     return best;
 }

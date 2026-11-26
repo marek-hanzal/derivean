@@ -17,11 +17,10 @@ ShoreGrid emptyGrid(int side, double cell, double seaLevel) {
 ShoreGrid shoreGridOf(const Domain& domain) {
     ShoreGrid grid = emptyGrid(domain.size, domain.cell, domain.seaLevel);
     const Shore* shore = domain.shore && domain.shore->top.size() == domain.cells() ? domain.shore.get() : nullptr;
-    const float sea = float(domain.seaLevel) + SeaBand;
     for (size_t i = 0; i < domain.cells(); ++i) {
         grid.rock[i] = domain.ground.rock[i];
         for (int c = 0; c < SedimentClasses; ++c) grid.cover[c][i] = domain.ground.sediment[c][i];
-        if (domain.level[i] > grid.top(i) + 1e-3f && (domain.level[i] <= sea || domain.discharge[i] > 0)) grid.water[i] = domain.level[i];
+        if (standsOver(domain, i, grid.top(i))) grid.water[i] = domain.level[i];
         if (!shore) continue;
         grid.notch[i] = shore->notch[i], grid.cut[i] = shore->cut[i];
         for (int k = 0; k < WaveDirections; ++k)
@@ -41,7 +40,7 @@ ShoreGrid shoreGridOf(const std::vector<const Tile*>& tiles, int perSide) {
                     const size_t from = size_t(z) * TileCells + size_t(x), to = grid.index(tx * TileCells + x, tz * TileCells + z);
                     grid.rock[to] = tile.now.rock[from];
                     for (int c = 0; c < SedimentClasses; ++c) grid.cover[c][to] = tile.now.sediment[c][from];
-                    if (tile.water[from] > grid.top(to)) grid.water[to] = tile.water[from];
+                    if (tile.water[from] > grid.top(to) + Film) grid.water[to] = tile.water[from];
                     if (!tile.shore) continue;
                     grid.notch[to] = tile.shore->notch[from], grid.cut[to] = tile.shore->cut[from];
                     for (int k = 0; k < WaveDirections; ++k) grid.wave[to] = std::max(grid.wave[to], WaveQuantum * float(tile.shore->height[from * WaveDirections + size_t(k)]));

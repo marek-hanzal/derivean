@@ -25,6 +25,9 @@ float floorOf(const Domain& domain, const SheetField& field, int x, int z) {
             // what breaks off, which the same law as in the flow puts at this depth of water.
             const float front = std::sqrt(field.slide[i] * field.thickness[i] * float(IceToWater / CalvingRate));
             floor = std::min(floor, sea - front);
+        } else if (field.thickness[n] <= 0) {
+            // Bare ground: this cell is the ice's end, and its water has to run off over that ground.
+            floor = std::min(floor, ground);
         } else {
             floor = std::min(floor, ground - Overdeepening * (field.top[i] - field.top[n]));
         }

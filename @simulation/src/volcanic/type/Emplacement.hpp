@@ -11,7 +11,10 @@ namespace derivean::sim {
 // How a cell of the grid takes what reaches it.
 enum class Rest : uint8_t {
     Open,      // material comes to rest and raises the ground
-    Passing,   // crosses and may stall, but leaves nothing: ground another owner has already finished
+    // Ground another owner has already finished. An eruption behaves on it as on open ground, so
+    // that what crosses it into open cells is what that owner saw cross; but what it lays there is
+    // not the grid's to keep: whoever reads `laid` drops it and books it as passed.
+    Passing,
     Closed,    // the edge: what arrives has left the grid
 };
 
@@ -31,7 +34,7 @@ struct Emplacement {
     std::vector<Rest> rest;
     std::vector<uint8_t> queued;  // cells waiting in the worklist of a relaxation
     double lost{};                // m³ that left over a Closed cell
-    double passed{};              // m³ that stalled on Passing cells and was dropped
+    double passed{};              // m³ laid on Passing cells and dropped by the reader of `laid`
 
     size_t cells() const { return size_t(width) * size_t(height); }
     size_t index(int x, int z) const { return size_t(z) * size_t(width) + size_t(x); }

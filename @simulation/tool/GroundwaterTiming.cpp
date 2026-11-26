@@ -21,9 +21,10 @@ void timeGroundwater(World& world, TileKey local) {
         if (!pooled) setting.workers = nullptr;
         double best[7] = {1e9, 1e9, 1e9, 1e9, 1e9, 1e9, 1e9};
         std::shared_ptr<GroundwaterTile> tile;
+        WaterField field;
         for (int run = 0; run < 3; ++run) {
             Lap lap;
-            WaterField field;
+            field = WaterField{};
             readColumns(setting, local, around, field);
             const double columns = lap();
             sinkStreams(field);
@@ -43,6 +44,20 @@ void timeGroundwater(World& world, TileKey local) {
         std::printf("local tile %d %d, best of 3, %s: columns %.0f ms, sinking streams %.0f, levels %.0f, routing %.0f, vents and fields %.0f, conduits %.0f (%zu listed) | water table and springs %.0f ms, cave field %.0f ms, all %.0f ms\n",
                     local.x, local.z, pooled ? "with the pool" : "one thread", 1e3 * best[0], 1e3 * best[1], 1e3 * best[2], 1e3 * best[3], 1e3 * best[4], 1e3 * best[5],
                     tile->caves->conduits.size(), 1e3 * (best[6] - best[5]), 1e3 * best[5], 1e3 * best[6]);
+        if (!pooled) {
+            // Where the water that is followed no farther was when the sweeps ended.
+            double lag[4] = {}, entered = 0;
+            for (int z = field.margin; z < field.size - field.margin; ++z)
+                for (int x = field.margin; x < field.size - field.margin; ++x) {
+                    const size_t cell = field.index(x, z);
+                    const AquiferColumn& column = field.column[cell];
+                    entered += column.recharge + column.sunk;
+                    lag[0] += field.fate[cell * 2 + Upper].lag;
+                    lag[column.crush >= 0.2f ? 1 : column.perched ? 2 : 3] += field.fate[cell * 2 + Lower].lag;
+                }
+            std::printf("  still under way after %d sweeps, of what enters: on tight beds %.1f %%, in fault rock %.1f %%, under tight beds %.1f %%, elsewhere %.1f %%\n", RouteSweeps,
+                        100 * lag[0] / entered, 100 * lag[1] / entered, 100 * lag[2] / entered, 100 * lag[3] / entered);
+        }
         if (!pooled || tile->caves->conduits.empty()) continue;
         // What a voxel column pays: the spans of vertical lines through the middle of every conduit.
         Lap lap;

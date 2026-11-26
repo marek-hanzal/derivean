@@ -4,11 +4,11 @@
 
 namespace derivean::sim {
 
-// A stream on soluble rock loses water to it cell after cell. The landscape's discharge is that of
-// a stream that loses none, so the share still on the surface is followed down each course here:
+// A stream on soluble rock loses water to it cell after cell, and the landscape's discharge is
+// that of a stream that loses none. The share still on the surface is followed down each course:
 // a cell's water is what its donors pass on after their own losses, plus what joins in the cell.
-// One sweep carries that one cell downstream. Once the landscape takes the same losses out of its
-// own routing (fn/Swallow.hpp), its recorded loss replaces this estimate.
+// One sweep carries that one cell downstream, so a loss is felt SinkSweeps cells down the course
+// and no farther; the landscape's own record of what sank (fn/Swallow.hpp) would be exact.
 void sinkStreams(WaterField& field) {
     const int size = field.size;
     const size_t cells = field.cells();
@@ -38,7 +38,7 @@ void sinkStreams(WaterField& field) {
         });
         kept.swap(next);
     }
-    for (size_t i = 0; i < cells; ++i) field.column[i].sunk = field.column[i].swallow > 0 ? lostAt(i, kept[i]) : 0.0f;
+    for (size_t i = 0; i < cells; ++i) field.column[i].sunk = lostAt(i, kept[i]);
 }
 
 } // namespace derivean::sim

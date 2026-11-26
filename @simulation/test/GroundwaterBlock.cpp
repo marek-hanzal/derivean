@@ -80,7 +80,7 @@ void testLimestoneBlock() {
     for (int z = 0; z < TileCells; ++z)
         for (int x = 0; x < TileCells; ++x) {
             AquiferColumn& column = field.column[field.index(x, z)];
-            column.fissures = int32_t(field.index(x, z));
+            column.fissured = true;
             field.fissures[field.index(x, z)] = fissuresAt(field.seed, mass, field.centre(x, z), 80.0f);
             if (x >= Valley) column.drain = Drain::Stream, column.stream = 1e9f, column.recharge = 0;
         }
@@ -119,6 +119,12 @@ void testLimestoneBlock() {
     expectWater(why->passages > (Valley - SinkX) * WaterCell, "no passage runs through from the sink to the spring", why->passages);
     expectWater(widest > 1.0 && trunk > 20e3, "flow has not gathered into conduits a person could walk", trunk);
     expectWater(straight > 0.6 * trunk, "passages do not follow the joint zones", straight / std::max(1.0, trunk));
+    // Cold water that met only the air's own gas lays nothing down, and nothing comes out above the river's level but at the river.
+    for (size_t i = 0; i < tile->springs.size(); ++i) {
+        expectWater(tile->springs[i].carbonate == 0 && tile->springs[i].silica == 0, "a cold limestone spring brings mineral to lay down", tile->springs[i].carbonate);
+        expectWater(tile->records[i].aquifer == Material::Limestone && tile->records[i].floor == Material::Shale, "a karst spring does not name the rock it comes from");
+        expectWater(tile->springs[i].position.x > (Valley - 2) * WaterCell, "water of the plateau comes out on the plateau, above its water table", tile->springs[i].position.x);
+    }
 
     // The voids are there for the voxel column, and a point is in a cave exactly where a span holds it.
     int spanned = 0;

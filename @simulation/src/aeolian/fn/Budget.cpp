@@ -144,12 +144,25 @@ void blowLoose(Domain& domain, FlowScratch& scratch) {
         if (domain.time + 1.5 * domain.step >= domain.endTime) shapeDunes(domain);
         return;
     }
+    WindField& wind = domain.aeolian;
+    for (size_t i = 0; i < domain.cells(); ++i) {
+        domain.ground.sediment[Sand][i] += wind.parked[i], domain.ground.sediment[Fines][i] += wind.parkedLoess[i];
+        wind.parked[i] = wind.parkedLoess[i] = 0;
+    }
     tidyLabels(domain);
     dryBasins(domain, scratch);
     const WindGraph graph = windGraph(domain);
     std::vector<float> raised;
     routeSand(domain, graph, raised);
     settleDust(domain, graph, raised);
+    // Until the last step what the wind has laid waits beside the ground for the wind's next turn.
+    if (domain.time + 1.5 * domain.step >= domain.endTime) return;
+    for (size_t i = 0; i < domain.cells(); ++i) {
+        if (domain.hold[i] != Free) continue;
+        wind.parked[i] = std::min(wind.labels.blown[i], std::max(0.0f, domain.ground.sediment[Sand][i]));
+        wind.parkedLoess[i] = std::min(wind.labels.loess[i], std::max(0.0f, domain.ground.sediment[Fines][i] - wind.labels.salt[i]));
+        domain.ground.sediment[Sand][i] -= wind.parked[i], domain.ground.sediment[Fines][i] -= wind.parkedLoess[i];
+    }
 }
 
 } // namespace derivean::sim

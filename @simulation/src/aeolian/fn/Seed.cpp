@@ -62,6 +62,7 @@ void readDrift(Domain& domain, const Setting& setting) {
 void allocateWind(Domain& domain) {
     domain.aeolian.labels.resize(domain.cells());
     domain.aeolian.parked.assign(domain.cells(), 0.0f);
+    domain.aeolian.parkedLoess.assign(domain.cells(), 0.0f);
 }
 
 void beginWind(Domain& domain, const Setting& setting, const TileLookup& lookup) {

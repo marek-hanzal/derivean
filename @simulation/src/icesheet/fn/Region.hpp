@@ -14,10 +14,13 @@ bool iceReaches(const Domain& domain, const SheetSource& source);
 // Relaxes a stage on cells four domain cells wide, from the thickness it was left with (or, the
 // first time, from what the source holds there). Along the rim the sheet is the source's wherever
 // the source has ice; elsewhere the rim is a wall, so an icefield of the domain's own neither
-// drains out nor is fed. With `recorded` 0 or 1 (IceNow, IceLastMaximum), cells a finished
-// neighbour owns are held at the ice that neighbour recorded for that stage: the later tile
-// continues the earlier one's sheet, which is what makes two tiles agree on their shared edge.
-void solveStage(const Domain& domain, SheetWork& work, int stage, int recorded, Workers* workers);
+// drains out nor is fed. `towards` (0 to below 1) moves the stage that far to the next colder one:
+// its climate and the source's sheet are blended between the two, which lets the margins of the
+// same stage stand in different places from one working of the bed to the next. With `recorded`
+// 0 or 1 (IceNow, IceLastMaximum), cells a finished neighbour owns are held at the ice that
+// neighbour recorded for that stage: the later tile continues the earlier one's sheet, which is
+// what makes two tiles agree on their shared edge.
+void solveStage(const Domain& domain, SheetWork& work, int stage, double towards, int recorded, Workers* workers);
 
 // The stage on the domain's own cells: its surface is the relaxed one, its thickness that surface
 // over each cell's own ground, so a valley under the sheet carries more ice than the ridge beside it.

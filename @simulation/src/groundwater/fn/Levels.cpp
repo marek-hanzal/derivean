@@ -12,8 +12,6 @@ float ease(const AquiferColumn& column, int k) {
     return std::max(0.05f, column.spread[0] * x * x + 2.0f * column.spread[1] * x * z + column.spread[2] * z * z);
 }
 
-float lowerT(const AquiferColumn& column) { return column.shallowT + column.deepT; }
-
 // Least gradient a storey's water table takes: what carries the recharge of a hillside through it.
 float leastGradient(const AquiferColumn& column, float transmissivity) {
     if (transmissivity <= 0) return MostGradient;

@@ -34,7 +34,7 @@ SheetSource worldSource(std::shared_ptr<const ContinentalIce> ice, uint64_t seed
     return source;
 }
 
-WearTotals workSheets(Domain& domain, SheetWork& work, const std::vector<float>& shares, double years, double span, bool leave, Workers* workers) {
+WearTotals workSheets(Domain& domain, SheetWork& work, const std::vector<float>& shares, double towards, double years, double span, bool leave, Workers* workers) {
     WearTotals totals;
     const size_t cells = domain.cells();
     std::vector<float> debris[SedimentClasses], flow, top[2];
@@ -43,7 +43,7 @@ WearTotals workSheets(Domain& domain, SheetWork& work, const std::vector<float>&
     for (int stage = 0; stage < work.source.stages(); ++stage) {
         const bool kept = leave && stage <= IceLastMaximum;
         if (shares[size_t(stage)] <= 0 && !kept) continue;
-        solveStage(domain, work, stage, kept ? stage : -1, workers);
+        solveStage(domain, work, stage, leave ? 0.0 : towards, kept ? stage : -1, workers);
         const SheetField field = readStage(domain, work, stage, workers);
         const std::vector<int32_t> downIce = downIceOrder(field);
         const double time = shares[size_t(stage)] * years;
@@ -78,6 +78,12 @@ WearTotals workSheets(Domain& domain, SheetWork& work, const std::vector<float>&
         }
     }
     return totals;
+}
+
+std::vector<double> shiftedLadder(const SheetSource& source, double towards) {
+    std::vector<double> ladder = source.cooling;
+    for (size_t k = 0; k + 1 < ladder.size(); ++k) ladder[k] = mix(source.cooling[k], source.cooling[k + 1], towards);
+    return ladder;
 }
 
 std::vector<float> sinkCrust(Domain& domain, const SheetWork& work, double remaining) {

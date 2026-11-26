@@ -24,30 +24,29 @@ Works, last verified:
 
   First far surface in the first frame and the far view whole after 1.5–1.9 s in both.
 
-Broken or unverified right now:
-- `@simulation/src/atmosphere/type/Plume.hpp:15` declares `enum AshClass { Lapilli, Sand, Dust }` in `derivean::sim`, which collides with `Sand` of the sediment classes in `@simulation/src/landscape/type/Terrain.hpp:17` in every file that sees both. The simulation's own files do not, the engine's do. Worked around in `@engine/src/nature/type/Air.hpp`, the only place the engine includes the atmosphere: it renames the token with a macro. Delete that header's macro once the simulation scopes one of the two.
-- `engine-tests`, 01:48 build: fails in `streamsWithoutBlocking` with "A far patch shows water that is not a level sheet" at the new landing (spawn −364162, −990, 302470). Cause unknown; `@engine/test/PlanetSession.hpp` prints a `DIAG patch ...` block with the 5 × 5 neighbourhood right before the failing check. Remove the diagnostic once fixed.
-- `engine-tests`, 01:20 build: failed "The player must come to rest on the ground" (`@engine/test/Planet.cpp`), reported by the ground stream as the site surface lying 1.1 m above the ground level. `footingAt` already reads `sim::Level::Ground`; `@engine/test/Planet.cpp` prints a `DIAG feet ...` line before that check. Suspects: the player resting on a stone (stones are not part of `surfaceAt`), or the spawn found at site level. Not yet seen with the diagnostic.
-- `farColoursMatchVoxels` failed at 01:05 with 48 % agreement after the simulation changed its cover rule; `surfaceMaterial` was updated since (silt where fines are thin or drowned, `coarseAs`, spring deposits) and has not been measured again.
-- Nothing after the 01:48 build has been compiled: 32-cube far chunks, packed quads, `cubeDetail` signature, shore rule, occlusion staleness, own-place tile priority, fast shutdown, `@napi/src/far.cpp`, `@engine/test/Cubes.cpp` in its current form. Syntax-checked with clang only.
-- Bridge tests (`@napi/test/session.test.cjs`, `cubes.test.cjs`, `chart.test.cjs`) and `mise run check` have not run since the cube work started.
-- The renderer does not draw cubes yet; no capture of cubes exists.
+Broken or unverified right now (03:00):
+- The whole tree compiles (02:48 build: engine, tests, bench, addon). `engine-tests` passes `testWorld`, `testScenarios`, `testStreamedWorld`, `testWeather` and then stops in the planet checks; **`testCubes` has never run to its end**, so the cube builder and the levels are covered only by the renderer drawing them and by clang.
+- The simulation's landing at seed 42, age 2e9 now lies on a lake 871 m deep (`sim::findLanding`; it was dry ground an hour earlier). Every planet check assumed dry land ("A player without voxels around must wait" failed). `standOnLand` in `@engine/test/Planet.cpp` now moves the player to the nearest dry ground first; the run with it is in flight. The bridge tests in `@napi/test/session.test.cjs` make the same assumption and have no such step yet.
+- "A far patch shows water that is not a level sheet" (patch path) fails in some runs and not in others, depending on which tiles are finished; `checkPatch` prints the neighbourhood when it does. The patch path is to be deleted, so this was not chased.
+- `farColoursMatchVoxels` (patch path) has not been reached since the cover rule was updated.
+- The simulation's headers collide: see `@engine/src/nature/type/Air.hpp`, which renames `Sand` of the ash classes with a macro so that the engine compiles. Delete the macro once `@simulation/src/atmosphere/type/Plume.hpp` scopes its enum.
+- Bridge tests and `mise run check` have not completed since the cube work started (`chart.test.cjs` passed at 02:40).
+- Not measured: the bench in a world of cubes (faces and milliseconds per level), and anything after the own-place tile priority and the wider tile reaches went in.
 
 ## 3. In progress
 
-Build and `engine-tests` are running on the current tree; then read the two `DIAG` outputs, fix, run the bridge tests, run the cube bench, update this file.
+`engine-tests` is running on the current tree. Then: fix what `testCubes` and the later planet checks report, give the bridge tests a dry start, run `node --test`, run `engine-bench 2e9 cubes 0 favoured`.
 
 Half-done things that look odd:
 - Two far-terrain paths exist. `PlanetOptions::cubes` (bridge: `WorldOptions.cubes`) picks cubes (`Game::cubes`, `@engine/src/horizon/type/FarCubes.hpp`) or patches (`Game::horizon`). The patch path (`Patch.*`, `Horizon.*`, `Select.cpp`, shading raster, `farPatch` in `@napi/src/far.cpp`, `FarPatch` in the contract, `checkPatch`/`farColoursMatchVoxels` in the tests) is to be deleted once the renderer draws cubes over the whole view. Do not invest in it.
 - The engine keeps faces as nine `int16` per quad everywhere (`FaceMesh`). The addon converts: packed quads for chunks in a world of cubes, eight words (occlusion stripped) for a world of patches.
-- `DIAG` prints in `@engine/test/Planet.cpp` and `@engine/test/PlanetSession.hpp` are temporary.
 
 ## 4. Next steps
 
-1. Get the build back (see section 2), run `engine-tests`, fix the two failures, remove the diagnostics.
-2. Run the bridge tests and `mise run check`; fix what the cube contract broke.
+1. Get `engine-tests` green from `testCubes` on (section 2).
+2. Give `@napi/test/session.test.cjs` and `cubes.test.cjs` a dry place to start (teleport after scanning `inspect`, or a `spawn` option), run them and `mise run check`.
 3. Bench: `patches 5 plain quick` against `patches 0 favoured quick` (thread change, boost-flight percentiles and voxels after a 1.5 km teleport), then `cubes 0 favoured` for faces and build time per level.
-4. With the renderer: one capture pair of the same view, patches against cubes; then delete the patch path and `WorldOptions.cubes`.
+4. The renderer draws levels 2–13 on WebGPU and the lead has a capture pair. Next with it: captures that wait for `Frame.ready.far`; then delete the patch path and `WorldOptions.cubes`.
 5. Volume levels: where ground tiles are finished (about 100 m round the player) cut the finest far levels from `sim::sampleBlock` at the cube's step so overhangs and towers survive; columns beyond. Not started. `sampleBlock` needs site and ground tiles within `sim::BlockSiteReach`/`BlockGroundReach` and builds what is missing, so gate it with `readyAround` as `TerrainStream.cpp` does.
 6. Eviction: the atlas never evicts and a ground tile is about 7 MB. Ask the lead for `evict` by level, farthest first, with keep radii of twice the request reach per level (ground 200 m, site 5 km, local 130 km, region everything within 600 km) under a budget of about 2 GB, never a tile a queued build depends on or a live (edited) tile; readers hold tiles through `TileReader`, so eviction must not free under a reader.
 7. Interventions (queued by the lead, not started): route the brush into `intervene` strokes, one per frame of brush work; drive `tick` from the game clock and `jumpTo` from the time controls; re-mesh chunks whose live tile changed; ledgers to the HUD; the atmosphere must read `world.ocean`. Needs a gate so no `sampleBlock`/`surfaceAt` reader runs during `intervene`/`advance`/`tick`/`jumpTo`/`syncLive`, without the frame waiting: background tasks hold a shared lock per task, the game thread takes the exclusive lock between frames with `try_lock` and a "pending" flag that makes new tasks wait. `EditStore` (per-chunk voxel overrides) then stops being the owner of dug ground.
@@ -77,7 +76,9 @@ Half-done things that look odd:
 - `Quads = Uint32Array`, two words per quad: word 0 plane (bits 0–5), lowU (6–11), lowV (12–17), sizeU − 1 (18–22), sizeV − 1 (23–27), axis (28–29), sign (30); word 1 material (0–7), occlusion (8–15, two bits per corner in the order low-low, high-low, low-high, high-high).
 - `ChunkMesh { key, origin, faces: Int16Array, quads: Quads | null }`: in a world of cubes voxel chunks have empty `faces` and their quads in `quads`; water meshes and debris stay `Int16Array` with `faceWords` words.
 - `CubeChunk { id, level, edge, origin, quads, water: { level, quads }[], dataLevel, wantedLevel }`; `CubeLevel { level, edge, wanted, shown, box }`; `Frame.cubes { added, removed, data, levels } | null`.
-- Readiness: `Frame.cubes.levels[k].wanted/shown` (squares of ground) and `box`; `Frame.tiles.{region,local,site,ground}.{wanted,finished}`; `Frame.pending.patches` counts missing far columns; `Frame.ready`; `CubeChunk.dataLevel/wantedLevel`; `Frame.cubes.data`.
+- Readiness: `Frame.ready.far` is true when every level holds all the squares of ground it wants, each cut from the data the level wants and none waiting for a swap, and every finished tile has been looked at; `Frame.pending.patches` is the number of squares still short of that. Per level `Frame.cubes.levels[k].{wanted, shown, settled, box}`: drawable is `box`, final is `settled === wanted`. Tiles: `Frame.tiles.{region,local,site,ground}.{wanted,finished}` and `Frame.ready.{site,local,region}`. Tile reaches (region 330 km, site 3 km) were widened so that every column a level wants can reach its data level.
+- Risers: a step's side carries the surface cover where the ground is a slope of at most 45° with cover on it, the bed at its depth where steeper or bare. Culling: only faces between solid and air of one level; no bottoms; nothing under the lowest neighbouring top; chunks without a face are not sent. Chunks under a finer level's box are kept (they are what shows when the finer level rests) and can be skipped by the renderer with a box test.
+- One water sheet per water body per column of chunks: levels closer than 2 cm are one sheet.
 - `CloudField.snowLadder`, `snowLine`, `seaLevel`; `Frame.weather.snowpack` is snow at the player's height.
 - `CloudField.aerosolDepth`, `ashAloft`, `ashLevel` are forwarded unchanged from the simulation's cloud field (zero until a source exists); the inspector shows `WeatherReport::ash` and `aerosolDepth`. The atmosphere's side is in `docs/handoff/atmosphere.md`.
 - Nothing measured from the world origin is `float32`: particles are relative to `Frame.particleOrigin`, patch heights to `origin.y`, quads to their chunk.

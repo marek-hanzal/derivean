@@ -60,7 +60,7 @@ struct WaterBudget {
     double seepage{};       // out in amounts too small to be a vent
     double baseflow{};      // out into streams, lakes and the sea
     double deep{};          // lost through the base of circulation
-    double underflow{};     // followed no farther: paths longer than the model reads, soluble rock with no outlet in the tile
+    double underflow{};     // followed no farther: paths longer than the model reads, conduits that go on beyond the tile
     double lateralIn{}, lateralOut{};   // across the tile's edge
     double dissolved{};     // m³/yr of rock that leaves in solution with the water that comes out
 };

@@ -6,10 +6,10 @@
 namespace derivean::sim {
 
 // The ground water of every local tile asked for so far. A tile's ground water is a pure function
-// of the setting and its key; this only makes sure it is worked out once. It is built on the
-// thread that first asks, with the atlas's pool joining in for the duration of the call: nothing
-// of a build is left running when `require` returns, so a world may be destroyed as soon as no
-// call into it is under way. What it keeps holds no landscape tile.
+// of the setting and its key; this only makes sure it is worked out once. It is built on the thread
+// that first asks, with the atlas's pool joining in for the duration of the call, and holds no
+// landscape tile once built. A world must not be destroyed while a call into it is under way; that
+// includes ground tiles still building on the atlas's pool, which ask for their springs here.
 class Aquifers {
 public:
     Aquifers() = default;

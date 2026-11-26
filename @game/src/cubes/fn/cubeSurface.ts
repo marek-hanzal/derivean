@@ -1,12 +1,19 @@
 import { MeshBasicNodeMaterial, type Texture, type UniformNode, type Vector3 } from "three/webgpu";
 import {
-  Fn, If, PI, cameraPosition, clamp, dot, float, floor, fract, fwidth, int, ivec2, length, max, min, mix, positionWorld,
-  smoothstep, step, textureLoad, uint, vec3, vec4,
+  Fn, If, PI, cameraPosition, clamp, float, floor, fract, fwidth, int, ivec2, length, max, min, mix, positionWorld, smoothstep, step,
+  textureLoad, uint, varying, vec3, vec4,
 } from "three/tsl";
 import { GrainCells, GroundRepeat } from "../../scene/constant/grain";
 import { groundColor, groundHash } from "../../scene/fn/groundTone";
+import { sunlit } from "../../shadow/fn/sunlit";
+import type { ShadowNodes } from "../../shadow/type/ShadowNodes";
 import { airFade } from "../../sky/fn/aerial";
+import { faceLight } from "../../sky/fn/faceLight";
 import type { SkyNodes } from "../../sky/type/SkyNodes";
+import { CoverMass } from "../../snow/constant/cover";
+import { snowMass } from "../../snow/fn/snowMass";
+import type { SnowNodes } from "../../snow/type/SnowNodes";
+import { Face } from "../constant/layout";
 import type { LevelTable } from "../type/LevelTable";
 import { faceNodes } from "./faceNodes";
 import { levelClip, levelRows } from "./levelClip";
@@ -18,6 +25,9 @@ export interface CubeLook {
   palette: Texture;
   // The render origin within one repeat of the ground's variation.
   anchor: UniformNode<"vec3", Vector3>;
+  shadow: ShadowNodes;
+  // Absent in a world that has no snow to draw.
+  snow?: SnowNodes;
 }
 
 // How much of the sky's light a corner keeps with one, two and three of its neighbours solid.
@@ -25,12 +35,19 @@ const Open = 0.82;
 
 // The one look of ground at every cube size, voxels and far levels alike: the material's colour varied as ground
 // is, each cube a shade of its own with a seam round it and specks within, lit flat by sky and sun with its
-// corners darkened by the neighbours the engine counted there, and faded by the air. Nothing is smoothed: a face
-// is lit by its own normal.
-export function cubeSurface({ sky, levels, palette, anchor }: CubeLook) {
+// corners darkened by the neighbours the engine counted there, shadowed by the cubes between it and the sun, and
+// faded by the air. Nothing is smoothed: a face is lit by its own normal. The simulation's snow lies on the tops
+// of the cubes, a cube whole or bare; where it is thin, the share of cubes it covers is its share of the ground.
+export function cubeSurface({ sky, levels, palette, anchor, shadow, snow }: CubeLook) {
   const material = new MeshBasicNodeMaterial({ fog: false });
   const face = faceNodes();
   material.positionNode = face.corner;
+  // Snow changes little across a quad, so it is read at the corners of the tops.
+  const snowed = snow && varying(Fn(() => {
+    const mass = float(0).toVar();
+    If(face.top, () => { mass.assign(snowMass(snow, positionWorld, sky.airSea)); });
+    return mass;
+  })(), "vSnow");
   material.colorNode = Fn(() => {
     const { row, edge } = levelRows(levels, face);
     const normal = face.normal.normalize();
@@ -39,7 +56,7 @@ export function cubeSurface({ sky, levels, palette, anchor }: CubeLook) {
 
     const fromEye = positionWorld.sub(cameraPosition);
     const range = length(fromEye);
-    const texel = textureLoad(palette, ivec2(int(face.words.x.shiftRight(uint(16)).bitAnd(uint(255))), 0));
+    const texel = textureLoad(palette, ivec2(int(face.field(Face.material, 8)), 0));
     const loose = texel.a;
     // Cubes of every level lie on one lattice from the world's origin, which the anchor carries into render space.
     // A cube's grain repeats after `repeat` cubes, so only the anchor's place within one repeat is added before
@@ -50,6 +67,7 @@ export function cubeSurface({ sky, levels, palette, anchor }: CubeLook) {
     const pixel = max(max(fwidth(cell.x), fwidth(cell.y)), fwidth(cell.z));
     const cube = floor(cell);
     const wrapped = (cells: typeof cube, scale: number) => cells.sub(repeat.mul(scale).mul(floor(cells.div(repeat.mul(scale)))));
+    const own = groundHash(wrapped(cube, 1));
     // A cube is one piece of ground: it takes the ground's variation at its middle, a tone of its own, and a
     // faint seam round its faces. What it is made of shows within it as specks a quarter and a twelfth of it
     // across, with the odd pale stone and dark pit among them: plain in loose grains, faint on a face of rock.
@@ -58,8 +76,7 @@ export function cubeSurface({ sky, levels, palette, anchor }: CubeLook) {
     If(pixel.lessThan(0.57), () => {
       const within = min(fract(cell), fract(cell).oneMinus()).add(normal.abs());
       const seam = smoothstep(0.015, 0.09, min(min(within.x, within.y), within.z));
-      tone.addAssign(smoothstep(0.14, 0.57, pixel).oneMinus()
-        .mul(groundHash(wrapped(cube, 1)).sub(0.5).mul(mix(0.08, 0.14, loose)).sub(seam.oneMinus().mul(0.04))));
+      tone.addAssign(smoothstep(0.14, 0.57, pixel).oneMinus().mul(own.sub(0.5).mul(mix(0.08, 0.14, loose)).sub(seam.oneMinus().mul(0.04))));
     });
     If(pixel.lessThan(0.12), () => {
       const coarse = groundHash(wrapped(floor(cell.mul(4)), 4));
@@ -68,15 +85,18 @@ export function cubeSurface({ sky, levels, palette, anchor }: CubeLook) {
         .mul(smoothstep(0.04, 0.12, pixel).oneMinus()).add(fines.sub(0.5).mul(smoothstep(0.015, 0.04, pixel).oneMinus()))
         .mul(mix(0.07, 0.2, loose)));
     });
-    const albedo = mix(groundColor(texel.rgb, cube.add(0.5).mul(edge).add(anchor.sub(near)), loose, range, edge).mul(tone), vec3(0.6), sky.plain);
+    const bare = groundColor(texel.rgb, cube.add(0.5).mul(edge).add(anchor.sub(near)), loose, range, edge).mul(tone);
+    // The cube's own number, turned so that it is not the one its tone was drawn from.
+    const white = snow && snowed ? step(fract(own.mul(7.31).add(0.37)), clamp(snowed.div(CoverMass), 0, 1).sub(1e-4)) : float(0);
+    const ground = snow ? mix(bare, vec3(snow.color).mul(tone.mul(0.25).add(0.75)), white) : bare;
+    const albedo = mix(ground, vec3(0.6), sky.plain);
 
     // Corner occlusion, two bits a corner, blended across the quad: exact, because a quad is only stretched
     // along an axis its occlusion does not change on.
-    const corner = (index: number) => float(face.words.x.shiftRight(uint(24 + index * 2)).bitAnd(uint(3)));
+    const corner = (index: number) => float(face.field(Face.occlusion, 8).shiftRight(uint(index * 2)).bitAnd(uint(3)));
     const across = clamp(face.across, 0, 1);
     const open = float(Open).pow(mix(mix(corner(0), corner(1), across.x), mix(corner(2), corner(3), across.x), across.y));
-    const light = mix(sky.groundLight, sky.skyLight, normal.y.mul(0.5).add(0.5)).mul(open)
-      .add(sky.sunLight.mul(max(dot(normal, sky.sunDirection), 0)).mul(mix(1, open, 0.5)));
+    const light = faceLight(sky, normal, open, sunlit(shadow, positionWorld.add(normal.mul(edge.mul(0.02)))));
     return vec4(airFade(sky, albedo.mul(light).div(PI), fromEye), 1);
   })();
   return material;

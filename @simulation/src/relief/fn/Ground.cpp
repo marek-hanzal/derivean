@@ -1,5 +1,7 @@
 #include "relief/type/Ground.hpp"
 
+#include "volcanic/fn/Volcanic.hpp"
+
 namespace derivean::sim {
 
 GroundLattice readGround(TileReader& reader, double minX, double minZ, double maxX, double maxZ) {
@@ -31,6 +33,10 @@ GroundLattice readGround(TileReader& reader, double minX, double minZ, double ma
             lattice.rock[node] = tile->now.rock[from];
             lattice.datum[node] = tile->now.datum[from];
             for (int c = 0; c < SedimentClasses; ++c) lattice.cover[c][node] = tile->now.sediment[c][from];
+            if (tile->volcanic && !tile->volcanic->pile.empty()) {
+                if (lattice.pile.empty()) lattice.pile.assign(nodes, PilePoint{});
+                lattice.pile[node] = pilePoint(*tile, from);
+            }
             if (!tile->detail) continue;
             const GroundDetail& detail = *tile->detail;
             lattice.crust[node] = detail.crust[from];
@@ -116,6 +122,12 @@ GroundPoint GroundLattice::at(double x, double z) const {
     point.coarse = Material(coarseKind[nearest]);
     point.fine = Material(fineKind[nearest]);
     point.bare = bare[nearest] != 0;
+    if (!pile.empty()) {
+        // Under a volcanic pile the layering keeps its own top: only the pile's floor bounds it.
+        point.pile = pile[nearest];
+        point.pile.thickness = (pile[a].thickness * (1 - tx) + pile[b].thickness * tx) * (1 - tz) + (pile[c].thickness * (1 - tx) + pile[d].thickness * tx) * tz;
+        point.datum = std::max(point.rock - point.pile.thickness, blend(datum));
+    }
     // The fall line belongs to the slope, not to the step a single ground cell makes on it.
     const float dx = float((lieAt(x + SlopeReach, z) - lieAt(x - SlopeReach, z)) / (2 * SlopeReach));
     const float dz = float((lieAt(x, z + SlopeReach) - lieAt(x, z - SlopeReach)) / (2 * SlopeReach));

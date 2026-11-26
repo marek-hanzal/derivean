@@ -92,15 +92,7 @@ void readSeas(Domain& domain, const Setting& setting, const TileLookup& lookup) 
 std::shared_ptr<const ShoreRecord> recordShore(const Domain& domain) {
     if (!domain.shore || domain.shore->top.size() != domain.cells()) return nullptr;
     Shore& shore = *domain.shore;
-    const float sea = float(domain.seaLevel) + SeaBand;
-    bool any = false;
-    for (size_t i = 0; i < domain.cells(); ++i) {
-        shore.top[i] = domain.ground.rock[i] + domain.sedimentAt(i);
-        const bool stands = domain.level[i] > shore.top[i] + 1e-3f && (domain.level[i] <= sea || domain.discharge[i] > 0);
-        shore.stood[i] = stands ? domain.level[i] : NoWater;
-        any = any || stands;
-    }
-    if (!any || !spreadWater(domain, shore)) return nullptr;
+    if (!readStanding(domain, shore) || !spreadWater(domain, shore)) return nullptr;
     raiseWaves(domain, shore);
     auto record = std::make_shared<ShoreRecord>();
     const size_t cells = size_t(TileCells) * TileCells;

@@ -9,7 +9,7 @@ constexpr float SwashSlope[SedimentClasses] = {0.27f, 0.08f, 0.004f};
 constexpr float ProfileDepth = 0.5f;
 constexpr float Closure = 2.5f;      // depth over wave height beyond which a bed is out of the waves' reach
 constexpr float Breaking = 2.0f;     // depth over wave height at which they move it most
-constexpr float GravelLift = 0.25f;  // how readily waves lift gravel against sand
+constexpr float GravelLift = 0.25f;  // how readily waves lift gravel against sand from a bed under water
 // Share of what a train can carry that it lifts from one cell's bed: a strong sea fills up over
 // ten cells of sand and so does a weak one, so the drift of a shore follows the stronger of them.
 constexpr float Lift = 0.1f;
@@ -164,7 +164,8 @@ struct Sweep {
             // A bed that already lies deeper under the cell ahead than sand holds is not dug
             // further: the waves there work on the shore above it, which then feeds it.
             const bool deep = straight != Outside && shore.top[straight] - shore.top[i] > holds(Sand, depth) * run;
-            const float sand = domain.ground.sediment[Sand][i], gravel = GravelLift * domain.ground.sediment[Coarse][i];
+            // Where the train ends on a shore its swash throws gravel up as readily as sand; only the sand comes back down.
+            const float sand = domain.ground.sediment[Sand][i], gravel = (covered(straight) ? GravelLift : 1.0f) * domain.ground.sediment[Coarse][i];
             if (want > 0 && sand + gravel > 0 && !deep) {
                 const float share = std::min(1.0f, want / (sand + gravel));
                 lay(i, Sand, -share * sand), moving[Sand] += share * sand;
@@ -189,7 +190,11 @@ struct Sweep {
     // steeply than it holds; at the shore the swash takes it. What cannot go on is turned along
     // the shore, to the cells half a right angle to either side: the drift of oblique waves.
     void pass(size_t i, size_t straight, float depth, float height, float moving[SedimentClasses]) {
-        const auto open = [&](size_t n, int k, int kind) { return covered(n) && shore.top[n] - shore.top[i] <= holds(kind, depth) * float(domain.cell) * NeighborReach[k]; };
+        // Cells that do not evolve hand nothing to one another: what they give goes into the domain.
+        const bool evolving = domain.hold[i] == Free;
+        const auto open = [&](size_t n, int k, int kind) {
+            return covered(n) && (evolving || domain.hold[n] == Free) && shore.top[n] - shore.top[i] <= holds(kind, depth) * float(domain.cell) * NeighborReach[k];
+        };
         if (!covered(straight)) {
             undercut(i, straight, std::min(stir, Lift * carry * std::pow(shore.arrive[i * WaveDirections + size_t(train)], 1.25f)), moving);
             swash(i, height, moving);

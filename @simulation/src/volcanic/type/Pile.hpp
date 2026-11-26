@@ -59,6 +59,15 @@ struct PileColumn {
     uint8_t vent{255};
 };
 
+// The pile under one point of the ground, as a reader that crosses tile edges carries it: nothing
+// in it refers to a tile's own list of vents.
+struct PilePoint {
+    float thickness{};   // m
+    float lava{};        // 0..1, share of lava in it
+    Material rock{Material::Basalt};   // what its lava is
+    uint64_t vent{};     // the vent that laid its top
+};
+
 // One member of a pile: a lava flow or a bed of ash.
 struct PileBed {
     float bottom{}, top{};   // m above the pile's floor

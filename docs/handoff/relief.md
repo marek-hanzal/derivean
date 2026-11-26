@@ -36,7 +36,15 @@ Known defects, with status:
 
 ## 3. In progress
 
-Nothing half-edited. The last change set was the reviewer's findings (see 5). The after-set of the nine places has not been run.
+Second run, 26 Nov. Landed in the tree and verified on hand-built planes (not yet on planet tiles, suite not re-run):
+
+- **Lowering of unchannelled ground** (`measurePower`/`solveHeights`, Fluvial.cpp). Two defects found by the volcanism stream on a hand-built Region plane (345 m/Myr on a 0.2 % granite slope, the same without rain). (a) The hidden stream of a cell is now `HiddenStreams` × min(1, the cell's own runoff in m/yr): no runoff, no lowering. It must follow the cell's own runoff, never the routed discharge: tried `min(hidden, discharge)` and it rilled the top of every slope at a cell's width. (b) A mantle no longer lends its erodibility to the rock under it: the cover is stripped at its own pace and the rock cut in what is left of the step (`lowering`); the old blend by `erosionRate` gave the whole cut the cover's erodibility whenever the recent rate was small. Granite plane now: 0 without rain; 3.2 / 13 / 77 m/Myr at 0.2 / 1 / 5 % under 0.9 m/yr. `testRelief` holds the case. Applies to every level, Ground included: ground tests still to re-run.
+
+Being tested in a private mirror, not in the tree (scratchpad `relief2/`: `lab.sh` copies the stream's files, applies `labpatch.py` switches read from `LAB_*` environment variables, builds; `driver.sh relief|beds|plane` runs the checks alone):
+
+- The comb is the lift's kernel, not its gains: any lift that answers the deficit of a neighbourhood narrower than a slope raises shoulders beside every cut, the shoulder turns the slope's water aside and the next valley starts at its foot. A lift per parent-cell footprint (means, cubic B-spline between them) ribs a crease too, less regularly; footprints of two and four parent cells progressively stop it.
+- Under the old controller the equilibrium of a held plane is full dissection down to the outlet whatever the kernel, because every stream larger than the hidden one is more erosive than the ground between. A floor under rivers the parent has drawn (gathered water ≥ the parent's channel head may not cut below `trend`) bounds that; reaches below the parent's head still grade far below the surface.
+- Next in the lab: no sinking (lift ≥ 0), the Region drainage rule at Local and Site, then pictures of the landing range.
 
 ## 4. Next steps
 

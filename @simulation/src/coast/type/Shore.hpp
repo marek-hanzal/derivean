@@ -46,6 +46,15 @@ struct ShoreRecord {
     CoastLedger ledger;
 };
 
+// m of water under which a flooded cell is wet ground, not a body of water: the flood of a step
+// leaves such films in every flat a river crosses.
+inline constexpr float Film = 0.1f;
+
+// What a step's flood left standing over ground at `top`: the sea, and lakes their rivers still reach.
+inline bool standsOver(const Domain& domain, size_t i, float top) {
+    return domain.level[i] > top + Film && (domain.level[i] <= float(domain.seaLevel) + SeaBand || domain.discharge[i] > 0);
+}
+
 inline float swingOf(const Domain& domain, float water) { return water <= float(domain.seaLevel) + SeaBand ? SeaSwing : LakeSwing; }
 
 // Calls `visit(x, z)` for every cell of the shore's box so that a cell comes after the three it

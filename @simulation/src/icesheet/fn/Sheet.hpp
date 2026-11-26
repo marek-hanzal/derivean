@@ -14,11 +14,16 @@ SheetSource worldSource(std::shared_ptr<const ContinentalIce> ice, uint64_t seed
 
 // The sheets of a glacial cycle work a region domain: each stage with a share is relaxed over the
 // ground as it is now, slides over it for its share of `years`, and its debris is carried and
-// laid. With `leave`, this is the last cycle: the present and the last maximum are solved whatever
-// their share and held to finished neighbours, the deposits are booked by kind in `work.left`,
-// the streams under the last maximum's ice fill their tunnels and spread outwash beyond it, and
-// `work.now` and `work.lastMaximum` receive the ice over the ground that results.
-WearTotals workSheets(Domain& domain, SheetWork& work, const std::vector<float>& shares, double years, double span, bool leave, Workers* workers);
+// laid. `towards` moves every stage that far to the next colder one (`shares` must be those of the
+// ladder so moved, see `shiftedLadder`). With `leave`, this is the last cycle: the stages stand
+// where they are, the present and the last maximum are solved whatever their share and held to
+// finished neighbours, the deposits are booked by kind in `work.left`, the streams under the last
+// maximum's ice fill their tunnels and spread outwash beyond it, and `work.now` and
+// `work.lastMaximum` receive the ice over the ground that results.
+WearTotals workSheets(Domain& domain, SheetWork& work, const std::vector<float>& shares, double towards, double years, double span, bool leave, Workers* workers);
+
+// The coolings of a source's stages with each moved `towards` the next colder one.
+std::vector<double> shiftedLadder(const SheetSource& source, double towards);
 
 // The crust under the ice standing now has given way by what the sheet presses it down, and ground
 // the last sheet left is still short of its rest by `remaining` of what that sheet added. Lowers

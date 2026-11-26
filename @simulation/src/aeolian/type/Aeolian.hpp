@@ -39,9 +39,12 @@ struct WindField {
     // Region only: the regime varies across a domain 300 km wide.
     std::vector<float> driftX, driftZ;    // m²/yr, resultant drift of a dry saturated bed
     std::vector<float> potential;         // m²/yr, drift of all sectors together
-    // Local and Site: wind-laid sand is renewed by the wind far faster than water and slopes work,
-    // so it is kept off the ground while the tile settles and laid back for the dune field.
-    std::vector<float> parked;            // m
+    // What the wind laid is the wind's: dune sand and loess take rain in and shed none, and no slope
+    // wash a level sums up inside its cells moves them. They are kept off the ground while water and
+    // slopes work and laid back for the wind: between the steps of a Region, and over the whole
+    // settling of a Local or Site tile, whose dune field is made at its end.
+    std::vector<float> parked;            // m of sand
+    std::vector<float> parkedLoess;       // m of fines; Region only
     float halfRange{10.0f};               // °C between the annual mean and the warmest month
     double span{};                        // yr of wind work the dune field of the tile stands for
     int rounds{};                         // rounds of the transport model behind it

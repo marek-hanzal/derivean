@@ -1,8 +1,11 @@
 #include "groundwater/fn/Stages.hpp"
 
+#include <cassert>
+
 namespace derivean::sim {
 
 std::shared_ptr<GroundwaterTile> solveField(WaterField& field) {
+    assert(field.size - 2 * field.margin == TileCells);
     auto tile = std::make_shared<GroundwaterTile>();
     sinkStreams(field);
     settleLevels(field);

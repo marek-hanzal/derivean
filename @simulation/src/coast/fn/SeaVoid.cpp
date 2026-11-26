@@ -29,7 +29,7 @@ struct SiteCell {
     size_t at{};
     float ground() const { return tile->now.rock[at] + loose(); }
     float loose() const { return tile->now.sediment[0][at] + tile->now.sediment[1][at] + tile->now.sediment[2][at]; }
-    bool wet() const { return tile->water[at] > ground(); }
+    bool wet() const { return tile->water[at] > ground() + Film; }
 };
 
 SiteCell cellAt(const SiteTiles& tiles, int64_t gx, int64_t gz) {

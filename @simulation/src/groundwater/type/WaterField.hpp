@@ -17,11 +17,11 @@ struct WaterLayer {
     float porosity{};
     float soluble{};            // m/Myr per m/yr of runoff; rock below SolubleEnough opens no conduits
     Material rock{Material::Bedrock};
-    uint32_t unit{};            // the layering unit the bed belongs to; 0 for cover and basement
+    uint32_t unit{};            // the layering unit the bed belongs to; 0 for cover, lava piles and basement
     float offset{};             // m from the top of that unit to the top of the bed: the same in every column
 };
 
-enum class Drain : uint8_t { None, Stream, Lake, Sea };
+enum class Drain : uint8_t { None, Stream, Still };
 
 // Where the planes of the two joint sets pass a column: signed metres from its centre along each
 // set's normal (-sin strike, cos strike) to the nearest zone and the nearest corridor of the set,
@@ -42,7 +42,7 @@ struct AquiferColumn {
     float recharge{};        // m³/yr entering the ground
     float rain{};            // m/yr
     float warmth{};          // °C, annual mean at the ground
-    float stream{};          // m³/yr of surface water the landscape routes through the cell
+    float stream{};          // m³/yr of water on the surface of the cell: the landscape's, less what soaked in on its way
     float incision{};        // m/yr the landscape is lowering the cell
     Drain drain{Drain::None};
     uint8_t flowTo{255};     // neighbour the surface water leaves by
@@ -55,14 +55,15 @@ struct AquiferColumn {
     float upperT{};          // m²/yr of the ground above it, saturated to the surface
     float upperStore{};      // m of water that ground holds when full
     float upperSoluble{};    // m of soluble rock that lies directly on the tight bed
-    uint32_t sheet{};        // Layer::unit and Layer::offset of the tight bed: equal in two columns that stand on the same bed
+    uint32_t sheet{};        // WaterLayer::unit and offset of the tight bed: equal in two columns that stand on the same bed
     float sheetOffset{};
-    Material upperRock{Material::Regolith}, floorRock{Material::Shale};
+    Material upperRock{Material::Regolith}, upperSolubleRock{Material::Air}, floorRock{Material::Shale};
 
     float roof{};            // m, top of the lower storey: the ground, or the underside of the tight bed
     float base{};            // m, where circulation ends
     float shallowBase{};     // m, base of the cover and of the joints weather has opened
-    float shallowT{}, deepT{};   // m²/yr above and below it
+    float shallowT{};        // m²/yr above it
+    float deepT[2]{};        // m²/yr below it: of the upper and of the lower half of that depth
     float baseLeak{};        // m³/yr lost downwards through the base
     float lowerStore{};      // m of water the storey holds when full
     float solubleTop{}, solubleBottom{1};   // m, the thickest run of soluble rock in the lower storey; none while top < bottom
@@ -72,8 +73,10 @@ struct AquiferColumn {
     float dipX{}, dipZ{};        // m the layering falls per metre east and per metre south
     float crush{};               // 0..1, closeness to the fault that bounds the structural domain
     Geotherm heat;
-    int32_t fissures{-1};        // index into WaterField::fissures; -1 where no soluble rock is within reach
+    bool fissured{};             // WaterField::fissures holds the joint planes of the column's soluble rock
 };
+
+inline float lowerT(const AquiferColumn& column) { return column.shallowT + column.deepT[0] + column.deepT[1]; }
 
 inline constexpr int Upper = 0, Lower = 1;
 
@@ -97,12 +100,13 @@ struct NodeFate {
 };
 
 // A tile with WaterReach cells of its neighbours while its ground water is worked out. Arrays hold
-// size² cells, row-major; per-node arrays hold two entries per cell, upper storey first.
+// size² cells, row-major; per-node arrays hold two entries per cell, upper storey first. The cells
+// inside the margin are a whole tile: size - 2 * margin is TileCells.
 struct WaterField {
     TileKey key;
     uint64_t seed{};
     int size{FieldCells};
-    int margin{WaterReach};              // cells around the tile's own
+    int margin{WaterReach};         // cells around the tile's own
     int64_t firstX{}, firstZ{};     // global index of cell (0, 0)
     float seaLevel{};
     Workers* workers{};
@@ -119,7 +123,7 @@ struct WaterField {
 
     std::vector<float> flux;        // m³/yr arriving at a node
     std::vector<float> sideways;    // m³/yr leaving it towards its neighbours
-    std::vector<Borne> carried;   // of the water leaving a node
+    std::vector<Borne> borne;       // by the water leaving a node
     std::vector<NodeFate> fate;
 
     size_t cells() const { return size_t(size) * size_t(size); }

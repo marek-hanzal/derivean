@@ -67,26 +67,41 @@ bool iceReaches(const Domain& domain, const SheetSource& source) {
     return false;
 }
 
-void solveStage(const Domain& domain, SheetWork& work, int stage, int recorded, Workers* workers) {
+void solveStage(const Domain& domain, SheetWork& work, int stage, double towards, int recorded, Workers* workers) {
     const SheetSource& source = work.source;
-    const int n = domain.size / Fold;
-    if (work.coarse.size() != size_t(source.stages())) work.coarse.resize(size_t(source.stages())), work.beyond.resize(size_t(source.stages()));
+    const int n = domain.size / Fold, stages = source.stages();
+    if (work.coarse.size() != size_t(stages)) {
+        // What the source says of a place does not change while the domain is replayed.
+        work.coarse.resize(size_t(stages)), work.beyond.resize(size_t(stages)), work.sunk.resize(size_t(stages));
+        for (int k = 0; k < stages; ++k) {
+            work.beyond[size_t(k)].resize(size_t(n) * size_t(n)), work.sunk[size_t(k)].resize(size_t(n) * size_t(n));
+            for (int z = 0; z < n; ++z)
+                for (int x = 0; x < n; ++x) {
+                    const Vec2 at = nodeCentre(domain, x, z);
+                    work.beyond[size_t(k)][size_t(z) * size_t(n) + size_t(x)] = source.thickness(k, at);
+                    work.sunk[size_t(k)][size_t(z) * size_t(n) + size_t(x)] = source.sink(k, at);
+                }
+        }
+    }
     IceGrid& grid = work.coarse[size_t(stage)];
-    std::vector<float>& beyond = work.beyond[size_t(stage)];
     const bool first = grid.width == 0;
     if (first) {
-        // What the source says of a place does not change while the domain is replayed.
         shapeIce(grid, n, n, Fold * domain.cell, false);
-        beyond.resize(grid.cells());
         for (int z = 0; z < n; ++z)
             for (int x = 0; x < n; ++x) {
-                const size_t i = grid.index(x, z);
                 const Vec2 at = nodeCentre(domain, x, z);
-                beyond[i] = source.thickness(stage, at), grid.heat[i] = source.heat(at), grid.sink[i] = source.sink(stage, at), grid.halfRange[i] = source.halfRange(at);
+                grid.heat[grid.index(x, z)] = source.heat(at), grid.halfRange[grid.index(x, z)] = source.halfRange(at);
             }
     }
+    const size_t colder = size_t(std::min(stage + 1, stages - 1));
+    const float blend = float(towards);
     grid.seaLevel = float(domain.seaLevel);
-    grid.cooling = float(source.cooling[size_t(stage)]);
+    grid.cooling = float(mix(source.cooling[size_t(stage)], source.cooling[colder], towards));
+    std::vector<float> beyond(grid.cells());
+    for (size_t i = 0; i < grid.cells(); ++i) {
+        beyond[i] = work.beyond[size_t(stage)][i] + blend * (work.beyond[colder][i] - work.beyond[size_t(stage)][i]);
+        grid.sink[i] = work.sunk[size_t(stage)][i] + blend * (work.sunk[colder][i] - work.sunk[size_t(stage)][i]);
+    }
 
     std::vector<float> given(grid.cells(), -1.0f);
     for (int z = 0; z < n; ++z) {
@@ -140,7 +155,7 @@ SheetField readStage(const Domain& domain, const SheetWork& work, int stage, Wor
             const int west = std::max(0, x - 1), east = std::min(n - 1, x + 1), north = std::max(0, z - 1), south = std::min(n - 1, z + 1);
             fallX[i] = (top[grid.index(east, z)] - top[grid.index(west, z)]) / float((east - west) * grid.cell);
             fallZ[i] = (top[grid.index(x, south)] - top[grid.index(x, north)]) / float((south - north) * grid.cell);
-            const float stress = float(IceWeight) * grid.thickness[i] * std::min(SteepestSurface, std::sqrt(fallX[i] * fallX[i] + fallZ[i] * fallZ[i]));
+            const float stress = std::min(YieldStress, float(IceWeight) * grid.thickness[i] * std::sqrt(fallX[i] * fallX[i] + fallZ[i] * fallZ[i]));
             passing[i] = float(SlideRate) * stress * stress * grid.thickness[i];
         }
 

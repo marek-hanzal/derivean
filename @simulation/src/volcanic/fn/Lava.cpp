@@ -31,7 +31,7 @@ void pourLava(Emplacement& field, const Rheology& rheology, int x, int z, double
     const Rheology rubble{RubbleRest * 0.3f, RubbleRest * 0.3f, 0.3f, 1e30f};
     for (const int32_t at : reached) {
         const size_t i = size_t(at);
-        if (field.laid[i] <= 0 || field.rest[i] != Rest::Open) continue;
+        if (field.laid[i] <= 0 || field.rest[i] == Rest::Closed) continue;
         float lowest = field.ground[i];
         for (int k = 0; k < 8; ++k) {
             const int nx = at % field.width + NeighborX[k], nz = at / field.width + NeighborZ[k];

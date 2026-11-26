@@ -33,14 +33,14 @@ std::vector<Material> crossedBy(const GroundwaterTile& tile, int32_t cell, int s
 
 SpringAccount explainSpring(World& world, Vec2 position, double reach) {
     SpringAccount account;
-    const double wide = reach + 64.0;
-    const TileKey first = tileAt(Level::Local, {position.x - wide, position.z - wide}), last = tileAt(Level::Local, {position.x + wide, position.z + wide});
+    const Vec2 low{position.x - reach, position.z - reach}, high{position.x + reach, position.z + reach};
+    const TileKey first = tileAt(Level::Local, low), last = tileAt(Level::Local, high);
     double nearest = reach;
     for (int z = first.z; z <= last.z; ++z)
         for (int x = first.x; x <= last.x; ++x) {
             const std::shared_ptr<const GroundwaterTile> tile = groundwaterAt(world, {Level::Local, x, z});
             for (size_t index = 0; index < tile->springs.size(); ++index) {
-                if (length(tile->springs[index].position - position) > wide) continue;
+                if (!ventNear(*tile, index, low, high)) continue;
                 const Spring spring = refineVent(world, *tile, index);
                 const double away = length(spring.position - position);
                 if (away > nearest) continue;

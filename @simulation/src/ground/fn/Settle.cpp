@@ -4,6 +4,7 @@
 #include "climate/type/Climate.hpp"
 #include "ground/constant/Ground.hpp"
 #include "ground/fn/Partings.hpp"
+#include "volcanic/fn/Volcanic.hpp"
 
 namespace derivean::sim {
 namespace {
@@ -41,6 +42,7 @@ void refreshPartings(Domain& domain, uint64_t seed) {
     double massLaid = 0;
     RockMass mass;
     for (size_t i = size_t(begin) * size_t(domain.size); i < size_t(end) * size_t(domain.size); ++i) {
+        if (volcanicUnit(domain, i, seed)) continue;
         const float depth = std::max(0.0f, domain.ground.datum[i] - domain.ground.rock[i]);
         UnitCache& cache = domain.unit[i];
         if (depth >= cache.top && depth < cache.bottom) continue;

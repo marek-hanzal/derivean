@@ -23,7 +23,9 @@ std::shared_ptr<const ShoreRecord> recordShore(const Domain& domain);
 
 // Shore.cpp — the working state, made on first use.
 Shore& shoreOf(Domain& domain);
-// Still water over `top`, from the water that stood when the step was flooded; false where there is none.
+// `top` and the water the step's flood left standing on it; false where there is none.
+bool readStanding(const Domain& domain, Shore& shore);
+// Still water over `top`, from that standing water; false where there is none.
 bool spreadWater(const Domain& domain, Shore& shore);
 
 // Waves.cpp
