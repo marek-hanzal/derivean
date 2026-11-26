@@ -26,7 +26,8 @@ struct SolarShadow {
 };
 SolarShadow solarShadow(const Sky& sky);
 
-// The Earth's shadow at the Moon, enlarged by 2 % for the air (Chauvenet 1863, as in NASA's canons).
+// The Earth's shadow at the Moon, enlarged by 2 % for the air (Chauvenet 1863, as in NASA's older canons;
+// the Five Millennium canon, Espenak & Meeus 2009, uses Danjon's rule).
 // Magnitudes are the share of the Moon's diameter inside the shadow (negative: outside by that much);
 // `umbralCoverage` is the share of its disc inside the umbra, which dims moonlight.
 struct LunarShadow {

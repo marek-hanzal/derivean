@@ -1,6 +1,6 @@
 // What follows from the geometry of the three bodies: eclipses against NASA's canon (Espenak,
 // eclipse.gsfc.nasa.gov; magnitudes as in eclipsewise.com), the Moon's months and standstills, the
-// equilibrium tide, and the deep-time state against the rhythmite record (Williams 2000) and the
+// deep-time state against the rhythmite record (Williams 2000) and the
 // standard Sun (Gough 1981).
 #include "AstronomyFixture.hpp"
 
@@ -9,7 +9,6 @@
 #include "astronomy/fn/Eclipse.hpp"
 #include "astronomy/fn/Moonlight.hpp"
 #include "astronomy/fn/Place.hpp"
-#include "astronomy/fn/Tide.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -142,33 +141,6 @@ void testMonths() {
     expect(moonIllumination(skyOn(2460409.2628), site) < 1e-3, "the new moon is lit", moonIllumination(skyOn(2460409.2628), site));
 }
 
-// The tide only moves water: over the sphere its mean is zero at every instant. A body raises a bulge
-// A = GM R⁴ / (GM⊕ d³) under itself and lowers its rim by A/2, so the planet-wide range is 1.5 (A☾ + A☉)
-// with the bodies in line and 1.5 A☾ with them at right angles; the degree-3 term and the bodies being
-// a few degrees off line or square allow 3 %. The Moon alone raises 0.357 m at its mean distance.
-void testTide() {
-    const auto range = [](const Sky& sky) {
-        constexpr int Points = 4000;
-        double sum = 0, low = 1e9, high = -1e9;
-        for (int i = 0; i < Points; ++i) {
-            // Fibonacci points cover the sphere evenly (González 2010).
-            const double z = 1 - (2 * i + 1.0) / Points, around = i * std::numbers::pi * (3 - std::sqrt(5.0));
-            const Vec3 at = Vec3{std::sqrt(1 - z * z) * std::cos(around), std::sqrt(1 - z * z) * std::sin(around), z} * PlanetRadius;
-            const double height = equilibriumTide(sky, at);
-            sum += height, low = std::min(low, height), high = std::max(high, height);
-        }
-        expect(std::abs(sum / Points) < 1e-4, "the tide has a net height (m)", sum / Points);
-        return high - low;
-    };
-    const auto bulge = [](double gm, Vec3 body) { return gm / EarthGM * std::pow(PlanetRadius, 4) / std::pow(length(body), 3); };
-    const Sky spring = skyOn(2460409.26), neap = skyOn(2460416.5);   // new moon 8 Apr 2024, first quarter 15 Apr
-    const double springRange = range(spring), neapRange = range(neap);
-    const double springExpected = 1.5 * (bulge(MoonGM, spring.moon) + bulge(SunGM, spring.sun)), neapExpected = 1.5 * bulge(MoonGM, neap.moon);
-    expect(std::abs(springRange / springExpected - 1) < 0.03, "the spring tide's range is off its bulges", springRange / springExpected);
-    expect(std::abs(neapRange / neapExpected - 1) < 0.03, "the neap tide's range is off its bulges", neapRange / neapExpected);
-    expect(std::abs(bulge(MoonGM, Vec3{MoonOrbitAxis, 0, 0}) - 0.357) < 0.002, "the Moon's equilibrium bulge is not 0.357 m");
-}
-
 // Today's state is today's constants; 620 Ma meets Williams (2000): a day of 21.9 ± 0.4 h, 400 ± 7
 // days and 13.1 ± 0.1 synodic months a year, the Moon at 0.965 a₀; the Moon recedes 1.24 cm/yr between
 // 2450 and 620 Ma. The young Sun gives 1/1.4 of today's light (Gough 1981).
@@ -211,9 +183,11 @@ void testDeepTime() {
 
 } // namespace
 
+void testAstronomyTide();   // AstronomyTide.cpp
+
 void testAstronomyEvents() {
     testEclipses();
     testMonths();
-    testTide();
     testDeepTime();
+    testAstronomyTide();
 }

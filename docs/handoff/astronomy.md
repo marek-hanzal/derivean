@@ -23,7 +23,7 @@ One time input, one snapshot, free functions on the snapshot.
 - `fn/Place.*`: what a place sees. The caller gives `up` (unit, Earth frame) where only the direction matters, or `observer` (Earth-frame position, m) where the distance matters (the Moon's parallax is 0.95° on average and up to 1.02° at perigee). Functions: `sunDirection`, `moonDirection`, `sunElevation`, `moonElevation`, `sunDeclination`, `sunAngularRadius`, `moonAngularRadius`, `solarTime` (apparent), `meanSolarTime`, `equationOfTime`, `irradiance` (1/r², luminosity of the age), `insolation` (on level ground above the air).
 - `fn/Eclipse.*`: `sunCoverage(sky, observer)` (share of the solar disc hidden), `solarShadow(sky)` (the Moon's shadow on the fundamental plane: axis distance, penumbra and umbra radii, north or south), `lunarShadow(sky, planetRadius)` (penumbral and umbral magnitudes, the share of the disc in the umbra).
 - `fn/Moonlight.*`: `lunarAge` (0 new, 0.5 full), `moonIllumination(sky, observer)`, `moonSunward` (from the Moon to the Sun).
-- `fn/Tide.*`: `tidePotential` (degrees 2 and 3, Moon and Sun) and `equilibriumTide` (potential over gravity, rigid planet).
+- `fn/Tide.*`: `tidePotential` (degrees 2 and 3, Moon and Sun), `equilibriumTide` (potential over gravity: the planet-wide shape on a rigid planet, not a height to add to a sea) and `wetTide` (that shape over a fixed wet mask, with the mask's own level correction, so the water's volume stays the same).
 - `fn/DeepTime.*`: `deepTimeAt(age) → DeepTime` (`type/DeepTime.hpp`: Moon's axis, sidereal month, nodal and apsidal periods, sidereal day, luminosity, `calibrated`) and `solarDay(siderealDay)`.
 - Constants: `constant/Sky.hpp` (bodies, orbits, rotation; measured values with sources), `constant/DeepTime.hpp` (the record's anchors).
 
@@ -64,6 +64,13 @@ One time input, one snapshot, free functions on the snapshot.
 
 Against JPL Horizons (DE441), six dates 1987–2026 and four sites at 0°, 139.8° E, 99.1° W and 18.96° E; the queries are kept in `.out/astronomy/horizons/*.sh`. Largest errors over the set, followed by the test's tolerance:
 
+What each reference is:
+- Horizons' RA and Dec are astrometric: they include the light time, but not aberration or nutation.
+- Its elevations are "apparent airless". They include aberration, nutation and the site's own corrections, but no refraction.
+- The model is a geometric one on a spherical Earth, so these are useful comparisons within the stated tolerances, not identities.
+
+The numbers:
+
 - **Sun**
   - direction: 0.0051° (tolerance 0.02°)
   - distance: 4.2 × 10⁻⁵ (tolerance 10⁻⁴)
@@ -83,22 +90,28 @@ Against JPL Horizons (DE441), six dates 1987–2026 and four sites at 0°, 139.8
   - All eight are found, with nothing extra. Greatest phases fall within 2.0 min (solar) and 4.9 min (lunar) of the canon's TD times (tolerance 10 min).
   - Solar eclipses are of the right kind (total, annular, partial). γ is within 0.028 of NASA's (0.369, −0.347, 1.068, −1.060 against 0.343, −0.351, 1.041, −1.065).
   - Lunar umbral magnitudes are within 0.04 (−0.124, 0.049, 1.211, 1.338 against −0.130, 0.087, 1.180, 1.362).
-  - Under the shadow's axis, the local Sun is hidden wholly at the total eclipse and to a ring at the annular one.
+  - Under the shadow's axis, the local Sun is hidden wholly at the total eclipse and to a ring at the annular one. This check, and the eclipses falling at new and full moon, use the same `Sky`, so they test consistency between the functions. Only the catalogue values are independent.
 - **Moon**
   - The synodic month comes out 29.5306 d (within 0.02 d over 24 lunations).
   - The yearly reach of the declination is within 0.1° of Horizons: 28.72° in 2025 (major standstill) and 18.65° in 2015.
 - **Tide**
-  - The mean over the sphere is zero.
+  - The mean over the whole sphere is zero.
+  - Over the cap z ≥ 0.5, with both bodies overhead at their mean distances, the planet-wide shape averages +0.1956 m (Codex measured +0.1955 m). `wetTide` brings that cap, and two uneven masks at two instants (the second larger), to a volume of zero (relative 10⁻¹²) without changing the shape. Water carried between masks by wetting and drying is the sea owner's solve and is not tested here.
   - Spring and neap ranges are within 3 % of 1.5 (A☾ + A☉) and 1.5 A☾.
   - The Moon raises 0.357 m at its mean distance.
 - **Deep time**
-  - At 620 Ma: a day of 22.09 h (Williams: 21.9 ± 0.4 h), 396.7 days a year (400 ± 7) and 13.10 synodic months (13.1 ± 0.1).
-  - At 2450 Ma: 19.43 h and 0.906 a₀.
+  - The Moon's distances at 620 Ma (0.965 a₀) and 2450 Ma (0.906 a₀) are the model's input calibration. The tests check that the input holds; they are not an independent estimate.
+  - At 620 Ma: a day of 22.09 h (Williams: 21.9 ± 0.4 h), 396.7 days a year (400 ± 7) and 13.10 synodic months (13.1 ± 0.1). The 22.09 h is what the model computes from the masses, the moment of inertia and the Earth–Moon angular-momentum balance it uses. It agrees with the record; it was not fitted to it.
+  - At 2450 Ma: a day of 19.43 h.
   - At age 0 (the hot body): a 16.9 h day, 0.837 a₀ and 0.714 L☉. This is an extrapolation and the real early Moon was much closer.
   - At 12 Gyr: an 81.5 h day, a 41.0 d month, 1.31 a₀ and 1.667 L☉ (held). The real Sun leaves the main sequence before then.
   - `calibrated` is true from 2450 Ma to today.
 
-Present-day validity: the ephemeris is linear in time from J2000. Over a few centuries the errors above grow slowly, mostly from the held ΔT (about 1 s per year) and the held obliquity (0.013° per century). Over millennia, use it as a model of Earth's sky, not as Earth's ephemeris.
+Present-day validity:
+- The range checked against Earth is 1987–2026. The ephemeris is linear in time from J2000. Outside that range the errors grow slowly, mostly from the held ΔT (about 1 s per year) and the held obliquity (0.013° per century).
+- Over millennia, use it as a model of Earth's sky, not as Earth's ephemeris.
+- The Earth frame is a model frame. Turning it into the real ITRF would need UT1 that varies with time, nutation and polar motion (Kaplan 2005).
+- In deep time the epoch only anchors the phases, and the geological age sets the rates.
 
 ## 6. Contracts
 
@@ -112,10 +125,13 @@ Present-day validity: the ephemeris is linear in time from J2000. Over a few cen
   - `sunDeclination(sky)` replaces `declinationOn`.
 - Seasons, 1/r² and polar night come out of these with no switch. Day length is where `sunElevation` crosses the air's own horizon (refraction is the air's).
 - Coriolis is S1's and S4's: f = 2Ω sin φ with Ω = 2π / `sky.deep.siderealDay` (7.292 × 10⁻⁵ s⁻¹ today; it changes with age).
-- The tide (S3, S4 or the coast):
-  - `equilibriumTide(sky, observer)` × 0.69 is the equilibrium tide against the sea floor; it replaces `tideHeight`;
-  - its mean over the sphere is zero, so it only moves water;
-  - the dynamic response is later work.
+- The tide (S3, S4 or the coast) is a force that moves water and makes none.
+  - The sea takes `tidePotential` as the forcing of its own flow, or, in the equilibrium approximation, `wetTide` over its wet cells with their true areas, × 0.69 against the yielding sea floor. Either replaces `tideHeight`.
+  - Never add `equilibriumTide` to a sea level. Its mean is zero only over the whole sphere. Over an ocean it is not: +0.20 m over the cap z ≥ 0.5 with both bodies overhead.
+  - With a fixed mask, `wetTide` subtracts the area-weighted mean over the wet cells, which is enough.
+  - Where cells wet and dry with the tide, the common level correction comes from the volume over the real bathymetry. That is the sea owner's equilibrium solve: find the level at which the volume filled equals the volume held.
+  - S4's or the coast's closed-budget test must include an uneven wet mask, and preferably cells that wet and dry. A uniform or whole-sphere sea passes even with the wrong contract.
+  - The dynamic response is later work.
 - Deep time: `sky.deep` carries the day, month and luminosity of the age. A climate that runs through geological time calls `deepTimeAt(age)` per epoch, without building a sky.
 
 ### S6: engine, bridge, game
@@ -175,7 +191,7 @@ Credited per AGENTS.md; the credits-sweep session moves them into `docs/credits.
   - the equation of time and its test value (ch. 28, example 28.b).
 - **Lieske, J. H., Lederle, T., Fricke, W., Morando, B. (1977).** "Expressions for the precession quantities based upon the IAU (1976) system of astronomical constants." *Astronomy and Astrophysics* 58, 1–16. Informs: the general precession in longitude (5029.0966″ per century) that the tropical and sidereal years imply.
 - **Park, R. S., Folkner, W. M., Williams, J. G., Boggs, D. H. (2021).** "The JPL Planetary and Lunar Ephemerides DE440 and DE441." *The Astronomical Journal* 161, 105. doi:10.3847/1538-3881/abd414. Informs: every Horizons reference value in the tests (DE441), and the Moon's GM.
-- **Giorgini, J. D., et al. (1996).** "JPL's On-Line Solar System Data Service." *Bulletin of the American Astronomical Society* 28(3), 1158; https://ssd.jpl.nasa.gov/horizons/. Informs: the test positions, elevations, sunrises, apsides and lunar reach, queried through its API (`.out/astronomy/horizons/*.sh`).
+- **Giorgini, J. D., et al. (1996).** "JPL's On-Line Solar System Data Service." *Bulletin of the American Astronomical Society* 28(3), 1158; https://ssd.jpl.nasa.gov/horizons/ (frames and time scales: https://ssd.jpl.nasa.gov/horizons/manual.html; API: https://ssd-api.jpl.nasa.gov/doc/horizons.html). Informs: the test positions, elevations, sunrises, apsides and lunar reach, queried through its API (`.out/astronomy/horizons/*.sh`).
 - **Williams, G. E. (2000).** "Geological constraints on the Precambrian history of Earth's rotation and the Moon's orbit." *Reviews of Geophysics* 38(1), 37–59. doi:10.1029/1999RG900016. Informs: the deep-time Moon distance (0.965 a₀ at 620 Ma; 1.24 cm/yr from 2450 to 620 Ma) and the test values at 620 Ma (21.9 h, 400 days, 13.1 synodic months a year).
 - **Dickey, J. O., Bender, P. L., Faller, J. E., et al. (1994).** "Lunar Laser Ranging: A Continuing Legacy of the Apollo Program." *Science* 265, 482–490. doi:10.1126/science.265.5171.482. Informs: today's lunar recession of 3.82 cm/yr, the start of the future extrapolation.
 - **Gough, D. O. (1981).** "Solar interior structure and luminosity variations." *Solar Physics* 74, 21–34. doi:10.1007/BF00151270. Informs: the Sun's luminosity over its main-sequence life, L = L☉ / (1 + 0.4 (1 − t/t☉)).
@@ -187,15 +203,16 @@ Credited per AGENTS.md; the credits-sweep session moves them into `docs/credits.
 - **Laskar, J., Fienga, A., Gastineau, M., Manche, H. (2011).** "La2010: a new orbital solution for the long-term motion of the Earth." *Astronomy and Astrophysics* 532, A89. doi:10.1051/0004-6361/201116836.
   - Both Laskar papers inform the stated limit: the orbital cycles are not an exact ephemeris beyond about 50 Myr, so they are left to S4b.
 - **Prša, A., et al. (2016).** "Nominal Values for Selected Solar and Planetary Quantities: IAU 2015 Resolution B3." *The Astronomical Journal* 152, 41. doi:10.3847/0004-6256/152/2/41. Informs: the Sun's luminosity (3.828 × 10²⁶ W), radius (6.957 × 10⁸ m) and GM, and the 1361 W/m² checked at 1 AU.
-- **International Astronomical Union (2012).** Resolution B2, "On the re-definition of the astronomical unit of length." https://www.iau.org/static/resolutions/IAU2012_English.pdf. Informs: 1 AU = 149 597 870 700 m.
+- **International Astronomical Union (2012).** Resolution B2, "On the re-definition of the astronomical unit of length." XXVIII General Assembly, Beijing. https://www.iau.org/. Informs: 1 AU = 149 597 870 700 m.
 - **Petit, G., Luzum, B. (eds.) (2010).** *IERS Conventions (2010)*. IERS Technical Note 36, Verlag des Bundesamts für Kartographie und Geodäsie, Frankfurt am Main. https://www.iers.org/IERS/EN/Publications/TechnicalNotes/tn36.html. Informs: the Earth's GM (3.986004418 × 10¹⁴ m³/s²) and the Love numbers behind the 0.69 factor of the observed equilibrium tide.
 - **IERS / U.S. Naval Observatory**, ΔT and Earth-orientation data. https://maia.usno.navy.mil/products/deltaT. Informs: TT − UT1 held at 69.2 s.
 - **Tiesinga, E., Mohr, P. J., Newell, D. B., Taylor, B. N. (2021).** "CODATA recommended values of the fundamental physical constants: 2018." *Reviews of Modern Physics* 93, 025010. doi:10.1103/RevModPhys.93.025010. Informs: G.
-- **Cartwright, D. E., Tayler, R. J. (1971).** "New Computations of the Tide-generating Potential." *Geophysical Journal of the Royal Astronomical Society* 23, 45–74. https://academic.oup.com/gji/article/23/1/45/. Informs: the tide-generating potential's expansion in degrees 2 and 3.
-- **Espenak, F., Meeus, J. (2006).** *Five Millennium Canon of Solar Eclipses: −1999 to +3000*. NASA/TP-2006-214141; and **Espenak, F., Meeus, J. (2009).** *Five Millennium Canon of Lunar Eclipses: −1999 to +3000*. NASA/TP-2009-214172. https://eclipse.gsfc.nasa.gov/. Magnitudes as listed on https://eclipsewise.com/. Informs:
+- **Cartwright, D. E., Tayler, R. J. (1971).** "New Computations of the Tide-generating Potential." *Geophysical Journal of the Royal Astronomical Society* 23(1), 45–73. doi:10.1111/j.1365-246X.1971.tb01803.x. Informs: the tide-generating potential's expansion in degrees 2 and 3.
+- **Espenak, F., Meeus, J. (2006).** *Five Millennium Canon of Solar Eclipses: −1999 to +3000*. NASA/TP-2006-214141; and **Espenak, F., Meeus, J. (2009).** *Five Millennium Canon of Lunar Eclipses: −1999 to +3000*. NASA/TP-2009-214172. https://eclipse.gsfc.nasa.gov/. Catalogues: https://eclipse.gsfc.nasa.gov/SEcat5/SE2001-2100.html and https://eclipse.gsfc.nasa.gov/LEcat5/LE2001-2100.html. Magnitudes and greatest-eclipse times (TD) as listed on https://eclipsewise.com/. Informs:
   - the eclipse dates, kinds, γ and umbral magnitudes of 2024–2025 in the tests;
   - the fundamental-plane description of the Moon's shadow.
-- **Chauvenet, W. (1863).** *A Manual of Spherical and Practical Astronomy*, vol. 1. J. B. Lippincott, Philadelphia. Informs: the 2 % enlargement of the Earth's shadow for its air, as NASA's canons use it.
+- **Chauvenet, W. (1863).** *A Manual of Spherical and Practical Astronomy*, vol. 1. J. B. Lippincott, Philadelphia. Informs: the 2 % enlargement of the Earth's shadow for its air (https://eclipse.gsfc.nasa.gov/LEcat5/shadow.html). NASA's older canons use it; the Five Millennium lunar canon uses Danjon's rule. Our umbral magnitudes agree with the Five Millennium canon's to 0.04, within the tests' 0.1.
 - **Urban, S. E., Seidelmann, P. K. (eds.) (2013).** *Explanatory Supplement to the Astronomical Almanac*, 3rd ed. University Science Books, Mill Valley CA. Informs: the −0.8333° convention for sunrise (34′ refraction plus 16′ semidiameter) in the tests.
 - **U.S. Naval Observatory**, "Earth's Seasons and Apsides." https://aa.usno.navy.mil/data/Earth_Seasons. Informs: the 2024 and 2025 March equinoxes in the tests.
+- **Kaplan, G. H. (2005).** *The IAU Resolutions on Astronomical Reference Systems, Time Scales, and Earth Rotation Models: Explanation and Implementation*. U.S. Naval Observatory Circular 179. https://aa.usno.navy.mil/downloads/Circular_179.pdf. Informs: what the model's Earth frame leaves out against the real ITRF (UT1 that varies with time, nutation, polar motion) and how UT1 enters sidereal time.
 - **González, Á. (2010).** "Measurement of areas on a sphere using Fibonacci and latitude–longitude lattices." *Mathematical Geosciences* 42, 49–64. doi:10.1007/s11004-009-9257-x. Informs: the even sphere sampling of the tide test.
