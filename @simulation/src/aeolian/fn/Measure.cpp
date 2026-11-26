@@ -1,6 +1,7 @@
 #include "aeolian/fn/Measure.hpp"
 
 #include <algorithm>
+#include <cstdint>
 
 namespace derivean::sim {
 namespace {
