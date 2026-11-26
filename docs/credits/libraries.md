@@ -12,6 +12,7 @@ Part of [Credits](../credits.md). A citation credits the people whose work we bu
 | [node-api-headers](https://github.com/nodejs/node-api-headers) | Node.js project | MIT | 1.7.0 | `@napi/package.json:7` | Node-API headers the addon compiles against |
 | [TypeScript](https://www.typescriptlang.org) | Microsoft | Apache-2.0 | 5.9.3 | `@game/package.json:19` | Type checking of the game |
 | [Vite](https://vite.dev) | Evan You, VoidZero Inc. and Vite contributors | MIT | 8.3.8 | `@game/package.json:20` | Build of the renderer |
+| [Clipper2](https://github.com/AngusJohnson/Clipper2) | Angus Johnson | BSL-1.0 | 1.5.4 | `@simulation/xmake.lua:12` | Integer polygon union with holes (PolyTree64) of crust footprints in the planet's boundary band, `@simulation/src/geometry/fn/Union.cpp:126` |
 | [xmake](https://xmake.io) | ruki and xmake contributors (xmake-io) | Apache-2.0 | 3.1.2 | `@napi/mise.toml`, `@simulation/mise.toml` | Native build of `@simulation`, `@engine` and `@napi` |
 | [mise](https://mise.jdx.dev) | Jeff Dickey (jdx) | MIT | (developer's install) | `mise.toml` | Tool versions and module tasks |
 

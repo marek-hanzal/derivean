@@ -8,10 +8,14 @@ if os.scriptdir() == os.projectdir() then
     add_rules("mode.release", "mode.debug")
 end
 
+-- Polygon union of crust footprints in the planet's boundary band (docs/credits/libraries.md).
+add_requires("clipper2 1.5.4")
+
 target("derivean-simulation")
     set_kind("static")
     add_files("src/**.cpp")
     add_includedirs("src", {public = true})
+    add_packages("clipper2", {public = true})
     if is_plat("linux") then
         add_syslinks("pthread", {public = true})
     end

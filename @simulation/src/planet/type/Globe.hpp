@@ -6,6 +6,7 @@
 #include "planet/type/Planet.hpp"
 #include "tectonics/type/Euler.hpp"
 
+#include <array>
 #include <memory>
 
 namespace derivean::sim {
@@ -49,6 +50,10 @@ struct CrustPiece {
     double area{};          // m², the birth cell's; a rotation keeps it
     uint16_t plate{};
 };
+
+// The cells round a cell: across its four edges and at its corners, eight inside a face and on face
+// edges, seven at a cube vertex (where three cells meet); -1 pads.
+using CellRing = std::array<int32_t, 8>;
 
 // The overlap of pieces and cells: per piece the cells it covers and per cell the pieces that cover it,
 // each with the area in m². Exact (candidates and overlaps of S3a) where the piece is flagged, cheap
@@ -109,6 +114,7 @@ struct Globe {
     double time{};
     PlateSpeeds speeds{PlateSpeeds::Today};
     std::shared_ptr<const SphereGrid> grid;
+    std::shared_ptr<const std::vector<CellRing>> rings;   // per cell of the grid
     std::vector<CrustPiece> pieces;      // in key order
     Coupling coupling;
     SphereField<float> elevation;        // m, view of the solid surface against the datum

@@ -47,6 +47,7 @@ Globe makeGlobe(uint64_t seed, int level, PlateSpeeds speeds, double time) {
     globe.time = std::min(time, TectonicsStart);
     const auto grid = std::make_shared<const SphereGrid>(makeSphereGrid(level));
     globe.grid = grid;
+    globe.rings = std::make_shared<const std::vector<CellRing>>(makeRings(*grid));
     for (SphereField<float>* field : {&globe.elevation, &globe.swell, &globe.meltHeat, &globe.erosion, &globe.deposition, &globe.temperature})
         *field = sphereField<float>(level);
     globe.precipitation = sphereField<float>(level, 0.8f);
@@ -71,6 +72,25 @@ Globe makeGlobe(uint64_t seed, int level, PlateSpeeds speeds, double time) {
         }
     }
     return globe;
+}
+
+std::vector<CellRing> makeRings(const SphereGrid& grid) {
+    std::vector<CellRing> rings(size_t(grid.cells));
+    for (int cell = 0; cell < grid.cells; ++cell) {
+        CellRing& ring = rings[size_t(cell)];
+        ring.fill(-1);
+        int count = 0;
+        const auto add = [&](int other) {
+            if (other == cell || std::find(ring.begin(), ring.begin() + count, other) != ring.begin() + count) return;
+            ring[size_t(count++)] = other;
+        };
+        for (int k = 0; k < 4; ++k) add(neighbourOf(grid, cell, k));
+        for (int k = 0; k < 4; ++k) {
+            const SphereVertex& vertex = grid.vertex[size_t(grid.corners[size_t(cell)][size_t(k)])];
+            for (int v = 0; v < vertex.count; ++v) add(vertex.cells[size_t(v)]);
+        }
+    }
+    return rings;
 }
 
 Vec3 centreOf(const SphereGrid& grid, const CrustPiece& piece) { return rotate(piece.rotation, grid.centre[size_t(piece.birth)]); }

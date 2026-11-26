@@ -13,6 +13,10 @@ void testAtmosphereSphere();
 void testGeometrySphere();
 void testGlobeKinematics();
 void testGlobeCoupling();
+void testGlobeUnion();
+void testGlobePlan();
+void testGlobeBoundary();
+void testGlobeBalance();
 void testClouds();
 void testAtmosphere();
 void testSnow();
@@ -68,6 +72,10 @@ constexpr Test Tests[] = {
     {"testGeometrySphere", testGeometrySphere},
     {"testGlobeKinematics", testGlobeKinematics},
     {"testGlobeCoupling", testGlobeCoupling},
+    {"testGlobeUnion", testGlobeUnion},
+    {"testGlobePlan", testGlobePlan},
+    {"testGlobeBoundary", testGlobeBoundary},
+    {"testGlobeBalance", testGlobeBalance},
     {"testClouds", testClouds},
     {"testAtmosphere", testAtmosphere},
     {"testSnow", testSnow},

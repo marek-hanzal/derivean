@@ -10,6 +10,9 @@ namespace derivean::sim {
 Globe makeGlobe(uint64_t seed, int level, PlateSpeeds speeds, double time);
 template <class T> SphereField<T> sphereField(int level, T value = T{});
 
+// The rings of every cell of a grid, from its edge and vertex tables.
+std::vector<CellRing> makeRings(const SphereGrid& grid);
+
 // The primordial column at a unit direction: the flat primordialColumn with its 2D noise replaced by
 // 3D noise on the sphere at the same physical wavelength.
 CrustColumn primordialColumnAt(uint64_t seed, Vec3 direction, int cell, double time);

@@ -160,6 +160,7 @@ van Oosterom, A., Strackee, J. (1983). The solid angle of a plane triangle. *IEE
 - **Model:** the tan(E/2) formula for spherical excess; cell area as excess × R².
 - **Used in:** `@simulation/src/geometry/fn/Metric.hpp:10`, `@simulation/src/geometry/fn/Metric.cpp:35`.
 - **Used in (S3a):** the area of a polygon and of an overlap as the fan's excesses from plane coordinates, `@simulation/src/geometry/fn/Overlap.hpp:12`, `@simulation/src/geometry/fn/Overlap.cpp:88`.
+- **Used in (S3b):** the signed area of each contour of a union of footprints, outer contours positive and holes negative, `@simulation/src/geometry/fn/Union.hpp:20`, `@simulation/src/geometry/fn/Union.cpp:32`.
 
 ### Rodrigues 1840; do Carmo 1976: rotation and holonomy
 Rodrigues, O. (1840). Des lois géométriques qui régissent les déplacements d'un système solide dans l'espace… *Journal de Mathématiques Pures et Appliquées* 5, 380–440. http://www.numdam.org/item/JMPA_1840_1_5__380_0/
@@ -221,3 +222,5 @@ Sutherland, I. E., Hodgman, G. W. (1974). Reentrant polygon clipping. *Communica
 - **Model:** clipping a polygon by each edge of a convex polygon in turn, here in the gnomonic tangent plane.
 - **Used in:** `@simulation/src/geometry/fn/Overlap.hpp:10`, `@simulation/src/geometry/fn/Overlap.cpp:60`, `:126`.
 - **Checked by:** `@simulation/test/GeometrySphereOverlap.cpp:57`.
+- **Used in (S3b):** clipping footprints to the piece or cell a union is measured in, `@simulation/src/geometry/fn/Union.hpp:14`, `@simulation/src/geometry/fn/Union.cpp:87`.
+- **Checked by (S3b):** `@simulation/test/GlobeUnion.cpp`.

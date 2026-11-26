@@ -20,6 +20,11 @@ void cicWeights(const SphereGrid& grid, const CrustPiece& piece, std::vector<Cel
 // The piece with the largest weight in a cell (the lower key on a tie), -1 if none covers it.
 int dominantPiece(const Coupling& coupling, int cell);
 
+// Books a change of felsic crust in a cell (m³, a gain or a loss) into its pieces by their weights over
+// the covered part. A loss is limited by what each piece holds; returns what was booked, which is what
+// the other side of the transaction must be credited with (S3-design.md §5, V3).
+double bookCell(const Coupling& coupling, std::vector<CrustPiece>& pieces, int cell, double volume);
+
 // A cell's view of an intensive field of its pieces: Σ w h / Σ w over the covered part, so a cell
 // with a slip of coverage (a hole or an overlap of up to half a cell) shows its pieces' values.
 template <class Value>
