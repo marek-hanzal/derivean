@@ -42,22 +42,22 @@ void blendPileSeams(Domain& domain) {
             };
             const Beyond fromX = alongX ? beyond(alongX, sideX, 0) : Beyond{own, ownShares};
             const Beyond fromZ = alongZ ? beyond(alongZ, 0, sideZ) : Beyond{own, ownShares};
-            const Beyond between{0.5f * (fromX.pile + fromZ.pile), {0.5f * (fromX.shares.lava + fromZ.shares.lava), 0.5f * (fromX.shares.flows + fromZ.shares.flows), 0.5f * (fromX.shares.wet + fromZ.shares.wet)}};
+            const Beyond between{0.5f * (fromX.pile + fromZ.pile), (fromX.shares + fromZ.shares) * 0.5f};
             const Beyond fromBoth = diagonal ? beyond(diagonal, sideX, sideZ) : between;
             const float weights[4] = {wx * wz, (1 - wx) * wz, wx * (1 - wz), (1 - wx) * (1 - wz)};
             const Beyond parts[4] = {{own, ownShares}, fromX, fromZ, fromBoth};
             float pile = 0;
-            PileShares laid{0, 0, 0};
+            PileShares laid = NoShares;
             for (int k = 0; k < 4; ++k) {
                 const float part = weights[k] * parts[k].pile;
-                pile += part, laid.lava += part * parts[k].shares.lava, laid.flows += part * parts[k].shares.flows, laid.wet += part * parts[k].shares.wet;
+                pile += part, laid = laid + parts[k].shares * part;
             }
             if (pile < ThinnestPile) {
                 if (own > 0) volcanic.floor[i] = NoPile, setShares(volcanic, i, 0.0f, {});
                 continue;
             }
             volcanic.floor[i] = ground.datum[i] - (ground.rock[i] - pile);
-            setShares(volcanic, i, pile, {laid.lava / pile, laid.flows / pile, laid.wet / pile});
+            setShares(volcanic, i, pile, laid * (1.0f / pile));
             // A cell the blend gives its first pile takes the top's vent from the nearest cell inward
             // that has one, past the blended band.
             if (volcanic.vent[i] == NoVent) {

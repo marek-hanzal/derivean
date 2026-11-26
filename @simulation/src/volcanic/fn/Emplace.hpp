@@ -50,8 +50,11 @@ Fall coneFall(Vec2 vent, double volume);
 Fall ashFall(Vec2 vent, double volume, Vec2 wind);
 
 // Collapse.cpp — m by which each cell drops when `volume` m³ leave the chamber under `centre` at
-// once: a block inside a ring fault, with a wall as narrow as the grid can draw.
-std::vector<float> founder(const Emplacement& field, Vec2 centre, double volume, Magma magma);
+// once. `blockDrop` is the roof: a block inside a ring fault, with a wall as narrow as the grid can
+// draw, the same depth everywhere inside; the layering under the pit goes down by it. `founder` is
+// what the surface of `field` drops by over that block: to a level floor, which truncates a cone.
+std::vector<float> blockDrop(const Emplacement& field, Vec2 centre, double volume, Magma magma);
+std::vector<float> founder(const Emplacement& field, const std::vector<float>& block);
 double calderaRadius(double volume, Magma magma);
 
 } // namespace derivean::sim

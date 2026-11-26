@@ -14,7 +14,7 @@ constexpr double MostInflation = 5.0;   // times the usual thickness of a flow u
 Laying emptyLaying(const Domain& domain) {
     Laying laying;
     const size_t cells = domain.cells();
-    for (auto* layer : {&laying.lava, &laying.fall, &laying.flows, &laying.ash, &laying.wet, &laying.drop}) layer->assign(cells, 0.0f);
+    for (auto* layer : {&laying.lava, &laying.fall, &laying.flows, &laying.ash, &laying.wet, &laying.drop, &laying.sink}) layer->assign(cells, 0.0f);
     laying.vent.assign(cells, NoVent);
     return laying;
 }
@@ -24,9 +24,15 @@ bool within(const Domain& domain, Vec2 site, double reach) {
     return site.x > domain.origin.x - reach && site.z > domain.origin.z - reach && site.x < domain.origin.x + span + reach && site.z < domain.origin.z + span + reach;
 }
 
-// What a vent brings up in one step of a region: the largest single eruption apart if it emptied
-// the chamber, the rest as the usual turn of fall and lava.
-void eruptEpisode(Domain& domain, Emplacement& field, Laying& laying, int index, const Episode& episode) {
+struct Blast {
+    int vent;
+    const Episode* episode;
+    Outburst outburst;
+};
+
+// What a vent brings up in one step of a region: the usual turn of fall and lava, and the largest
+// single eruption apart if it emptied the chamber, handed back to go off once the step's cones stand.
+void eruptEpisode(Domain& domain, Emplacement& field, Laying& laying, int index, const Episode& episode, std::vector<Blast>& blasts) {
     const Vent& vent = domain.volcanic.vents[size_t(index)];
     const bool empties = emptiesChamber(vent, episode.paroxysm);
     const double volume = episode.volume - minorVolume(vent, episode) - (empties ? episode.paroxysm : 0.0);
@@ -48,6 +54,7 @@ void eruptEpisode(Domain& domain, Emplacement& field, Laying& laying, int index,
     }
     if (!empties) return;
     // The step ends with it: what the vent brings up afterwards belongs to later steps and fills the pit.
+    // The collapse cuts the ground as the step left it, so a cone built in these years is truncated.
     Outburst blast;
     blast.site = episode.site;
     blast.fall = episode.paroxysm * ParoxysmStyle.cone;
@@ -55,7 +62,7 @@ void eruptEpisode(Domain& domain, Emplacement& field, Laying& laying, int index,
     blast.flows = episode.paroxysm - blast.fall - blast.ash;
     blast.current = AshFlow;
     blast.founders = episode.paroxysm;
-    emplace(domain, field, laying, index, blast);
+    blasts.push_back({index, &episode, blast});
 }
 
 } // namespace
@@ -76,6 +83,7 @@ void erupt(Domain& domain, FlowScratch&, const Setting& setting) {
     };
     std::vector<MinorEvent> minor;
     std::vector<Caldera> emptied;
+    std::vector<Blast> blasts;
     for (size_t index = 0; index < volcanic.vents.size(); ++index) {
         const Vent& vent = volcanic.vents[index];
         if (!region) {
@@ -96,10 +104,14 @@ void erupt(Domain& domain, FlowScratch&, const Setting& setting) {
         for (const Episode& episode : vent.episodes) {
             if (std::abs(episode.time - domain.time) > 0.5 * domain.step || !within(domain, episode.site, AshReach)) continue;
             ready();
-            // Nothing this step laid is on the ground before settleLaying.
-            if (within(domain, episode.site, 0) && emptiesChamber(vent, episode.paroxysm)) emptied.push_back(calderaOf(domain, vent, episode));
-            eruptEpisode(domain, field, laying, int(index), episode);
+            eruptEpisode(domain, field, laying, int(index), episode, blasts);
         }
+    }
+    for (Blast& blast : blasts) {
+        emplace(domain, field, laying, blast.vent, blast.outburst);
+        // The ground as the roof went down: what the step laid so far, the blast's own included, stands in `field`.
+        if (within(domain, blast.outburst.site, 0)) emptied.push_back(calderaOf(domain, field, volcanic.vents[size_t(blast.vent)], *blast.episode));
+        collapse(domain, field, laying, blast.vent, blast.outburst);
     }
     if (field.cells()) settleLaying(domain, laying);
     if (!emptied.empty()) recordCalderas(domain, std::move(emptied));

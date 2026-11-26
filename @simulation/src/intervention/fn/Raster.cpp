@@ -39,18 +39,19 @@ void layDeposit(Overlay& overlay, const Deposit& laid) {
             // The grid cells under this site cell, and how much of the site cell each covers.
             const double x0 = (double(gx) * cell - laid.origin.x) / laid.cell, x1 = (double(gx + 1) * cell - laid.origin.x) / laid.cell;
             const double z0 = (double(gz) * cell - laid.origin.z) / laid.cell, z1 = (double(gz + 1) * cell - laid.origin.z) / laid.cell;
-            double drop = 0, rock = 0, lava = 0, loose[SedimentClasses]{}, buried = 0;   // buried: share of the cell under rock
+            double drop = 0, sink = 0, rock = 0, lava = 0, loose[SedimentClasses]{}, buried = 0;   // buried: share of the cell under rock
             for (int z = std::max(0, int(std::floor(z0))); z < std::min(laid.height, int(std::ceil(z1))); ++z) {
                 const double across = std::min(z1, double(z + 1)) - std::max(z0, double(z));
                 for (int x = std::max(0, int(std::floor(x0))); x < std::min(laid.width, int(std::ceil(x1))); ++x) {
                     const double share = across * (std::min(x1, double(x + 1)) - std::max(x0, double(x))) / ((x1 - x0) * (z1 - z0));
                     const size_t i = size_t(z) * size_t(laid.width) + size_t(x);
                     drop += share * value(laid.drop, i), rock += share * value(laid.rock, i), lava += share * value(laid.lava, i);
+                    sink += share * value(laid.sink.empty() ? laid.drop : laid.sink, i);
                     if (value(laid.rock, i) > 0) buried += share;
                     for (int c = 0; c < SedimentClasses; ++c) loose[c] += share * value(laid.loose[c], i);
                 }
             }
-            if (drop <= 0 && rock <= 0 && loose[Coarse] <= 0 && loose[Sand] <= 0 && loose[Fines] <= 0) continue;
+            if (drop <= 0 && sink <= 0 && rock <= 0 && loose[Coarse] <= 0 && loose[Sand] <= 0 && loose[Fines] <= 0) continue;
             // Booked from the column as it came out, so that the budget closes to the rounding of
             // the columns themselves.
             Ground& column = tile->now;
@@ -58,7 +59,8 @@ void layDeposit(Overlay& overlay, const Deposit& laid) {
             const double was = held();
             float& top = column.rock[at];
             top = float(double(top) - std::max(0.0, drop));
-            column.datum[at] = float(double(column.datum[at]) - std::max(0.0, drop));
+            // The layering goes down as the roof's block; the surface to the pit's floor.
+            column.datum[at] = float(double(column.datum[at]) - std::max(0.0, sink));
             const double sunk = was - held();
             if (rock > 0) {
                 if (tile->pile.empty()) tile->pile.assign(column.rock.size(), LivePile{});

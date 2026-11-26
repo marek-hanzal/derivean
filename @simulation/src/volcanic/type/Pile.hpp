@@ -35,8 +35,10 @@ struct Caldera {
     double time{};       // yr the roof went down: the end of its step
     float cut{};         // m, the pit as that step's eruptions left it (fn/Caldera.cpp)
     float kept{};        // 0..1, the pit at the end of the region's window against `cut`
-    // While the region replays: the surface before the step the roof went down in, on the domain's
-    // cells of a square around the caldera from (x, z), `side` cells wide, which the pit is read against.
+    float wall{1};       // how deep the surface dropped at the ring wall against the roof's block, one figure for
+                         // the whole ring (fn/Caldera.cpp, from fn/Collapse.cpp's cut)
+    // While the region replays: the surface as the roof went down, on the domain's cells of a
+    // square around the caldera from (x, z), `side` cells wide, which the pit is read against.
     int x{}, z{}, side{};
     std::vector<float> before;
 };
@@ -49,13 +51,14 @@ struct VolcanicTile {
     std::vector<float> laid;     // yr before the tile's time that the top of the pile was laid
     std::vector<uint8_t> lava;   // share of lava in the pile in parts of 255; the rest is ash and scoria
     std::vector<uint8_t> flows;  // share of it the currents of hot ash laid, in parts of 255
+    std::vector<uint8_t> fall;   // share of it that fell around the vents, in parts of 255
     std::vector<uint8_t> wet;    // share of it laid under standing water, sea or lake, in parts of 255
     std::vector<uint16_t> vent;   // index into `vents` of the vent that laid the top; NoVent for none
     std::vector<Vent> vents;     // every vent whose products or conduits reach the tile
     // Pile and its shares over the tile and the Apron cells beyond its edge, (TileCells + 2·Apron)²,
     // as its own replay left them: what a later neighbour blends its seam towards (fn/Seams.cpp).
     std::vector<float> wide;
-    std::vector<uint8_t> wideLava, wideFlows, wideWet;
+    std::vector<uint8_t> wideLava, wideFlows, wideFall, wideWet;
     std::vector<Caldera> calderas;   // a region's: every caldera whose site lies in the tile
     VolcanicLedger ledger;
 };
@@ -66,7 +69,9 @@ struct VolcanicDomain {
     std::vector<Vent> vents;
     std::vector<float> floor;      // m below the datum of the pile's floor; there is a pile where the rock surface stands above it
     std::vector<float> lavaLaid;   // m of lava ever laid into the pile
-    std::vector<float> flowLaid;   // m of it the currents of hot ash laid
+    std::vector<float> flowLaid;   // m of it the hot currents of chamber-emptying eruptions laid thick and dry enough to weld
+    std::vector<float> fallLaid;   // m of it that fell around the vents, came in block-and-ash currents, or in hot ones
+                                   // too thin or wet to weld; the rest of what is not lava is ash the wind carried
     std::vector<float> wetLaid;    // m of it laid under standing water
     std::vector<float> allLaid;    // m of everything ever laid into it
     std::vector<float> laidAt;     // yr after the domain's start that the top was laid
@@ -79,8 +84,11 @@ struct VolcanicDomain {
 
 // What a pile is made of, as shares of all that was laid into it.
 struct PileShares {
-    float lava{1}, flows{}, wet{};
+    float lava{1}, flows{}, fall{}, wet{};
 };
+inline PileShares operator*(const PileShares& shares, float by) { return {shares.lava * by, shares.flows * by, shares.fall * by, shares.wet * by}; }
+inline PileShares operator+(const PileShares& a, const PileShares& b) { return {a.lava + b.lava, a.flows + b.flows, a.fall + b.fall, a.wet + b.wet}; }
+inline constexpr PileShares NoShares{0, 0, 0, 0};
 
 inline constexpr float NoPile = -1e9f;   // a floor that far above the datum: nothing stands on it
 inline constexpr float ThinnestPile = 0.02f;   // m of pile a finer level inherits or a seam blends below which a cell has none
@@ -91,6 +99,7 @@ struct PileColumn {
     float laid{};        // yr before the tile's time
     uint8_t lava{};      // parts of 255
     uint16_t vent{NoVent};
+    uint8_t flows{}, fall{}, wet{};   // parts of 255, as `PileShares`
 };
 
 // The pile under one point of the ground, as a reader that crosses tile edges carries it: nothing
@@ -100,13 +109,14 @@ struct PilePoint {
     float lava{};        // 0..1, share of lava in it
     Material rock{Material::Basalt};   // what its lava is
     uint64_t vent{};     // the vent that laid its top
+    float flows{}, fall{}, wet{};   // 0..1, as `PileShares`
 };
 
-// One member of a pile: a lava flow or a bed of ash.
+// One member of a pile: a lava flow or a bed of what the eruptions threw out.
 struct PileBed {
     float bottom{}, top{};   // m above the pile's floor
     Material rock{Material::Basalt};
-    bool sheet{};            // lava that cooled as one sheet: its columns stand upright between bottom and top
+    bool sheet{};            // cooled as one sheet, lava or welded tuff: its columns stand upright between bottom and top
 };
 
 } // namespace derivean::sim

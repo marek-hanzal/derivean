@@ -23,7 +23,11 @@ CellChange changeAt(const World& world, double x, double z) {
     if (!change.tile->pile.empty()) {
         const LivePile& laid = change.tile->pile[change.at];
         const float thickness = laid.thickness(change.tile->now.rock[change.at], change.tile->now.datum[change.at]);
-        if (thickness > 0) change.pile = {thickness, laid.laid > 0 ? std::min(1.0f, laid.lava / laid.laid) : 0.0f, laid.kind, laid.vent};
+        if (thickness > 0) {
+            // Play keeps only its lava apart; whatever else it laid counts as the fall around its vent, dry.
+            const float lava = laid.laid > 0 ? std::min(1.0f, laid.lava / laid.laid) : 0.0f;
+            change.pile = {thickness, lava, laid.kind, laid.vent, 0.0f, 1.0f - lava, 0.0f};
+        }
     }
     return change;
 }
@@ -44,7 +48,8 @@ bool changeLattice(const World& world, GroundLattice& lattice) {
                 PilePoint& pile = lattice.pile[node];
                 // What stands of the untouched pile: less what the session cut from the rock before laying.
                 const float below = std::clamp(pile.thickness + change.rock - change.datum - change.pile.thickness, 0.0f, pile.thickness), total = below + change.pile.thickness;
-                pile = {total, (pile.lava * below + change.pile.lava * change.pile.thickness) / total, change.pile.rock, change.pile.vent};
+                const auto mean = [&](float was, float now) { return (was * below + now * change.pile.thickness) / total; };
+                pile = {total, mean(pile.lava, change.pile.lava), change.pile.rock, change.pile.vent, mean(pile.flows, change.pile.flows), mean(pile.fall, change.pile.fall), mean(pile.wet, change.pile.wet)};
             }
             moved = true;
         }

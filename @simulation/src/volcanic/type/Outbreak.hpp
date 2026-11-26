@@ -31,6 +31,7 @@ struct NearField {
     std::vector<float> fragments;   // fall around the vent and the deposits of hot currents: loose
     std::vector<float> lava;        // set lava: rock
     std::vector<float> drop;        // m the ground founders where the eruption emptied its chamber
+    std::vector<float> sink;        // m the layering under it goes down: the roof's block (fn/Collapse.cpp)
     double left{};                  // m³ that left the grid or came to rest on cells it may not change
 };
 

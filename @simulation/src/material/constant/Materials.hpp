@@ -11,9 +11,12 @@
 #include "material/definition/Gneiss.hpp"
 #include "material/definition/Granite.hpp"
 #include "material/definition/Gravel.hpp"
+#include "material/definition/Hyaloclastite.hpp"
 #include "material/definition/Ice.hpp"
+#include "material/definition/Ignimbrite.hpp"
 #include "material/definition/IronFormation.hpp"
 #include "material/definition/Kimberlite.hpp"
+#include "material/definition/LapilliTuff.hpp"
 #include "material/definition/Leaf.hpp"
 #include "material/definition/Limestone.hpp"
 #include "material/definition/Magma.hpp"
@@ -22,6 +25,7 @@
 #include "material/definition/Mudstone.hpp"
 #include "material/definition/OreVein.hpp"
 #include "material/definition/Peridotite.hpp"
+#include "material/definition/PillowLava.hpp"
 #include "material/definition/Quartzite.hpp"
 #include "material/definition/Regolith.hpp"
 #include "material/definition/RockSalt.hpp"
@@ -52,7 +56,8 @@ namespace derivean::sim {
     X(Sandstone) X(Conglomerate) X(Mudstone) X(Limestone) X(RockSalt) X(Coal) \
     X(Scree) X(Gravel) X(Silt) X(Till) X(Regolith) X(Snow) X(Ice) X(Magma) \
     X(Kimberlite) X(IronFormation) X(OreVein) \
-    X(Sinter) X(Travertine)
+    X(Sinter) X(Travertine) \
+    X(Ignimbrite) X(Hyaloclastite) X(PillowLava) X(LapilliTuff)
 
 enum class Material : uint8_t {
 #define X(name) name,

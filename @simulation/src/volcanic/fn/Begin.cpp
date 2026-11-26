@@ -24,18 +24,17 @@ struct Parents {
     // them: a finer cell takes the mix of its parents, not that of the one it lies in.
     float blend(int64_t ix, int64_t iz, float tx, float tz, PileShares& shares) const {
         float pile = 0;
-        PileShares sum{0, 0, 0};
+        PileShares sum = NoShares;
         for (int j = 0; j < 2; ++j) {
             for (int i = 0; i < 2; ++i) {
                 size_t cell;
                 const Tile* tile = at(ix + i, iz + j, cell);
                 if (!tile || !tile->volcanic || tile->volcanic->pile.empty()) continue;
                 const float part = (i ? tx : 1 - tx) * (j ? tz : 1 - tz) * tile->volcanic->pile[cell];
-                const PileShares own = sharesOf(*tile->volcanic, cell);
-                pile += part, sum.lava += part * own.lava, sum.flows += part * own.flows, sum.wet += part * own.wet;
+                pile += part, sum = sum + sharesOf(*tile->volcanic, cell) * part;
             }
         }
-        shares = pile > 0 ? PileShares{sum.lava / pile, sum.flows / pile, sum.wet / pile} : PileShares{};
+        shares = pile > 0 ? sum * (1.0f / pile) : PileShares{};
         return pile;
     }
     // The parent's datum through the same smoothing spline its rock was read by (landscape/fn/Seed.cpp).

@@ -42,6 +42,7 @@ void allocateVolcanic(Domain& domain) {
     volcanic.floor.assign(cells, NoPile);
     volcanic.lavaLaid.assign(cells, 0.0f);
     volcanic.flowLaid.assign(cells, 0.0f);
+    volcanic.fallLaid.assign(cells, 0.0f);
     volcanic.wetLaid.assign(cells, 0.0f);
     volcanic.allLaid.assign(cells, 0.0f);
     volcanic.laidAt.assign(cells, 0.0f);
@@ -63,10 +64,12 @@ void settleLaying(Domain& domain, const Laying& laying) {
             const size_t i = domain.index(x, z);
             if (domain.hold[i] != Free) continue;
             const bool owned = domain.owned(x, z);
-            if (laying.drop[i] > 0) {
-                // The roof of a chamber goes down with its layering.
+            if (laying.sink[i] > 0) {
+                // The roof of a chamber goes down with its layering as one block; its surface comes
+                // to the pit's floor, so what stood above that is cut from the top of the pile, and
+                // where the floor lies less deep, the rubble of the cut fills the pit to it.
                 ground.rock[i] -= laying.drop[i];
-                ground.datum[i] -= laying.drop[i];
+                ground.datum[i] -= laying.sink[i];
                 if (!region) domain.trend[i] -= laying.drop[i];
                 if (owned) volcanic.ledger.foundered += double(laying.drop[i]) * area;
             }
@@ -93,7 +96,11 @@ void settleLaying(Domain& domain, const Laying& laying) {
             ground.rock[i] += loose + added;
             volcanic.allLaid[i] += loose + added;
             volcanic.lavaLaid[i] += lava;
-            volcanic.flowLaid[i] += laying.flows[i];
+            // Hot currents weld where they lay thick enough at once above the water (all of the
+            // cell's wet part is taken as theirs); the rest of them is pumice and ash as loose as the fall.
+            const bool welds = laying.flows[i] - laying.wet[i] >= Welding;
+            volcanic.flowLaid[i] += welds ? laying.flows[i] : 0.0f;
+            volcanic.fallLaid[i] += laying.fall[i] + (welds ? 0.0f : laying.flows[i]);
             volcanic.wetLaid[i] += laying.wet[i];
             volcanic.laidAt[i] = now;
             volcanic.vent[i] = laying.vent[i];

@@ -97,7 +97,9 @@ void emplace(Domain& domain, Emplacement& field, Laying& laying, int vent, const
         const float reach = Shortest + (1.0f - Shortest) * float((pulse * 5) % outburst.pulses + 1) / float(outburst.pulses);
         Rheology current = outburst.current, lava = outburst.rheology;
         current.coolLength *= reach, lava.coolLength *= reach;
-        pour(current, outburst.flows / outburst.pulses, laying.flows, ledger.cone);
+        // Only the currents of an eruption that empties its chamber are hot pumice that may weld;
+        // the block-and-ash currents of the usual eruptions lie with the cone's fall.
+        pour(current, outburst.flows / outburst.pulses, outburst.founders > 0 ? laying.flows : laying.fall, ledger.cone);
         pour(lava, outburst.lava / outburst.pulses, laying.lava, ledger.lava);
     }
     if (outburst.ash > 0) {
@@ -105,16 +107,20 @@ void emplace(Domain& domain, Emplacement& field, Laying& laying, int vent, const
         ledger.ash += laid;
         ledger.drifted += outburst.ash - laid;
     }
-    if (outburst.founders > 0) {
-        const std::vector<float> drop = founder(field, site, outburst.founders, domain.volcanic.vents[size_t(vent)].magma);
-        for (size_t i = 0; i < drop.size(); ++i) {
-            if (drop[i] <= 0 || field.rest[i] != Rest::Open) continue;
-            laying.drop[i] += drop[i];
-            field.ground[i] -= drop[i];
-            laying.any = true;
-        }
-    }
     ledger.left += field.lost + field.passed - before;
+}
+
+void collapse(Domain& domain, Emplacement& field, Laying& laying, int vent, const Outburst& outburst) {
+    if (outburst.founders <= 0) return;
+    const std::vector<float> block = blockDrop(field, outburst.site, outburst.founders, domain.volcanic.vents[size_t(vent)].magma);
+    const std::vector<float> drop = founder(field, block);
+    for (size_t i = 0; i < drop.size(); ++i) {
+        if (block[i] <= 0 || field.rest[i] != Rest::Open) continue;
+        laying.drop[i] += drop[i];
+        laying.sink[i] += block[i];
+        field.ground[i] -= drop[i];
+        laying.any = true;
+    }
 }
 
 } // namespace derivean::sim

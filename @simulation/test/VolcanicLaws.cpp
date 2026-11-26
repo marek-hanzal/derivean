@@ -154,45 +154,19 @@ void testColumn() {
     }
 }
 
-// What a pile is made of is recorded as it is laid: its lava, what the currents of ash laid, and
-// what came to lie under standing water.
-void testRecords() {
-    for (const bool sea : {false, true}) {
-        ProvingSpec spec;
-        spec.ground.level = Level::Region, spec.ground.slope = 0.002, spec.ground.rock = Material::Granite;
-        spec.magma = Magma::Andesite;
-        Domain domain = planeDomain(spec.ground);
-        domain.volcanic.vents = {provingVent(spec, domain)};
-        domain.seaLevel = sea ? 1e5 : -1e5;
-        Emplacement field = fieldOf(domain);
-        Laying laying;
-        for (auto* layer : {&laying.lava, &laying.fall, &laying.flows, &laying.ash, &laying.wet, &laying.drop}) layer->assign(domain.cells(), 0.0f);
-        laying.vent.assign(domain.cells(), NoVent);
-        Outburst outburst;
-        outburst.site = domain.volcanic.vents.front().centre;
-        outburst.fall = 0.2 * Km3, outburst.lava = 0.4 * Km3, outburst.flows = 0.2 * Km3, outburst.ash = 0.2 * Km3;
-        outburst.rheology = lavaOf(Magma::Andesite), outburst.current = BlockFlow, outburst.pulses = 4;
-        emplace(domain, field, laying, 0, outburst);
-        double laid = 0, wet = 0, flows = 0, recorded = 0, all = 0;
-        for (size_t i = 0; i < domain.cells(); ++i) laid += laying.lava[i] + laying.fall[i] + laying.flows[i] + laying.ash[i], wet += laying.wet[i];
-        settleLaying(domain, laying);
-        for (size_t i = 0; i < domain.cells(); ++i) flows += domain.volcanic.flowLaid[i], recorded += domain.volcanic.wetLaid[i], all += domain.volcanic.allLaid[i];
-        expect(flows > 0 && flows < all, "the currents of ash are not told apart in the pile", flows / std::max(all, 1e-9));
-        if (sea) expect(wet > 0.99 * laid && recorded > 0.9 * all, "what a vent under the sea laid is not recorded as laid under water", recorded / std::max(all, 1e-9));
-        else expect(wet == 0 && recorded == 0, "what a vent on dry land laid is recorded as laid under water", wet);
-    }
-}
-
 } // namespace
 
 void testVolcanicJoints();
+void testVolcanicCollapse();
+void testVolcanicPile();
 
 // A vent on a plane of a region, through the level's own replay.
 void testVolcanicLaws() {
     testLaws();
     testColumn();
     testVolcanicJoints();
-    testRecords();
+    testVolcanicCollapse();
+    testVolcanicPile();
 
     ProvingSpec spec;
     spec.ground.level = Level::Region;

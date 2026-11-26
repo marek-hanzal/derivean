@@ -167,10 +167,12 @@ NearField layOutbreak(Emplacement& field, const Outbreak& outbreak) {
         harvest(near.lava);
     }
     near.drop.assign(field.cells(), 0.0f);
+    near.sink.assign(field.cells(), 0.0f);
     if (outbreak.empties) {
-        near.drop = founder(field, outbreak.site, outbreak.volume, outbreak.magma);
+        near.sink = blockDrop(field, outbreak.site, outbreak.volume, outbreak.magma);
+        near.drop = founder(field, near.sink);
         for (size_t i = 0; i < field.cells(); ++i) {
-            if (field.rest[i] != Rest::Open) near.drop[i] = 0;
+            if (field.rest[i] != Rest::Open) near.drop[i] = 0, near.sink[i] = 0;
             field.ground[i] -= near.drop[i];
         }
     }
@@ -187,6 +189,7 @@ std::shared_ptr<const Deposit> depositOf(const Emplacement& field, const NearFie
     laid->width = field.width, laid->height = field.height;
     if (near.fragments.size() != field.cells() || near.lava.size() != field.cells()) return laid;
     laid->drop = near.drop;
+    laid->sink = near.sink;
     laid->rock.assign(field.cells(), 0.0f);
     laid->lava.assign(field.cells(), 0.0f);
     for (auto& layer : laid->loose) layer.assign(field.cells(), 0.0f);

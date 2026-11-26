@@ -26,6 +26,7 @@ struct Deposit {
     double cell{};        // m
     int width{}, height{};
     std::vector<float> drop, rock;              // m per cell, row-major; empty where there is none
+    std::vector<float> sink;                    // m the layering goes down under `drop`; empty: by `drop`
     std::vector<float> loose[SedimentClasses];  // m per cell by class
     std::vector<float> lava;                    // m of `rock` that is lava; the rest welded fragments
     Material kind{Material::Basalt};            // what its lava is
