@@ -2,6 +2,7 @@
 
 #include "aeolian/fn/Regime.hpp"
 #include "climate/type/Climate.hpp"
+#include "landscape/fn/Build.hpp"
 #include "landscape/fn/Forcing.hpp"
 
 namespace derivean::sim {
@@ -60,8 +61,7 @@ void readDrift(Domain& domain, const Setting& setting) {
 // Near an edge shared with a finished neighbour the ground fades into what that neighbour's replay
 // left for the same cells (`blendSeams`, landscape/fn/Extract.cpp). A label fades the same way and
 // with the same weights, or it keeps this tile's value over sediment that is now mostly the
-// neighbour's and steps at the edge. The weight must stay equal to the one there.
-float seamWeight(int distance) { return float(smoothstep(0.0, 1.0, (distance + 0.5) / Apron)); }
+// neighbour's and steps at the edge.
 
 float seamLabel(const Domain& domain, Label label, int x, int z, float own) {
     const int sideX = x < Apron ? -1 : x >= TileCells - Apron ? 1 : 0, sideZ = z < Apron ? -1 : z >= TileCells - Apron ? 1 : 0;
@@ -86,7 +86,6 @@ float seamLabel(const Domain& domain, Label label, int x, int z, float own) {
 void allocateWind(Domain& domain) {
     domain.aeolian.labels.resize(domain.cells());
     domain.aeolian.parked.assign(domain.cells(), 0.0f);
-    domain.aeolian.parkedLoess.assign(domain.cells(), 0.0f);
 }
 
 void beginWind(Domain& domain, const Setting& setting, const TileLookup& lookup) {

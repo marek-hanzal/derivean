@@ -168,8 +168,8 @@ void blowLoose(Domain& domain, FlowScratch& scratch) {
     }
     WindField& wind = domain.aeolian;
     for (size_t i = 0; i < domain.cells(); ++i) {
-        domain.ground.sediment[Sand][i] += wind.parked[i], domain.ground.sediment[Fines][i] += wind.parkedLoess[i];
-        wind.parked[i] = wind.parkedLoess[i] = 0;
+        domain.ground.sediment[Sand][i] += wind.parked[i];
+        wind.parked[i] = 0;
     }
     tidyLabels(domain);
     dryBasins(domain, scratch);
@@ -177,9 +177,11 @@ void blowLoose(Domain& domain, FlowScratch& scratch) {
     std::vector<float> raised;
     routeSand(domain, graph, raised);
     settleDust(domain, graph, raised);
-    // Until the last step what the wind has laid waits beside the ground for the wind's next turn.
-    // Not where water or ice holds it or a channel runs over it: there it is the water's to take, and
-    // what lies there is no longer the wind's.
+    wind.finesLeft = domain.ground.sediment[Fines];
+    // Until the last step the sand the wind has laid waits beside the ground for the wind's next
+    // turn. Not where water or ice holds it or a channel runs over it: there it is the water's to
+    // take, and what lies there is no longer the wind's. Loess stays on the ground among the fines
+    // for the water and slopes to work like any other; `tidyLabels` keeps its label within them.
     if (lastStep(domain)) return;
     const float channel = ChannelHeads[size_t(domain.key.level)];
     for (size_t i = 0; i < domain.cells(); ++i) {
@@ -189,8 +191,7 @@ void blowLoose(Domain& domain, FlowScratch& scratch) {
             continue;
         }
         wind.parked[i] = std::min(wind.labels.blown[i], std::max(0.0f, domain.ground.sediment[Sand][i]));
-        wind.parkedLoess[i] = std::min(wind.labels.loess[i], std::max(0.0f, domain.ground.sediment[Fines][i] - wind.labels.salt[i]));
-        domain.ground.sediment[Sand][i] -= wind.parked[i], domain.ground.sediment[Fines][i] -= wind.parkedLoess[i];
+        domain.ground.sediment[Sand][i] -= wind.parked[i];
     }
 }
 

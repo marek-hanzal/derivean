@@ -77,6 +77,7 @@ void tidyLabels(Domain& domain) {
         labels.blown[i] = std::min(labels.blown[i], std::max(0.0f, domain.ground.sediment[Sand][i]));
         labels.lag[i] = std::min(labels.lag[i], std::max(0.0f, domain.ground.sediment[Coarse][i]));
         const float fines = std::max(0.0f, domain.ground.sediment[Fines][i]);
+        if (domain.aeolian.finesLeft.size() == domain.cells()) labels.loess[i] = std::max(0.0f, labels.loess[i] - std::max(0.0f, domain.aeolian.finesLeft[i] - fines));
         labels.salt[i] = std::min(labels.salt[i], fines);
         labels.loess[i] = std::min(labels.loess[i], fines - labels.salt[i]);
         // Water that lays fresh sediment on an armour buries it; the wind starts on the new cover.

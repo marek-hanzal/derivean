@@ -41,12 +41,15 @@ struct WindField {
     // Region only: the regime varies across a domain 300 km wide.
     std::vector<float> driftX, driftZ;    // m²/yr, resultant drift of a dry saturated bed
     std::vector<float> potential;         // m²/yr, drift of all sectors together
-    // What the wind laid is the wind's: dune sand and loess take rain in and shed none, and no slope
-    // wash a level sums up inside its cells moves them. They are kept off the ground while water and
-    // slopes work and laid back for the wind: between the steps of a Region, and over the whole
-    // settling of a Local or Site tile, whose dune field is made at its end.
+    // Dune sand takes rain in and sheds none, and no slope wash a level sums up inside its cells
+    // moves it. It is kept off the ground while water and slopes work and laid back for the wind:
+    // between the steps of a Region, and over the whole settling of a Local or Site tile, whose dune
+    // field is made at its end. Loess is not: it is among the most erodible covers, and stays on
+    // the ground for water and slopes to rework.
     std::vector<float> parked;            // m of sand
-    std::vector<float> parkedLoess;       // m of fines; Region only
+    // Region only: m of Fines on each cell when the wind's turn of the step ended. What water and
+    // slopes take before the next turn comes off the top, and the loess lies at the top.
+    std::vector<float> finesLeft;
     // Region only: m/yr of fines that settle on each cell out of dust raised beyond the domain.
     std::vector<float> farDust;
     float halfRange{10.0f};               // °C between the annual mean and the warmest month
