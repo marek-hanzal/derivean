@@ -144,7 +144,8 @@ WindRecord windRecordOf(const Domain& domain) {
             clipped(i, wind.labels.blown[i], wind.labels.lag[i], wind.labels.salt[i], wind.labels.loess[i], record.wide, size_t(z) * WideCells + size_t(x));
         }
     // The tile's own cells are read off after `settleSeams` blended their ground: their own labels
-    // are clipped, faded into the neighbours' at the seam, and clipped again to the blended cover.
+    // are clipped to that cover, faded into the neighbours' at the seam, and clipped to it again.
+    // Within the seam a label can so come out below what the tile's own cover held; never above.
     record.labels.resize(size_t(TileCells) * TileCells);
     for (int z = 0; z < TileCells; ++z) {
         for (int x = 0; x < TileCells; ++x) {
