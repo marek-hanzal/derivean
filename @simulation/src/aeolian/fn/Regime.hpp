@@ -38,5 +38,8 @@ WindRegime regimeOf(int winds, const double* headings, const double* speeds, con
 // Share of the year a bare loose surface is dry enough to blow, from rain (m/yr) and the annual
 // mean temperature at the ground (°C); ground that is both frozen and wet does not blow at all.
 double dryShare(double rain, double warmth, double halfRange);
+// 0..1: the share of what the air could take from the ground that the rain leaves it; 0 where rain
+// keeps up. How seldom running water and plants hold a place, as against how often its surface is dry.
+float aridityOf(float rain, float celsius);
 
 } // namespace derivean::sim

@@ -50,9 +50,8 @@ struct WindField {
     // Region only: m/yr of fines that settle on each cell out of dust raised beyond the domain.
     std::vector<float> farDust;
     float halfRange{10.0f};               // °C between the annual mean and the warmest month
-    // The pool the dune pass of a Local or Site tile may spread its rows over; null for the calling
-    // thread alone. That pass is the tile's last and longest piece of work; its result does not
-    // depend on the pool.
+    // The pool the dune pass of a Local or Site tile may spread its rows over, set by `buildDomain`;
+    // null for the calling thread alone. The field it leaves does not depend on it.
     Workers* workers{};
     double span{};                        // yr of wind work the dune field of the tile stands for
     int rounds{};                         // rounds of the transport model behind it

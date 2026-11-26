@@ -55,10 +55,6 @@ void routeSand(Domain& domain, const WindGraph& graph, std::vector<float>& raise
 // FarDust.cpp — Region: `WindField::farDust`, a closed form over the planet grid of the dust that
 // deserts beyond the domain raise and the annual mean wind brings to each cell. Called by `beginWind`.
 void readFarDust(Domain& domain, const Setting& setting);
-// 0..1: the share of what the air could take that the rain leaves it; 0 where rain keeps up.
-float aridityOf(float rain, float celsius);
-// 0..1: how much a ground raises dust as the driest deserts do.
-float dustSource(float rain, float celsius);
 
 // Dust.cpp — Region: fines raised this step travel with the same drift and settle with distance,
 // and the far dust settles on every cell of the tile's own.

@@ -77,19 +77,23 @@ void routeSand(Domain& domain, const WindGraph& graph, std::vector<float>& raise
         const float ground = domain.ground.rock[i] + domain.sedimentAt(i);
         top[i] = lee[i] = ramp[i] = wet[i] ? std::max(domain.level[i], ground) + domain.ice[i] : ground;
     }
-    // A line goes on from a cell under it, and starts only at a break.
+    // A line starts only at a break and goes on from every cell it passes over, a cell filled up to
+    // it included, until it meets the ground.
     const float brink = BreakTan * cell;
+    std::vector<uint8_t> underLee(cells, 0), underRamp(cells, 0);
     for (const int32_t at : graph.order)
         for (int k = 0; k < 2; ++k)
             if (const int32_t next = graph.to[size_t(at) * 2 + size_t(k)]; next >= 0) {
                 const size_t a = size_t(at), n = size_t(next);
-                if (lee[a] > top[a] || top[a] - top[n] >= brink) lee[n] = std::max(lee[n], lee[a] - LeeTan * cell);
+                const float line = lee[a] - LeeTan * cell;
+                if ((underLee[a] || top[a] - top[n] >= brink) && line >= top[n]) underLee[n] = 1, lee[n] = std::max(lee[n], line);
             }
     for (size_t step = graph.order.size(); step-- > 0;)
         for (int k = 0; k < 2; ++k)
             if (const int32_t next = graph.to[size_t(graph.order[step]) * 2 + size_t(k)]; next >= 0) {
                 const size_t a = size_t(graph.order[step]), n = size_t(next);
-                if (ramp[n] > top[n] || top[n] - top[a] >= brink) ramp[a] = std::max(ramp[a], ramp[n] - RampTan * cell);
+                const float line = ramp[n] - RampTan * cell;
+                if ((underRamp[n] || top[n] - top[a] >= brink) && line >= top[a]) underRamp[a] = 1, ramp[a] = std::max(ramp[a], line);
             }
 
     raised.assign(cells, 0.0f);

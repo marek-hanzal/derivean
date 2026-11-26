@@ -88,11 +88,16 @@ void checkOneWind() {
     SandBed again = flatBed(5.0f);
     blowBed(again, wind, {300, 0.4f, 4});
     expect(again.sand == bed.sand, "the same bed gave two different fields");
+    // Across the bands as well as along them, with sand entering from held cells.
+    const WindRegime slant = steady({35.0, 160.0});
     Workers pool(3);
-    SandBed spread = flatBed(5.0f);
+    SandBed alone = flatBed(5.0f), spread = flatBed(5.0f);
+    for (SandBed* each : {&alone, &spread})
+        for (int z = 0; z < Side; ++z) each->kind[each->index(0, z)] = BedCell::Held;
     spread.workers = &pool;
-    blowBed(spread, wind, {300, 0.4f, 4});
-    expect(spread.sand == bed.sand, "a pool changed the field");
+    blowBed(alone, slant, {120, 0.4f, 4});
+    blowBed(spread, slant, {120, 0.4f, 4});
+    expect(spread.sand == alone.sand && spread.ledger.entered == alone.ledger.entered && spread.ledger.left == alone.ledger.left, "a pool changed the field");
 }
 
 // Little sand under the same wind leaves separate dunes on a bare floor, not ridges.

@@ -71,7 +71,6 @@ void beginWind(Domain& domain, const Setting& setting, const TileLookup& lookup)
     allocateWind(domain);
     const Vec2 middle = domain.center(domain.size / 2, domain.size / 2);
     wind.regime = regimeAt(setting.seed, middle, setting.age);
-    wind.workers = setting.workers;
     wind.halfRange = float(zonalClimate(setting.seed, planetPoint(setting.seed, middle).z, setting.age).seasonal);
     if (domain.key.level == Level::Region) readDrift(domain, setting), readFarDust(domain, setting);
 

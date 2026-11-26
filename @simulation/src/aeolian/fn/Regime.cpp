@@ -102,4 +102,6 @@ double dryShare(double rain, double warmth, double halfRange) {
     return dry * (1.0 - shareOfYearBelow(0.0, warmth, halfRange) * (1.0 - dry));
 }
 
+float aridityOf(float rain, float celsius) { return std::clamp(1.0f - std::max(0.0f, rain) / evaporationDemand(celsius), 0.0f, 1.0f); }
+
 } // namespace derivean::sim

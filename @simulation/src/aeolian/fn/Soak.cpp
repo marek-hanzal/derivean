@@ -1,6 +1,7 @@
 #include "aeolian/fn/Wind.hpp"
 
 #include "aeolian/constant/Wind.hpp"
+#include "aeolian/fn/Regime.hpp"
 #include "chronology/type/Calendar.hpp"
 
 #include <algorithm>
@@ -15,7 +16,7 @@ namespace {
 // loses. Measured channel losses of desert washes are some 1–10 % of a flood per kilometre.
 constexpr float FloodWidth = 4.5f;    // m of flood channel per (m³/s)^0.5
 constexpr float BedDrain = 5.0f;      // m of water a year a dry sand or gravel bed passes on to the ground under it
-constexpr float BedDepth = 2.0f;      // m of loose bed below which the rock under it holds the water up
+constexpr float SoakDepth = 2.0f;      // m of loose bed below which the rock under it holds the water up
 
 } // namespace
 
@@ -32,7 +33,7 @@ float sinkIntoBed(const Domain& domain, size_t i, float discharge) {
     const float cell = float(domain.cell);
     const float width = std::min(cell, FloodWidth * std::sqrt(discharge / (FloodShare * float(YearSeconds))));
     const float dry = aridityOf(domain.rain[i], domain.warmthNow[i]);
-    return std::min(discharge, dry * open * std::min(1.0f, loose / BedDepth) * BedDrain * width * cell);
+    return std::min(discharge, dry * open * std::min(1.0f, loose / SoakDepth) * BedDrain * width * cell);
 }
 
 } // namespace derivean::sim

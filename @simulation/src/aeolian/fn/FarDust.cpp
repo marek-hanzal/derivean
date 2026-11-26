@@ -2,7 +2,6 @@
 
 #include "aeolian/constant/Wind.hpp"
 #include "aeolian/fn/Regime.hpp"
-#include "hydrology/constant/Water.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "planet/fn/Sample.hpp"
 
@@ -23,6 +22,12 @@ constexpr double TraceReach = 2400e3;   // m, four fall lengths of the fine dust
 constexpr double Calm = 0.3;            // m/s of mean wind below which the air is taken to stand
 constexpr int FarStride = 64;           // cells between the points the far dust is read at
 
+// Dust comes from the driest ground almost alone.
+float dustSource(float rain, float celsius) {
+    const float square = aridityOf(rain, celsius) * aridityOf(rain, celsius);
+    return square * square;
+}
+
 // m/yr of fines the ground at a world position gives up to the wind, read from the planet grid.
 float emissionAt(const Planet& planet, uint64_t seed, Vec2 position, const WindRegime& regime) {
     const Vec2 point = planetPoint(seed, position);
@@ -41,15 +46,18 @@ float farDustAt(const Domain& domain, const Setting& setting, Vec2 position) {
     Vec2 at = position;
     for (double travelled = 0; travelled < TraceReach; travelled += TraceStep) {
         const WindRegime regime = regimeAt(setting.seed, at, setting.age);
-        const double speed = length(regime.mean);
-        if (speed < Calm) break;
         const bool inside = at.x >= low[0] && at.x < high[0] && at.z >= low[1] && at.z < high[1];
         const float raised = inside ? 0.0f : emissionAt(planet, setting.seed, at, regime);
         const float rain = std::max(0.0f, float(samplePlanet(planet.precipitation, planetPoint(setting.seed, at), Kernel::Linear)));
+        // Each stretch of the way gives what it raises less what settles before it has crossed the rest.
         for (int s = 0; s < DustSizes; ++s) {
-            flux[s] += double(raised * DustShare[s]) * TraceStep * std::exp(-depth[s]);
-            depth[s] += TraceStep / DustFall[s] * (1.0 + rain / DustWashRain);
+            const double fall = (1.0 + rain / DustWashRain) / DustFall[s];
+            flux[s] += double(raised * DustShare[s]) * std::exp(-depth[s]) * (1.0 - std::exp(-fall * TraceStep)) / fall;
+            depth[s] += fall * TraceStep;
         }
+        // Where the mean wind is calm the air goes nowhere in particular: it brings nothing from further off.
+        const double speed = length(regime.mean);
+        if (speed < Calm) break;
         at = at - regime.mean * (TraceStep / speed);
     }
     double settling = 0;
@@ -59,19 +67,12 @@ float farDustAt(const Domain& domain, const Setting& setting, Vec2 position) {
 
 } // namespace
 
-float aridityOf(float rain, float celsius) { return std::clamp(1.0f - std::max(0.0f, rain) / evaporationDemand(celsius), 0.0f, 1.0f); }
-
-float dustSource(float rain, float celsius) {
-    // Dust comes from the driest ground almost alone.
-    const float square = aridityOf(rain, celsius) * aridityOf(rain, celsius);
-    return square * square;
-}
-
 void readFarDust(Domain& domain, const Setting& setting) {
     WindField& wind = domain.aeolian;
     wind.farDust.assign(domain.cells(), 0.0f);
-    if (!setting.planet || setting.planet->precipitation.cells.empty()) return;
-    const int nodes = domain.size / FarStride + 2;
+    const Planet* planet = setting.planet;
+    if (!planet || planet->precipitation.cells.empty() || planet->temperature.cells.empty() || planet->elevation.cells.empty()) return;
+    const int nodes = (domain.size - 1) / FarStride + 2;
     std::vector<float> node(size_t(nodes) * size_t(nodes));
     for (int nz = 0; nz < nodes; ++nz)
         for (int nx = 0; nx < nodes; ++nx)

@@ -29,6 +29,7 @@ constexpr float LeastGain = 0.1f, MostGain = 2.5f;
 // A grain hopping over ground that falls to one side lands a little down that side. Without this
 // neighbouring lines of cells along the wind would each grow dunes of their own.
 constexpr float Deflect = 3.0f;      // cells of sideways shift of a hop per unit of sideways slope
+constexpr double MostAside = 0.7;    // sideways slope beyond which the shift grows no further
 constexpr int LandingRounds = 12;    // rounds without lifting in which sand still in the air comes down
 
 struct Work {
@@ -53,7 +54,8 @@ void eachRange(const SandBed& bed, int count, const std::function<void(int, int)
 // number so that the bands either side of the seam of the torus run apart too. One band where the
 // bed is too small for two.
 void cutBands(const SandBed& bed, const DuneRun& run, Work& work) {
-    const int reach = int(std::ceil(run.hop * (1.0 + GustReach) + 0.7 * Deflect)) + 2;
+    // A hop lands at most this many rows from where it started, the four cells around its landing point included.
+    const int reach = int(std::ceil(run.hop * (1.0 + GustReach) + MostAside * Deflect)) + 2;
     int count = bed.size / (2 * reach);
     count -= count % 2;
     work.band.clear();
@@ -104,7 +106,7 @@ void send(SandBed& bed, Work& work, int x, int z, Vec2 heading, double hop, doub
     const BedCell kind = bed.kind[from];
     const float out = work.flight[from] + work.taken[from];
     if (out <= 0) return;
-    const double aside = std::clamp(double((topAt(bed, x, z + 1) - topAt(bed, x, z - 1)) * heading.x - (topAt(bed, x + 1, z) - topAt(bed, x - 1, z)) * heading.z) / (2 * bed.cell), -0.7, 0.7) * Deflect;
+    const double aside = std::clamp(double((topAt(bed, x, z + 1) - topAt(bed, x, z - 1)) * heading.x - (topAt(bed, x + 1, z) - topAt(bed, x - 1, z)) * heading.z) / (2 * bed.cell), -MostAside, MostAside) * Deflect;
     const double moveX = heading.x * hop + aside * heading.z, moveZ = heading.z * hop - aside * heading.x;
     const int strides = int(std::ceil(std::max(std::abs(moveX), std::abs(moveZ))));
     size_t fell = from;

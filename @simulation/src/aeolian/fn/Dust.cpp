@@ -1,6 +1,7 @@
 #include "aeolian/fn/Wind.hpp"
 
 #include "aeolian/constant/Wind.hpp"
+#include "aeolian/fn/Regime.hpp"
 
 namespace derivean::sim {
 

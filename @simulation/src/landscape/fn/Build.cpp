@@ -167,6 +167,9 @@ Domain buildDomain(const Setting& setting, TileKey key, const TileLookup& lookup
     // A ground tile is the last link before the player sees ground, so its own work is spread over
     // the pool; the coarser levels are built whole tiles side by side.
     domain.workers = key.level == Level::Ground ? setting.workers : nullptr;
+    // Except the dune pass that ends a Local or Site tile: one long piece of work that would hold
+    // the tile back on its own, and whose rows may be spread without changing its field.
+    domain.aeolian.workers = setting.workers;
     domain.cell = spec.cell;
     domain.step = spec.step;
     domain.origin = {key.x * tileSpan(key.level) - Halo * spec.cell, key.z * tileSpan(key.level) - Halo * spec.cell};

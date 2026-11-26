@@ -3,6 +3,7 @@
 #include "aeolian/fn/Wind.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "measure/fn/Plane.hpp"
+#include "planet/type/Planet.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -170,9 +171,32 @@ void checkBasin() {
     expect(domain.aeolian.ledger.salt > 0 && domain.aeolian.ledger.salt <= domain.ledger.dissolved * 1.0001 + 1.0, "more salt was laid than rock gave to solution", domain.aeolian.ledger.salt);
 }
 
+// The dust of a world's deserts beyond a domain: none from a wet world, and from a world that is
+// all desert some on every cell, never more than such ground raises.
+void checkFarDust() {
+    Domain domain = dryPlain();
+    Planet planet;
+    planet.seaLevel = 0;
+    planet.elevation = Field<float>(PlanetCells, PlanetCells, 500.0f);
+    planet.temperature = Field<float>(PlanetCells, PlanetCells, 25.0f);
+    Backdrop backdrop;
+    const Setting setting{7, 4.6e9, &planet, &backdrop};
+    planet.precipitation = Field<float>(PlanetCells, PlanetCells, 2.0f);
+    readFarDust(domain, setting);
+    float most = 0;
+    for (const float rate : domain.aeolian.farDust) most = std::max(most, rate);
+    expect(domain.aeolian.farDust.size() == domain.cells() && most == 0, "a wet world raised dust", most);
+    planet.precipitation = Field<float>(PlanetCells, PlanetCells, 0.0f);
+    readFarDust(domain, setting);
+    float least = 1e9f;
+    for (const float rate : domain.aeolian.farDust) least = std::min(least, rate), most = std::max(most, rate);
+    expect(least > 0 && most < 1e-4f, "far dust over a desert world is missing or more than deserts raise", least);
+}
+
 } // namespace
 
 void testAeolianGround() {
     checkBudget();
     checkBasin();
+    checkFarDust();
 }
