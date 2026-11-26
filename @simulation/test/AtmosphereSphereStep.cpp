@@ -1,0 +1,124 @@
+// The flow's state across steps: an inversion that does not converge publishes nothing, a retry
+// computes what a clean run does, and the leapfrog's fixed step is restarted when it changes, as at
+// the shorter last step of a window that does not divide by the step.
+#include "AtmosphereSphereFixture.hpp"
+
+#include "astronomy/constant/DeepTime.hpp"
+#include "atmosphere/fn/SphereFlow.hpp"
+#include "atmosphere/fn/SphereOperators.hpp"
+#include "atmosphere/fn/SpherePoisson.hpp"
+
+using namespace derivean::sim;
+using namespace derivean::sim::atmosphere_sphere_test;
+
+namespace {
+
+constexpr double Day = 86400.0;
+
+bool sameState(const SphereFlow& a, const SphereFlow& b) {
+    return a.vorticity == b.vorticity && a.before == b.before && a.stream == b.stream && a.flux == b.flux && a.started == b.started &&
+           a.step == b.step;
+}
+
+// Level 3, a smooth vorticity, CG cut to zero iterations (the case of DREV-CLAUDE-004). A step
+// without a step length is refused.
+void checkFailure() {
+    const SphereGrid grid = makeSphereGrid(3);
+    const SphereStencil stencil = makeSphereStencil(grid);
+    SpherePoisson poisson = makeSpherePoisson(grid, stencil);
+    std::vector<double> vorticity(size_t(grid.cells));
+    for (int c = 0; c < grid.cells; ++c) {
+        const Vec3 p = grid.centre[size_t(c)];
+        vorticity[size_t(c)] = 2e-5 * (p.x + p.y * p.z);
+    }
+    SphereFlow flow = makeSphereFlow(grid, rotationRateAt(PresentAge));
+    const SphereFlow fresh = flow;
+    expect(!stepSphereFlow(flow, grid, stencil, poisson) && sameState(flow, fresh), "a step without a step length was taken");
+    flow.limit = 0;
+    expect(!setVorticity(flow, grid, stencil, poisson, vorticity) && !flow.inversion.converged, "an unconverged start was accepted");
+    expect(sameState(flow, fresh), "an unconverged start changed the flow");
+    flow.limit = 60;
+    expect(setVorticity(flow, grid, stencil, poisson, vorticity), "the start did not invert", flow.inversion.residual);
+    setStep(flow, 120);
+    // Once in the forward step after the start, once in the leapfrog after it.
+    for (int phase = 0; phase < 2; ++phase) {
+        const SphereFlow clean = flow;
+        flow.limit = 0;
+        expect(!stepSphereFlow(flow, grid, stencil, poisson) && flow.inversion.residual > flow.tolerance, "an unconverged step was accepted",
+               phase);
+        expect(sameState(flow, clean), "an unconverged step changed the history or the wind", phase);
+        flow.limit = 60;
+        SphereFlow control = clean;
+        expect(stepSphereFlow(flow, grid, stencil, poisson) && stepSphereFlow(control, grid, stencil, poisson), "the retry was not accepted",
+               phase);
+        expect(sameState(flow, control), "a retry differs from a clean step", phase);
+    }
+}
+
+// Day of the Rossby–Haurwitz wave at level 5 against the analytic wave, largest error per amplitude.
+double waveError(const SphereGrid& grid, const SphereFlow& flow, double rotation) {
+    const std::vector<double> exact = rossbyHaurwitz(grid, rotation, Day);
+    double error = 0, amplitude = 0;
+    for (int c = 0; c < grid.cells; ++c) {
+        error = std::max(error, std::abs(flow.vorticity[size_t(c)] - exact[size_t(c)]));
+        amplitude = std::max(amplitude, std::abs(exact[size_t(c)]));
+    }
+    return error / amplitude;
+}
+
+// The same step changes nothing, a new one restarts. A day of the wave ending in a half step (with its
+// restart) lands where a day of equal steps does: 3.34e-2 of the amplitude off the analytic wave for
+// both (the grid's error), 1.7e-5 apart. A leapfrog step of length h₁ from levels h₀ apart lands
+// 4.4e-3 away: with tendency F it adds 2h₁F where (h₀ + h₁)F is due, and the filter reads a false
+// curvature.
+void checkStepChange() {
+    const SphereGrid grid = makeSphereGrid(5);
+    const SphereStencil stencil = makeSphereStencil(grid);
+    SpherePoisson poisson = makeSpherePoisson(grid, stencil);
+    const double rotation = rotationRateAt(PresentAge);
+    SphereFlow start = makeSphereFlow(grid, rotation);
+    expect(setVorticity(start, grid, stencil, poisson, rossbyHaurwitz(grid, rotation, 0)), "the wave did not invert");
+    // Courant at most 0.4, and the window ends half a step after the last whole one.
+    const int whole = int(std::ceil(Day * outflowCourant(grid, start.flux, 1.0) / 0.4));
+    const double step = Day / (whole + 0.5), rest = Day - whole * step;
+
+    SphereFlow even = start;
+    setStep(even, Day / (whole + 1));
+    SphereFlow shortened = start, stale = start;
+    setStep(shortened, step);
+    setStep(stale, step);
+    bool accepted = true;
+    for (int s = 0; s <= whole; ++s) accepted = stepSphereFlow(even, grid, stencil, poisson) && accepted;
+    for (int s = 0; s < whole; ++s) {
+        accepted = stepSphereFlow(shortened, grid, stencil, poisson) && accepted;
+        accepted = stepSphereFlow(stale, grid, stencil, poisson) && accepted;
+    }
+    setStep(shortened, step);
+    expect(shortened.started, "the same step restarted the history");
+    setStep(shortened, rest);
+    expect(!shortened.started && shortened.before == shortened.vorticity, "a new step did not restart the history");
+    stale.step = rest;   // bypasses setStep: a leapfrog step of `rest` from levels `step` apart
+    accepted = stepSphereFlow(shortened, grid, stencil, poisson) && stepSphereFlow(stale, grid, stencil, poisson) && accepted;
+    expect(accepted, "a step of the window was not accepted");
+    const double evenError = waveError(grid, even, rotation), shortError = waveError(grid, shortened, rotation);
+    double amplitude = 0, shortOff = 0, staleOff = 0;
+    for (int c = 0; c < grid.cells; ++c) {
+        amplitude = std::max(amplitude, std::abs(even.vorticity[size_t(c)]));
+        shortOff = std::max(shortOff, std::abs(shortened.vorticity[size_t(c)] - even.vorticity[size_t(c)]));
+        staleOff = std::max(staleOff, std::abs(stale.vorticity[size_t(c)] - even.vorticity[size_t(c)]));
+    }
+    expect(shortError < 1.01 * evenError, "a shortened last step lands off the wave", shortError / evenError);
+    expect(shortOff < 1e-4 * amplitude, "a shortened last step departs from equal steps", shortOff / amplitude);
+    expect(staleOff > 20 * shortOff, "the stale leapfrog step is not caught by the test", staleOff / amplitude);
+}
+
+} // namespace
+
+namespace derivean::sim::atmosphere_sphere_test {
+
+void checkStep() {
+    checkFailure();
+    checkStepChange();
+}
+
+} // namespace derivean::sim::atmosphere_sphere_test

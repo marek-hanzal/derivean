@@ -16,7 +16,9 @@ Asselin, R. (1972). Frequency filter for time integrations. *Monthly Weather Rev
 
 Williams, P. D. (2009). A proposed modification to the Robert–Asselin time filter. *Monthly Weather Review* 137(8), 2538–2546. doi:10.1175/2009MWR2724.1
 - **Model:** the Robert–Asselin–Williams filter damping the computational mode of the leapfrog step, strength 0.1.
-- **Used in:** `@simulation/src/atmosphere/fn/Circulation.cpp:15` (cited by name only); on the sphere `@simulation/src/atmosphere/fn/SphereFlow.cpp:14`, `SphereFlow.hpp:28`; `docs/handoff/atmosphere-sphere.md:66`.
+- **Used in:** `@simulation/src/atmosphere/fn/Circulation.cpp:15` (cited by name only); on the sphere `@simulation/src/atmosphere/fn/SphereFlow.cpp:16`, `SphereFlow.hpp:36`; `docs/handoff/atmosphere-sphere.md:66`.
+- **Checked by:** `@simulation/test/AtmosphereSphereStep.cpp:74` (a window ending in a shorter step, with the restart, against equal steps).
+- **Limits:** the leapfrog and the filter take the three time levels as equally spaced; on the sphere the step is part of the flow's state and a change of it restarts with a forward step (`@simulation/src/atmosphere/fn/SphereFlow.hpp:24`).
 
 ### Alduchov and Eskridge 1996: the Magnus formula
 Alduchov, O. A., Eskridge, R. E. (1996). Improved Magnus form approximation of saturation vapor pressure. *Journal of Applied Meteorology* 35(4), 601–609. doi:10.1175/1520-0450(1996)035<0601:IMFAOS>2.0.CO;2
@@ -140,8 +142,8 @@ The barotropic core on the cubed sphere, `docs/handoff/atmosphere-sphere.md`. Pu
 ### Charney, Fjørtoft and von Neumann 1950: the barotropic vorticity equation
 Charney, J. G., Fjørtoft, R., von Neumann, J. (1950). Numerical integration of the barotropic vorticity equation. *Tellus* 2(4), 237–254. doi:10.3402/tellusa.v2i4.8607 (the original Wiley record is doi:10.1111/j.2153-3490.1950.tb00336.x)
 - **Model:** ∂ζ/∂t = −∇·(v (ζ + f)) with the wind from the stream function, ζ = Δψ, f = 2Ω sin φ.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereFlow.hpp:21`, `@simulation/src/atmosphere/type/SphereFlow.hpp:12`; `docs/handoff/atmosphere-sphere.md:62`.
-- **Checked by:** `@simulation/test/AtmosphereSphereFlow.cpp:56` (the Rossby–Haurwitz wave), `:124` (steady solid rotation), `@simulation/test/AtmosphereSphereDrift.cpp:42` (unforced drift over 30 days).
+- **Used in:** `@simulation/src/atmosphere/fn/SphereFlow.hpp:29`, `@simulation/src/atmosphere/type/SphereFlow.hpp:12`; `docs/handoff/atmosphere-sphere.md:62`.
+- **Checked by:** `@simulation/test/AtmosphereSphereFlow.cpp:54` (the Rossby–Haurwitz wave), `:113` (steady solid rotation), `@simulation/test/AtmosphereSphereDrift.cpp:42` (unforced drift over 30 days).
 
 ### Hermeline 2000; Domelevo and Omnes 2005: the discrete duality Laplacian
 Hermeline, F. (2000). A finite volume method for the approximation of diffusion operators on distorted meshes. *Journal of Computational Physics* 160(2), 481–499. doi:10.1006/jcph.2000.6466
@@ -167,7 +169,7 @@ Brandt, A. (1977). Multi-level adaptive solutions to boundary-value problems. *M
 ### Holmes and Featherstone 2002: normalised Legendre recursions
 Holmes, S. A., Featherstone, W. E. (2002). A unified approach to the Clenshaw summation and the recursive computation of very high degree and order normalised associated Legendre functions. *Journal of Geodesy* 76(5), 279–299. doi:10.1007/s00190-002-0216-2
 - **Model:** the 4π-normalised associated Legendre functions by the standard forward column recursions (their eqs. 11–13), for the spherical harmonics of the eddy band.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereHarmonics.hpp:7`, `@simulation/src/atmosphere/fn/SphereHarmonics.cpp:9`; `docs/handoff/atmosphere-sphere.md:78`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereHarmonics.hpp:7`, `@simulation/src/atmosphere/fn/SphereHarmonics.cpp:9`; `docs/handoff/atmosphere-sphere.md:79`.
 - **Checked by:** `@simulation/test/AtmosphereSphere.cpp:120` (Δ Y = −l(l + 1)/R² Y), `@simulation/test/AtmosphereSphereBand.cpp:66`.
 
 ### van Leer 1974; Sweby 1984: the limited tracer flux
@@ -175,8 +177,8 @@ van Leer, B. (1974). Towards the ultimate conservative difference scheme. II. Mo
 
 Sweby, P. K. (1984). High resolution schemes using flux limiters for hyperbolic conservation laws. *SIAM Journal on Numerical Analysis* 21(5), 995–1011. doi:10.1137/0721062
 - **Model:** upwind flux plus a Lax–Wendroff correction limited by the van Leer limiter of the ratio of successive differences.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereFlow.hpp:38`, `@simulation/src/atmosphere/fn/SphereFlow.cpp:45`; `docs/handoff/atmosphere-sphere.md:67`.
-- **Checked by:** `@simulation/test/AtmosphereSphereFlow.cpp:163` (mass, bounds, a uniform tracer).
+- **Used in:** `@simulation/src/atmosphere/fn/SphereFlow.hpp:49`, `@simulation/src/atmosphere/fn/SphereFlow.cpp:68`; `docs/handoff/atmosphere-sphere.md:68`.
+- **Checked by:** `@simulation/test/AtmosphereSphereFlow.cpp:154` (mass, bounds, a uniform tracer).
 - **Approximations:** the correction runs along one grid line per edge; across the lines the scheme is upwind and diffusive.
 
 ### Neumaier 1974: compensated summation
@@ -187,7 +189,7 @@ Neumaier, A. (1974). Rundungsfehleranalyse einiger Verfahren zur Summation endli
 ### Haurwitz 1940: the Rossby–Haurwitz wave
 Haurwitz, B. (1940). The motion of atmospheric disturbances on the spherical Earth. *Journal of Marine Research* 3(3), 254–267. https://elischolar.library.yale.edu/journal_of_marine_research/575 (unverified: pages, given as 254–267 by Williamson et al. 1992 and as 245–267 elsewhere)
 - **Model:** the wave of wavenumber 4 as an exact solution of the non-divergent barotropic vorticity equation, turning at ν = (R(3 + R) ω − 2Ω) / ((1 + R)(2 + R)) (Williamson et al. 1992, eq. 136 of the ORNL/TM-11895 report).
-- **Checked by:** `@simulation/test/AtmosphereSphereFlow.cpp:51`, `:56`; `docs/handoff/atmosphere-sphere.md:71`.
+- **Checked by:** `@simulation/test/AtmosphereSphereFixture.hpp:57`, `@simulation/test/AtmosphereSphereFlow.cpp:54`, `@simulation/test/AtmosphereSphereStep.cpp:74`; `docs/handoff/atmosphere-sphere.md:72`.
 
 ## Snow (approved, not yet written)
 
