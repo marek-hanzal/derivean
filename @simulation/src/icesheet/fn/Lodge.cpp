@@ -2,8 +2,9 @@
 
 #include "icesheet/constant/Ice.hpp"
 #include "icesheet/fn/Region.hpp"
-#include "icesheet/fn/Wear.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <numeric>
 
 namespace derivean::sim {
@@ -18,6 +19,13 @@ constexpr int PluckRadius = 2;
 constexpr float CoverShield = 1.0f;         // m of cover left over rock that halves what the ice digs from it, twice over
 
 float groundOf(const Domain& domain, size_t i) { return domain.ground.rock[i] + domain.sedimentAt(i); }
+
+// How readily the ice plucks a cell's rock, from the rock-mass field alone (its kind, the share
+// broken along planes and faults, the cohesion of the jointed mass), so basins follow structure.
+float pluckFactor(const Domain& domain, size_t i) {
+    const float kind = std::clamp(std::sqrt(domain.unit[i].traits.erodibility / GraniteErodibility), 0.5f, 3.0f);
+    return kind * (1.0f + 2.5f * domain.weakness[i]) / std::max(0.05f, domain.sound[i]);
+}
 
 // Lays `amount` (m by class) on cell i and books it.
 void lay(Domain& domain, size_t i, const float amount[SedimentClasses], std::vector<float>& kind) {
@@ -55,7 +63,7 @@ SheetLoad takeUpBed(Domain& domain, SheetWork& work, const ParentSheet& parent) 
     for (auto& part : carried.load) part.assign(cells, 0.0f);
     carried.unstripped.assign(cells, 0.0f);
     std::vector<float> factor(cells);
-    for (size_t i = 0; i < cells; ++i) factor[i] = rockFactor(domain, i);
+    for (size_t i = 0; i < cells; ++i) factor[i] = pluckFactor(domain, i);
     const std::vector<float> plucked = boxMean(factor, domain.size, PluckRadius), around = boxMean(factor, domain.size, MeanRadius);
     const float deepest = domain.key.level == Level::Local ? BasinDepth : KnobRelief;
     for (int z = 0; z < domain.size; ++z) {
