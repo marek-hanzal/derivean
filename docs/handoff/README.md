@@ -23,7 +23,7 @@ These are binding and are not in the original briefs.
 
 ## State of the tree
 
-Last checkpoint commit: `ef5c567` (work in progress, not a verified state). Later work is uncommitted unless a newer commit exists.
+Last checkpoint commit: `08f5a7e` (work in progress, not a verified state). Later work is uncommitted unless a newer commit exists.
 
 On 26 Nov at about 03:00 every running stream stopped mid-work on a model usage limit. Each was restarted by a fresh worker from its own file here and the checkpoint `c131234`; a stream's file can lag behind its code, so a successor first compares `git diff 54fdbd9 c131234` over the stream's directories and finishes or undoes half-done edits. The orphaned run `terra volcanic --x 13686236 --z 11027538 --level 2` (six hours of CPU without finishing) was stopped; the volcanic stream found and fixed its cause (oversized minor eruptions, millimetre relaxation of cones on steep ground).
 
@@ -34,7 +34,7 @@ Starting the game builds the planet first: about 8 minutes at 08:54 and still un
 Open investigation: thin vertical columns, one cell wide and up to hundreds of metres tall, seen in a worker's game capture (owner's screenshot). They are in the engine's quads (2 347 riser quads one cube wide and 16 or more high at level 5 in the 03:03 data, materials silt, sand, gravel), so loose cover; cause not yet found.
 
 - `mise -C @simulation run build` builds when no stream is mid-save; streams share one working tree, so a failing build is usually someone's half-saved file — wait and retry before touching another owner's code.
-- `mise -C @simulation run test` stops at `testLandscapePlane` ("a site plane was cut into gullies"): a regression of the relief rework in progress. Tests registered after it do not run; streams run their own tests through small drivers linked against the library.
+- `mise -C @simulation run test` gets past the relief, ice and volcanic checks and stops at `testChart` ("the local chart does not mix the local tile with the region around it"): more Local tiles are finished around the test focus than before; a build cascade is suspected and being checked.
 - Root `mise run check` fails in `engine-tests` (`Planet.cpp:36`, the player must come to rest on the ground: the engine places the player on the Site surface while voxels come from the finer Ground level).
 - The renderer is flipped: one WebGPU scene draws voxel chunks and far cube levels 2–13, with sun shadows, snow, clouds, cloud shadow and precipitation; the WebGL path is gone (three's WebGL 2 fallback backend draws no clouds). Captures under `.out/playwright/renderer/`. Captures are still not taken on final data until the engine's readiness is truthful.
 
@@ -43,7 +43,7 @@ Open investigation: thin vertical columns, one cell wide and up to hundreds of m
 | Stream | File | Owns | Status |
 | --- | --- | --- | --- |
 | Planet, strata, rock mass, ore, heat, spawn | [planet.md](planet.md) | `@simulation/src/{planet,strata,rockmass,ore,tectonics,core}`, `simulation/fn/Spawn.*`, `simulation/{type,service}/World.*`, `tool/PlanetCommand.cpp` | Lead's own; stable |
-| Relief of Region, Local, Site | [relief.md](relief.md) | behaviour of those levels in `@simulation/src/landscape/**`, `tool/{View,Relief,Block}Command.cpp` | In progress, second run: Region and slope mechanics done; the settling controller at Local and Site is next; top priority |
+| Relief of Region, Local, Site | [relief.md](relief.md) | behaviour of those levels in `@simulation/src/landscape/**`, `tool/{View,Relief,Block}Command.cpp` | In progress, top priority. Comb and debris needles gone (Local and Site held to the parent's mean, Region drainage rule at Local); the range now reads as smooth rounded upland (mean slope 21.6°, faces above 60° 0.45 %), so walls are next: incision to threshold slopes by rock-mass strength, ice that sharpens |
 | Ground level and voxel forms | [ground.md](ground.md) | `@simulation/src/{ground,relief}`, `simulation/fn/{Query,Reader,Live}.*` | Finished; no active owner |
 | Groundwater, springs, caves, karst | [groundwater.md](groundwater.md) | `@simulation/src/groundwater/**` | In progress; stand-in deleted, real springs and caves linked; world runs and second review next |
 | Interventions, hydrology, time | [interventions.md](interventions.md) | `@simulation/src/{hydrology,intervention}` | Finished; not wired into the game |
@@ -51,7 +51,7 @@ Open investigation: thin vertical columns, one cell wide and up to hundreds of m
 | Coasts and lake shores | [coast.md](coast.md) | `@simulation/src/coast/**` | Started |
 | Wind and dry lands | [aeolian.md](aeolian.md) | `@simulation/src/aeolian/**` | Started |
 | Volcanism | [volcanic.md](volcanic.md) | `@simulation/src/volcanic/**`, the deposit edit in `@simulation/src/intervention/**`, voxel piles in `relief/fn/{Form,Ground}.cpp` and `simulation/fn/Query.cpp` | World tiles build (an arc Local tile with its parents in about 4 min); piles in the voxel answer; live eruption functions exist (`outbreaksBetween`, `airSourcesOf`, `layOutbreak`), nothing calls them yet; eruptions 4.1 a year on land, 5–6× below Earth, under analysis |
-| Ice sheets | [icesheet.md](icesheet.md) | `@simulation/src/icesheet/**` | Started |
+| Ice sheets | [icesheet.md](icesheet.md) | `@simulation/src/icesheet/**` | Region sheets on real land; last sheet at Local and Site (basins, till tails, eskers, moraine) with tests; seam step at Local, speckle lakes and grid dashes open; Site not built yet |
 | Measurements, inspector, scouting | [measure.md](measure.md) | `@simulation/src/{measure,inspect}`, `tool/Measure*`, `tool/InspectCommand.cpp` | Finished a full pass; to be repeated |
 | Engine | [engine.md](engine.md) | `@engine/**`, `@napi/**`, `@game/main/engine*`, `@game/contract/GameBridge.ts`, `@game/preload/**` | In progress; long queue |
 | Renderer | [renderer.md](renderer.md) | `@game/src/**` except the map, `@game/main/{index,capture}.mjs`, `@game/capture/**` | WebGPU only: cubes at every distance, sun shadows, snow, clouds and cloud shadow ported, rain and snow written; next: clouds in motion and live, the clouds' GPU cost, low-sun captures of a range |
