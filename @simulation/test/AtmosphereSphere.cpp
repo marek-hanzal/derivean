@@ -170,5 +170,6 @@ void testAtmosphereSphere() {
     checkFlow();
     checkTracer();
     checkDrift();
+    checkStep();
     checkEddyBand();
 }
