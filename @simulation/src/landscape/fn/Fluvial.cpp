@@ -1,10 +1,11 @@
 #include "landscape/fn/Process.hpp"
 
+// About 300 lines: the erosion factor, the implicit solve and the carrying of the load are three
+// sweeps over one flow order that share one working state and are only meaningful together.
 namespace derivean::sim {
 namespace {
 
 constexpr int Passes = 2;            // implicit solves; each refines the deposition of the one before
-constexpr float LagShield = 0.3f;    // m of blocks and gravel under which unchannelled water does not reach the rock
 constexpr float FreeFall = 1.19f;    // rise over run (50°) above which water leaves the bed and falls
 
 struct Sweep {
@@ -32,19 +33,14 @@ void measurePower(Sweep& sweep) {
     forRows(domain, domain.size, [&](int begin, int end) {
     for (size_t i = size_t(begin) * size_t(domain.size); i < size_t(end) * size_t(domain.size); ++i) {
         float power = 0;
-        sweep.scratch.channelled[i] = 0;
         if (domain.hold[i] != Settled && (drains ? !(sweep.standing(i) && domain.hold[i] == Rim) : !sweep.flooded(i))) {
             // The coarser levels cut with the water a cell has gathered, not with the sheet that any long slope carries.
             const float flow = std::pow(ground ? working[i] : sweep.scratch.gathered[i], float(StreamExponent)), drive = flow - head;
-            sweep.scratch.channelled[i] = drive > 0;
-            // At ground level water cuts once it is more than a rill's worth. A cell of the coarser
-            // levels that carries less than a channel of its level still holds streams of its own
-            // inside it, the largest of them about that size: its ground is lowered at the pace such a
-            // stream cuts on the cell's slope, and above it the cell's own water takes over. Blocks
-            // move only in a channel the level can draw, except at Region level, where the streams a
-            // cell hides are long enough to carry and wear down what falls into them.
+            // Where a level cuts with all of a cell's water, it cuts once that is more than a channel
+            // head's worth. A Region cell that has gathered less still holds streams of its own inside
+            // it, the largest about `hidden`: its ground is lowered at the pace such a stream cuts on
+            // the cell's slope, loose cover and blocks included, and above that its own water takes over.
             const float wash = ground ? std::max(0.0f, drive) : std::max(flow, hidden);
-            const float blocks = ground || domain.key.level == Level::Region ? wash : std::max(0.0f, drive);
             if (wash > 0) {
                 // What is about to settle here is as easy to pick up again as what already lies here.
                 // Storms count for loose cover only: rock is cut by what runs over it year in, year out.
@@ -53,7 +49,7 @@ void measurePower(Sweep& sweep) {
                 for (int c = 0; c < SedimentClasses; ++c) {
                     const float layer = domain.ground.sediment[c][i] + sweep.scratch.settle[c][i];
                     loose += layer;
-                    soft += SedimentErodibility[c] * layer * (c == Coarse ? blocks : wash) * storm;
+                    soft += SedimentErodibility[c] * layer * wash * storm;
                 }
                 float erodibility = domain.unit[i].traits.erodibility * domain.quality[i] * (1.0f + 2.5f * domain.weakness[i]) * wash * rockCutOf(domain.key.level);
                 if (loose > 0) {
@@ -142,7 +138,6 @@ void carryLoad(Sweep& sweep, bool final) {
     Domain& domain = sweep.domain;
     FlowScratch& scratch = sweep.scratch;
     const int size = domain.size;
-    const bool selective = false;   // every level takes loose cover as it lies; a lag of blocks under sheets of water is not modelled yet
     const float perYear = sweep.area / sweep.dt;
     for (auto& flux : scratch.flux) std::fill(flux.begin(), flux.end(), 0.0f);
     std::vector<float> fresh[SedimentClasses];
@@ -191,19 +186,14 @@ void carryLoad(Sweep& sweep, bool final) {
                 for (float& part : laid) part *= kept;
                 laidTotal *= kept;
             }
-            // Outside a channel the Local and Site levels move only sand and fines: what the water
-            // cannot take stays behind as a lag of blocks and gravel, and shields the rock under it.
-            const bool sheet = selective && !scratch.channelled[i];
-            const float lag = sheet ? domain.ground.sediment[Coarse][i] : 0.0f;
-            const float loose = domain.sedimentAt(i) - lag;
+            const float loose = domain.sedimentAt(i);
             const float fromLoose = std::min(cut, loose);
-            const float fromRock = lag > LagShield ? 0.0f : cut - fromLoose;
-            cut = fromLoose + fromRock;
+            const float fromRock = cut - fromLoose;
             const RockTraits& rock = domain.unit[i].traits;
             float source[SedimentClasses] = {fromRock * rock.coarse, fromRock * rock.sand, fromRock * rock.fines};
             float taken[SedimentClasses] = {};
             if (loose > 0)
-                for (int c = sheet ? 1 : 0; c < SedimentClasses; ++c) source[c] += taken[c] = fromLoose * domain.ground.sediment[c][i] / loose;
+                for (int c = 0; c < SedimentClasses; ++c) source[c] += taken[c] = fromLoose * domain.ground.sediment[c][i] / loose;
 
             float shortfall = 0;
             for (int c = 0; c < SedimentClasses; ++c) {
@@ -276,7 +266,6 @@ void cutAndFill(Domain& domain, FlowScratch& scratch) {
     const size_t cells = domain.cells();
     scratch.next.resize(cells);
     scratch.power.resize(cells);
-    scratch.channelled.resize(cells);
     scratch.drained.assign(cells, 0);
     scratch.pool.resize(cells);
     for (int c = 0; c < SedimentClasses; ++c) {

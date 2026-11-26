@@ -14,9 +14,10 @@ IceGrid planetIce(const Planet& planet);
 // What a relaxed grid holds as one stage: grounded ice only.
 IceStage stageOf(const IceGrid& grid, const Planet& planet);
 
-// The stages of a world of the given age: the last maximum grown from bare ground, the present
-// reached by warming from it (what is left of that sheet, not what bare ground would grow), and
-// colder stages by cooling on from the last maximum down to the coldest point of the region window.
+// The stages of a world of the given age: the present grown from bare ground, then the last
+// maximum and colder stages down to the coldest point of the region window, each by cooling on
+// from the stage before. A sheet's hold on ground its climate would not retake from bare ground
+// is therefore not in the present stage.
 ContinentalIce solveContinental(const Planet& planet, double age, Workers* workers);
 
 } // namespace derivean::sim

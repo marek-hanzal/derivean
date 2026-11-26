@@ -17,18 +17,20 @@ float wetShare(const AquiferColumn& column, int storey, float level) {
     return (column.deepT * deep + column.shallowT * shallow) / through;
 }
 
-// m, where a storey's water stands: the lowest stand between its resting level and the ground at
-// which what is under water can carry the flow that passes sideways.
+// m, where a storey's water stands: the lowest stand between its resting level and its top at
+// which what is under water can carry the flow that passes sideways. The top is the ground, or for
+// water under a tight bed the underside of that bed: above it the level would be a pressure.
 float tableOf(const WaterField& field, size_t cell, int storey) {
     const AquiferColumn& column = field.column[cell];
     const size_t node = cell * 2 + size_t(storey);
-    const float rest = std::min(field.level[node], column.ground);
-    if (field.fate[node].emerges > LeastSeep) return column.ground;
+    const float top = storey == Lower && column.perched ? column.roof : column.ground;
+    const float rest = std::min(field.level[node], top);
+    if (field.fate[node].emerges > LeastSeep) return top;
     const float passing = field.sideways[node];
     if (passing <= 0) return rest;
     const auto carries = [&](float level) { return wetShare(column, storey, level) * (field.room[node] - field.pull[node] * (column.ground - level)); };
     if (carries(rest) >= passing) return rest;
-    float low = rest, high = column.ground;
+    float low = rest, high = top;
     for (int step = 0; step < 18; ++step) {
         const float middle = 0.5f * (low + high);
         (carries(middle) >= passing ? high : low) = middle;

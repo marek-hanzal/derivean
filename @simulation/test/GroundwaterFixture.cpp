@@ -5,17 +5,20 @@
 
 using namespace derivean::sim;
 
-WaterField handField(const std::function<HandColumn(int, int)>& describe) {
+namespace {
+
+WaterField fieldOf(TileKey key, int margin, const std::function<HandColumn(int, int)>& describe) {
     WaterField field;
-    field.key = {Level::Local, 0, 0};
+    field.key = key;
     field.seed = 42;
-    field.size = TileCells, field.margin = 0;
+    field.size = TileCells + 2 * margin, field.margin = margin;
+    field.firstX = int64_t(key.x) * TileCells - margin, field.firstZ = int64_t(key.z) * TileCells - margin;
     field.seaLevel = 0;
     field.column.assign(field.cells(), AquiferColumn{});
     field.fissures.assign(field.cells(), Fissures{});
     for (int z = 0; z < field.size; ++z)
         for (int x = 0; x < field.size; ++x) {
-            const HandColumn hand = describe(x, z);
+            const HandColumn hand = describe(int(field.firstX) + x, int(field.firstZ) + z);
             AquiferColumn& column = field.column[field.index(x, z)];
             column.ground = column.bedrock = column.stage = hand.ground;
             column.rain = hand.rain, column.warmth = 8.0f;
@@ -27,6 +30,12 @@ WaterField handField(const std::function<HandColumn(int, int)>& describe) {
         }
     return field;
 }
+
+} // namespace
+
+WaterField handField(const std::function<HandColumn(int, int)>& describe) { return fieldOf({Level::Local, 0, 0}, 0, describe); }
+
+WaterField handTile(TileKey key, const std::function<HandColumn(int, int)>& describe) { return fieldOf(key, Reach, describe); }
 
 Layer handLayer(Material rock, float top, float bottom, float metresPerSecond, uint32_t unit) {
     Layer layer;

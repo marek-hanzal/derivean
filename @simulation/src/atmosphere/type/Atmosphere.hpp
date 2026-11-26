@@ -131,10 +131,12 @@ struct Atmosphere {
     AirWork work;
 };
 
-// Opens a source. From the step that covers its start to the one that covers its end, its ash,
-// gas, vapour and heat enter the air over its position at its height: dust and gas are carried by
-// the wind of that level, lapilli and sand-size ash land downwind of it within the step, vapour
-// joins the band's vapour and heat warms the cell's air.
+// Opens a source. From the atmosphere's current step on, between the source's start and end, its
+// ash, gas, vapour and heat enter the air over its position at its height: dust and gas are
+// carried by the wind of that level, lapilli and sand-size ash land downwind of it within the
+// step, vapour joins the vapour of the band (the high band for a source above the tropopause) and
+// heat warms the cell's air. The vapour is new water: total(waterLedger) grows by
+// plumeLedger(...).vapourEmitted.
 void addSource(Atmosphere& atmosphere, const AirSource& source);
 
 // Ash on the ground at a world position: the blankets of lapilli and sand-size ash evaluated at

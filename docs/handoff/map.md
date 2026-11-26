@@ -21,7 +21,7 @@ How verified:
 - `@napi/test/chart.test.cjs`: promise returns before the chart is read, shape of the answer, `unless`, positions to ±1e12 m, bad requests refused, restart with 12 charts in flight, and a worker thread terminated with 12 charts in flight (child process `chart-teardown.cjs`). All five passed; the last one was run alone after its fix (it caught a real abort, fixed in `ChartWork::OnOK`).
 - Captures under `.out/playwright/map/` from `@game/capture/map.json`: `map-5km.png`, `map-200km.png`, `map-1000km.png` (refined tiles against hatched planet-scale ground), `map-planet.png`, `map-closed.png` (the game after closing), each with a `.json` record.
 - Real input, driven through `webContents.sendInputEvent` by a scratch script (not in the repository): `keys-map-open.png`, `keys-map-zoomed.png`, `keys-map-travelled.png`, `keys-map-closed.png`, `keys.json`, `keys-lock.json` in the same folder. 12 of 12 and 5 of 5 checks passed. These runs need the window to hold the focus; other windows on the machine taking it makes them fail for reasons that are not the map's.
-- Frame times, 20 s boosted flight at 700–860 m/s over the same path, map closed against open at a 5 km span (`@game/capture/map-flight.json`, records `flight-*.json`): p50 8.30 ms both; p95 8.9–9.2 closed, 9.0 open; p99 9.2–9.4 closed, 9.3–10.5 open; worst frame 9.4–25.0 closed, 17.1–25.1 open. Up to 1 % more frames miss a refresh with the map open.
+- Frame times, 20 s boosted flight at 700 m/s over the same path on a 120 Hz display, map closed against open at a 5 km span (`@game/capture/map-flight.json`, records `flight-*.json`; legs closed, open, closed, open after a warm-up leg): p50 8.30 ms in all four; p95 9.0, 9.0, 9.0, 9.1; p99 9.3, 9.3, 9.3, 9.5; worst frame 9.4, 16.6, 9.4, 17.5; frames in 20 s 2401, 2400, 2401, 2394. The open legs brought 26 and 65 charts on screen. So the percentiles match and the map costs at most a handful of single missed refreshes in 20 s. The machine was under heavy load from other work throughout; the closed warm-up leg had a 25 ms frame of its own.
 
 Broken or weak:
 
@@ -30,15 +30,14 @@ Broken or weak:
 
 ## 3. In progress
 
-Nothing half-done. The last change, handing one arrived pane a frame to the GPU (`arrived` queue in `ChartFeed.ts`), softer shading (`TypicalShade` 0.2) and the `PaneMeasure` type moved to `type/ChartLook.ts`, is built into `@game/dist`; its flight capture was running when this was written, so the frame-time figures above are from the build before it.
+Nothing half-done.
 
 ## 4. Next steps
 
-1. Run `@game/capture/map-flight.json` again on a quiet machine and put its figures in section 2.
-2. Run `node --test @napi/test/chart.test.cjs` once more as a whole.
-3. Ask the renderer's owner to skip drawing the 3D scene while `map.open` is true: the map is opaque, the scene under it costs the whole frame budget, and that is what leaves no room for the map's own work.
-4. If the simulation gains a planet fallback and an eased surface of its own (the engine has `surfaceOrPlanet` and `surfaceEased` in `@engine/src/nature/type/SurfaceReader.hpp`), call them from `chartOf` and drop its own planet read and the shader's seam flattening.
-5. Optional: a graticule with coordinates; place names once the world has any.
+1. Run `@game/capture/map-flight.json` again on a quiet machine; the figures in section 2 were taken at a load average of 30–50.
+2. Ask the renderer's owner to skip drawing the 3D scene while `map.open` is true: the map is opaque, the scene under it costs the whole frame budget, and that is what leaves no room for the map's own work.
+3. If the simulation gains a planet fallback and an eased surface of its own (the engine has `surfaceOrPlanet` and `surfaceEased` in `@engine/src/nature/type/SurfaceReader.hpp`), call them from `chartOf` and drop its own planet read and the shader's seam flattening.
+4. Optional: a graticule with coordinates; place names once the world has any.
 
 ## 5. Decisions and why
 

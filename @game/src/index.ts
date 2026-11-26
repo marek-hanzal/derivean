@@ -140,6 +140,7 @@ function compose() {
       const which = options ? ` · seed ${options.seed} · ${formatAge(options.age)}` : "";
       launcher.progress(`Generating the planet${which} · ${Math.max(0, Math.floor((time - since) / 1000))} s`);
     }
+    scene.covered = map.open;
     const shown = session.tick(time);
     if (!shown) return;
     const { world, frame, active, pilot } = shown;

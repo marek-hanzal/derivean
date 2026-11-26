@@ -24,7 +24,8 @@ int gatherOf(float gathered, float head) { return gathered < head ? 0 : 3; }
 // Water running down a plane arrives at a cell as a sheet however long the slope is: one cell's
 // yield for every cell of the way. That much of a cell's water cuts no channel. What it carries
 // beyond the sheet has been gathered from the sides, by a hollow, a crease or a stream.
-constexpr float SheetMargin = 1.6f;    // share of the sheet a cell must exceed before any of its water counts as gathered
+// `way` is the length of the slope above a cell: every cell hands its own on, longer by one step.
+constexpr float SheetMargin = 3.2f;    // sheets a cell must carry before any of its water counts as gathered
 
 } // namespace
 
@@ -36,7 +37,7 @@ void routeWater(Domain& domain, FlowScratch& scratch) {
     for (size_t i = 0; i < cells; ++i) domain.discharge[i] = domain.runoff[i] * area + domain.inflow[i];
     const bool ground = !gathersWater(domain.key.level);
     const float head = channelHeadOf(domain.key.level), own = std::max(2.0f * head, 0.4f * area);
-    // m·m³/yr: the way each cell's inflow has come since it fell as rain, summed over that inflow.
+    // m·m³/yr: the length of slope above each cell, summed over the water that arrives from it.
     std::vector<float>& travelled = scratch.travelled;
     if (!ground) travelled.assign(cells, 0.0f), scratch.gathered.resize(cells);
     const float sea = float(domain.seaLevel);
@@ -90,8 +91,7 @@ void routeWater(Domain& domain, FlowScratch& scratch) {
         if (!ground) {
             const float yield = domain.runoff[size_t(cell)] * area, arrived = water - yield - domain.inflow[size_t(cell)];
             way = arrived > 0 ? travelled[size_t(cell)] / arrived : 0.0f;
-            // The water of a sheet has come, on average, half the length of the slope above the cell.
-            gathered = std::max(0.0f, water - SheetMargin * yield * (2.0f * way / float(domain.cell) + 1.0f));
+            gathered = std::max(0.0f, water - SheetMargin * yield * (way / float(domain.cell) + 0.5f));
             scratch.gathered[size_t(cell)] = gathered;
         }
         // Through standing water the flow keeps to one path: the way to the lake's outlet.

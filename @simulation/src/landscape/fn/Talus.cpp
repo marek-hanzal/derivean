@@ -119,11 +119,21 @@ void settleDebris(Domain& domain, FlowScratch& scratch) {
                 for (int c = 0; c < SedimentClasses; ++c) scratch.moved[c][other] += moving[c] * excess[k] / steep;
             }
         }
+        // The order is that of the surface before anything moved, so a share can land on a cell
+        // the pass has left behind. It rests there: nothing that moved may go missing.
+        for (size_t i = 0; i < cells; ++i)
+            for (int c = 0; c < SedimentClasses; ++c) {
+                if (scratch.moved[c][i] <= 0) continue;
+                if (domain.hold[i] == Free) domain.ground.sediment[c][i] += scratch.moved[c][i];
+                else scratch.left += double(scratch.moved[c][i]) * area;
+                scratch.moved[c][i] = 0;
+            }
     }
 }
 
-// Blocks and gravel that lie at the surface break down as the rock they came from does; what they
-// become is sand and fines in that rock's proportion, which running water can carry.
+// Blocks and gravel that lie at the surface break down as the rock under them does (a cell does
+// not record where its debris came from); what they become is sand and fines in that rock's
+// proportion, which running water can carry.
 void wearDebris(Domain& domain) {
     const float dt = float(domain.step);
     for (size_t i = 0; i < domain.cells(); ++i) {

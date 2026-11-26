@@ -2,10 +2,10 @@
 
 #include "core/service/Workers.hpp"
 
+
 namespace derivean::sim {
 namespace {
 
-constexpr double Pi = 3.141592653589793;
 constexpr double LevelDepth[PlumeLevels] = {2000, 4000, 4000, 8000};   // m that dust settles through at each level
 constexpr double Conversion[PlumeLevels] = {3, 5, 10, 35};             // days for sulphur dioxide to turn into sulphate
 // Days sulphate stays at a level. From the three bands it reaches the ground; from above the
@@ -19,7 +19,8 @@ constexpr double VeilDim = 0.105;       // the same for a thick sulphate veil, w
 constexpr double SpreadShare = 0.3;     // spread of a blanket of ash over its distance from the source
 constexpr double ColumnSpread = 0.15;   // spread at the source over the height the ash fell from
 constexpr double ColumnHeat = 1.0e7;    // J/m²/K of the air column that a source's heat warms
-constexpr double Trace = 1e-12;         // kg/m² below which a level counts as clean
+constexpr double ClearSky = 1e-7;       // planet-mean optical depth below which what is left aloft is put down and the sky counts as clean
+constexpr double BuryingSnow = 5.0;     // kg/m² of fresh snow that hides the ash under it e-fold
 constexpr int Carriers = 3 * PlumeLevels;
 
 double sum(const Field<double>& field) {
@@ -28,11 +29,27 @@ double sum(const Field<double>& field) {
     return all;
 }
 
-// kg/m² a patch laid on a point.
-double blanket(const AshPatch& patch, Vec2 position) {
-    const double dx = wrapDelta(position.x - patch.centre.x, PlanetSpan), dz = wrapDelta(position.z - patch.centre.z, PlanetSpan);
-    const double variance = patch.spread * patch.spread;
-    return patch.mass * std::exp(-0.5 * (dx * dx + dz * dz) / variance) / (2 * Pi * variance);
+// Books a landed blanket into the cells it covers, by the blanket's own shape, so that the cells
+// together receive exactly its mass.
+void book(Plume& plume, const AshPatch& landed) {
+    const int reach = std::clamp(int(std::ceil(2.5 * landed.spread / AirCell)), 1, 8);
+    const int centreX = floorToInt(landed.centre.x / AirCell), centreZ = floorToInt(landed.centre.z / AirCell);
+    double weights[17][17], all = 0;
+    for (int dz = -reach; dz <= reach; ++dz) {
+        for (int dx = -reach; dx <= reach; ++dx) {
+            const double offX = (centreX + dx + 0.5) * AirCell - landed.centre.x, offZ = (centreZ + dz + 0.5) * AirCell - landed.centre.z;
+            all += weights[dz + reach][dx + reach] = std::exp(-0.5 * (offX * offX + offZ * offZ) / (landed.spread * landed.spread));
+        }
+    }
+    for (int dz = -reach; dz <= reach; ++dz) {
+        for (int dx = -reach; dx <= reach; ++dx) {
+            // A blanket much narrower than a cell lies in the cell under its centre.
+            const double share = all > 0 ? weights[dz + reach][dx + reach] / all : (dx == 0 && dz == 0 ? 1.0 : 0.0);
+            const size_t cell = plume.fallen.index(wrapAir(centreX + dx), wrapAir(centreZ + dz));
+            plume.fallen.cells[cell] += landed.mass * share / AirCellArea;
+            plume.fallRate.cells[cell] += landed.mass * share / (AirCellArea * AirStep);
+        }
+    }
 }
 
 // What one source gives off in `seconds` of a step.
@@ -55,7 +72,7 @@ void emit(Atmosphere& atmosphere, const AirSource& source, double seconds) {
         const double reach = speed * above / AshSettling[size_t(grain)];
         AshPatch landed{source.id, grain, source.position + wind * (above / AshSettling[size_t(grain)]), SpreadShare * reach + ColumnSpread * above, mass};
         bool merged = false;
-        for (size_t back = 0; back < 8 && back < plume.patches.size() && !merged; ++back) {
+        for (size_t back = 0; back < 256 && back < plume.patches.size() && !merged; ++back) {
             AshPatch& patch = plume.patches[plume.patches.size() - 1 - back];
             const double apart = std::hypot(wrapDelta(landed.centre.x - patch.centre.x, PlanetSpan), wrapDelta(landed.centre.z - patch.centre.z, PlanetSpan));
             if (patch.source != landed.source || patch.grain != grain || apart > 0.25 * std::min(patch.spread, landed.spread)) continue;
@@ -66,9 +83,7 @@ void emit(Atmosphere& atmosphere, const AirSource& source, double seconds) {
             merged = true;
         }
         if (!merged) plume.patches.push_back(landed);
-        const size_t under = atmosphere.ground.index(wrapAir(floorToInt(landed.centre.x / AirCell)), wrapAir(floorToInt(landed.centre.z / AirCell)));
-        plume.fallen.cells[under] += mass / AirCellArea;
-        plume.fallRate.cells[under] += mass / (AirCellArea * AirStep);
+        book(plume, landed);
         plume.totals.ashEmitted += mass;
         plume.totals.ashFallen += mass;
     }
@@ -126,9 +141,41 @@ void settle(Atmosphere& atmosphere) {
         plume.depth.cells[cell] = ashDepth + veilDepth;
         plume.dimming.cells[cell] = 1.0 - (1.0 - AshDim * (1.0 - std::exp(-ashDepth))) * (1.0 - VeilDim * (1.0 - std::exp(-veilDepth)));
     }
+    // Once what is left no longer dims anything, it is put down where it floats and the sky is clean.
+    double haze = 0;
+    for (double depth : plume.depth.cells) haze += depth;
+    double gas = 0;
+    for (const Field<double>& level : plume.gas) gas += sum(level);
+    plume.aloft = left > 0;
+    if (plume.aloft && (haze + VeilOptics * gas) / double(plume.depth.size()) < ClearSky) {
+        for (size_t cell = 0; cell < plume.fallen.size(); ++cell) {
+            for (size_t level = 0; level < PlumeLevels; ++level) {
+                plume.dustFallen.cells[cell] += plume.dust[level].cells[cell];
+                plume.fallen.cells[cell] += plume.dust[level].cells[cell];
+                ashFallen += plume.dust[level].cells[cell];
+                sulphurFallen += plume.gas[level].cells[cell] + plume.veil[level].cells[cell];
+                plume.dust[level].cells[cell] = plume.gas[level].cells[cell] = plume.veil[level].cells[cell] = 0;
+            }
+            plume.depth.cells[cell] = plume.dimming.cells[cell] = 0;
+        }
+        plume.aloft = false;
+    }
     plume.totals.ashFallen += ashFallen * AirCellArea;
     plume.totals.sulphurFallen += sulphurFallen * AirCellArea;
-    plume.aloft = left > Trace;
+}
+
+// Ash that fell this step lies on the snow; snow that fell on it hides it, and it is gone where
+// the pack is gone.
+void soot(Atmosphere& atmosphere) {
+    Plume& plume = atmosphere.plume;
+    plume.sooted = false;
+    for (size_t cell = 0; cell < plume.onSnow.size(); ++cell) {
+        const double lying = atmosphere.snow.cells[cell] > 0
+                                 ? (plume.onSnow.cells[cell] + plume.fallRate.cells[cell] * AirStep) * std::exp(-atmosphere.snowRate.cells[cell] * AirStep / BuryingSnow)
+                                 : 0.0;
+        plume.onSnow.cells[cell] = lying;
+        plume.sooted = plume.sooted || lying > 0;
+    }
 }
 
 } // namespace
@@ -138,23 +185,24 @@ void shapePlume(Atmosphere& atmosphere) {
     Plume& plume = atmosphere.plume;
     for (auto* levels : {&plume.dust, &plume.gas, &plume.veil})
         for (Field<double>& field : *levels) field = blank;
-    for (Field<double>* field : {&plume.fallen, &plume.dustFallen, &plume.fallRate, &plume.depth, &plume.dimming}) *field = blank;
+    for (Field<double>* field : {&plume.fallen, &plume.onSnow, &plume.dustFallen, &plume.fallRate, &plume.depth, &plume.dimming}) *field = blank;
 }
 
 void addSource(Atmosphere& atmosphere, const AirSource& source) { atmosphere.plume.sources.push_back(source); }
 
 void stepPlume(Atmosphere& atmosphere, Workers& workers) {
     Plume& plume = atmosphere.plume;
-    if (plume.sources.empty() && !plume.aloft) return;
-    std::fill(plume.fallRate.cells.begin(), plume.fallRate.cells.end(), 0.0);
     const double from = double(atmosphere.step) * AirStep, to = from + AirStep;
+    bool emitting = false;
+    for (const AirSource& source : plume.sources) emitting = emitting || (source.end > from && source.start < to);
+    if (!emitting && !plume.aloft && !plume.sooted) return;
+    std::fill(plume.fallRate.cells.begin(), plume.fallRate.cells.end(), 0.0);
     for (const AirSource& source : plume.sources) {
         const double seconds = std::min(to, source.end) - std::max(from, source.start);
         if (seconds > 0) emit(atmosphere, source, seconds);
     }
     if (!plume.aloft) {
-        std::fill(plume.depth.cells.begin(), plume.depth.cells.end(), 0.0);
-        std::fill(plume.dimming.cells.begin(), plume.dimming.cells.end(), 0.0);
+        soot(atmosphere);
         return;
     }
 
@@ -175,40 +223,7 @@ void stepPlume(Atmosphere& atmosphere, Workers& workers) {
         }
     });
     settle(atmosphere);
-}
-
-AshFall ashFallAt(const Atmosphere& atmosphere, Vec2 position) {
-    const Plume& plume = atmosphere.plume;
-    const double x = position.x / AirCell - 0.5, z = position.z / AirCell - 0.5;
-    AshFall fall;
-    fall.mass = sample(plume.dustFallen, x, z, Kernel::Linear, Edge::Wrap);
-    fall.rate = sample(plume.fallRate, x, z, Kernel::Linear, Edge::Wrap);
-    double most = 0;
-    for (const AshPatch& patch : plume.patches) {
-        const double here = blanket(patch, position);
-        fall.mass += here;
-        if (here > most) most = here, fall.source = patch.source;
-    }
-    // Far from every blanket the ash is the dust of whichever source gave off most of it.
-    double largest = 0;
-    for (const AirSource& source : plume.sources) {
-        const double dust = source.ash[Dust] * (source.end - source.start);
-        if (fall.mass > 0 && most < 0.5 * fall.mass && dust > largest) largest = dust, fall.source = source.id;
-    }
-    for (const AirSource& source : plume.sources)
-        if (source.id == fall.source && fall.mass > 0) fall.since = fall.since == 0 ? source.start : std::min(fall.since, source.start);
-    if (fall.mass <= 0) fall.source = 0;
-    return fall;
-}
-
-PlumeLedger plumeLedger(const Atmosphere& atmosphere) {
-    PlumeLedger ledger = atmosphere.plume.totals;
-    for (size_t level = 0; level < PlumeLevels; ++level) {
-        ledger.ashAloft += sum(atmosphere.plume.dust[level]) * AirCellArea;
-        ledger.sulphurGas += sum(atmosphere.plume.gas[level]) * AirCellArea;
-        ledger.sulphurVeil += sum(atmosphere.plume.veil[level]) * AirCellArea;
-    }
-    return ledger;
+    soot(atmosphere);
 }
 
 } // namespace derivean::sim

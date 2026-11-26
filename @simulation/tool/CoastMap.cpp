@@ -34,6 +34,9 @@ void writeShoreMap(const ShoreGrid& grid, const ShoreSurvey& survey, const std::
             if (grid.wet(i)) {
                 const double depth = grid.water[i] - grid.top(i);
                 color = blend(Shallow, Deep, std::min(1.0, std::sqrt(depth / 30.0)));
+                // A loose bed shows through shallow water.
+                const float loose = grid.loose(i);
+                if (loose >= BareCover) color = blend(color, grid.cover[Coarse][i] >= CoarseShare * loose ? GravelColor : grid.cover[Sand][i] >= grid.cover[Fines][i] ? SandColor : MudColor, 0.45 * std::exp(-depth / 6.0));
                 if (survey.flag[i] & 4) color = blend(color, Lagoon, 0.6);
                 if (survey.flag[i] & 1) color = blend(color, Bench, 0.7);
             } else {

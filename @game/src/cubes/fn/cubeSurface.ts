@@ -1,6 +1,6 @@
-import { DoubleSide, MeshBasicNodeMaterial, type Texture, type UniformNode, type Vector3 } from "three/webgpu";
+import { MeshBasicNodeMaterial, type Texture, type UniformNode, type Vector3 } from "three/webgpu";
 import {
-  Fn, If, PI, cameraPosition, clamp, dot, float, floor, fract, frontFacing, fwidth, int, ivec2, length, max, min, mix, positionWorld,
+  Fn, If, PI, cameraPosition, clamp, dot, float, floor, fract, fwidth, int, ivec2, length, max, min, mix, positionWorld,
   smoothstep, step, textureLoad, uint, vec3, vec4,
 } from "three/tsl";
 import { GrainCells, GroundRepeat } from "../../scene/constant/grain";
@@ -26,11 +26,9 @@ const Open = 0.82;
 // The one look of ground at every cube size, voxels and far levels alike: the material's colour varied as ground
 // is, each cube a shade of its own with a seam round it and specks within, lit flat by sky and sun with its
 // corners darkened by the neighbours the engine counted there, and faded by the air. Nothing is smoothed: a face
-// is lit by its own normal. Faces are also drawn from behind, as ground in shade: where a coarse level is cut at
-// a finer one's box and stands higher, its inside closes the step instead of opening onto the sky. That is a
-// trick.
+// is lit by its own normal.
 export function cubeSurface({ sky, levels, palette, anchor }: CubeLook) {
-  const material = new MeshBasicNodeMaterial({ side: DoubleSide, fog: false });
+  const material = new MeshBasicNodeMaterial({ fog: false });
   const face = faceNodes();
   material.positionNode = face.corner;
   material.colorNode = Fn(() => {
@@ -46,8 +44,7 @@ export function cubeSurface({ sky, levels, palette, anchor }: CubeLook) {
     // Cubes of every level lie on one lattice from the world's origin, which the anchor carries into render space.
     const cell = inside.add(anchor).div(edge);
     const pixel = max(max(fwidth(cell.x), fwidth(cell.y)), fwidth(cell.z));
-    const lit = mix(texel.rgb, vec3(0.6), sky.plain).mul(sky.groundLight).mul(0.6 / Math.PI).toVar();
-    If(frontFacing, () => {
+    {
       const cube = floor(cell);
       const repeat = min(float(GrainCells), float(GroundRepeat).div(edge));
       const wrapped = (cells: typeof cube, scale: number) => cells.sub(repeat.mul(scale).mul(floor(cells.div(repeat.mul(scale)))));
@@ -78,9 +75,8 @@ export function cubeSurface({ sky, levels, palette, anchor }: CubeLook) {
       const open = float(Open).pow(mix(mix(corner(0), corner(1), across.x), mix(corner(2), corner(3), across.x), across.y));
       const light = mix(sky.groundLight, sky.skyLight, normal.y.mul(0.5).add(0.5)).mul(open)
         .add(sky.sunLight.mul(max(dot(normal, sky.sunDirection), 0)).mul(mix(1, open, 0.5)));
-      lit.assign(albedo.mul(light).div(PI));
-    });
-    return vec4(airFade(sky, lit, fromEye), 1);
+      return vec4(airFade(sky, albedo.mul(light).div(PI), fromEye), 1);
+    }
   })();
   return material;
 }

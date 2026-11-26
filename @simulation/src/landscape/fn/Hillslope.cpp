@@ -5,9 +5,10 @@ namespace {
 
 constexpr float RegolithDepth = 0.6f;     // m, e-folding of weathering under its own waste
 constexpr float CreepRate = 0.02f;        // m²/yr, soil diffusivity under a temperate climate
-// Without roots and burrowers soil moves by rain splash, wetting and frost alone: an order of
-// magnitude less than under plants, more where the ground freezes and thaws through the year.
-constexpr float BareCreepRate = 0.02f;    // m²/yr, the Region, Local and Site levels
+// Rate of the Region, Local and Site levels, more where the ground freezes and thaws through the
+// year. Bare ground creeps an order of magnitude less than this; with 0.002 the unchannelled water
+// of a Site tile rills a held plane (test/LandscapePlane.cpp), so the rate stays until it does not.
+constexpr float BareCreepRate = 0.02f;    // m²/yr
 constexpr float FrostCreep = 12.0f;       // gain of that rate per unit share of the year spent cracking
 // A ground cell hides nothing: what moves soil across a quarter of a metre is splash, wetting and
 // frost alone, a small part of what a wider cell sums up.

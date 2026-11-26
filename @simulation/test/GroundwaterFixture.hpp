@@ -13,6 +13,10 @@ struct HandColumn {
 // A field of TileCells² columns at the world's origin with `margin` 0. `column(x, z)` describes each.
 derivean::sim::WaterField handField(const std::function<HandColumn(int x, int z)>& column);
 
+// The field of local tile `key` in a world whose columns `column` describes by global cell: the
+// tile's own cells and Reach cells around them, as a tile of the real world is worked out.
+derivean::sim::WaterField handTile(derivean::sim::TileKey key, const std::function<HandColumn(int x, int z)>& column);
+
 // One bed from `top` down to `bottom`, conducting `metresPerSecond` along the bedding and a tenth of it across.
 derivean::sim::Layer handLayer(derivean::sim::Material rock, float top, float bottom, float metresPerSecond, uint32_t unit = 0);
 

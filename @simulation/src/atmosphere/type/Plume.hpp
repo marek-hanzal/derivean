@@ -21,7 +21,8 @@ inline constexpr int PlumeLevels = 4;
 
 // A source of material in the air: a vent in eruption, or wind lifting dust off dry ground. It
 // emits at constant rates between two calendar times; whoever owns it adds one source per phase of
-// its activity. Only what lies in the future of the atmosphere when it is added gets emitted.
+// its activity. Only what lies after the atmosphere's current step when it is added gets emitted,
+// so add a source before advancing past its start.
 struct AirSource {
     uint64_t id{};                           // the owner's name for it; the inspector reports it back
     Vec2 position;                           // world metres
@@ -56,6 +57,8 @@ struct Plume {
     std::vector<AirSource> sources;
     std::array<Field<double>, PlumeLevels> dust, gas, veil;   // kg/m²: fine ash, sulphur dioxide, and sulphate counted as the dioxide it formed from
     Field<double> fallen;       // kg/m² of ash of all classes that landed in the cell, as a cell mean
+    Field<double> onSnow;       // kg/m² of it lying on top of the cell's snow: fresh snow buries it, and it goes with the pack
+    bool sooted{};              // whether any cell has ash on its snow
     Field<double> dustFallen;   // kg/m²: the part of it that came down from the dust on the grid
     Field<double> fallRate;     // kg/m²/s of ash landing in the cell during the last step
     Field<double> depth;        // visible optical depth of ash and veil over the cell

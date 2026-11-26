@@ -32,6 +32,7 @@ struct Outburst {
     double ash{};        // carried off by the wind
     double founders{};   // volume by which the chamber's roof goes down afterwards
     Rheology rheology;   // of the lava
+    Rheology current;    // of the currents of ash
     int pulses{1};       // parts in which fall and lava alternate
 };
 void emplace(Domain& domain, Emplacement& field, Laying& laying, int vent, const Outburst& outburst);

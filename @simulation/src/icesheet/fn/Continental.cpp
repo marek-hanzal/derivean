@@ -12,12 +12,48 @@ namespace derivean::sim {
 namespace {
 
 constexpr double WidestGap = 1.5;     // °C at most between two stages
-constexpr int Rounds = 6000;          // most a stage is relaxed for
-constexpr float Settled = 0.25f;      // m a round may still change a stage that counts as steady
+constexpr int FirstRounds = 1600;     // most the first stage is relaxed for at each resolution, from bare ground
+constexpr int NextRounds = 800;       // and every colder one, from the stage before
+constexpr float Settled = 2e-4f;      // share of the ice volume forty rounds may still move in a stage that counts as steady
 
-void relaxTo(IceGrid& grid, double cooling, Workers* workers) {
+// The same planet at twice the cell: the sheet finds its outline there four times as fast.
+IceGrid halved(const IceGrid& fine) {
+    IceGrid coarse;
+    shapeIce(coarse, fine.width / 2, fine.height / 2, fine.cell * 2, fine.wraps);
+    coarse.seaLevel = fine.seaLevel;
+    for (int z = 0; z < coarse.height; ++z) {
+        for (int x = 0; x < coarse.width; ++x) {
+            const size_t to = coarse.index(x, z);
+            for (int k = 0; k < 4; ++k) {
+                const size_t from = fine.index(2 * x + (k & 1), 2 * z + (k >> 1));
+                coarse.bed[to] += 0.25f * fine.bed[from], coarse.warmth[to] += 0.25f * fine.warmth[from], coarse.halfRange[to] += 0.25f * fine.halfRange[from];
+                coarse.rain[to] += 0.25f * fine.rain[from], coarse.heat[to] += 0.25f * fine.heat[from];
+            }
+        }
+    }
+    return coarse;
+}
+
+// The first stage: its outline is found at twice the cell, then every cell starts from the ice
+// surface found there, over its own ground.
+void growFromBare(IceGrid& grid, double cooling, Workers* workers) {
+    IceGrid coarse = halved(grid);
+    coarse.cooling = grid.cooling = float(cooling);
+    relaxIce(coarse, workers, FirstRounds, Settled, true);
+    for (int z = 0; z < grid.height; ++z) {
+        for (int x = 0; x < grid.width; ++x) {
+            const size_t i = grid.index(x, z), from = coarse.index(x / 2, z / 2);
+            grid.thickness[i] = coarse.thickness[from] <= 0 ? 0.0f : std::max(0.0f, coarse.bed[from] + coarse.thickness[from] - grid.bed[i]);
+            grid.sink[i] = coarse.sink[from];
+            grid.thaw[i] = coarse.thaw[from];
+        }
+    }
+    relaxIce(grid, workers, FirstRounds, Settled, true);
+}
+
+void coolTo(IceGrid& grid, double cooling, Workers* workers) {
     grid.cooling = float(cooling);
-    relaxIce(grid, workers, Rounds, Settled, true);
+    relaxIce(grid, workers, NextRounds, Settled, true);
 }
 
 } // namespace
@@ -75,15 +111,12 @@ ContinentalIce solveContinental(const Planet& planet, double age, Workers* worke
     for (double time = window.start; time <= ice.present; time += RegionStep) deepest = std::min(deepest, maximumCooling(planet.seed, time, ice.present));
     const int colder = int(std::ceil((lastMaximum - deepest) / WidestGap - 1e-9));
 
+    // Warmest first, each colder stage grown from the one before: the way a glaciation builds up.
     ice.stages.resize(size_t(2 + colder));
-    relaxTo(grid, lastMaximum, workers);
-    ice.stages[IceLastMaximum] = stageOf(grid, planet);
-    const std::vector<float> thickness = grid.thickness, sink = grid.sink;
-    relaxTo(grid, 0.0, workers);
+    growFromBare(grid, 0.0, workers);
     ice.stages[IceNow] = stageOf(grid, planet);
-    grid.thickness = thickness, grid.sink = sink;
-    for (int k = 1; k <= colder; ++k) {
-        relaxTo(grid, lastMaximum + (deepest - lastMaximum) * double(k) / double(colder), workers);
+    for (int k = 0; k <= colder; ++k) {
+        coolTo(grid, colder ? lastMaximum + (deepest - lastMaximum) * double(k) / double(colder) : lastMaximum, workers);
         ice.stages[size_t(IceLastMaximum + k)] = stageOf(grid, planet);
     }
     return ice;

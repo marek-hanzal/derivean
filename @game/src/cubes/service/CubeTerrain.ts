@@ -1,7 +1,7 @@
 import { type Group, type Material, type Vector3 } from "three/webgpu";
 import type { Frame, WorldInfo } from "../../../contract/GameBridge";
 import { FreeLevel, Overlap } from "../constant/levels";
-import { type Box, Everywhere, Nowhere, column, setLevel } from "../fn/levelTable";
+import { type Box, Everywhere, Nowhere, column, setLevel, snapped } from "../fn/levelTable";
 import type { LevelTable } from "../type/LevelTable";
 import { createFaceBatch, type FaceBatch } from "./FaceBatch";
 
@@ -65,23 +65,26 @@ export function createCubeTerrain(content: Group, world: WorldInfo, levels: Leve
 
   return {
     apply,
-    // Says where each level is drawn this frame, seen from the render origin: the voxels inside the footprint of
-    // their box, a far level inside its own box and outside the next finer one that has a box.
+    // Says where each level is drawn this frame, seen from the render origin. A level holds whole columns of
+    // chunks, so its box counts by its footprint at any height: the voxels are drawn inside theirs, a far level
+    // inside its own and outside the next finer one that has a box. Where two levels meet, the square of the
+    // finer one ends on the coarser one's lattice, inside the finer box, and the coarser ground is closed along it.
     place(origin: Vector3) {
       for (const batch of [voxels, ...ground, ...water]) batch?.follow(origin);
-      const near: Box = voxelBox ? column(voxelBox) : Nowhere;
-      setLevel(levels, 0, origin, world.voxelSize, 0, near, Nowhere, Nowhere);
       setLevel(levels, FreeLevel, origin, world.voxelSize, 0, Everywhere, Nowhere, Nowhere);
-      let finerGround = near;
-      let finerWater = Nowhere;
-      for (const { level, edge, box } of boxes) {
-        if (!box) {
-          setLevel(levels, level, origin, edge, 0, Nowhere, Nowhere, Nowhere);
-          continue;
-        }
-        setLevel(levels, level, origin, edge, edge * Overlap, box, finerGround, finerWater);
-        finerGround = finerWater = box;
-      }
+      const drawn = [{ level: 0, edge: world.voxelSize, box: voxelBox }, ...boxes];
+      let finerGround: Box = Nowhere;
+      let finerWater: Box = Nowhere;
+      drawn.forEach(({ level, edge, box }, index) => {
+        const coarser = drawn.slice(index + 1).find((next) => next.box);
+        const own = !box ? Nowhere : coarser ? snapped(column(box), coarser.edge) : column(box);
+        setLevel(levels, level, origin, edge, edge * Overlap, own, finerGround, finerWater);
+        if (own === Nowhere || finerGround === Nowhere) ground[level]?.cap();
+        else ground[level]?.cap(finerGround.min, finerGround.max);
+        if (own === Nowhere) return;
+        finerGround = own;
+        if (index) finerWater = own;
+      });
     },
     // Far chunks held, by level.
     counts: () => Array.from(ground, (batch) => batch?.lists ?? 0),

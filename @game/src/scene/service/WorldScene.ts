@@ -27,6 +27,7 @@ export function createWorldScene(canvas: HTMLCanvasElement) {
   camera.rotation.order = "YXZ";
   let stage: ReturnType<typeof createWorldStage> | undefined;
   let plain = false;
+  let covered = false;
   let width = 0;
   let height = 0;
 
@@ -44,6 +45,9 @@ export function createWorldScene(canvas: HTMLCanvasElement) {
       stage = undefined;
       renderer.clear();
     },
+    // True while something opaque lies over the canvas, as the map does: the world is then kept but not drawn.
+    get covered() { return covered; },
+    set covered(value: boolean) { covered = value; },
     // Plain relief shading; the choice outlives the world it was made in.
     get plain() { return plain; },
     set plain(value: boolean) {
@@ -54,7 +58,7 @@ export function createWorldScene(canvas: HTMLCanvasElement) {
     target(point: Point | undefined, shape: BrushShape, radius: number) { stage?.target(point, shape, radius); },
     // `entered` is false until the player first takes control of this world.
     draw(entered: boolean, yaw: number, pitch: number, dt: number, time: number) {
-      if (!stage) return;
+      if (!stage || covered) return;
       if (canvas.clientWidth !== width || canvas.clientHeight !== height) {
         width = canvas.clientWidth;
         height = canvas.clientHeight;

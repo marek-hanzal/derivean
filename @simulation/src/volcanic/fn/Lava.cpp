@@ -6,7 +6,7 @@ namespace derivean::sim {
 namespace {
 
 constexpr double GulpSheets = 4.0;   // flow units the vent cell takes at once
-constexpr double MostGulps = 24.0;   // an eruption is fed in at most this many parts
+constexpr double MostGulps = 8.0;    // an eruption is fed in at most this many parts
 
 } // namespace
 

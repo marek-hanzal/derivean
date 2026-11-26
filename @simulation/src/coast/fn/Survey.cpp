@@ -16,6 +16,7 @@ struct Reader {
     ShoreSurvey& survey;
     std::vector<float> cliffs, platforms, beaches[2], slopes[SedimentClasses], struck;
     std::vector<int32_t> behind;   // wet cells found behind a strip
+    std::vector<float> calm;       // m, wave height under which the water behind each of them is its lagoon
 
     bool inside(int x, int z) const { return x >= 0 && z >= 0 && x < grid.side && z < grid.side; }
     bool platform(size_t i) const { return grid.wet(i) && grid.cut[i] > 0 && grid.loose(i) < BareCover && grid.water[i] - grid.top(i) <= BenchWater; }
@@ -56,9 +57,12 @@ struct Reader {
         for (int step = 0, nx = x, nz = z; step <= far && inside(nx, nz); ++step, nx += NeighborX[back], nz += NeighborZ[back]) {
             const size_t n = grid.index(nx, nz);
             if (grid.wet(n)) {
+                // Other water, not the far side of a point: it must lie sheltered against the water in front.
+                if (grid.wave[n] >= Sheltered * grid.wave[front]) break;
                 if (!(survey.flag[i] & 2)) survey.strip += grid.cell;
                 survey.flag[i] |= 2;
                 behind.push_back(int32_t(n));
+                calm.push_back(Sheltered * grid.wave[front]);
                 break;
             }
             if (grid.top(n) > water + StripTop) break;
@@ -99,20 +103,18 @@ struct Reader {
             }
     }
 
-    // Water behind a strip is a lagoon as far as it lies sheltered from the open water's waves.
+    // Water behind a strip is a lagoon as far as it lies sheltered from the waves before the strip.
     void fillLagoons() {
-        float open = 0;
-        for (size_t i = 0; i < grid.wave.size(); ++i)
-            if (grid.wet(i)) open = std::max(open, grid.wave[i]);
         for (size_t next = 0; next < behind.size(); ++next) {
             const size_t i = size_t(behind[next]);
-            if ((survey.flag[i] & 4) || grid.wave[i] >= Sheltered * open) continue;
+            const float limit = calm[next];
+            if ((survey.flag[i] & 4) || grid.wave[i] >= limit) continue;
             survey.flag[i] |= 4;
             survey.lagoon += grid.cell * grid.cell;
             for (const int k : Side) {
                 const int nx = int(i % size_t(grid.side)) + NeighborX[k], nz = int(i / size_t(grid.side)) + NeighborZ[k];
                 if (!inside(nx, nz)) continue;
-                if (grid.wet(grid.index(nx, nz))) behind.push_back(int32_t(grid.index(nx, nz)));
+                if (grid.wet(grid.index(nx, nz))) behind.push_back(int32_t(grid.index(nx, nz))), calm.push_back(limit);
                 else survey.lagoonShore += grid.cell;
             }
         }
@@ -125,7 +127,7 @@ ShoreSurvey surveyShore(const ShoreGrid& grid) {
     ShoreSurvey survey;
     survey.kind.assign(grid.rock.size(), uint8_t(ShoreKind::None));
     survey.flag.assign(grid.rock.size(), 0);
-    Reader reader{grid, survey, {}, {}, {}, {}, {}, {}};
+    Reader reader{grid, survey, {}, {}, {}, {}, {}, {}, {}};
     for (size_t i = 0; i < grid.rock.size(); ++i)
         if (reader.platform(i)) survey.flag[i] |= 1;
     for (int z = 0; z < grid.side; ++z) {

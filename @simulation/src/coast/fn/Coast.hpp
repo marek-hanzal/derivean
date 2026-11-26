@@ -30,13 +30,14 @@ bool spreadWater(const Domain& domain, Shore& shore);
 float stormWind(const Domain& domain, size_t cell, int train);   // m/s
 void raiseWaves(const Domain& domain, Shore& shore);
 
-// Cliff.cpp — lets up to `years` pass for every face under attack, but no longer than the first
-// of them needs to come down; returns the years that passed.
-double cutCliffs(Domain& domain, Shore& shore, double years);
+// Cliff.cpp — lets `years` pass for every face under attack; one that is cut through comes down.
+void cutCliffs(Domain& domain, Shore& shore, double years);
 // m, the wave height a cell's rock withstands.
 float withstandOf(const Domain& domain, size_t cell);
 
-// Drift.cpp — one pass of every train over the sand and gravel within its reach.
+// Drift.cpp — marks the cells some train can work, then one pass of every train over the sand
+// and gravel within its reach.
+void findSurf(const Domain& domain, Shore& shore);
 void moveSand(Domain& domain, Shore& shore, int round);
 
 } // namespace derivean::sim

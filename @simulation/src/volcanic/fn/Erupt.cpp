@@ -25,27 +25,31 @@ bool within(const Domain& domain, Vec2 site, double reach) {
 // the chamber, the rest as the usual turn of fall and lava.
 void eruptEpisode(Domain& domain, Emplacement& field, Laying& laying, int index, const Episode& episode) {
     const Vent& vent = domain.volcanic.vents[size_t(index)];
-    double volume = episode.volume * (1.0 - minorShare(vent, episode));
-    if (episode.paroxysm >= CalderaVolume[size_t(vent.magma)]) {
-        Outburst blast;
-        blast.site = episode.site;
-        blast.fall = episode.paroxysm * ParoxysmStyle.cone;
-        blast.ash = episode.paroxysm * ParoxysmStyle.ash;
-        blast.flows = episode.paroxysm - blast.fall - blast.ash;
-        blast.founders = episode.paroxysm;
-        emplace(domain, field, laying, index, blast);
-        volume -= episode.paroxysm;
+    const bool empties = episode.paroxysm >= CalderaVolume[size_t(vent.magma)];
+    const double volume = episode.volume * (1.0 - minorShare(vent, episode)) - (empties ? episode.paroxysm : 0.0);
+    if (volume > 0) {
+        const Style& style = styleOf(vent.magma);
+        Outburst outburst;
+        outburst.site = episode.site;
+        outburst.fall = volume * style.cone;
+        outburst.lava = volume * style.lava;
+        outburst.flows = volume * style.flows;
+        outburst.ash = volume * style.ash;
+        outburst.rheology = lavaOf(vent.magma);
+        outburst.current = BlockFlow;
+        outburst.pulses = std::clamp(int(2.0 + std::log2(1.0 + volume / 1e9)), 2, MostPulses);
+        emplace(domain, field, laying, index, outburst);
     }
-    if (volume <= 0) return;
-    const Style& style = styleOf(vent.magma);
-    Outburst outburst;
-    outburst.site = episode.site;
-    outburst.fall = volume * style.cone;
-    outburst.lava = volume * style.lava;
-    outburst.ash = volume * style.ash;
-    outburst.rheology = lavaOf(vent.magma);
-    outburst.pulses = std::clamp(int(2.0 + std::log2(1.0 + volume / 1e9)), 2, MostPulses);
-    emplace(domain, field, laying, index, outburst);
+    if (!empties) return;
+    // The step ends with it: what the vent brings up afterwards belongs to later steps and fills the pit.
+    Outburst blast;
+    blast.site = episode.site;
+    blast.fall = episode.paroxysm * ParoxysmStyle.cone;
+    blast.ash = episode.paroxysm * ParoxysmStyle.ash;
+    blast.flows = episode.paroxysm - blast.fall - blast.ash;
+    blast.current = AshFlow;
+    blast.founders = episode.paroxysm;
+    emplace(domain, field, laying, index, blast);
 }
 
 } // namespace

@@ -7,7 +7,9 @@ namespace {
 
 constexpr uint64_t BedStream = 0x50494c45;
 constexpr float Pitch[2] = {14.0f, 34.0f};   // m from the base of one flow to the base of the next, by Magma
-constexpr float Youngest = 0.03f;            // least share of a level's settling time that erosion is given on fresh rock
+constexpr double LavaSealing = 2.0e6;        // yr after which half of the rain runs off a lava surface instead of sinking into it
+constexpr double AshSealing = 0.3e6;         // yr, the same for ash and scoria
+constexpr float Freshest = 0.01f;            // share of its usual erosion that even the freshest surface takes
 
 Material lavaOf(const VolcanicTile* tile, const std::vector<Vent>& vents, uint8_t vent) {
     const std::vector<Vent>& list = tile ? tile->vents : vents;
@@ -83,13 +85,17 @@ bool volcanicUnit(Domain& domain, size_t i, uint64_t seed) {
             own = height - bed.bottom;
         }
     }
-    if (!region && !volcanic.laidAt.empty()) {
-        // A finer level settles for a fixed span whatever the age of the ground. Rock laid within
-        // that span has met the weather only since: it is given that share of the span's erosion.
-        const double span = domain.endTime - domain.startTime, age = span - double(volcanic.laidAt[i]);
-        const float young = float(std::clamp(age / span, double(Youngest), 1.0));
-        traits.erodibility *= young;
-        traits.weathering *= young;
+    if (!plug) {
+        // Fresh lava and scoria swallow the rain: no water runs on them, and none cuts them, until
+        // weathering has sealed their surface. Ash seals within a few hundred thousand years, lava
+        // takes millions. A finer level besides settles for a fixed span whatever the age of the
+        // ground: rock laid within that span is given only its own share of the span's erosion.
+        const float share = volcanic.allLaid[i] > 0 ? volcanic.lavaLaid[i] / volcanic.allLaid[i] : 1.0f;
+        const double span = domain.endTime - domain.startTime, age = std::max(0.0, (region ? domain.time - domain.startTime : span) - double(volcanic.laidAt[i]));
+        const double sealing = share * LavaSealing + (1 - share) * AshSealing;
+        const float worked = float(age / (age + sealing) * (region ? 1.0 : std::min(1.0, age / span)));
+        traits.erodibility *= std::max(worked, Freshest);
+        traits.weathering *= std::max(worked, Freshest);
     }
     domain.unit[i] = {depth, depth + std::max(own, 1e-3f), traits};
     return true;

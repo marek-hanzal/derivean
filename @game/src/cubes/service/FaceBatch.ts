@@ -1,9 +1,13 @@
 import { type Group, type InstancedBufferAttribute, type InstancedBufferGeometry, type Material, Mesh, type Vector3 } from "three/webgpu";
 import type { Point, Quads } from "../../../contract/GameBridge";
+import { type Cut, capFaces } from "../fn/capFaces";
 import { faceGeometry } from "../fn/faceGeometry";
 import { packFaces, packQuads, shiftFaces } from "../fn/packFaces";
 
-interface Run { at: number; count: number }
+// A list's instances; for a chunk also its place in cubes from the anchor.
+interface Run { at: number; count: number; home?: number[] }
+
+const Caps = "caps";
 
 // Fewer holes than this are not worth closing.
 const Tidy = 4096;
@@ -25,6 +29,8 @@ export function createFaceBatch(content: Group, material: Material, level: numbe
   let used = 0;
   let holes = 0;
   let anchor: Point = [0, 0, 0];
+  let cut: Cut | undefined;
+  let capped = false;
   let mesh: Mesh<InstancedBufferGeometry> | undefined;
 
   // Replaces the geometry: the buffer has grown or everything in it has moved.
@@ -68,6 +74,7 @@ export function createFaceBatch(content: Group, material: Material, level: numbe
     const run = runs.get(key);
     if (!run) return;
     runs.delete(key);
+    if (run.home) capped = false;
     packed.fill(0, run.at * 4, (run.at + run.count) * 4);
     touch(run.at, run.count);
     holes += run.count;
@@ -83,10 +90,14 @@ export function createFaceBatch(content: Group, material: Material, level: numbe
       mesh?.geometry.dispose();
       if (mesh) mesh.geometry = faceGeometry(packed, used);
     }
-    const run = { at: used, count };
+    const run: Run = { at: used, count };
     runs.set(key, run);
     used += count;
     return run;
+  }
+
+  function* chunks() {
+    for (const run of runs.values()) if (run.home) yield run as Required<Run>;
   }
 
   function show(run: Run) {
@@ -95,7 +106,8 @@ export function createFaceBatch(content: Group, material: Material, level: numbe
   }
 
   return {
-    get lists() { return runs.size; },
+    // Chunks held.
+    get lists() { return runs.size - Number(runs.has(Caps)); },
     remove,
     // A chunk's quads; `origin` is the world position they count from, on the chunks' lattice except in height
     // for a sheet of water, whose odd part of a cube the faces carry as their rise.
@@ -105,8 +117,9 @@ export function createFaceBatch(content: Group, material: Material, level: numbe
       if (!mesh) anchor = [origin[0], Math.floor(origin[1] / edge) * edge, origin[2]];
       const height = (origin[1] - anchor[1]) / edge;
       const run = claim(key, quads.length / 2);
-      packQuads(quads, level, [Math.round((origin[0] - anchor[0]) / edge), Math.floor(height), Math.round((origin[2] - anchor[2]) / edge)],
-        Math.floor((height - Math.floor(height)) * 256), packed, run.at);
+      run.home = [Math.round((origin[0] - anchor[0]) / edge), Math.floor(height), Math.round((origin[2] - anchor[2]) / edge)];
+      packQuads(quads, level, run.home, Math.floor((height - Math.floor(height)) * 256), packed, run.at);
+      capped = false;
       show(run);
     },
     // A face list counted from the batch's own anchor, for a batch that holds nothing else.
@@ -124,11 +137,37 @@ export function createFaceBatch(content: Group, material: Material, level: numbe
       if (!mesh || Math.max(Math.abs(origin.x - anchor[0]), Math.abs(origin.y - anchor[1]), Math.abs(origin.z - anchor[2])) < Math.max(AnchorReach * edge, AnchorMetres)) return;
       const lattice = edge * Side;
       const next: Point = [Math.round(origin.x / lattice) * lattice, Math.round(origin.y / lattice) * lattice, Math.round(origin.z / lattice) * lattice];
-      shiftFaces(packed, 0, used, anchor.map((value, axis) => Math.round((value - next[axis]) / edge)));
+      const by = anchor.map((value, axis) => Math.round((value - next[axis]) / edge));
+      shiftFaces(packed, 0, used, by);
+      for (const run of runs.values()) run.home = run.home?.map((value, axis) => value + by[axis]);
+      capped = false;
       anchor = next;
       mesh.position.set(...anchor);
       mesh.updateMatrix();
       tidy();
+    },
+    // Closes the ground where a square of it is left to a finer level (capFaces): `low` and `high` are the
+    // square's corners in world metres, on this batch's lattice. Without a square nothing is closed.
+    cap(low?: readonly number[], high?: readonly number[]) {
+      const next = low && high && mesh ? {
+        x0: Math.round((low[0] - anchor[0]) / edge), x1: Math.round((high[0] - anchor[0]) / edge),
+        z0: Math.round((low[2] - anchor[2]) / edge), z1: Math.round((high[2] - anchor[2]) / edge),
+      } : undefined;
+      if (capped && next?.x0 === cut?.x0 && next?.x1 === cut?.x1 && next?.z0 === cut?.z0 && next?.z1 === cut?.z1) return;
+      cut = next;
+      capped = true;
+      const faces = cut && cut.x1 > cut.x0 && cut.z1 > cut.z0 ? capFaces(packed, chunks(), cut, level) : [];
+      // The caps change with every step of the finer square, so their run is kept and written over; it is only
+      // moved when it has become too short.
+      let run = runs.get(Caps);
+      if (!run && !faces.length) return;
+      if (!run || run.count * 4 < faces.length) {
+        remove(Caps);
+        run = claim(Caps, Math.max(256, 2 ** Math.ceil(Math.log2(faces.length / 4))));
+      }
+      packed.fill(0, run.at * 4, (run.at + run.count) * 4);
+      packed.set(faces, run.at * 4);
+      show(run);
     },
     // The mesh, for a batch that is a body of its own to pose. Undefined while the batch is empty.
     get mesh() { return mesh; },

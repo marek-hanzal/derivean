@@ -4,6 +4,8 @@ namespace derivean::sim {
 namespace {
 
 constexpr float FrictionReach = 5.0f;   // m: depth² under FrictionReach·width is where friction takes more than a hundredth of a wave
+constexpr float LooseBed = 0.1f;        // m of loose cover from which a bed is sand or mud to the waves, not rock
+constexpr float SmoothBed = 0.2f;       // friction of such a bed against a rock bench's
 
 } // namespace
 
@@ -16,9 +18,9 @@ float stormWind(const Domain& domain, size_t cell, int train) {
 
 // Each train is carried from cell to cell in the direction it travels: it arrives as the blend of
 // the three cells behind, grows by the wind over the width of the cell, and is cut down by the
-// bed where the water is shallow at high water. A cell the water does not cover lets nothing
-// through, so land shelters what lies behind it; the blend lets a train turn into that shelter by
-// a little with every cell, as waves do around a point.
+// bed where the water is shallow at high water. A cell neither the water nor the train's own
+// swash covers lets nothing through, so land shelters what lies behind it; the blend lets a train
+// turn into that shelter by a little with every cell, as waves do around a point.
 void raiseWaves(const Domain& domain, Shore& shore) {
     const int size = domain.size;
     const bool open = !shore.beyond.empty();
@@ -40,13 +42,16 @@ void raiseWaves(const Domain& domain, Shore& shore) {
                 energy = (1.0f - 2.0f * WaveSpread) * from(back) + WaveSpread * (from(backLeft) + from(backRight));
             }
             shore.arrive[at] = energy;
-            const float depth = water + swingOf(domain, water) - shore.top[i];
+            // Ground that stands out of high water is still crossed by a train whose swash runs over it.
+            float depth = water + swingOf(domain, water) - shore.top[i];
+            if (depth <= 0 && energy > 0) depth += std::min(HighestBerm, Runup * std::sqrt(energy));
             if (depth <= 0) return;
             const float gale = shore.gale[at], full = FullSea * FullSea * gale * gale;
             if (energy < full) energy = std::min(full, energy + FetchGrowth * gale * run);
             // The bed is only felt where the water is shallow against the width of the cell.
             if (depth * depth < FrictionReach * run) {
-                const float height = std::sqrt(energy), worn = height / (1.0f + BedFriction * height * run / (depth * depth));
+                const float rough = shore.top[i] - domain.ground.rock[i] > LooseBed ? SmoothBed : 1.0f;
+                const float height = std::sqrt(energy), worn = height / (1.0f + rough * BedFriction * height * run / (depth * depth));
                 energy = worn * worn;
             }
             shore.wave[at] = std::min(energy, Breaker * Breaker * depth * depth);

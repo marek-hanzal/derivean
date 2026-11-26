@@ -27,6 +27,7 @@ export function createCubeScene(canvas: HTMLCanvasElement): ReturnType<typeof cr
   let gpuMs: number | null = null;
   let drawn = 0;
   let plain = false;
+  let covered = false;
   let width = 0;
   let height = 0;
 
@@ -47,6 +48,9 @@ export function createCubeScene(canvas: HTMLCanvasElement): ReturnType<typeof cr
       stage = undefined;
       if (backend !== "starting") renderer.clear();
     },
+    // True while something opaque lies over the canvas, as the map does: the world is then kept but not drawn.
+    get covered() { return covered; },
+    set covered(value: boolean) { covered = value; },
     // Plain relief shading; the choice outlives the world it was made in.
     get plain() { return plain; },
     set plain(value: boolean) {
@@ -57,7 +61,7 @@ export function createCubeScene(canvas: HTMLCanvasElement): ReturnType<typeof cr
     target(point: Point | undefined, shape: BrushShape, radius: number) { stage?.target(point, shape, radius); },
     // `entered` is false until the player first takes control of this world.
     draw(entered: boolean, yaw: number, pitch: number, dt: number, time: number) {
-      if (!stage || backend === "starting") return;
+      if (!stage || covered || backend === "starting") return;
       if (canvas.clientWidth !== width || canvas.clientHeight !== height) {
         width = canvas.clientWidth;
         height = canvas.clientHeight;

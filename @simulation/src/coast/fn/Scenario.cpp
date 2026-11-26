@@ -23,7 +23,9 @@ struct Shape {
 Shape shapeOf(const CoastSpec& spec, double x, double z, double cell, double rough) {
     const double landSlope = spec.level == Level::Site ? 0.35 : 0.22, seaSlope = spec.level == Level::Site ? 0.05 : 0.025;
     const auto profile = [&](double inland) {
-        return inland >= 0 ? std::min(spec.upland, 0.5 + landSlope * inland * cell) + rough * std::min(1.0, inland / 6.0) : seaSlope * inland * cell - 0.5;
+        // The upland keeps a fall of half a percent towards the shore, so that its rain runs off.
+        return inland >= 0 ? std::min(spec.upland + 0.005 * inland * cell, 0.5 + landSlope * inland * cell) + rough * std::min(1.0, inland / 6.0)
+                           : std::max(-spec.shelf + 0.002 * inland * cell, seaSlope * inland * cell - 0.5);
     };
     if (spec.scene == CoastScene::Lake) {
         const double radius = std::hypot(x, z), shoreAt = 70.0;
@@ -39,7 +41,7 @@ Shape shapeOf(const CoastSpec& spec, double x, double z, double cell, double rou
         shoreline = across < 1 ? 60.0 * std::sqrt(1.0 - across * across) : -12.0 * std::exp(-(across - 1) * (across - 1) * 6.0);
     }
     const bool west = spec.scene != CoastScene::Bay || x < -38;
-    return {float(profile(z - shoreline)), west && std::abs(z - shoreline) < 20};
+    return {float(profile(z - shoreline)), west && z - shoreline < 2 && z - shoreline > -25};
 }
 
 } // namespace
@@ -66,7 +68,7 @@ Domain coastDomain(const CoastSpec& spec) {
     for (int z = 0; z < size; ++z) {
         for (int x = 0; x < size; ++x) {
             const size_t i = domain.index(x, z);
-            const double rough = 1.5 * level.cell / 64.0 * fractalNoise(spec.seed, x / 9.0, z / 9.0, 3);
+            const double rough = 0.004 * level.cell * fractalNoise(spec.seed, x / 9.0, z / 9.0, 3);
             const Shape shape = shapeOf(spec, x - middle, z - middle, level.cell, rough);
             if (spec.scene != CoastScene::Lake && x > middle) domain.unit[i].traits = traitsOf(spec.other);
             domain.ground.rock[i] = domain.ground.datum[i] = base + shape.ground;

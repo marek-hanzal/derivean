@@ -30,8 +30,8 @@ struct Shore {
     std::vector<float> pending[SedimentClasses];   // m of broken rock in the surf of a cell, not yet carried off or laid
     std::vector<float> cut, laid; // m of rock the waves took and of cover they left, net, over the replay
     std::vector<float> before;    // m of loose cover when the step's work began
-    std::vector<float> rate;      // m/yr each face is going back in the current round
     std::vector<float> load[SedimentClasses];      // m of sand and gravel on its way through a cell in the current sweep
+    std::vector<uint8_t> surf;    // 1 where some train can move the bed or runs over dry ground; 2 where a load waits in the current sweep
     int minX{}, maxX{-1}, minZ{}, maxZ{-1};        // box around every cell with still water, one cell wider
     CoastLedger ledger;
 };

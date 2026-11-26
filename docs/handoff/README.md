@@ -39,7 +39,7 @@ Last checkpoint commit: `625fdda` (work in progress, not a verified state). Late
 | Ground level and voxel forms | [ground.md](ground.md) | `@simulation/src/{ground,relief}`, `simulation/fn/{Query,Reader,Live}.*` | Finished; no active owner |
 | Groundwater, springs, caves, karst | [groundwater.md](groundwater.md) | `@simulation/src/groundwater/**` | In progress |
 | Interventions, hydrology, time | [interventions.md](interventions.md) | `@simulation/src/{hydrology,intervention}` | Finished; not wired into the game |
-| Atmosphere, climate, calendar | [atmosphere.md](atmosphere.md) | `@simulation/src/{atmosphere,climate,chronology}` | Snow ladder done; volcanic sources in progress |
+| Atmosphere, climate, calendar | [atmosphere.md](atmosphere.md) | `@simulation/src/{atmosphere,climate,chronology}` | Finished: snow by elevation, sources for ash, gas and dust with transport and fallout; nothing emits yet |
 | Coasts and lake shores | [coast.md](coast.md) | `@simulation/src/coast/**` | Started |
 | Wind and dry lands | [aeolian.md](aeolian.md) | `@simulation/src/aeolian/**` | Started |
 | Volcanism | [volcanic.md](volcanic.md) | `@simulation/src/volcanic/**` | Started; live eruptions are its second phase |

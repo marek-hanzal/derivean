@@ -20,6 +20,7 @@ void testIntervention();
 void testOre();
 void testRockMass();
 void testGroundwaterBlock();
+void testGroundwaterEdge();
 void testGroundwaterTile();
 
 int main() {
@@ -43,6 +44,7 @@ int main() {
     testOre();
     testRockMass();
     testGroundwaterBlock();
+    testGroundwaterEdge();
     testGroundwaterTile();
     return 0;
 }

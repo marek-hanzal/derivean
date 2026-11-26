@@ -85,7 +85,7 @@ void testLimestoneBlock() {
             if (x >= Valley) column.drain = Drain::Stream, column.stream = 1e9f, column.recharge = 0;
         }
     AquiferColumn& sink = field.column[field.index(SinkX, SinkZ)];
-    sink.stream = 3.0e6f, sink.swallow = 1.0e4f;
+    sink.stream = 3.0e6f, sink.swallow = 1.0e5f;
     const std::shared_ptr<GroundwaterTile> tile = solveField(field);
     const CaveField& caves = *tile->caves;
     const WaterBudget& budget = tile->budget;

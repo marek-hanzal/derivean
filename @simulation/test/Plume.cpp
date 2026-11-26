@@ -67,10 +67,11 @@ void testPlume() {
     addSource(once, eruption);
     addSource(daily, eruption);
     advanceAtmosphere(once, onDay(20), workers);
-    for (int day = 1; day <= 20; ++day) advanceAtmosphere(daily, onDay(day), workers);
+    Workers two(2);
+    for (int day = 1; day <= 20; ++day) advanceAtmosphere(daily, onDay(day), two);
     bool same = once.plume.fallen.cells == daily.plume.fallen.cells && once.airTemperature.cells == daily.airTemperature.cells && once.plume.patches.size() == daily.plume.patches.size();
     for (size_t level = 0; level < PlumeLevels; ++level) same = same && once.plume.dust[level].cells == daily.plume.dust[level].cells && once.plume.veil[level].cells == daily.plume.veil[level].cells;
-    expect(same, "one jump and daily steps gave different plumes");
+    expect(same, "one jump and daily steps on other threads gave different plumes");
 
     // Everything the source gave off is aloft or on the ground.
     const PlumeLedger ledger = plumeLedger(once);
@@ -82,7 +83,10 @@ void testPlume() {
     double patched = 0, dustDown = 0;
     for (const AshPatch& patch : once.plume.patches) patched += patch.mass;
     for (double fallen : once.plume.dustFallen.cells) dustDown += fallen * AirCellArea;
-    expect(std::abs(patched + dustDown - ledger.ashFallen) < 1e-9 * ledger.ashFallen, "what ashFallAt reads is not what fell", patched + dustDown - ledger.ashFallen);
+    expect(std::abs(patched + dustDown - ledger.ashFallen) < 1e-9 * ledger.ashFallen, "blankets and settled dust are not what fell", patched + dustDown - ledger.ashFallen);
+    double booked = 0;
+    for (double fallen : once.plume.fallen.cells) booked += fallen * AirCellArea;
+    expect(std::abs(booked - ledger.ashFallen) < 1e-9 * ledger.ashFallen, "the cells were not booked what fell on them", booked - ledger.ashFallen);
 
     // Coarse ash falls first: lapilli nearest the vent, sand-size ash further, dust furthest, and the blanket thins outwards.
     double reach[AshClasses]{}, mass[AshClasses]{};
@@ -97,7 +101,8 @@ void testPlume() {
     expect(reach[Lapilli] > 1000 && reach[Lapilli] < 0.3 * reach[Grit] && reach[Grit] < 1.0e6 && reach[Dust] > 2 * reach[Grit], "coarse ash did not fall before fine", reach[Grit]);
     const Vec2 heading = normalized({wrapDelta(sandCentre.x - vent.x, PlanetSpan), wrapDelta(sandCentre.z - vent.z, PlanetSpan)});
     const AshFall near = ashFallAt(once, vent + heading * reach[Lapilli]), further = ashFallAt(once, vent + heading * reach[Grit]), far = ashFallAt(once, vent + heading * (4 * reach[Grit]));
-    expect(near.mass > 3 * further.mass && further.mass > 3 * far.mass && far.mass >= 0, "the ash blanket does not thin downwind", further.mass);
+    expect(near.mass > 3 * further.mass && further.mass > 3 * far.mass, "the ash blanket does not thin downwind", further.mass);
+    expect(ashFallAt(once, vent + heading * (-0.4 * PlanetSpan)).source == 0 || ashFallAt(once, vent + heading * (-0.4 * PlanetSpan)).mass >= 1e-6, "a place free of ash names a source");
     expect(near.source == 1 && near.since == eruption.start && near.mass > 1.0, "the blanket does not name its source", near.mass);
     const WeatherReport report = inspectWeather(once, vent + heading * reach[Lapilli], 150, onDay(20));
     expect(report.cause.find("ash from source 1") != std::string::npos && report.ash.mass == near.mass, "the inspector does not explain the ash");

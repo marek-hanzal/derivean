@@ -9,7 +9,7 @@ void printShore(const derivean::sim::ShoreGrid& grid, const derivean::sim::Shore
 void printCoastLedger(const derivean::sim::CoastLedger& ledger, double area);
 
 // CoastMap.cpp — a map of what a shore is made of, `zoom` pixels to the cell: water by depth, pale
-// where it is shallow; sand yellow, gravel grey-brown, mud brown, bare rock grey, all shaded by
+// where it is shallow and tinted by a loose bed; sand yellow, gravel grey-brown, mud brown, bare rock grey, all shaded by
 // the relief; cliffs at the water's edge red, wave-cut platform violet, strips with water behind
 // them outlined in orange, lagoons green-blue, stacks white.
 void writeShoreMap(const derivean::sim::ShoreGrid& grid, const derivean::sim::ShoreSurvey& survey, const std::string& path, int zoom);

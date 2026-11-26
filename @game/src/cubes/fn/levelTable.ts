@@ -13,6 +13,13 @@ export const Nowhere: Box = { min: [1, 1, 1], max: [-1, -1, -1] };
 // The footprint of a box at any height.
 export const column = (box: Box): Box => ({ min: [box.min[0], -Far, box.min[2]], max: [box.max[0], Far, box.max[2]] });
 
+// The largest footprint within a column whose sides lie on a lattice of `edge` metres; nowhere if there is none.
+export function snapped(box: Box, edge: number): Box {
+  const min: Point = [Math.ceil(box.min[0] / edge) * edge, box.min[1], Math.ceil(box.min[2] / edge) * edge];
+  const max: Point = [Math.floor(box.max[0] / edge) * edge, box.max[1], Math.floor(box.max[2] / edge) * edge];
+  return min[0] < max[0] && min[2] < max[2] ? { min, max } : Nowhere;
+}
+
 export function createLevelTable(): LevelTable {
   const rows = Array.from({ length: LevelSlots * LevelRows }, (_, row) => row % 2 ? new Vector4(-1, -1, -1, 0) : new Vector4(1, 1, 1, 1));
   return { rows, node: uniformArray(rows, "vec4") };

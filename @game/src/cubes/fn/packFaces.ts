@@ -6,7 +6,7 @@ import type { Quads } from "../../../contract/GameBridge";
 // Plane, lowU and lowV are signed sixteen-bit counts of cubes from the anchor of the batch the face is drawn in,
 // so the place of its chunk is already in them. `rise` lifts the face by 256ths of a cube: a sheet of water lies
 // at its level, not on the lattice.
-const pack = (out: Uint32Array, at: number, axis: number, negative: boolean, plane: number, lowU: number, lowV: number,
+export const packFace = (out: Uint32Array | number[], at: number, axis: number, negative: boolean, plane: number, lowU: number, lowV: number,
   sizeU: number, sizeV: number, material: number, occlusion: number, level: number, rise: number) => {
   out[at] = (plane & 0xffff) | (lowU & 0xffff) << 16;
   out[at + 1] = (lowV & 0xffff) | (sizeU & 0xffff) << 16;
@@ -20,7 +20,7 @@ export function packQuads(quads: Quads, level: number, home: readonly number[], 
     const shape = quads[quad * 2];
     const look = quads[quad * 2 + 1];
     const axis = shape >>> 28 & 3;
-    pack(out, (first + quad) * 4, axis, (shape >>> 30 & 1) === 0, (shape & 63) + home[axis], (shape >>> 6 & 63) + home[(axis + 1) % 3],
+    packFace(out, (first + quad) * 4, axis, (shape >>> 30 & 1) === 0, (shape & 63) + home[axis], (shape >>> 6 & 63) + home[(axis + 1) % 3],
       (shape >>> 12 & 63) + home[(axis + 2) % 3], (shape >>> 18 & 31) + 1, (shape >>> 23 & 31) + 1, look & 255, look >>> 8 & 255, level, rise);
   }
 }
@@ -29,7 +29,7 @@ export function packQuads(quads: Quads, level: number, home: readonly number[], 
 export function packFaces(faces: Int16Array, words: number, level: number, out: Uint32Array, first: number) {
   for (let face = 0; face < Math.floor(faces.length / words); face++) {
     const at = face * words;
-    pack(out, (first + face) * 4, faces[at], faces[at + 1] < 0, faces[at + 2], faces[at + 3], faces[at + 4], faces[at + 5], faces[at + 6],
+    packFace(out, (first + face) * 4, faces[at], faces[at + 1] < 0, faces[at + 2], faces[at + 3], faces[at + 4], faces[at + 5], faces[at + 6],
       faces[at + 7], words > 8 ? faces[at + 8] : 0, level, 0);
   }
 }

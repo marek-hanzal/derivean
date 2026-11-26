@@ -94,7 +94,7 @@ void stepHeat(Atmosphere& atmosphere, int begin, int end) {
             const double water = atmosphere.openWater.cells[cell];
             double surface = atmosphere.surfaceTemperature.cells[cell];
             // Ash on snow darkens it: the pack then turns away less of the sun.
-            const double sooted = 1.0 - AshOnSnow * saturate(atmosphere.plume.fallen.cells[cell] * (1.0 / SootedSnow));
+            const double sooted = 1.0 - AshOnSnow * saturate(atmosphere.plume.onSnow.cells[cell] * (1.0 / SootedSnow));
             const double snowCover = std::max(0.0, atmosphere.snowCover.cells[cell] - atmosphere.snowUsual.cells[cell]) * sooted;
             const double shade = atmosphere.shade.cells[cell];
             const double absorbed = (1.0 - SnowShade * snowCover - IceShade * water * frozenShare(surface)) *

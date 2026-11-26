@@ -13,7 +13,7 @@ inline constexpr double WindHeight = 10.0;          // m
 inline constexpr double SandRoughness = 3e-4;        // m
 
 // The lee of a crest is calm below a line that falls at this slope from it: sand that lands there stays.
-inline constexpr float ShadowTan = 0.268f;          // 15°
+inline constexpr float ShadowTan = 0.194f;          // 11°
 // A step steeper than this stops a hopping grain at its foot: sand ramps up a cliff, it does not jump it.
 inline constexpr float ClimbTan = 1.0f;
 

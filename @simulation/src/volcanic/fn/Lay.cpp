@@ -76,12 +76,12 @@ void emplace(Domain& domain, Emplacement& field, Laying& laying, int vent, const
         booked += harvest(field, laying, into, vent);
     };
     // Fall around the vent and lava in turn: that is what layers a cone.
-    pour(AshFlow, outburst.flows, laying.fall, ledger.cone);
     for (int pulse = 0; pulse < outburst.pulses; ++pulse) {
         if (outburst.fall > 0) {
             buildCone(field, coneFall(site, outburst.fall / outburst.pulses), repose);
             ledger.cone += harvest(field, laying, laying.fall, vent);
         }
+        pour(outburst.current, outburst.flows / outburst.pulses, laying.fall, ledger.cone);
         pour(outburst.rheology, outburst.lava / outburst.pulses, laying.lava, ledger.lava);
     }
     if (outburst.ash > 0) {

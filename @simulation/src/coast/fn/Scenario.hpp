@@ -27,6 +27,7 @@ struct CoastSpec {
     double joints{0};      // 0..1 crushed share of the rock inside the joint zones; 0 for none
     double river{0};       // m³/yr of a river that reaches the middle of the shore from inland
     double upland{60};     // m the land rises to
+    double shelf{15};      // m of water at which the sea floor levels off
     int steps{0};          // 0 runs the settling time of the level
     uint64_t seed{42};
 };

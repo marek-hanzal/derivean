@@ -99,14 +99,47 @@ void printCaves(const WaterBlock& block, double land) {
     std::printf("  void %.3g m3 = %.4f %% of the top 100 m of that ground; thinnest roof %.1f m\n", volume, karst > 0 ? 100 * volume / (karst * 100.0) : 0.0, count ? thinnest : 0.0);
 }
 
+// What the inspector would be told about the largest spring and the widest passage of the block.
+void printAccounts(World& world, const WaterBlock& block) {
+    const Spring* largest = nullptr;
+    const Conduit* widest = nullptr;
+    for (const auto& tile : block.tiles) {
+        for (const Spring& spring : tile->springs)
+            if (!largest || spring.discharge > largest->discharge) largest = &spring;
+        for (const Conduit& conduit : tile->caves->conduits)
+            if (!widest || conduit.radius > widest->radius) widest = &conduit;
+    }
+    if (largest) {
+        const SpringAccount account = explainSpring(world, largest->position);
+        std::printf("explainSpring at X %.0f Z %.0f: %s", largest->position.x, largest->position.z, account.found ? "" : "nothing found\n");
+        if (account.found) {
+            std::printf("%s spring, vent put on the site level's ground at X %.1f Z %.1f, %.1f m (local level: %.1f m); water came through", KindNames[int(account.record.kind)],
+                        account.spring.position.x, account.spring.position.z, double(account.spring.elevation), double(largest->elevation));
+            for (const Material rock : account.crossed) std::printf(" %s", definitionOf(rock).name.data());
+            std::printf("\n");
+        }
+    }
+    if (widest) {
+        const CaveAccount account = explainCave(world, 0.5 * (widest->ax + widest->bx), 0.5 * (widest->ay + widest->by), 0.5 * (widest->az + widest->bz));
+        std::printf("explainCave in the widest passage: %s", account.found ? "" : "nothing found\n");
+        if (account.found)
+            std::printf("radius %.1f m, %.0f l/s, cut in %s%s%s along a joint %s striking %.0f deg, level %d, catchment %.2f km2, %.3g yr to open, %.3g yr dry, %.1f m of roof; drains to spring %llu at X %.0f Z %.0f\n",
+                        double(account.conduit.radius), 1000.0 * account.conduit.flux, definitionOf(account.record.rock).name.data(), account.record.floor == Material::Air ? "" : " on ",
+                        account.record.floor == Material::Air ? "" : definitionOf(account.record.floor).name.data(), account.record.order == 2 ? "zone" : account.record.order == 1 ? "corridor" : "(none)",
+                        57.2958 * account.record.strike, int(account.record.level), account.record.catchment / 1e6, double(account.record.grew), double(account.record.abandoned),
+                        double(account.record.cover), static_cast<unsigned long long>(account.outlet.id), account.outlet.position.x, account.outlet.position.z);
+    }
+}
+
 } // namespace
 
-// terra groundwater [--x --z] [--span m] [--out directory] [--tag name] [--time 1]: the ground
-// water under a square of the world. Without a position the square is centred on the landing.
+// terra groundwater [--x --z | --at landing|limestone|hot] [--span m] [--out directory] [--tag name]
+// [--time 1] [--explain 1]: the ground water under a square of the world.
 int groundwaterCommand(const Arguments& arguments) {
     World world({arguments.seed(), arguments.number("age", 4.6e9), unsigned(arguments.number("threads", 0))});
     Vec2 centre{arguments.number("x", 0), arguments.number("z", 0)};
-    if (!arguments.values.count("x") && !arguments.values.count("z")) centre = findLanding(world, centre);
+    const std::string place = arguments.text("at", "landing");
+    if (!arguments.values.count("x") && !arguments.values.count("z")) centre = place == "landing" ? findLanding(world, centre) : seekWaterPlace(world, place);
     const double span = arguments.number("span", 16000);
     const TileKey first = tileAt(Level::Local, {centre.x - span / 2, centre.z - span / 2}), last = tileAt(Level::Local, {centre.x + span / 2, centre.z + span / 2});
     const int tiles = std::max(last.x - first.x, last.z - first.z) + 1;
@@ -142,5 +175,6 @@ int groundwaterCommand(const Arguments& arguments) {
     printCaves(block, land);
     if (arguments.values.count("out")) writeWaterMaps(block, arguments.text("out", "."), arguments.text("tag", "here"));
     if (arguments.number("time", 0) > 0) timeGroundwater(world, tileAt(Level::Local, centre));
+    if (arguments.number("explain", 0) > 0) printAccounts(world, block);
     return 0;
 }

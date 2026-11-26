@@ -16,10 +16,11 @@ struct Rheology {
     float coolLength{};    // m of travel over which it sets
 };
 
-inline constexpr Rheology BasaltLava{0.03f, 4.0f, 8.0f, 26000.0f};      // long thin sheets: flanks of 1 to 5 degrees
+inline constexpr Rheology BasaltLava{0.15f, 1.2f, 8.0f, 26000.0f};      // long thin sheets: a flank of one degree at the vent, eight at its far edge
 inline constexpr Rheology AndesiteLava{0.6f, 45.0f, 35.0f, 9000.0f};    // short thick tongues
 inline constexpr Rheology DomeLava{12.0f, 60.0f, 80.0f, 1500.0f};       // degassed, nearly solid: piles over its vent
-inline constexpr Rheology AshFlow{0.02f, 0.5f, 20.0f, 28000.0f};        // a hot current of ash and gas: runs far, ponds in valleys
+inline constexpr Rheology AshFlow{0.02f, 0.5f, 20.0f, 28000.0f};        // the current of ash and gas of a chamber emptying: runs far, ponds in valleys
+inline constexpr Rheology BlockFlow{0.05f, 1.2f, 20.0f, 14000.0f};      // the smaller currents of ash and blocks of an ordinary eruption
 inline constexpr float QuenchShare = 0.12f;   // share of its cooling length lava keeps once it runs under water
 
 inline constexpr const Rheology& lavaOf(Magma magma) { return magma == Magma::Basalt ? BasaltLava : AndesiteLava; }
@@ -27,13 +28,15 @@ inline constexpr const Rheology& lavaOf(Magma magma) { return magma == Magma::Ba
 // How an eruption divides what it brings up: lava, fragments that fall near the vent and build its
 // cone, and ash the wind carries away.
 struct Style {
-    float lava{}, cone{}, ash{};
+    float lava{}, cone{}, flows{}, ash{};   // `flows`: hot currents of ash and blocks that run out over the foot of the cone
 };
 
-inline constexpr Style BasaltStyle{0.93f, 0.05f, 0.02f};
-inline constexpr Style AndesiteStyle{0.45f, 0.27f, 0.28f};
+// The scoria of fluid melt builds small cones all over a shield, none at a region's scale: it is
+// part of the small eruptions the local level builds (volcanic/fn/Minor.hpp).
+inline constexpr Style BasaltStyle{0.97f, 0.0f, 0.0f, 0.03f};
+inline constexpr Style AndesiteStyle{0.40f, 0.20f, 0.20f, 0.20f};
 // The largest eruptions empty their chamber as currents of ash and a high column, with no lava at all.
-inline constexpr Style ParoxysmStyle{0.0f, 0.05f, 0.35f};   // the remaining 0.6 runs out as ash flows
+inline constexpr Style ParoxysmStyle{0.0f, 0.05f, 0.60f, 0.35f};
 
 inline constexpr const Style& styleOf(Magma magma) { return magma == Magma::Basalt ? BasaltStyle : AndesiteStyle; }
 

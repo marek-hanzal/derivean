@@ -9,8 +9,7 @@ namespace derivean::sim {
 namespace {
 
 constexpr float Least = 1e-3f;       // m of mobile layer below which a cell has nothing to pass on
-constexpr float Tolerance = 0.002f;  // share of a flow unit by which a surface may stand above its rest
-constexpr float Easing = 0.5f;       // share of an excess a cell gives up at once: the two sides meet, neither overshoots
+constexpr float Tolerance = 0.02f;   // share of a flow unit by which a surface may stand above its rest
 
 float yieldAt(const Rheology& rheology, float heat) {
     return rheology.yieldCold * std::pow(rheology.yieldHot / rheology.yieldCold, std::clamp(heat, 0.0f, 1.0f));
@@ -48,23 +47,36 @@ long relax(Emplacement& field, const Rheology& rheology, Worklist& work, long vi
         const float top = field.ground[i] + layer;
         // The fall over one cell's width that the layer just holds.
         const float holds = yieldAt(rheology, field.heat[i]) / std::min(layer, rheology.sheet) * cell;
-        float excess[8], most = 0, squares = 0;
+        // For each neighbour the level this cell would have to sink to before it stopped feeding it.
+        float level[8];
+        int order[8], count = 0;
         for (int k = 0; k < 8; ++k) {
-            excess[k] = 0;
             const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
             if (!field.contains(nx, nz)) continue;
             const size_t j = field.index(nx, nz);
-            excess[k] = std::max(0.0f, top - field.ground[j] - field.mobile[j] - holds * NeighborReach[k]);
-            most = std::max(most, excess[k]);
-            squares += excess[k] * excess[k];
+            level[k] = field.ground[j] + field.mobile[j] + holds * NeighborReach[k];
+            if (level[k] >= top - slack) continue;
+            int at = count++;
+            for (; at > 0 && level[order[at - 1]] > level[k]; --at) order[at] = order[at - 1];
+            order[at] = k;
         }
-        if (most <= slack) continue;
-        // Steeper ways take more: a flow keeps to the fall line and to the floor of a valley.
-        const float leaving = std::min(layer, Easing * most);
+        if (count == 0) continue;
+        // The cell and the neighbours below it come to one level, each neighbour by its own
+        // threshold lower: the lowest takes most, as a flow keeps to the fall line. If the layer
+        // does not last that far, all of it goes and the neighbours share it the same way.
+        float sum = top, common = top;
+        int taking = 0;
+        while (taking < count && level[order[taking]] < common) sum += level[order[taking++]], common = sum / float(taking + 1);
+        if (common < field.ground[i]) {
+            sum = layer, taking = 0;
+            common = 1e30f;
+            while (taking < count && level[order[taking]] < common) sum += level[order[taking++]], common = sum / float(taking);
+        }
         float sent = 0;
-        for (int k = 0; k < 8; ++k) {
-            if (excess[k] <= 0) continue;
-            const float part = std::min(leaving * excess[k] * excess[k] / squares, Easing * excess[k]);
+        for (int n = 0; n < taking; ++n) {
+            const int k = order[n];
+            const float part = std::min(common - level[k], layer - sent);
+            if (part <= 0) continue;
             const size_t j = field.index(x + NeighborX[k], z + NeighborZ[k]);
             sent += part;
             if (field.rest[j] == Rest::Closed) {
@@ -85,7 +97,6 @@ long relax(Emplacement& field, const Rheology& rheology, Worklist& work, long vi
             wake(field, work, j);
         }
         field.mobile[i] = layer - sent;
-        if (field.mobile[i] >= Least) wake(field, work, i);
         // A cell that has sunk may release what rested against it.
         for (int k = 0; k < 8; ++k) {
             const int nx = x + NeighborX[k], nz = z + NeighborZ[k];

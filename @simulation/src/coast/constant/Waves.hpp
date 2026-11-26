@@ -40,7 +40,8 @@ inline constexpr float HighestBerm = 3.0f;     // m above high water
 inline constexpr float Withstand = 0.063f;
 inline constexpr float Quarry = 0.02f;
 inline constexpr float CrushedStrength = 0.15f;   // share of its strength rock keeps where a cell is all joint corridor
-// yr the sea works a shore during one step: about as long as it has stood near its present level.
+// yr the sea has stood near its present level: the time waves have had to cut a shore of the
+// finer levels, whose settling is not a calendar. Every step of a region holds a high stand as long.
 inline constexpr double StandTime = 6000.0;
 // m below still water to which a face is cut. A Region step spans several glacial cycles: what its
 // sea leaves is the ramp planed while the level swung, not a bench at one level.

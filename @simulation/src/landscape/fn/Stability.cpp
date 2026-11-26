@@ -99,6 +99,7 @@ void failFaces(Domain& domain, FlowScratch& scratch) {
     std::vector<float>& height = scratch.work;
     std::vector<int32_t>& foot = scratch.foot;
     foot.resize(domain.cells());
+    for (size_t i = 0; i < foot.size(); ++i) foot[i] = int32_t(i);   // a neighbour of equal height may not have been visited yet
     const auto runTo = [&](int x, int z, int32_t at) {
         const int dx = x - at % size, dz = z - at / size;
         return std::sqrt(float(dx * dx + dz * dz));

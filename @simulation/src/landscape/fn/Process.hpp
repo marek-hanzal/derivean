@@ -6,7 +6,8 @@
 
 namespace derivean::sim {
 
-// Working arrays of one step. Kept outside Domain so a replay allocates them once.
+// Working arrays of the steps of one replay, allocated once. `retreated`, `left` and the soundness
+// arrays carry over from step to step, so a scratch belongs to one domain for the whole replay.
 struct FlowScratch {
     std::vector<float> share;                    // cells × 8: part of a cell's outflow that leaves towards each neighbour
     std::vector<float> next;                     // m, surface after cutting and filling
@@ -26,7 +27,6 @@ struct FlowScratch {
     std::vector<float> retreated;                // m the free face of each column has weathered back since the column last came down
     double left{};                               // m³ of debris that slid onto cells that do not evolve, over the whole replay and domain
     std::vector<float> soundScale, soundLog;     // how sound each cell's rock is against its material: fixed for a replay
-    std::vector<uint8_t> channelled;             // 1 where the water of a cell is enough to cut a channel
     std::vector<uint8_t> drained;                // 1 where a lake of this step lost its water to the cutting of its outlet
     std::vector<float> pool;                     // m, water surface each cell is left with once the beds below it are cut
     std::vector<float> travelled;                // routing only: the way a cell's inflow has come, summed over that inflow
@@ -95,9 +95,9 @@ inline constexpr float ChannelHeads[LevelCount] = {0, 2.5e7f, ChannelHead, 2.0f 
 inline constexpr float channelHeadOf(Level level) { return ChannelHeads[size_t(level)]; }
 // The Region level draws its valleys by the water a cell has gathered beyond the sheet any slope
 // carries, lowers the ground between them at the pace of the streams a cell hides, and lets a stream
-// keep to one drawn path. The Local and Site levels still cut with all the water of a cell from one
-// cell's worth upwards: the same rule made them rib a led plane at the width of the settling
-// controller's average, and that has to be cured there first.
+// keep to one drawn path. The Local and Site levels cut with all the water of a cell from one
+// cell's worth upwards: under the settling controller the gathered-water rule ribs a held plane at
+// the width of the controller's average (test/LandscapePlane.cpp), so it is not used there.
 inline constexpr bool gathersWater(Level level) { return level == Level::Region; }
 // m³/yr of the largest stream a Region cell holds inside itself: a headwater stream. A cell that
 // has gathered less water than a channel of the level is lowered at the pace such a stream cuts on

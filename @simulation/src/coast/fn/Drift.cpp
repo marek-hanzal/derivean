@@ -11,9 +11,12 @@ constexpr float Closure = 2.5f;      // depth over wave height beyond which a be
 constexpr float Breaking = 2.0f;     // depth over wave height at which they move it most
 constexpr float GravelLift = 0.25f;  // how readily waves lift gravel against sand
 // m of sand a train of one metre carries through a cell in one sweep, and m of bed a sweep can
-// lift. Both scale with the cell: a level moves the deposits it can draw.
-constexpr float Carry[LevelCount] = {0, 16.0f, 1.5f, 0.12f, 0};
-constexpr float Stir[LevelCount] = {0, 2.0f, 0.3f, 0.03f, 0};
+// lift. A sweep stands for a few years of a finer level's shore and a few centuries of a region's:
+// the drift of a metre-high sea, some 10^5 m³ a year, is then tens of metres over a cell of either,
+// and far more than a four-metre cell's own bed can supply, so a site's sand goes wherever its
+// waves let it lie.
+constexpr float Carry[LevelCount] = {0, 16.0f, 30.0f, 20.0f, 0};
+constexpr float Stir[LevelCount] = {0, 2.0f, 1.0f, 0.25f, 0};
 
 float holds(int kind, float depth) { return SwashSlope[kind] / std::sqrt(1.0f + std::max(0.0f, depth) / ProfileDepth); }
 
@@ -24,7 +27,18 @@ struct Sweep {
     float run, carry, stir;
     double area;
 
-    bool covered(size_t i) const { return shore.still[i] != NoWater && shore.still[i] + swingOf(domain, shore.still[i]) > shore.top[i]; }
+    // A cell the train crosses: the water covers it, or the train's swash does.
+    bool covered(size_t i) const { return shore.wave[i * WaveDirections + size_t(train)] > 0; }
+
+    void hand(size_t to, int kind, float amount) {
+        shore.load[kind][to] += amount;
+        shore.surf[to] |= 2;
+    }
+
+    void strandLost(size_t i, const float moving[SedimentClasses]) {
+        for (const int kind : {Coarse, Sand})
+            if (moving[kind] > 0) shore.pending[kind][i] += moving[kind];
+    }
 
     void lay(size_t i, int kind, float amount) {
         domain.ground.sediment[kind][i] += amount;
@@ -37,6 +51,25 @@ struct Sweep {
         const float water = shore.still[i], laid = std::clamp(water + swingOf(domain, water) - shore.top[i], 0.0f, amount);
         lay(i, kind, laid);
         shore.pending[kind][i] += amount - laid;
+    }
+
+    // Loose ground ahead that stands steeper over the water than its classes hold is undercut:
+    // what comes down joins what the train carries. A bluff of sand feeds a shore this way.
+    void undercut(size_t i, size_t ahead, float reach, float moving[SedimentClasses]) {
+        if (domain.hold[ahead] != Free) return;
+        // What waits in the surf at the foot of the shore is taken along first.
+        for (const int kind : {Sand, Coarse}) {
+            const float taken = std::min(shore.pending[kind][ahead], reach);
+            shore.pending[kind][ahead] -= taken, moving[kind] += taken;
+        }
+        for (const int kind : {Fines, Sand, Coarse}) {
+            const float over = shore.top[ahead] - shore.top[i] - SwashSlope[kind] * run;
+            const float fallen = std::min({domain.ground.sediment[kind][ahead], 0.5f * over, reach});
+            if (fallen <= 0) continue;
+            lay(ahead, kind, -fallen);
+            if (kind == Fines) lay(i, Fines, fallen);
+            else moving[kind] += fallen;
+        }
     }
 
     // The swash runs up the land ahead of the last cell the water covers and leaves what it
@@ -64,12 +97,22 @@ struct Sweep {
 
     void visit(int x, int z) {
         const size_t i = domain.index(x, z);
-        if (!covered(i)) return;
+        // Most water is too deep for any wave to touch the bed, and nothing is on its way through it.
+        if (!shore.surf[i]) return;
         float moving[SedimentClasses] = {shore.load[Coarse][i], shore.load[Sand][i], 0};
         shore.load[Coarse][i] = shore.load[Sand][i] = 0;
+        shore.surf[i] &= 1;
+        if (!covered(i)) {
+            // Nothing is handed to a cell the train does not cross; kept for the books all the same.
+            strandLost(i, moving);
+            return;
+        }
         const size_t at = i * WaveDirections + size_t(train);
         const float water = shore.still[i], depth = water - shore.top[i], height = std::sqrt(shore.arrive[at]);
-        const float within = height > 1e-3f ? std::clamp((Closure * height - depth) / ((Closure - Breaking) * height), 0.0f, 1.0f) : 0.0f;
+        // A cell is as shallow as its bed gets on the way to the cell ahead: the surf of a shore
+        // lies inside the last cell of water, however deep that cell is on average.
+        const float shoal = std::min(depth, water - 0.5f * (shore.top[i] + shore.top[size_t(ptrdiff_t(i) + ptrdiff_t(NeighborZ[train]) * domain.size + NeighborX[train])]));
+        const float within = height > 1e-3f ? std::clamp((Closure * height - shoal) / ((Closure - Breaking) * height), 0.0f, 1.0f) : 0.0f;
         const float capacity = within > 0 ? carry * std::pow(shore.wave[at], 1.25f) * within : 0.0f;
         if (domain.hold[i] != Free) {
             // A cell that does not evolve takes what reaches it and hands on what its own surf would carry.
@@ -82,21 +125,18 @@ struct Sweep {
             const int nx = x + NeighborX[train], nz = z + NeighborZ[train];
             if (x == 0 || z == 0 || x == domain.size - 1 || z == domain.size - 1) {
                 const bool inward = nx > 0 && nz > 0 && nx < domain.size - 1 && nz < domain.size - 1 && covered(domain.index(nx, nz));
-                if (inward) shore.load[Coarse][domain.index(nx, nz)] += moving[Coarse], shore.load[Sand][domain.index(nx, nz)] += moving[Sand];
+                if (inward) hand(domain.index(nx, nz), Coarse, moving[Coarse]), hand(domain.index(nx, nz), Sand, moving[Sand]);
                 else shore.ledger.entered -= double(given) * area;
                 return;
             }
         } else {
             work(i, depth, within, capacity, moving);
         }
-        if (moving[Coarse] + moving[Sand] <= 0) return;
         pass(i, depth, height, moving);
     }
 
     void work(size_t i, float depth, float within, float capacity, float moving[SedimentClasses]) {
         const float water = shore.still[i];
-        // Mud does not ride with the waves: what waits in the surf sinks here, and the undertow takes it on.
-        if (shore.pending[Fines][i] > 0) lay(i, Fines, shore.pending[Fines][i]), shore.pending[Fines][i] = 0;
         const float total = moving[Coarse] + moving[Sand];
         if (total > capacity) {
             // Waves that can carry less than they bring drop the difference, gravel first, up to high water.
@@ -143,23 +183,42 @@ struct Sweep {
         const auto ahead = [&](int k) { return size_t(ptrdiff_t(i) + ptrdiff_t(NeighborZ[k]) * domain.size + NeighborX[k]); };
         const auto open = [&](size_t n, int k, int kind) { return covered(n) && shore.top[n] - shore.top[i] <= holds(kind, depth) * float(domain.cell) * NeighborReach[k]; };
         const size_t straight = ahead(train);
-        if (!covered(straight)) swash(i, height, moving);
+        if (!covered(straight)) {
+            undercut(i, straight, std::min(stir, carry * std::pow(shore.arrive[i * WaveDirections + size_t(train)], 1.25f)), moving);
+            swash(i, height, moving);
+        }
         const int sides[2] = {(train + 1) & 7, (train + 7) & 7};
         for (const int kind : {Coarse, Sand}) {
             if (moving[kind] <= 0) continue;
             if (open(straight, train, kind)) {
-                shore.load[kind][straight] += moving[kind];
+                hand(straight, kind, moving[kind]);
                 continue;
             }
             const bool first = open(ahead(sides[0]), sides[0], kind), second = open(ahead(sides[1]), sides[1], kind);
-            if (first) shore.load[kind][ahead(sides[0])] += second ? 0.5f * moving[kind] : moving[kind];
-            if (second) shore.load[kind][ahead(sides[1])] += first ? 0.5f * moving[kind] : moving[kind];
+            if (first) hand(ahead(sides[0]), kind, second ? 0.5f * moving[kind] : moving[kind]);
+            if (second) hand(ahead(sides[1]), kind, first ? 0.5f * moving[kind] : moving[kind]);
             if (!first && !second) strand(i, kind, moving[kind]);
         }
     }
 };
 
 } // namespace
+
+void findSurf(const Domain& domain, Shore& shore) {
+    for (int z = shore.minZ; z <= shore.maxZ; ++z) {
+        for (int x = shore.minX; x <= shore.maxX; ++x) {
+            const size_t i = domain.index(x, z);
+            shore.surf[i] = 0;
+            if (shore.still[i] == NoWater) continue;
+            float highest = 0;
+            for (int k = 0; k < WaveDirections; ++k) highest = std::max(highest, shore.arrive[i * WaveDirections + size_t(k)]);
+            float shoal = shore.still[i] - shore.top[i];
+            if (x > 0 && z > 0 && x < domain.size - 1 && z < domain.size - 1)
+                for (int k = 0; k < 8; ++k) shoal = std::min(shoal, shore.still[i] - 0.5f * (shore.top[i] + shore.top[domain.index(x + NeighborX[k], z + NeighborZ[k])]));
+            shore.surf[i] = highest > 0 && (shoal <= 0 || shoal * shoal < Closure * Closure * highest);
+        }
+    }
+}
 
 void moveSand(Domain& domain, Shore& shore, int round) {
     Sweep sweep{domain, shore, 0, 0, Carry[size_t(domain.key.level)], Stir[size_t(domain.key.level)], domain.cell * domain.cell};

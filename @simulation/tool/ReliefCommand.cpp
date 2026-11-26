@@ -117,7 +117,7 @@ int reliefCommand(const Arguments& arguments) {
             writeSlopeMap(mosaic, path);
             std::printf("  %s\n", path.c_str());
         }
-        if (const int crop = int(arguments.number("crop", 0)); crop > 0 && !out.empty()) {
+        if (const int crop = std::min(int(arguments.number("crop", 0)), mosaic.side()); crop > 0 && !out.empty()) {
             // The cells around the place themselves, eight pixels each, shaded without exaggeration.
             constexpr int Zoom = 8;
             const Vec2 centre = level == Level::Site ? site : local;
