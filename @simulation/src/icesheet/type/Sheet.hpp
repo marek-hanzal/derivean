@@ -2,6 +2,7 @@
 
 #include "core/type/Vec.hpp"
 #include "icesheet/type/Continental.hpp"
+#include "icesheet/type/Esker.hpp"
 #include "icesheet/type/IceGrid.hpp"
 #include "landscape/type/Level.hpp"
 #include "landscape/type/Terrain.hpp"
@@ -31,6 +32,10 @@ struct SheetRecord {
     // Finer levels only: m of the last maximum's sheet over each cell. `Tile::iceAge` there also
     // holds the level's own valley glaciers; the level below reads the sheet from here.
     std::vector<float> sheetThen;
+    // Finer levels only: of the ridges of stretches starting on an unfinished neighbour, what lies
+    // on the tile, for that neighbour to take; of those starting on the tile, what it took for
+    // each unfinished neighbour's part, for that neighbour to lay.
+    std::vector<EskerCrossing> eskerArrived, eskerSent;
 };
 
 // One stage's sheet on the cells of a domain, read off the coarse relaxation over the domain's own ground.
@@ -66,7 +71,8 @@ struct SheetWork {
     std::vector<float> worn;             // m of rock ground off so far, per domain cell
     std::vector<float> now, lastMaximum; // m of grounded ice per domain cell, once the last sheet has left its record
     std::vector<float> rest;             // m each cell's crust has still to rise since the last sheet left
-    // Per domain cell while the last sheet leaves its record; the tile's cells are read off at the end.
+    // Per domain cell while the last sheet leaves its record (the esker crossings already per
+    // tile); the tile's cells are read off at the end.
     SheetRecord left;
 };
 

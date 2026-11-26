@@ -37,6 +37,7 @@ std::shared_ptr<const SheetRecord> presentFiner(Domain& domain, const SheetWork&
     record->meltTo.assign(cells, 255);
     for (auto& part : record->passing) part.resize(cells);
     record->sheetThen.resize(cells);
+    record->eskerArrived = work.left.eskerArrived, record->eskerSent = work.left.eskerSent;
     for (int z = 0; z < TileCells; ++z)
         for (int x = 0; x < TileCells; ++x) {
             const size_t from = domain.index(x + Halo, z + Halo), to = size_t(z) * TileCells + size_t(x);

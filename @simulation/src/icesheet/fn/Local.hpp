@@ -14,9 +14,10 @@ namespace derivean::sim {
 
 // Esker.cpp — the tunnel fill the parent spread over its cells is set aside from their cover, to
 // stand as a ridge along the stream's path once the ice has gone (`layEskers`). A stretch's ridge
-// is as wide as its tunnel and holds the stretch's own fill, so its height is the same in every
-// domain that holds it. Tunnels come from a Region parent only: at Site the Local ridge is part of
-// the parent's surface already.
+// is as wide as its tunnel and holds the stretch's own fill, as far as the cover of the parent
+// cell it starts in gives it; the tile owning that cell takes for what finished neighbours laid
+// of it and for its own drawing of the rest, and the tiles finished later lay what it took for them. Tunnels come from a Region parent only: at Site
+// the Local ridge is part of the parent's surface already.
 EskerFill setAsideEskers(Domain& domain, const ParentSheet& parent, const std::vector<Tunnel>& tunnels);
 
 // EskerPath.cpp — where the tunnels ran through the domain. Water under the ice runs down its head
