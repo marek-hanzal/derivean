@@ -1,6 +1,6 @@
 # Credits: astronomy and the geometry of the sphere
 
-Part of [Credits](../credits.md); the entry format is explained there. Both domains are new (planet slices S1 and S2, 26 Nov 2026) and still in progress; the entries follow the Sources sections of `docs/handoff/geometry.md` (S1, commit `cb87997`; its lines and the geometry source lines as of S1's follow-up to Codex's DREV-CLAUDE-002-03) and `docs/handoff/astronomy.md:167` (S2, commit `e3ed117`), with the bibliographic data checked again here. Astronomy line numbers are as of `e3ed117`.
+Part of [Credits](../credits.md); the entry format is explained there. Both domains are new (planet slices S1 and S2, 26 Nov 2026) and still in progress; the entries follow the Sources sections of `docs/handoff/geometry.md` (S1, commit `cb87997`; its lines and the geometry source lines as of S1's follow-up to Codex's DREV-CLAUDE-002-03) and `docs/handoff/astronomy.md:183` (S2, commits `e3ed117` and `56c2ef1`), with the bibliographic data checked again here. Astronomy line numbers are as of `56c2ef1`.
 
 ## The Sun, the Earth and the Moon today
 
@@ -27,7 +27,7 @@ Prša, A., Harmanec, P., Torres, G., et al. (2016). Nominal values for selected 
 ### Petit and Luzum 2010: IERS Conventions
 Petit, G., Luzum, B. (eds.) (2010). *IERS Conventions (2010)*. IERS Technical Note 36. Verlag des Bundesamts für Kartographie und Geodäsie, Frankfurt am Main. ISBN 3-89888-989-6. https://iers-conventions.obspm.fr/content/tn36.pdf
 - **Model:** the Earth's GM (3.986004418 × 10¹⁴ m³/s²) and the Love numbers behind the factor (1 + k₂ − h₂) = 0.69 of the observed equilibrium tide.
-- **Used in:** `@simulation/src/astronomy/constant/Sky.hpp:8`; `@simulation/src/astronomy/fn/Tide.hpp:16`.
+- **Used in:** `@simulation/src/astronomy/constant/Sky.hpp:8`; `@simulation/src/astronomy/fn/Tide.hpp:22`.
 
 ### IERS and U.S. Naval Observatory: ΔT
 IERS / U.S. Naval Observatory, ΔT and Earth-orientation data. https://maia.usno.navy.mil/products/deltaT
@@ -66,7 +66,7 @@ Giorgini, J. D., Yeomans, D. K., Chamberlin, A. B., et al. (1996). JPL's on-line
 Park, R. S., Folkner, W. M., Williams, J. G., Boggs, D. H. (2021). The JPL planetary and lunar ephemerides DE440 and DE441. *The Astronomical Journal* 161(3), 105. doi:10.3847/1538-3881/abd414
 - **Reference data:** geocentric astrometric RA/Dec and distances, topocentric airless elevations, sunrises, the apsides of 2024 and the Moon's reach in 2015 and 2025, queried 26 Nov 2026 (`.out/astronomy/horizons/*.sh`); the Moon's GM.
 - **Used in:** `@simulation/src/astronomy/constant/Sky.hpp:8`.
-- **Checked by:** `@simulation/test/Astronomy.cpp:1`, `:20`, `:35`, `:59`, `:84`, `:153`; `@simulation/test/AstronomyEvents.cpp:114`, `:135`; `@simulation/test/AstronomyFixture.hpp:5`.
+- **Checked by:** `@simulation/test/Astronomy.cpp:1`, `:20`, `:35`, `:59`, `:84`, `:153`; `@simulation/test/AstronomyEvents.cpp:113`, `:134`; `@simulation/test/AstronomyFixture.hpp:5`.
 
 ### Espenak and Meeus 2006, 2009: the NASA eclipse canons
 Espenak, F., Meeus, J. (2006). *Five Millennium Canon of Solar Eclipses: −1999 to +3000*. NASA/TP-2006-214141. https://eclipse.gsfc.nasa.gov/SEpubs/5MCSE.html
@@ -100,7 +100,7 @@ Kaplan, G. H. (2005). *The IAU Resolutions on Astronomical Reference Systems, Ti
 Williams, G. E. (2000). Geological constraints on the Precambrian history of Earth's rotation and the Moon's orbit. *Reviews of Geophysics* 38(1), 37–59. doi:10.1029/1999RG900016
 - **Model:** the Moon's distance before today from the rhythmite record (0.965 a₀ at 620 Ma, 1.24 cm/yr from 2450 to 620 Ma); the day from conserving the Earth–Moon angular momentum.
 - **Used in:** `@simulation/src/astronomy/constant/DeepTime.hpp:10`; `@simulation/src/astronomy/type/DeepTime.hpp:10`.
-- **Checked by:** `@simulation/test/AstronomyEvents.cpp:172`, `:184`–`:190`: at 620 Ma a day of 21.9 ± 0.4 h, 400 ± 7 days and 13.1 synodic months a year.
+- **Checked by:** `@simulation/test/AstronomyEvents.cpp:144`, `:156`–`:162`: at 620 Ma a day of 21.9 ± 0.4 h, 400 ± 7 days and 13.1 synodic months a year.
 
 ### Dickey et al. 1994; Murray and Dermott 1999: the Moon's recession and precessions
 Dickey, J. O., Bender, P. L., Faller, J. E., et al. (1994). Lunar laser ranging: a continuing legacy of the Apollo program. *Science* 265(5171), 482–490. doi:10.1126/science.265.5171.482
@@ -113,7 +113,7 @@ Murray, C. D., Dermott, S. F. (1999). *Solar System Dynamics*. Cambridge Univers
 Gough, D. O. (1981). Solar interior structure and luminosity variations. *Solar Physics* 74(1), 21–34. doi:10.1007/BF00151270
 - **Model:** L = L☉ / (1 + 0.4 (1 − t/t☉)).
 - **Used in:** `@simulation/src/astronomy/constant/DeepTime.hpp:21`, `:24`; `@simulation/src/astronomy/fn/DeepTime.cpp:50`; `@simulation/src/astronomy/type/DeepTime.hpp:12`.
-- **Checked by:** `@simulation/test/AstronomyEvents.cpp:174`: the young Sun gives 1/1.4 of today's light.
+- **Checked by:** `@simulation/test/AstronomyEvents.cpp:146`: the young Sun gives 1/1.4 of today's light.
 
 ### Laskar et al. 2004, 2011; Milankovitch 1941: orbital cycles (planned, S4b)
 Laskar, J., Robutel, P., Joutel, F., et al. (2004). A long-term numerical solution for the insolation quantities of the Earth. *Astronomy & Astrophysics* 428(1), 261–285. doi:10.1051/0004-6361:20041335
@@ -122,7 +122,7 @@ Laskar, J., Fienga, A., Gastineau, M., Manche, H. (2011). La2010: a new orbital 
 
 Milankovitch, M. (1941). *Kanon der Erdbestrahlung und seine Anwendung auf das Eiszeitenproblem*. Königlich Serbische Akademie, Belgrade. (unverified: publisher series)
 - **Model:** eccentricity, obliquity and precession cycles (41 kyr, 19/23 kyr, 100/405 kyr) pacing the ice; La2010 is an exact ephemeris only to about 50 Myr, so they are left as cycles to S4b.
-- **Used in:** `@simulation/src/astronomy/type/DeepTime.hpp:16`, `:17` (why they are not there yet); `docs/handoff/astronomy.md:58`, `:188`; `.out/lead/handover/PLANET.md:77`.
+- **Used in:** `@simulation/src/astronomy/type/DeepTime.hpp:16`, `:17` (why they are not there yet); `docs/handoff/astronomy.md:58`, `:204`; `.out/lead/handover/PLANET.md:77`.
 
 ## The sphere and its grid
 
