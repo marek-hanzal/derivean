@@ -33,11 +33,13 @@ inline constexpr float SeaBand = 0.5f;         // m above the sea level up to wh
 inline constexpr float Runup = 0.6f;           // m the swash climbs above high water per metre of wave
 inline constexpr float HighestBerm = 3.0f;     // m above high water
 
-// Rock withstands waves lower than Withstand·√(compressive strength in MPa, as jointed and
-// crushed at the cell); above that its foot is cut back by Quarry·(H − Hc)/Hc² metres a year
-// (after Sunamura: retreat in proportion to the excess of the assailing over the resisting force).
-// Chalk then goes at decimetres a year and sound granite not at all.
-inline constexpr float Withstand = 0.063f;
+// Rock withstands waves lower than Hc = Withstand·(compressive strength in MPa, as jointed and
+// crushed at the cell): the force of a breaking wave, ρgH, against the strength it must overcome
+// (Sunamura 1977), so the threshold is linear in the strength: ρgHc/strength ≈ 2e-4. Above it each
+// train of height H cuts the foot back by Quarry·(H − Hc)/Hc² metres a year, and a face goes back
+// by the mean over the WaveDirections trains. One train of a metre or two takes chalk at
+// decimetres a year, sandstone at millimetres, and sound granite only above three metres.
+inline constexpr float Withstand = 0.02f;
 inline constexpr float Quarry = 0.02f;
 inline constexpr float CrushedStrength = 0.15f;   // share of its strength rock keeps where a cell is all joint corridor
 // yr the sea has stood near its present level: the time waves have had to cut a shore of the

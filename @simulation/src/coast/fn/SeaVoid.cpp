@@ -39,6 +39,9 @@ SiteCell cellAt(const SiteTiles& tiles, int64_t gx, int64_t gz) {
 // A cave grows from the face as far as the waves have had time for: the face itself has gone back
 // by `notch` since it was laid bare, and the crushed rock along the joint goes faster in proportion
 // to the excess of the waves over what each withstands (the retreat law of coast/fn/Cliff.cpp).
+// Crushed rock withstands CrushedStrength of the face's waves, so it goes at least 1/CrushedStrength²
+// times as fast: the time limits a cave only while its face is freshly cut, and the excess of the
+// waves (CaveReach per e-fold) limits the rest.
 void openCaves(const Setting& setting, int64_t gx, int64_t gz, Vec2 from, Vec2 to, Vec2 inward, float water, float struck, float notch, float datum, std::vector<SeaVoid>& out) {
     const double cell = specOf(Level::Site).cell;
     const Vec2 centre{(double(gx) + 0.5) * cell, (double(gz) + 0.5) * cell};
@@ -49,8 +52,8 @@ void openCaves(const Setting& setting, int64_t gx, int64_t gz, Vec2 from, Vec2 t
     const RockMass mass = rockMassAt(setting.seed, column, bed, layer.laidDown, column.material);
     const MaterialDefinition& rock = definitionOf(bed.rock);
     const float sound = rock.massCohesion > 0 ? std::clamp(mass.cohesion / rock.massCohesion, 0.05f, 4.0f) : 1.0f;
-    const float withstand = Withstand * std::sqrt(rock.compressiveStrength * sound * CrushedStrength);
-    const float face = Withstand * std::sqrt(rock.compressiveStrength * sound);
+    const float withstand = Withstand * rock.compressiveStrength * sound * CrushedStrength;
+    const float face = Withstand * rock.compressiveStrength * sound;
     if (struck <= withstand) return;
     const auto rate = [&](float w) { return std::max(0.0f, struck - w) / (w * w); };
     const float faster = struck > face ? rate(withstand) / rate(face) : CaveLongest / std::max(NotchLeast, notch);

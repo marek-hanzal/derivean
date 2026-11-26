@@ -10,8 +10,8 @@ namespace derivean::sim {
 struct CoastLedger {
     double cut{};         // rock the waves broke off
     double dissolved{};   // the part of it that went into solution
-    double entered{};     // sand and gravel handed in by the surf of cells that do not evolve
-    double left{};        // carried onto such cells
+    double entered{};     // sand and gravel the surf lifts from the bed of cells that do not evolve
+    double left{};        // what such cells take off a train (dropped, stranded, slid onto them) and mud the surf takes out of reach
 };
 
 inline constexpr float NoWater = -1e30f;

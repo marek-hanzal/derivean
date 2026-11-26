@@ -3,7 +3,7 @@
 namespace derivean::sim {
 namespace {
 
-constexpr float LeastWithstand = 0.03f;   // m; loose and rotten ground gives way to any wave
+constexpr float LeastWithstand = 0.03f;   // m; loose and rotten ground, and crushed weak rock, give way to any wave
 // km a block travels to and fro in the surf while the face behind it goes back by its own width:
 // what the rock's abrasion leaves of it by then is the shingle of the shore.
 constexpr float SurfTravel = 60.0f;
@@ -122,7 +122,7 @@ float bringDown(Domain& domain, Shore& shore, size_t i, float bench) {
 float withstandOf(const Domain& domain, size_t cell) {
     const float intact = definitionOf(domain.unit[cell].traits.dominant).compressiveStrength;
     const float jointed = intact * domain.sound[cell] * (1.0f - (1.0f - CrushedStrength) * domain.weakness[cell]) / std::max(0.05f, domain.quality[cell]);
-    return std::max(LeastWithstand, Withstand * std::sqrt(std::max(0.0f, jointed)));
+    return std::max(LeastWithstand, Withstand * std::max(0.0f, jointed));
 }
 
 void cutCliffs(Domain& domain, Shore& shore, double years) {

@@ -104,10 +104,17 @@ void rockCoasts() {
     const ShoreSurvey survey = surveyShore(grid);
     expect(survey.cliffHeight.count > 40 && survey.cliffHeight.p50 >= 10, "an exposed coast of weak rock grew no cliff", survey.cliffHeight.p50);
     expect(survey.benched > 5000 && survey.platformWidth.high >= 2 * grid.cell, "an exposed cliff has no platform at its foot", survey.platformWidth.high);
-    // The weak half goes back faster than the strong one, and joint zones faster than the rock
-    // between them, which is thirteen times as wide.
+    // The weak half goes back faster than the strong one. Sound limestone withstands these storms;
+    // only its joint zones are cut.
     expect(retreat(exposed, true) > 3 * retreat(exposed, false) && retreat(exposed, false) > 0, "chalk does not go back faster than limestone", retreat(exposed, true) / retreat(exposed, false));
-    expect(retreat(exposed, false, 1) * 13 > 2 * retreat(exposed, false, 0), "waves do not take the joint zones of a rock first", retreat(exposed, false, 1) / retreat(exposed, false, 0));
+    expect(retreat(exposed, false, 0) == 0, "storms of three metres cut sound limestone", retreat(exposed, false, 0));
+    // A rock the storms cut between its joints too loses its joint zones faster than the rock
+    // between them, which is thirteen times as wide.
+    CoastSpec soft = spec;
+    soft.rock = soft.other = Material::Shale;
+    const Domain shale = worked(soft, soft.steps);
+    expect(retreat(shale, false, 0) > 0 && retreat(shale, false, 1) * 13 > 2 * retreat(shale, false, 0), "waves do not take the joint zones of a rock first",
+           retreat(shale, false, 1) / std::max(1.0, retreat(shale, false, 0)));
 
     // The same shore in the lee of its own land, with no sea beyond: the chop of a few kilometres
     // of water cannot touch the limestone, and takes of the chalk a small part of what the open sea did.
