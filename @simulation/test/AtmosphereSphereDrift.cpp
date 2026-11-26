@@ -50,13 +50,13 @@ void checkDrift() {
         state = state * 6364136223846793005ull + 1442695040888963407ull;
         value = (double(state >> 11) / double(1ull << 53) - 0.5) * 2e-5;
     }
-    setVorticity(flow, grid, stencil, poisson, noise);
+    expect(setVorticity(flow, grid, stencil, poisson, noise), "the noise did not invert", flow.inversion.residual);
+    setStep(flow, 1800);
     const Integrals start = integralsOf(grid, flow);
     const double absolute = areaMean(grid, flow.vorticity) + areaMean(grid, flow.coriolis);
     bool converged = true;
     for (int s = 0; s < 30 * 48; ++s) {
-        stepSphereFlow(flow, grid, stencil, poisson, 1800);
-        converged = converged && flow.inversion.converged;
+        converged = stepSphereFlow(flow, grid, stencil, poisson) && converged;
     }
     const Integrals end = integralsOf(grid, flow);
     const double enstrophy = end.enstrophy / start.enstrophy, energy = end.energy / start.energy;
