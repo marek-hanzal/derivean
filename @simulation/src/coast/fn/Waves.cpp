@@ -83,7 +83,7 @@ void raiseWaves(const Domain& domain, Shore& shore) {
                 const float grown = std::min(most, limit * std::tanh(std::sqrt(fetched * fetched + FetchGrowth * gale * run) / limit));
                 energy = std::max(energy, grown * grown);
             } else {
-                // A sea higher than the depth holds came from deeper water: the bed wears it down towards that height.
+                // A sea higher than this water holds under this wind came from deeper water: the bed wears it down towards that height.
                 const float rough = shore.top[i] - domain.ground.rock[i] > LooseBed ? SmoothBed : 1.0f;
                 const float height = std::sqrt(energy), friction = rough * bedShare(height, depth) * BedFriction;
                 energy = std::max(most, height / (1.0f + friction * height * run / (depth * depth)));

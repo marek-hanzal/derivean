@@ -59,7 +59,9 @@ inline bool standsOver(const Domain& domain, size_t i, float top) {
     return level > top + Film && level > domain.surface[i] + Film && (level <= float(domain.seaLevel) + SeaBand || domain.discharge[i] > 0);
 }
 
-inline float swingOf(const Domain& domain, float water) { return water <= float(domain.seaLevel) + SeaBand ? SeaSwing : LakeSwing; }
+// Half the range the waterline of water standing at `water` moves through: the sea's or a lake's.
+inline float swingAt(float water, double seaLevel) { return water <= float(seaLevel) + SeaBand ? SeaSwing : LakeSwing; }
+inline float swingOf(const Domain& domain, float water) { return swingAt(water, domain.seaLevel); }
 
 // Calls `visit(x, z)` for every cell of the shore's box so that a cell comes after the three it
 // receives a train travelling towards neighbour `k` from, and before the three it hands it to.

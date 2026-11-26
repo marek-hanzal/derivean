@@ -81,14 +81,17 @@ float flatSea(Level level, float depth, double storm, double swell, int x) {
 // Wave growth against the fetch-limited forecast of the Shore Protection Manual (1984, eq. 3-39):
 // 100 km of deep water under 15 m/s raise 2.3 m; 20 km of water 3.2 m deep under 20 m/s 0.83 m (a
 // lake that shallow, as Balaton, sees storm waves of about a metre), and no more than the 0.90 m
-// such water holds however long its fetch. A swell from deeper water is worn down to that height.
+// such water holds however long its fetch. A swell higher than that, broken to 1.6 m where it
+// enters the shelf, loses height to the bed between the JONSWAP rates (dH/dx = −Cf·H/(2·(g·h)^1.5),
+// Cf 0.038 to 0.09 m²/s³: 1.39 to 1.15 m after 1.3 km) and is worn down to what the water holds.
 void waveGrowth() {
     const float open = flatSea(Level::Region, 200, 15, 0, 98);
     expect(open > 2.2f && open < 2.5f, "100 km of deep sea under 15 m/s do not raise 2.3 m", open);
     const float shallow = flatSea(Level::Local, 3.2f, 20, 0, -1);
     expect(shallow > 0.78f && shallow < 0.88f, "20 km of water 3.2 m deep under 20 m/s do not raise 0.83 m", shallow);
-    const float worn = flatSea(Level::Local, 3.2f, 20, 3, -1), entering = flatSea(Level::Local, 3.2f, 20, 3, 4);
-    expect(worn > 0.88f && worn < 0.95f && entering > worn + 0.2f, "a swell over a shallow shelf is not worn down to what the depth holds", worn);
+    const float midway = flatSea(Level::Local, 3.2f, 20, 3, 20), worn = flatSea(Level::Local, 3.2f, 20, 3, -1);
+    expect(midway > 1.15f && midway < 1.4f, "the bed of a shallow shelf does not wear a swell at the rate it is measured to", midway);
+    expect(worn > 0.88f && worn < 0.95f, "a swell over a shallow shelf is not worn down to what the depth holds", worn);
 }
 
 void rockCoasts() {

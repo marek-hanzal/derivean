@@ -138,7 +138,7 @@ ShoreSurvey surveyShore(const ShoreGrid& grid) {
         for (int x = 0; x < grid.side; ++x) {
             const size_t i = grid.index(x, z);
             if (grid.wet(i)) {
-                const float deep = grid.water[i] + (grid.water[i] <= float(grid.seaLevel) + SeaBand ? SeaSwing : LakeSwing) - grid.top(i);
+                const float deep = grid.water[i] + swingAt(grid.water[i], grid.seaLevel) - grid.top(i);
                 if (deep >= OffshoreShallow && deep <= OffshoreDeep) reader.offshore.push_back(grid.wave[i]);
                 continue;
             }
