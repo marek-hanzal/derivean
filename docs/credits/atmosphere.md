@@ -16,7 +16,7 @@ Asselin, R. (1972). Frequency filter for time integrations. *Monthly Weather Rev
 
 Williams, P. D. (2009). A proposed modification to the Robert–Asselin time filter. *Monthly Weather Review* 137(8), 2538–2546. doi:10.1175/2009MWR2724.1
 - **Model:** the Robert–Asselin–Williams filter damping the computational mode of the leapfrog step, strength 0.1.
-- **Used in:** `@simulation/src/atmosphere/fn/Circulation.cpp:15` (cited by name only); on the sphere `@simulation/src/atmosphere/fn/SphereFlow.cpp:16`, `SphereFlow.hpp:36`; `docs/handoff/atmosphere-sphere.md:66`.
+- **Used in:** `@simulation/src/atmosphere/fn/Circulation.cpp:15` (cited by name only); on the sphere `@simulation/src/atmosphere/fn/SphereFlow.cpp:16`, `SphereFlow.hpp:36`; `docs/handoff/atmosphere-sphere.md:69`.
 - **Checked by:** `@simulation/test/AtmosphereSphereStep.cpp:74` (a window ending in a shorter step, with the restart, against equal steps).
 - **Limits:** the leapfrog and the filter take the three time levels as equally spaced; on the sphere the step is part of the flow's state and a change of it restarts with a forward step (`@simulation/src/atmosphere/fn/SphereFlow.hpp:24`).
 
@@ -142,7 +142,7 @@ The barotropic core on the cubed sphere, `docs/handoff/atmosphere-sphere.md`. Pu
 ### Charney, Fjørtoft and von Neumann 1950: the barotropic vorticity equation
 Charney, J. G., Fjørtoft, R., von Neumann, J. (1950). Numerical integration of the barotropic vorticity equation. *Tellus* 2(4), 237–254. doi:10.3402/tellusa.v2i4.8607 (the original Wiley record is doi:10.1111/j.2153-3490.1950.tb00336.x)
 - **Model:** ∂ζ/∂t = −∇·(v (ζ + f)) with the wind from the stream function, ζ = Δψ, f = 2Ω sin φ.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereFlow.hpp:29`, `@simulation/src/atmosphere/type/SphereFlow.hpp:12`; `docs/handoff/atmosphere-sphere.md:62`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereFlow.hpp:29`, `@simulation/src/atmosphere/type/SphereFlow.hpp:12`; `docs/handoff/atmosphere-sphere.md:65`.
 - **Checked by:** `@simulation/test/AtmosphereSphereFlow.cpp:54` (the Rossby–Haurwitz wave), `:113` (steady solid rotation), `@simulation/test/AtmosphereSphereDrift.cpp:42` (unforced drift over 30 days).
 
 ### Hermeline 2000; Domelevo and Omnes 2005: the discrete duality Laplacian
@@ -150,47 +150,59 @@ Hermeline, F. (2000). A finite volume method for the approximation of diffusion 
 
 Domelevo, K., Omnes, P. (2005). A finite volume method for the Laplace equation on almost arbitrary two-dimensional grids. *ESAIM: Mathematical Modelling and Numerical Analysis* 39(6), 1203–1249. doi:10.1051/m2an:2005047
 - **Model:** the Laplacian as the energy ½ Σ diamond |∇ψ|² over diamonds of two cell centres and an edge's two vertices, with the gradient on each diamond from the differences across and along the edge; symmetric and positive on distorted meshes.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereOperators.hpp:43`, `@simulation/src/atmosphere/fn/SphereOperators.cpp:110`; `docs/handoff/atmosphere-sphere.md:24`.
-- **Checked by:** `@simulation/test/AtmosphereSphere.cpp:60` (symmetry, null space, positivity), `:120` (local error by place), `@simulation/test/AtmosphereSpherePoisson.cpp:37` (second-order solutions).
+- **Used in:** `@simulation/src/atmosphere/fn/SphereOperators.hpp:46`, `@simulation/src/atmosphere/fn/SphereOperators.cpp:123`; `docs/handoff/atmosphere-sphere.md:24`.
+- **Checked by:** `@simulation/test/AtmosphereSphere.cpp:61` (symmetry, null space, positivity, the split product the solver uses), `:133` (local error by place), `@simulation/test/AtmosphereSpherePoisson.cpp:37` (second-order solutions).
 - **Approximations:** the vertex unknowns are not solved for but replaced by least-squares fits of the cell values, so the operator is cell-centred; its local error at face edges stays at about a tenth of the value, while the solution is second order.
 
 ### Hestenes and Stiefel 1952: conjugate gradients
 Hestenes, M. R., Stiefel, E. (1952). Methods of conjugate gradients for solving linear systems. *Journal of Research of the National Bureau of Standards* 49(6), 409–436. doi:10.6028/jres.049.044
 - **Model:** preconditioned conjugate gradients on the symmetric stiffness, restricted to fields of zero mean.
-- **Used in:** `@simulation/src/atmosphere/type/SpherePoisson.hpp:19`, `@simulation/src/atmosphere/fn/SpherePoisson.cpp:41`; `docs/handoff/atmosphere-sphere.md:43`.
-- **Checked by:** `@simulation/test/AtmosphereSpherePoisson.cpp:37`, `:64` (null mode), `:89` (unconverged solves reported, the true residual).
+- **Used in:** `@simulation/src/atmosphere/type/SpherePoisson.hpp:22`, `@simulation/src/atmosphere/fn/SpherePoisson.cpp:34`; `docs/handoff/atmosphere-sphere.md:44`.
+- **Checked by:** `@simulation/test/AtmosphereSpherePoisson.cpp:37`, `:65` (null mode), `:91` (unconverged solves reported, the true residual).
 
 ### Brandt 1977: multigrid
 Brandt, A. (1977). Multi-level adaptive solutions to boundary-value problems. *Mathematics of Computation* 31(138), 333–390. doi:10.1090/S0025-5718-1977-0431719-X
-- **Model:** a V-cycle over the quadtree's coarser levels with Gauss–Seidel smoothing, as the conjugate gradients' preconditioner.
-- **Used in:** `@simulation/src/atmosphere/type/SpherePoisson.hpp:21`, `@simulation/src/atmosphere/fn/SphereMultigrid.cpp:12`; `docs/handoff/atmosphere-sphere.md:45`.
-- **Checked by:** `@simulation/test/AtmosphereSpherePoisson.cpp:37`, iterations independent of the level; `:117`, the V-cycle symmetric and positive.
+- **Model:** a V-cycle over the quadtree's coarser levels with Chebyshev–Jacobi smoothing (the two entries below), as the conjugate gradients' preconditioner.
+- **Used in:** `@simulation/src/atmosphere/type/SpherePoisson.hpp:24`, `@simulation/src/atmosphere/fn/SphereMultigrid.cpp:15`; `docs/handoff/atmosphere-sphere.md:46`.
+- **Checked by:** `@simulation/test/AtmosphereSpherePoisson.cpp:37`, iterations independent of the level; `:118`, the V-cycle symmetric and positive.
+
+### Adams, Brezina, Hu and Tuminaro 2003: polynomial smoothing
+Adams, M., Brezina, M., Hu, J., Tuminaro, R. (2003). Parallel multigrid smoothing: polynomial versus Gauss–Seidel. *Journal of Computational Physics* 188(2), 593–610. doi:10.1016/S0021-9991(03)00194-3
+- **Model:** a Chebyshev polynomial in D⁻¹K as the multigrid smoother in place of Gauss–Seidel, damping the upper part of the spectrum, with no order among the cells. The interval here, [0.2, 1.05] · λmax with λmax from 12 power steps, is Neon's proposal (`.out/review-mailbox/from-neon/DREV-NEON-002-02.txt`), not the paper's values.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereMultigrid.cpp:18`; `docs/handoff/atmosphere-sphere.md:48`.
+- **Checked by:** `@simulation/test/AtmosphereSpherePoisson.cpp:37` (iterations independent of the level), `:118` (the V-cycle symmetric and positive).
+
+### Saad 2003: the Chebyshev iteration
+Saad, Y. (2003). *Iterative Methods for Sparse Linear Systems*, 2nd ed. SIAM, Philadelphia. doi:10.1137/1.9780898718003. Algorithm 12.1, "Chebyshev Acceleration", §12.3.2, p. 399.
+- **Model:** the three-term recurrence of the Chebyshev iteration on an interval [α, β] (θ, δ, σ₁ = θ/δ, ρₖ₊₁ = 1/(2σ₁ − ρₖ), dₖ₊₁ = ρₖ₊₁ρₖ dₖ + 2ρₖ₊₁/δ · rₖ₊₁), applied to K with the Jacobi preconditioner D⁻¹, of degree 3.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereMultigrid.cpp:52`; `docs/handoff/atmosphere-sphere.md:48`.
+- **Checked by:** `@simulation/test/AtmosphereSpherePoisson.cpp:118`.
 
 ### Holmes and Featherstone 2002: normalised Legendre recursions
 Holmes, S. A., Featherstone, W. E. (2002). A unified approach to the Clenshaw summation and the recursive computation of very high degree and order normalised associated Legendre functions. *Journal of Geodesy* 76(5), 279–299. doi:10.1007/s00190-002-0216-2
 - **Model:** the 4π-normalised associated Legendre functions by the standard forward column recursions (their eqs. 11–13), for the spherical harmonics of the eddy band.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereHarmonics.hpp:7`, `@simulation/src/atmosphere/fn/SphereHarmonics.cpp:9`; `docs/handoff/atmosphere-sphere.md:79`.
-- **Checked by:** `@simulation/test/AtmosphereSphere.cpp:120` (Δ Y = −l(l + 1)/R² Y), `@simulation/test/AtmosphereSphereBand.cpp:66`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereHarmonics.hpp:7`, `@simulation/src/atmosphere/fn/SphereHarmonics.cpp:9`, the eddy band's shared recursion `@simulation/src/atmosphere/fn/EddyBand.cpp:28`; `docs/handoff/atmosphere-sphere.md:82`.
+- **Checked by:** `@simulation/test/AtmosphereSphere.cpp:133` (Δ Y = −l(l + 1)/R² Y), `@simulation/test/AtmosphereSphereBand.cpp:66`, `:73` (the shared recursion against the harmonics mode by mode).
 
 ### van Leer 1974; Sweby 1984: the limited tracer flux
 van Leer, B. (1974). Towards the ultimate conservative difference scheme. II. Monotonicity and conservation combined in a second-order scheme. *Journal of Computational Physics* 14(4), 361–370. doi:10.1016/0021-9991(74)90019-9
 
 Sweby, P. K. (1984). High resolution schemes using flux limiters for hyperbolic conservation laws. *SIAM Journal on Numerical Analysis* 21(5), 995–1011. doi:10.1137/0721062
 - **Model:** upwind flux plus a Lax–Wendroff correction limited by the van Leer limiter of the ratio of successive differences.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereFlow.hpp:49`, `@simulation/src/atmosphere/fn/SphereFlow.cpp:68`; `docs/handoff/atmosphere-sphere.md:68`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereFlow.hpp:49`, `@simulation/src/atmosphere/fn/SphereFlow.cpp:68`; `docs/handoff/atmosphere-sphere.md:71`.
 - **Checked by:** `@simulation/test/AtmosphereSphereFlow.cpp:154` (mass, bounds, a uniform tracer).
 - **Approximations:** the correction runs along one grid line per edge; across the lines the scheme is upwind and diffusive.
 
 ### Neumaier 1974: compensated summation
 Neumaier, A. (1974). Rundungsfehleranalyse einiger Verfahren zur Summation endlicher Summen. *ZAMM – Zeitschrift für Angewandte Mathematik und Mechanik* 54(1), 39–51. doi:10.1002/zamm.19740540106
 - **Model:** the area means over the sphere summed with a running compensation.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereOperators.cpp:163`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereOperators.cpp:211`.
 - **Used in (S3b):** the planet's stock totals over crust pieces in key order, `@simulation/src/planet/fn/Pieces.hpp:39`.
 
 ### Haurwitz 1940: the Rossby–Haurwitz wave
 Haurwitz, B. (1940). The motion of atmospheric disturbances on the spherical Earth. *Journal of Marine Research* 3(3), 254–267. https://elischolar.library.yale.edu/journal_of_marine_research/575 (unverified: pages, given as 254–267 by Williamson et al. 1992 and as 245–267 elsewhere)
 - **Model:** the wave of wavenumber 4 as an exact solution of the non-divergent barotropic vorticity equation, turning at ν = (R(3 + R) ω − 2Ω) / ((1 + R)(2 + R)) (Williamson et al. 1992, eq. 136 of the ORNL/TM-11895 report).
-- **Checked by:** `@simulation/test/AtmosphereSphereFixture.hpp:57`, `@simulation/test/AtmosphereSphereFlow.cpp:54`, `@simulation/test/AtmosphereSphereStep.cpp:74`; `docs/handoff/atmosphere-sphere.md:72`.
+- **Checked by:** `@simulation/test/AtmosphereSphereFixture.hpp:57`, `@simulation/test/AtmosphereSphereFlow.cpp:54`, `@simulation/test/AtmosphereSphereStep.cpp:74`; `docs/handoff/atmosphere-sphere.md:75`.
 
 ## Snow (approved, not yet written)
 

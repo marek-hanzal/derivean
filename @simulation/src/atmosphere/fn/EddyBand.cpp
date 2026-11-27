@@ -25,7 +25,8 @@ struct Legendre {
     double diagonal[Block], before[Block], now[Block];
 };
 
-// Steps `state.now` from P̄_(l−1)m to P̄_lm for every group of the block (l > m).
+// Steps `state.now` from P̄_(l−1)m to P̄_lm for every group of the block (l > m), by the forward
+// column recursion of SphereHarmonics.cpp (Holmes & Featherstone 2002, eqs. 11–13).
 void stepDegree(const EddyBand& band, int first, int count, int l, int m, Legendre& state) {
     const int width = band.highest + 1;
     const double a = l == m + 1 ? legendreNext(m) : band.a[size_t(l * width + m)];
