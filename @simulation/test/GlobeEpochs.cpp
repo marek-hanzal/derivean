@@ -8,6 +8,7 @@
 //   no slot inside a plate half open (GlobeGaps.hpp).
 // - The steps after keep both gates in the plate's frame and no cell of a boundary proper (two plates
 //   within its ring) open by half; the stock of felsic crust and basalt with the interior stays exact.
+// - After every step's motion every cell's owner is the exact coupling's (GlobeCases.hpp).
 // - A seam whose crust finds no room within StackLimit nearby spreads it through its plate and
 //   delaminates the rest, and closes with the stock and StackLimit kept.
 // - After every step each plate is one region with a cell (planet/fn/Cohesion, stats.wholeUnsettled; no
@@ -20,6 +21,7 @@
 // A rigid plate of two lattices carries a seam's gap of under half a slot diagonally over the mantle
 // cells and opens them by up to √2 of it, so per mantle cell inside a plate the cover is reported
 // (docs/handoff/planet-globe.md), not gated.
+#include "GlobeCases.hpp"
 #include "GlobeCohesion.hpp"
 #include "GlobeFixture.hpp"
 #include "GlobeGaps.hpp"
@@ -83,8 +85,11 @@ double drift(const Globe& globe, const CrustStock& start) {
                     std::abs(now.basalt + globe.ledger.interior.basalt - start.basalt) / start.basalt);
 }
 
+int splitSteps = 0;   // steps whose motion put a plate in two regions
+
 void step(Globe& globe, int index) {
     advancePlates(globe, PlanetStep, index);
+    splitSteps += globe_test::expectExactRegions(globe, index);
     keepPlatesWhole(globe, index);
     const Cohesion cohesion = measureCohesion(globe);
     expect(cohesion.fragment < MicroplateArea && globe.stats.wholeUnsettled == 0, "a plate is not one region with a cell after a step", cohesion.fragment);
@@ -239,5 +244,6 @@ void testGlobeEpochs() {
     expect(globe.stats.sutured > sutured, "no seam closes in the band after the reorganisation", double(globe.stats.sutured - sutured));
     expectCohesive(globe, "a plate breaks into regions in the steps after the reorganisation");
     expect(globe.stats.fragmentsJoined > 0, "no fragment of a plate joins the plate round it", double(globe.stats.fragmentsJoined));
+    expect(splitSteps > 0, "no step's motion puts a plate in two regions, so no step checks a measured plate against the exact coupling");
     expect(drift(globe, start) < 1e-12, "the steps after the reorganisation lose crust", drift(globe, start));
 }

@@ -25,12 +25,14 @@ struct RealWeights {
 // through free cells, are its regions: a gap inside a plate fills with its own new crust and is no
 // boundary with another plate (lead, 27 Nov), and a whole-cell piece offset by a diagonal covers most of
 // two cells that share a corner only, so regions joined by edges alone would cut a piece in two.
-// Coverage is read from the coupling, cloud-in-cell outside the band, except for a plate in two regions
-// or more (lead, 27 Nov): there the cells its pieces' real footprints reach and the cells the coupling
-// gives it, and the ring of each, are classified again by the real overlaps of every piece that reaches
-// them, whichever plate it is of, and the regions are grouped again until no further plate is in two, so which cells a
-// fragment has, how many, where its borders run and which pieces it takes all follow the crust that
-// stands there (independent reviewer of Codex DREV-CLAUDE-008-05). A region's area is what its plate
+// Every cell's owner is the one the exact overlaps of all its pieces give (planet/fn/Owner; Codex
+// DREV-CLAUDE-008-06): where bounds of the overlaps decide it, the coupling's classification stands with
+// that owner, and every other cell is classified by the real overlaps of every piece that can reach it,
+// before any region is grouped. A plate in two regions or more (lead, 27 Nov) has the cells its pieces'
+// real footprints reach and the cells it owns, and the ring of each, classified again by real overlaps,
+// so the dominant pieces `deal` reads, which cells a fragment has, how many, where its borders run and
+// which pieces it takes all follow the crust that stands there (independent reviewer of Codex
+// DREV-CLAUDE-008-05). A region's area is what its plate
 // covers of its cells, each cell at most whole: for a plate in two regions or more the union of its real
 // footprints clipped to each cell (Codex DREV-CLAUDE-008-02 and -05), since the overlaps summed per cell
 // count crust twice where pieces of a plate overlap; for a plate in one region, which no area decides,
@@ -43,7 +45,7 @@ struct PlateRegions {
     std::vector<double> area;       // per region, sr its plate covers in its cells
     std::vector<int32_t> cells;     // per region
     std::vector<int32_t> largest;   // per plate: its largest region (the first of equal ones), or -1
-    RealWeights real;               // filled for every piece of a plate classified by real overlaps
+    RealWeights real;               // filled for every piece whose real overlaps a classification read
 };
 PlateRegions plateRegionsOf(const Globe& globe);
 
