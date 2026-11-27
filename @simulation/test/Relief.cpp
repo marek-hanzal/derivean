@@ -48,8 +48,8 @@ double worstFace(const Domain& domain, double sound) {
 
 // A tile sends out no more sediment than it eroded and took in. Loads are carried as floats and
 // booked in doubles where they cross the edge, so a tile that passes on nearly all it takes in
-// matches to a float's rounding of that throughput (Local 906 584 of the young world: 4e3 m³ over
-// on 3.1e12), not to a cubic metre.
+// matches only to a float's rounding of that throughput: a leak smaller than 1e-7 of it, its own
+// deposition included, does not show here.
 bool sendsNoMore(const TileLedger& ledger) { return ledger.sedimentOut <= ledger.eroded + ledger.sedimentIn + 1e-7 * (ledger.eroded + ledger.sedimentIn) + 1; }
 
 // m of ground the water took off the tile's own cells, as a mean over them.

@@ -33,6 +33,7 @@ float bedShare(float height, float depth) {
     const float deep = 2 * float(std::numbers::pi) * WindSeaSteepness * depth / height;
     // 1/tanh is at least 1 and so is its power, and a rounded product does not fall below its
     // factor: kh is never below the deep-water k0·h, so deep water is answered before any of it.
+    // Checked over every positive float on macOS libm; it needs tanh ≤ 1 and a monotone pow.
     if (deep > 10) return 0;
     const float kh = deep * std::pow(1.0f / std::tanh(std::pow(deep, 0.75f)), 2.0f / 3.0f);
     if (kh > 10) return 0;

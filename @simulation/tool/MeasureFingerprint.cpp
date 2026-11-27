@@ -180,13 +180,18 @@ int measureFingerprint(const Arguments& arguments) {
         pending.push_back(key);
     }
     std::printf("built %zu tiles in %.1f s\n", world.atlas.finished(), lap());
-    // Every tile the targets were built from, down to the regions.
+    // Every tile the targets were built from, down to the regions; one the atlas does not hold is
+    // counted, not hashed.
+    size_t missing = 0;
     while (!pending.empty()) {
         const TileKey key = pending.back();
         pending.pop_back();
         if (prints.count(key)) continue;
         const auto tile = world.atlas.find(key);
-        if (!tile) continue;
+        if (!tile) {
+            ++missing;
+            continue;
+        }
         prints[key] = printOf(*tile);
         for (const TileKey& other : dependencies(key)) pending.push_back(other);
     }
@@ -207,6 +212,7 @@ int measureFingerprint(const Arguments& arguments) {
     }
     std::printf("prints %zu (region %d local %d site %d ground %d)  all %016llx\n", prints.size(), perLevel[1], perLevel[2], perLevel[3], perLevel[4],
                 static_cast<unsigned long long>(all));
+    if (missing) std::printf("missing %zu dependencies the atlas does not hold\n", missing);
 
     // --blocks 1: a block of voxels over the middle of each ground target, cut once to build the
     // tiles it reads and then timed again; its materials hashed like a tile.
@@ -214,6 +220,7 @@ int measureFingerprint(const Arguments& arguments) {
         for (const auto& [what, key] : targets) {
             if (key.level != Level::Ground) continue;
             const auto held = world.atlas.find(key);
+            if (!held) continue;
             const Tile& tile = *held;
             const size_t middle = size_t(TileCells / 2) * TileCells + TileCells / 2;
             const double top = tile.now.rock[middle] + tile.now.sediment[0][middle] + tile.now.sediment[1][middle] + tile.now.sediment[2][middle];

@@ -62,11 +62,12 @@ void sampleBlock(World& world, const Block& block, Material* materials) {
         return true;
     };
     // The block spans a few site cells: their runoff is read once, over the cells the columns'
-    // corners fall in, from the first column's to the last's.
+    // corners fall in, from the first column's to the last's. Columns step forward (step > 0, as
+    // every caller passes); a block of no columns reads none.
     const auto siteCellOf = [&](double position) { return int64_t(std::floor(position / siteCell - 0.5)); };
     const int64_t runoffX = siteCellOf(block.originX + 0.5 * block.step), runoffZ = siteCellOf(block.originZ + 0.5 * block.step);
-    const int runoffCountX = int(siteCellOf(block.originX + (block.countX - 0.5) * block.step) - runoffX) + 2;
-    const int runoffCountZ = int(siteCellOf(block.originZ + (block.countZ - 0.5) * block.step) - runoffZ) + 2;
+    const int runoffCountX = block.countX > 0 ? int(siteCellOf(block.originX + (block.countX - 0.5) * block.step) - runoffX) + 2 : 0;
+    const int runoffCountZ = block.countZ > 0 ? int(siteCellOf(block.originZ + (block.countZ - 0.5) * block.step) - runoffZ) + 2 : 0;
     std::vector<float> runoffs(size_t(runoffCountX) * size_t(runoffCountZ));
     std::vector<uint8_t> runoffKnown(runoffs.size());
     for (int z = 0; z < runoffCountZ; ++z)

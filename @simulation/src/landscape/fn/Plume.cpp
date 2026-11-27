@@ -35,8 +35,8 @@ void settlePlume(Domain& domain, FlowScratch& scratch, float dt, float area) {
         const std::vector<float>& cloud = scratch.plume[c];
         std::vector<int32_t>& active = scratch.plumeCells[c];
         active.clear();
-        // A cell the sweeps would work is one not at zero or below, NaN included; what entered and
-        // whether anything did count only what is above zero, as they always have.
+        // A cell the sweeps work is one not at zero or below, NaN included; what entered and whether
+        // anything did count only what is above zero.
         for (size_t i = 0; i < cloud.size(); ++i) {
             if (cloud[i] <= 0) continue;
             active.push_back(int32_t(i));
