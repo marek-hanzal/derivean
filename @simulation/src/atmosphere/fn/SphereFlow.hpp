@@ -27,6 +27,12 @@ SphereFlow makeSphereFlow(const SphereGrid& grid, double rotation);
 // last two levels as one step apart. The same step changes nothing.
 void setStep(SphereFlow& flow, double step);
 
+// Drops the older time levels, so the next step is a forward step from the current ζ and its first
+// guess the last ψ alone: setVorticity's and setStep's restart, without an inversion. Only with ζ, ψ
+// and the fluxes consistent, as between windows; for a change that leaves them as they are but makes
+// the history stale (setSurface's new background, Codex DREV-CLAUDE-010-04).
+void restartHistory(SphereFlow& flow);
+
 // One step of ∂ζ/∂t = −∇·(v (ζ + f)) in flux form (Charney, Fjørtoft & von Neumann 1950): each edge
 // carries its volume flux times the absolute vorticity at the edge's midpoint, applied to both cells
 // with opposite signs, so the area integral of ζ + f is kept to rounding. The edge value is the mean

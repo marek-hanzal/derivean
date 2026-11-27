@@ -238,6 +238,7 @@ void checkEddyRefusals() {
 } // namespace
 
 void derivean::sim::atmosphere_sphere_test::checkEddies() {
+    checkEddyStart();
     checkEnvelope();
     checkGrowth();
     checkCadence();
