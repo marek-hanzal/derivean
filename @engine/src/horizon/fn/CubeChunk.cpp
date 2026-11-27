@@ -103,11 +103,11 @@ uint64_t cubeDetail(const sim::World& world, CubeKey key) {
     uint64_t detail = 0;
     int probe = 0;
     for (double dz : {-reach, size + reach})
-        for (double dx : {-reach, size + reach}) detail |= uint64_t(surfaceOrPlanet(ground, {x + dx, z + dz}).level) << (3 * probe++);
+        for (double dx : {-reach, size + reach}) detail |= uint64_t(surfaceLevel(ground, {x + dx, z + dz})) << (3 * probe++);
     for (int j = 0; j < WaterProbes; ++j)
         for (int i = 0; i < WaterProbes; ++i) {
             const sim::Vec2 place{x - Ring * edge + i * wide / (WaterProbes - 1), z - Ring * edge + j * wide / (WaterProbes - 1)};
-            detail |= uint64_t(surfaceOrPlanet(water, place).level) << (3 * probe++);
+            detail |= uint64_t(surfaceLevel(water, place)) << (3 * probe++);
         }
     return detail;
 }
@@ -140,6 +140,11 @@ CubeColumn buildCubes(const sim::World& world, CubeKey key) {
                 if (std::isnan(levelAt(a, b))) return false;
         return true;
     };
+    // Which of the columns the cubes look at stand under water.
+    std::vector<uint8_t> wetness(size_t(Side) * Side);
+    for (int j = -Halo; j < CubeSide + Halo; ++j)
+        for (int i = -Halo; i < CubeSide + Halo; ++i) wetness[size_t(j + Halo) * Side + size_t(i + Halo)] = wet(i, j);
+    const auto isWet = [&](int i, int j) { return wetness[size_t(j + Halo) * Side + size_t(i + Halo)] != 0; };
     int lowest = std::numeric_limits<int>::max(), highest = std::numeric_limits<int>::lowest();
     uint8_t dataLevel = uint8_t(sim::Level::Ground);
     for (int j = -Halo; j < CubeSide + Halo; ++j)
@@ -149,7 +154,7 @@ CubeColumn buildCubes(const sim::World& world, CubeKey key) {
             here.top = int(std::floor(here.sample.ground / edge + 0.5));
             if (const float level = levelAt(i, j); !std::isnan(level)) {
                 const int above = int(std::ceil(level / edge));
-                here.top = wet(i, j) ? std::min(here.top, above - 1) : std::max(here.top, above);
+                here.top = isWet(i, j) ? std::min(here.top, above - 1) : std::max(here.top, above);
             }
             lowest = std::min(lowest, here.top);
             highest = std::max(highest, here.top);
@@ -205,7 +210,7 @@ CubeColumn buildCubes(const sim::World& world, CubeKey key) {
     std::vector<float> levels;
     for (int j = 0; j < CubeSide; ++j)
         for (int i = 0; i < CubeSide; ++i)
-            if (wet(i, j)) levels.push_back(levelAt(i, j));
+            if (isWet(i, j)) levels.push_back(levelAt(i, j));
     std::sort(levels.begin(), levels.end());
     const auto always = [](int32_t) { return true; };
     for (size_t first = 0; first < levels.size();) {
@@ -214,7 +219,7 @@ CubeColumn buildCubes(const sim::World& world, CubeKey key) {
         WaterSheet sheet{double(levels[last]), {}};
         std::vector<int32_t> mask(size_t(CubeSide) * CubeSide);
         for (int j = 0; j < CubeSide; ++j)
-            for (int i = 0; i < CubeSide; ++i) mask[size_t(i) * CubeSide + j] = wet(i, j) && levelAt(i, j) >= levels[first] && levelAt(i, j) <= levels[last];
+            for (int i = 0; i < CubeSide; ++i) mask[size_t(i) * CubeSide + j] = isWet(i, j) && levelAt(i, j) >= levels[first] && levelAt(i, j) <= levels[last];
         mergeMask(mask, CubeSide, CubeSide, always, always, [&](int u, int v, int width, int height, int32_t) {
             sheet.faces.insert(sheet.faces.end(), {1, 1, 0, int16_t(u), int16_t(v), int16_t(width), int16_t(height), int16_t(Material::Water), 0});
         });

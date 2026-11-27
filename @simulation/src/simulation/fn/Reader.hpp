@@ -26,6 +26,16 @@ struct TileReader {
     }
 };
 
+// The cell a point lies in at the reader's level and the tile that holds it, which readSurface reads
+// the point from; the tile is null while it is not finished.
+struct SurfaceHome {
+    int64_t x, z;
+    int32_t tileX, tileZ;
+    const Tile* tile;
+};
+
+SurfaceHome surfaceHome(TileReader& reader, Vec2 position);
+
 // Fills `sample` from the reader's level; false when the tile under the point is not finished.
 bool readSurface(TileReader& reader, Vec2 position, SurfaceSample& sample);
 

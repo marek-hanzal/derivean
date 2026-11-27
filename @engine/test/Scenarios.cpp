@@ -52,8 +52,7 @@ void narrowBreachKeepsItsLevel() {
     bool fell = false;
     for (int step = 0; step < 360; ++step) {
         simulate(water, world, 1);
-        for (const auto& [cell, amount] : water.cells)
-            expect(cell.y < floor + 1 + depth, "Water rose above its original source");
+        forEachWater(water, [&](Cell cell, int) { expect(cell.y < floor + 1 + depth, "Water rose above its original source"); });
         for (const auto& parcel : water.parcels) fell |= parcel.position[1] < floor * double(VoxelSize);
     }
     expect(fell && water.budget.escaped == 0, "Water did not fall through the opening");
@@ -77,7 +76,11 @@ void sandBankSettles() {
     for (int step = 0; step < 960; ++step) stepSand(sand, world, water, 1.0 / 120.0, landed);
     expect(sand.grains.empty() && sand.escaped == 0 && sand.deposited == released, "Released sand must come to rest, every grain of it");
     expect(landed.size() == released, "Every settled grain must be reported as changed ground");
-    for (const auto& [tile, content] : world.tiles) expect(content.occupied > 0, "An emptied tile survived");
+    for (const auto& [key, chunk] : world.chunks) {
+        expect(chunk.occupied > 0, "An emptied chunk survived");
+        for (const TerrainTile& tile : chunk.tiles)
+            expect(tile.occupied > 0 || (!tile.detail && tile.uniform == Material::Air), "An emptied tile kept its matter");
+    }
 }
 
 } // namespace

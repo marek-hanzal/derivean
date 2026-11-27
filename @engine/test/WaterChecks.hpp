@@ -10,10 +10,10 @@ namespace derivean {
 
 inline void checkBalance(const WaterState& water) {
     uint64_t cells = 0, parcels = 0;
-    for (const auto& [point, amount] : water.cells) {
+    forEachWater(water, [&](Cell, int amount) {
         expect(amount > 0 && amount <= WaterUnits, "Overfilled or empty water cell");
-        cells += amount;
-    }
+        cells += uint64_t(amount);
+    });
     for (const auto& parcel : water.parcels) parcels += parcel.amount;
     expect(cells == water.budget.bulk && parcels == water.budget.airborne, "Water ledger disagrees with stored state");
     expect(cells + parcels + water.budget.escaped == water.budget.initial, "Water volume changed");
@@ -28,8 +28,9 @@ inline void simulate(WaterState& water, const VoxelWorld& world, int steps, cons
 
 inline uint64_t below(const WaterState& water, int level) {
     uint64_t count = 0;
-    for (const auto& [cell, amount] : water.cells)
-        if (cell.y < level) count += amount;
+    forEachWater(water, [&](Cell cell, int amount) {
+        if (cell.y < level) count += uint64_t(amount);
+    });
     return count;
 }
 

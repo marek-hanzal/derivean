@@ -48,13 +48,18 @@ inline sim::SurfaceSample surfaceOrPlanet(SurfaceReader& reader, sim::Vec2 posit
     return sample;
 }
 
+// The level surfaceOrPlanet answers a point from, without reading the sample: the finest level whose
+// tile holds the point's cell.
+inline sim::Level surfaceLevel(SurfaceReader& reader, sim::Vec2 position) {
+    for (int level = int(reader.finest); level >= int(sim::Level::Region); --level)
+        if (sim::surfaceHome(reader.levels[size_t(level) - 1], position).tile) return sim::Level(level);
+    return PlanetLevel;
+}
+
 // Metres of glacier ice on the ground at a point, from the tile `sample` was read from.
 inline float iceAt(SurfaceReader& reader, const sim::SurfaceSample& sample, sim::Vec2 position) {
     if (sample.level == PlanetLevel) return 0;
-    const double cell = sim::specOf(sample.level).cell;
-    const int64_t x = int64_t(std::floor(position.x / cell)), z = int64_t(std::floor(position.z / cell));
-    const int32_t tileX = int32_t(std::floor(double(x) / sim::TileCells)), tileZ = int32_t(std::floor(double(z) / sim::TileCells));
-    const sim::Tile* tile = reader.levels[size_t(sample.level) - 1].tile(tileX, tileZ);
+    const auto [x, z, tileX, tileZ, tile] = sim::surfaceHome(reader.levels[size_t(sample.level) - 1], position);
     const size_t at = size_t(z - int64_t(tileZ) * sim::TileCells) * sim::TileCells + size_t(x - int64_t(tileX) * sim::TileCells);
     return tile && at < tile->ice.size() ? tile->ice[at] : 0;
 }

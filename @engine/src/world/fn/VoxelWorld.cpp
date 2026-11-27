@@ -3,6 +3,8 @@
 namespace derivean {
 namespace {
 
+constexpr int TileSide = TerrainChunk::TileSide;
+
 size_t tileIndex(Cell offset) {
     return size_t((offset.y * VoxelsPerMeter + offset.z) * VoxelsPerMeter + offset.x);
 }
@@ -11,17 +13,35 @@ Material at(const TerrainTile& tile, Cell offset) {
     return tile.detail ? (*tile.detail)[tileIndex(offset)] : tile.uniform;
 }
 
-template<typename Map, typename Key>
-void dropCell(Map& counts, const Key& key) {
-    const auto counter = counts.find(key);
-    if (--counter->second == 0) counts.erase(counter);
+// A point of a chunk: its tile there and its offset in that tile.
+struct Spot {
+    size_t tile;
+    Cell offset;
+};
+
+Spot spotOf(Cell chunk, Cell point) {
+    const Cell local = point - chunk * ChunkSide;
+    const Cell tile{local.x / VoxelsPerMeter, local.y / VoxelsPerMeter, local.z / VoxelsPerMeter};
+    return {size_t((tile.y * TileSide + tile.z) * TileSide + tile.x), local - tile * VoxelsPerMeter};
 }
 
-// The voxel as stored: air wherever no tile exists, loaded or not.
+TerrainChunk* chunkAt(const VoxelWorld& world, Cell key) {
+    // The world is read as const; the cache hands out what the caller is allowed to have.
+    return cachedFind(world.found, const_cast<VoxelWorld&>(world).chunks, key);
+}
+
+void erase(VoxelWorld& world, Cell key) {
+    forget(world.found, key);
+    world.chunks.erase(key);
+}
+
+// The voxel as stored: air wherever no chunk holds matter, loaded or not.
 Material storedAt(const VoxelWorld& world, Cell point) {
-    const Cell key = tileOf(point);
-    const auto tile = world.tiles.find(key);
-    return tile == world.tiles.end() ? Material::Air : at(tile->second, point - key * VoxelsPerMeter);
+    const Cell key = chunkOf(point);
+    const TerrainChunk* chunk = chunkAt(world, key);
+    if (!chunk) return Material::Air;
+    const Spot spot = spotOf(key, point);
+    return at(chunk->tiles[spot.tile], spot.offset);
 }
 
 } // namespace
@@ -35,10 +55,11 @@ bool known(const VoxelWorld& world, Cell chunk) {
 }
 
 Material materialAt(const VoxelWorld& world, Cell point) {
-    const Cell key = tileOf(point);
-    const auto tile = world.tiles.find(key);
-    if (tile != world.tiles.end()) return at(tile->second, point - key * VoxelsPerMeter);
-    return known(world, chunkOf(point)) ? Material::Air : Unloaded;
+    const Cell key = chunkOf(point);
+    const TerrainChunk* chunk = chunkAt(world, key);
+    if (!chunk) return known(world, key) ? Material::Air : Unloaded;
+    const Spot spot = spotOf(key, point);
+    return at(chunk->tiles[spot.tile], spot.offset);
 }
 
 Voxels sampleWorld(const VoxelWorld& world, Bounds bounds) {
@@ -56,53 +77,62 @@ Voxels sampleWorld(const VoxelWorld& world, Bounds bounds) {
                                         region.max.x - region.min.x, Unloaded);
                 }
     }
-    const Cell first = tileOf(bounds.min);
-    const Cell last = tileOf(bounds.max - Cell{1, 1, 1});
-    for (int y = first.y; y <= last.y; ++y)
-        for (int z = first.z; z <= last.z; ++z)
-            for (int x = first.x; x <= last.x; ++x) {
-                const Cell key{x, y, z};
-                const auto it = world.tiles.find(key);
-                if (it == world.tiles.end()) continue;
-                const Cell origin = key * VoxelsPerMeter;
-                const Bounds region = intersection(bounds, {origin, origin + Cell{VoxelsPerMeter, VoxelsPerMeter, VoxelsPerMeter}});
-                for (int rowY = region.min.y; rowY < region.max.y; ++rowY)
-                    for (int rowZ = region.min.z; rowZ < region.max.z; ++rowZ) {
-                        const Cell start{region.min.x, rowY, rowZ};
-                        auto output = result.cells.begin() + result.index(start);
-                        const int count = region.max.x - region.min.x;
-                        if (it->second.detail)
-                            std::copy_n(it->second.detail->begin() + tileIndex(start - origin), count, output);
-                        else
-                            std::fill_n(output, count, it->second.uniform);
-                    }
+    const Cell low = chunkOf(bounds.min), high = chunkOf(bounds.max - Cell{1, 1, 1});
+    for (int cy = low.y; cy <= high.y; ++cy)
+        for (int cz = low.z; cz <= high.z; ++cz)
+            for (int cx = low.x; cx <= high.x; ++cx) {
+                const Cell key{cx, cy, cz};
+                const auto chunk = world.chunks.find(key);
+                if (chunk == world.chunks.end()) continue;
+                const Bounds part = intersection(bounds, chunkBounds(key));
+                const Cell first = tileOf(part.min), last = tileOf(part.max - Cell{1, 1, 1});
+                for (int y = first.y; y <= last.y; ++y)
+                    for (int z = first.z; z <= last.z; ++z)
+                        for (int x = first.x; x <= last.x; ++x) {
+                            const Cell origin = Cell{x, y, z} * VoxelsPerMeter;
+                            const TerrainTile& tile = chunk->second.tiles[spotOf(key, origin).tile];
+                            if (!tile.occupied) continue;
+                            const Bounds region = intersection(part, {origin, origin + Cell{VoxelsPerMeter, VoxelsPerMeter, VoxelsPerMeter}});
+                            for (int rowY = region.min.y; rowY < region.max.y; ++rowY)
+                                for (int rowZ = region.min.z; rowZ < region.max.z; ++rowZ) {
+                                    const Cell start{region.min.x, rowY, rowZ};
+                                    auto output = result.cells.begin() + result.index(start);
+                                    const int count = region.max.x - region.min.x;
+                                    if (tile.detail)
+                                        std::copy_n(tile.detail->begin() + tileIndex(start - origin), count, output);
+                                    else
+                                        std::fill_n(output, count, tile.uniform);
+                                }
+                        }
             }
     return result;
 }
 
 void setVoxel(VoxelWorld& world, Cell point, Material material) {
-    const Cell key = tileOf(point);
-    const Cell chunk = chunkOf(point);
-    auto found = world.tiles.find(key);
-    if (found == world.tiles.end()) {
+    const Cell key = chunkOf(point);
+    TerrainChunk* found = chunkAt(world, key);
+    if (!found) {
         // Rock that is not materialised cannot be edited; open sky becomes a loaded chunk on first use.
-        if (material == Material::Air || !known(world, chunk)) return;
-        if (world.streamed) world.streamed->loaded.insert(chunk);
-        found = world.tiles.try_emplace(key).first;
+        if (material == Material::Air || !known(world, key)) return;
+        if (world.streamed) world.streamed->loaded.insert(key);
+        forget(world.found, key);
+        found = &world.chunks.try_emplace(key).first->second;
     }
 
-    auto& tile = found->second;
-    const Cell offset = point - key * VoxelsPerMeter;
-    const Material before = at(tile, offset);
+    TerrainChunk& chunk = *found;
+    const Spot spot = spotOf(key, point);
+    TerrainTile& tile = chunk.tiles[spot.tile];
+    const Material before = at(tile, spot.offset);
     if (before == material) return;
     if (world.streamed) world.streamed->journal.push_back({point, before, material});
     if (before == Material::Air) {
-        ++world.chunks[chunk];
+        ++chunk.occupied;
         ++tile.occupied;
     } else if (material == Material::Air) {
-        dropCell(world.chunks, chunk);
+        --chunk.occupied;
         if (--tile.occupied == 0) {
-            world.tiles.erase(found);
+            if (chunk.occupied == 0) erase(world, key);
+            else tile = TerrainTile{};
             return;
         }
     }
@@ -111,7 +141,7 @@ void setVoxel(VoxelWorld& world, Cell point, Material material) {
         tile.detail = std::make_unique<TerrainTile::Detail>();
         tile.detail->fill(tile.uniform);
     }
-    (*tile.detail)[tileIndex(offset)] = material;
+    (*tile.detail)[tileIndex(spot.offset)] = material;
     if (tile.occupied == TerrainTile::CellCount &&
         std::all_of(tile.detail->begin(), tile.detail->end(), [material](Material m) { return m == material; })) {
         tile.uniform = material;
@@ -154,18 +184,16 @@ bool inVoid(const VoxelWorld& world, double highestPoint) {
 
 void loadChunk(VoxelWorld& world, ChunkVoxels&& chunk) {
     world.streamed->loaded.insert(chunk.key);
-    if (chunk.occupied) world.chunks[chunk.key] = chunk.occupied;
-    for (auto& [key, tile] : chunk.tiles) world.tiles.insert_or_assign(key, std::move(tile));
+    if (!chunk.occupied) return;
+    forget(world.found, chunk.key);
+    TerrainChunk& into = world.chunks[chunk.key];
+    into.occupied = chunk.occupied;
+    for (auto& [key, tile] : chunk.tiles) into.tiles[spotOf(chunk.key, key * VoxelsPerMeter).tile] = std::move(tile);
 }
 
 void unloadChunk(VoxelWorld& world, Cell chunk) {
     world.streamed->loaded.erase(chunk);
-    if (!world.chunks.erase(chunk)) return;
-    constexpr int side = ChunkSide / VoxelsPerMeter;
-    const Cell origin = chunk * side;
-    for (int y = 0; y < side; ++y)
-        for (int z = 0; z < side; ++z)
-            for (int x = 0; x < side; ++x) world.tiles.erase(origin + Cell{x, y, z});
+    erase(world, chunk);
 }
 
 } // namespace derivean

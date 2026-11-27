@@ -63,17 +63,34 @@ void move(Game& game, const Command& command, double scale, const Footing& footi
     game.clock += FixedStep;
 }
 
+// The footing under a point, read again only where the point stands elsewhere or a tile has
+// finished since. footingAt reads x and z alone, from the atlas and the session's overlay and sea;
+// the game writes neither within a frame, and the atlas only gains tiles and counts each. The count
+// is taken before the read, so a tile finishing during it makes the next call read again.
+struct FootingMemo {
+    double x{NAN}, z{NAN};
+    size_t tiles{};
+    Footing footing;
+};
+
+Footing footingOnce(const Game& game, FootingMemo& memo, Position point) {
+    const size_t tiles = game.nature.world.atlas.finished();
+    if (point[0] == memo.x && point[2] == memo.z && tiles == memo.tiles) return memo.footing;
+    memo = {point[0], point[2], tiles, footingAt(game, point)};
+    return memo.footing;
+}
+
 Bounds particleView(Position eye) {
     const Cell center = chunkOf(cellAt(eye));
     const Cell spread{Visibility, Visibility, Visibility};
     return {chunkBounds(center - spread).min, chunkBounds(center + spread).max};
 }
 
-void streamTerrain(Game& game, Frame& frame, bool moved) {
+void streamTerrain(Game& game, Frame& frame, bool moved, FootingMemo& memo) {
     const auto start = Clock::now();
     Nature& nature = game.nature;
     const Position feet = game.physics.feet(), velocity = game.physics.velocity();
-    const Footing footing = footingAt(game, feet);
+    const Footing footing = footingOnce(game, memo, feet);
     requestTiles(nature, feet, velocity, footing.ground ? feet[1] - *footing.ground : 0.0);
     advanceStream(game.stream, nature, game.world, game.edits, feet, std::hypot(velocity[0], velocity[1], velocity[2]));
     const bool changed = !game.stream.loaded.empty() || !game.stream.dropped.empty();
@@ -85,10 +102,10 @@ void streamTerrain(Game& game, Frame& frame, bool moved) {
     frame.streamingMs += millisecondsSince(start);
 }
 
-void projectNature(Game& game, Frame& frame) {
+void projectNature(Game& game, Frame& frame, FootingMemo& memo) {
     const auto start = Clock::now();
     projectScene(game, frame);
-    const Footing footing = footingAt(game, frame.eye);
+    const Footing footing = footingOnce(game, memo, frame.eye);
     const double clearance = footing.ground ? frame.eye[1] - *footing.ground : 0.0;
     const Position velocity = game.physics.velocity();
     advanceCubes(game.cubes, game.nature, frame.eye, clearance, std::hypot(velocity[0], velocity[1], velocity[2]), frame.cubes);
@@ -170,7 +187,8 @@ Frame advance(Game& game, const Command& command) {
         // Flight speed must not carry over into a fall.
         if (!game.flying) game.physics.returnPlayer(game.physics.feet());
     }
-    streamTerrain(game, frame, command.teleport.has_value());
+    FootingMemo memo;
+    streamTerrain(game, frame, command.teleport.has_value(), memo);
     streamColliders(game);
     game.held = awaitsGround(game);
     if (command.active) {
@@ -181,7 +199,7 @@ Frame advance(Game& game, const Command& command) {
         game.jumpQueued |= command.jump;
         game.accumulator += std::clamp(command.elapsed, 0.0, 0.1);
         const double scale = std::max(1.0, std::hypot(double(command.x), double(command.z)));
-        const Footing footing = footingAt(game, game.physics.feet());
+        const Footing footing = footingOnce(game, memo, game.physics.feet());
         while (game.accumulator + 1e-9 >= FixedStep) move(game, command, scale, footing);
         recoverPlayer(game);
         retireDebris(game, frame);
@@ -194,7 +212,7 @@ Frame advance(Game& game, const Command& command) {
     }
 
     frame.eye = game.physics.eye();
-    projectNature(game, frame);
+    projectNature(game, frame, memo);
     const Bounds view = particleView(frame.eye);
     const Cell anchor = chunkBounds(chunkOf(cellAt(frame.eye))).min;
     frame.particleOrigin = {anchor.x * double(VoxelSize), anchor.y * double(VoxelSize), anchor.z * double(VoxelSize)};

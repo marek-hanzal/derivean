@@ -138,7 +138,9 @@ struct Arrive {
 //   game started there (at) or at its own spawn and teleported (jump)
 // engine-bench [age] [engine workers, 0 for the machine's] [plain|favoured: the frame thread] [quick: no waiting for the far rings | ready [seconds, 300]: watch the readiness signals standing still]
 int main(int argc, char** argv) {
-    setvbuf(stdout, nullptr, _IOLBF, 0);
+    // Unbuffered, so a log shows each line as it is printed. Windows' C runtime ends the process on line
+    // buffering with size 0, and with a size it buffers whole blocks.
+    setvbuf(stdout, nullptr, _IONBF, 0);
     const double age = argc > 1 ? std::atof(argv[1]) : 2e9;
     if (argc > 2 && !std::strcmp(argv[2], "start")) {
         timeStart(age);

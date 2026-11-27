@@ -3,6 +3,8 @@
 #include "ground/type/Clast.hpp"
 #include "simulation/type/World.hpp"
 
+#include <span>
+
 namespace derivean::sim {
 
 // The surface at one point, read from the finest level that is finished there.
@@ -75,5 +77,16 @@ struct Block {
 };
 
 void sampleBlock(World& world, const Block& block, Material* materials);
+
+// Blocks of one footprint at several heights: each span is filled as sampleBlock fills the block of
+// its originY and countY (the footprint's own are not read). What does not depend on height is read
+// once: the tiles, the ground lattice, layering, exposure, sea voids, runoff and the caves' fields.
+struct BlockSpan {
+    double originY{};
+    int countY{};
+    Material* materials{};
+};
+
+void sampleBlocks(World& world, const Block& footprint, std::span<const BlockSpan> spans);
 
 } // namespace derivean::sim

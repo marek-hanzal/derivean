@@ -112,18 +112,18 @@ void JoltRuntime::suspend(JPH::BodyID id, bool suspended) {
 Pose JoltRuntime::pose(JPH::BodyID id) const {
     JPH::RVec3 position;
     JPH::Quat rotation;
-    resources_->system.GetBodyInterface().GetPositionAndRotation(id, position, rotation);
+    resources_->system.GetBodyInterfaceNoLock().GetPositionAndRotation(id, position, rotation);
     return {asPosition(position), {rotation.GetX(), rotation.GetY(), rotation.GetZ(), rotation.GetW()}};
 }
 
 std::pair<Position, Position> JoltRuntime::extent(JPH::BodyID id) const {
-    JPH::BodyLockRead lock(resources_->system.GetBodyLockInterface(), id);
+    JPH::BodyLockRead lock(resources_->system.GetBodyLockInterfaceNoLock(), id);
     const auto& box = lock.GetBody().GetWorldSpaceBounds();
     return {asPosition(JPH::RVec3(box.mMin)), asPosition(JPH::RVec3(box.mMax))};
 }
 
 std::pair<double, double> JoltRuntime::verticalExtent(JPH::BodyID id) const {
-    JPH::BodyLockRead lock(resources_->system.GetBodyLockInterface(), id);
+    JPH::BodyLockRead lock(resources_->system.GetBodyLockInterfaceNoLock(), id);
     const auto& box = lock.GetBody().GetWorldSpaceBounds();
     return {box.mMin.GetY(), box.mMax.GetY()};
 }

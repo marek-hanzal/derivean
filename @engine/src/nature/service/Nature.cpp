@@ -40,12 +40,16 @@ void quiesce(sim::Workers& pool) {
     gate->changed.notify_all();
 }
 
+// The game waits for the spin-up of the first weather; it gains little beyond eight threads.
+constexpr unsigned StartThreads = 8;
+
 } // namespace
 
 Nature::Nature(NatureOptions options)
     : world(sim::WorldOptions{options.seed, options.age, options.threads}) {
     crew.emplace(options.threads ? options.threads : backgroundThreads());
     air.emplace(options.threads ? options.threads : 2u);
+    startThreads = options.threads ? options.threads : std::clamp(std::thread::hardware_concurrency(), 1u, StartThreads);
 }
 
 Nature::~Nature() {
