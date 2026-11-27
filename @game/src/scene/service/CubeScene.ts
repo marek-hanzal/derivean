@@ -35,6 +35,11 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
   let covered = false;
   let width = 0;
   let height = 0;
+  // The canvas's size in CSS pixels as layout last gave it, kept by an observer so that a frame does not ask layout
+  // for it. A canvas with no area (a collapsed window) is not drawn: a camera of aspect 0 projects to NaN, and the
+  // device refuses targets of size 0.
+  let layout = { width: canvas.clientWidth, height: canvas.clientHeight };
+  new ResizeObserver(() => { layout = { width: canvas.clientWidth, height: canvas.clientHeight }; }).observe(canvas);
   // While a bench runs it alone draws, so the frames it times are not shared with the display's.
   let benching = false;
 
@@ -68,12 +73,11 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
     apply(frame: Frame) { stage?.apply(frame); },
     target(point: Point | undefined, shape: BrushShape, radius: number) { stage?.target(point, shape, radius); },
     draw(entered: boolean, yaw: number, pitch: number, dt: number, time: number) {
-      if (!stage || covered || benching || backend === "starting") return;
-      if (canvas.clientWidth !== width || canvas.clientHeight !== height) {
-        width = canvas.clientWidth;
-        height = canvas.clientHeight;
+      if (!stage || covered || benching || backend === "starting" || layout.width < 1 || layout.height < 1) return;
+      if (layout.width !== width || layout.height !== height) {
+        ({ width, height } = layout);
         renderer.setSize(width, height, false);
-        camera.aspect = width / Math.max(1, height);
+        camera.aspect = width / height;
         camera.updateProjectionMatrix();
       }
       stage.pose(entered, yaw, pitch, dt, time);
@@ -104,7 +108,8 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
     async bench(frames: number, batches = 6) {
       const device = (renderer.backend as { device?: { queue: { onSubmittedWorkDone(): Promise<void> } } }).device;
       const benched = stage;
-      if (!benched || !device || benching) return null;
+      // Not before a frame has sized the targets, nor on a canvas with no area.
+      if (!benched || !device || benching || width < 1 || layout.width < 1 || layout.height < 1) return null;
       // Per batch: milliseconds a frame until the GPU is done, and of those, the page's own to submit the frames.
       const timed = { cloudy: [] as number[], clear: [] as number[], cloudySubmit: [] as number[], clearSubmit: [] as number[] };
       const shown = benched.cloudsShown;
