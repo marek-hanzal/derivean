@@ -1,3 +1,4 @@
+// One command, cohesive: the print of every tile field, the targets, and their timing (about 260 lines).
 #include "Measure.hpp"
 
 #include "coast/type/Shore.hpp"
@@ -16,6 +17,10 @@
 #include <cstdio>
 #include <map>
 #include <sys/resource.h>
+#ifdef __APPLE__
+#include <libproc.h>
+#include <unistd.h>
+#endif
 
 using namespace derivean::sim;
 
@@ -118,6 +123,19 @@ Vec2 riverMouth(const Tile& tile) {
 
 double cpuSeconds(const timeval& t) { return double(t.tv_sec) + 1e-6 * double(t.tv_usec); }
 
+// Instructions and cycles the process has retired, where the system counts them (macOS): unlike
+// times they hardly move with the machine's load. Zero elsewhere.
+struct Counters {
+    double instructions{}, cycles{};
+};
+Counters countersNow() {
+#ifdef __APPLE__
+    rusage_info_v4 info{};
+    if (proc_pid_rusage(getpid(), RUSAGE_INFO_V4, reinterpret_cast<rusage_info_t*>(&info)) == 0) return {double(info.ri_instructions), double(info.ri_cycles)};
+#endif
+    return {};
+}
+
 } // namespace
 
 // terra measure fingerprint [--age 1.2e9|4.6e9] [--threads n] [--time 0|1] [--repeat n] [--blocks 0|1]
@@ -126,6 +144,7 @@ double cpuSeconds(const timeval& t) { return double(t.tv_sec) + 1e-6 * double(t.
 // builds that print the same lines made the same world to the bit. With --time 1 each target is
 // then replayed on the calling thread alone, --repeat times, and the least wall and user time are
 // printed: on a loaded machine one replay's time says more about the scheduler than the code.
+// Instructions and cycles (macOS) are the least over the repeats too.
 int measureFingerprint(const Arguments& arguments) {
     const double age = arguments.number("age", 4.6e9);
     Lap lap;
@@ -216,20 +235,24 @@ int measureFingerprint(const Arguments& arguments) {
     const int repeats = int(std::max(1.0, std::min(100.0, arguments.number("repeat", 1))));   // each of wall, user, sys is its own least
     for (const auto& [what, key] : targets) {
         const Dependencies needed = requireDependencies(world, key);
-        double wall = 1e30, user = 1e30, sys = 1e30;
+        double wall = 1e30, user = 1e30, sys = 1e30, instructions = 1e30, cycles = 1e30;
         bool same = true;
         for (int repeat = 0; repeat < repeats; ++repeat) {
             rusage before{}, after{};
             getrusage(RUSAGE_SELF, &before);
+            const Counters start = countersNow();
             lap();
             const auto again = replayTile(alone, key, needed.lookup());
             wall = std::min(wall, lap());
+            const Counters end = countersNow();
             getrusage(RUSAGE_SELF, &after);
+            instructions = std::min(instructions, end.instructions - start.instructions), cycles = std::min(cycles, end.cycles - start.cycles);
             user = std::min(user, cpuSeconds(after.ru_utime) - cpuSeconds(before.ru_utime));
             sys = std::min(sys, cpuSeconds(after.ru_stime) - cpuSeconds(before.ru_stime));
             same = same && printOf(*again) == prints.at(key);
         }
-        std::printf("time %-13s level %d  wall %.2f s  user %.2f s  sys %.2f s  %s\n", what.c_str(), int(key.level), wall, user, sys, same ? "same" : "DIFFERS");
+        std::printf("time %-13s level %d  wall %.2f s  user %.2f s  sys %.2f s  instructions %.4g  cycles %.4g  %s\n", what.c_str(), int(key.level), wall, user, sys,
+                    instructions, cycles, same ? "same" : "DIFFERS");
         std::fflush(stdout);
     }
     return 0;
