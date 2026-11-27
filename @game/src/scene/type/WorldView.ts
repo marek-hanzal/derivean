@@ -1,11 +1,24 @@
+/// <reference types="@webgpu/types" />
 import type { BrushShape, Frame, Point, WorldInfo } from "../../../contract/GameBridge";
 import type { WeatherSought } from "../../clouds/fn/findWeather";
 import type { SeenAir } from "../../sky/type/SeenAir";
 
+export interface BenchRecord {
+  frames: number;
+  batches: number;
+  cloudyMs: number;
+  clearMs: number;
+  cloudMs: number;
+  cloudy: number[];
+  clear: number[];
+}
+
 // What draws the world (CubeScene): the session feeds it frames and poses, the HUD and captures read it.
 export interface WorldView {
-  // What three.js got: WebGPU, its WebGL 2 fallback, or "starting" until the device is there.
+  // "WebGPU" once the device is there, "starting" until then.
   readonly backend: string;
+  // The WebGPU device, once it is there, for what else draws with it (the map).
+  readonly device: GPUDevice | undefined;
   load(world: WorldInfo): void;
   unload(): void;
   // True while something opaque lies over the canvas, as the map does: the world is kept but not drawn.
@@ -25,6 +38,9 @@ export interface WorldView {
   air(): SeenAir | null;
   // GPU milliseconds the clouds take, null while they are not drawn or not timed.
   cloudCost(): number | null;
+  // Milliseconds a frame takes with the clouds shown and hidden, frames drawn back to back until the GPU is done
+  // (CubeScene); null without a device to wait on.
+  bench(frames: number, batches?: number): Promise<BenchRecord | null>;
   // Milliseconds the draw takes on the CPU and on the GPU; null where that is not measured.
   timings(): { cpuMs: number | null; gpuMs: number | null };
   readonly renderStats: { calls: number; triangles: number };

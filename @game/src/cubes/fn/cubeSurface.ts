@@ -1,6 +1,6 @@
 import { MeshBasicNodeMaterial, type Node, type Texture, type UniformNode, type Vector3 } from "three/webgpu";
 import {
-  Fn, If, PI, cameraPosition, clamp, float, floor, fract, fwidth, int, ivec2, length, luminance, max, min, mix, modelWorldMatrix, positionWorld, smoothstep,
+  Fn, If, PI, cameraPosition, clamp, exp2, float, floor, fract, fwidth, int, ivec2, length, luminance, max, min, mix, modelWorldMatrix, positionWorld, smoothstep,
   select, step, textureLoad, uint, varying, vec3, vec4,
 } from "three/tsl";
 import { GrainCells, GroundRepeat } from "../../scene/constant/grain";
@@ -32,8 +32,7 @@ export interface CubeLook {
   shadow: ShadowNodes;
   // Absent in a world that has no snow to draw.
   snow?: SnowNodes;
-  // The far levels' ground heights (LevelHeights). The WebGL fallback reads no storage buffers in a fragment
-  // shader, so there, as without them, faces take only their own light and risers no snow.
+  // The far levels' ground heights (LevelHeights). Without them faces take only their own light and risers no snow.
   land?: LevelHeights["nodes"];
 }
 
@@ -64,11 +63,13 @@ export function cubeSurface({ sky, levels, palette, anchor, shadow, snow, land }
     return mass;
   })(), "vSnow");
   // The snow round a face, one value for the whole face, read at its middle: what the ground in front of a riser
-  // sends back.
-  const around = snow && varying(snowMass(snow, modelWorldMatrix.mul(vec4(face.middle, 1)).xyz, sky.airSea), "vSnowAround");
-  // The node builder is the function's only argument when it is called without inputs.
-  type Built = { renderer: { backend: { isWebGPUBackend?: boolean } } };
-  material.colorNode = (Fn((builder: Built) => {
+  // sends back, and, through the land light, of a top on a slope. A batch's holes read none.
+  const around = snow && varying(Fn(() => {
+    const mass = float(0).toVar();
+    If(face.held, () => { mass.assign(snowMass(snow, modelWorldMatrix.mul(vec4(face.middle, 1)).xyz, sky.airSea)); });
+    return mass;
+  })(), "vSnowAround");
+  material.colorNode = Fn(() => {
     const { row, edge } = levelRows(levels, face);
     const normal = face.normal.normalize();
     const inside = positionWorld.sub(normal.mul(edge.mul(0.01)));
@@ -106,12 +107,13 @@ export function cubeSurface({ sky, levels, palette, anchor, shadow, snow, land }
         .mul(mix(0.07, 0.2, loose)));
     });
     const bare = groundColor(texel.rgb, cube.add(0.5).mul(edge).add(anchor.sub(near)), loose, range, edge).mul(tone);
-    const lit = sunlit(shadow, positionWorld.add(normal.mul(edge.mul(0.02))));
+    // Held in a variable: the land light reads it inside its own branches, where three would build it again.
+    const lit = sunlit(shadow, positionWorld.add(normal.mul(edge.mul(0.02)))).toVar();
     // A riser on ground the snow lies on is the stair the lattice cuts into a covered slope, so it takes the snow
     // round it as a top does; on ground steeper than snow holds on it stays bare rock.
     const riser = normal.y.abs().lessThan(0.5);
-    const stands = land && builder.renderer.backend.isWebGPUBackend && landNormal(land, levels, face.field(Face.level), edge, inside,
-      (point) => sunlit(shadow, point), around && riser.and(around.greaterThan(0)));
+    const stands = land && landNormal(land, levels, face.field(Face.level), edge, inside,
+      (point) => sunlit(shadow, point), normal.y.greaterThan(0.5), lit, around && riser.and(around.greaterThan(0)));
     const onRiser = stands && around ? select(riser, clamp(around.div(CoverMass), 0, 1), float(0))
       .mul(smoothstep(SnowHolds[0], SnowHolds[1], stands.steep).oneMinus()) : float(0);
     const share = snowed ? max(clamp(snowed.div(CoverMass), 0, 1), onRiser) : float(0);
@@ -124,14 +126,14 @@ export function cubeSurface({ sky, levels, palette, anchor, shadow, snow, land }
     // along an axis its occlusion does not change on.
     const corner = (index: number) => float(face.field(Face.occlusion).shiftRight(uint(index * 2)).bitAnd(uint(3)));
     const across = clamp(face.across, 0, 1);
-    const open = float(Open).pow(mix(mix(corner(0), corner(1), across.x), mix(corner(2), corner(3), across.x), across.y));
+    const open = exp2(mix(mix(corner(0), corner(1), across.x), mix(corner(2), corner(3), across.x), across.y).mul(Math.log2(Open)));
     // Snow sends back far more of the light than bare ground: the bounce takes its share of the snow's colour.
     // Plain shading keeps its neutral bounce.
     const fallen = luminance(sky.groundLight).div(GroundBounce);
     const below = snow && around ? mix(sky.groundLight, vec3(fallen).mul(snow.color), clamp(around.div(CoverMass), 0, 1).mul(sky.plain.oneMinus())) : undefined;
     const itself = faceLight(sky, normal, open, lit, below);
     const light = stands ? mix(itself, faceLight(sky, stands.normal, open, stands.lit, below), stands.share) : itself;
-    return vec4(airFade(sky, albedo.mul(light).div(PI), fromEye), 1);
-  }) as unknown as () => Node<"vec4">)();
+    return vec4(airFade(sky, albedo.mul(light).div(PI), fromEye, range), 1);
+  })();
   return material;
 }

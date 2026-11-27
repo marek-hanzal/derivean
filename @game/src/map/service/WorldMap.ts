@@ -1,3 +1,4 @@
+/// <reference types="@webgpu/types" />
 import type { Frame, GameBridge, Point, WorldInfo } from "../../../contract/GameBridge";
 import { readClock } from "../../calendar/fn/readClock";
 import type { Pilot } from "../../control/type/Pilot";
@@ -18,6 +19,8 @@ export interface MapHost {
   playing(): boolean;
   // Captures the pointer again.
   lock(): void | Promise<void>;
+  // The scene's WebGPU device, which the map draws with; none until it is there.
+  device(): GPUDevice | undefined;
 }
 
 const TextMs = 120;
@@ -28,7 +31,9 @@ const ScaleBarRoom = 150;
 // simulating with a pilot that only waits.
 export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "chart">, host: MapHost) {
   const chrome = buildMapChrome(root);
-  let drawing: { surface: ChartSurface; feed: ChartFeed } | undefined;
+  let drawing: { device: GPUDevice; surface: ChartSurface; feed: ChartFeed } | undefined;
+  // Devices the map cannot draw with: lost, or refusing its shaders.
+  const unusable = new WeakSet<GPUDevice>();
   let open = false;
   let following = true;
   let view: MapView = { x: 0, z: 0, scale: 0 };
@@ -42,8 +47,6 @@ export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "char
   let texted = -Infinity;
   // The map was closed with Escape and the pointer waits for the key to come up.
   let escaping = false;
-  // The chart canvas lost its WebGL context and has not had it back.
-  let lost = false;
 
   // A map that closes without the pointer being captured again leaves the game unlocked with nothing on screen
   // saying so. The lock's own listeners decide what an unlocked game shows.
@@ -67,13 +70,24 @@ export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "char
     else if (resume === "never") unlocked();
   }
 
-  // What the map draws with, built on first use and again after a lost context came back. A context that
-  // cannot be had, or is lost, leaves the map shut.
+  // What the map draws with, built on first use once the scene's device is there, and built again on the device
+  // there is now once the one it was built on is lost. A lost device, or one that refuses the map's shaders,
+  // leaves it shut until the scene has another.
   function draws() {
-    if (drawing || lost) return drawing;
+    const device = host.device();
+    if (drawing?.surface.usable && drawing.device === device) return drawing;
+    drawing?.feed.rest();
+    drawing?.surface.dispose();
+    drawing = undefined;
+    if (!device || unusable.has(device)) return undefined;
+    void device.lost.then(() => unusable.add(device));
     try {
-      const surface = createChartSurface(chrome.canvas);
-      drawing = { surface, feed: createChartFeed(bridge, surface, (error) => {
+      const surface = createChartSurface(chrome.canvas, device, (error) => {
+        console.error("The map cannot be drawn", error);
+        unusable.add(device);
+        hide("never");
+      });
+      drawing = { device, surface, feed: createChartFeed(bridge, surface, (error) => {
         console.error("The map could not be charted", error);
         hide("never");
       }) };
@@ -82,15 +96,6 @@ export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "char
     }
     return drawing;
   }
-  // The browser gives a lost context back only when the loss is prevented; nothing built on it survives.
-  chrome.canvas.addEventListener("webglcontextlost", (event) => {
-    event.preventDefault();
-    lost = true;
-    drawing?.feed.rest();
-    drawing = undefined;
-    painted = undefined;
-  });
-  chrome.canvas.addEventListener("webglcontextrestored", () => { lost = false; });
 
   // Opens the map on the player, or turns an open one back to them. `span` is the metres across the shorter
   // side of the viewport; without it the last zoom is kept.

@@ -11,7 +11,7 @@ export interface ViewStats {
   calls: number; triangles: number; levels: number[]; yaw: number; pitch: number;
   // Clock rate asked for, and milliseconds of GPU time the clouds take (null while not drawn or untimed).
   rate: number; cloudMs: number | null;
-  // What draws the world: WebGPU or three.js's WebGL 2 fallback of it.
+  // What draws the world: WebGPU, or "starting" until the device is there.
   backend: string;
   // Milliseconds the draw takes on the CPU and on the GPU; null where that is not measured.
   draw: { cpuMs: number | null; gpuMs: number | null };

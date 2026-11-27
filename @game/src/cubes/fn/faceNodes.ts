@@ -41,6 +41,8 @@ export function faceNodes() {
     across: varying(across, "vFaceAcross"),
     // A top: the face of a cube that looks up. For the vertex stage.
     top: onY.and(negative.not()),
+    // A face and not a hole: a batch's holes are zeroed words, whose quads have no area. For the vertex stage.
+    held: sizeU.greaterThan(0),
     // For the fragment stage; only the fields of the last two words are carried there.
     field(field: FaceField): Node<"uint"> {
       const carriedWord = late[field.word];

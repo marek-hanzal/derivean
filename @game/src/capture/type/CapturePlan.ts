@@ -37,6 +37,9 @@ export interface CaptureShot {
   // Opens the map over the shot, centred on the player, with this many metres across the shorter side of the
   // window; the shot waits for its sharp chart and a cruise flies with the map open. Omitted closes the map.
   map?: { span: number };
+  // After the shot is taken, time a frame with the clouds shown and hidden: `batches` (6 when omitted) of `frames`
+  // frames drawn back to back each (WorldView.bench). It is written beside the shot as `<name>-bench.json`.
+  bench?: { frames: number; batches?: number };
   // Readiness the shot needs to count (Frame.ready): it is not taken on a stall without it, and once its timeout
   // has passed without it, it is taken and recorded as `unready`. Overrides the plan's.
   ready?: Array<keyof Frame["ready"]>;

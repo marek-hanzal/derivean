@@ -46,3 +46,32 @@ Worley, S. (1996). A cellular texture basis function. *Proceedings of SIGGRAPH 9
 - **Used in:** `@game/src/clouds/constant/noise.ts:60`, `:61`, `:71` (cited by name only; which Perlin variant is not stated).
 - **Used in (Perlin 2002, S3b):** 3D gradient noise with the quintic fade and twelve edge gradients for the planet on the sphere (plate warp, swell, primordial plumes), `@simulation/src/core/fn/Noise.hpp:16`, `@simulation/src/core/fn/Noise.cpp:83`.
 - **Note:** the noise shapes cloud detail inside a simulated weather cell; where and how much cloud there is comes from the simulation (`docs/handoff/brief/clouds.md`).
+
+### Williams 1978: shadow maps
+Williams, L. (1978). Casting curved shadows on curved surfaces. *ACM SIGGRAPH Computer Graphics* 12(3), 270–274. doi:10.1145/965139.807402
+- **Model:** a depth map seen from the light; a point is in shadow where something lies nearer the light along its ray.
+- **Used in:** `@game/src/shadow/constant/cascades.ts:1`, `@game/src/shadow/fn/sunlit.ts:15`; the maps are drawn by `@game/src/shadow/service/SunShadow.ts` with `@game/src/shadow/fn/casterSurface.ts`.
+- **Approximations:** the maps hold only faces that look away from the sun (where a ray leaves solid ground), so lit faces cannot shadow themselves.
+
+### Reeves, Salesin and Cook 1987: percentage-closer filtering
+Reeves, W. T., Salesin, D. H., Cook, R. L. (1987). Rendering antialiased shadows with depth maps. *ACM SIGGRAPH Computer Graphics* 21(4), 283–291. doi:10.1145/37402.37435
+- **Model:** filter the result of the depth comparisons, not the depths, so a shadow's edge is a share of lit samples.
+- **Used in:** `@game/src/shadow/fn/sunlit.ts:15` (the comparison sampler's linear filter over four texels).
+
+### Dimitrov 2007: cascaded shadow maps
+Dimitrov, R. (2007). *Cascaded Shadow Maps*. NVIDIA Corporation, August 2007. https://developer.download.nvidia.com/SDK/10.5/opengl/src/cascaded_shadow_maps/doc/cascaded_shadow_maps.pdf
+- **Model:** several shadow maps of growing extent round the eye, the finest used where it reaches and the next beyond, blended over a band at the border.
+- **Used in:** `@game/src/shadow/constant/cascades.ts:1` (four sun cascades, read in `@game/src/shadow/fn/sunlit.ts`); `@game/src/clouds/fn/cloudShadow.ts:11` (the near 16 km and far 96 km cloud maps of `@game/src/clouds/constant/shadow.ts`, drawn by `@game/src/clouds/service/CloudShadow.ts`).
+- **Approximations:** the cascades are squares fixed by the levels of cubes, not splits of the view frustum; a coarser sun cascade is still read inside a finer one's square, moved to where the ray leaves it, so a ridge beyond the square casts its shadow in.
+
+### Lysenko 2012: greedy meshing
+Lysenko, M. (2012). Meshing in a Minecraft game. *0 FPS* (blog), 30 June 2012. https://0fps.net/2012/06/30/meshing-in-a-minecraft-game/
+- **Model:** the exposed faces of a voxel slice cut into as few rectangles as a greedy sweep finds, row by row.
+- **Used in:** `@engine/src/voxel/type/Mesh.hpp:23` (`mergeMask`), called by `@engine/src/voxel/fn/Mesh.cpp:10` and `@engine/src/horizon/fn/CubeChunk.cpp:215`.
+- **Approximations:** a rectangle grows only along an axis its corner occlusion is constant on, so it is not always the largest the sweep could make.
+
+### cgerikj: binary greedy meshing
+cgerikj (2020–). *Binary Greedy Meshing* (v2), GitHub, MIT licence. https://github.com/cgerikj/binary-greedy-meshing (author's name not stated; first release year unverified, the repository dates from February 2020)
+- **Model:** solid cells as 64-bit words, faces as a solid bit whose neighbour bit is clear (`solid & ~next`), whole rows tested or cleared a word at a time and set bits walked with a count of trailing zeros.
+- **Used in:** `@engine/src/voxel/fn/Mesh.cpp:7` (`meshFaces`, `mergeSolids`). No code is taken; the faces still go through `mergeMask`, so the quads and their order are those of the cell-by-cell walk.
+- **Checked by:** `@engine/test/Mesh.cpp` (`testMesh`): the same quads and collider boxes in the same order as a cell-by-cell walk over chunks of every kind of ground.

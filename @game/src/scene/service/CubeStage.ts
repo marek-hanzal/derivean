@@ -12,7 +12,7 @@ import { createCubeTerrain } from "../../cubes/service/CubeTerrain";
 import { createLevelHeights } from "../../cubes/service/LevelHeights";
 import { createParticleScene } from "../../particles/service/ParticleScene";
 import { cascadeOf } from "../../shadow/constant/cascades";
-import { createSunShadow } from "../../shadow/service/SunShadow";
+import { createSunShadow, type ShadowView } from "../../shadow/service/SunShadow";
 import { skyBackground } from "../../sky/fn/radiance";
 import { createDaylight } from "../../sky/service/Daylight";
 import { createSnowField } from "../../snow/service/SnowField";
@@ -80,6 +80,13 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
   let cloudy = true;
   let dt = 0;
   let squares: ReturnType<typeof terrain.place> = [];
+  // What the shadows are cast from, kept from frame to frame: the cascade a stamp is asked for picks its levels.
+  let stamped = 0;
+  const ofStamped = (level: number) => cascadeOf(level) === stamped;
+  const view: ShadowView = {
+    origin, eye, ground, sun: sky.sunDirection.value, squares,
+    stamp: (cascade) => { stamped = cascade; return terrain.stamp(ofStamped); },
+  };
   let placed = false;
 
   function rebase(around: Vector3) {
@@ -101,6 +108,9 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
     },
     // False hides the clouds, their shadows and what falls from them; the weather itself goes on.
     veil(shown: boolean) { cloudy = shown; },
+    // Stops the light's easing until the next pose: frames drawn without a pose (a bench) take no time.
+    hold() { dt = 0; },
+    get cloudsShown() { return cloudy; },
     findWeather: (sought: WeatherSought) => field ? findWeather(field, sought) : undefined,
     counts: terrain.counts,
     get exposure() { return daylight.exposure; },
@@ -153,10 +163,9 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
       daylight.cover(overhead[0], overhead[1], dt);
       daylight.haze(clouds.field.air(eye.x, eye.z), dt);
       precipitation.update(eye, now / 1000, !plain && cloudy);
-      shadow.cast(renderer, {
-        origin, eye, ground, sun: sky.sunDirection.value, squares,
-        stamp: (cascade) => terrain.stamp((level) => cascadeOf(level) === cascade),
-      });
+      view.ground = ground;
+      view.squares = squares;
+      shadow.cast(renderer, view);
       cloudPass.scene(renderer, scene, camera);
       counted();
       cloudPass.finish(renderer, camera, eye, shown);

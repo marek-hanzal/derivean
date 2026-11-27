@@ -8,12 +8,15 @@ import { createCubeStage } from "./CubeStage";
 // The world on screen: the WebGPU renderer and its camera, which outlive worlds; `load` swaps the stage. Depth
 // is reversed in a float buffer, because one view holds cubes 6 cm from the eye and mountains hundreds of
 // kilometres away. The scene is drawn multisampled into the cloud pass's own target, so the canvas itself needs no
-// antialiasing. Nothing is drawn until the device is there; `backend` then says what three.js got, WebGPU or
-// its WebGL 2 fallback. A device that cannot be had is reported through `failed`.
+// antialiasing. The game draws with WebGPU alone: three.js would fall back to WebGL 2 where WebGPU cannot be had,
+// and that is switched off (three 0.187 offers no option for it, so its `_getFallback` is cleared), and a renderer
+// that still came up on anything else is refused. Nothing is drawn until the device is there; one that cannot be
+// had is reported through `failed`.
 export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unknown) => void): WorldView {
   const renderer = new WebGPURenderer({
     canvas, antialias: false, powerPreference: "high-performance", reversedDepthBuffer: true, trackTimestamp: true,
   });
+  (renderer as unknown as { _getFallback: null })._getFallback = null;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = Exposure;
@@ -32,13 +35,22 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
   let covered = false;
   let width = 0;
   let height = 0;
+  // The canvas's size in CSS pixels as layout last gave it, kept by an observer so that a frame does not ask layout
+  // for it. A canvas with no area (a collapsed window) is not drawn: a camera of aspect 0 projects to NaN, and the
+  // device refuses targets of size 0.
+  let layout = { width: canvas.clientWidth, height: canvas.clientHeight };
+  new ResizeObserver(() => { layout = { width: canvas.clientWidth, height: canvas.clientHeight }; }).observe(canvas);
+  // While a bench runs it alone draws, so the frames it times are not shared with the display's.
+  let benching = false;
 
   void renderer.init().then(() => {
-    backend = (renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend ? "WebGPU" : "WebGL 2 (three.js fallback)";
-  }).catch(failed);
+    if (!(renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend) throw new Error("not a WebGPU device");
+    backend = "WebGPU";
+  }).catch((error: unknown) => failed(new Error(`WebGPU is required: ${error instanceof Error ? error.message : String(error)}`)));
 
   return {
     get backend() { return backend; },
+    get device() { return backend === "WebGPU" ? (renderer.backend as unknown as { device: GPUDevice }).device : undefined; },
     load(world: WorldInfo) {
       stage?.dispose();
       stage = createCubeStage(scene, camera, world);
@@ -61,12 +73,11 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
     apply(frame: Frame) { stage?.apply(frame); },
     target(point: Point | undefined, shape: BrushShape, radius: number) { stage?.target(point, shape, radius); },
     draw(entered: boolean, yaw: number, pitch: number, dt: number, time: number) {
-      if (!stage || covered || backend === "starting") return;
-      if (canvas.clientWidth !== width || canvas.clientHeight !== height) {
-        width = canvas.clientWidth;
-        height = canvas.clientHeight;
+      if (!stage || covered || benching || backend === "starting" || layout.width < 1 || layout.height < 1) return;
+      if (layout.width !== width || layout.height !== height) {
+        ({ width, height } = layout);
         renderer.setSize(width, height, false);
-        camera.aspect = width / Math.max(1, height);
+        camera.aspect = width / height;
         camera.updateProjectionMatrix();
       }
       stage.pose(entered, yaw, pitch, dt, time);
@@ -89,6 +100,45 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
     levelCounts: () => stage?.counts() ?? [],
     air: () => stage?.air ?? null,
     cloudCost: () => null,
+    // Time of a frame, as frames drawn back to back in batches of `frames` with the clouds shown and hidden in turn
+    // until the GPU is done: the display's vsync cannot hold them back, so the difference is what the clouds cost.
+    // Median milliseconds a frame over the batches; null where the device cannot be waited on. Showing the clouds
+    // again draws both cloud shadow maps at once, so each batch begins with one frame left out of its time. The
+    // light does not ease while the bench draws; the clouds' picture is built up again afterwards.
+    async bench(frames: number, batches = 6) {
+      const device = (renderer.backend as { device?: { queue: { onSubmittedWorkDone(): Promise<void> } } }).device;
+      const benched = stage;
+      // Not before a frame has sized the targets, nor on a canvas with no area.
+      if (!benched || !device || benching || width < 1 || layout.width < 1 || layout.height < 1) return null;
+      // Per batch: milliseconds a frame until the GPU is done, and of those, the page's own to submit the frames.
+      const timed = { cloudy: [] as number[], clear: [] as number[], cloudySubmit: [] as number[], clearSubmit: [] as number[] };
+      const shown = benched.cloudsShown;
+      benching = true;
+      benched.hold();
+      try {
+        for (let batch = 0; batch < batches * 2; batch++) {
+          const cloudy = batch % 2 === 0;
+          benched.veil(cloudy);
+          benched.draw(renderer, () => {});
+          await device.queue.onSubmittedWorkDone();
+          const began = performance.now();
+          for (let frame = 0; frame < frames; frame++) benched.draw(renderer, () => {});
+          timed[cloudy ? "cloudySubmit" : "clearSubmit"].push((performance.now() - began) / frames);
+          await device.queue.onSubmittedWorkDone();
+          timed[cloudy ? "cloudy" : "clear"].push((performance.now() - began) / frames);
+        }
+      } finally {
+        benched.veil(shown);
+        benching = false;
+      }
+      const median = (values: number[]) => Number([...values].sort((a, b) => a - b)[values.length >> 1].toFixed(3));
+      const cloudy = median(timed.cloudy);
+      const clear = median(timed.clear);
+      return {
+        frames, batches, cloudyMs: cloudy, clearMs: clear, cloudMs: Number((cloudy - clear).toFixed(3)),
+        cloudySubmitMs: median(timed.cloudySubmit), clearSubmitMs: median(timed.clearSubmit), ...timed,
+      };
+    },
     timings: () => ({ cpuMs, gpuMs }),
     renderStats,
   };

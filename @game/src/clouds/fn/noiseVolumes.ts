@@ -1,5 +1,5 @@
 import {
-  DataTexture, FloatType, LinearFilter, NearestFilter, RepeatWrapping, RGBAFormat, Storage3DTexture, UnsignedByteType, type WebGPURenderer,
+  DataTexture, LinearFilter, RepeatWrapping, RGBAFormat, Storage3DTexture, UnsignedByteType, type WebGPURenderer,
 } from "three/webgpu";
 import { Fn, instanceIndex, instancedArray, textureStore, uvec3, vec3, wgsl, wgslFn } from "three/tsl";
 import { CoverSteps } from "../constant/density";
@@ -38,7 +38,8 @@ function volume(renderer: WebGPURenderer, size: number, at: typeof shapeAt) {
 
 // For each of the three shape characters, the noise level above which a given share of the volume lies: texel i
 // holds the levels for a cover of i / CoverSteps as r, g, b. Measured on slices of the same noise, rounded as the
-// volume's bytes round it, so a cover of 0.3 really leaves 30 % of a layer in cloud. The GPU answers later.
+// volume's bytes round it, so a cover of 0.3 really leaves 30 % of a layer in cloud, and kept in bytes, which hold
+// those levels exactly and which the GPU filters between covers. The GPU answers later.
 async function coverLevels(renderer: WebGPURenderer) {
   const each = LevelSize * LevelSize;
   const samples = instancedArray(each * LevelSlices, "vec4");
@@ -53,13 +54,13 @@ async function coverLevels(renderer: WebGPURenderer) {
   const values = new Float32Array(await renderer.getArrayBufferAsync(samples.value));
   measure.dispose();
   samples.value.dispose?.();
-  const levels = new Float32Array((CoverSteps + 1) * 4);
+  const levels = new Uint8Array((CoverSteps + 1) * 4);
   for (let k = 0; k < 3; k++) {
-    const sorted = Float32Array.from({ length: values.length / 4 }, (_, i) => Math.round(Math.min(1, Math.max(0, values[i * 4 + k])) * 255) / 255).sort();
+    const sorted = Uint8Array.from({ length: values.length / 4 }, (_, i) => Math.round(Math.min(1, Math.max(0, values[i * 4 + k])) * 255)).sort();
     for (let i = 0; i <= CoverSteps; i++) levels[i * 4 + k] = sorted[Math.min(sorted.length - 1, Math.floor((1 - i / CoverSteps) * sorted.length))];
   }
-  const texture = new DataTexture(levels, CoverSteps + 1, 1, RGBAFormat, FloatType);
-  texture.minFilter = texture.magFilter = NearestFilter;
+  const texture = new DataTexture(levels, CoverSteps + 1, 1, RGBAFormat, UnsignedByteType);
+  texture.minFilter = texture.magFilter = LinearFilter;
   texture.needsUpdate = true;
   return texture;
 }

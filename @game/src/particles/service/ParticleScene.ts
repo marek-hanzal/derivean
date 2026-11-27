@@ -1,5 +1,5 @@
 import {
-  BoxGeometry, DynamicDrawUsage, type Group, InstancedMesh, Matrix4, MeshStandardMaterial,
+  BoxGeometry, DynamicDrawUsage, type Group, InstancedMesh, MeshStandardMaterial,
 } from "three/webgpu";
 import type { Point } from "../../../contract/GameBridge";
 
@@ -11,10 +11,11 @@ interface ParticleGroup {
 }
 
 // Particle positions arrive as float32 offsets from an origin the engine sends in doubles; the mesh position
-// carries that origin, so the offsets go into the float32 instance matrices as they are.
+// carries that origin, so the offsets go into the float32 instance matrices as they are. A particle's matrix is a
+// scale and a move: an instanced mesh starts every matrix as the identity, so only those six numbers are written,
+// and an update sends up only the matrices drawn.
 export function createParticleScene(content: Group) {
   const cube = new BoxGeometry(1, 1, 1);
-  const matrix = new Matrix4();
   const groups: ParticleGroup[] = [
     new MeshStandardMaterial({ color: "#60cdda", roughness: 0.24, transparent: true, opacity: 0.77 }),
     new MeshStandardMaterial({ color: "#c3a478", roughness: 0.98 }),
@@ -53,12 +54,21 @@ export function createParticleScene(content: Group) {
 
     for (let i = 0; i < particles.length; i += 5) {
       const group = groups[particles[i + 4]];
+      if (!group.mesh) continue;
+      const matrices = group.mesh.instanceMatrix.array as Float32Array;
+      const at = group.count++ * 16;
       const scale = particles[i + 3];
-      matrix.makeScale(scale, scale, scale).setPosition(particles[i], particles[i + 1], particles[i + 2]);
-      group.mesh?.setMatrixAt(group.count++, matrix);
+      matrices[at] = matrices[at + 5] = matrices[at + 10] = scale;
+      matrices[at + 12] = particles[i];
+      matrices[at + 13] = particles[i + 1];
+      matrices[at + 14] = particles[i + 2];
     }
     for (const group of groups) {
-      if (group.mesh?.count) group.mesh.instanceMatrix.needsUpdate = true;
+      if (!group.mesh?.count) continue;
+      // Matrices past the count are not drawn, so a range left from a frame not yet drawn may go.
+      group.mesh.instanceMatrix.clearUpdateRanges();
+      group.mesh.instanceMatrix.addUpdateRange(0, group.mesh.count * 16);
+      group.mesh.instanceMatrix.needsUpdate = true;
     }
   }
 

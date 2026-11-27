@@ -27,7 +27,8 @@ const literal = (value: number) => value.toFixed(1);
 //   bands   per band two layers, [cover, base, top, extinction per metre] and [ice, billow, breadth, streak]
 //   shapes  heaped, smooth and cellular noise; details fine noise for wisps; both share `repeat`, a repeating
 //           linear sampler
-//   levels  for each cover step, the noise level above which that share of a layer lies, per character
+//   levels  for each cover step, the noise level above which that share of a layer lies, per character, read
+//           through `repeat` at texel centres, so it filters between steps and never wraps
 export const DensityWgsl = `
 ${CloudSkyStruct}
 
@@ -60,17 +61,23 @@ fn cloudForm(characters: vec3f, billow: f32) -> f32 {
   return mix(characters.b, characters.r, (billow - 0.55) / 0.45);
 }
 
-fn coverLevels(levels: texture_2d<f32>, cover: f32) -> vec3f {
-  let at = clamp(cover, 0.0, 1.0) * ${literal(CoverSteps)};
-  let low = u32(floor(at));
-  let high = min(low + 1u, ${CoverSteps}u);
-  return mix(textureLoad(levels, vec2u(low, 0u), 0).rgb, textureLoad(levels, vec2u(high, 0u), 0).rgb, at - floor(at));
+// The levels between two tabulated covers, filtered by the sampler: texel i is centred at (i + 0.5) / texels.
+fn coverLevels(levels: texture_2d<f32>, filtered: sampler, cover: f32) -> vec3f {
+  let at = (clamp(cover, 0.0, 1.0) * ${literal(CoverSteps)} + 0.5) / ${literal(CoverSteps + 1)};
+  return textureSampleLevel(levels, filtered, vec2f(at, 0.5), 0.0).rgb;
 }
 
 // Extinction per metre of one band at a render-space point in x, its ice share in y. \`fine\` adds wisps.
 fn bandCloud(c: CloudSky, bands: texture_2d_array<f32>, bandSampler: sampler, shapes: texture_3d<f32>, details: texture_3d<f32>,
     repeat: sampler, levels: texture_2d<f32>, band: i32, p: vec3f, cell: vec2f, fine: bool) -> vec2f {
-  let range = cloudRange(c, band);
+  return bandCloudOf(c, bands, bandSampler, shapes, details, repeat, levels, band, cloudRange(c, band), smallRepeat(band),
+    cloudWind(c, band), cloudDrift(c, band), p, cell, fine);
+}
+
+// bandCloud with the band's range, small repeat, wind and drift given, for a caller that holds them for many points.
+fn bandCloudOf(c: CloudSky, bands: texture_2d_array<f32>, bandSampler: sampler, shapes: texture_3d<f32>, details: texture_3d<f32>,
+    repeat: sampler, levels: texture_2d<f32>, band: i32, range: vec4f, size: f32, wind: vec2f, drift: vec4f, p: vec3f, cell: vec2f,
+    fine: bool) -> vec2f {
   let y = p.y + c.datum;
   if (range.z <= 0.0 || y <= range.x || y >= range.y) { return vec2f(0.0); }
   let shape = textureSampleLevel(bands, bandSampler, cell, band * 2, 0.0);
@@ -83,10 +90,7 @@ fn bandCloud(c: CloudSky, bands: texture_2d_array<f32>, bandSampler: sampler, sh
   let streak = form.w;
   let tower = billow * breadth;
 
-  let size = smallRepeat(band);
-  let wind = cloudWind(c, band);
   let across = vec2f(-wind.y, wind.x);
-  let drift = cloudDrift(c, band);
   let plain = p.xz / size + drift.xy;
   let drawn = vec2f(dot(p.xz, wind) / (size * ${literal(StreakStretch)}), dot(p.xz, across) / size) + drift.zw;
   // Heaps are sampled stretched upwards: a dome then stands on the whole of its footprint and the cloud base cuts
@@ -111,7 +115,7 @@ fn bandCloud(c: CloudSky, bands: texture_2d_array<f32>, bandSampler: sampler, sh
     let above = textureSampleLevel(bands, bandSampler, cell, band * 2 + 2, 0.0).x * select(1.0, 0.45, band == 1);
     cover = mix(cover, min(cover, above), tower * smoothstep(0.7, 1.0, h));
   }
-  let level = cloudForm(coverLevels(levels, cover), billow);
+  let level = cloudForm(coverLevels(levels, repeat, cover), billow);
   var body = cloudForm(characters, billow) - level;
   if (body <= -0.12) { return vec2f(0.0, ice); }
   // Wisps move the cloud's surface in and out; without them (far away, or for light on its way) it sits at their
@@ -137,8 +141,8 @@ fn bandCloud(c: CloudSky, bands: texture_2d_array<f32>, bandSampler: sampler, sh
 fn cloudShade(c: CloudSky, bands: texture_2d_array<f32>, bandSampler: sampler, shapes: texture_3d<f32>, details: texture_3d<f32>,
     repeat: sampler, levels: texture_2d<f32>, p: vec3f) -> f32 {
   let cell = cloudCell(c, p);
-  return bandCloud(c, bands, bandSampler, shapes, details, repeat, levels, 0, p, cell, false).x
-    + bandCloud(c, bands, bandSampler, shapes, details, repeat, levels, 1, p, cell, false).x
-    + bandCloud(c, bands, bandSampler, shapes, details, repeat, levels, 2, p, cell, false).x;
+  return bandCloudOf(c, bands, bandSampler, shapes, details, repeat, levels, 0, c.range0, ${literal(SmallRepeats[0])}, c.wind01.xy, c.drift0, p, cell, false).x
+    + bandCloudOf(c, bands, bandSampler, shapes, details, repeat, levels, 1, c.range1, ${literal(SmallRepeats[1])}, c.wind01.zw, c.drift1, p, cell, false).x
+    + bandCloudOf(c, bands, bandSampler, shapes, details, repeat, levels, 2, c.range2, ${literal(SmallRepeats[2])}, c.wind2, c.drift2, p, cell, false).x;
 }
 `;

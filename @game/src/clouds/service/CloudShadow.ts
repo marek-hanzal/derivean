@@ -1,13 +1,14 @@
-import { LinearFilter, type Node, NodeMaterial, QuadMesh, RenderTarget, UnsignedByteType, Vector3, Vector4, type WebGPURenderer } from "three/webgpu";
+import {
+  LinearFilter, type Node, NodeMaterial, QuadMesh, RedFormat, RenderTarget, UnsignedByteType, Vector3, Vector4, type WebGPURenderer,
+} from "three/webgpu";
 import { uniform, uv, vec4, wgsl, wgslFn } from "three/tsl";
 import { DensityWgsl } from "../constant/density";
-import { ForwardShare, ForwardThinning, LeastThrough, ShadowMs, ShadowSize, ShadowSpan } from "../constant/shadow";
+import { ForwardShare, ForwardThinning, LeastThrough, ShadowMs, ShadowSize, ShadowSpans } from "../constant/shadow";
 import { CloudParams, CloudSkyOf, CloudTextures, cloudArgs } from "../fn/cloudArgs";
 import { sunThrough } from "../fn/sunThrough";
 import type { CloudNodes } from "../type/CloudNodes";
 import type { CloudShade } from "../type/CloudShade";
 
-const Texel = ShadowSpan / ShadowSize;
 const literal = (value: number) => value.toFixed(4);
 
 // Each texel looks up the sun's ray through the three bands of the same density field the clouds are drawn from,
@@ -35,48 +36,65 @@ fn cloudThrough(at: vec2f, place: vec4f, sun: vec3f, ${CloudParams}) -> f32 {
 }
 `, [wgsl(DensityWgsl)]);
 
-// The shadows the clouds cast, as a map of sunlight reaching a level plane around the eye, so the shadows are the
-// clouds' own and move with them. The map is anchored to the world on whole texels and redrawn a few times a
-// second.
+// The shadows the clouds cast, as maps of sunlight reaching a level plane around the eye, one near and one far
+// (ShadowSpans), so the shadows are the clouds' own and move with them. Each map is anchored to the world on whole
+// texels of its own and redrawn a few times a second.
 export function createCloudShadow(clouds: CloudNodes, sun: Node<"vec3">) {
-  const target = new RenderTarget(ShadowSize, ShadowSize, { type: UnsignedByteType, depthBuffer: false });
-  target.texture.minFilter = target.texture.magFilter = LinearFilter;
-  const drawn = uniform(new Vector4());
-  const shade: CloudShade = { map: target.texture, place: uniform(new Vector4()), sun, beyond: uniform(1) };
-  const material = new NodeMaterial();
-  material.fragmentNode = vec4(throughNode({ at: uv(), place: drawn, sun, ...cloudArgs(clouds) }) as Node<"float">, 0, 0, 1);
-  const quad = new QuadMesh(material);
-  const centre = new Vector3();
-  let last = -Infinity;
-
+  const args = cloudArgs(clouds);
+  const maps = ShadowSpans.map((span) => {
+    // One byte a texel: the share let through is all a map holds (r8unorm).
+    const target = new RenderTarget(ShadowSize, ShadowSize, { format: RedFormat, type: UnsignedByteType, depthBuffer: false });
+    target.texture.minFilter = target.texture.magFilter = LinearFilter;
+    const drawn = uniform(new Vector4());
+    const material = new NodeMaterial();
+    material.fragmentNode = vec4(throughNode({ at: uv(), place: drawn, sun, ...args }) as Node<"float">, 0, 0, 1);
+    return {
+      span, texel: span / ShadowSize, target, drawn, material, quad: new QuadMesh(material), place: uniform(new Vector4()), centre: new Vector3(),
+      last: -Infinity,
+    };
+  });
+  const shade: CloudShade = {
+    maps: [maps[0].target.texture, maps[1].target.texture], places: [maps[0].place, maps[1].place], sun, beyond: uniform(1),
+  };
   return {
     shade,
-    // Redraws the map when it is due. `origin` and `eye` are world metres, `ground` the height to lay the plane at;
-    // `overhead` is the share of the sky the cloud over the eye covers and its optical depth.
+    // Redraws the maps when they are due. `origin` and `eye` are world metres, `ground` the height to lay the plane
+    // at; `overhead` is the share of the sky the cloud over the eye covers and its optical depth.
     update(renderer: WebGPURenderer, origin: Vector3, eye: Vector3, ground: number, lit: boolean, now: number,
       overhead: readonly [number, number]) {
       if (!lit) {
-        shade.place.value.setScalar(0);
+        for (const map of maps) {
+          map.place.value.setScalar(0);
+          map.last = -Infinity;
+        }
         shade.beyond.value = 1;
-        last = -Infinity;
         return;
       }
       shade.beyond.value = 1 - overhead[0] * (1 - sunThrough(overhead[1]));
-      if (now - last >= ShadowMs) {
-        last = now;
-        centre.set(Math.round(eye.x / Texel) * Texel, Math.round(ground / 50) * 50, Math.round(eye.z / Texel) * Texel);
-        drawn.value.set(centre.x - origin.x, centre.z - origin.z, ShadowSpan, centre.y - origin.y);
-        const previous = renderer.getRenderTarget();
-        renderer.setRenderTarget(target);
-        quad.render(renderer);
-        renderer.setRenderTarget(previous);
+      // A map that has never been drawn is drawn at once; otherwise at most one map a frame, the one longest due,
+      // so two draws never fall in one frame and neither map waits on the other however slow the frames are.
+      const due = maps.filter((map) => now - map.last >= ShadowMs);
+      const next = due.reduce<(typeof maps)[number] | undefined>((oldest, map) => (oldest && oldest.last <= map.last ? oldest : map), undefined);
+      for (const map of maps) {
+        const { span, texel, target, drawn, quad, place, centre } = map;
+        if (map === next || map.last === -Infinity) {
+          map.last = now;
+          centre.set(Math.round(eye.x / texel) * texel, Math.round(ground / 50) * 50, Math.round(eye.z / texel) * texel);
+          drawn.value.set(centre.x - origin.x, centre.z - origin.z, span, centre.y - origin.y);
+          const previous = renderer.getRenderTarget();
+          renderer.setRenderTarget(target);
+          quad.render(renderer);
+          renderer.setRenderTarget(previous);
+        }
+        // The map stays where it was drawn in the world while the render origin moves under it.
+        place.value.set(centre.x - origin.x, centre.z - origin.z, span, centre.y - origin.y);
       }
-      // The map stays where it was drawn in the world while the render origin moves under it.
-      shade.place.value.set(centre.x - origin.x, centre.z - origin.z, ShadowSpan, centre.y - origin.y);
     },
     dispose() {
-      target.dispose();
-      material.dispose();
+      for (const { target, material } of maps) {
+        target.dispose();
+        material.dispose();
+      }
     },
   };
 }

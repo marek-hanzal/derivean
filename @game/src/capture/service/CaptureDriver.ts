@@ -1,4 +1,4 @@
-// 272 lines: one state machine over a shot's phases, which share the shot's bookkeeping; split by phase, that
+// 275 lines: one state machine over a shot's phases, which share the shot's bookkeeping; split by phase, that
 // state would pass through a layer that only forwards it.
 import type { Frame, Point } from "../../../contract/GameBridge";
 import type { WorldClock } from "../../calendar/service/WorldClock";
@@ -31,6 +31,8 @@ export interface CaptureHost {
   mapSettled(): boolean;
   // Renderer-side numbers for the shot record; `lap` closes the frame-time lap opened by startLap.
   measure(lap: boolean): Record<string, unknown>;
+  // GPU time of a frame with the clouds shown and hidden, drawn back to back.
+  bench(frames: number, batches?: number): Promise<unknown>;
   // How much of the ground round a point the simulation holds at each level of detail, as shares.
   survey(x: number, z: number): Promise<Record<string, number>>;
 }
@@ -108,6 +110,7 @@ export function createCaptureDriver(bridge: CaptureBridge, plan: CapturePlan, ho
       const dataLevels = await host.survey(frame.eye[0], frame.eye[2]);
       for (let i = 0; i < 3; i++) await new Promise(requestAnimationFrame);
       await bridge.shot(current.name, { ...record, dataLevels });
+      if (current.bench) await bridge.shot(`${current.name}-bench`, await host.bench(current.bench.frames, current.bench.batches));
       index++;
       notes = {};
       turning = undefined;

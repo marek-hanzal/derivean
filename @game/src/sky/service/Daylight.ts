@@ -1,7 +1,8 @@
 import { Color, Vector2, Vector3, Vector4 } from "three/webgpu";
-import { uniform } from "three/tsl";
+import { renderGroup, uniform } from "three/tsl";
 import type { Point } from "../../../contract/GameBridge";
 import { Adaptation, AirEnd, ExposedLight, Exposure, ExposureRange, GroundBounce, GroundTint, ReliefSun, StillAir } from "../constant/air";
+import { eyeAir } from "../fn/aerial";
 import { createSkyLight, setSkyLight } from "../fn/skyLight";
 import type { AirOptics } from "../type/AirOptics";
 import type { HazeAir } from "../type/HazeAir";
@@ -15,11 +16,15 @@ const AltitudeStep = 25;
 // if it stood overhead, so a beam left on there would light level ground in full.
 const Setting = [0.02, 0.05] as const;
 const luminance = (color: Color) => 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+const finite = (air: HazeAir) => Number.isFinite(air.haze) && Number.isFinite(air.top) && Number.isFinite(air.veil)
+  && air.spectrum.every(Number.isFinite) && air.albedo.every(Number.isFinite);
 
 // Sun, sky light, air and exposure, all following the simulated sun, as the uniforms node materials light
 // themselves from. Everything here lives in render space. `optics` is the simulation's clean air.
 export function createDaylight(viewDistance: number, optics: AirOptics) {
   const light = createSkyLight();
+  // The sun's direction as the light last had it, for setting the light again under other air.
+  const sunNow: Point = [0, 1, 0];
   const nodes: SkyNodes = {
     skySun: uniform(light.skySun.value),
     skyZenith: uniform(light.skyZenith.value),
@@ -38,8 +43,12 @@ export function createDaylight(viewDistance: number, optics: AirOptics) {
     airShare: uniform(1),
     airEnd: uniform(new Vector2(viewDistance * AirEnd, viewDistance)),
     airVeil: uniform(new Vector4()),
+    airEye: uniform(new Vector4()),
     plain: uniform(0),
   };
+  nodes.airEye.setGroup(renderGroup).onRenderUpdate(({ camera }) => {
+    if (camera) eyeAir(camera.matrixWorld.elements[13] - nodes.airSea.value, nodes.airHaze.value.y, nodes.airClean.value.w, nodes.airEye.value);
+  });
   let exposure = Exposure;
   let plain = false;
   // Share of the sky under cloud and that cloud's optical depth, eased.
@@ -117,7 +126,7 @@ export function createDaylight(viewDistance: number, optics: AirOptics) {
     },
     // The weather's haze over the eye, eased over a second or two like the cloud.
     haze(seen: HazeAir | undefined, dt: number) {
-      if (!seen || ![seen.haze, seen.top, seen.veil, ...seen.spectrum, ...seen.albedo].every(Number.isFinite) || !(seen.thickness > 0)) return;
+      if (!seen || !finite(seen) || !(seen.thickness > 0)) return;
       weathered = true;
       let change = Math.abs(seen.haze - air.haze) + Math.abs(seen.veil - air.veil) + Math.abs(seen.top - air.top) / 1000;
       for (let colour = 0; colour < 3; colour++) {
@@ -134,12 +143,12 @@ export function createDaylight(viewDistance: number, optics: AirOptics) {
       }
       air.thickness = seen.thickness;
       breathe();
-      setSkyLight(light, light.skySun.value.toArray(), altitude, drawn(), optics);
+      setSkyLight(light, light.skySun.value.toArray(sunNow), altitude, drawn(), optics);
       relight();
     },
     shade(value: boolean) {
       plain = value;
-      setSkyLight(light, light.skySun.value.toArray(), altitude, drawn(), optics);
+      setSkyLight(light, light.skySun.value.toArray(sunNow), altitude, drawn(), optics);
       breathe();
       relight();
     },

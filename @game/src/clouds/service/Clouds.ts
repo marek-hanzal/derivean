@@ -1,5 +1,5 @@
 import {
-  Data3DTexture, DataArrayTexture, DataTexture, FloatType, LinearFilter, RepeatWrapping, RGBAFormat, Vector2, Vector3, Vector4,
+  Data3DTexture, DataArrayTexture, DataTexture, FloatType, LinearFilter, RepeatWrapping, RGBAFormat, UnsignedByteType, Vector2, Vector3, Vector4,
   type WebGPURenderer,
 } from "three/webgpu";
 import { texture, texture3D, uniform } from "three/tsl";
@@ -31,7 +31,8 @@ export function createClouds() {
   empty.minFilter = empty.magFilter = LinearFilter;
   empty.wrapS = empty.wrapT = RepeatWrapping;
   empty.needsUpdate = true;
-  const flat = new DataTexture(new Float32Array(4), 1, 1, RGBAFormat, FloatType);
+  const flat = new DataTexture(new Uint8Array(4), 1, 1, RGBAFormat, UnsignedByteType);
+  flat.minFilter = flat.magFilter = LinearFilter;
   flat.needsUpdate = true;
   const still = new Data3DTexture(new Uint8Array(4), 1, 1, 1);
   still.minFilter = still.magFilter = LinearFilter;
@@ -72,8 +73,7 @@ export function createClouds() {
     // Places the fields for a render origin and an eye, both in world metres. False while there is no cloud to
     // draw.
     update(renderer: WebGPURenderer, origin: Vector3, eye: Vector3, now: number) {
-      // The noise is made by compute shaders, which three.js's WebGL 2 fallback does not run: it shows no clouds.
-      if (!noise && (renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend) {
+      if (!noise) {
         noise = noiseVolumes(renderer);
         nodes.shapes.value = noise.shapes;
         nodes.details.value = noise.details;
@@ -89,7 +89,7 @@ export function createClouds() {
       const latest = field.latest;
       nodes.eye.value.copy(eye).sub(origin);
       if (!latest || !ready) return false;
-      field.update(now);
+      field.update(renderer, now);
       if (field.texture && nodes.bands.value !== field.texture) nodes.bands.value = field.texture;
       const span = latest.cell * latest.cells;
       nodes.grid.value.set(fract((origin.x - latest.origin[0]) / span), fract((origin.z - latest.origin[1]) / span), 1 / span, latest.cells);

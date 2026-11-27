@@ -13,6 +13,7 @@ const NightLight = 0.35;
 // The dome's light against its colours, by day, dusk and night.
 const DomeLight = { day: 1.9, dusk: 1.1, night: 0.5 };
 const scratch = new Color();
+const tint: [number, number, number] = [0, 0, 0];
 const smooth = (from: number, to: number, value: number) => {
   const t = Math.max(0, Math.min(1, (value - from) / (to - from)));
   return t * t * (3 - 2 * t);
@@ -30,14 +31,18 @@ export function createSkyLight(): SkyLight {
   };
 }
 
+function add(target: Color, hex: string, share: number) {
+  scratch.set(hex);
+  target.r += scratch.r * share;
+  target.g += scratch.g * share;
+  target.b += scratch.b * share;
+}
+
 function blend(target: Color, day: string, dusk: string, night: string, days: number, dusks: number, nights: number) {
   target.setRGB(0, 0, 0);
-  for (const [hex, share] of [[day, days], [dusk, dusks], [night, nights]] as const) {
-    scratch.set(hex);
-    target.r += scratch.r * share;
-    target.g += scratch.g * share;
-    target.b += scratch.b * share;
-  }
+  add(target, day, days);
+  add(target, dusk, dusks);
+  add(target, night, nights);
 }
 
 // What the haze and the clean air's green take from light per metre along a level line at a height.
@@ -67,7 +72,7 @@ export function setSkyLight(light: SkyLight, sun: Point, altitude: number, air: 
   const days = smooth(-0.02, 0.3, height);
   const nights = 1 - smooth(-0.24, -0.04, height);
   const dusks = Math.max(0, 1 - days - nights);
-  light.skySun.value.set(...sun).normalize();
+  light.skySun.value.fromArray(sun).normalize();
   blend(light.skyZenith.value, DaySky.zenith, DuskSky.zenith, NightSky.zenith, days, dusks, nights);
   blend(light.skyHorizon.value, DaySky.horizon, DuskSky.horizon, NightSky.horizon, days, dusks, nights);
   blend(light.skyGlow.value, DaySky.glow, DuskSky.glow, NightSky.glow, days * 0.25, dusks, 0);
@@ -78,10 +83,10 @@ export function setSkyLight(light: SkyLight, sun: Point, altitude: number, air: 
   // reflects it (Hapke's diffusive reflectance, 1981: (1 − γ) / (1 + γ) with γ = √(1 − albedo)), kept at the
   // horizon's brightness. A little absorption per scattering adds up over many: dust is tan.
   const grey = 0.2126 * horizon.r + 0.7152 * horizon.g + 0.0722 * horizon.b;
-  const tint = air.albedo.map((albedo) => {
-    const gamma = Math.sqrt(Math.max(0, 1 - albedo));
-    return (1 - gamma) / (1 + gamma);
-  });
+  for (let colour = 0; colour < 3; colour++) {
+    const gamma = Math.sqrt(Math.max(0, 1 - air.albedo[colour]));
+    tint[colour] = (1 - gamma) / (1 + gamma);
+  }
   const tintGrey = 0.2126 * tint[0] + 0.7152 * tint[1] + 0.0722 * tint[2];
   horizon.lerp(scratch.setRGB(grey * tint[0] / tintGrey, grey * tint[1] / tintGrey, grey * tint[2] / tintGrey), whitening);
   light.skyZenith.value.lerp(horizon, 1 - Math.exp(-ZenithPaling * days * Math.max(0, hazeAbove(air, altitude) - ReferenceDepth)));

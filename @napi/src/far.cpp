@@ -5,11 +5,12 @@ namespace derivean {
 Napi::Value quads(Napi::Env env, const FaceMesh& faces) {
     const size_t count = faces.size() / FaceWords;
     auto array = Napi::Uint32Array::New(env, count * 2);
+    uint32_t* out = array.Data();
     for (size_t face = 0; face < count; ++face) {
         const int16_t* word = faces.data() + face * FaceWords;
-        array[face * 2] = uint32_t(word[2]) | uint32_t(word[3]) << 6 | uint32_t(word[4]) << 12 | uint32_t(word[5] - 1) << 18 |
-                          uint32_t(word[6] - 1) << 23 | uint32_t(word[0]) << 28 | uint32_t(word[1] > 0) << 30;
-        array[face * 2 + 1] = uint32_t(word[7]) | uint32_t(word[8]) << 8;
+        out[face * 2] = uint32_t(word[2]) | uint32_t(word[3]) << 6 | uint32_t(word[4]) << 12 | uint32_t(word[5] - 1) << 18 |
+                        uint32_t(word[6] - 1) << 23 | uint32_t(word[0]) << 28 | uint32_t(word[1] > 0) << 30;
+        out[face * 2 + 1] = uint32_t(word[7]) | uint32_t(word[8]) << 8;
     }
     return array;
 }

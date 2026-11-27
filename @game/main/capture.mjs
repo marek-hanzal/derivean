@@ -1,5 +1,7 @@
 import { app } from "electron";
+import { execFile } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -43,6 +45,9 @@ function checkShot(file, shot) {
     && brush === undefined)) reject(file, `shot ${shot.name} has a malformed turn or one with a cruise or brush`);
   if (shot.map !== undefined && !(finite(shot.map?.span) && shot.map.span > 0)) reject(file, `shot ${shot.name} has a malformed map`);
   if (!readiness(shot.ready)) reject(file, `shot ${shot.name} asks for readiness other than ${Readiness.join(", ")}`);
+  const { bench } = shot;
+  if (bench !== undefined && !(Number.isInteger(bench?.frames) && bench.frames > 0
+    && (bench.batches === undefined || (Number.isInteger(bench.batches) && bench.batches > 0)))) reject(file, `shot ${shot.name} has a malformed bench`);
 }
 
 // The plan named by DERIVEAN_CAPTURE, or null for a normal run. src/capture/type/CapturePlan.ts owns its shape.
@@ -61,6 +66,36 @@ export async function readCapturePlan() {
   if (size !== undefined && !(Array.isArray(size) && size.length === 2 && size.every((edge) => Number.isInteger(edge) && edge > 0))) reject(file, "size is not a width and a height");
   return { ...plan, out: path.resolve(repository, plan.out ?? ".out/playwright/capture") };
 }
+
+// The GPU's busy share over all its users, %, from IOAccelerator's performance statistics; null off macOS or where it
+// cannot be read. Never rejects.
+function gpuBusy() {
+  if (process.platform !== "darwin") return Promise.resolve(null);
+  return new Promise((resolve) => {
+    execFile("ioreg", ["-r", "-d", "1", "-c", "IOAccelerator"], { timeout: 5000 }, (error, out) => {
+      const found = !error && /"Device Utilization %"=(\d+)/.exec(out);
+      resolve(found ? Number(found[1]) : null);
+    });
+  });
+}
+
+// How busy the machine was as a record was taken, so that a time measured on a shared machine can be read against
+// its load: a capture is not timed on a quiet machine, and only a change well beyond the load's swing is a finding.
+// The load averages (null on Windows, which has none) and cores; the share of a core each kind of this app's
+// processes took since the record before (Electron's app metrics: the first record's is not a reading, and a
+// bench's covers its shot and the bench); and the GPU's busy share. Null where any of it fails: the record matters
+// more than its stamp.
+async function machine() {
+  try {
+    const appCpu = {};
+    for (const { type, cpu } of app.getAppMetrics()) appCpu[type] = Number(((appCpu[type] ?? 0) + cpu.percentCPUUsage).toFixed(1));
+    const load = process.platform === "win32" ? null : os.loadavg().map((value) => Number(value.toFixed(2)));
+    return { load, cores: os.cpus().length, appCpu, gpuBusy: await gpuBusy() };
+  } catch {
+    return null;
+  }
+}
+const stampText = (stamp) => stamp ? `, load ${stamp.load?.[0] ?? "n/a"}, GPU busy ${stamp.gpuBusy ?? "n/a"}%` : "";
 
 // Serves the renderer's capture driver: hands out the plan, writes each shot, and ends the run.
 export function serveCapture(plan, window, handle) {
@@ -91,17 +126,27 @@ export function serveCapture(plan, window, handle) {
   handle("derivean:capture-plan", () => plan);
   handle("derivean:capture-shot", async ({ name, record }) => {
     alive();
-    if (!plan.shots.some((shot) => shot.name === name)) throw new Error(`Unplanned capture shot ${name}`);
     await mkdir(plan.out, { recursive: true });
+    const stamp = await machine();
+    // A record that is not an object (a bench the device could not wait on gives null) keeps its value beside the stamp.
+    const stamped = record && typeof record === "object" && !Array.isArray(record) ? { ...record, machine: stamp } : { record, machine: stamp };
+    // A shot's bench comes after its picture, as a record of its own.
+    const benched = plan.shots.find((shot) => shot.bench && `${shot.name}-bench` === name);
+    if (benched) {
+      await writeFile(path.join(plan.out, `${name}.json`), `${JSON.stringify(stamped, null, 2)}\n`);
+      console.log(`Benched ${benched.name}: ${JSON.stringify({ cloudyMs: record?.cloudyMs, clearMs: record?.clearMs, cloudMs: record?.cloudMs })}${stampText(stamp)}`);
+      return;
+    }
+    if (!plan.shots.some((shot) => shot.name === name)) throw new Error(`Unplanned capture shot ${name}`);
     const image = await window.webContents.capturePage();
     if (image.isEmpty()) throw new Error(`The window gave no image for ${name}`);
     const { width } = window.getContentBounds();
     await writeFile(path.join(plan.out, `${name}.png`), image.resize({ width, quality: "best" }).toPNG());
-    await writeFile(path.join(plan.out, `${name}.json`), `${JSON.stringify(record, null, 2)}\n`);
+    await writeFile(path.join(plan.out, `${name}.json`), `${JSON.stringify(stamped, null, 2)}\n`);
     const outcome = record?.outcome ?? "taken";
     const unready = Array.isArray(record?.unready) ? record.unready : [];
     outcomes.push({ name, outcome, unready });
-    console.log(`Captured ${path.join(plan.out, `${name}.png`)} ${outcome}${unready.length ? `, unready ${unready.join(" ")}` : ""}`);
+    console.log(`Captured ${path.join(plan.out, `${name}.png`)} ${outcome}${unready.length ? `, unready ${unready.join(" ")}` : ""}${stampText(stamp)}`);
   });
   handle("derivean:capture-finish", (failure) => {
     clearTimeout(watchdog);

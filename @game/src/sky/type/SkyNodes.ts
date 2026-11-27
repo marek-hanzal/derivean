@@ -29,6 +29,8 @@ export interface SkyNodes {
   airShare: UniformNode<"float", number>;
   airEnd: UniformNode<"vec2", Vector2>;
   airVeil: UniformNode<"vec4", Vector4>;
+  // What the air's paths take from the eye, worked out for each view's camera (eyeAir).
+  airEye: UniformNode<"vec4", Vector4>;
   // 1 for plain relief shading.
   plain: UniformNode<"float", number>;
 }

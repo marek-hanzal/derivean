@@ -41,7 +41,7 @@ Napi::Value clouds(Napi::Env env, const Frame& frame) {
     output["snow"] = packed(env, field.snow);
     const auto& lying = frame.cloudsAir->snow.cells;
     auto snowpack = Napi::Float32Array::New(env, lying.size());
-    std::transform(lying.begin(), lying.end(), snowpack.Data(), [](auto value) { return float(value); });
+    std::transform(lying.begin(), lying.end(), snowpack.Data(), [](auto mass) { return float(mass); });
     output["snowpack"] = snowpack;
     output["snowLadder"] = packed(env, field.snowLadder);
     output["snowLine"] = packed(env, field.snowLine);

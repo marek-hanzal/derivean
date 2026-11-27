@@ -1,4 +1,4 @@
-import { dot, exp, max, mix, positionWorldDirection, pow, smoothstep, step, vec3 } from "three/tsl";
+import { dot, exp, max, mix, positionWorldDirection, smoothstep, step } from "three/tsl";
 import type { Node } from "three/webgpu";
 import type { SkyNodes } from "../type/SkyNodes";
 
@@ -7,9 +7,13 @@ import type { SkyNodes } from "../type/SkyNodes";
 export function skyRadiance(sky: SkyNodes, direction: Node<"vec3">) {
   const up = max(direction.y, 0);
   const toSun = dot(direction, sky.skySun);
+  // The band's fourth power and the aureole's thirty-second by squaring.
+  const squared = (value: Node<"float">, times: number): Node<"float"> => (times ? squared(value.mul(value), times - 1) : value);
+  const band = squared(max(toSun.mul(0.5).add(0.5), 0), 2);
+  const near = squared(max(toSun, 0), 5);
   return mix(sky.skyHorizon, sky.skyZenith, exp(up.mul(-3.4)).oneMinus())
-    .add(sky.skyGlow.mul(exp(up.mul(-6))).mul(pow(max(toSun.mul(0.5).add(0.5), 0), 4)).mul(0.8))
-    .add(sky.skyGlow.mul(pow(max(toSun, 0), 32)).mul(0.5));
+    .add(sky.skyGlow.mul(exp(up.mul(-6))).mul(band).mul(0.8))
+    .add(sky.skyGlow.mul(near).mul(0.5));
 }
 
 // The scene's background: the clear sky and the sun's disc.

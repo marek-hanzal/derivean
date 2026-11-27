@@ -12,6 +12,13 @@ export const NoHeight = -1e30;
 // gentle ground, and the near one keeps a ridge or a valley from being smeared across.
 export const LandReach = [3, 8] as const;
 
+// Columns round a square that its slopes read: the far reach on every side.
+export const SlopeMargin = LandReach[1];
+
+// Numbers a column keeps (LevelHeights): its height, the length of the slope across the near reach, and the slope
+// across both reaches averaged, along x and along z.
+export const SlopeWords = 4;
+
 // Cube edges, metres, over which faces start to be lit as the land they stand for, ramped by the number of
 // doublings, and the most of their light that is the land's: a cube a few voxels across is still the voxels'
 // own, a coarse one stands for many of them.

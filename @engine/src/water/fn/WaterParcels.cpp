@@ -2,22 +2,18 @@
 #include "particles/type/VoxelContact.hpp"
 #include "physics/constant/Gravity.hpp"
 #include "physics/service/JoltRuntime.hpp"
+#include "water/constant/ParcelRoots.hpp"
 
-#include <array>
 #include <cmath>
 
 namespace derivean {
 namespace {
 
-// A parcel leaves a cell with at most the cell's water, so its width is looked up by amount; a
-// larger amount would be computed as before.
+static_assert(ParcelRoots.size() == WaterUnits + 1);
+
+// A parcel carries at most a cell's water, `amount` 0 to WaterUnits.
 double parcelWidth(int amount) {
-    static const std::array<double, WaterUnits + 1> widths = [] {
-        std::array<double, WaterUnits + 1> table{};
-        for (int units = 0; units <= WaterUnits; ++units) table[size_t(units)] = VoxelSize * std::cbrt(units / double(WaterUnits));
-        return table;
-    }();
-    return amount >= 0 && amount <= WaterUnits ? widths[size_t(amount)] : VoxelSize * std::cbrt(amount / double(WaterUnits));
+    return VoxelSize * ParcelRoots[size_t(amount)];
 }
 
 bool poolContact(const WaterState& state, Position at, double half) {

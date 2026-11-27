@@ -1,4 +1,4 @@
-import { DepthTexture, DoubleSide, FloatType, MeshBasicNodeMaterial, ViewportDepthTextureNode } from "three/webgpu";
+import { DoubleSide, MeshBasicNodeMaterial } from "three/webgpu";
 import {
   Fn, abs, cameraPosition, cameraProjectionMatrixInverse, cameraWorldMatrix, dot, exp, float, getViewPosition, length, max, min, mix,
   normalize, positionWorld, pow, screenUV, vec3, vec4,
@@ -10,6 +10,7 @@ import { levelClip, levelRows } from "../../cubes/fn/levelClip";
 import type { LevelTable } from "../../cubes/type/LevelTable";
 import { airFade, airLight } from "../../sky/fn/aerial";
 import type { SkyNodes } from "../../sky/type/SkyNodes";
+import { bedDepth } from "./bedDepth";
 
 // Seas and lakes: the level sheets the engine sends with a level of cubes, drawn at the water's level whatever
 // plane their faces carry. The depth of the bed under a pixel is read from the scene's depth, so tint and opacity
@@ -19,17 +20,15 @@ import type { SkyNodes } from "../../sky/type/SkyNodes";
 export function sheetSurface(sky: SkyNodes, levels: LevelTable, clouds: CloudShade) {
   const material = new MeshBasicNodeMaterial({ transparent: true, depthWrite: false, side: DoubleSide, fog: false });
   const face = faceNodes();
-  // The copy of the scene's depth the sheets read; a float like the depth buffer it is copied from.
-  const sceneDepth = new DepthTexture(1, 1, FloatType);
-  material.addEventListener("dispose", () => sceneDepth.dispose());
+  const bed = bedDepth(material);
   material.positionNode = face.corner;
   material.colorNode = Fn(() => {
     // Sheets of two levels would blend twice where they overlapped, so a sheet ends at its square.
     levelClip(levelRows(levels, face).row, positionWorld, 4, 0);
     const fromEye = positionWorld.sub(cameraPosition);
     const range = length(fromEye);
-    const bed = cameraWorldMatrix.mul(vec4(getViewPosition(screenUV, new ViewportDepthTextureNode(screenUV, null, sceneDepth), cameraProjectionMatrixInverse), 1));
-    const depth = max(positionWorld.y.sub(bed.y), 0);
+    const floor = cameraWorldMatrix.mul(vec4(getViewPosition(screenUV, bed, cameraProjectionMatrixInverse), 1));
+    const depth = max(positionWorld.y.sub(floor.y), 0);
     const deepening = exp(depth.div(-14)).oneMinus();
     const toEye = normalize(fromEye.negate());
     const facing = abs(toEye.y);

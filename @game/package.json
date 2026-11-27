@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "@types/three": "0.187.0",
+    "@webgpu/types": "0.1.71",
     "electron": "45.5.0",
     "typescript": "5.9.3",
     "vite": "8.3.8"

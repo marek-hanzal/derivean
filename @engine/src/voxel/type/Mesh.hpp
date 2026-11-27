@@ -19,9 +19,10 @@ using FaceMesh = std::vector<int16_t>;
 // `voxels` must hold every cell of `inner` padded by one, edges and corners included.
 FaceMesh meshFaces(const Voxels& voxels, Bounds inner);
 
-// Cuts a mask of `width` × `height` entries into rectangles of equal non-zero entries, clearing it,
-// and hands each to `emit(u, v, width, height, entry)`. `alongU` and `alongV` say whether a
-// rectangle of that entry may grow along the axis.
+// Cuts a mask of `width` × `height` entries into rectangles of equal non-zero entries, clearing it, row by row
+// as greedy meshing does (Lysenko 2012, docs/credits/rendering.md), and hands each to
+// `emit(u, v, width, height, entry)`. `alongU` and `alongV` say whether a rectangle of that entry may grow along
+// the axis.
 template<typename AlongU, typename AlongV, typename Emit>
 void mergeMask(std::vector<int32_t>& mask, int width, int height, AlongU alongU, AlongV alongV, Emit emit) {
     for (int j = 0; j < height; ++j)
@@ -40,6 +41,8 @@ void mergeMask(std::vector<int32_t>& mask, int width, int height, AlongU alongU,
         }
 }
 
-std::vector<Bounds> mergeSolids(Voxels voxels);
+// Solid cells of `voxels` as boxes, for colliders: each grows from the lowest cell not yet taken along x, then z,
+// then y, as far as every cell it would take is solid and not taken.
+std::vector<Bounds> mergeSolids(const Voxels& voxels);
 
 } // namespace derivean
