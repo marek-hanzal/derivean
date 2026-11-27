@@ -67,9 +67,11 @@ std::vector<int32_t> joinsOf(const Globe& globe, const PlateRegions& regions) {
     std::vector<int32_t> to(regions.plate.size(), -1);
     std::vector<uint8_t> aside(regions.plate.size(), 0);   // joins no plate's largest region
     std::vector<double> shared(2 * plates, 0);   // m (corners: their count) with a plate's largest region, then with any of it
-    std::vector<std::vector<int32_t>> cells(regions.plate.size());
-    for (int c = 0; c < grid.cells; ++c)
-        if (regions.region[size_t(c)] >= 0) cells[size_t(regions.region[size_t(c)])].push_back(c);
+    std::vector<std::vector<int32_t>> cells(regions.plate.size());   // of the regions that are not their plate's largest
+    for (int c = 0; c < grid.cells; ++c) {
+        const int32_t r = regions.region[size_t(c)];
+        if (r >= 0 && regions.largest[size_t(regions.plate[size_t(r)])] != r) cells[size_t(r)].push_back(c);
+    }
     const auto count = [&](size_t r, int32_t m, double length) {
         const int32_t other = m >= 0 ? regions.owner[size_t(m)] : -1;
         if (other < 0 || other == regions.plate[r]) return;
