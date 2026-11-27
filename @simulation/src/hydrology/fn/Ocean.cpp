@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <map>
 
 namespace derivean::sim {
@@ -14,6 +15,7 @@ namespace {
 constexpr double Gathered = 86400.0;   // s that must gather before the sea is integrated
 constexpr double FirstRound = 3600.0;  // s, and longest round: throats in different places take turns
 constexpr double LongestRound = 3.15576e7;
+constexpr double RoundsUntil = 0x1p53;   // s after the newest cut: offsets are whole seconds held exactly below it
 
 } // namespace
 
@@ -99,14 +101,12 @@ double nextRoundOffset(double age) {
 // A round ends where `opened + offset` rounds to, and the integration stops on that stored time.
 // The age read back from it can fall short of the offset, so the search starts half the first
 // round early, at most one end back, and takes whole rounds until the stored end lies past now.
-// Past 2^53 s an offset divided by the year can round below its own round, which would give the
-// same offset back; a step that does not move takes the longest round instead.
+// Rounds are followed while their offsets are whole seconds held exactly, below 2^53 s (285 Myr)
+// after the newest cut; past that the turns end and every throat runs on its own.
 double roundEnd(const Ocean& ocean) {
+    if (!(ocean.seconds - ocean.opened < RoundsUntil)) return std::numeric_limits<double>::infinity();
     double offset = nextRoundOffset(ocean.seconds - ocean.opened - 0.5 * FirstRound);
-    while (ocean.opened + offset <= ocean.seconds && std::isfinite(offset)) {
-        const double next = nextRoundOffset(offset);
-        offset = next > offset ? next : offset + LongestRound;
-    }
+    while (ocean.opened + offset <= ocean.seconds) offset = nextRoundOffset(offset);
     return ocean.opened + offset;
 }
 
@@ -121,8 +121,9 @@ void integrate(Ocean& ocean, bool all) {
     Exchange exchange;
     if (!throats.empty()) exchange = openExchange(ocean);
     while (ocean.seconds < target) {
-        const double end = throats.size() < 2 ? target : std::min(target, roundEnd(ocean));
-        if (end >= target && !all && throats.size() > 1 && roundEnd(ocean) > target) break;
+        const double round = throats.size() < 2 ? std::numeric_limits<double>::infinity() : roundEnd(ocean);
+        const double end = std::min(target, round);
+        if (end >= target && !all && std::isfinite(round) && round > target) break;
         for (const Throat& throat : throats) flowThrough(ocean, exchange, throat, end - ocean.seconds);
         ocean.seconds = end;
     }
