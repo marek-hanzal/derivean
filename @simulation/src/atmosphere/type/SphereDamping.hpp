@@ -12,7 +12,8 @@ namespace derivean::sim {
 // of L before the flow's filter, in [0, 1] while s ν λ_max² ≤ 1. With the filter a mode's two roots
 // stay real up to s ν λ² = 0.976, the physical one positive and dominant, and the step is stable up
 // to 2.06; a mode started by the forward step keeps its sign below 0.976. The check of a step holds
-// s ν bound² ≤ 1 on a certified upper bound, 1.3 to 1.4 times λ_max, so s ν λ_max² ≤ 0.6 in practice.
+// s ν bound² ≤ 1 on a certified upper bound: that certifies s ν λ_max² ≤ 1, not the ≈ 0.55 that
+// (estimate / bound)² suggests, and no monotone step, not for an arbitrary history nor a sum of forces.
 // ν is set from an estimate of λ_max so the fastest mode decays in `decay`.
 struct SphereDamping {
     double decay{};      // s, e-folding time of the fastest mode
