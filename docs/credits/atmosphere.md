@@ -188,7 +188,7 @@ Higham, N. J., Mary, T. (2022). Mixed precision algorithms in numerical linear a
 ### Fischer 1998: projection of successive solutions
 Fischer, P. F. (1998). Projection techniques for iterative solution of Ax = b with successive right-hand sides. *Computer Methods in Applied Mechanics and Engineering* 163(1–4), 193–204. doi:10.1016/S0045-7825(98)00012-7 (record checked in Crossref, whose title drops "Ax = b"; the paper itself not read).
 - **Model:** the first guess of an iterative solve as the projection, in the energy norm x K x, of the new solution on the span of earlier solutions, so the first guess is never worse in that norm than any of them. Here the span is the last three accepted ψ of the flow, in differences, solved through a 3 × 3 Gram matrix; Fischer builds a K-orthonormal basis instead. Neon's DREV-NEON-019-01 (`.out/review-mailbox/from-neon/DREV-NEON-019-01.txt`) proposed it as the fallback to extrapolation in time.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereFlowGuess.cpp:12`, `@simulation/src/atmosphere/fn/SphereFlow.hpp:39`; `docs/handoff/atmosphere-sphere.md:89`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereFlowGuess.cpp:63`, `@simulation/src/atmosphere/fn/SphereFlow.hpp:39`; `docs/handoff/atmosphere-sphere.md:89`.
 - **Checked by:** `@simulation/test/AtmosphereSphereStep.cpp:122` (fewer iterations on the Rossby–Haurwitz wave, the flow within the tolerance, restarts), `:26` (a refused step leaves the history).
 - **Approximations:** only three levels; a difference whose Cholesky pivot falls below 1e-12 of its diagonal is dropped.
 
