@@ -5,6 +5,7 @@
 #include "atmosphere/fn/SphereMultigrid.hpp"
 #include "atmosphere/fn/SphereOperators.hpp"
 #include "atmosphere/fn/SpherePoisson.hpp"
+#include "atmosphere/fn/StencilMatrix.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -144,6 +145,38 @@ void checkPreconditioner() {
     }
 }
 
+// The smoother's interval rests on λmax(D⁻¹K) estimated from 12 power steps: on levels 2 to 5 the
+// estimate is below the value 2000 steps from a random start converge to (both are Rayleigh
+// quotients, so lower bounds) and within 5 % of it.
+void checkLargestEigenvalue() {
+    for (int level = 2; level <= 5; ++level) {
+        const SphereGrid grid = makeSphereGrid(level);
+        const PoissonLevel at = makePoissonLevel(grid, makeSphereStencil(grid));
+        std::uint64_t state = uint64_t(level);
+        std::vector<double> x(size_t(grid.cells)), kx;
+        for (double& value : x) {
+            state = state * 6364136223846793005ull + 1442695040888963407ull;
+            value = double(state >> 11) / double(1ull << 53) - 0.5;
+        }
+        double largest = 0;
+        for (int step = 0; step < 2000; ++step) {
+            applyMatrix(at.stiffness, x, kx);
+            double kxx = 0, dxx = 0, top = 0;
+            for (size_t c = 0; c < x.size(); ++c) {
+                kxx += kx[c] * x[c];
+                dxx += x[c] * x[c] / at.inverseDiagonal[c];
+            }
+            largest = kxx / dxx;
+            for (size_t c = 0; c < x.size(); ++c) {
+                x[c] = at.inverseDiagonal[c] * kx[c];
+                top = std::max(top, std::abs(x[c]));
+            }
+            for (double& value : x) value /= top;
+        }
+        expect(at.largest <= largest * (1 + 1e-9) && at.largest > 0.95 * largest, "λmax of D⁻¹K is misestimated", at.largest / largest);
+    }
+}
+
 } // namespace
 
 namespace derivean::sim::atmosphere_sphere_test {
@@ -153,6 +186,7 @@ void checkPoisson() {
     checkNullMode();
     checkFailure();
     checkPreconditioner();
+    checkLargestEigenvalue();
 }
 
 } // namespace derivean::sim::atmosphere_sphere_test

@@ -4,6 +4,7 @@
 #include "AtmosphereSphereFixture.hpp"
 
 #include "atmosphere/fn/SphereOperators.hpp"
+#include "atmosphere/fn/StencilMatrix.hpp"
 #include "geometry/fn/Edge.hpp"
 
 #include <cstdint>
@@ -92,6 +93,21 @@ void checkStiffness() {
     }
     const double quotient = energy / mass * PlanetRadius * PlanetRadius;
     expect(std::abs(quotient - 2) < 3e-3, "Rayleigh quotient of the degree-1 harmonic is not 2 / R²", quotient);
+    // The split form the solver uses gives the same product bit for bit, from the coarsest level
+    // (no structured rows) to level 7, whose face rows of 124 cells span two blocks of 64, and keeps
+    // the face interiors structured.
+    for (int level = 1; level <= 7; ++level) {
+        const SphereGrid at = makeSphereGrid(level);
+        const SphereMatrix full = makeLaplacian(at, makeSphereStencil(at));
+        const StencilMatrix split = makeStencilMatrix(full, at.side);
+        const int inside = at.side >= 5 ? 6 * (at.side - 4) * (at.side - 4) : 0;
+        expect(split.interior == inside, "the face interiors are not structured", level);
+        const std::vector<double> field = noise(size_t(at.cells), uint64_t(level));
+        std::vector<double> splitProduct;
+        applyMatrix(full, field, product);
+        applyMatrix(split, field, splitProduct);
+        expect(splitProduct == product, "the split stiffness product differs from the assembled one", level);
+    }
 }
 
 // One flux per edge: the area-weighted divergence of any fluxes sums to zero over the closed grid,

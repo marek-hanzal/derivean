@@ -2,6 +2,7 @@
 
 #include "atmosphere/fn/SphereMultigrid.hpp"
 #include "atmosphere/fn/SphereOperators.hpp"
+#include "atmosphere/fn/StencilMatrix.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -15,26 +16,18 @@ void precondition(SpherePoisson& poisson, const std::vector<double>& r, std::vec
         vCycle(poisson.levels, poisson.smoothing, r, z);
         return;
     }
-    for (size_t c = 0; c < r.size(); ++c) z[c] = poisson.inverseDiagonal[c] * r[c];
+    const std::vector<double>& inverse = poisson.levels[0].inverseDiagonal;
+    for (size_t c = 0; c < r.size(); ++c) z[c] = inverse[c] * r[c];
 }
 
 } // namespace
 
 SpherePoisson makeSpherePoisson(const SphereGrid& grid, const SphereStencil& stencil, bool multigrid) {
     SpherePoisson poisson;
-    PoissonLevel own;
-    own.level = grid.level;
-    own.side = grid.side;
-    own.stiffness = makeLaplacian(grid, stencil);
-    own.solution.assign(size_t(grid.cells), 0.0);
-    own.source = own.solution;
-    own.residual = own.solution;
-    poisson.levels.push_back(std::move(own));
+    poisson.levels.push_back(makePoissonLevel(grid, stencil));
     poisson.multigrid = multigrid && grid.level >= 2;
     if (poisson.multigrid)
         for (PoissonLevel& level : coarserLevels(grid.level)) poisson.levels.push_back(std::move(level));
-    poisson.inverseDiagonal.resize(size_t(grid.cells));
-    for (int c = 0; c < grid.cells; ++c) poisson.inverseDiagonal[size_t(c)] = 1.0 / poisson.levels[0].stiffness.diagonal[size_t(c)];
     return poisson;
 }
 
@@ -67,10 +60,15 @@ PoissonReport solveSpherePoisson(SpherePoisson& poisson, const SphereGrid& grid,
         report.converged = true;
         return report;
     }
-    precondition(poisson, r, z);
-    p = z;
-    double rz = dotOf(r, z);
+    // The tolerance is checked before each preconditioning, so the last iteration does not run a
+    // V-cycle whose direction would be thrown away.
     report.residual = std::sqrt(dotOf(r, r)) / bNorm;
+    double rz = 0;
+    if (report.residual > tolerance && limit > 0) {
+        precondition(poisson, r, z);
+        p = z;
+        rz = dotOf(r, z);
+    }
     while (report.residual > tolerance && report.iterations < limit) {
         applyMatrix(poisson.levels[0].stiffness, p, q);
         const double alpha = rz / dotOf(p, q);
@@ -78,12 +76,13 @@ PoissonReport solveSpherePoisson(SpherePoisson& poisson, const SphereGrid& grid,
             result[c] += alpha * p[c];
             r[c] -= alpha * q[c];
         }
+        ++report.iterations;
+        report.residual = std::sqrt(dotOf(r, r)) / bNorm;
+        if (report.residual <= tolerance || report.iterations == limit) break;
         precondition(poisson, r, z);
         const double next = dotOf(r, z), beta = next / rz;
         rz = next;
         for (size_t c = 0; c < n; ++c) p[c] = z[c] + beta * p[c];
-        ++report.iterations;
-        report.residual = std::sqrt(dotOf(r, r)) / bNorm;
     }
     // The recursive residual drifts from the true one below about 1e-13 (it fell to 1e-22 while the
     // true one stayed at 2e-13), so the report and `converged` come from one more product.
