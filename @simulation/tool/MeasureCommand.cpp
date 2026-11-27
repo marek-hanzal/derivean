@@ -13,7 +13,7 @@ int usage() {
     std::fprintf(stderr,
                  "usage: terra measure <what> [--seed n] [--age years] [--x m --z m] [--at shore|coast|peak|landing] [--levels 123] [--tiles n] [--out directory]\n"
                  "  at a place : scale regularity seams levels budget site (all five)\n"
-                 "  no place   : plane references conservation determinism history future performance earth\n");
+                 "  no place   : plane references conservation determinism history future performance earth fingerprint\n");
     return 2;
 }
 
@@ -29,6 +29,7 @@ int measureCommand(const std::string& what, const Arguments& arguments) {
     if (what == "future") return measureFuture(arguments);
     if (what == "performance") return measurePerformance(arguments);
     if (what == "earth") return measureEarth(arguments);
+    if (what == "fingerprint") return measureFingerprint(arguments);
     const bool all = what == "site";
     if (!all && what != "scale" && what != "regularity" && what != "seams" && what != "levels" && what != "budget") return usage();
 
