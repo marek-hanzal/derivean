@@ -4,6 +4,7 @@
 #include "atmosphere/type/StencilMatrix.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <vector>
 
@@ -80,6 +81,46 @@ template <class Real, class Row> void forEachProduct(const StencilMatrixOf<Real>
             for (int i0 = 0; i0 < run; i0 += Chunk) {
                 const int count = std::min(Chunk, run - i0);
                 blockProduct(matrix, v, count, line + Margin + i0, x, 0, row);
+                v += Entries * count;
+            }
+            seamsBefore(line + side);
+        }
+        faceValues = v;
+    }
+}
+
+// Calls row(r, Σ_j |K_rj|) for every row r in ascending order, each sum's terms in column order as
+// forEachProduct adds them: bit for bit forEachProduct of |K| with a field of ones (a product by one
+// is exact, fused or not), without the copy of K that takes (Neon DREV-NEON-065).
+template <class Real, class Row> void forEachMagnitudeSum(const StencilMatrixOf<Real>& matrix, Row&& row) {
+    constexpr int Margin = StencilMatrix::Margin, Chunk = StencilMatrix::Chunk, Entries = StencilMatrix::Entries;
+    const int side = matrix.side, run = side - 2 * Margin;
+    const size_t seams = matrix.seamRow.size();
+    size_t k = 0;
+    auto seamsBefore = [&](int end) {
+        for (; k < seams && matrix.seamRow[k] < end; ++k) {
+            Real sum = 0;
+            for (int e = matrix.start[k]; e < matrix.start[k + 1]; ++e) sum += std::abs(matrix.value[size_t(e)]);
+            row(size_t(matrix.seamRow[k]), sum);
+        }
+    };
+    const Real* faceValues = matrix.inner.data();
+    for (int face = 0; face < 6; ++face) {
+        const Real* v = matrix.shared ? matrix.inner.data() : faceValues;
+        for (int j = 0; j < side; ++j) {
+            const int line = (face * side + j) * side;
+            if (matrix.interior == 0 || j < Margin || j >= side - Margin) {
+                seamsBefore(line + side);
+                continue;
+            }
+            seamsBefore(line + Margin);
+            for (int i0 = 0; i0 < run; i0 += Chunk) {
+                const int count = std::min(Chunk, run - i0);
+                for (int i = 0; i < count; ++i) {
+                    Real sum = 0;
+                    for (int e = 0; e < Entries; ++e) sum += std::abs(v[e * count + i]);
+                    row(size_t(line + Margin + i0 + i), sum);
+                }
                 v += Entries * count;
             }
             seamsBefore(line + side);

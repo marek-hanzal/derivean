@@ -60,7 +60,16 @@ void setStep(SphereFlow& flow, double step);
 const std::vector<double>& baseLevel(const SphereFlow& flow);
 
 // Whether stepSphereFlow takes `forcing` on a grid of `cells`: each vector empty or one value per
-// cell, every value finite, every friction rate at least zero.
+// cell, every value finite, every friction rate at least zero; the two terms' checks apart.
 bool admissibleForcing(const SphereForcing& forcing, size_t cells);
+bool admissibleTendency(const std::vector<double>& tendency, size_t cells);
+bool admissibleFriction(const std::vector<double>& friction, size_t cells);
+
+// stepSphereFlow with a forcing's two terms that the caller has found admissible (admissibleTendency,
+// admissibleFriction; their values asserted only, their sizes checked: false, nothing changed), so the
+// hour checks each once (Neon DREV-NEON-059, 065): a friction fixed for the window once a window, a
+// tendency once a step.
+[[nodiscard]] bool stepAdmittedFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
+                                    const std::vector<double>& tendency, const std::vector<double>& friction);
 
 } // namespace derivean::sim

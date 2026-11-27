@@ -1,9 +1,13 @@
 // The hour's restore when memory has run out (Codex DREV-CLAUDE-007-04, its rollback-oom): an
-// allocation that fails inside a window, with every allocation after it failing too, leaves the flow
-// and the hour as they came in. The window's first accepted step hands the flow's K ψ buffer to the
-// history and leaves `product` without capacity, so a restore by copy would have to allocate and
-// fail as well. Two places: the source's own allocation at the second step, and the copy that takes
-// a refused try back.
+// allocation that fails inside a window, with every allocation after it failing too, leaves the flow's
+// state and the hour as they came in. The window's first accepted step hands the flow's K ψ buffer to
+// the history and leaves `product` without capacity, so a restore of the whole flow by copy would
+// have to allocate and fail as well. The hour keeps the window's start and its forcing in its own
+// capacity (Neon DREV-NEON-059), so neither the source's output nor a refused try's take-back needs
+// memory once the window has begun: the source's own allocation at the second step throws and the
+// start is swapped back; a refused try with memory exhausted is taken back by copy into the flow's
+// own capacity, without allocating; and the source's allocation in a try after a refused one throws
+// and the start is swapped back, the hour's refusals moved back.
 //
 // The test binary's operator new is replaced here: it is malloc unless this thread's gate is shut,
 // then it throws std::bad_alloc. The gate is open everywhere except inside this test's sources.
@@ -13,6 +17,7 @@
 #include "atmosphere/fn/SphereFlow.hpp"
 #include "atmosphere/fn/SphereHour.hpp"
 #include "atmosphere/fn/SpherePoisson.hpp"
+#include "atmosphere/fn/SphereTransport.hpp"
 
 #include <cstdlib>
 #include <limits>
@@ -40,21 +45,11 @@ using namespace derivean::sim::atmosphere_sphere_test;
 
 namespace {
 
-// The whole flow, its work space included (trialProduct carries K ψ while `known`).
-bool sameWhole(const SphereFlow& a, const SphereFlow& b) {
-    return a.rotation == b.rotation && a.coriolis == b.coriolis && a.vorticity == b.vorticity && a.before == b.before &&
-           a.stream == b.stream && a.streamBack == b.streamBack && a.streamBackTwo == b.streamBackTwo &&
-           a.productBack == b.productBack && a.productBackTwo == b.productBackTwo && a.product == b.product && a.levels == b.levels &&
-           a.known == b.known && a.projection == b.projection && a.flux == b.flux && a.tolerance == b.tolerance && a.limit == b.limit &&
-           a.step == b.step && a.started == b.started && a.trialVorticity == b.trialVorticity && a.trialBefore == b.trialBefore &&
-           a.trialStream == b.trialStream && a.trialFlux == b.trialFlux && a.trialProduct == b.trialProduct && a.tendency == b.tendency &&
-           a.absolute == b.absolute && a.atVertex == b.atVertex && a.inversion.converged == b.inversion.converged &&
-           a.inversion.product == b.inversion.product;
-}
-
-// One window over a flow whose K ψ a refused direct step filled, the forcing from `source`; the
-// allocation the source sets up fails, and the flow and the hour must come out as they went in.
-void rollback(const SphereForcingSource& source, const char* where) {
+// One window over a flow whose K ψ a refused direct step filled, the forcing from `source`, which
+// shuts memory at the second step. With `throws` the window ends in std::bad_alloc, otherwise it is
+// refused for its forcing without allocating; either way the flow's state comes out as it went in,
+// and the hour too, but for the refusal of the window that was refused.
+void rollback(const SphereForcingSource& source, bool throws, const char* where, bool refusedFirst = false) {
     const SphereGrid grid = makeSphereGrid(4);
     const SphereStencil stencil = makeSphereStencil(grid);
     SpherePoisson poisson = makeSpherePoisson(grid, stencil);
@@ -74,19 +69,23 @@ void rollback(const SphereForcingSource& source, const char* where) {
     SphereHour hour;
     hour.steps = 2, hour.calm = 1, hour.courant = 0.12;
     hour.refusals.push_back({HourRefusal::Courant, 3, 1});
+    // With `refusedFirst` the two-step try exceeds the limit at once and is taken back by copy before
+    // the four-step try's source runs.
+    if (refusedFirst) hour.limit = 0.75 * outflowCourant(grid, stencil, flow.flux, hour.window / 2);
     const SphereFlow start = flow;
     refused = 0;
-    bool caught = false;
+    bool caught = false, taken = true;
     try {
-        (void)advanceSphereHour(hour, flow, grid, stencil, poisson, source);
+        taken = advanceSphereHour(hour, flow, grid, stencil, poisson, source);
     } catch (const std::bad_alloc&) {
         caught = true;
     }
     shut = false;
-    expect(caught && refused >= 1, where, refused);
-    expect(sameWhole(flow, start), where);
+    expect(throws ? caught && refused >= 1 : !caught && !taken && refused == 0, where, refused);
+    expect(sameState(flow, start), where);
+    const HourTry last = throws ? HourTry{HourRefusal::Courant, 3, 1} : HourTry{HourRefusal::Forcing, 2, 1};
     expect(hour.steps == 2 && hour.calm == 1 && hour.courant == 0.12 && hour.refusals.size() == 1 &&
-               hour.refusals[0].reason == HourRefusal::Courant && hour.refusals[0].steps == 3 && hour.refusals[0].at == 1,
+               hour.refusals[0].reason == last.reason && hour.refusals[0].steps == last.steps && hour.refusals[0].at == last.at,
            where, hour.steps);
 }
 
@@ -96,17 +95,27 @@ void derivean::sim::atmosphere_sphere_test::checkRollback() {
     // The source's own allocation at the second step.
     rollback(
         [](const SphereFlow& candidate, SphereForcing& forcing) {
+            forcing.tendency.assign(candidate.vorticity.size(), 0.0);
             if (!candidate.started) return;
             shut = true;
-            forcing.tendency.resize(candidate.vorticity.size());
+            const std::vector<double> own(candidate.vorticity.size());
+            forcing.tendency[0] = own[0];
         },
-        "memory running out in the source left the window half done");
+        true, "memory running out in the source left the window half done");
     // A forcing that is not admissible at the second step, filled into the capacity of the first:
-    // the try is refused and its copy of the start, which must allocate, fails.
+    // the try is refused and taken back into the flow's own capacity with memory shut.
     rollback(
         [](const SphereFlow& candidate, SphereForcing& forcing) {
             forcing.tendency.assign(candidate.vorticity.size(), candidate.started ? std::numeric_limits<double>::quiet_NaN() : 0.0);
             shut = candidate.started;
         },
-        "memory running out in taking a try back left the window half done");
+        false, "memory running out in taking a try back left the window half done");
+    // The source's own allocation in the second try, after the first was refused and taken back: the
+    // restore swaps the start in and moves the hour's refusals back.
+    rollback(
+        [](const SphereFlow& candidate, SphereForcing&) {
+            shut = true;
+            const std::vector<double> own(candidate.vorticity.size());
+        },
+        true, "memory running out in the try after a refusal left the window half done", true);
 }

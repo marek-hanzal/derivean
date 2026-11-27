@@ -84,7 +84,7 @@ void checkStepChange() {
     SphereFlow start = makeSphereFlow(grid, rotation);
     expect(setVorticity(start, grid, stencil, poisson, rossbyHaurwitz(grid, rotation, 0)), "the wave did not invert");
     // Courant at most 0.4, and the window ends half a step after the last whole one.
-    const int whole = int(std::ceil(Day * outflowCourant(grid, start.flux, 1.0) / 0.4));
+    const int whole = int(std::ceil(Day * outflowCourant(grid, stencil, start.flux, 1.0) / 0.4));
     const double step = Day / (whole + 0.5), rest = Day - whole * step;
 
     SphereFlow even = start;
@@ -162,7 +162,7 @@ void checkGuess() {
            "the start did not restart the guess's history");
     SphereFlow last = projected;
     last.projection = 0;
-    const double step = 0.4 / outflowCourant(grid, projected.flux, 1.0);
+    const double step = 0.4 / outflowCourant(grid, stencil, projected.flux, 1.0);
     setStep(projected, step);
     setStep(last, step);
     int fewer = 0, more = 0;

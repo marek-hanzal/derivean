@@ -14,14 +14,10 @@ constexpr int PowerSteps = 60;
 
 // max_i Σ_j |K_ij| / A_i: every eigenvalue of A⁻¹K lies in a Gershgorin disc of one of its rows
 // (Gershgorin 1931), centred at K_ii / A_i with radius Σ_{j≠i} |K_ij| / A_i, so none exceeds it.
-// The row sums are the product of |K| with ones.
+// The row sums are read from K in place (forEachMagnitudeSum).
 double gershgorinBound(const SphereGrid& grid, const StencilMatrix& stiffness) {
-    StencilMatrix magnitude = stiffness;
-    for (double& v : magnitude.inner) v = std::abs(v);
-    for (double& v : magnitude.value) v = std::abs(v);
-    const std::vector<double> ones(size_t(grid.cells), 1.0);
     double bound = 0;
-    forEachProduct(magnitude, ones.data(), [&](size_t row, double sum) { bound = std::max(bound, sum / grid.area[row]); });
+    forEachMagnitudeSum(stiffness, [&](size_t row, double sum) { bound = std::max(bound, sum / grid.area[row]); });
     return bound;
 }
 

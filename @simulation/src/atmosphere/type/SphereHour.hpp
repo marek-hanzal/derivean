@@ -1,5 +1,8 @@
 #pragma once
 
+#include "atmosphere/type/SphereForcing.hpp"
+#include "atmosphere/type/SpherePoisson.hpp"
+
 #include <vector>
 
 namespace derivean::sim {
@@ -19,6 +22,22 @@ struct HourTry {
     HourRefusal reason{};
     int steps{};   // wind steps the try split the window into
     int at{};      // the step it stopped before, 0 to steps − 1
+};
+
+// The flow's state at a window's start, as a refused try or an exception puts it back: the fields
+// SphereFlow names its state (vorticity, before, stream, flux, started, the first guess's history)
+// and what a step reads besides (step, known with trialProduct, the last inversion's report). The
+// rest of the flow is work space a step writes before it reads (product, the other trial vectors,
+// tendency, absolute, atVertex) or fixed for the flow (rotation, coriolis, projection, tolerance,
+// limit), and is neither copied nor restored (Neon DREV-NEON-059).
+struct SphereFlowStart {
+    std::vector<double> vorticity, before, stream, streamBack, streamBackTwo, productBack, productBackTwo, flux;
+    std::vector<double> trialProduct;   // only while `known`
+    int levels{1};
+    bool known{};
+    double step{};
+    bool started{};
+    PoissonReport inversion;
 };
 
 // The flow's step controller over one window (an hour); S4 plan, binding correction 5 (Codex's
@@ -47,6 +66,11 @@ struct SphereHour {
     int calm{};            // windows in a row that would need at most `lower` of the steps
     double courant{};      // the largest of the last accepted window, its end state included
     std::vector<HourTry> refusals;   // of the last window, in order; the caller logs them
+    // Work space, one window at a time, kept for its capacity: the window's start and the forcing a
+    // source fills (advanceSphereHour). Not part of the controller: a window neither reads it before
+    // writing it nor restores it.
+    SphereFlowStart start;
+    SphereForcing filled;
 };
 
 } // namespace derivean::sim

@@ -20,12 +20,13 @@ double limitedDifference(double upstream, double local) {
 
 } // namespace
 
-double outflowCourant(const SphereGrid& grid, const std::vector<double>& flux, double step) {
+double outflowCourant(const SphereGrid& grid, const SphereStencil& stencil, const std::vector<double>& flux, double step) {
+    assert(stencil.topology.size() == flux.size());
     double worst = 0;
     for (int c = 0; c < grid.cells; ++c) {
         double out = 0;
         for (int e : grid.edges[size_t(c)]) {
-            const double leaving = grid.edge[size_t(e)].left == c ? flux[size_t(e)] : -flux[size_t(e)];
+            const double leaving = stencil.topology[size_t(e)].left == c ? flux[size_t(e)] : -flux[size_t(e)];
             out += std::max(0.0, leaving);
         }
         worst = std::max(worst, out * step / grid.area[size_t(c)]);

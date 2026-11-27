@@ -47,7 +47,9 @@ double largestFlux(const std::vector<double>& flux) {
 }
 
 // The step that keeps the outflow Courant number at `courant`.
-double stepFor(const SphereGrid& grid, const std::vector<double>& flux, double courant) { return courant / outflowCourant(grid, flux, 1.0); }
+double stepFor(const SphereGrid& grid, const SphereStencil& stencil, const std::vector<double>& flux, double courant) {
+    return courant / outflowCourant(grid, stencil, flux, 1.0);
+}
 
 // The Rossby–Haurwitz wave (rossbyHaurwitz in the fixture) with Earth's Ω turns east by 12.2° a day.
 // After a day the stepped flow matches it; the integral of the absolute vorticity holds to rounding
@@ -74,7 +76,7 @@ void checkWave() {
         };
         double absolute0, relative0, enstrophy0, scale0;
         integrals(absolute0, relative0, enstrophy0, scale0);
-        const int steps = int(std::ceil(Day / stepFor(grid, flow.flux, 0.4)));
+        const int steps = int(std::ceil(Day / stepFor(grid, stencil, flow.flux, 0.4)));
         setStep(flow, Day / steps);
         bool accepted = true;
         for (int s = 0; s < steps; ++s) accepted = stepSphereFlow(flow, grid, stencil, poisson) && accepted;
@@ -128,7 +130,7 @@ void checkFlow() {
             worst[band] = std::max(worst[band], std::abs(flow.flux[e] - exact) / scale);
         }
         const std::vector<double> start = flow.vorticity;
-        const double step = stepFor(grid, flow.flux, 0.4);
+        const double step = stepFor(grid, stencil, flow.flux, 0.4);
         const int steps = int(std::ceil(Day / step));
         setStep(flow, Day / steps);
         for (int s = 0; s < steps; ++s) expect(stepSphereFlow(flow, grid, stencil, poisson), "a step of the rotation was not accepted", s);
@@ -168,7 +170,7 @@ void checkTracer() {
         const std::vector<double> exact = bell;
         const double mass = areaMean(grid, bell);
         const double turn = 2 * Pi / Spin;
-        const int steps = int(std::ceil(turn / stepFor(grid, flow.flux, 0.45)));
+        const int steps = int(std::ceil(turn / stepFor(grid, stencil, flow.flux, 0.45)));
         const double peak = *std::max_element(bell.begin(), bell.end());
         double lowest = 0, highest = 0;
         for (int s = 0; s < steps; ++s) {

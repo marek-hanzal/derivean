@@ -22,7 +22,9 @@ struct SphereForcing {
 // Fills the forcing of the next wind step from the flow it steps from (its ζ, the level before, ψ),
 // as closures that read the state do: relaxation, damping, eddy growth. `forcing` is the caller's
 // storage, its vectors emptied before each call with their capacity kept; a term the source leaves
-// empty is no term. A source may read only the flow and a context fixed for the window: a try taken
+// empty is no term. A source may read only the flow's state (SphereFlowStart's fields, baseLevel;
+// not its work space, which a retaken try finds as the refused try left it) and a context fixed for
+// the window: a try taken
 // back asks it again for the same steps, and only then is the retaken window a clean run. Time, the
 // eddies and whatever else changes during the window (S4.3) go to it explicitly as the try's
 // context, never as state the source keeps or reads from outside. What it throws ends the window

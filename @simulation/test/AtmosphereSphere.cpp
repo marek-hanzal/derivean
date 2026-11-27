@@ -236,6 +236,7 @@ void testAtmosphereSphere() {
     checkForcing();
     checkHour();
     checkRollback();
+    checkInPlace();
     checkDamping();
     checkClosures();
     checkSeason();

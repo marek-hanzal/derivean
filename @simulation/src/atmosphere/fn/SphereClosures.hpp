@@ -34,8 +34,10 @@ void fillClosures(SphereClosures& closures, const SphereGrid& grid, const Sphere
                   SphereForcing& forcing);
 
 // One window of the flow forced by the closures, its steps held to the same damping's bound: sets
-// hour.stiffest to the damping's stiffness, then advanceSphereHour with fillClosures as the source.
-// Throws std::invalid_argument unless closuresFit, before anything changes, hour.stiffest included.
+// hour.stiffest to the damping's stiffness, then advanceSphereHour with fillClosures' tendency as the
+// source and the closures' friction fixed for the window, read in place; the same forcing as
+// fillClosures', bit for bit. Throws std::invalid_argument unless closuresFit, before anything
+// changes, hour.stiffest included; checked once a window.
 // Once the window has begun, hour.stiffest stays set after its refusal or an exception from within
 // it (the same call repeats the same tries).
 [[nodiscard]] bool advanceClosedHour(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil,

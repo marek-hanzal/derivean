@@ -1,6 +1,7 @@
 #pragma once
 
 #include "atmosphere/fn/SphereStencil.hpp"
+#include "atmosphere/type/SphereFlow.hpp"
 #include "geometry/fn/SphereGrid.hpp"
 #include "atmosphere/fn/SphereHarmonics.hpp"
 #include "geometry/constant/Sphere.hpp"
@@ -71,6 +72,19 @@ inline std::vector<double> rossbyHaurwitz(const SphereGrid& grid, double rotatio
     return vorticity;
 }
 
+// The flow's state (SphereFlowStart's fields, trialProduct while `known`) and what is fixed for it;
+// its work space a step writes before it reads is left out.
+inline bool sameState(const SphereFlow& a, const SphereFlow& b) {
+    return a.rotation == b.rotation && a.coriolis == b.coriolis && a.vorticity == b.vorticity && a.before == b.before &&
+           a.stream == b.stream && a.streamBack == b.streamBack && a.streamBackTwo == b.streamBackTwo &&
+           a.productBack == b.productBack && a.productBackTwo == b.productBackTwo && a.levels == b.levels && a.known == b.known &&
+           (!a.known || a.trialProduct == b.trialProduct) && a.projection == b.projection && a.flux == b.flux &&
+           a.tolerance == b.tolerance && a.limit == b.limit && a.step == b.step && a.started == b.started &&
+           a.inversion.converged == b.inversion.converged && a.inversion.product == b.inversion.product &&
+           a.inversion.iterations == b.inversion.iterations && a.inversion.residual == b.inversion.residual &&
+           a.inversion.sourceMean == b.inversion.sourceMean;
+}
+
 // Tests run on several resolutions; levels 4 to 6 keep the suite fast (6 × 16² to 6 × 64² cells).
 void checkPoisson();
 void checkMultigrid();
@@ -83,6 +97,7 @@ void checkLatitudeBands();
 void checkForcing();
 void checkHour();
 void checkRollback();
+void checkInPlace();
 void checkDamping();
 void checkClosures();
 void checkSeason();
