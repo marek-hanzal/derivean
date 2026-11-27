@@ -61,6 +61,7 @@ struct Plume {
     bool sooted{};              // whether any cell has ash on its snow
     Field<double> dustFallen;   // kg/m²: the part of it that came down from the dust on the grid
     Field<double> fallRate;     // kg/m²/s of ash landing in the cell during the last step
+    bool falling{};             // whether fallRate holds any: it is cleared at the next step even while the plume is otherwise idle
     Field<double> depth;        // visible optical depth of ash and veil over the cell
     Field<double> lowDepth;     // the part of it in the low band, which hazes the view along the ground
     Field<double> dimming;      // share of sunlight they keep from the surface

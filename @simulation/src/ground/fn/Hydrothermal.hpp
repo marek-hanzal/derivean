@@ -14,6 +14,10 @@ namespace derivean::sim {
 // the vent instead. The mineral laid never exceeds what the water brought in the time.
 void growSpringDeposit(const Spring& spring, SpringGround& around);
 
+// A spring that brings neither silica nor carbonate and is no hotter than the ground it alters
+// grows no crust and alters nothing: growSpringDeposit leaves only its pools, which nothing reads.
+bool laysNothing(const Spring& spring, double cell);
+
 // Springs.cpp — what the given springs have built, read onto a ground domain. Each deposit is grown
 // on the site surface around its vent, which every ground tile reads alike, so the tiles a deposit
 // spans agree on it. Fills the crust of `detail` over the tile's own cells and `altered` (0..1 per

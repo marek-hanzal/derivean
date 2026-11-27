@@ -6,7 +6,7 @@ namespace derivean::sim {
 namespace {
 
 constexpr int RowGrain = 16;    // rows per task of the column physics
-constexpr int TaskGrain = 3;    // carried fields per task: few larger tasks cost less than many small ones
+constexpr int TaskGrain = 1;    // lets every task have a part of its own when threads are free: the circulation, task 0, is the longest
 constexpr int EddyEvery = 4;    // wind steps between refreshes of the weather-system vorticity
 
 } // namespace

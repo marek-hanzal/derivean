@@ -2,6 +2,7 @@
 #include "core/service/Workers.hpp"
 #include "planet/type/Planet.hpp"
 
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 
@@ -32,6 +33,23 @@ Planet plainPlanet() {
         for (int x = 0; x < PlanetCells; ++x) planet.elevation.at(x, z) = x < PlanetCells / 2 ? -3000.0f : 150.0f;
     return planet;
 }
+
+// The same with a massif of 3 km across eight planet columns of the plain, under snow the year round.
+Planet massifPlanet() {
+    Planet planet = plainPlanet();
+    for (int z = 0; z < PlanetCells; ++z)
+        for (int x = 3 * PlanetCells / 4; x < 3 * PlanetCells / 4 + 8; ++x) planet.elevation.at(x, z) = 3000.0f;
+    return planet;
+}
+
+int rowAt(const Atmosphere& air, double latitude) {
+    int row = 0;
+    for (int z = 0; z < AirCells / 2; ++z)
+        if (std::abs(air.latitude[size_t(z)] - latitude) < std::abs(air.latitude[size_t(row)] - latitude)) row = z;
+    return row;
+}
+
+double most(const AirField& field) { return *std::max_element(field.cells.begin(), field.cells.end()); }
 
 double apart(Vec2 a, Vec2 b) { return std::hypot(wrapDelta(a.x - b.x, PlanetSpan), wrapDelta(a.z - b.z, PlanetSpan)); }
 
@@ -131,4 +149,51 @@ void testPlume() {
     expect(landMean(veiled, veiled.plume.depth) > 0.2 && landMean(veiled, veiled.plume.dimming) > 0.02 && landMean(veiled, veiled.plume.dimming) < 0.11, "the veil does not dim the sun as a veil does", landMean(veiled, veiled.plume.dimming));
     expect(cooling > 0.3 && cooling < 8, "the land under a heavy veil did not cool by a plausible amount", cooling);
     expect(plumeLedger(veiled).sulphurVeil > 0.5 * 5e11 && plumeLedger(control).sulphurEmitted == 0, "the veil did not form from the gas", plumeLedger(veiled).sulphurVeil);
+}
+
+// What a plume leaves once its sources are done: no ash still landing, and no trace on snow that
+// fresh snow has buried deep.
+void testPlumeEnds() {
+    Workers workers(2);
+    const Atmosphere warm = startAtmosphere(plainPlanet(), onDay(0), workers);
+    const Vec2 tropic{(AirCells * 0.7 + 0.3) * AirCell, (rowAt(warm, 12) + 0.4) * AirCell};
+
+    // Lapilli and sand-size ash land within the step they are thrown: two days after the source
+    // stopped, nothing is landing anywhere.
+    Atmosphere coarse = warm;
+    addSource(coarse, {1, tropic, 3000, 0.5 * DaySeconds, DaySeconds, {1e6, 1e6, 0}, 0, 0, 0});
+    advanceAtmosphere(coarse, onDay(3), workers);
+    expect(ashFallAt(coarse, tropic).mass > 0, "the coarse source laid no ash");
+    expect(most(coarse.plume.fallRate) == 0 && ashFallAt(coarse, tropic).rate == 0, "ash still lands two days after a coarse source stopped", most(coarse.plume.fallRate));
+
+    // A little fine dust thins out until the sky counts as clean and the rest is put down; a day
+    // after that nothing is landing either.
+    Atmosphere fine = warm;
+    addSource(fine, {2, tropic, 3000, 0.5 * DaySeconds, DaySeconds, {0, 0, 1.0}, 0, 0, 0});
+    int day = 1;
+    for (; day <= 120 && (day == 1 || fine.plume.aloft); ++day) advanceAtmosphere(fine, onDay(day), workers);
+    expect(!fine.plume.aloft, "a little dust never cleared from the sky", day);
+    advanceAtmosphere(fine, onDay(day + 1), workers);
+    expect(most(fine.plume.fallRate) == 0, "ash still lands a day after the sky cleared", most(fine.plume.fallRate));
+
+    // Ash on snow that 250 kg/m² of fresh snow (50 e-folds of burial) has covered since it last
+    // landed shows nothing: it no longer lies on the snow, and once no cell has any the plume is idle.
+    Atmosphere cold = startAtmosphere(massifPlanet(), onDay(0), workers);
+    const int row = rowAt(cold, 62);
+    const Vec2 massif{(3 * AirCells / 4 + 1.5) * AirCell, (row + 0.5) * AirCell};
+    addSource(cold, {3, massif, 6000, 0, 0.5 * DaySeconds, {0, 1e6, 1e5}, 0, 0, 0});
+    std::vector<double> buried(cold.snow.size(), 0.0);
+    size_t deep = 0;
+    for (long step = 1; step <= long(200 * DaySeconds / AirStep); ++step) {
+        advanceAtmosphere(cold, {Era, double(step) * AirStep}, workers);
+        for (size_t cell = 0; cell < buried.size(); ++cell)
+            buried[cell] = cold.plume.fallRate.cells[cell] > 0 ? 0.0 : buried[cell] + cold.snowRate.cells[cell] * AirStep;
+    }
+    for (size_t cell = 0; cell < buried.size(); ++cell) {
+        if (buried[cell] < 250 || cold.snow.cells[cell] <= 0) continue;
+        ++deep;
+        expect(cold.plume.onSnow.cells[cell] == 0, "ash buried under 250 kg/m² of snow still lies on it", cold.plume.onSnow.cells[cell]);
+    }
+    expect(deep > 0, "no ash on the massif was buried deep");
+    expect(cold.plume.sooted == (most(cold.plume.onSnow) > 0), "the plume does not know whether ash lies on snow");
 }

@@ -3,6 +3,8 @@
 #include "climate/fn/Seasons.hpp"
 #include "ground/constant/Ground.hpp"
 
+#include <bit>
+
 namespace derivean::sim {
 namespace {
 
@@ -19,7 +21,8 @@ constexpr float ThawDepth = 0.8f;       // m of mantle that thaws
 constexpr float Puddle = 0.05f;         // m of standing water under which ground still freezes and thaws as ground
 
 // Mean over a square of cells around each, by two running sums. Rows, then columns: each is its own
-// work, so they are spread over the domain's pool.
+// work, so they are spread over the domain's pool. The columns are walked a row at a time, each with
+// its own sum in the order a column alone would take.
 void boxMean(const Domain& domain, const std::vector<float>& from, std::vector<float>& into, std::vector<float>& work, int reach) {
     const int size = domain.size;
     const float scale = 1.0f / float(2 * reach + 1);
@@ -32,11 +35,16 @@ void boxMean(const Domain& domain, const std::vector<float>& from, std::vector<f
         }
     });
     forRows(domain, size, [&](int begin, int end) {
-        for (int x = begin; x < end; ++x) {
-            float sum = 0;
-            const auto at = [&](int z) { return work[size_t(std::clamp(z, 0, size - 1)) * size_t(size) + size_t(x)]; };
-            for (int z = -reach; z <= reach; ++z) sum += at(z);
-            for (int z = 0; z < size; ++z) into[size_t(z) * size_t(size) + size_t(x)] = sum * scale, sum += at(z + reach + 1) - at(z - reach);
+        std::vector<float> sum(size_t(end - begin), 0.0f);
+        const auto row = [&](int z) { return &work[size_t(std::clamp(z, 0, size - 1)) * size_t(size) + size_t(begin)]; };
+        for (int z = -reach; z <= reach; ++z) {
+            const float* at = row(z);
+            for (int x = 0; x < end - begin; ++x) sum[size_t(x)] += at[x];
+        }
+        for (int z = 0; z < size; ++z) {
+            const float *ahead = row(z + reach + 1), *behind = row(z - reach);
+            float* out = &into[size_t(z) * size_t(size) + size_t(begin)];
+            for (int x = 0; x < end - begin; ++x) out[x] = sum[size_t(x)] * scale, sum[size_t(x)] += ahead[x] - behind[x];
         }
     });
 }
@@ -108,11 +116,13 @@ bool flowThawed(Domain& domain, FlowScratch& scratch) {
     if (!any) return false;
     for (int round = 0; round < FlowRounds; ++round) {
         for (int c = 0; c < SedimentClasses; ++c) moved[c].assign(domain.cells(), 0.0f);
+        bool flowing = false;
         for (int z = Halo + 1; z < Halo + TileCells - 1; ++z)
             for (int x = Halo + 1; x < Halo + TileCells - 1; ++x) {
                 const size_t i = domain.index(x, z);
-                const float mantle = domain.sedimentAt(i), fines = domain.ground.sediment[Fines][i];
+                const float fines = domain.ground.sediment[Fines][i];
                 if (domain.warmthNow[i] >= FlowingBelow || fines < 0.1f || domain.stream[i] >= BedFlow || domain.level[i] > domain.surface[i] + Puddle) continue;
+                const float mantle = domain.sedimentAt(i);
                 const float here = domain.ground.rock[i] + mantle;
                 int lowest = -1;
                 float steepest = 0.03f;
@@ -122,6 +132,7 @@ bool flowThawed(Domain& domain, FlowScratch& scratch) {
                     if (slope > steepest) steepest = slope, lowest = k;
                 }
                 if (lowest < 0) continue;
+                flowing = true;
                 // Only the thawed part of the column flows, and only while that leaves it above its neighbour.
                 const float thawed = std::min(mantle, ThawDepth);
                 const float leaves = std::min({FlowRate * thawed * thawed * std::min(steepest, 0.6f) * thawed, 0.2f * thawed, 0.4f * steepest * cell * NeighborReach[lowest]});
@@ -131,8 +142,17 @@ bool flowThawed(Domain& domain, FlowScratch& scratch) {
                     moved[c][i] -= part, moved[c][to] += part;
                 }
             }
+        // A round in which nothing flowed and the clamp changed no bit leaves the ground as it found
+        // it, and so would every round after it.
+        bool changed = false;
         for (int c = 0; c < SedimentClasses; ++c)
-            for (size_t i = 0; i < domain.cells(); ++i) domain.ground.sediment[c][i] = std::max(0.0f, domain.ground.sediment[c][i] + moved[c][i]);
+            for (size_t i = 0; i < domain.cells(); ++i) {
+                float& sediment = domain.ground.sediment[c][i];
+                const float next = std::max(0.0f, sediment + moved[c][i]);
+                changed = changed || std::bit_cast<uint32_t>(next) != std::bit_cast<uint32_t>(sediment);
+                sediment = next;
+            }
+        if (!flowing && !changed) break;
     }
     return true;
 }

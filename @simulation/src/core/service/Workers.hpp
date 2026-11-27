@@ -30,8 +30,23 @@ public:
     // Removes a queued task by its submission ticket. A claimed task keeps running.
     bool cancelQueued(uint64_t ticket);
 
-    // Runs queued tasks on the calling thread until `done` holds. Lets a task wait for the tasks
-    // it depends on without parking a pool thread.
+    // Held by a thread for as long as it holds a claim: a build of something others may wait for.
+    // A thread holding a claim never runs another task on its stack: that task could wait for the
+    // claim, and the wait would close through the thread's own stack, where the claim cannot be
+    // finished until the task returns. A thread without one may, since the task starts on a clean
+    // frame and nothing beneath it is waited for. Claims nest; the count is per thread.
+    class Claim {
+    public:
+        Claim();
+        ~Claim();
+        Claim(const Claim&) = delete;
+        Claim& operator=(const Claim&) = delete;
+    };
+
+    // Runs queued tasks on the calling thread until `done` holds; a thread holding a Claim, or one
+    // of a pool that is stopping, only waits. Lets a waiter work for the tasks it waits on without parking a pool thread. `done` is
+    // called with the pool's lock held, so it may take locks of its own that are never held while
+    // calling into the pool; whoever makes it true calls notify().
     void helpUntil(const std::function<bool()>& done);
 
     // Splits [0, count) into contiguous ranges; returns after every range has finished. The caller

@@ -69,6 +69,14 @@ void testSnow() {
         }
     }
 
+    // No cell has more of its ground under snow than it has ground, however its rungs round, at
+    // the start or after weeks of weather.
+    Atmosphere later = air;
+    advanceAtmosphere(later, {Era, 50 * DaySeconds}, workers);
+    for (const Atmosphere* state : {&air, &later})
+        for (size_t cell = 0; cell < state->snowCover.size(); ++cell)
+            expect(state->snowCover.cells[cell] <= 1 - state->openWater.cells[cell], "a cell has more ground under snow than it has ground", state->snowCover.cells[cell] - (1 - state->openWater.cells[cell]));
+
     // Midwinter at 45° north: the plain is under snow, and there is more of it higher up.
     const int z = rowAt(air, 45), x = AirCells - 8;
     const Vec2 here{(x + 0.5) * AirCell, (z + 0.5) * AirCell};

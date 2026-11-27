@@ -83,8 +83,11 @@ Head headOf(const Domain& domain, const ParentSheet& parent) {
 // the highest one, so a second ridge nearby is not averaged in.
 bool crossing(const Domain& domain, const Route& route, double corridor, double edge, bool entering, Vec2& where) {
     std::vector<std::pair<Vec2, float>> found;
-    for (int z = 0; z < domain.size; ++z)
-        for (int x = 0; x < domain.size; ++x) {
+    // A neighbour's record lies outside the tile's own cells, and a cell beside them lies within
+    // one of them: only the ring just around them is read, in the order of a sweep of the domain.
+    const int low = std::max(0, Halo - 1), high = std::min(domain.size - 1, Halo + TileCells);
+    for (int z = low; z <= high; ++z)
+        for (int x = low; x <= high; x += z == low || z == high ? 1 : high - low) {
             size_t at = 0;
             const SheetRecord* record = domain.hold[domain.index(x, z)] == Settled ? finishedSheet(domain, x, z, at) : nullptr;
             if (!record || record->esker[at] <= 1.0f) continue;

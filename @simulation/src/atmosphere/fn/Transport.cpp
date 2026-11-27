@@ -103,6 +103,9 @@ void carry(const Atmosphere& atmosphere, const AirField& from, AirField& to, Air
     const AirRows& alongX = work.alongX[size_t(band)];
     const AirRows& alongZ = work.alongZ[size_t(band)];
     const bool water = kind != Carried::Temperature;
+    // Cloud is carried without slopes: its passes read this flat row and leave `slope` alone.
+    const bool sloped = kind != Carried::Cloud;
+    static constexpr double Flat[AirCells + 2] = {};
 
     // Cloud fields are empty over most of the planet; rows with nothing in or next to them are skipped.
     bool empty[AirCells];
@@ -115,15 +118,16 @@ void carry(const Atmosphere& atmosphere, const AirField& from, AirField& to, Air
 
     // Fluxes along X row by row, and the slopes along Z the second pass needs. The row is copied
     // with its wrapped neighbours on both ends so that the loops run without index arithmetic.
-    double padded[AirCells + 4], slopeX[AirCells + 2], flux[AirCells + 1];
+    double padded[AirCells + 4], slopes[AirCells + 2], flux[AirCells + 1];
     double* const here = padded + 2;
+    const double* const slopeX = sloped ? slopes : Flat;
     for (int z = 0; z < n; ++z) {
         const int up = wrapAir(z - 1), down = wrapAir(z + 1);
         double* out = &to.cells[size_t(z) * n];
-        double* slopeZ = &slope.cells[size_t(z) * n];
+        double* slopeZ = sloped ? &slope.cells[size_t(z) * n] : nullptr;
         if (empty[z] && empty[up] && empty[down]) {
             std::fill(out, out + n, 0.0);
-            std::fill(slopeZ, slopeZ + n, 0.0);
+            if (sloped) std::fill(slopeZ, slopeZ + n, 0.0);
             continue;
         }
         const double* row = &from.cells[size_t(z) * n];
@@ -135,22 +139,19 @@ void carry(const Atmosphere& atmosphere, const AirField& from, AirField& to, Air
         here[-1] = row[n - 1];
         here[n] = row[0];
         here[n + 1] = row[1];
-        // slopeX[x + 1] belongs to cell x, for x from −1 to n.
-        if (kind == Carried::Cloud) {
-            std::fill(slopeX, slopeX + n + 2, 0.0);
-            std::fill(slopeZ, slopeZ + n, 0.0);
-        } else {
-            for (int x = -1; x <= n; ++x) slopeX[x + 1] = limitedSlope(here[x - 1], here[x], here[x + 1]);
+        // slopes[x + 1] belongs to cell x, for x from −1 to n.
+        if (sloped) {
+            for (int x = -1; x <= n; ++x) slopes[x + 1] = limitedSlope(here[x - 1], here[x], here[x + 1]);
             for (int x = 0; x < n; ++x) slopeZ[x] = limitedSlope(north[x], here[x], south[x]);
         }
         if (kind == Carried::Vapour) {
             for (int x = 0; x < n; ++x) {
                 const double most = here[x] * slack[x];
-                slopeX[x + 1] = std::clamp(slopeX[x + 1], -most, most);
+                slopes[x + 1] = std::clamp(slopes[x + 1], -most, most);
                 slopeZ[x] = std::clamp(slopeZ[x], -most, most);
             }
-            slopeX[0] = slopeX[n];
-            slopeX[n + 1] = slopeX[1];
+            slopes[0] = slopes[n];
+            slopes[n + 1] = slopes[1];
         }
         const double* courant = &work.courantX.cells[size_t(z) * n];
         const double shear = alongX[size_t(z)] * share;
@@ -169,8 +170,8 @@ void carry(const Atmosphere& atmosphere, const AirField& from, AirField& to, Air
         if (empty[z] && empty[upper]) continue;
         const double* row = &from.cells[size_t(z) * n];
         const double* north = &from.cells[size_t(upper) * n];
-        const double* slopeHere = &slope.cells[size_t(z) * n];
-        const double* slopeNorth = &slope.cells[size_t(upper) * n];
+        const double* slopeHere = sloped ? &slope.cells[size_t(z) * n] : Flat;
+        const double* slopeNorth = sloped ? &slope.cells[size_t(upper) * n] : Flat;
         const double* courant = &work.courantZ.cells[size_t(z) * n];
         double* out = &to.cells[size_t(z) * n];
         double* outNorth = &to.cells[size_t(upper) * n];

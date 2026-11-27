@@ -18,7 +18,7 @@ void allocate(Atmosphere& atmosphere) {
                             &atmosphere.windZ, &atmosphere.surfaceTemperature, &atmosphere.airTemperature,
                             &atmosphere.upperTemperature, &atmosphere.shade, &atmosphere.soil, &atmosphere.snow, &atmosphere.snowCover, &atmosphere.snowUsual,
                             &atmosphere.rainRate, &atmosphere.snowRate, &atmosphere.lift, &atmosphere.glide,
-                            &atmosphere.work.potential, &atmosphere.work.bend, &atmosphere.work.next, &atmosphere.work.before, &atmosphere.work.courantX,
+                            &atmosphere.work.potential, &atmosphere.work.bend, &atmosphere.work.before, &atmosphere.work.courantX,
                             &atmosphere.work.courantZ})
         *field = blank;
     for (AirLayers* layers : {&atmosphere.vapour, &atmosphere.liquid, &atmosphere.ice, &atmosphere.falling, &atmosphere.work.slack})

@@ -15,17 +15,28 @@ Rheology looseAt(float reposeTan) { return {reposeTan * 0.3f, reposeTan * 0.3f, 
 
 } // namespace
 
-double fallThickness(const Fall& fall, Vec2 at) {
+FallLaw fallLaw(const Fall& fall) {
+    const double lean = dot(fall.stretch, fall.stretch);
+    FallLaw law;
+    law.peak = std::pow(1.0 - lean, 1.5) / (2.0 * Pi * fall.length * fall.length);
+    if (fall.hole > 0) {
+        const double inner = fall.length * fall.hole / (fall.length + fall.hole);
+        law.whole = fall.length * fall.length - inner * inner;
+    }
+    return law;
+}
+
+double fallThickness(const Fall& fall, const FallLaw& law, Vec2 at) {
     const Vec2 offset = at - fall.vent;
-    const double distance = length(offset), lean = dot(fall.stretch, fall.stretch);
+    const double distance = length(offset);
     // An ellipse of equal thickness has the vent at one focus; without wind it is a circle.
-    const double blanket = std::pow(1.0 - lean, 1.5) / (2.0 * Pi * fall.length * fall.length) * std::exp(-(distance - dot(fall.stretch, offset)) / fall.length);
+    const double blanket = law.peak * std::exp(-(distance - dot(fall.stretch, offset)) / fall.length);
     if (fall.hole <= 0) return fall.volume * blanket;
     // Around the jet the same law with a hollow over the vent, normalised to the same volume.
-    const double inner = fall.length * fall.hole / (fall.length + fall.hole);
-    const double whole = fall.length * fall.length - inner * inner;
-    return fall.volume * blanket * (1.0 - std::exp(-distance / fall.hole)) * fall.length * fall.length / whole;
+    return fall.volume * blanket * (1.0 - std::exp(-distance / fall.hole)) * fall.length * fall.length / law.whole;
 }
+
+double fallThickness(const Fall& fall, Vec2 at) { return fallThickness(fall, fallLaw(fall), at); }
 
 Fall coneFall(Vec2 vent, double volume) {
     Fall fall;
@@ -56,13 +67,14 @@ void buildCone(Emplacement& field, const Fall& fall, float reposeTan) {
     const int64_t firstX = int64_t(std::llround(field.origin.x / field.cell)), firstZ = int64_t(std::llround(field.origin.z / field.cell));
     const int side = 2 * reach + 1;
     std::vector<double> share(size_t(side) * size_t(side));
+    const FallLaw law = fallLaw(fall);
     double total = 0;
     for (int dz = -reach; dz <= reach; ++dz) {
         for (int dx = -reach; dx <= reach; ++dx) {
             double sum = 0;
             for (int sz = 0; sz < samples; ++sz)
                 for (int sx = 0; sx < samples; ++sx)
-                    sum += fallThickness(fall, {(double(ventX + dx) + (sx + 0.5) / samples) * field.cell, (double(ventZ + dz) + (sz + 0.5) / samples) * field.cell});
+                    sum += fallThickness(fall, law, {(double(ventX + dx) + (sx + 0.5) / samples) * field.cell, (double(ventZ + dz) + (sz + 0.5) / samples) * field.cell});
             share[size_t(dz + reach) * size_t(side) + size_t(dx + reach)] = sum;
             total += sum;
         }

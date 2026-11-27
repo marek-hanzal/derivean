@@ -42,7 +42,7 @@ CloudReport describeClouds(const AirColumn& column, const ColumnProfile& profile
         layer.liquidPath = column.liquid[band];
         layer.icePath = column.ice[band];
         const double path = layer.liquidPath + layer.icePath;
-        layer.cover = 1.0 - std::exp(-path / CoverPath[band]);
+        layer.cover = path == 0 ? 0.0 : 1.0 - std::exp(-path / CoverPath[band]);   // 1 − e⁰ is +0 too
         layer.opticalDepth = opticalDepthOf(column, band);
         report.opticalDepth += layer.opticalDepth;
         clear *= 1.0 - layer.cover;

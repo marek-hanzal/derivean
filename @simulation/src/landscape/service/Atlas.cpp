@@ -45,6 +45,9 @@ std::shared_ptr<const Tile> Atlas::require(TileKey key, BuildMode mode) {
         slot.claimed = true;
     }
 
+    // A ground tile asks for ground water, whose waiters may work the pool's queue: this thread
+    // must not, or a neighbour taken from the queue could wait for this tile on its own stack.
+    const Workers::Claim claim;
     try {
         const std::vector<TileKey> needed = dependencies(key);
         if (mode == BuildMode::Demand)

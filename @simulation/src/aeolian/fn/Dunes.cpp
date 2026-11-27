@@ -1,3 +1,4 @@
+// 255 lines, kept whole: one transport model, whose steps of a round share the Work kept between them.
 #include "aeolian/fn/Dunes.hpp"
 
 #include "aeolian/constant/Wind.hpp"
@@ -34,7 +35,7 @@ constexpr double MostAside = 0.7;    // sideways slope beyond which the shift gr
 constexpr int LandingRounds = 12;    // rounds without lifting in which sand still in the air comes down
 
 struct Work {
-    std::vector<float> flight, arriving, taken, line, gust;
+    std::vector<float> flight, arriving, taken, line, turned, gust;
     std::vector<float> top;     // the bed's surface while a round's sand is aimed: it moves only after
     std::vector<uint8_t> shadow;
     int gusts{};   // lattice points per side
@@ -129,6 +130,11 @@ void send(SandBed& bed, Work& work, int x, int z, Vec2 heading, double hop, doub
         const size_t over = bed.index(wrapped(x + int(std::lround(moveX * stride / strides)), size), wrapped(z + int(std::lround(moveZ * stride / strides)), size));
         if (work.shadow[over]) fell = over;
     }
+    if (fell != from) {
+        if (kind == BedCell::Held) entered += work.taken[from] * bed.cell * bed.cell;
+        work.arriving[fell] += out;
+        return;
+    }
     const int lowX = int(std::floor(x + moveX)), lowZ = int(std::floor(z + moveZ));
     const float partX = float(x + moveX - lowX), partZ = float(z + moveZ - lowZ);
     const size_t to[4] = {bed.index(wrapped(lowX, size), wrapped(lowZ, size)), bed.index(wrapped(lowX + 1, size), wrapped(lowZ, size)),
@@ -136,7 +142,7 @@ void send(SandBed& bed, Work& work, int x, int z, Vec2 heading, double hop, doub
     const float share[4] = {(1 - partX) * (1 - partZ), partX * (1 - partZ), (1 - partX) * partZ, partX * partZ};
     // Across the edge the bed continues as another piece of the field: no step is read there.
     const bool inside = lowX >= 0 && lowZ >= 0 && lowX + 1 < size && lowZ + 1 < size;
-    if (fell == from && inside && kind != BedCell::Wall) {
+    if (inside && kind != BedCell::Wall) {
         float ahead = 0;
         for (int c = 0; c < 4; ++c) ahead += share[c] * work.top[to[c]];
         // Higher than the climb allows over the length of the hop, compared in squares.
@@ -147,26 +153,24 @@ void send(SandBed& bed, Work& work, int x, int z, Vec2 heading, double hop, doub
         }
     }
     if (kind == BedCell::Held) entered += work.taken[from] * bed.cell * bed.cell;
-    if (fell != from) work.arriving[fell] += out;
-    else
-        for (int c = 0; c < 4; ++c) work.arriving[to[c]] += out * share[c];
+    for (int c = 0; c < 4; ++c) work.arriving[to[c]] += out * share[c];
 }
 
+// `work.top` holds the bed's surface as the round begins.
 void launch(SandBed& bed, Work& work, Vec2 heading, double hop, const DuneRun& run, bool lifting) {
     const int size = bed.size;
     // What every cell gives is settled before any of it moves, and the bed changes only after all
     // of it has been aimed: no cell's share or path depends on the order of the sweep.
-    eachRange(bed, size, [&](int begin, int end) {
-        for (size_t i = bed.index(0, begin); i < bed.index(0, end); ++i) work.top[i] = bed.top(i);
-    });
-    eachRange(bed, size, [&](int begin, int end) {
-        for (int z = begin; z < end; ++z)
-            for (int x = 0; x < size; ++x) {
-                const size_t i = bed.index(x, z);
-                const bool gives = lifting && !work.shadow[i] && bed.sand[i] > 0;
-                work.taken[i] = !gives ? 0.0f : bed.kind[i] == BedCell::Open ? lifted(bed, work, x, z, heading, run) : bed.kind[i] == BedCell::Held ? run.slab : 0.0f;
-            }
-    });
+    if (!lifting) std::fill(work.taken.begin(), work.taken.end(), 0.0f);
+    else
+        eachRange(bed, size, [&](int begin, int end) {
+            for (int z = begin; z < end; ++z)
+                for (int x = 0; x < size; ++x) {
+                    const size_t i = bed.index(x, z);
+                    const bool gives = !work.shadow[i] && bed.sand[i] > 0;
+                    work.taken[i] = !gives ? 0.0f : bed.kind[i] == BedCell::Open ? lifted(bed, work, x, z, heading, run) : bed.kind[i] == BedCell::Held ? run.slab : 0.0f;
+                }
+        });
     std::fill(work.arriving.begin(), work.arriving.end(), 0.0f);
     const int bands = int(work.band.size()) - 1;
     for (int parity = 0; parity < 2; ++parity) {
@@ -231,9 +235,14 @@ void blowBed(SandBed& bed, const WindRegime& regime, const DuneRun& run) {
         const double swing = GustSwing * (2 * unit(hash(bed.seed, -1, round)) - 1);
         const Vec2 heading = normalized({sector.x - sector.z * swing, sector.z + sector.x * swing});
         const double hop = run.hop * (1 + GustReach * (2 * unit(hash(bed.seed, -2, round)) - 1));
-        castShadow(bed, heading, work.line, work.shadow);
-        drawGusts(bed, work, uint64_t(round));
-        launch(bed, work, heading, hop, run, round < run.rounds);
+        eachRange(bed, bed.size, [&](int begin, int end) {
+            for (size_t i = bed.index(0, begin); i < bed.index(0, end); ++i) work.top[i] = bed.top(i);
+        });
+        castShadow(bed, work.top, heading, work.line, work.turned, work.shadow);
+        // Gusts only set what a cell lifts; the landing rounds lift nothing.
+        const bool lifting = round < run.rounds;
+        if (lifting) drawGusts(bed, work, uint64_t(round));
+        launch(bed, work, heading, hop, run, lifting);
         land(bed, work, run.slab, round + 1 == rounds);
         slidePairs(bed, round);
     }

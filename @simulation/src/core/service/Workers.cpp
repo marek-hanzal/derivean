@@ -6,6 +6,15 @@
 #include <memory>
 
 namespace derivean::sim {
+namespace {
+
+thread_local int claimsHeld = 0;
+
+} // namespace
+
+Workers::Claim::Claim() { ++claimsHeld; }
+
+Workers::Claim::~Claim() { --claimsHeld; }
 
 Workers::Workers(unsigned threads) {
     if (threads == 0) threads = std::max(1u, std::thread::hardware_concurrency() - 1);
@@ -57,7 +66,9 @@ bool Workers::runOne(std::unique_lock<std::mutex>& lock) {
     auto task = std::move(queue_.front().task);
     queue_.pop_front();
     lock.unlock();
-    task();
+    // A task has nobody to hand an exception to: one that throws ends the program, on a pool thread
+    // and on a thread helping in helpUntil alike, rather than surfacing in an unrelated waiter.
+    [&]() noexcept { task(); }();
     lock.lock();
     wake_.notify_all();
     return true;
@@ -75,12 +86,16 @@ void Workers::loop() {
 void Workers::helpUntil(const std::function<bool()>& done) {
     std::unique_lock lock(mutex_);
     while (!done()) {
-        if (runOne(lock)) continue;
+        if (claimsHeld == 0 && !stopping_ && runOne(lock)) continue;
         wake_.wait_for(lock, std::chrono::milliseconds(2));
     }
 }
 
-void Workers::notify() { wake_.notify_all(); }
+void Workers::notify() {
+    // Taking the lock orders this after a waiter's check of its condition, so the wake is not lost.
+    { std::lock_guard lock(mutex_); }
+    wake_.notify_all();
+}
 
 void Workers::parallelFor(int count, const std::function<void(int, int)>& body, int grain) {
     if (count <= 0) return;
@@ -111,7 +126,13 @@ void Workers::parallelFor(int count, const std::function<void(int, int)>& body, 
             shared.done.notify_all();
         }
     };
-    for (int helper = 1; helper < parts; ++helper) submit([share, work] { work(*share); }, 1 << 20);
+    // The caller waits for every part, and it may hold a claim: a part on another thread holds one
+    // as well, so that it never runs a task that could wait for the caller's.
+    for (int helper = 1; helper < parts; ++helper)
+        submit([share, work] {
+            const Claim claim;
+            work(*share);
+        }, 1 << 20);
     work(*share);
     std::unique_lock lock(share->mutex);
     share->done.wait(lock, [&] { return share->finished.load() == share->parts; });

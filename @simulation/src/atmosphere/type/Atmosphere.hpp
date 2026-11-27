@@ -54,7 +54,7 @@ struct AirSeason {
 
 // Work space of one step. Nothing in here survives a step, so it is not part of the state.
 struct AirWork {
-    AirField potential, bend, next;   // circulation
+    AirField potential, bend;   // circulation
     AirField before;                  // air temperature before the wind carried it
     AirField courantX, courantZ;      // share of a cell crossing its west and north face in a wind step with the low band's wind, drift excluded
     AirLayers slack;                  // slope a cell may carry per unit of content and still stay non-negative, per band

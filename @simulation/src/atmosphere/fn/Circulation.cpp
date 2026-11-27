@@ -74,7 +74,6 @@ void stepCirculation(Atmosphere& atmosphere) {
     const double biharmonic = 1.0 / (64 * GridDamping);   // per cell⁴, with the Laplacians left in cell units
     AirField& potential = atmosphere.work.potential;
     AirField& bend = atmosphere.work.bend;
-    AirField& next = atmosphere.work.next;
     const AirField& before = atmosphere.vorticityBefore;
 
     AirRows mean{};
@@ -126,14 +125,14 @@ void stepCirculation(Atmosphere& atmosphere) {
                 q2[x] * (p2[e] - p2[w]) - q0[x] * (p0[e] - p0[w]) - q1[e] * (p2[e] - p0[e]) + q1[w] * (p2[w] - p0[w]);
             const double damping = biharmonic * (b1[w] + b1[e] + b0[x] + b2[x] - 4 * b1[x]);
             const double tendency = relaxed + feeding * eddy[x] - jacobian * jacobianScale - damping;
-            next.at(x, z) = (before.at(x, z) + span * tendency) * atmosphere.dragKeep.at(x, z);
+            const double next = (before.at(x, z) + span * tendency) * atmosphere.dragKeep.at(x, z);
+            // The filter writes the two levels of this cell only, which nothing later in this loop
+            // reads: the tendencies of other cells read the stream, potential and bend.
+            const size_t cell = size_t(z) * n + size_t(x);
+            const double curve = 0.5 * FilterStrength * (before.cells[cell] - 2 * atmosphere.vorticity.cells[cell] + next);
+            atmosphere.vorticityBefore.cells[cell] = atmosphere.vorticity.cells[cell] + FilterSplit * curve;
+            atmosphere.vorticity.cells[cell] = next - (1.0 - FilterSplit) * curve;
         }
-    }
-
-    for (size_t cell = 0; cell < next.size(); ++cell) {
-        const double curve = 0.5 * FilterStrength * (before.cells[cell] - 2 * atmosphere.vorticity.cells[cell] + next.cells[cell]);
-        atmosphere.vorticityBefore.cells[cell] = atmosphere.vorticity.cells[cell] + FilterSplit * curve;
-        atmosphere.vorticity.cells[cell] = next.cells[cell] - (1.0 - FilterSplit) * curve;
     }
 }
 

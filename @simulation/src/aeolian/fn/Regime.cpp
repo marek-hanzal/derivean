@@ -22,6 +22,34 @@ constexpr double BeltLag = 30.0;          // days
 constexpr double StormWind = 6.0;         // m/s
 constexpr int Months = 12;
 constexpr int Reach = 6;                  // quadrature points on either side of the mean, half a deviation apart
+constexpr int Span = 2 * Reach + 1;
+
+// Gaussian weights of the quadrature points and their sum, in the order addMonth visits them.
+struct Quadrature {
+    double share[Span][Span]{};
+    double total{};
+};
+
+const Quadrature& quadrature() {
+    static const Quadrature weights = [] {
+        Quadrature q;
+        for (int b = -Reach; b <= Reach; ++b)
+            for (int a = -Reach; a <= Reach; ++a) {
+                q.share[b + Reach][a + Reach] = std::exp(-0.125 * (a * a + b * b));
+                q.total += q.share[b + Reach][a + Reach];
+            }
+        return q;
+    }();
+    return weights;
+}
+
+// The mean wind of one month at a latitude: the belts there, moved with the sun.
+Vec2 monthWind(double latitude, double northZ, int month) {
+    const double day = (month + 0.5) * YearDays / Months;
+    const double belt = latitude - BeltShift * declinationOn(day - BeltLag) * std::cos(latitude * Pi / 180.0);
+    const BeltWind wind = beltWind(belt);
+    return {wind.east, wind.poleward * (belt >= 0 ? 1.0 : -1.0) * northZ};
+}
 
 } // namespace
 
@@ -29,18 +57,18 @@ double thresholdFriction(double grain) { return 0.1 * std::sqrt((GrainDensity - 
 
 double saturatedFlux(double speed) {
     static const double threshold = thresholdFriction(DuneGrain);
-    const double friction = 0.4 * speed / std::log(WindHeight / SandRoughness);
+    static const double profile = std::log(WindHeight / SandRoughness);
+    const double friction = 0.4 * speed / profile;
     if (friction <= threshold) return 0;
     return FluxCoefficient * NearGroundAir / Gravity * friction * friction * (friction - threshold) * YearSeconds / SandBulkDensity;
 }
 
 void addMonth(WindRegime& regime, Vec2 monthly, double spread, double weight) {
-    double total = 0;
+    const Quadrature& weights = quadrature();
     std::array<double, RoseSectors> rose{};
     for (int b = -Reach; b <= Reach; ++b) {
         for (int a = -Reach; a <= Reach; ++a) {
-            const double share = std::exp(-0.125 * (a * a + b * b));
-            total += share;
+            const double share = weights.share[b + Reach][a + Reach];
             const Vec2 wind{monthly.x + 0.5 * spread * a, monthly.z + 0.5 * spread * b};
             const double flux = saturatedFlux(length(wind));
             if (flux <= 0) continue;
@@ -53,7 +81,7 @@ void addMonth(WindRegime& regime, Vec2 monthly, double spread, double weight) {
             rose[size_t((low + 1) % RoseSectors)] += share * flux * part;
         }
     }
-    for (int k = 0; k < RoseSectors; ++k) regime.drift[size_t(k)] += weight * rose[size_t(k)] / total;
+    for (int k = 0; k < RoseSectors; ++k) regime.drift[size_t(k)] += weight * rose[size_t(k)] / weights.total;
     regime.mean = regime.mean + monthly * weight;
     regime.spread += weight * spread;
 }
@@ -70,18 +98,20 @@ void closeRose(WindRegime& regime) {
 WindRegime regimeAtLatitude(double latitude, double northZ, double gradient) {
     WindRegime regime;
     const double spread = std::hypot(Gustiness, StormWind * storminess(gradient, latitude));
-    for (int month = 0; month < Months; ++month) {
-        const double day = (month + 0.5) * YearDays / Months;
-        const double belt = latitude - BeltShift * declinationOn(day - BeltLag) * std::cos(latitude * Pi / 180.0);
-        const BeltWind wind = beltWind(belt);
-        addMonth(regime, {wind.east, wind.poleward * (belt >= 0 ? 1.0 : -1.0) * northZ}, spread, 1.0 / Months);
-    }
+    for (int month = 0; month < Months; ++month) addMonth(regime, monthWind(latitude, northZ, month), spread, 1.0 / Months);
     closeRose(regime);
     return regime;
 }
 
-WindRegime regimeAt(uint64_t seed, Vec2 position, double time) {
-    const Vec2 point = planetPoint(seed, position);
+Vec2 meanWindAtLatitude(double latitude, double northZ) {
+    Vec2 mean;
+    for (int month = 0; month < Months; ++month) mean = mean + monthWind(latitude, northZ, month) * (1.0 / Months);
+    return mean;
+}
+
+WindRegime regimeAt(uint64_t seed, Vec2 position, double time) { return regimeAtPoint(seed, planetPoint(seed, position), time); }
+
+WindRegime regimeAtPoint(uint64_t seed, Vec2 point, double time) {
     const double degree = PlanetSpan / 360.0 * northwardZ(point.z);   // one degree of latitude northwards, along Z
     const ZonalClimate north = zonalClimate(seed, point.z + degree, time);
     const ZonalClimate south = zonalClimate(seed, point.z - degree, time);

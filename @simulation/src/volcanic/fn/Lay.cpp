@@ -53,11 +53,12 @@ double layAsh(const Domain& domain, Emplacement& field, Laying& laying, const Fa
     const double far = fall.length * std::log(crest / AshFloor) / (1.0 - length(fall.stretch));
     const int x0 = std::max(0, int((fall.vent.x - far - domain.origin.x) / domain.cell)), x1 = std::min(domain.size - 1, int((fall.vent.x + far - domain.origin.x) / domain.cell));
     const int z0 = std::max(0, int((fall.vent.z - far - domain.origin.z) / domain.cell)), z1 = std::min(domain.size - 1, int((fall.vent.z + far - domain.origin.z) / domain.cell));
+    const FallLaw law = fallLaw(fall);
     double laid = 0;
     for (int z = z0; z <= z1; ++z) {
         for (int x = x0; x <= x1; ++x) {
             const size_t i = domain.index(x, z);
-            const float thickness = float(fallThickness(fall, domain.center(x, z)));
+            const float thickness = float(fallThickness(fall, law, domain.center(x, z)));
             if (thickness < AshFloor || field.rest[i] != Rest::Open) continue;
             laying.ash[i] += thickness;
             laying.wet[i] += std::clamp(field.water[i] - field.ground[i], 0.0f, thickness);

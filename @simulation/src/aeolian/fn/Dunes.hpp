@@ -20,8 +20,8 @@ void blowBed(SandBed& bed, const WindRegime& regime, const DuneRun& run);
 std::vector<int> windTurns(const WindRegime& regime, int year);
 
 // Shadow.cpp — marks the cells below the line that falls at ShadowTan from every higher point
-// upwind; `line` receives the height of that line over each cell.
-void castShadow(const SandBed& bed, Vec2 heading, std::vector<float>& line, std::vector<uint8_t>& shadow);
+// upwind. `top` is the bed's surface, base and sand; `line` and `turned` are its scratch.
+void castShadow(const SandBed& bed, const std::vector<float>& top, Vec2 heading, std::vector<float>& line, std::vector<float>& turned, std::vector<uint8_t>& shadow);
 
 // Avalanche.cpp — sand at and around `cell` slides until nothing loose stands steeper than repose.
 void slideSand(SandBed& bed, size_t cell, std::vector<int32_t>& stack);
