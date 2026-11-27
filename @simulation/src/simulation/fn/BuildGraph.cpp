@@ -2,6 +2,7 @@
 
 #include "groundwater/fn/Reads.hpp"
 #include "landscape/fn/Build.hpp"
+#include "simulation/constant/BuildPriority.hpp"
 #include "simulation/type/World.hpp"
 
 #include <atomic>
@@ -76,6 +77,7 @@ void buildAll(World& world, const std::vector<BuildKey>& targets) {
         // Another thread may finish or claim a node meanwhile: a finished one returns at once, a
         // claimed one is waited for, and its builder holds no claim it waits on (Prepared). Each
         // part takes the next node left, so one slow node does not hold up the ones cut with it.
+        // A part waits for whatever its nodes find claimed, so it ranks below every build.
         std::atomic<size_t> next{0};
         std::mutex mutex;
         std::exception_ptr failure;
@@ -86,7 +88,7 @@ void buildAll(World& world, const std::vector<BuildKey>& targets) {
                     std::lock_guard lock(mutex);
                     if (!failure) failure = std::current_exception();
                 }
-        });
+        }, 1, preparedPriority);
         if (failure) std::rethrow_exception(failure);
     }
 }

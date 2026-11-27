@@ -33,6 +33,7 @@ void testSnow();
 void testPlume();
 void testPlumeEnds();
 void testWorkersClaim();
+void testWorkersCeiling();
 void testLandscapePlume();
 void testIceSheet();
 void testIceSheetLocal();
@@ -113,6 +114,7 @@ constexpr Test Tests[] = {
     {"testPlume", testPlume, "unit"},
     {"testPlumeEnds", testPlumeEnds, "unit"},
     {"testWorkersClaim", testWorkersClaim, "unit"},
+    {"testWorkersCeiling", testWorkersCeiling, "unit"},
     {"testLandscapePlume", testLandscapePlume, "unit"},
     {"testIceSheet", testIceSheet, "unit"},
     {"testIceSheetLocal", testIceSheetLocal, "unit"},

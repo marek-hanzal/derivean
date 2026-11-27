@@ -3,6 +3,7 @@
 #include "groundwater/fn/Reads.hpp"
 #include "groundwater/fn/Regional.hpp"
 #include "groundwater/fn/Stages.hpp"
+#include "simulation/constant/BuildPriority.hpp"
 
 #include <optional>
 #include <stdexcept>
@@ -15,7 +16,7 @@ namespace {
 void requireAround(Atlas& atlas, TileKey key, BuildMode mode, std::shared_ptr<const Tile> held[9], const Tile* around[9]) {
     const auto reads = aquiferTerrain(key);
     if (mode == BuildMode::Demand)
-        for (const TileKey tile : reads) atlas.request(tile, 1000 - int(key.level) * 100);
+        for (const TileKey tile : reads) atlas.request(tile, terrainPriority(key.level));
     for (size_t i = 0; i < reads.size(); ++i) {
         held[i] = mode == BuildMode::Prepared ? atlas.find(reads[i]) : atlas.require(reads[i]);
         if (!held[i]) throw std::logic_error("missing prepared terrain input for aquifer");
@@ -42,8 +43,9 @@ std::shared_ptr<const T> Aquifers::once(Slots<T>& slots, TileKey key, Workers* w
     // A thread that claimed a local tile waits for region tiles and landscape tiles only, one
     // that claimed a region tile for landscape tiles only, and the landscape tiles ground water
     // asks the atlas for never ask for ground water. Only a ground tile asks, and nothing here
-    // waits for one. A waiter without a claim of its own works the pool's queue meanwhile; one
-    // with a claim only waits (Workers::Claim).
+    // waits for one. A waiter works the pool's queue meanwhile, though only above what it holds
+    // (Workers::Claim); the claim of a tile here holds its priority.
+    const int priority = Workers::above(aquiferPriority(key.level));
     const auto settled = [&] { return slots[key].tile != nullptr || !slots[key].claimed; };
     std::optional<Workers::Claim> claim;
     while (true) {
@@ -53,7 +55,7 @@ std::shared_ptr<const T> Aquifers::once(Slots<T>& slots, TileKey key, Workers* w
             Slot<T>& slot = slots[key];
             if (slot.tile || slot.claimed) return slot.tile;
             slot.claimed = true;
-            claim.emplace();
+            claim.emplace(priority);
             break;
         }
         if (workers)
@@ -71,7 +73,7 @@ std::shared_ptr<const T> Aquifers::once(Slots<T>& slots, TileKey key, Workers* w
         // function of the setting and the key, so a waiter then works it out itself rather than
         // sharing a failure that may have been the machine's.
         slot.claimed = true;
-        claim.emplace();
+        claim.emplace(priority);
         break;
     }
     // A build that throws gives the claim back, so that nobody waits for it forever.
@@ -114,6 +116,7 @@ std::shared_ptr<const RegionalTile> Aquifers::regional(Atlas& atlas, TileKey reg
 }
 
 void Aquifers::requestRegional(Atlas& atlas, TileKey region) {
+    if (!atlas.setting().workers) return;
     {
         std::lock_guard lock(mutex_);
         Slot<RegionalTile>& slot = regional_[region];
@@ -128,7 +131,7 @@ void Aquifers::requestRegional(Atlas& atlas, TileKey region) {
             regional(atlas, region, BuildMode::Demand, false);
         } catch (...) {
         }
-    }, 1000 - int(region.level) * 100 - 1);
+    }, aquiferPriority(region.level));
 }
 
 std::vector<std::shared_ptr<const RegionalTile>> Aquifers::regionsUnder(Atlas& atlas, TileKey local, BuildMode mode) {
