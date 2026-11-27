@@ -9,26 +9,34 @@ namespace derivean::sim {
 
 // One level of the multigrid hierarchy: the same Laplacian rediscretised on a coarser level of the
 // face quadtree, with its work space. Cell c of level l has the children (face, 2i + di, 2j + dj) on
-// level l + 1, so restriction and prolongation need no tables.
-struct PoissonLevel {
+// level l + 1, so restriction and prolongation need no tables. The float32 V-cycle's levels are the
+// double ones rounded (narrowLevels).
+template <class Real> struct PoissonLevelOf {
     int level{};
     int side{};
-    StencilMatrix stiffness;
-    std::vector<double> inverseDiagonal;
+    StencilMatrixOf<Real> stiffness;
+    std::vector<Real> inverseDiagonal;
     double largest{};                     // λmax of D⁻¹K, estimated on smoothed levels
-    std::vector<double> solution, source;   // the coarse correction and its source (not on the finest)
+    std::vector<Real> solution, source;   // the coarse correction and its source (not on the finest)
     // Work space: the smoother's residual and directions, CG's on the coarsest level.
-    std::vector<double> residual, direction, spare;
+    std::vector<Real> residual, direction, spare;
 };
+
+using PoissonLevel = PoissonLevelOf<double>;
 
 // Inverting the weather grid's Laplacian, Δψ = ζ, by conjugate gradients (Hestenes & Stiefel 1952) on
 // the subspace without the constant, which is the stiffness matrix's only null mode, preconditioned by
 // one multigrid V-cycle (Brandt 1977) over the coarser quadtree levels or, without them, by the
 // diagonal.
 struct SpherePoisson {
-    std::vector<PoissonLevel> levels;             // [0] is the grid's own level, then ever coarser
+    std::vector<PoissonLevel> levels;             // [0] is the grid's own level, then ever coarser;
+                                                  // with `narrow`, only [0] (no work space) and the coarsest
     bool multigrid{};                             // else the preconditioner is levels[0]'s diagonal
     int smoothing{3};                             // Chebyshev degree before and after the coarse step, ≥ 1
+    // The V-cycle in float32, a low-precision preconditioner inside the double CG (Higham & Mary 2022,
+    // §8.2): the levels above the coarsest rounded, the coarsest solved in double; the last entry holds
+    // only the coarsest's float source and correction. Empty when the V-cycle runs in double.
+    std::vector<PoissonLevelOf<float>> narrow;
     // Work space, no state between solves; one solve at a time per SpherePoisson.
     std::vector<double> target, residual, direction, product, preconditioned;
 };

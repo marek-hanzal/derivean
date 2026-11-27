@@ -3,7 +3,7 @@
 #include "climate/type/Climate.hpp"
 
 #include <array>
-#include <mutex>
+#include <vector>
 
 namespace derivean::sim {
 namespace {
@@ -84,12 +84,13 @@ void shapeSurface(Planet& planet, double dt, Workers& workers) {
     for (int z = 0; z < PlanetCells; ++z) warmRow[size_t(z)] = std::abs(latitudeAt(planetCellCenter(0, z).z)) < WarmLatitude;
 
     // Running water removes crust faster the higher and wetter the ground; a dry body keeps its relief.
-    std::mutex ledgerLock;
-    double eroded = 0, solute = 0;
+    // Each row keeps its own sums and the rows are added in order afterwards, so the totals do not
+    // depend on how the rows were shared among threads or which finished first.
+    std::vector<double> rowEroded(PlanetCells, 0.0), rowSolute(PlanetCells, 0.0);
     workers.parallelFor(PlanetCells, [&](int begin, int end) {
-        double partial = 0, dissolved = 0;
         const int n = PlanetCells;
         for (int z = begin; z < end; ++z) {
+            double partial = 0, dissolved = 0;
             for (int x = 0; x < n; ++x) {
                 const size_t cell = size_t(z) * n + size_t(x);
                 CrustColumn& column = planet.columns.cells[cell];
@@ -122,11 +123,12 @@ void shapeSurface(Planet& planet, double dt, Workers& workers) {
                 }
                 planet.erosion.cells[cell] = planet.erosion.cells[cell] * memory + (1 - memory) * removed / float(dt);
             }
+            rowEroded[size_t(z)] = partial;
+            rowSolute[size_t(z)] = dissolved;
         }
-        std::lock_guard lock(ledgerLock);
-        eroded += partial;
-        solute += dissolved;
     }, 16);
+    double eroded = 0, solute = 0;
+    for (int z = 0; z < PlanetCells; ++z) eroded += rowEroded[size_t(z)], solute += rowSolute[size_t(z)];
     planet.ledger.eroded += eroded * PlanetCellArea;
 
     // Loads walk downhill a few cells per step, settling in basins, on plains and under the sea.

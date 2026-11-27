@@ -103,7 +103,7 @@ Domain coastDomain(const CoastSpec& spec) {
             if (x > 0 && z > 0 && x < last && z < last) continue;
             for (int k = 0; k < WaveDirections; ++k) {
                 const double along = std::max(0.0, (travel.x * NeighborX[k] + travel.z * NeighborZ[k]) / NeighborReach[k]);
-                shore.beyond[domain.index(x, z) * WaveDirections + size_t(k)] = float(spec.swell * spec.swell * along * along * along * along);
+                shore.beyond[trainIndex(domain.cells(), domain.index(x, z), k)] = float(spec.swell * spec.swell * along * along * along * along);
             }
         }
     return domain;

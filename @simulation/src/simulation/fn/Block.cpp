@@ -61,6 +61,20 @@ void sampleBlock(World& world, const Block& block, Material* materials) {
         runoff = runoffOf(tile->rain[at], tile->warmth[at]);
         return true;
     };
+    // The block spans a few site cells: their runoff is read once, over the cells the columns'
+    // corners fall in, from the first column's to the last's. Columns step forward (step > 0, as
+    // every caller passes); a block of no columns reads none.
+    const auto siteCellOf = [&](double position) { return int64_t(std::floor(position / siteCell - 0.5)); };
+    const int64_t runoffX = siteCellOf(block.originX + 0.5 * block.step), runoffZ = siteCellOf(block.originZ + 0.5 * block.step);
+    const int runoffCountX = block.countX > 0 ? int(siteCellOf(block.originX + (block.countX - 0.5) * block.step) - runoffX) + 2 : 0;
+    const int runoffCountZ = block.countZ > 0 ? int(siteCellOf(block.originZ + (block.countZ - 0.5) * block.step) - runoffZ) + 2 : 0;
+    std::vector<float> runoffs(size_t(runoffCountX) * size_t(runoffCountZ));
+    std::vector<uint8_t> runoffKnown(runoffs.size());
+    for (int z = 0; z < runoffCountZ; ++z)
+        for (int x = 0; x < runoffCountX; ++x) {
+            const size_t at = size_t(z) * size_t(runoffCountX) + size_t(x);
+            runoffKnown[at] = cellRunoff(runoffX + x, runoffZ + z, runoffs[at]);
+        }
     const auto siteRunoff = [&](double x, double z) {
         const double fx = x / siteCell - 0.5, fz = z / siteCell - 0.5;
         const int64_t gx = int64_t(std::floor(fx)), gz = int64_t(std::floor(fz));
@@ -69,10 +83,14 @@ void sampleBlock(World& world, const Block& block, Material* materials) {
         for (int corner = 0; corner < 4; ++corner) {
             const int dx = corner & 1, dz = corner >> 1;
             const float weight = (dx ? tx : 1 - tx) * (dz ? tz : 1 - tz);
-            if (float runoff; weight > 0 && cellRunoff(gx + dx, gz + dz, runoff)) sum += weight * runoff, weights += weight;
+            const size_t at = size_t(gz + dz - runoffZ) * size_t(runoffCountX) + size_t(gx + dx - runoffX);
+            if (weight > 0 && runoffKnown[at]) sum += weight * runoffs[at], weights += weight;
         }
         return weights > 0 ? sum / weights : 0.0f;
     };
+    TileKey groundKey{Level::Ground, 0, 0};
+    const Tile* groundTile = nullptr;
+    bool groundRead = false;
     const size_t layer = size_t(block.countX) * size_t(block.countZ);
     for (int iz = 0; iz < block.countZ; ++iz) {
         for (int ix = 0; ix < block.countX; ++ix) {
@@ -85,8 +103,10 @@ void sampleBlock(World& world, const Block& block, Material* materials) {
             const float weight[4] = {(1 - ux) * (1 - uz), ux * (1 - uz), (1 - ux) * uz, ux * uz};
             const FormSetting& nearest = node[(uz > 0.5f ? strataCountX : 0) + (ux > 0.5f ? 1 : 0)];
             FormSetting here{setting.seed, blendThickness(nearest.strata, corner, weight), nearest.strataCentre, nearest.ore, &nearest.strata, nearest.masses};
-            const TileKey under = tileAt(Level::Ground, {x, z});
-            if (const Tile* tile = fine.tile(under.x, under.z)) here.volcanic = tile->volcanic.get();
+            // A block lies on one ground tile or a few: the one under the last column is kept.
+            if (const TileKey under = tileAt(Level::Ground, {x, z}); !groundRead || !(under == groundKey))
+                groundKey = under, groundTile = fine.tile(under.x, under.z), groundRead = true;
+            if (groundTile) here.volcanic = groundTile->volcanic.get();
             here.runoff = siteRunoff(x, z);   // bare soluble rock opens by it into grikes (groundwater/fn/Pavement.hpp)
             const double ex = x / ExposureLattice - double(openX), ez = z / ExposureLattice - double(openZ);
             const int ox = std::clamp(int(ex), 0, openCountX - 2), oz = std::clamp(int(ez), 0, openCountZ - 2);

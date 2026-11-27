@@ -7,7 +7,13 @@
 #include "simulation/fn/Spawn.hpp"
 
 #include <cstdio>
+
+#if defined(_WIN32)
+#include <windows.h>
+#include <psapi.h>
+#else
 #include <sys/resource.h>
+#endif
 
 using namespace derivean::sim;
 
@@ -15,12 +21,15 @@ namespace {
 
 // Peak resident memory of the process in megabytes.
 double peakMegabytes() {
+#if defined(_WIN32)
+    PROCESS_MEMORY_COUNTERS counters{};
+    if (!GetProcessMemoryInfo(GetCurrentProcess(), &counters, sizeof counters)) return 0.0;
+    return double(counters.PeakWorkingSetSize) / (1024.0 * 1024.0);
+#else
+    // macOS reports ru_maxrss in bytes.
     rusage usage{};
     getrusage(RUSAGE_SELF, &usage);
-#ifdef __APPLE__
     return double(usage.ru_maxrss) / (1024.0 * 1024.0);
-#else
-    return double(usage.ru_maxrss) / 1024.0;
 #endif
 }
 

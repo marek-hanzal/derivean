@@ -66,9 +66,15 @@ CellField vertexValues(const SphereGrid& grid, const SphereStencil& stencil, con
     return values;
 }
 
+// Each product is its own statement, so it is rounded before it is added on every platform: clang
+// fuses `sum += a * b` into a multiply-add on x86-64, but on arm64 it vectorises the products and adds
+// them in order unfused, so the fused form gives different bits on the two (docs/windows.md#determinism).
 double dotOf(const CellField& a, const CellField& b) {
     double sum = 0;
-    for (size_t k = 0; k < a.size(); ++k) sum += a[k] * b[k];
+    for (size_t k = 0; k < a.size(); ++k) {
+        const double term = a[k] * b[k];
+        sum += term;
+    }
     return sum;
 }
 

@@ -5,6 +5,9 @@
 #include "intervention/fn/Intervention.hpp"
 #include "landscape/fn/Forcing.hpp"
 
+#include <algorithm>
+#include <iterator>
+
 namespace derivean::sim {
 
 CellChange changeAt(const World& world, double x, double z) {
@@ -33,11 +36,16 @@ CellChange changeAt(const World& world, double x, double z) {
 }
 
 bool changeLattice(const World& world, GroundLattice& lattice) {
+    // The same height may hold another material, so each class of cover is asked, not their sum.
+    const auto unchanged = [](const CellChange& change) {
+        const bool cover = std::all_of(std::begin(change.cover), std::end(change.cover), [](float metres) { return metres == 0; });
+        return cover && change.rock == 0 && change.datum == 0 && change.pile.thickness == 0;
+    };
     bool moved = false;
     for (int z = 0; z < lattice.countZ; ++z)
         for (int x = 0; x < lattice.countX; ++x) {
             const CellChange change = changeAt(world, double(lattice.originX + x) * lattice.spacing + lattice.shift, double(lattice.originZ + z) * lattice.spacing + lattice.shift);
-            if (!change.tile || (change.rock == 0 && change.ground() == 0 && change.datum == 0 && change.pile.thickness == 0)) continue;
+            if (!change.tile || unchanged(change)) continue;
             const size_t node = size_t(z) * size_t(lattice.countX) + size_t(x);
             lattice.rock[node] += change.rock;
             lattice.datum[node] += change.datum;

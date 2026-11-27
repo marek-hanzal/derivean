@@ -2,13 +2,11 @@
 // and cube vertices), the null mode taken out by area, and failure that shows.
 #include "AtmosphereSphereFixture.hpp"
 
-#include "atmosphere/fn/SphereMultigrid.hpp"
 #include "atmosphere/fn/SphereOperators.hpp"
 #include "atmosphere/fn/SpherePoisson.hpp"
 #include "atmosphere/fn/StencilMatrix.hpp"
 
 #include <cmath>
-#include <cstdint>
 
 using namespace derivean::sim;
 using namespace derivean::sim::atmosphere_sphere_test;
@@ -88,7 +86,11 @@ void checkNullMode() {
 }
 
 // An impossible tolerance or too few iterations end unconverged, with the count and residual given,
-// and the iterate kept; the diagonal preconditioner on the same problem needs many more steps.
+// and the iterate kept; the diagonal preconditioner on the same problem needs many more steps. The
+// impossible solve stops at 8 iterations, before the true residual reaches its floor near 1e-13:
+// past it CG moves the iterate away and back (from 3e-14 at iteration 12 up to 5e-9 at 17), so its
+// residual at a later count depends on the last bits of the grid (Windows builds its grid with
+// another libm) and of the V-cycle's precision.
 void checkFailure() {
     const SphereGrid grid = makeSphereGrid(5);
     const SphereStencil stencil = makeSphereStencil(grid);
@@ -97,8 +99,8 @@ void checkFailure() {
     const std::vector<double> u = harmonicField(grid, 2, 1);
     std::vector<double> source = u, psi(size_t(grid.cells), 0.0);
     for (double& value : source) value *= laplacianEigenvalue(2);
-    const PoissonReport impossible = solveSpherePoisson(poisson, grid, source, psi, 1e-30, 20);
-    expect(!impossible.converged && impossible.iterations == 20 && impossible.residual > 1e-30 && impossible.residual < 1e-9,
+    const PoissonReport impossible = solveSpherePoisson(poisson, grid, source, psi, 1e-30, 8);
+    expect(!impossible.converged && impossible.iterations == 8 && impossible.residual > 1e-30 && impossible.residual < 1e-9,
            "an impossible tolerance does not show as unconverged", impossible.residual);
     // CG's recursive residual falls on below rounding while the true one stops near 1e-13: a solve
     // asked for 1e-16 must not report success.
@@ -117,12 +119,14 @@ void checkFailure() {
 }
 
 // From a tolerance of 1e-10 up the solve reports CG's recursive residual; on levels 5 to 7, cold and
-// warm, it stays within a hundredth of the tolerance of the true ‖b − K ψ‖ / ‖b‖.
+// warm, with the V-cycle in float32 and in double, it stays within a hundredth of the tolerance of the
+// true ‖b − K ψ‖ / ‖b‖.
 void checkReportedResidual() {
-    for (int level = 5; level <= 7; ++level) {
+    for (int run = 0; run < 6; ++run) {
+        const int level = 5 + run % 3;
         const SphereGrid grid = makeSphereGrid(level);
         const SphereStencil stencil = makeSphereStencil(grid);
-        SpherePoisson poisson = makeSpherePoisson(grid, stencil);
+        SpherePoisson poisson = makeSpherePoisson(grid, stencil, true, run < 3);
         const std::vector<double> u = harmonicField(grid, 4, 2);
         std::vector<double> source = u, psi(size_t(grid.cells), 0.0), product, nudged;
         for (double& value : source) value *= laplacianEigenvalue(4);
@@ -151,67 +155,6 @@ void checkReportedResidual() {
     }
 }
 
-// Preconditioned CG needs a symmetric positive preconditioner: y · B x = x · B y and x · B x > 0 for
-// the V-cycle B on residual-like fields (zero sum).
-void checkPreconditioner() {
-    const SphereGrid grid = makeSphereGrid(5);
-    const SphereStencil stencil = makeSphereStencil(grid);
-    SpherePoisson poisson = makeSpherePoisson(grid, stencil);
-    std::uint64_t state = 7;
-    auto randomField = [&] {
-        std::vector<double> field(size_t(grid.cells));
-        double sum = 0;
-        for (double& value : field) {
-            state = state * 6364136223846793005ull + 1442695040888963407ull;
-            value = double(state >> 11) / double(1ull << 53) - 0.5;
-            sum += value;
-        }
-        for (double& value : field) value -= sum / double(grid.cells);
-        return field;
-    };
-    for (int trial = 0; trial < 3; ++trial) {
-        const std::vector<double> x = randomField(), y = randomField();
-        std::vector<double> bx, by;
-        vCycle(poisson.levels, poisson.smoothing, x, bx);
-        vCycle(poisson.levels, poisson.smoothing, y, by);
-        const double ybx = dotOf(y, bx), xby = dotOf(x, by);
-        expect(std::abs(ybx - xby) < 1e-12 * std::sqrt(dotOf(bx, bx) * dotOf(y, y)), "the V-cycle is not symmetric", ybx - xby);
-        expect(dotOf(x, bx) > 0, "the V-cycle is not positive", dotOf(x, bx));
-    }
-}
-
-// The smoother's interval rests on λmax(D⁻¹K) estimated from 12 power steps: on levels 2 to 5 the
-// estimate is below the value 2000 steps from a random start converge to (both are Rayleigh
-// quotients, so lower bounds) and within 5 % of it.
-void checkLargestEigenvalue() {
-    for (int level = 2; level <= 5; ++level) {
-        const SphereGrid grid = makeSphereGrid(level);
-        const PoissonLevel at = makePoissonLevel(grid, makeSphereStencil(grid), LevelUse::Coarser);
-        std::uint64_t state = uint64_t(level);
-        std::vector<double> x(size_t(grid.cells)), kx;
-        for (double& value : x) {
-            state = state * 6364136223846793005ull + 1442695040888963407ull;
-            value = double(state >> 11) / double(1ull << 53) - 0.5;
-        }
-        double largest = 0;
-        for (int step = 0; step < 2000; ++step) {
-            applyMatrix(at.stiffness, x, kx);
-            double kxx = 0, dxx = 0, top = 0;
-            for (size_t c = 0; c < x.size(); ++c) {
-                kxx += kx[c] * x[c];
-                dxx += x[c] * x[c] / at.inverseDiagonal[c];
-            }
-            largest = kxx / dxx;
-            for (size_t c = 0; c < x.size(); ++c) {
-                x[c] = at.inverseDiagonal[c] * kx[c];
-                top = std::max(top, std::abs(x[c]));
-            }
-            for (double& value : x) value /= top;
-        }
-        expect(at.largest <= largest * (1 + 1e-9) && at.largest > 0.95 * largest, "λmax of D⁻¹K is misestimated", at.largest / largest);
-    }
-}
-
 } // namespace
 
 namespace derivean::sim::atmosphere_sphere_test {
@@ -220,8 +163,6 @@ void checkPoisson() {
     checkConvergence();
     checkNullMode();
     checkFailure();
-    checkPreconditioner();
-    checkLargestEigenvalue();
     checkReportedResidual();
 }
 

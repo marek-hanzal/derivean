@@ -34,13 +34,27 @@ function wellFormed(chart, request) {
   assert.ok(chart.waters.every((kind, pixel) => (kind === 0) === Number.isNaN(chart.water[pixel])), "water has a level exactly where it has a kind");
 }
 
+// Advances the session until `done` holds. node:test fails a test at its time limit but does not stop
+// the test's own code, and an endless wait would keep the process and `node --test` alive for good, so
+// the wait ends with the test's signal and says what it was waiting for.
+async function advanceUntil(t, what, done, pause) {
+  while (!done()) {
+    if (t.signal.aborted) {
+      console.error(`${t.name}: stopped waiting for ${what()} at the time limit`);
+      throw new Error(`stopped waiting for ${what()}`);
+    }
+    session.advance(controls);
+    await sleep(pause, undefined, { signal: t.signal }).catch(() => {});
+  }
+}
+
 before(() => {
   session = new Session(options);
   info = session.info();
   eye = session.advance(controls).eye;
 }, { timeout: 900_000 });
 
-test("a chart is promised at once and read while the session goes on advancing", { timeout: 300_000 }, async () => {
+test("a chart is promised at once and read while the session goes on advancing", { timeout: 300_000 }, async (t) => {
   const request = { x: eye[0], z: eye[2], span: info.planetSpan, size: 1024 };
   let chart;
   let read;
@@ -50,10 +64,7 @@ test("a chart is promised at once and read while the session goes on advancing",
     read = performance.now() - asked;
   });
   const promised = performance.now() - asked;
-  while (!chart) {
-    session.advance(controls);
-    await sleep(0);
-  }
+  await advanceUntil(t, () => "the whole planet's chart", () => chart, 0);
   await promise;
   assert.ok(promised < read / 3, `the call returned after ${promised} ms of the ${read} ms the chart took: it must not read it`);
   wellFormed(chart, request);
@@ -65,7 +76,7 @@ test("a chart is promised at once and read while the session goes on advancing",
 
 // [0, 0] is deep sea at this age, and over deep sea no ground tile is wanted: the player is taken to
 // the dry land nearest it, once over the planet's ground and again onto the site level's.
-async function standOnLand() {
+async function standOnLand(t) {
   let best = -1;
   let nearest = Infinity;
   for (let pixel = 0; pixel < planet.ground.length; pixel++) {
@@ -77,21 +88,17 @@ async function standOnLand() {
   const x = planet.origin[0] + ((best % planet.size) + 0.5) * planet.pitch;
   const z = planet.origin[1] + (Math.floor(best / planet.size) + 0.5) * planet.pitch;
   session.advance({ ...controls, teleport: [x, planet.ground[best] + 100, z] });
-  while (!["site", "ground"].includes(session.inspect(x, z).level)) {
-    session.advance(controls);
-    await sleep(50);
-  }
+  const level = () => session.inspect(x, z).level;
+  await advanceUntil(t, () => `a site tile under the player at ${x} ${z} (level now ${level()})`, () => ["site", "ground"].includes(level()), 50);
   session.advance({ ...controls, teleport: [x, session.inspect(x, z).ground + 2, z] });
   return [x, z];
 }
 
-test("a chart around the player reads the tiles under them, and the same tiles give the same chart", { timeout: 900_000 }, async () => {
-  const [x, z] = await standOnLand();
+test("a chart around the player reads the tiles under them, and the same tiles give the same chart", { timeout: 900_000 }, async (t) => {
+  const [x, z] = await standOnLand(t);
   // The ground tile under the player is built after they arrive, with the voxels: minutes on a busy machine.
-  while (session.inspect(x, z).level !== "ground") {
-    session.advance(controls);
-    await sleep(50);
-  }
+  const level = () => session.inspect(x, z).level;
+  await advanceUntil(t, () => `a ground tile under the player at ${x} ${z} (level now ${level()})`, () => level() === "ground", 50);
   // Half a metre a pixel reads the ground level: what the voxels are cut from and the inspector reads.
   const request = { x, z, span: 64, size: 128 };
   const chart = await session.chart(request);

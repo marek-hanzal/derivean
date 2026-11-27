@@ -14,6 +14,8 @@ Part of [Credits](../credits.md). A citation credits the people whose work we bu
 | [Vite](https://vite.dev) | Evan You, VoidZero Inc. and Vite contributors | MIT | 8.3.8 | `@game/package.json:20` | Build of the renderer |
 | [xmake](https://xmake.io) | ruki and xmake contributors (xmake-io) | Apache-2.0 | 3.1.2 | `@napi/mise.toml`, `@simulation/mise.toml` | Native build of `@simulation`, `@engine` and `@napi` |
 | [mise](https://mise.jdx.dev) | Jeff Dickey (jdx) | MIT | (developer's install) | `mise.toml` | Tool versions and module tasks |
+| [LLVM](https://llvm.org) (clang-cl, llvm-lib) | LLVM Developer Group and contributors | Apache-2.0 with LLVM exception | 23.1.5 | `@simulation/mise.toml`, `@napi/mise.toml` | C++ compiler on Windows ([Windows](../windows.md)); on macOS Xcode's clang |
+| [Visual Studio 2022 Build Tools](https://visualstudio.microsoft.com/downloads/) (MSVC STL, Universal CRT, Windows SDK, `link.exe`) | Microsoft | Microsoft Software License Terms; the STL is Apache-2.0 with LLVM exception | 17.14, MSVC 14.44, SDK 10.0.22621 (developer's install) | — | Standard library, C runtime, platform headers and linker of the Windows build |
 
 ## Studied, not linked
 
@@ -21,8 +23,20 @@ Part of [Credits](../credits.md). A citation credits the people whose work we bu
 | --- | --- | --- | --- |
 | [S2 Geometry](https://github.com/google/s2geometry) | Google (Eric Veach et al.) | Apache-2.0 | Face numbering, orientation and quadtree conventions, reimplemented in `@simulation/src/geometry`; no code copied, the library is not linked (`docs/handoff/geometry.md:55`) |
 | [PROJ](https://proj.org) | PROJ contributors (OSGeo; originally Gerald Evenden, Frank Warmerdam) | MIT-style | The QSC projection was compared and not taken (`docs/handoff/geometry.md:97`) |
+| [node-gyp](https://github.com/nodejs/node-gyp) | Node.js contributors | MIT | Its `win_delay_load_hook.cc` binds a delay-loaded `node.exe` to the host executable; `@napi/src/windows/HostImports.cpp` does the same in its own code |
 
-No code from either project is in the repository, so neither licence binds the build; they are listed as credit.
+No code from these projects is in the repository, so none of their licences binds the build; they are listed as credit.
+
+## Platform documentation
+
+| Document | Publisher | What it informs |
+| --- | --- | --- |
+| [Arm Neon Intrinsics Reference](https://arm-software.github.io/acle/neon_intrinsics/advsimd.html), part of the [Arm C Language Extensions](https://github.com/ARM-software/acle) | Arm Limited, 2014–2026, read 27 Nov 2026 | `vld1q`, `vextq`, `vfmaq` (FMLA) and `vst1q` in `f64` and `f32` in the arm64 kernels of the shared stiffness product, double and float32, `@simulation/src/atmosphere/fn/StencilNeon.hpp:21`, `:53` |
+| [Clang Compiler User's Manual](https://clang.llvm.org/docs/UsersManual.html), `-ffp-contract` | LLVM Project, web edition read 27 Nov 2026 (Xcode's clang 21 here) | When clang fuses a multiply and an add: `on`, the default for C and C++, fuses them within one statement; the floating-point rule of [Windows](../windows.md#determinism), and why the arm64 kernel's fused sums equal the scalar ones (`@simulation/src/atmosphere/fn/StencilMatrix.hpp:93`, and why the seam and tail sums stay scalar (`:27`)) |
+| [/arch (x64)](https://learn.microsoft.com/en-us/cpp/build/reference/arch-x64) | Microsoft | `/arch:AVX2` enables AVX2 and FMA3 code generation (`@simulation/xmake.lua`) |
+| [Linker support for delay-loaded DLLs](https://learn.microsoft.com/en-us/cpp/build/reference/linker-support-for-delay-loaded-dlls) and [delay load hooks](https://learn.microsoft.com/en-us/cpp/build/reference/understanding-the-helper-function) | Microsoft | `/DELAYLOAD`, `__pfnDliNotifyHook2` and `dliNotePreLoadLibrary` in `@napi/src/windows/HostImports.cpp` |
+| [GetLogicalProcessorInformationEx](https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/nf-sysinfoapi-getlogicalprocessorinformationex) and [PROCESSOR_RELATIONSHIP](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-processor_relationship) | Microsoft | Efficiency classes of cores, `@engine/src/threads/fn/Threads.cpp` |
+| [Node-API](https://nodejs.org/api/n-api.html) | Node.js project | The addon's binary interface; on Windows its exports are imported from the host executable |
 
 ## Data
 

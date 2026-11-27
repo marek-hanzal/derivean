@@ -1,3 +1,4 @@
+#include "BuildGraphFixture.hpp"
 #include "GroundFixture.hpp"
 
 #include "ground/type/Detail.hpp"
@@ -8,21 +9,6 @@
 #include <algorithm>
 #include <future>
 #include <memory>
-
-namespace derivean::sim {
-
-// Use finished inputs in fresh worlds to exercise the two build paths without replaying the planet's terrain.
-struct BuildGraphFixture {
-    static void seed(World& world, std::shared_ptr<const Tile> site, std::shared_ptr<const GroundwaterTile> aquifer) {
-        const TileKey siteKey = site->key;
-        const TileKey aquiferKey = aquifer->key;
-        world.atlas.slots_.emplace(siteKey, Atlas::Slot{std::move(site)});
-        ++world.atlas.finished_;
-        world.groundwater.slots_.emplace(aquiferKey, Aquifers::Slot<GroundwaterTile>{std::move(aquifer)});
-    }
-};
-
-} // namespace derivean::sim
 
 namespace {
 

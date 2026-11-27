@@ -24,6 +24,7 @@ void testClouds();
 void testAtmosphere();
 void testSnow();
 void testPlume();
+void testLandscapePlume();
 void testIceSheet();
 void testIceSheetLocal();
 void testIceSheetSeam();
@@ -43,6 +44,7 @@ void testHydrology();
 void testGroundForms();
 void testGroundTile();
 void testIntervention();
+void testInterventionQueries();
 void testOre();
 void testRockMass();
 void testGroundwaterBlock();
@@ -91,6 +93,7 @@ constexpr Test Tests[] = {
     {"testAtmosphere", testAtmosphere, "weather"},
     {"testSnow", testSnow, "weather"},
     {"testPlume", testPlume, "unit"},
+    {"testLandscapePlume", testLandscapePlume, "unit"},
     {"testIceSheet", testIceSheet, "unit"},
     {"testIceSheetLocal", testIceSheetLocal, "unit"},
     {"testIceSheetSeam", testIceSheetSeam, "unit"},
@@ -110,6 +113,7 @@ constexpr Test Tests[] = {
     {"testGroundForms", testGroundForms, "unit"},
     {"testGroundTile", testGroundTile, "world"},
     {"testIntervention", testIntervention, "intervention"},
+    {"testInterventionQueries", testInterventionQueries, "unit"},
     {"testOre", testOre, "unit"},
     {"testRockMass", testRockMass, "unit"},
     {"testGroundwaterBlock", testGroundwaterBlock, "unit"},

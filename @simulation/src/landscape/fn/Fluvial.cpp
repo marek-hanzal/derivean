@@ -2,7 +2,9 @@
 
 #include "aeolian/fn/Regime.hpp"
 
-// About 365 lines: the erosion factor, the implicit solve and the carrying of the load are three
+#include <bit>
+
+// About 375 lines: the erosion factor, the implicit solve and the carrying of the load are three
 // sweeps over one flow order that share one working state and are only meaningful together.
 namespace derivean::sim {
 namespace {
@@ -73,8 +75,8 @@ void measurePower(Sweep& sweep) {
                     const float* share = &sweep.scratch.share[i * 8];
                     const int x = int(i % size_t(domain.size)), z = int(i / size_t(domain.size));
                     float fall = 0;
-                    for (int k = 0; k < 8; ++k)
-                        if (share[k] > 0) fall += share[k] * (domain.surface[i] - domain.surface[domain.index(x + NeighborX[k], z + NeighborZ[k])]) / NeighborReach[k];
+                    for (uint8_t ways = sweep.scratch.ways[i]; ways; ways &= uint8_t(ways - 1))
+                        if (const int k = std::countr_zero(ways); share[k] > 0) fall += share[k] * (domain.surface[i] - domain.surface[domain.index(x + NeighborX[k], z + NeighborZ[k])]) / NeighborReach[k];
                     if (fall > FreeFall * sweep.cell) rock *= FreeFall * sweep.cell / fall, cover *= FreeFall * sweep.cell / fall;
                 }
             }
@@ -134,8 +136,8 @@ void solveHeights(Sweep& sweep) {
             // drains to has been cut below it, the water has left and the river works its floor.
             float held = domain.level[i];
             if (drains)
-                for (int k = 0; k < 8; ++k)
-                    if (share[k] > 0) held = std::min(held, scratch.pool[domain.index(x + NeighborX[k], z + NeighborZ[k])]);
+                for (uint8_t ways = scratch.ways[i]; ways; ways &= uint8_t(ways - 1))
+                    if (const int k = std::countr_zero(ways); share[k] > 0) held = std::min(held, scratch.pool[domain.index(x + NeighborX[k], z + NeighborZ[k])]);
             if (held >= before - 1e-3f) {
                 scratch.next[i] = before;
                 scratch.pool[i] = std::max(held, before);
@@ -149,8 +151,8 @@ void solveHeights(Sweep& sweep) {
             continue;
         }
         float pull = 0, weighted = 0;
-        for (int k = 0; k < 8; ++k) {
-            if (share[k] <= 0) continue;
+        for (uint8_t ways = scratch.ways[i]; ways; ways &= uint8_t(ways - 1)) {
+            const int k = std::countr_zero(ways);
             pull += share[k] / NeighborReach[k];
             weighted += share[k] / NeighborReach[k] * scratch.next[domain.index(x + NeighborX[k], z + NeighborZ[k])];
         }
@@ -176,8 +178,8 @@ void carryLoad(Sweep& sweep, bool final) {
     const int size = domain.size;
     const float perYear = sweep.area / sweep.dt;
     for (auto& flux : scratch.flux) std::fill(flux.begin(), flux.end(), 0.0f);
-    std::vector<float> fresh[SedimentClasses];
-    for (auto& layer : fresh) layer.assign(domain.cells(), 0.0f);
+    std::vector<float>* fresh = scratch.fresh;
+    for (int c = 0; c < SedimentClasses; ++c) fresh[c].assign(domain.cells(), 0.0f);
 
     for (size_t step = domain.cells(); step-- > 0;) {
         const int32_t cell = domain.order[step];
@@ -294,8 +296,8 @@ void carryLoad(Sweep& sweep, bool final) {
         const float* share = &scratch.share[i * 8];
         const double total = double(load[0] + load[1] + load[2]) * sweep.dt;
         bool passed = false;
-        for (int k = 0; k < 8; ++k) {
-            if (share[k] <= 0) continue;
+        for (uint8_t ways = scratch.ways[i]; ways; ways &= uint8_t(ways - 1)) {
+            const int k = std::countr_zero(ways);
             passed = true;
             const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
             const size_t other = domain.index(nx, nz);
@@ -327,11 +329,19 @@ void cutAndFill(Domain& domain, FlowScratch& scratch) {
     constexpr float DepositSlope[LevelCount] = {0, 0.02f, 0.06f, 0.25f, 0.5f};
     const float rise = DepositSlope[size_t(domain.key.level)] * sweep.cell;
     scratch.room.assign(cells, 1e9f);
+    // The directions each cell's water leaves by, in rising order: every loop over a cell's shares
+    // below walks these alone and takes the shares in the order it did over all eight.
+    scratch.ways.resize(cells);
     for (size_t i = 0; i < cells; ++i) {
-        const float* share = &scratch.share[i * 8];
+        uint8_t ways = 0;
+        for (int k = 0; k < 8; ++k)
+            if (!(scratch.share[i * 8 + size_t(k)] <= 0)) ways |= uint8_t(1u << k);
+        scratch.ways[i] = ways;
+    }
+    for (size_t i = 0; i < cells; ++i) {
         float lowest = domain.level[i];
-        for (int k = 0; k < 8; ++k) {
-            if (share[k] <= 0) continue;
+        for (uint8_t ways = scratch.ways[i]; ways; ways &= uint8_t(ways - 1)) {
+            const int k = std::countr_zero(ways);
             const size_t other = domain.index(int(i % size_t(domain.size)) + NeighborX[k], int(i / size_t(domain.size)) + NeighborZ[k]);
             scratch.room[other] = std::min(scratch.room[other], std::max(0.0f, domain.level[i] - domain.level[other]));
             lowest = std::min(lowest, domain.level[other]);

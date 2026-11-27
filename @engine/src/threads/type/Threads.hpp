@@ -6,9 +6,10 @@ namespace derivean {
 // processor tells them apart, else all but two of its threads.
 unsigned backgroundThreads();
 
-// Puts the calling thread in the scheduler's interactive class. Whoever advances the game calls it
-// once: the pools may then be as large as the machine, because a frame takes a core from them
-// whenever it wants one. Only macOS has such a class; elsewhere the call does nothing.
+// Puts the calling thread ahead of the pools in the scheduler: the interactive class on macOS, the
+// highest priority of a normal process on Windows. Whoever advances the game calls it once: the
+// pools may then be as large as the machine, because a frame takes a core from them whenever it
+// wants one.
 void favourCallingThread();
 
 } // namespace derivean

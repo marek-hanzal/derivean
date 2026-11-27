@@ -5,11 +5,14 @@
 #include <cmath>
 #include <cstdlib>
 
+#if defined(__aarch64__)
+#include "atmosphere/fn/StencilNeon.hpp"
+#endif
+
 namespace derivean::sim {
 namespace {
 
-// Interior rows are visited face by face, grid line by grid line, i from 2 to side − 3, which is
-// also their order in `inner`.
+// `inner` holds the interior rows face by face, grid line by grid line, i from 2 to side − 3.
 constexpr int Margin = StencilMatrix::Margin, Chunk = StencilMatrix::Chunk, Entries = StencilMatrix::Entries;
 
 bool insideFace(int side, int row) {
@@ -17,6 +20,7 @@ bool insideFace(int side, int row) {
     return i >= Margin && i < side - Margin && j >= Margin && j < side - Margin;
 }
 
+// Grid line dj outer, neighbour di inner; the NEON kernels (StencilNeon.hpp) add their taps in this order.
 std::array<int, Entries> offsetsFor(int side) {
     std::array<int, Entries> offset{};
     int k = 0;
@@ -38,6 +42,45 @@ bool regularOf(const SphereMatrix& matrix, int side, const std::array<int, Entri
             if (matrix.column[size_t(first + e)] - r != offset[size_t(e)]) return false;
     }
     return true;
+}
+
+
+// applyMatrix on a shared matrix, grid line by grid line with the six faces inside, so one line of
+// `inner` stays in L1 while all six faces use it instead of the whole face streaming six times. Every
+// row is written once with the sum forEachProduct gives it; only the order of the rows differs.
+template <class Real> void applySharedMatrix(const StencilMatrixOf<Real>& matrix, const Real* __restrict x, Real* __restrict y) {
+    const int side = matrix.side, run = side - 2 * Margin;
+    auto write = [y](size_t r, Real sum) { y[r] = sum; };
+    for (size_t k = 0; k < matrix.seamRow.size(); ++k) y[size_t(matrix.seamRow[k])] = seamProduct(matrix, k, x);
+    const Real* line = matrix.inner.data();
+    for (int j = Margin; j < side - Margin; ++j, line += size_t(Entries) * size_t(run))
+        for (int face = 0; face < 6; ++face) {
+            const Real* v = line;
+            for (int i0 = 0; i0 < run; i0 += Chunk) {
+                const int count = std::min(Chunk, run - i0), first = (face * side + j) * side + Margin + i0;
+                int i = 0;
+#if defined(__aarch64__)
+                constexpr int rows = NeonRows<Real>;
+                for (; i + rows <= count; i += rows) productNeon(v + i, count, x + first + i, side, y + first + i);
+#endif
+                blockProduct(matrix, v, count, first, x, i, write);
+                v += Entries * count;
+            }
+        }
+}
+
+template <class Real> void applyStencil(const StencilMatrixOf<Real>& matrix, const std::vector<Real>& field, std::vector<Real>& result) {
+    result.resize(matrix.diagonal.size());
+    if (matrix.shared) {
+        applySharedMatrix(matrix, field.data(), result.data());
+        return;
+    }
+    Real* y = result.data();
+    forEachProduct(matrix, field.data(), [y](size_t r, Real sum) { y[r] = sum; });
+}
+
+std::vector<float> narrowedOf(const std::vector<double>& values) {
+    return std::vector<float>(values.begin(), values.end());
 }
 
 } // namespace
@@ -116,9 +159,26 @@ StencilMatrix makeStencilMatrix(const SphereMatrix& matrix, int side) {
 }
 
 void applyMatrix(const StencilMatrix& matrix, const std::vector<double>& field, std::vector<double>& result) {
-    result.resize(matrix.diagonal.size());
-    double* y = result.data();
-    forEachProduct(matrix, field.data(), [y](size_t r, double sum) { y[r] = sum; });
+    applyStencil(matrix, field, result);
+}
+
+void applyMatrix(const StencilMatrixOf<float>& matrix, const std::vector<float>& field, std::vector<float>& result) {
+    applyStencil(matrix, field, result);
+}
+
+StencilMatrixOf<float> narrowed(const StencilMatrix& matrix) {
+    StencilMatrixOf<float> narrow;
+    narrow.side = matrix.side;
+    narrow.interior = matrix.interior;
+    narrow.shared = matrix.shared;
+    narrow.offset = matrix.offset;
+    narrow.inner = narrowedOf(matrix.inner);
+    narrow.seamRow = matrix.seamRow;
+    narrow.start = matrix.start;
+    narrow.column = matrix.column;
+    narrow.value = narrowedOf(matrix.value);
+    narrow.diagonal = narrowedOf(matrix.diagonal);
+    return narrow;
 }
 
 } // namespace derivean::sim
