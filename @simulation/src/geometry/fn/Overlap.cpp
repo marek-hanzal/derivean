@@ -3,6 +3,7 @@
 #include "geometry/constant/Sphere.hpp"
 #include "geometry/fn/SpherePolygon.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cmath>
@@ -27,15 +28,16 @@ Plane planeAt(Vec3 centre) {
     return {centre, first, cross(centre, first)};
 }
 
-// Gnomonic plane coordinates: the point p / (p · centre) − centre in (first, second).
+// Gnomonic plane coordinates: the point p / (p · centre) − centre in (first, second). Only the first
+// `count` corners are set.
 struct Flat {
     int count{};
-    std::array<double, 16> x{}, y{};
+    std::array<double, 16> x, y;
 };
 
-Flat project(const Plane& plane, const SpherePolygon& polygon) {
+template <class Out>
+void projectInto(const Plane& plane, const SpherePolygon& polygon, Out& flat) {
     assert(polygon.count >= 3 && polygon.count <= 8);
-    Flat flat;
     flat.count = polygon.count;
     for (int k = 0; k < polygon.count; ++k) {
         const Vec3 p = polygon.corner[size_t(k)];
@@ -44,6 +46,11 @@ Flat project(const Plane& plane, const SpherePolygon& polygon) {
         flat.x[size_t(k)] = dot(p, plane.first) / height;
         flat.y[size_t(k)] = dot(p, plane.second) / height;
     }
+}
+
+Flat project(const Plane& plane, const SpherePolygon& polygon) {
+    Flat flat;
+    projectInto(plane, polygon, flat);
     return flat;
 }
 
@@ -58,14 +65,14 @@ double sideOf(double ax, double ay, double bx, double by, double px, double py) 
 }
 
 // Sutherland & Hodgman (1974): keeps the part of `subject` left of the directed line a → b. Each clip
-// adds at most one corner, so eight corners clipped by eight edges need at most sixteen.
-void clip(Flat& subject, double ax, double ay, double bx, double by) {
-    Flat kept;
+// adds at most one corner, so eight corners clipped by eight edges need at most sixteen. The kept part
+// goes into `kept`, so a chain of clips alternates two buffers.
+void clip(const Flat& subject, Flat& kept, double ax, double ay, double bx, double by) {
+    kept.count = 0;
     const int n = subject.count;
     if (n == 0) return;
     double previousSide = sideOf(ax, ay, bx, by, subject.x[size_t(n - 1)], subject.y[size_t(n - 1)]);
-    for (int k = 0; k < n; ++k) {
-        const int before = (k + n - 1) % n;
+    for (int k = 0, before = n - 1; k < n; before = k++) {
         const double side = sideOf(ax, ay, bx, by, subject.x[size_t(k)], subject.y[size_t(k)]);
         assert(kept.count < 16);
         if ((side >= 0) != (previousSide >= 0)) {
@@ -82,7 +89,6 @@ void clip(Flat& subject, double ax, double ay, double bx, double by) {
         }
         previousSide = side;
     }
-    subject = kept;
 }
 
 // Σ of the fan's excesses, tan(E/2) = |P1 · (P2 × P3)| / (|P1||P2||P3| + (P1·P2)|P3| + (P2·P3)|P1| +
@@ -90,7 +96,7 @@ void clip(Flat& subject, double ax, double ay, double bx, double by) {
 // is the plane cross product of the corner differences.
 double excessOf(const Flat& flat) {
     if (flat.count < 3) return 0;
-    std::array<double, 16> norm{};
+    std::array<double, 16> norm;
     for (int k = 0; k < flat.count; ++k) norm[size_t(k)] = std::sqrt(1 + flat.x[size_t(k)] * flat.x[size_t(k)] + flat.y[size_t(k)] * flat.y[size_t(k)]);
     const double x0 = flat.x[0], y0 = flat.y[0], n0 = norm[0];
     double excess = 0;
@@ -114,18 +120,37 @@ double areaOf(const SpherePolygon& polygon) {
     return excessOf(project(planeAt(cap.centre), polygon)) * PlanetRadius * PlanetRadius;
 }
 
-double overlapArea(const SpherePolygon& a, const SpherePolygon& b) {
-    const PolygonCap capA = capOf(a), capB = capOf(b);
+double overlapArea(const SpherePolygon& a, const SpherePolygon& b) { return overlapArea(preparedOf(a), b); }
+
+PreparedPolygon preparedOf(const SpherePolygon& polygon) {
+    PreparedPolygon ready;
+    ready.cap = capOf(polygon);
+    const Plane plane = planeAt(ready.cap.centre);
+    ready.first = plane.first, ready.second = plane.second;
+    projectInto(plane, polygon, ready);
+    return ready;
+}
+
+double overlapArea(const PreparedPolygon& a, const SpherePolygon& b) { return overlapArea(a, b, capOf(b)); }
+
+double overlapArea(const PreparedPolygon& a, const SpherePolygon& b, const PolygonCap& capB) {
+    const PolygonCap& capA = a.cap;
     assert(capA.reach < LargestReach && capB.reach < LargestReach);
     if (length(capA.centre - capB.centre) > capA.reach + capB.reach + ApartMargin) return 0;
-    const Plane plane = planeAt(capA.centre);
-    Flat piece = project(plane, a);
+    const Plane plane{capA.centre, a.first, a.second};
+    std::array<Flat, 2> buffers;
+    Flat* piece = &buffers[0];
+    Flat* kept = &buffers[1];
+    piece->count = a.count;
+    std::copy(a.x.begin(), a.x.begin() + a.count, piece->x.begin());
+    std::copy(a.y.begin(), a.y.begin() + a.count, piece->y.begin());
     const Flat edge = project(plane, b);
-    for (int k = 0; k < edge.count && piece.count > 0; ++k) {
+    for (int k = 0; k < edge.count && piece->count > 0; ++k) {
         const size_t next = size_t((k + 1) % edge.count);
-        clip(piece, edge.x[size_t(k)], edge.y[size_t(k)], edge.x[next], edge.y[next]);
+        clip(*piece, *kept, edge.x[size_t(k)], edge.y[size_t(k)], edge.x[next], edge.y[next]);
+        std::swap(piece, kept);
     }
-    return excessOf(piece) * PlanetRadius * PlanetRadius;
+    return excessOf(*piece) * PlanetRadius * PlanetRadius;
 }
 
 } // namespace derivean::sim

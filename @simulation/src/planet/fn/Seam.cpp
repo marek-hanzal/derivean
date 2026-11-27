@@ -1,5 +1,6 @@
 #include "planet/fn/Seam.hpp"
 
+#include "core/fn/Listed.hpp"
 #include "geometry/fn/Overlap.hpp"
 #include "geometry/fn/SpherePolygon.hpp"
 #include "geometry/fn/Union.hpp"
@@ -36,9 +37,8 @@ double unionOverPiece(Globe& globe, int k, const std::vector<int>& pieces) {
 size_t suture(Globe& globe, Band& band, const Substep& substep) {
     const SphereGrid& grid = *globe.grid;
     PlanPieces plan{{}, {}, std::vector<int>(globe.pieces.size(), -1)};
-    std::vector<int> over, receivers, cells, work, scratch;
+    std::vector<int> over, receivers, cells;
     std::vector<double> overlap;
-    std::vector<CellWeight> weights;
     std::vector<std::vector<int>> cellsOf;   // per candidate
     // The pieces coupled at the substep's start, then those born in it (planet/fn/Band.hpp).
     const size_t coupled = band.weightStart.size() - 1;
@@ -50,22 +50,22 @@ size_t suture(Globe& globe, Band& band, const Substep& substep) {
         if (b < coupled) {
             for (int32_t s = band.weightStart[b]; s < band.weightStart[b + 1]; ++s) cells.push_back(band.weights[size_t(s)].cell);
         } else {
-            exactWeights(grid, piece, weights, scratch, work);
-            for (const CellWeight& w : weights) cells.push_back(w.cell);
+            for (int32_t s = band.bornStart[b - coupled]; s < band.bornStart[b - coupled + 1]; ++s) cells.push_back(band.bornWeights[size_t(s)].cell);
         }
         bool deciding = false;
+        for (const int cell : cells) deciding = deciding || band.decide[size_t(cell)];
+        if (!deciding) continue;
         over.clear();
         for (const int cell : cells) {
-            deciding = deciding || band.decide[size_t(cell)];
             forLive(band, cell, [&](int l, double) {
                 if (l != k && globe.pieces[size_t(l)].plate == piece.plate && !tiles(globe.pieces[size_t(l)], piece) &&
-                    std::find(over.begin(), over.end(), l) == over.end())
+                    !listed(over, l))
                     over.push_back(l);
             });
         }
-        if (!deciding || over.empty()) continue;
+        if (over.empty()) continue;
         std::sort(over.begin(), over.end(), [&](int a, int c) { return globe.pieces[size_t(a)].key < globe.pieces[size_t(c)].key; });
-        const SpherePolygon footprint = footprintOf(grid, piece);
+        const PreparedPolygon footprint = preparedOf(footprintOf(grid, piece));
         receivers.clear(), overlap.clear();
         double sum = 0, most = 0;
         for (const int l : over) {
@@ -142,21 +142,23 @@ CellPlates platesAt(const Globe& globe, const Band& band, int cell) {
 
 // Every slot inside one plate next to a cell of the old band and open by half or more gets a new piece
 // of that plate (fillSlot): the last spreading of a fossil ridge, ocean floor or crust necked from
-// continental neighbours. Up to BirthsPerRound per cell and round, the key's order −1 − (round · BirthsPerRound + n).
-// A cell of the old band where two plates now meet and that a suture left open by half takes a piece as
-// at a closing boundary (fillCell, order −1 − (SeamRounds · BirthsPerRound + round)), so the new boundaries start
-// with no cell open by half.
-size_t fill(Globe& globe, Band& band, const Substep& substep, int round) {
+// continental neighbours. Up to BirthsPerRound per cell and round, the key's order
+// −1 − first − (round · BirthsPerRound + n). A cell of the old band where two plates now meet and that a
+// suture left open by half takes a piece as at a closing boundary (fillCell, order
+// −1 − first − (SeamRounds · BirthsPerRound + round)), so the new boundaries start with no cell open by half.
+// `first` is a closing's SeamKeys · phase, so two closings of one step give their births distinct keys.
+constexpr int SeamKeys = SeamRounds * (BirthsPerRound + 1);
+size_t fill(Globe& globe, Band& band, const Substep& substep, int round, int first) {
     size_t filled = 0;
     for (const int32_t cell : band.cells) {
-        for (int n = 0; n < BirthsPerRound && fillSlot(globe, band, cell, {substep.step, cell, -1 - (round * BirthsPerRound + n)}, globe.time); ++n)
+        for (int n = 0; n < BirthsPerRound && fillSlot(globe, band, cell, {substep.step, cell, -1 - first - (round * BirthsPerRound + n)}, globe.time); ++n)
             ++globe.stats.fossil, ++filled;
         const double half = BornShare * globe.grid->area[size_t(cell)];
         const Over over = overOf(globe, band, cell, -1, {}, {});
-        if (over.sum > half && (over.most > half || unionInCell(globe, cell, over.pieces, over.sum, globe.stats.unions) > half)) continue;
+        if (coversOver(globe, cell, over, half, globe.stats.unions)) continue;
         const CellPlates at = platesAt(globe, band, cell);
         if (!at.two || at.largest < 0) continue;
-        fillCell(globe, band, cell, at.largest, {substep.step, cell, -1 - (SeamRounds * BirthsPerRound + round)}, globe.time);
+        fillCell(globe, band, cell, at.largest, {substep.step, cell, -1 - first - (SeamRounds * BirthsPerRound + round)}, globe.time);
         ++globe.stats.fossil, ++filled;
     }
     return filled;
@@ -164,11 +166,11 @@ size_t fill(Globe& globe, Band& band, const Substep& substep, int round) {
 
 } // namespace
 
-void reorganisePlates(Globe& globe, int step) {
+void reorganisePlates(Globe& globe, int step, Workers* workers) {
     Band band;
     markBand(globe, 1, band);
     enterGlobeEpoch(globe);
-    closeSeams(globe, band, step);
+    closeSeams(globe, band, step, 0, workers);
 }
 
 size_t sutureBand(Globe& globe, Band& band, const Substep& substep) {
@@ -177,18 +179,20 @@ size_t sutureBand(Globe& globe, Band& band, const Substep& substep) {
     return total;
 }
 
-bool closeSeams(Globe& globe, Band& band, int step) {
+bool closeSeams(Globe& globe, Band& band, int step, int phase, Workers* workers) {
     const Substep seam{step, -1, 0.0};
     // A suture can leave a cycle for the next round and a fossil can cover a neighbour by the rest of
     // its half, so both repeat until neither changes anything (a few rounds; bounded for safety).
     int round = 0;
     for (; round < SeamRounds; ++round) {
-        coupleBand(globe, band);   // the last round's fossils become candidates of this one's sutures
-        if (sutureBand(globe, band, seam) + fill(globe, band, seam, round) == 0) break;
+        // The last round's fossils become candidates of this one's sutures; nothing moves between rounds.
+        if (round == 0) coupleBand(globe, band, workers);
+        else recoupleBand(band);
+        if (sutureBand(globe, band, seam) + fill(globe, band, seam, round, phase * SeamKeys) == 0) break;
     }
     const bool settled = round < SeamRounds;
     globe.stats.unsettled += !settled;
-    settleBand(globe, band);
+    settleBand(globe, band, phase > 0, workers);
     return settled;
 }
 

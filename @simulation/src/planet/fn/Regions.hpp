@@ -1,0 +1,52 @@
+#pragma once
+
+#include "planet/type/Globe.hpp"
+
+namespace derivean::sim {
+
+// A cell is a plate's when the piece covering most of it covers this share of it at least. Less is the
+// rounding of the exact overlaps where footprints meet along an edge or a corner (about 1e-16 of a cell,
+// geometry/fn/Overlap.hpp) or of the band's normalised weights (about 1e-12), not crust standing on the
+// cell (Codex DREV-CLAUDE-008-01). It is a million times the band's rounding and far under the slivers
+// a plate's motion leaves (a substep moves a plate kilometres; 1e-6 of a level-5 cell is a strip 0.3 m
+// wide along its edge). It classifies cells only: the balance and the coupling take every piece whole.
+inline constexpr double OwnedShare = 1e-6;
+
+// Per piece whose real overlaps a classification read: its exact weights normalised to its area, as
+// `couple` weighs a flagged piece (exactCoupling; the coupling's own where the piece is coupled exactly).
+struct RealWeights {
+    std::vector<int32_t> begin, end;   // per piece, into `weights`, or -1
+    std::vector<CellWeight> weights;
+};
+
+// The plates' regions on the mantle grid: a cell belongs to the plate of the piece that covers most of
+// it, by OwnedShare at least (`dominant`, the lower key on a tie, and its plate as `owner`; any other cell
+// is free), and the cells of one plate joined across cell edges or corners (the ring), directly or
+// through free cells, are its regions: a gap inside a plate fills with its own new crust and is no
+// boundary with another plate (lead, 27 Nov), and a whole-cell piece offset by a diagonal covers most of
+// two cells that share a corner only, so regions joined by edges alone would cut a piece in two.
+// Every cell's owner is the one the exact overlaps of all its pieces give (planet/fn/Owner; Codex
+// DREV-CLAUDE-008-06): where bounds of the overlaps decide it, the coupling's classification stands with
+// that owner, and every other cell is classified by the real overlaps of every piece that can reach it,
+// before any region is grouped. A plate in two regions or more (lead, 27 Nov) has the cells its pieces'
+// real footprints reach and the cells it owns, and the ring of each, classified again by real overlaps,
+// so the dominant pieces `deal` reads, which cells a fragment has, how many, where its borders run and
+// which pieces it takes all follow the crust that stands there (independent reviewer of Codex
+// DREV-CLAUDE-008-05). A region's area is what its plate
+// covers of its cells, each cell at most whole: for a plate in two regions or more the union of its real
+// footprints clipped to each cell (Codex DREV-CLAUDE-008-02 and -05), since the overlaps summed per cell
+// count crust twice where pieces of a plate overlap; for a plate in one region, which no area decides,
+// that sum.
+struct PlateRegions {
+    std::vector<int32_t> dominant;  // per cell: the piece covering most of it by the overlaps read, or -1
+    std::vector<int32_t> owner;     // per cell: plate, or -1 for a free cell
+    std::vector<int32_t> region;    // per cell: region, or -1
+    std::vector<int32_t> plate;     // per region
+    std::vector<double> area;       // per region, sr its plate covers in its cells
+    std::vector<int32_t> cells;     // per region
+    std::vector<int32_t> largest;   // per plate: its largest region (the first of equal ones), or -1
+    RealWeights real;               // filled for every piece whose real overlaps a classification read
+};
+PlateRegions plateRegionsOf(const Globe& globe);
+
+} // namespace derivean::sim

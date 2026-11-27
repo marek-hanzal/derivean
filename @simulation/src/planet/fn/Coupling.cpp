@@ -6,6 +6,7 @@
 #include "geometry/fn/Projection.hpp"
 #include "geometry/fn/SphereGrid.hpp"
 #include "geometry/fn/SpherePolygon.hpp"
+#include "core/service/Workers.hpp"
 #include "planet/fn/Pieces.hpp"
 
 #include <algorithm>
@@ -17,6 +18,7 @@ namespace {
 // Before normalisation the exact overlaps of a footprint sum to its area within this share (Codex V3;
 // S3a measured 4e-14 at level 7).
 constexpr double CoverageTolerance = 1e-9;
+constexpr int CoupleGrain = 256;   // pieces a pool range takes at least
 
 void add(std::vector<CellWeight>& weights, int cell, double area) {
     for (CellWeight& w : weights)
@@ -31,16 +33,22 @@ void add(std::vector<CellWeight>& weights, int cell, double area) {
 
 double exactWeights(const SphereGrid& grid, const CrustPiece& piece, std::vector<CellWeight>& weights, std::vector<int>& cells, std::vector<int>& work) {
     weights.clear();
-    const SpherePolygon footprint = footprintOf(grid, piece);
-    candidateCells(grid, footprint, cells, work);
+    const PreparedPolygon footprint = preparedOf(footprintOf(grid, piece));
+    candidateCells(grid, footprint.cap, cells, work);
     double sum = 0;
     for (const int cell : cells) {
-        const double area = overlapArea(footprint, polygonOf(grid, cell));
+        const double area = overlapArea(footprint, polygonOf(grid, cell), grid.cap[size_t(cell)]);
         if (area <= 0) continue;
         weights.push_back({cell, area});
         sum += area;
     }
     return sum;
+}
+
+void exactCoupling(const SphereGrid& grid, const CrustPiece& piece, std::vector<CellWeight>& weights, std::vector<int>& cells, std::vector<int>& work) {
+    const double sum = exactWeights(grid, piece, weights, cells, work);
+    require(std::abs(sum - piece.area) <= CoverageTolerance * piece.area, "exact overlaps of a footprint miss its area", sum / piece.area - 1);
+    for (CellWeight& w : weights) w.area *= piece.area / sum;
 }
 
 void cicWeights(const SphereGrid& grid, const CrustPiece& piece, std::vector<CellWeight>& weights) {
@@ -59,25 +67,31 @@ void cicWeights(const SphereGrid& grid, const CrustPiece& piece, std::vector<Cel
         }
 }
 
-void couple(const SphereGrid& grid, const std::vector<CrustPiece>& pieces, const std::vector<uint8_t>& exact, bool allExact, Coupling& coupling) {
+void couple(const SphereGrid& grid, const std::vector<CrustPiece>& pieces, const std::vector<uint8_t>& exact, bool allExact, Coupling& coupling, Workers* workers) {
     const size_t n = pieces.size();
     coupling.slots.resize(n * CouplingSlots);
     coupling.counts.assign(n, 0);
-    std::vector<CellWeight> weights;
-    std::vector<int> cells, work;
-    for (size_t k = 0; k < n; ++k) {
-        const CrustPiece& piece = pieces[k];
-        if (allExact || (k < exact.size() && exact[k])) {
-            const double sum = exactWeights(grid, piece, weights, cells, work);
-            require(std::abs(sum - piece.area) <= CoverageTolerance * piece.area, "exact overlaps of a footprint miss its area", sum / piece.area - 1);
-            for (CellWeight& w : weights) w.area *= piece.area / sum;
-        } else {
-            cicWeights(grid, piece, weights);
+    coupling.exact.assign(n, 0);
+    // Each piece writes only its own slots, so the pool's ranges cannot change a bit; the lists below
+    // are built in key order.
+    const auto weigh = [&](int begin, int end) {
+        std::vector<CellWeight> weights;
+        std::vector<int> cells, work;
+        for (size_t k = size_t(begin); k < size_t(end); ++k) {
+            const CrustPiece& piece = pieces[k];
+            if (allExact || (k < exact.size() && exact[k])) {
+                exactCoupling(grid, piece, weights, cells, work);
+                coupling.exact[k] = 1;
+            } else {
+                cicWeights(grid, piece, weights);
+            }
+            require(weights.size() <= size_t(CouplingSlots), "a footprint meets too many cells", double(weights.size()));
+            std::copy(weights.begin(), weights.end(), coupling.slots.begin() + std::ptrdiff_t(k * CouplingSlots));
+            coupling.counts[k] = uint8_t(weights.size());
         }
-        require(weights.size() <= size_t(CouplingSlots), "a footprint meets too many cells", double(weights.size()));
-        std::copy(weights.begin(), weights.end(), coupling.slots.begin() + std::ptrdiff_t(k * CouplingSlots));
-        coupling.counts[k] = uint8_t(weights.size());
-    }
+    };
+    if (workers) workers->parallelFor(int(n), weigh, CoupleGrain);
+    else weigh(0, int(n));
 
     coupling.pieceStart.assign(n + 1, 0);
     for (size_t k = 0; k < n; ++k) coupling.pieceStart[k + 1] = coupling.pieceStart[k] + coupling.counts[k];

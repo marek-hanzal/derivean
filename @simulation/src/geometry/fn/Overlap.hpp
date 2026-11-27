@@ -1,6 +1,9 @@
 #pragma once
 
+#include "geometry/fn/SpherePolygon.hpp"
 #include "geometry/type/SpherePolygon.hpp"
+
+#include <array>
 
 namespace derivean::sim {
 
@@ -24,5 +27,19 @@ namespace derivean::sim {
 // a footprint's candidates they sum to its area to about 4e-14 at level 7 (docs/handoff/geometry.md).
 double areaOf(const SpherePolygon& polygon);
 double overlapArea(const SpherePolygon& a, const SpherePolygon& b);
+
+// A polygon made ready to overlap many others: its cap and its corners on the plane tangent at the
+// cap's centre, as overlapArea(a, b) projects them; overlapArea(preparedOf(a), b) is overlapArea(a, b)
+// bit for bit.
+struct PreparedPolygon {
+    PolygonCap cap;
+    Vec3 first, second;   // the tangent plane's axes
+    int count{};
+    std::array<double, 8> x, y;
+};
+PreparedPolygon preparedOf(const SpherePolygon& polygon);
+double overlapArea(const PreparedPolygon& a, const SpherePolygon& b);
+// The same with b's cap, capOf(b), already taken.
+double overlapArea(const PreparedPolygon& a, const SpherePolygon& b, const PolygonCap& capB);
 
 } // namespace derivean::sim

@@ -31,7 +31,8 @@ struct EulerEpoch {
     int index{};
     double start{}, end{};   // yr
     uint64_t seed{};
-    std::vector<EulerPlate> plates;
+    std::vector<EulerPlate> plates;   // the epoch's sites, then the plates split from them within it (planet/fn/Cohesion)
+    size_t sites{};                   // plates the epoch began with and still has, first in `plates`; 0: all of them
 };
 
 // Σ a (I − x xᵀ) over a set of crust pieces (areas a, unit centres x): the moment that turns a rotation

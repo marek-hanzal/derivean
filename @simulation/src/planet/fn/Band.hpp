@@ -1,8 +1,11 @@
 #pragma once
 
+#include "geometry/type/SpherePolygon.hpp"
 #include "planet/type/Globe.hpp"
 
 namespace derivean::sim {
+
+class Workers;
 
 // The boundary band of one planet step (S3-design.md §4). The core is every cell that has pieces of
 // two plates within its ring, read from the coupling at the step's start. Within the step a plate
@@ -31,19 +34,42 @@ struct Band {
     // The pieces born in the current substep, with their exact overlaps per region cell, so every later
     // birth of the substep reads them (Codex DREV-CLAUDE-005-01); coupleBand folds them into the lists.
     std::vector<std::vector<PieceWeight>> born;   // per region cell
+    // The same overlaps per birth, in birth order: band piece weightStart.size() − 1 + i is birth i.
+    std::vector<int32_t> bornStart{0};
+    std::vector<CellWeight> bornWeights;
     // The openness of lattice slots inside one plate (planet/fn/Interior.hpp) as last measured, per
     // piece and edge, valid while its stamp is `slotGeneration`: a new substep, a new piece and a
     // consumed one each start a new generation, so nothing measured before them is read.
     std::vector<float> slotOpen;
     std::vector<uint32_t> slotStamp;
     uint32_t slotGeneration{1};
+    // Scratch of one interiorSlot call (planet/fn/Interior.cpp): the footprint and cap of each piece it
+    // reads, per piece of the globe, valid while its stamp is `footprintCall`.
+    std::vector<SpherePolygon> footprint;
+    std::vector<PolygonCap> footprintCap;
+    std::vector<uint32_t> footprintStamp;
+    uint32_t footprintCall{};
+    // Per cell, for interiorSlot: whether a slot centred over it is measured (1, 0, or −1 not yet
+    // known; a property of `decide` and `region` alone), and the generation in which pieces of two
+    // plates were seen over it and its ring: a birth (joinBand) and a consumption (planet/fn/Transfers)
+    // each start a new generation, so it holds while the pieces stay those it saw.
+    std::vector<int8_t> slotCell;
+    std::vector<uint32_t> mixedStamp;
 };
 
 // Marks the band from the globe's coupling at the start of a step.
 void markBand(const Globe& globe, int sweep, Band& band);
 
+// Marks a band whose core is the given cells, as markBand widens its own (planet/fn/Cohesion: the cells
+// a fragment of a plate leaves when it joins the plate around it).
+void markBandAt(const Globe& globe, int sweep, const std::vector<int32_t>& cells, Band& band);
+
 // Exact overlaps of every live band piece as the pieces stand; lists per region cell.
-void coupleBand(const Globe& globe, Band& band);
+void coupleBand(const Globe& globe, Band& band, Workers* workers = nullptr);
+
+// coupleBand when no band piece has moved since the last one (closeSeams' rounds): the overlaps of the
+// pieces coupled then are kept and the births' are taken from joinBand, the same bits as coupleBand.
+void recoupleBand(Band& band);
 
 // The rings round a point within which every cell that a footprint centred there can reach lies: a
 // footprint reaches at most its cell's largest chord to a corner from its centre, and two of those plus
@@ -56,14 +82,6 @@ inline constexpr int GuardRings = 3;
 // of a deciding cell: the only ones a step's turn could bring to one, since the sweep is taken from the
 // fastest plate. Read before the pieces outside the band turn.
 std::vector<int32_t> nearBand(const Globe& globe, const Band& band);
-
-// Fatal when one of `near` reaches a deciding cell in the substep it has just turned through (`dt`, yr):
-// the band missed it (Codex DREV-CLAUDE-005-04). Checked after the turn, at the piece's end position and
-// back along its arc at points at most half the shortest edge apart, the substep's start included: a
-// deciding cell within GuardRings of a point is reached when its centre is nearer than the two cells'
-// largest chords to a corner (`SphereGrid::reach`) and a quarter of the shortest edge (the envelope ρ_k +
-// ρ_c of S3-design.md §4 V3, so a piece born in a large cell that drifts among small ones is caught).
-void requireBandHeld(const Globe& globe, const Band& band, const std::vector<int32_t>& near, double dt, double shortest);
 
 // Adds a piece born in this substep to the band with its exact overlaps.
 void joinBand(const Globe& globe, Band& band, int piece);

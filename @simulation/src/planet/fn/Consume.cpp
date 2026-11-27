@@ -1,6 +1,7 @@
 #include "planet/fn/Boundary.hpp"
 
 #include "chronology/constant/Timeline.hpp"
+#include "core/fn/Listed.hpp"
 #include "geometry/constant/Sphere.hpp"
 #include "geometry/fn/Cell.hpp"
 #include "geometry/fn/Overlap.hpp"
@@ -43,14 +44,16 @@ bool overrides(const Globe& globe, int l, int k) {
     return arriving > meeting || (arriving == meeting && own.plate < other.plate);
 }
 
-// How much of k the given pieces cover together, in k's tangent plane.
-double unionOver(const Globe& globe, int k, const std::vector<Overrider>& pieces, int plate, long& unions) {
+// How much of k (its footprint `ownFootprint`) the given pieces (`footprints`, one per piece) cover
+// together, in k's tangent plane.
+double unionOver(const Globe& globe, int k, const SpherePolygon& ownFootprint, const std::vector<Overrider>& pieces,
+    const std::vector<SpherePolygon>& footprints, int plate, long& unions) {
     const TangentPlane plane = tangentPlaneAt(centreOf(*globe.grid, globe.pieces[size_t(k)]));
-    const PlanePolygon own = projected(plane, footprintOf(*globe.grid, globe.pieces[size_t(k)]));
+    const PlanePolygon own = projected(plane, ownFootprint);
     std::vector<PlanePolygon> parts;
-    for (const Overrider& o : pieces)
-        if (plate < 0 || globe.pieces[size_t(o.piece)].plate == plate)
-            parts.push_back(clipped(projected(plane, footprintOf(*globe.grid, globe.pieces[size_t(o.piece)])), own));
+    for (size_t i = 0; i < pieces.size(); ++i)
+        if (plate < 0 || globe.pieces[size_t(pieces[i].piece)].plate == plate)
+            parts.push_back(clipped(projected(plane, footprints[i]), own));
     ++unions;
     return unionArea(parts).area;
 }
@@ -110,18 +113,15 @@ void holdOpening(Globe& globe, const Band& band, PlanPieces& plan, const std::ve
     // that was closed, and a seam's gap does not hold a trench back).
     const auto stays = [&](int cell, int asked) {
         rest.clear();
-        double sumAll = 0, sumRest = 0;
+        double sumAll = 0, sumRest = 0, askedArea = 0;
         forLive(band, cell, [&](int k, double area) {
             sumAll += area;
             if (!gone[size_t(k)]) rest.push_back(k), sumRest += area;
+            if (k == asked) askedArea = area;
         });
         const double half = BornShare * globe.grid->area[size_t(cell)];
         if (sumRest == sumAll || sumAll < half) return true;
         if (unionInCell(globe, cell, rest, sumRest, globe.stats.unions) >= half) return true;
-        double askedArea = 0;
-        forLive(band, cell, [&](int k, double area) {
-            if (k == asked) askedArea = area;
-        });
         if (askedArea <= 0) return true;
         rest.push_back(asked);
         return unionInCell(globe, cell, rest, sumRest + askedArea, globe.stats.unions) < half;
@@ -155,6 +155,8 @@ void consumeInBand(Globe& globe, Band& band, const Substep& substep) {
     const auto local = [&](int piece) { return localOf(plan, globe, piece); };
     std::vector<int> partners;
     std::vector<Overrider> overriders;
+    std::vector<SpherePolygon> footprints;   // per overrider
+    std::vector<int> plates;                 // the overriders' plates weighed for k
     std::vector<size_t> bandOf;   // per candidate: its index among the band's pieces
     const size_t coupled = band.weightStart.size() - 1;
     for (size_t b = 0; b < coupled; ++b) {
@@ -168,35 +170,40 @@ void consumeInBand(Globe& globe, Band& band, const Substep& substep) {
             deciding = deciding || band.decide[size_t(cell)];
             const BandList list = listOf(band, cell);
             for (const PieceWeight* w = list.begin; w != list.end; ++w)
-                if (globe.pieces[size_t(w->piece)].plate != piece.plate && std::find(partners.begin(), partners.end(), w->piece) == partners.end())
+                if (globe.pieces[size_t(w->piece)].plate != piece.plate && !listed(partners, int(w->piece)))
                     partners.push_back(w->piece);
         }
         if (!deciding || partners.empty()) continue;
         std::sort(partners.begin(), partners.end(), [&](int a, int b) { return globe.pieces[size_t(a)].key < globe.pieces[size_t(b)].key; });
-        overriders.clear();
+        overriders.clear(), footprints.clear();
         double sum = 0, most = 0;
-        const SpherePolygon footprint = footprintOf(grid, piece);
+        const SpherePolygon own = footprintOf(grid, piece);
+        const PreparedPolygon footprint = preparedOf(own);
         for (const int l : partners) {
             if (!overrides(globe, l, k)) continue;
-            const double overlap = overlapArea(footprint, footprintOf(grid, globe.pieces[size_t(l)]));
+            SpherePolygon theirs = footprintOf(grid, globe.pieces[size_t(l)]);
+            const double overlap = overlapArea(footprint, theirs);
             if (overlap <= 0) continue;
-            overriders.push_back({l, overlap});
+            overriders.push_back({l, overlap}), footprints.push_back(theirs);
             sum += overlap, most = std::max(most, overlap);
         }
         const double half = ConsumedShare * piece.area;
         if (sum < half) continue;
-        if (most < half && unionOver(globe, k, overriders, -1, globe.stats.unions) < half) continue;
+        if (most < half && unionOver(globe, k, own, overriders, footprints, -1, globe.stats.unions) < half) continue;
         // The receiving plate is the one covering most of k, by its own union (the lower index on a tie).
+        // A plate weighed once is not weighed again: the same cover cannot win over the one that beat it.
         int plate = -1;
         double best = -1;
+        plates.clear();
         for (const Overrider& o : overriders) {
             const int q = globe.pieces[size_t(o.piece)].plate;
-            if (q == plate) continue;
+            if (listed(plates, q)) continue;
+            plates.push_back(q);
             int count = 0;
             double single = 0;
             for (const Overrider& p : overriders)
                 if (globe.pieces[size_t(p.piece)].plate == q) ++count, single = p.overlap;
-            const double cover = count == 1 ? single : unionOver(globe, k, overriders, q, globe.stats.unions);
+            const double cover = count == 1 ? single : unionOver(globe, k, own, overriders, footprints, q, globe.stats.unions);
             if (cover > best || (cover == best && q < plate)) best = cover, plate = q;
         }
         for (const Overrider& o : overriders)

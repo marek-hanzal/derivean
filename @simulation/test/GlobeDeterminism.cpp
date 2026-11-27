@@ -61,8 +61,13 @@ void expectSame(const Globe& a, const Globe& b, const char* what) {
     expect(a.contactZone == b.contactZone && a.contact.value.size() == b.contact.value.size() &&
                std::equal(a.contact.value.begin(), a.contact.value.end(), b.contact.value.begin(), sameContact),
            what);
-    expect(a.motion.size() == b.motion.size() && a.applied.size() == b.applied.size(), what);
-    for (size_t p = 0; p < a.motion.size(); ++p) expect(sameBits(a.motion[p].resistance, b.motion[p].resistance) && sameBits(a.motion[p].oceanAge, b.motion[p].oceanAge) && sameBits(a.applied[p], b.applied[p]), what, double(p));
+    expect(a.motion.size() == b.motion.size() && a.applied.size() == b.applied.size() && a.epoch.plates.size() == b.epoch.plates.size() && a.splits.size() == b.splits.size() && a.plateEnds.size() == b.plateEnds.size(), what);
+    for (size_t e = 0; e < a.plateEnds.size(); ++e) expect(sameBits(a.plateEnds[e].time, b.plateEnds[e].time) && a.plateEnds[e].id == b.plateEnds[e].id, what, double(e));
+    for (size_t s = 0; s < a.splits.size(); ++s) {
+        const PlateSplit &p = a.splits[s], &q = b.splits[s];
+        expect(sameBits(p.time, q.time) && p.parent == q.parent && p.child == q.child && sameBits(p.area, q.area) && p.pieces == q.pieces, what, double(s));
+    }
+    for (size_t p = 0; p < a.motion.size(); ++p) expect(sameBits(a.motion[p].resistance, b.motion[p].resistance) && sameBits(a.motion[p].oceanAge, b.motion[p].oceanAge) && a.motion[p].id == b.motion[p].id && sameBits(a.applied[p], b.applied[p]), what, double(p));
     expect(sameBits(a.seaLevel, b.seaLevel) && a.seaLevels == b.seaLevels && sameBits(a.ledger, b.ledger), what);
 }
 

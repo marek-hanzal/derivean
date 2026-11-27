@@ -42,7 +42,7 @@ Stern, R. J. (2002). Subduction zones. *Reviews of Geophysics* 40(4), 1012. doi:
 ### Bird 2003: the plates of today's Earth
 Bird, P. (2003). An updated digital model of plate boundaries. *Geochemistry, Geophysics, Geosystems* 4(3), 1027. doi:10.1029/2001GC000252
 - **Reference data:** 52 plates, 14 large and 38 small; each plate is one region, the small ones plates of their own; the list is incomplete below the Shetland plate, 72 240 km².
-- **Used in:** `@simulation/test/GlobeCohesion.hpp` (a plate's cells outside its largest region), the cohesion gate in `docs/handoff/planet-globe.md` (stage 2b).
+- **Used in:** `@simulation/src/planet/fn/Cohesion.cpp` (`MicroplateArea`: a region cut off from its plate under 0.002 sr joins the plate round it, a larger one is a plate of its own), `@simulation/test/GlobeCohesion.hpp` and test `GlobeEpochs` (the gate over every step), the numbers in `docs/handoff/planet-globe.md` (stage 2b).
 
 ### Kay and Kay 1993: a thickened crustal root founders
 Kay, R. W. and Kay, S. M. (1993). Delamination and delamination magmatism. *Tectonophysics* 219(1–3), 177–189. doi:10.1016/0040-1951(93)90295-U

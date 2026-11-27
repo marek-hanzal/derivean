@@ -4,6 +4,8 @@
 
 namespace derivean::sim {
 
+class Workers;
+
 // Fills the coupling of pieces and cells. A piece flagged in `exact` (or every piece when `exact` is
 // empty and `allExact` holds) gets its true overlaps with the cells its envelope can reach (S3a's
 // candidates and overlaps; the sum before normalisation is asserted against its area to 1e-9, Codex
@@ -11,10 +13,12 @@ namespace derivean::sim {
 // of its centre, overlapping up to four cells of that face, normalised to the piece's area. Inside a
 // plate nothing is born or consumed, so normalised cheap weights conserve exactly and only the band
 // needs true geometry (S3-design.md §4). The weights are Jones's (1999) first-order conservative coupling.
-void couple(const SphereGrid& grid, const std::vector<CrustPiece>& pieces, const std::vector<uint8_t>& exact, bool allExact, Coupling& coupling);
+void couple(const SphereGrid& grid, const std::vector<CrustPiece>& pieces, const std::vector<uint8_t>& exact, bool allExact, Coupling& coupling, Workers* workers = nullptr);
 
 // The exact overlaps of one piece, unnormalised, with their sum.
 double exactWeights(const SphereGrid& grid, const CrustPiece& piece, std::vector<CellWeight>& weights, std::vector<int>& cells, std::vector<int>& work);
+// The exact overlaps of one piece normalised to its area, as `couple` weighs a flagged piece.
+void exactCoupling(const SphereGrid& grid, const CrustPiece& piece, std::vector<CellWeight>& weights, std::vector<int>& cells, std::vector<int>& work);
 void cicWeights(const SphereGrid& grid, const CrustPiece& piece, std::vector<CellWeight>& weights);
 
 // The piece with the largest weight in a cell (the lower key on a tie), -1 if none covers it.

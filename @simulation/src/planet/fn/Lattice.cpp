@@ -1,17 +1,24 @@
 #include "planet/fn/Lattice.hpp"
 
+#include "core/fn/Listed.hpp"
 #include "geometry/constant/Sphere.hpp"
 #include "geometry/fn/Overlap.hpp"
 #include "geometry/fn/Rotation.hpp"
 #include "geometry/fn/SphereGrid.hpp"
 #include "geometry/fn/SpherePolygon.hpp"
 #include "geometry/fn/Union.hpp"
+#include "planet/fn/Interior.hpp"
 #include "planet/fn/Pieces.hpp"
 
 #include <algorithm>
 #include <cmath>
 
 namespace derivean::sim {
+namespace {
+
+constexpr double BoundMargin = 1e-6;   // of a cell, by which a bound of a union must clear what it decides
+
+} // namespace
 
 double unionInCell(const Globe& globe, int cell, const std::vector<int>& pieces, double sum, long& unions) {
     const SphereGrid& grid = *globe.grid;
@@ -22,6 +29,23 @@ double unionInCell(const Globe& globe, int cell, const std::vector<int>& pieces,
     for (const int k : pieces) parts.push_back(clipped(projected(plane, footprintOf(grid, globe.pieces[size_t(k)])), own));
     ++unions;
     return unionArea(parts).area;
+}
+
+bool coversOver(const Globe& globe, int cell, const Over& over, double half, long& unions) {
+    if (over.sum <= half) return false;
+    if (over.most > half) return true;
+    const SphereGrid& grid = *globe.grid;
+    // Bounds decide only clear of `half` by this share of the cell, far over the rounding of the band's
+    // normalised weights and of the union's clipped parts (about 1e-12).
+    const double clear = half + BoundMargin * grid.area[size_t(cell)];
+    std::vector<SpherePolygon> footprint(over.pieces.size());
+    for (size_t i = 0; i < over.pieces.size(); ++i) footprint[i] = footprintOf(grid, globe.pieces[size_t(over.pieces[i])]);
+    double least = over.sum;
+    for (size_t i = 0; i < over.pieces.size() && least > clear; ++i)
+        for (size_t j = 0; j < i && least > clear; ++j)
+            if (!tiles(globe.pieces[size_t(over.pieces[i])], globe.pieces[size_t(over.pieces[j])])) least -= overlapArea(footprint[i], footprint[j]);
+    if (least > clear) return true;
+    return unionInCell(globe, cell, over.pieces, over.sum, unions) > half;
 }
 
 Over overOf(const Globe& globe, const Band& band, int cell, int plate, Vec3 x, Vec3 normal) {
@@ -61,17 +85,21 @@ double weldTurn(Globe& globe, const Band& band, int cell, int plate, Vec3 x, Vec
 // a zero `normal` (a seam inside one plate, planet/fn/Seam.hpp) a slot may lie across any edge of T.
 bool openSlot(Globe& globe, const Band& band, int cell, int plate, Vec3 normal, bool cellOpen, Slot& slot) {
     const SphereGrid& grid = *globe.grid;
-    const SpherePolygon home = polygonOf(grid, cell);
+    const PreparedPolygon home = preparedOf(polygonOf(grid, cell));
     std::vector<int> near;
     const auto gather = [&](int c) {
         forLive(band, c, [&](int k, double) {
-            if (std::find(near.begin(), near.end(), k) == near.end()) near.push_back(k);
+            if (!listed(near, k)) near.push_back(k);
         });
     };
     gather(cell);
     for (const int32_t other : (*globe.rings)[size_t(cell)])
         if (other >= 0) gather(other);
     std::sort(near.begin(), near.end(), [&](int a, int b) { return globe.pieces[size_t(a)].key < globe.pieces[size_t(b)].key; });
+    std::vector<Vec3> nearCentre(near.size());
+    std::vector<SpherePolygon> nearFootprint(near.size());
+    for (size_t i = 0; i < near.size(); ++i)
+        nearCentre[i] = centreOf(grid, globe.pieces[size_t(near[i])]), nearFootprint[i] = footprintOf(grid, globe.pieces[size_t(near[i])]);
     double best = 0, bestCover = 0;   // the most open slot; else, in an open cell, the fill covering most of it
     Slot fill;
     std::vector<int> over;
@@ -84,26 +112,34 @@ bool openSlot(Globe& globe, const Band& band, int cell, int plate, Vec3 normal, 
             const Vec3 centre = rotate(template_.rotation, grid.centre[size_t(next)]);
             if (dot(normal, normal) > 0 && dot(centre - from, normal) <= 0) continue;
             const SpherePolygon footprint = rotated(polygonOf(grid, next), template_.rotation);
+            const PreparedPolygon ready = preparedOf(footprint);
             const double cover = overlapArea(home, footprint);
             if (cover <= 0) continue;
             const double area = grid.area[size_t(next)], reach = 2.5 * std::sqrt(area) / PlanetRadius;
+            // The union covers each overlap to UnionShortfall (a lone overlap is the cover), so a slot that
+            // one piece leaves too closed to fill or be born in is passed over at that piece, and so is
+            // one its own plate already covers by over SlotClash (planet/fn/Interior.cpp does the same).
+            const double closing = cellOpen ? SlotFill : BornShare;
             double own = 0, sum = 0;
+            bool passed = false;
             over.clear();
-            for (const int l : near) {
-                const Vec3 d = centreOf(grid, globe.pieces[size_t(l)]) - centre;
+            for (size_t i = 0; i < near.size() && !passed; ++i) {
+                const int l = near[i];
+                const Vec3 d = nearCentre[i] - centre;
                 if (dot(d, d) >= reach * reach) continue;
-                const double o = overlapArea(footprint, footprintOf(grid, globe.pieces[size_t(l)]));
+                const double o = overlapArea(ready, nearFootprint[i]);
                 if (o <= 0) continue;
-                over.push_back(l), sum += o;
+                over.push_back(int(i)), sum += o;
                 if (globe.pieces[size_t(l)].plate == plate) own += o;
+                passed = own > SlotClash * area || (area - o) / area + UnionShortfall < closing;
             }
-            if (own > SlotClash * area) continue;
+            if (passed) continue;
             double covered = sum;
             if (over.size() > 1 && sum > 0.5 * area) {
                 const TangentPlane plane = tangentPlaneAt(centre);
                 const PlanePolygon clip = projected(plane, footprint);
                 std::vector<PlanePolygon> parts;
-                for (const int l : over) parts.push_back(clipped(projected(plane, footprintOf(grid, globe.pieces[size_t(l)])), clip));
+                for (const int i : over) parts.push_back(clipped(projected(plane, nearFootprint[size_t(i)]), clip));
                 ++globe.stats.unions;
                 covered = unionArea(parts).area;
             }

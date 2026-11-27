@@ -4,6 +4,7 @@
 #include "core/fn/Hash.hpp"
 #include "geometry/constant/Sphere.hpp"
 #include "planet/fn/Boundary.hpp"
+#include "planet/fn/Cohesion.hpp"
 #include "planet/fn/Coupling.hpp"
 #include "planet/fn/FlatView.hpp"
 #include "planet/fn/GlobeContacts.hpp"
@@ -58,15 +59,17 @@ Globe startGlobe(uint64_t seed, double time, int level, PlateSpeeds speeds) {
 void stepGlobe(Globe& globe, int64_t step, Workers& workers) {
     restoreKeyOrder(globe);
     const double before = globe.time;
-    if (before >= globe.epoch.end) reorganisePlates(globe, int(step));
+    if (before >= globe.epoch.end) reorganisePlates(globe, int(step), &workers);
     if (strataSlot(before) != strataSlot(before - PlanetStep)) {
         forCovers(globe, retireOldest);
         forCovers(globe, buryCover);
     }
 
     setWater(globe);
-    advancePlates(globe, PlanetStep, int(step));
+    advancePlates(globe, PlanetStep, int(step), 1, &workers);
     auto mark = std::chrono::steady_clock::now();
+    keepPlatesWhole(globe, int(step), &workers);
+    clockPhase(globe, GlobePhase::Whole, mark);
     traceGlobeContacts(globe);
     actOnGlobeContacts(globe, PlanetStep);
     relaxGlobeThickCrust(globe, PlanetStep);

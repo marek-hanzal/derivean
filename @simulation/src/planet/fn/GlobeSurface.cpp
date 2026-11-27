@@ -1,7 +1,6 @@
 #include "planet/fn/GlobeSurface.hpp"
 
 #include "geometry/fn/Cell.hpp"
-#include "geometry/fn/Frame.hpp"
 #include "geometry/fn/Metric.hpp"
 #include "geometry/fn/SphereGrid.hpp"
 #include "planet/fn/Coupling.hpp"
@@ -25,6 +24,9 @@ constexpr double SoluteShare = 0.07;
 constexpr float CoolShare = 0.35f;
 constexpr float PlatformDepth = 70.0f;
 constexpr double WarmLatitude = 45.0 * 3.141592653589793 / 180;
+// A unit centre's z is the sine of its latitude; no cell centre of levels 1 to 9 lies within 2e-6 of
+// this, so the test agrees with the latitude's own (checked over every centre).
+const double SinWarmLatitude = std::sin(WarmLatitude);
 constexpr float StepFill = 1500.0f;
 
 Facies faciesOf(float waterDepth, float slope, float supply, float rain) {
@@ -166,10 +168,11 @@ void shapeGlobeSurface(Globe& globe, double dt) {
         const float water = sea - elevation[cell];
         return !temperate || water <= PlatformDepth || water >= ShelfDepth ? 0.0 : double(water - PlatformDepth) / IsostaticRise;
     };
+    require(grid.level <= 9, "the warm shelves' latitude test holds to level 9", grid.level);
     std::vector<uint8_t> warm(cells);
     double pulling = 0, shelfRoom = 0, deepArea = 0;
     for (size_t cell = 0; cell < cells; ++cell) {
-        warm[cell] = std::abs(latLonOf(grid.centre[cell]).latitude) < WarmLatitude;
+        warm[cell] = std::abs(grid.centre[cell].z) < SinWarmLatitude;
         const double area = grid.area[cell];
         pulling += room(cell) * (warm[cell] ? 1.0 : CoolShare) * area;
         shelfRoom += room(cell) * area;

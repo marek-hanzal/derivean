@@ -1,5 +1,6 @@
 #include "planet/fn/Boundary.hpp"
 
+#include "core/fn/Listed.hpp"
 #include "geometry/constant/Sphere.hpp"
 #include "geometry/fn/Rotation.hpp"
 #include "geometry/fn/SphereGrid.hpp"
@@ -34,7 +35,7 @@ Nearest nearestPlates(const Globe& globe, const Band& band, int cell) {
     for (int ring = 0; ring < 2; ++ring)
         for (size_t i = 0, n = near.size(); i < n; ++i)
             for (const int32_t other : rings[size_t(near[i])])
-                if (other >= 0 && std::find(near.begin(), near.end(), other) == near.end()) near.push_back(other);
+                if (other >= 0 && !listed(near, other)) near.push_back(other);
     const Vec3 x = globe.grid->centre[size_t(cell)];
     std::vector<std::pair<double, int>> best;   // per plate seen: distance, piece
     std::vector<int> plates;
@@ -75,7 +76,7 @@ bool bearCell(Globe& globe, Band& band, int cell, const Substep& substep, int or
         // A closed cell still looks for a slot while its overlaps sum to under 1 − SlotHint.
         const Over over = overOf(globe, band, cell, -1, {}, {});
         const double half = BornShare * area;
-        const bool open = !(over.sum > half && (over.most > half || unionInCell(globe, cell, over.pieces, over.sum, globe.stats.unions) > half));
+        const bool open = !coversOver(globe, cell, over, half, globe.stats.unions);
         const bool closed = !open && over.sum >= (1 - SlotHint) * area;
         // Inside one plate a gap is a slot of its lattice open by half or more, not a mantle cell a seam
         // crosses (planet/fn/Interior.hpp); such a slot is filled first, wherever no other plate is near

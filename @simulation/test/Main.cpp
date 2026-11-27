@@ -27,6 +27,10 @@ void testGlobeBalance();
 void testGlobeDeterminism();
 void testGlobeBridge();
 void testGlobeEpochs();
+void testGlobeCohesion();
+void testGlobeCover();
+void testGlobeReal();
+void testGlobeOwner();
 void testClouds();
 void testAtmosphere();
 void testSnow();
@@ -110,6 +114,10 @@ constexpr Test Tests[] = {
     {"testGlobeDeterminism", testGlobeDeterminism, "unit"},
     {"testGlobeBridge", testGlobeBridge, "unit"},
     {"testGlobeEpochs", testGlobeEpochs, "unit"},
+    {"testGlobeCohesion", testGlobeCohesion, "unit"},
+    {"testGlobeCover", testGlobeCover, "unit"},
+    {"testGlobeReal", testGlobeReal, "unit"},
+    {"testGlobeOwner", testGlobeOwner, "unit"},
     {"testClouds", testClouds, "weather"},
     {"testAtmosphere", testAtmosphere, "weather"},
     {"testSnow", testSnow, "weather"},

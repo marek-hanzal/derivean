@@ -3,6 +3,7 @@
 #include "geometry/constant/Sphere.hpp"
 #include "geometry/fn/Rotation.hpp"
 #include "planet/constant/Scale.hpp"
+#include "planet/fn/BandHeld.hpp"
 #include "planet/fn/Coupling.hpp"
 #include "planet/fn/Pieces.hpp"
 #include "planet/fn/Rotate.hpp"
@@ -81,7 +82,7 @@ Vec3 towards(Vec3 from, Vec3 to) {
     return size > 0 ? along * (1.0 / size) : Vec3{};
 }
 
-void advancePlates(Globe& globe, double dt, int step, int refine) {
+void advancePlates(Globe& globe, double dt, int step, int refine, Workers* workers) {
     auto mark = std::chrono::steady_clock::now();
     applyKinematics(globe, dt);
     const SphereGrid& grid = *globe.grid;
@@ -99,7 +100,7 @@ void advancePlates(Globe& globe, double dt, int step, int refine) {
 
     for (int index = 0; index < substeps; ++index) {
         turn(globe.pieces, turnBy, band.pieces);
-        coupleBand(globe, band);
+        coupleBand(globe, band, workers);
         const Substep substep{step, index, dt / substeps};
         consumeInBand(globe, band, substep);
         // Sutures follow every round of births, so no piece is left half covered by its own plate, and
@@ -126,18 +127,18 @@ void advancePlates(Globe& globe, double dt, int step, int refine) {
 
     clockPhase(globe, GlobePhase::Rest, mark);
     globe.stats.bandCells += long(band.cells.size());
-    settleBand(globe, band);
+    settleBand(globe, band, false, workers);
     clockPhase(globe, GlobePhase::Couple, mark);
 }
 
-void settleBand(Globe& globe, const Band& band) {
+void settleBand(Globe& globe, const Band& band, bool keepExact, Workers* workers) {
     std::vector<CrustPiece> kept;
     std::vector<uint8_t> exact;
     kept.reserve(globe.pieces.size());
     for (size_t k = 0; k < globe.pieces.size(); ++k) {
         if (band.dead[k]) continue;
         kept.push_back(std::move(globe.pieces[k]));
-        exact.push_back(band.member[k]);
+        exact.push_back(band.member[k] | uint8_t(keepExact && k < globe.coupling.exact.size() ? globe.coupling.exact[k] << 1 : 0));
     }
     // Births join in substep and cell order, not key order; the sort carries the exact flags along.
     std::vector<size_t> order(kept.size());
@@ -146,8 +147,8 @@ void settleBand(Globe& globe, const Band& band) {
     globe.pieces.clear();
     std::vector<uint8_t> flags;
     for (const size_t i : order) globe.pieces.push_back(std::move(kept[i])), flags.push_back(exact[i]);
-    for (const uint8_t f : flags) globe.stats.exactPieces += f;
-    couple(*globe.grid, globe.pieces, flags, false, globe.coupling);
+    for (uint8_t& f : flags) globe.stats.exactPieces += f & 1, f = f != 0;
+    couple(*globe.grid, globe.pieces, flags, false, globe.coupling, workers);
 }
 
 } // namespace derivean::sim

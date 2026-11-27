@@ -5,6 +5,8 @@
 
 namespace derivean::sim {
 
+class Workers;
+
 // A plate reorganisation at the start of an epoch (Codex DREV-CLAUDE-005-04; an addition to
 // S3-design.md §4 by the lead's decision of 27 Nov, docs/handoff/planet-globe.md). The band of the
 // ending epoch's boundaries is read from the coupling, every piece is dealt to its new plate
@@ -19,13 +21,15 @@ namespace derivean::sim {
 // plate changes in its own frame (§4, cover slip): whole-cell pieces of two lattices offset by a share f
 // of a cell meet with a gap f or an overlap 1 − f. Only pieces of two lattices of one plate can overlap
 // (sameLattice), so only those are looked at.
-void reorganisePlates(Globe& globe, int step);
+void reorganisePlates(Globe& globe, int step, Workers* workers = nullptr);
 
 // The closing alone, over a band marked before the pieces were dealt to their new plates; whether it
 // settled, a round changing nothing within SeamRounds (Codex DREV-CLAUDE-005-05). A suture always
 // places its donor's crust, by delaminating what no piece of its plate within reach has room for
-// (planet/fn/Around), so a seam is never kept for want of room.
-bool closeSeams(Globe& globe, Band& band, int step);
+// (planet/fn/Around), so a seam is never kept for want of room. `phase` tells apart the closings of one
+// step, which give their births distinct keys: 0 at a reorganisation, 1 where fragments of plates join
+// the plate round them (planet/fn/Cohesion).
+bool closeSeams(Globe& globe, Band& band, int step, int phase, Workers* workers = nullptr);
 
 // The sutures alone in a substep of the boundary band, after its births: a seam that the band's births
 // or welds have covered by half again closes as at the reorganisation (lead, 27 Nov); the pieces it

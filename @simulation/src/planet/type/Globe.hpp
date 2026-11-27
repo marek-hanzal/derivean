@@ -73,6 +73,7 @@ struct Coupling {
     std::vector<int32_t> cellStart;    // cells + 1
     std::vector<PieceWeight> byCell;   // per cell in piece order
     std::vector<double> covered;       // per cell, Σ of its weights
+    std::vector<uint8_t> exact;        // per piece, whether its weights are exact
     std::vector<CellWeight> slots;     // scratch: CouplingSlots per piece
     std::vector<uint8_t> counts;       // scratch
 };
@@ -84,6 +85,7 @@ struct GlobeMotion {
     // yr: the area mean of the age of the plate's ocean floor as the epoch starts, 0 for a plate with no
     // ocean then. Which of two oceans sinks is the plates' choice, not the pieces' (sinksUnder).
     double oceanAge{};
+    int32_t id{};          // the plate's identity in globe.splits and globe.plateEnds, never reused
 };
 
 // The nearest cell of another plate as a cell of the mantle grid sees it, with the relative motion of
@@ -110,8 +112,25 @@ struct GlobeLedger {
     double waterInventory{};        // m³, all water the body holds (as the flat history: a closed stock, S3d replaces it)
 };
 
+// A plate split within an epoch (planet/fn/Cohesion): a region of the parent cut off from its largest
+// that became a plate of its own, with the parent's Euler vector and motion.
+struct PlateSplit {
+    double time{};        // yr
+    int32_t parent{}, child{};   // ids (GlobeMotion::id)
+    double area{};        // sr the parent covered in the region's cells (planet/fn/Regions)
+    int32_t pieces{};     // dealt to the child
+};
+
+// A plate left with no piece within its epoch (planet/fn/Cohesion), dropped from the plates. Every epoch
+// gives its plates new ids (enterGlobeEpoch), so the plates an epoch's end replaces are not recorded
+// here: an id ends here at most once, within the epoch that made it or its parent.
+struct PlateEnd {
+    double time{};        // yr
+    int32_t id{};
+};
+
 // Wall time of a step's phases, s (diagnostics only: no state reads it, so determinism ignores it).
-enum class GlobePhase : uint8_t { Band, Substeps, Rest, Couple, Contacts, Elevation, Climate, Surface, Count };
+enum class GlobePhase : uint8_t { Band, Substeps, Rest, Couple, Whole, Contacts, Elevation, Climate, Surface, Count };
 
 // What the boundary events did, for `terra globe` and the tests.
 struct GlobeStats {
@@ -121,10 +140,13 @@ struct GlobeStats {
     long bandCells{}, exactPieces{}, unions{};
     long filled{};   // births where no contact opens: fillCell (at closings too) and fillSlot in the band (not the fossils' slots)
     long held{};   // candidates held back since consuming them would open a cell by more than half
-    long sutured{}, fossil{};   // seams: consumed by their own plate, born in old band slots at reorganisations
+    long sutured{}, fossil{};   // seams: consumed by their own plate, born in old band slots at reorganisations and joins
     long seamsRefused{};        // suture donors a plan found no room for nearby: placed farther or delaminated
-    long unsettled{};           // reorganisations whose seams did not settle in SeamRounds
+    long unsettled{};           // closings (reorganisations, joins) whose seams did not settle in SeamRounds
     long unsettledSubsteps{};                 // substeps whose sutures still consumed after BearRounds rounds of births
+    long plateSplits{}, fragmentsJoined{};    // regions cut off from their plate: made plates, dealt to the plate round them
+    long wholeUnsettled{};                    // steps that left a plate other than one region: a fragment, or no cell
+    long strandedPieces{};                    // pieces of plates with no cell dealt to the plate under them
 };
 
 struct Globe {
@@ -149,6 +171,9 @@ struct Globe {
     std::vector<float> seaLevels;
     double seaLevel{}, surfaceWater{}, surfaceKelvin{};
     GlobeLedger ledger;
+    std::vector<PlateSplit> splits;      // every split of the history, in order
+    std::vector<PlateEnd> plateEnds;     // every plate dropped within its epoch, in order (not the plates an epoch's end replaces)
+    int32_t platesMade{};                // ids given
     GlobeStats stats;
 };
 
