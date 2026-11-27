@@ -37,7 +37,7 @@ double exactWeights(const SphereGrid& grid, const CrustPiece& piece, std::vector
     candidateCells(grid, footprint.cap, cells, work);
     double sum = 0;
     for (const int cell : cells) {
-        const double area = overlapArea(footprint, polygonOf(grid, cell));
+        const double area = overlapArea(footprint, polygonOf(grid, cell), grid.cap[size_t(cell)]);
         if (area <= 0) continue;
         weights.push_back({cell, area});
         sum += area;

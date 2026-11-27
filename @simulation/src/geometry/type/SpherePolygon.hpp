@@ -15,4 +15,12 @@ struct SpherePolygon {
     std::array<Vec3, 8> corner{};
 };
 
+// The centre of a polygon's corners (their normalized sum) and the largest chord from it to a corner,
+// on the unit sphere (fn/SpherePolygon's capOf). A convex polygon smaller than a hemisphere lies inside
+// the cap of that chord about that centre.
+struct PolygonCap {
+    Vec3 centre;
+    double reach{};
+};
+
 } // namespace derivean::sim

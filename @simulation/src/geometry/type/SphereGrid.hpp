@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geometry/type/SpherePolygon.hpp"
 #include "geometry/type/Vec3.hpp"
 
 #include <array>
@@ -42,6 +43,7 @@ struct SphereGrid {
     std::vector<double> area;                  // m², fn/Metric's areaOf
     std::vector<Vec3> centre;                  // unit direction (cell centre of fn/Cell)
     std::vector<double> reach;                 // per cell, the largest chord from the centre to a corner (unit sphere)
+    std::vector<PolygonCap> cap;               // per cell, capOf(polygonOf(grid, cell)) (fn/SpherePolygon)
     std::vector<std::array<int, 4>> edges;     // per cell, in the cell's edge order
     std::vector<std::array<int, 4>> corners;   // per cell, vertex per corner
     std::vector<SphereEdge> edge;

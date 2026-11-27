@@ -5,6 +5,7 @@
 #include "geometry/fn/Edge.hpp"
 #include "geometry/fn/Metric.hpp"
 #include "geometry/fn/Neighbour.hpp"
+#include "geometry/fn/SpherePolygon.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -71,6 +72,8 @@ SphereGrid makeSphereGrid(int level) {
         for (int vertex : grid.corners[size_t(c)]) reach = std::max(reach, length(grid.vertex[size_t(vertex)].point - grid.centre[size_t(c)]));
         grid.reach[size_t(c)] = reach;
     }
+    grid.cap.resize(size_t(grid.cells));
+    for (int c = 0; c < grid.cells; ++c) grid.cap[size_t(c)] = capOf(polygonOf(grid, c));
     grid.edge.reserve(size_t(2 * grid.cells));
     for (int c = 0; c < grid.cells; ++c) {
         const Cell cell = cellAt(grid, c);
