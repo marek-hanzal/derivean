@@ -7,11 +7,9 @@
 #include "simulation/fn/Live.hpp"
 #include "simulation/fn/Reader.hpp"
 
-#include <span>
-
 namespace derivean::sim {
 
-void sampleBlocks(World& world, const Block& block, const BlockSpan* spans, size_t spanCount) {
+void sampleBlocks(World& world, const Block& block, std::span<const BlockSpan> spans) {
     const double maxX = block.originX + block.countX * block.step, maxZ = block.originZ + block.countZ * block.step;
     requireOver(world, Level::Site, block.originX, block.originZ, maxX, maxZ, BlockSiteReach);
     requireOver(world, Level::Ground, block.originX, block.originZ, maxX, maxZ, BlockGroundReach);
@@ -119,7 +117,7 @@ void sampleBlocks(World& world, const Block& block, const BlockSpan* spans, size
                 caveKey = local;
                 caves = caveFieldAt(world, {x, z});
             }
-            for (const BlockSpan& span : std::span(spans, spanCount)) {
+            for (const BlockSpan& span : spans) {
                 Material* column = span.materials + size_t(iz) * size_t(block.countX) + size_t(ix);
                 formColumn(here, ground, open, caves.get(), x, z, span.originY, block.step, span.countY, column, layer);
                 cutSeaVoids(sea, x, z, span.originY, block.step, span.countY, column, layer);
@@ -129,7 +127,7 @@ void sampleBlocks(World& world, const Block& block, const BlockSpan* spans, size
 
     // Stones lie on and in the ground as solids of their own rock.
     const TileKey low = tileAt(Level::Ground, {block.originX - ClastReach, block.originZ - ClastReach}), high = tileAt(Level::Ground, {maxX + ClastReach, maxZ + ClastReach});
-    for (const BlockSpan& span : std::span(spans, spanCount)) {
+    for (const BlockSpan& span : spans) {
         const CubeLattice cubes{block.originX, span.originY, block.originZ, block.step, block.countX, span.countY, block.countZ};
         for (int z = low.z; z <= high.z; ++z)
             for (int x = low.x; x <= high.x; ++x)
@@ -139,7 +137,7 @@ void sampleBlocks(World& world, const Block& block, const BlockSpan* spans, size
 
 void sampleBlock(World& world, const Block& block, Material* materials) {
     const BlockSpan span{block.originY, block.countY, materials};
-    sampleBlocks(world, block, &span, 1);
+    sampleBlocks(world, block, {&span, 1});
 }
 
 StoneSample stoneAt(World& world, double x, double y, double z) {

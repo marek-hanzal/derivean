@@ -122,8 +122,7 @@ Sides sampleSides(sim::World& world, int x, int z, const std::vector<int>& level
         }
         const Bounds face = faceBox(chunkBounds({x, levels.front(), z}), normal);
         const Cell size = face.size();
-        sim::sampleBlocks(world, {face.min.x * double(VoxelSize), 0, face.min.z * double(VoxelSize), VoxelSize, size.x, 0, size.z},
-                          spans.data(), spans.size());
+        sim::sampleBlocks(world, {face.min.x * double(VoxelSize), 0, face.min.z * double(VoxelSize), VoxelSize, size.x, 0, size.z}, spans);
     }
     return sides;
 }

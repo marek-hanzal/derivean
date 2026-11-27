@@ -9,7 +9,8 @@
 namespace derivean {
 namespace {
 
-// A parcel holds at most a cell's water, so its width is looked up by amount.
+// A parcel leaves a cell with at most the cell's water, so its width is looked up by amount; a
+// larger amount would be computed as before.
 double parcelWidth(int amount) {
     static const std::array<double, WaterUnits + 1> widths = [] {
         std::array<double, WaterUnits + 1> table{};
