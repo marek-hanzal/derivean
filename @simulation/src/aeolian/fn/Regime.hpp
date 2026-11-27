@@ -28,8 +28,13 @@ void closeRose(WindRegime& regime);
 // slope breezes, and the reversal of a monsoon.
 WindRegime regimeAtLatitude(double latitude, double northZ, double gradient);
 
+// The annual mean wind of regimeAtLatitude alone, the same to the bit, without the rose.
+Vec2 meanWindAtLatitude(double latitude, double northZ);
+
 // The regime at a world position as the landscape reads the planet there.
 WindRegime regimeAt(uint64_t seed, Vec2 position, double time);
+// The same at the planet point that position reads (planetPoint).
+WindRegime regimeAtPoint(uint64_t seed, Vec2 point, double time);
 
 // A regime of steady winds: `speeds[k]` m/s blowing towards `headings[k]` radians (from +X towards
 // +Z) for `shares[k]` of the year. For hand-built beds.

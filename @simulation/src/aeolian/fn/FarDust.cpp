@@ -2,6 +2,7 @@
 
 #include "aeolian/constant/Wind.hpp"
 #include "aeolian/fn/Regime.hpp"
+#include "climate/type/Climate.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "planet/fn/Sample.hpp"
 
@@ -27,13 +28,11 @@ float dustSource(float rain, float celsius) {
     return square * square;
 }
 
-// m/yr of fines the ground at a world position gives up to the wind, read from the planet grid.
-float emissionAt(const Planet& planet, uint64_t seed, Vec2 position, const WindRegime& regime) {
-    const Vec2 point = planetPoint(seed, position);
-    if (samplePlanet(planet.elevation, point, Kernel::Linear) <= planet.seaLevel) return 0;
-    const float rain = float(samplePlanet(planet.precipitation, point, Kernel::Linear));
+// m/yr of fines the land at a planet point gives up to the wind, from its rain (m/yr) and the
+// potential sand drift of its regime.
+float emissionAt(const Planet& planet, Vec2 point, float rain, double potential) {
     const float warmth = float(samplePlanet(planet.temperature, point, Kernel::Linear));
-    return DustRise * dustSource(rain, warmth) * std::min(DustWindCap, float(regime.potential) / DustDrift);
+    return DustRise * dustSource(rain, warmth) * std::min(DustWindCap, float(potential) / DustDrift);
 }
 
 // m/yr of fines settling at `position` in dry air out of dust raised anywhere upwind on the planet grid.
@@ -46,19 +45,29 @@ float farDustAt(const Setting& setting, Vec2 position) {
     double flux[DustSizes] = {}, depth[DustSizes] = {};   // m²/yr arriving, and optical depth of the way back
     Vec2 at = position;
     for (double travelled = 0; travelled < TraceReach; travelled += TraceStep) {
-        const WindRegime regime = regimeAt(setting.seed, at, setting.age);
-        const float raised = emissionAt(planet, setting.seed, at, regime);
-        const float rain = std::max(0.0f, float(samplePlanet(planet.precipitation, planetPoint(setting.seed, at), Kernel::Linear)));
+        const Vec2 point = planetPoint(setting.seed, at);
+        const float rainfall = float(samplePlanet(planet.precipitation, point, Kernel::Linear));
+        // The sea raises nothing, so there the rose of the regime is not needed, only its mean wind.
+        float raised = 0;
+        Vec2 mean;
+        if (samplePlanet(planet.elevation, point, Kernel::Linear) <= planet.seaLevel) {
+            mean = meanWindAtLatitude(latitudeAt(point.z), northwardZ(point.z));
+        } else {
+            const WindRegime regime = regimeAtPoint(setting.seed, point, setting.age);
+            raised = emissionAt(planet, point, rainfall, regime.potential);
+            mean = regime.mean;
+        }
+        const float rain = std::max(0.0f, rainfall);
         // Each stretch of the way gives what it raises less what settles before it has crossed the rest.
         for (int s = 0; s < DustSizes; ++s) {
             const double fall = (1.0 + rain / DustWashRain) / DustFall[s];
-            flux[s] += double(raised * DustShare[s]) * std::exp(-depth[s]) * (1.0 - std::exp(-fall * TraceStep)) / fall;
+            if (raised != 0) flux[s] += double(raised * DustShare[s]) * std::exp(-depth[s]) * (1.0 - std::exp(-fall * TraceStep)) / fall;
             depth[s] += fall * TraceStep;
         }
         // Where the mean wind is calm the air goes nowhere in particular: it brings nothing from further off.
-        const double speed = length(regime.mean);
+        const double speed = length(mean);
         if (speed < Calm) break;
-        at = at - regime.mean * (TraceStep / speed);
+        at = at - mean * (TraceStep / speed);
     }
     double settling = 0;
     for (int s = 0; s < DustSizes; ++s) settling += flux[s] / DustFall[s];
