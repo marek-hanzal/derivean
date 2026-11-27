@@ -28,39 +28,50 @@ constexpr double RowHeight = 0.8660254037844386;
 constexpr float NeckCore = 2.0f;             // column widths from the axis within which no joint is drawn
 
 // The column a point lies in, on a jittered triangular lattice whose cells are near-regular
-// hexagons, and its distance in column widths to the nearest joint (the nearest side of its cell).
+// hexagons: the centres around it, the nearest of them and how far that one is.
 struct ColumnAt {
+    static constexpr int Candidates = 16;
     int64_t i{}, j{};
-    double toJoint{};
+    Vec2 at, sites[Candidates];
+    int count{}, nearest{};
+    double near{};
 };
 
 // Along x the lattice repeats every `period` columns when that is set, so it closes around a ring.
 ColumnAt columnAt(uint64_t seed, double x, double z, int64_t period = 0) {
-    constexpr int Candidates = 16;
-    Vec2 sites[Candidates];
-    int64_t keys[Candidates][2];
-    int count = 0, nearest = 0;
+    ColumnAt column;
+    int64_t keys[ColumnAt::Candidates][2];
+    column.at = {x, z};
     const int64_t row = int64_t(std::floor(z / RowHeight));
     for (int64_t j = row - 1; j <= row + 2; ++j) {
-        const int64_t column = int64_t(std::floor(x - 0.5 * double(j)));
-        for (int64_t i = column - 1; i <= column + 2; ++i) {
+        const int64_t first = int64_t(std::floor(x - 0.5 * double(j)));
+        for (int64_t i = first - 1; i <= first + 2; ++i) {
             const int64_t key = period > 0 ? ((i % period) + period) % period : i;
-            sites[count] = {double(i) + 0.5 * double(j) + ColumnJitter * (unit(hash(seed, key, j, 1)) - 0.5), double(j) * RowHeight + ColumnJitter * (unit(hash(seed, key, j, 2)) - 0.5)};
+            const int count = column.count++;
+            column.sites[count] = {double(i) + 0.5 * double(j) + ColumnJitter * (unit(hash(seed, key, j, 1)) - 0.5), double(j) * RowHeight + ColumnJitter * (unit(hash(seed, key, j, 2)) - 0.5)};
             keys[count][0] = key, keys[count][1] = j;
-            if (length(sites[count] - Vec2{x, z}) < length(sites[nearest] - Vec2{x, z})) nearest = count;
-            ++count;
+            const double near = length(column.sites[count] - column.at);
+            if (count == 0 || near < column.near) column.nearest = count, column.near = near;
         }
     }
-    // The nearest side is the nearest of the planes halfway to every other centre.
-    const Vec2 at{x, z}, own = sites[nearest];
-    const double near = length(own - at);
+    column.i = keys[column.nearest][0], column.j = keys[column.nearest][1];
+    return column;
+}
+
+// Distance in column widths to the nearest joint: the nearest of the planes halfway from the
+// column's centre to every other centre, which is the nearest side of its cell.
+double toJoint(const ColumnAt& column) {
+    const Vec2 own = column.sites[column.nearest];
     double side = 1e30;
-    for (int k = 0; k < count; ++k) {
-        if (k == nearest) continue;
-        const double apart = length(sites[k] - own);
-        if (apart > 0) side = std::min(side, (length(sites[k] - at) * length(sites[k] - at) - near * near) / (2.0 * apart));
+    for (int k = 0; k < column.count; ++k) {
+        if (k == column.nearest) continue;
+        const double apart = length(column.sites[k] - own);
+        if (apart > 0) {
+            const double far = length(column.sites[k] - column.at);
+            side = std::min(side, (far * far - column.near * column.near) / (2.0 * apart));
+        }
     }
-    return {keys[nearest][0], keys[nearest][1], side};
+    return side;
 }
 
 // A column weathered back at a face, or the joint beside it standing open. `x`, `z` are in
@@ -71,7 +82,7 @@ bool weathered(uint64_t flow, double x, double z, int64_t period, float width, f
     // Each column weathers back from the face by its own amount, so a face shows them as prisms.
     if (depth < MostRecess * width * float(unit(hash(flow, column.i, column.j, 3)))) return true;
     if (width < DrawnJoint * step) return false;
-    return column.toJoint * width < 0.5 * std::max(JointOpen * width, step);
+    return toJoint(column) * width < 0.5 * std::max(JointOpen * width, step);
 }
 
 float widthFor(float thickness) { return std::clamp(ColumnGrowth * std::sqrt(thickness), NarrowestColumn, WidestColumn); }

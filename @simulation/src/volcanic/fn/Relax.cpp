@@ -14,9 +14,10 @@ constexpr float Precision = 0.005f;  // share of the fall a layer holds over one
 
 // Lava keeps running while its core is hot and stiffens fast once the crust has grown through it:
 // the yield strength stays near its hot value for most of the way and reaches the cold one at the end.
-// `ratio` is yieldCold / yieldHot. Lava that has spent no heat skips the pow: pow(ratio, 0) is 1.
+// `ratio` is yieldCold / yieldHot. Lava that has spent no heat, and fall and rubble, whose yield
+// does not change as they cool, skip the pow: pow(ratio, 0) and pow(1, y) are 1.
 float yieldAt(const Rheology& rheology, float ratio, float heat) {
-    if (heat >= 1.0f) return rheology.yieldHot;
+    if (heat >= 1.0f || ratio == 1.0f) return rheology.yieldHot;
     const float spent = 1.0f - std::clamp(heat, 0.0f, 1.0f);
     return rheology.yieldHot * std::pow(ratio, spent * spent * spent);
 }

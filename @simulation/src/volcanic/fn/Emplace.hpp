@@ -41,6 +41,13 @@ struct Fall {
 
 // Fall.cpp — m of fall at a world position. Integrates to `volume` over the plane.
 double fallThickness(const Fall& fall, Vec2 at);
+// The parts of that law that hold over the whole fall, worked out once for a fall read at many points.
+struct FallLaw {
+    double peak{};    // 1/m², the blanket's thickness per unit volume at the vent, before the hollow
+    double whole{};   // m², what the hollow over the vent leaves of the blanket's spread
+};
+FallLaw fallLaw(const Fall& fall);
+double fallThickness(const Fall& fall, const FallLaw& law, Vec2 at);
 // The cone of an eruption: fragments fall around the vent by the law above, summed over each cell
 // so that no volume is lost to the grid, and slide to rest at `reposeTan`.
 void buildCone(Emplacement& field, const Fall& fall, float reposeTan);
