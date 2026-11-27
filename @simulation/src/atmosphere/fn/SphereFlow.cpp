@@ -57,7 +57,7 @@ void acceptTrial(SphereFlow& flow) {
 }
 
 // −∇·(v q) per cell with the edge value of q the mean of its two cells moved to the edge's midpoint
-// by the edge gradient (EdgeStencil::offset).
+// by the edge gradient (EdgeStencil::offset, read as SphereStencil::carry).
 void tendencyOf(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, const std::vector<double>& vorticity,
                 std::vector<double>& tendency) {
     std::vector<double>& absolute = flow.absolute;
@@ -65,14 +65,14 @@ void tendencyOf(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& s
     for (size_t c = 0; c < absolute.size(); ++c) absolute[c] = vorticity[c] + flow.coriolis[c];
     std::vector<double>& at = flow.atVertex;
     vertexValues(grid, stencil, absolute, at);
-    assert(stencil.edge.size() == grid.edge.size());
+    assert(stencil.carry.size() == grid.edge.size());
     tendency.assign(size_t(grid.cells), 0.0);
     for (size_t e = 0; e < grid.edge.size(); ++e) {
         const SphereEdge& edge = grid.edge[e];
-        const EdgeStencil& metric = stencil.edge[e];
+        const std::array<double, 2>& carry = stencil.carry[e];
         const size_t l = size_t(edge.left), r = size_t(edge.right);
-        const Vec3 gradient = metric.across * (absolute[r] - absolute[l]) + metric.along * (at[size_t(edge.to)] - at[size_t(edge.from)]);
-        const double carried = flow.flux[e] * (0.5 * (absolute[l] + absolute[r]) + dot(gradient, metric.offset));
+        const double moved = carry[0] * (absolute[r] - absolute[l]) + carry[1] * (at[size_t(edge.to)] - at[size_t(edge.from)]);
+        const double carried = flow.flux[e] * (0.5 * (absolute[l] + absolute[r]) + moved);
         tendency[l] -= carried;
         tendency[r] += carried;
     }

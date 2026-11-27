@@ -80,6 +80,8 @@ SphereStencil makeSphereStencil(const SphereGrid& grid) {
             const int behind = neighbourOf(grid, c, (k + 2) % 4);
             (grid.edge[size_t(e)].left == c ? edge.behindLeft : edge.behindRight) = behind;
         }
+    stencil.carry.reserve(stencil.edge.size());
+    for (const EdgeStencil& edge : stencil.edge) stencil.carry.push_back({dot(edge.offset, edge.across), dot(edge.offset, edge.along)});
     return stencil;
 }
 

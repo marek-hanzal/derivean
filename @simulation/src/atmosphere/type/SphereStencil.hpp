@@ -38,9 +38,14 @@ struct EdgeStencil {
 // face edge the grid lines of the two faces meet the edge obliquely (60° at a cube vertex), so the
 // four centres' mean sits O(h) from the vertex along the edge (a quarter of a cell next to a cube
 // vertex).
+//
+// `carry[e]` is edge e's offset projected on its gradient weights, (offset · across, offset · along):
+// the advected value's move to the edge's midpoint is carry · (right − left, to − from), read in
+// 16 bytes an edge instead of the three vectors' 72.
 struct SphereStencil {
     std::vector<EdgeStencil> edge;
     std::vector<std::array<double, 4>> weight;
+    std::vector<std::array<double, 2>> carry;
 };
 
 } // namespace derivean::sim
