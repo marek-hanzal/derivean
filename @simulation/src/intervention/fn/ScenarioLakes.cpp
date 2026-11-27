@@ -13,18 +13,6 @@ struct Frame {
     double cell{};
 };
 
-const LiveSet& setOf(World& world) { return world.interventions.overlay.sets.front(); }
-
-const LiveSet& openSite(World& world, const StreamSite& site) {
-    forgetInterventions(world);
-    intervene(world, watch(site.at));
-    advance(world, Hour);
-    syncLive(world);
-    return setOf(world);
-}
-
-double surfaceAt(const LiveSet& set, int32_t cell) { return double(set.grid.ground[size_t(cell)]) + set.grid.depth[size_t(cell)]; }
-
 // The grid cells [x0, x1] × [z0, z1] as one stroke.
 Edit box(const Frame& frame, EditKind kind, int x0, int x1, int z0, int z1, double height) {
     if (x0 > x1) std::swap(x0, x1);
@@ -32,14 +20,6 @@ Edit box(const Frame& frame, EditKind kind, int x0, int x1, int z0, int z1, doub
     const double middle = (double(frame.originZ) + 0.5 * (z0 + z1 + 1)) * frame.cell;
     return stroke(kind, {double(frame.originX + x0) * frame.cell, middle}, {double(frame.originX + x1 + 1) * frame.cell, middle}, (z1 - z0 + 1) * frame.cell,
                   height, height, Coarse);
-}
-
-double waterIn(const LiveSet& set, int x0, int x1, int z0, int z1) {
-    if (x0 > x1) std::swap(x0, x1);
-    double volume = 0;
-    for (int z = z0; z <= z1; ++z)
-        for (int x = x0; x <= x1; ++x) volume += set.grid.depth[size_t(z) * size_t(set.grid.width) + size_t(x)];
-    return volume * set.grid.cell * set.grid.cell;
 }
 
 } // namespace
@@ -57,19 +37,7 @@ ScenarioReport runLakeCascade(World& world, const StreamSite& site) {
     // The works need ground to stand on: an open stream bed with next to no standing water under
     // their footprint. A pit dug inside a lake starts full, and nothing can then be told apart.
     const Frame frame{int64_t(untouched.originX) * TileCells, int64_t(untouched.originZ) * TileCells, untouched.grid.width, untouched.grid.cell};
-    int32_t anchor = -1;
-    int flip = 1;
-    double nearest = 1e30;
-    for (int z = EditClear + 12; z < untouched.grid.height - EditClear - 12; ++z) {
-        for (int x = EditClear + 34; x < untouched.grid.width - EditClear - 34; ++x) {
-            const int32_t cell = z * frame.width + x;
-            const double middle = std::hypot(x - 0.5 * frame.width, z - 0.5 * untouched.grid.height);
-            if (middle >= nearest || untouched.grid.depth[size_t(cell)] > 0 || untouched.grid.discharge[size_t(cell)] < StreamFlow) continue;
-            const int side = arrivesFrom(untouched, cell).x > 0 ? -1 : 1;
-            if (waterIn(untouched, x - 9 * side, x + 33 * side, z - 11, z + 11) > 100.0) continue;
-            nearest = middle, anchor = cell, flip = side;
-        }
-    }
+    const auto [anchor, flip] = cascadePlace(untouched);
     if (anchor < 0) {
         report.failure = "no open stream bed with dry ground for the works in the middle of the site";
         return report;
@@ -168,7 +136,6 @@ ScenarioReport runLakeCascade(World& world, const StreamSite& site) {
 // to leave by, led aside and then down to lower ground or water. Nothing is dammed; the old bed is
 // left dry because the water no longer reaches it.
 ScenarioReport runDiversion(World& world, const StreamSite& site, double years) {
-    constexpr int Room = 12;              // cells the channel may wander from its ends
     constexpr double Wide = 8.0;          // m: two site cells, so the channel holds across a diagonal
     constexpr double Aside = 40.0;        // m the channel leaves the old bed by before it turns
     ScenarioReport report;
@@ -177,39 +144,10 @@ ScenarioReport runDiversion(World& world, const StreamSite& site, double years) 
     const LiveSet& untouched = openSite(world, site);
     const WaterGrid& grid = untouched.grid;   // like `untouched`, only good until the first edit
     const int width = grid.width;
-    const auto inRange = [&](int x, int z) { return x >= EditClear + Room && z >= EditClear + Room && x < grid.width - EditClear - Room && z < grid.height - EditClear - Room; };
-    // The intake: the open stream bed nearest the middle that runs on as one bed for a while and
-    // has lower ground or water within reach to lead it to.
-    int32_t anchor = -1, outfall = -1, oldProbe = -1;
-    double intake = 0, best = 1e30;
-    std::vector<int32_t> old;
-    for (int z = 0; z < grid.height; ++z) {
-        for (int x = 0; x < grid.width; ++x) {
-            const int32_t cell = z * grid.width + x;
-            const double middle = std::hypot(x - 0.5 * grid.width, z - 0.5 * grid.height);
-            if (!inRange(x, z) || middle >= best || grid.depth[size_t(cell)] > 0 || grid.discharge[size_t(cell)] < StreamFlow) continue;
-            const std::vector<int32_t> course = courseFrom(untouched, cell, 48);
-            bool oneBed = course.size() >= 8;
-            for (size_t i = 1; oneBed && i < 8; ++i)
-                oneBed = grid.depth[size_t(course[i])] <= 0 && grid.discharge[size_t(course[i])] < 1.5f * grid.discharge[size_t(cell)];
-            if (!oneBed) continue;
-            const double sill = std::min(surfaceAt(untouched, cell) - 0.15, double(grid.ground[size_t(course[1])]) - 0.1);
-            const Vec2 from = centreOf(untouched, cell);
-            int32_t found = -1;
-            double nearest = 1e30;
-            for (int oz = z - 50; oz <= z + 50; ++oz) {
-                for (int ox = x - 50; ox <= x + 50; ++ox) {
-                    const int32_t other = oz * grid.width + ox;
-                    const double away = inRange(ox, oz) ? length(centreOf(untouched, other) - from) : 0.0;
-                    if (away < 60 || away > 200 || surfaceAt(untouched, other) > sill - 0.5) continue;
-                    const double rank = away + (grid.discharge[size_t(other)] >= StreamFlow ? 0.0 : 1000.0);
-                    if (rank < nearest) nearest = rank, found = other;
-                }
-            }
-            if (found < 0) continue;
-            best = middle, anchor = cell, outfall = found, intake = sill, old = course, oldProbe = course[6];
-        }
-    }
+    const IntakePlace place = diversionPlace(untouched);
+    const int32_t anchor = place.anchor, outfall = place.outfall;
+    const double intake = place.intake;
+    const std::vector<int32_t>& old = place.old;
     if (anchor < 0) {
         report.failure = "no open stream bed in the middle of the site has lower ground within reach";
         return report;
@@ -238,7 +176,7 @@ ScenarioReport runDiversion(World& world, const StreamSite& site, double years) 
         for (int dz = -1; dz <= 1; ++dz)
             for (int dx = -1; dx <= 1; ++dx) taken = std::max(taken, double(set.grid.discharge[size_t(gaugeZ + dz) * size_t(width) + size_t(gaugeX + dx)]));
         for (const WaterSource& source : set.grid.sources) load += source.load;
-        report.stages.push_back({label, budgetOf(world), {set.grid.discharge[size_t(oldProbe)], taken, apart, surfaceAt(set, anchor), surfaceAt(set, outfall), load}});
+        report.stages.push_back({label, budgetOf(world), {set.grid.discharge[size_t(old[6])], taken, apart, surfaceAt(set, anchor), surfaceAt(set, outfall), load}});
     };
     measure("untouched stream");
     for (int leg = 0; leg < 2; ++leg) {

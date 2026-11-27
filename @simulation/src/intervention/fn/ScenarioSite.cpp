@@ -61,9 +61,33 @@ StreamSite findStream(World& world) {
             if (!found) break;
             at = {(key.x * double(TileCells) + cell % TileCells + 0.5) * specOf(level).cell, (key.z * double(TileCells) + cell / TileCells + 0.5) * specOf(level).cell};
         }
-        if (found) return {true, tileAt(Level::Site, at), at};
+        if (!found) continue;
+        const StreamSite site{true, tileAt(Level::Site, at), at};
+        const LiveSet& set = openSite(world, site);
+        if (cascadePlace(set).anchor < 0 || diversionPlace(set).anchor < 0) continue;
+        forgetInterventions(world);
+        return site;
     }
+    forgetInterventions(world);
     return {};
+}
+
+const LiveSet& openSite(World& world, const StreamSite& site) {
+    forgetInterventions(world);
+    intervene(world, watch(site.at));
+    advance(world, SiteWatch);
+    syncLive(world);
+    return setOf(world);
+}
+
+double surfaceAt(const LiveSet& set, int32_t cell) { return double(set.grid.ground[size_t(cell)]) + set.grid.depth[size_t(cell)]; }
+
+double waterIn(const LiveSet& set, int x0, int x1, int z0, int z1) {
+    if (x0 > x1) std::swap(x0, x1);
+    double volume = 0;
+    for (int z = z0; z <= z1; ++z)
+        for (int x = x0; x <= x1; ++x) volume += set.grid.depth[size_t(z) * size_t(set.grid.width) + size_t(x)];
+    return volume * set.grid.cell * set.grid.cell;
 }
 
 Vec2 centreOf(const LiveSet& set, int32_t cell) {
@@ -149,6 +173,58 @@ void forgetInterventions(World& world) {
     world.interventions = Interventions{};
     world.interventions.calendar.era = era;
     world.ocean = fillOcean(world.planet, world.options.age);
+}
+
+WorksPlace cascadePlace(const LiveSet& set) {
+    WorksPlace place;
+    double nearest = 1e30;
+    for (int z = EditClear + 12; z < set.grid.height - EditClear - 12; ++z) {
+        for (int x = EditClear + 34; x < set.grid.width - EditClear - 34; ++x) {
+            const int32_t cell = z * set.grid.width + x;
+            const double middle = std::hypot(x - 0.5 * set.grid.width, z - 0.5 * set.grid.height);
+            if (middle >= nearest || set.grid.depth[size_t(cell)] > 0 || set.grid.discharge[size_t(cell)] < StreamFlow) continue;
+            const int side = arrivesFrom(set, cell).x > 0 ? -1 : 1;
+            if (waterIn(set, x - 9 * side, x + 33 * side, z - 11, z + 11) > 100.0) continue;
+            nearest = middle, place = {cell, side};
+        }
+    }
+    return place;
+}
+
+IntakePlace diversionPlace(const LiveSet& set) {
+    constexpr int Room = 12;   // cells the channel may wander from its ends
+    const WaterGrid& grid = set.grid;
+    const auto inRange = [&](int x, int z) { return x >= EditClear + Room && z >= EditClear + Room && x < grid.width - EditClear - Room && z < grid.height - EditClear - Room; };
+    IntakePlace place;
+    double best = 1e30;
+    for (int z = 0; z < grid.height; ++z) {
+        for (int x = 0; x < grid.width; ++x) {
+            const int32_t cell = z * grid.width + x;
+            const double middle = std::hypot(x - 0.5 * grid.width, z - 0.5 * grid.height);
+            if (!inRange(x, z) || middle >= best || grid.depth[size_t(cell)] > 0 || grid.discharge[size_t(cell)] < StreamFlow) continue;
+            const std::vector<int32_t> course = courseFrom(set, cell, 48);
+            bool oneBed = course.size() >= 8;
+            for (size_t i = 1; oneBed && i < 8; ++i)
+                oneBed = grid.depth[size_t(course[i])] <= 0 && grid.discharge[size_t(course[i])] < 1.5f * grid.discharge[size_t(cell)];
+            if (!oneBed) continue;
+            const double sill = std::min(surfaceAt(set, cell) - 0.15, double(grid.ground[size_t(course[1])]) - 0.1);
+            const Vec2 from = centreOf(set, cell);
+            int32_t found = -1;
+            double nearest = 1e30;
+            for (int oz = z - 50; oz <= z + 50; ++oz) {
+                for (int ox = x - 50; ox <= x + 50; ++ox) {
+                    const int32_t other = oz * grid.width + ox;
+                    const double away = inRange(ox, oz) ? length(centreOf(set, other) - from) : 0.0;
+                    if (away < 60 || away > 200 || surfaceAt(set, other) > sill - 0.5) continue;
+                    const double rank = away + (grid.discharge[size_t(other)] >= StreamFlow ? 0.0 : 1000.0);
+                    if (rank < nearest) nearest = rank, found = other;
+                }
+            }
+            if (found < 0) continue;
+            best = middle, place = {cell, found, sill, course};
+        }
+    }
+    return place;
 }
 
 } // namespace derivean::sim
