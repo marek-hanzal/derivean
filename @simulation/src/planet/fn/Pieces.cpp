@@ -119,8 +119,8 @@ void globeFailure(const char* what, double value) {
 }
 
 void restoreKeyOrder(Globe& globe) {
-    const auto byKey = [](const CrustPiece& a, const CrustPiece& b) { return a.key < b.key; };
-    if (std::is_sorted(globe.pieces.begin(), globe.pieces.end(), byKey)) return;
+    const std::vector<CrustPiece>& pieces = globe.pieces;
+    if (std::is_sorted(pieces.begin(), pieces.end(), [](const CrustPiece& a, const CrustPiece& b) { return a.key < b.key; })) return;
     sortPieces(globe.pieces);
     couple(*globe.grid, globe.pieces, {}, true, globe.coupling);
 }

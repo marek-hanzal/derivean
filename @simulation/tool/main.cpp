@@ -3,10 +3,14 @@
 #include <cstdio>
 #include <string>
 
+// The globe history (S3b) until S3e makes it the planet.
+int globeCommand(const Arguments& arguments);
+
 int main(int count, char** words) {
     const std::string command = count > 1 ? words[1] : "";
     const Arguments arguments(count, words);
     if (command == "planet") return planetCommand(arguments);
+    if (command == "globe") return globeCommand(arguments);
     if (command == "map") return mapCommand(arguments);
     if (command == "chart") return chartCommand(arguments);
     if (command == "probe") return probeCommand(arguments);

@@ -7,6 +7,7 @@
 #include "geometry/fn/Rotation.hpp"
 #include "geometry/fn/SphereGrid.hpp"
 #include "geometry/fn/Union.hpp"
+#include "planet/fn/FlatView.hpp"
 #include "planet/fn/Pieces.hpp"
 #include "planet/fn/Plan.hpp"
 #include "tectonics/fn/Euler.hpp"
@@ -94,9 +95,11 @@ std::vector<int> behindOf(const Globe& globe, const Band& band, int k) {
     return found;
 }
 
-void markStacked(CrustPiece& piece, double time) {
+// As the flat Crossing.cpp's markStacked, with the strike of the contact between the two pieces.
+void markStacked(CrustPiece& piece, double time, float strike) {
     piece.column.orogenTime = piece.column.quietSince = float(time);
     piece.column.exhumed = 0;
+    piece.column.fabric = strike;
     piece.column.basement = Basement::Orogen;
 }
 
@@ -126,7 +129,8 @@ void book(Globe& globe, const Transfer& t, const std::vector<int>& global, std::
     Cover share = covers[size_t(coverOf[size_t(t.from)])];
     scaleCover(share, float(t.cover * from.area / to.area));
     stackCover(to.record.cover, share);
-    markStacked(to, globe.time);
+    const Vec3 at = centreOf(*globe.grid, to);
+    markStacked(to, globe.time, flatStrikeOf(at, towards(at, centreOf(*globe.grid, from))));
     globe.motion[from.plate].resistance += felsic;
     globe.ledger.stacked += felsic;
 }
