@@ -22,7 +22,7 @@ The aim is that every physical model carries its source, the model taken, where 
 
 | Domain | File | Entries |
 | --- | --- | --- |
-| Planet, tectonics and earthquakes | [credits/planet.md](credits/planet.md) | 6 |
+| Planet, tectonics and earthquakes | [credits/planet.md](credits/planet.md) | 14 |
 | Landscape and erosion | [credits/landscape.md](credits/landscape.md) | 5 |
 | Hydrology and groundwater | [credits/hydrology.md](credits/hydrology.md) | 18 |
 | Coasts, waves and river mouths | [credits/coasts.md](credits/coasts.md) | 19 |
@@ -30,12 +30,12 @@ The aim is that every physical model carries its source, the model taken, where 
 | Volcanism | [credits/volcanism.md](credits/volcanism.md) | 12 |
 | Ice sheets, glacial erosion and firn | [credits/ice.md](credits/ice.md) | 7 |
 | Atmosphere, haze, clouds and snow | [credits/atmosphere.md](credits/atmosphere.md) | 35 |
-| Astronomy and the geometry of the sphere | [credits/astronomy-geometry.md](credits/astronomy-geometry.md) | 28 |
+| Astronomy and the geometry of the sphere | [credits/astronomy-geometry.md](credits/astronomy-geometry.md) | 34 |
 | Rendering | [credits/rendering.md](credits/rendering.md) | 8 |
-| Engine, libraries and tools | [credits/libraries.md](credits/libraries.md) | 21 |
+| Engine, libraries and tools | [credits/libraries.md](credits/libraries.md) | 22 |
 | Reference data for comparison with Earth | [credits/reference-data.md](credits/reference-data.md) | 12 |
 
-An entry may group the papers of one model; together the files cite about 190 works, 15 software projects and 6 platform documents.
+An entry may group the papers of one model; together the files cite about 190 works, 16 software projects and 6 platform documents.
 
 ## Not yet identified
 
