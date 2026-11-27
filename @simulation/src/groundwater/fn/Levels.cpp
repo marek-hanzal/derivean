@@ -68,8 +68,9 @@ void findWays(WaterField& field) {
 // The sweeps relax the stands as Bellman 1958 and Ford 1956 relax shortest paths
 // (docs/credits/hydrology.md). A sweep sets each cell from its neighbours' values of the sweep
 // before and never from its own, so a cell none of whose neighbours changed in the last sweep would
-// compute what it already holds: it keeps it, and when no cell changes the sweeps left would change
-// nothing. Both shortcuts give the values of all LevelSweeps sweeps to the bit; the count still
+// compute what it already holds: it keeps it, a row whose cells and neighbours' cells all held still
+// is copied whole, and when no cell changes the sweeps left would change nothing. These shortcuts
+// give the values of all LevelSweeps sweeps to the bit; the count still
 // bounds how far an edge's error creeps in (constant/Hydraulics.hpp). What a step adds along each
 // edge is fixed by the columns and is worked out once.
 void spreadLevels(WaterField& field) {
