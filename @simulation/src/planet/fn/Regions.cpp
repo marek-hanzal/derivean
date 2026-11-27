@@ -12,11 +12,12 @@ PlateRegions plateRegionsOf(const Globe& globe) {
     const Coupling& coupling = globe.coupling;
     const size_t n = size_t(grid.cells);
     PlateRegions regions;
+    regions.dominant.assign(n, -1);
     regions.owner.assign(n, -1);
     std::vector<double> covered(n, 0);   // m², by the owner's pieces, at most the cell
     int32_t plates = 0;
     for (size_t c = 0; c < n; ++c) {
-        const int k = dominantPiece(coupling, int(c));
+        const int k = regions.dominant[c] = dominantPiece(coupling, int(c));
         if (k < 0) continue;
         double most = 0, own = 0;
         const int32_t plate = globe.pieces[size_t(k)].plate;

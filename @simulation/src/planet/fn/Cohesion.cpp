@@ -112,20 +112,22 @@ std::vector<int32_t> joinsOf(const Globe& globe, const PlateRegions& regions) {
 }
 
 // Deals the pieces of every region that goes somewhere to its plate; per region the pieces dealt, and
-// the cells a join leaves (the regions' and the centres of their pieces). A piece of the plate that
+// the cells a join leaves (the regions' and the centres of their pieces). `regions` are measured on the
+// coupling as it stands, so their dominant pieces are the coupling's. A piece of the plate that
 // covers no cell most and is centred off its plate's cells goes with the moving region it covers most:
 // left behind, it would cover the region most once the closing took the rest, and the births take its plate.
 std::vector<int32_t> deal(Globe& globe, const PlateRegions& regions, const std::vector<int32_t>& to, std::vector<int32_t>& left) {
     const SphereGrid& grid = *globe.grid;
     const Coupling& coupling = globe.coupling;
-    std::vector<int32_t> target(globe.pieces.size(), -1), dealt(to.size(), 0), from(globe.pieces.size(), -1);
+    std::vector<int32_t> target(globe.pieces.size(), -1), dealt(to.size(), 0), from(globe.pieces.size(), -1), centre(globe.pieces.size());
     std::vector<uint8_t> dominant(globe.pieces.size(), 0);
     for (size_t k = 0; k < globe.pieces.size(); ++k) {
-        const int32_t r = regions.region[size_t(centreCellOf(grid, globe.pieces[k]))];
+        centre[k] = centreCellOf(grid, globe.pieces[k]);
+        const int32_t r = regions.region[size_t(centre[k])];
         if (r >= 0 && to[size_t(r)] >= 0 && regions.plate[size_t(r)] == globe.pieces[k].plate) target[k] = to[size_t(r)], from[k] = r;
     }
     for (int c = 0; c < grid.cells; ++c) {
-        const int k = dominantPiece(coupling, c);
+        const int32_t k = regions.dominant[size_t(c)];
         if (k >= 0) dominant[size_t(k)] = 1;
         const int32_t r = regions.region[size_t(c)];
         if (r < 0 || to[size_t(r)] < 0) continue;
@@ -134,7 +136,7 @@ std::vector<int32_t> deal(Globe& globe, const PlateRegions& regions, const std::
     }
     for (size_t k = 0; k < globe.pieces.size(); ++k) {
         const CrustPiece& piece = globe.pieces[k];
-        if (target[k] >= 0 || dominant[k] || regions.owner[size_t(centreCellOf(grid, piece))] == piece.plate) continue;
+        if (target[k] >= 0 || dominant[k] || regions.owner[size_t(centre[k])] == piece.plate) continue;
         double most = 0;
         for (int32_t w = coupling.pieceStart[k]; w < coupling.pieceStart[k + 1]; ++w) {
             const CellWeight& weight = coupling.byPiece[size_t(w)];
@@ -146,7 +148,7 @@ std::vector<int32_t> deal(Globe& globe, const PlateRegions& regions, const std::
         if (target[k] < 0) continue;
         globe.pieces[k].plate = uint16_t(target[k]);
         ++dealt[size_t(from[k])];
-        left.push_back(centreCellOf(grid, globe.pieces[k]));
+        left.push_back(centre[k]);
     }
     return dealt;
 }

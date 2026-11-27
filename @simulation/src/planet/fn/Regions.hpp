@@ -20,6 +20,7 @@ inline constexpr double OwnedShare = 1e-6;
 // only, so regions joined by edges alone would cut a piece in two. A region's area is what its plate
 // covers of its cells, each cell at most whole.
 struct PlateRegions {
+    std::vector<int32_t> dominant;  // per cell: the coupling's dominant piece, or -1
     std::vector<int32_t> owner;     // per cell: plate, or -1 for a free cell
     std::vector<int32_t> region;    // per cell: region, or -1
     std::vector<int32_t> plate;     // per region
