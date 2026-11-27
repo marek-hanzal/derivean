@@ -67,6 +67,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     }
     const Vec2 material = setting.strata.material + (Vec2{x, z} - setting.strataCentre);
     const float fold = foldAt(setting.seed, setting.strata, material);
+    BodyMemo bodies;   // every bed of the column is read at `material`
     const float loose = ground.ground - ground.rock;
     // Rock that eruptions laid on the layering fills the column from the pile's floor up; the plug
     // of a conduit cuts pile and layering alike (volcanic/type/Pile.hpp).
@@ -108,7 +109,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     {
         float depth = std::max(0.0f, ground.datum - ground.rock) + 0.1f;
         const StrataUnit unit = unitAt(setting.strata, depth, fold);
-        Bed top = bedAt(setting.seed, setting.strata, unit, depth, material);
+        Bed top = bedAt(setting.seed, setting.strata, unit, depth, material, bodies);
         city.strength = ground.pile.thickness > 0 ? 0.0f : massive(traitsOf(top.rock)) * exposure * bare;
         if (city.strength > 0.05f) {
             city.seed = setting.seed;
@@ -118,7 +119,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
         for (int guard = 0; city.strength > 0.05f && guard < 6; ++guard) {
             city.floor = ground.datum - top.bottom;
             depth = top.bottom + 0.05f;
-            top = bedAt(setting.seed, setting.strata, unitAt(setting.strata, depth, fold), depth, material);
+            top = bedAt(setting.seed, setting.strata, unitAt(setting.strata, depth, fold), depth, material, bodies);
             if (massive(traitsOf(top.rock)) < 0.5f) break;
         }
     }
@@ -127,7 +128,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     const bool grikes = setting.runoff > 0 && ground.pile.thickness <= 0, recessed = steep > 0.02f && loose > 0;
     const float surfaceDepth = std::max(0.0f, ground.datum - ground.rock) + 0.05f;
     const StrataUnit surfaceUnit = grikes || recessed ? unitAt(setting.strata, surfaceDepth, fold) : StrataUnit{};
-    const Bed surface = grikes || recessed ? bedAt(setting.seed, setting.strata, surfaceUnit, surfaceDepth, material) : Bed{};
+    const Bed surface = grikes || recessed ? bedAt(setting.seed, setting.strata, surfaceUnit, surfaceDepth, material, bodies) : Bed{};
 
     // Bare soluble rock opens along its joints into grikes as deep as `grike` below its surface.
     float grike = 0;
@@ -175,7 +176,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
                 }
             } else if (depth < bed.top || depth >= bed.bottom) {
                 const StrataUnit unit = unitAt(setting.strata, depth, fold);
-                bed = bedAt(setting.seed, setting.strata, unit, depth, material);
+                bed = bedAt(setting.seed, setting.strata, unit, depth, material, bodies);
                 laidDown = unit.laidDown;
                 layer = {1, 0};
                 seams = hasSeams(bed.rock);
