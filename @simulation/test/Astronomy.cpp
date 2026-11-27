@@ -193,11 +193,35 @@ void testSolarTime() {
 
 } // namespace
 
+// The closed-form daily mean against the mean of insolation sampled every minute over the 24 h
+// centred on the instant, at every 15° of latitude and four dates (solstices, equinox, perihelion);
+// and its two ends, polar day (the pole's sin δ) and polar night (zero).
+void testDailyInsolation() {
+    double worst = 0;
+    for (double date : {2460389.625, 2460483.0, 2460312.5, 2461030.5})
+        for (double latitude = -90; latitude <= 90; latitude += 15) {
+            const Vec3 up = upAt(latitude, 15);
+            double sampled = 0;
+            for (int m = 0; m < 24 * 60; ++m) sampled += insolation(skyOn(date, (m + 0.5 - 12 * 60) * Minute), up);
+            sampled /= 24 * 60;
+            const Sky sky = skyOn(date);
+            worst = std::max(worst, std::abs(dailyMeanInsolation(sky, up) - sampled) / irradiance(sky));
+        }
+    // Measured 8.4e-4 (1.1 W/m²): the declination's move over the sampled day, largest where the
+    // half-day is most sensitive to it, near the polar circles.
+    expect(worst < 1e-3, "the daily mean is off the sampled day (share of the irradiance)", worst);
+    const Sky june = skyOn(2460483.0);
+    const double pole = dailyMeanInsolation(june, {0, 0, 1}), sinDeclination = std::sin(sunDeclination(june));
+    expect(std::abs(pole - irradiance(june) * sinDeclination) < 1e-9 * irradiance(june), "the pole's polar day is not S sin δ", pole);
+    expect(dailyMeanInsolation(june, {0, 0, -1}) == 0 && dailyMeanInsolation(june, upAt(-70, 0)) == 0, "polar night is not dark");
+}
+
 void testAstronomy() {
     testAgainstHorizons();
     testSunrise();
     testPolarNight();
     testYear();
     testSolarTime();
+    testDailyInsolation();
     testAstronomyEvents();
 }

@@ -34,4 +34,11 @@ double equationOfTime(const Sky& sky);
 double irradiance(const Sky& sky);
 double insolation(const Sky& sky, Vec3 up);
 
+// W/m², the mean of `insolation` over one turn of the Earth with the Sun's declination and distance
+// held at the instant's (Berger 1978): (S / π) (h₀ sin φ sin δ + cos φ cos δ sin h₀), where the
+// half-day h₀ is the hour angle at which the Sun crosses the horizon, π in polar day and 0 in polar
+// night. Over a real day the declination moves by up to 0.4° and the distance by 0.03 %, which this
+// leaves out.
+double dailyMeanInsolation(const Sky& sky, Vec3 up);
+
 } // namespace derivean::sim

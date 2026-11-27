@@ -116,6 +116,13 @@ Gough, D. O. (1981). Solar interior structure and luminosity variations. *Solar 
 - **Used in:** `@simulation/src/astronomy/constant/DeepTime.hpp:21`, `:24`; `@simulation/src/astronomy/fn/DeepTime.cpp:50`; `@simulation/src/astronomy/type/DeepTime.hpp:12`.
 - **Checked by:** `@simulation/test/AstronomyEvents.cpp:146`: the young Sun gives 1/1.4 of today's light.
 
+### Berger 1978: daily insolation
+Berger, A. (1978). Long-term variations of daily insolation and Quaternary climatic changes. *Journal of the Atmospheric Sciences* 35(12), 2362–2367. doi:10.1175/1520-0469(1978)035<2362:LTVODI>2.0.CO;2
+- **Model:** the daily mean insolation at the top of the air, W = (S / π)(h₀ sin φ sin δ + cos φ cos δ sin h₀), with cos h₀ = −tan φ tan δ, h₀ = π in polar day and 0 in polar night.
+- **Used in:** `@simulation/src/astronomy/fn/Place.hpp:38`, `@simulation/src/astronomy/fn/Place.cpp:57`.
+- **Checked by:** `@simulation/test/Astronomy.cpp:199`, against the minute-sampled mean of `insolation` over the 24 h around the instant (within 8.4 × 10⁻⁴ of the irradiance), and the pole's polar day S sin δ.
+- **Approximations:** the declination and the Sun's distance are held at the instant's for the whole day (they move by up to 0.4° and 0.03 % in a day).
+
 ### Laskar et al. 2004, 2011; Milankovitch 1941: orbital cycles (planned, S4b)
 Laskar, J., Robutel, P., Joutel, F., et al. (2004). A long-term numerical solution for the insolation quantities of the Earth. *Astronomy & Astrophysics* 428(1), 261–285. doi:10.1051/0004-6361:20041335
 
