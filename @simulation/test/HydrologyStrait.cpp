@@ -149,6 +149,42 @@ void testMergeAndPart() {
     expectClosed(sea, "merge and part");
 }
 
+// Three seas in a row joined by two straits of 1 m², cut at `opened`. Its rounds end where
+// `opened` plus their offset rounds to, a little short of the whole offset for most fractions.
+Ocean chain(double opened) {
+    Ocean sea = boxes(17, 7, 30, {{1, 2, 4, 5, 0, 10}, {6, 2, 9, 5, 0, 4}, {11, 2, 14, 5, 0, 1}});
+    drainOcean(sea, opened);
+    expect(openStrait(sea, channel(sea, 2, 3, 7, 3, 1, 0)) && openStrait(sea, channel(sea, 7, 3, 12, 3, 1, 0)), "a strait was refused");
+    return sea;
+}
+
+// Every round ends past the time it starts at, also on the stored end of the round before: the
+// sea cut at a fraction of a second reaches any time asked for. Fed in, settled or integrated a
+// day at a time, it moves what the sea cut on the whole second before it moves in the same span.
+void testFractionalCut() {
+    for (const double opened : {496.07, 992.05, 1984.01}) {
+        Ocean walked = chain(opened);
+        for (int round = 0; walked.seconds < opened + DaySeconds; ++round) {
+            const double end = roundEnd(walked);
+            expect(end > walked.seconds && round < 64, "a round does not end past the time it starts at", walked.seconds - walked.opened);
+            walked.seconds = end;
+        }
+        for (const double span : {7200.0, 14400.0, 28800.0, DaySeconds + 1.0}) {
+            const bool settled = span < DaySeconds;   // a day and a second is integrated on its own
+            Ocean cut = chain(opened), whole = chain(std::floor(opened));
+            for (Ocean* sea : {&cut, &whole}) {
+                drainOcean(*sea, span);
+                if (settled) settleOcean(*sea);
+                expectClosed(*sea, "fractional cut");
+            }
+            expect(near(cut.seconds - cut.opened, whole.seconds - whole.opened, 1e-12) && near(cut.pending, whole.pending, 1e-12), "the fractional cut integrated another span", cut.seconds - cut.opened);
+            for (size_t strait = 0; strait < 2; ++strait)
+                expect(cut.moved[strait].water > 0 && near(cut.moved[strait].water, whole.moved[strait].water, 1e-12) && near(cut.moved[strait].salt, whole.moved[strait].salt, 1e-12),
+                       "the fractional cut moved other water or salt", cut.moved[strait].water / whole.moved[strait].water - 1);
+        }
+    }
+}
+
 } // namespace
 
 void testStraitLedger();   // HydrologyLedger.cpp
@@ -160,5 +196,6 @@ void testStraitBodies() {
     testMerging();
     testMergeAndPart();
     testReversal();
+    testFractionalCut();
     testStraitLedger();
 }

@@ -25,6 +25,10 @@ bool openStrait(Ocean& ocean, const Strait& strait);
 void drainOcean(Ocean& ocean, double seconds);
 void settleOcean(Ocean& ocean);
 
+// s, end of the round the sea is in when throats in different places take turns: past `seconds`
+// whenever that is finite, so every round moves the sea on.
+double roundEnd(const Ocean& ocean);
+
 Tally stockOf(const WaterGrid& grid);
 double crustOf(const WaterGrid& grid);   // kg of salt on the dry cells
 
