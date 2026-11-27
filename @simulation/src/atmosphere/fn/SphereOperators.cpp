@@ -124,8 +124,9 @@ EdgeField streamFluxOf(const SphereGrid& grid, const SphereStencil& stencil, con
 
 void streamFluxOf(const SphereGrid& grid, const SphereStencil& stencil, const CellField& stream, EdgeField& flux, CellField& atVertex) {
     vertexValues(grid, stencil, stream, atVertex);
-    flux.resize(grid.edge.size());
-    for (size_t e = 0; e < flux.size(); ++e) flux[e] = atVertex[size_t(grid.edge[e].from)] - atVertex[size_t(grid.edge[e].to)];
+    assert(stencil.topology.size() == grid.edge.size());
+    flux.resize(stencil.topology.size());
+    for (size_t e = 0; e < flux.size(); ++e) flux[e] = atVertex[size_t(stencil.topology[e].from)] - atVertex[size_t(stencil.topology[e].to)];
 }
 
 SphereMatrix makeLaplacian(const SphereGrid& grid, const SphereStencil& tables) {

@@ -9,6 +9,8 @@ namespace derivean::sim {
 
 // The weather's finite-volume discretisation on top of the geometry's sphere grid
 // (geometry/type/SphereGrid.hpp): per edge and per vertex, in the grid's edge and vertex order.
+// `topology` and `vertexCells` are compact copies of the grid's own facts, filled only from it so
+// the step reads a few bytes an edge; the grid stays their owner.
 //
 // The gradient at an edge's midpoint comes from two differences: across the edge (right − left) and
 // along it (to − from, values at the vertices). In the gnomonic tangent plane at the midpoint `across`
@@ -28,6 +30,15 @@ struct EdgeStencil {
     Vec3 offset;        // m
 };
 
+// An edge's two cells and two vertices (SphereEdge's left, right, from and to): the step's 16 bytes
+// of the grid's 48-byte edge.
+struct EdgeTopology {
+    int left{};
+    int right{};
+    int from{};
+    int to{};
+};
+
 // `weight[v]` gives a value at vertex v from the values of its cells (SphereVertex::cells, in that
 // order). The weights are the least-squares fit of a linear field in the gnomonic tangent plane at
 // the vertex, so they sum to one and reproduce linear fields exactly. A plain mean would not: on a
@@ -39,13 +50,15 @@ struct EdgeStencil {
 // the advected value's move to the edge's midpoint is carry · (right − left, to − from), read in
 // 16 bytes an edge instead of the three vectors' 72.
 //
-// A step reads only the hot tables: carry, weight, `vertexCells` and `behind`. `edge` (104 bytes an
-// edge) builds the Laplacian and serves the diagnostic operators (gradientOf, curlOf), and
-// releaseEdgeTables drops it once the Poisson solver is made.
+// A step reads only the hot tables: `topology`, carry, weight, `vertexCells` and `behind`, not the
+// grid's edges and vertices. `edge` (104 bytes an edge) builds the Laplacian and serves the
+// diagnostic operators (gradientOf, curlOf), and releaseEdgeTables drops it once the Poisson solver
+// is made.
 struct SphereStencil {
     std::vector<EdgeStencil> edge;
     std::vector<std::array<double, 4>> weight;
     std::vector<std::array<double, 2>> carry;
+    std::vector<EdgeTopology> topology;
     // Per vertex its cells (SphereVertex::cells), four always: a cube vertex's three are followed by
     // its first again, whose weight is zero, so a vertex value is one four-term sum without the grid's
     // 48-byte vertex.

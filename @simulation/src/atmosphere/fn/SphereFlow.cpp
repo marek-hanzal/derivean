@@ -65,10 +65,10 @@ void tendencyOf(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& s
     for (size_t c = 0; c < absolute.size(); ++c) absolute[c] = vorticity[c] + flow.coriolis[c];
     std::vector<double>& at = flow.atVertex;
     vertexValues(grid, stencil, absolute, at);
-    assert(stencil.carry.size() == grid.edge.size());
+    assert(stencil.carry.size() == grid.edge.size() && stencil.topology.size() == grid.edge.size());
     tendency.assign(size_t(grid.cells), 0.0);
-    for (size_t e = 0; e < grid.edge.size(); ++e) {
-        const SphereEdge& edge = grid.edge[e];
+    for (size_t e = 0; e < stencil.topology.size(); ++e) {
+        const EdgeTopology& edge = stencil.topology[e];
         const std::array<double, 2>& carry = stencil.carry[e];
         const size_t l = size_t(edge.left), r = size_t(edge.right);
         const double moved = carry[0] * (absolute[r] - absolute[l]) + carry[1] * (at[size_t(edge.to)] - at[size_t(edge.from)]);
@@ -167,10 +167,10 @@ double outflowCourant(const SphereGrid& grid, const std::vector<double>& flux, d
 
 void advectTracer(const SphereGrid& grid, const SphereStencil& stencil, const std::vector<double>& flux, double step, std::vector<double>& tracer,
                   std::vector<double>& work) {
-    assert(stencil.behind.size() == grid.edge.size());
+    assert(stencil.behind.size() == flux.size() && stencil.topology.size() == flux.size() && flux.size() == grid.edge.size());
     work.assign(size_t(grid.cells), 0.0);
     for (size_t e = 0; e < flux.size(); ++e) {
-        const SphereEdge& edge = grid.edge[e];
+        const EdgeTopology& edge = stencil.topology[e];
         const bool outOfLeft = flux[e] > 0;
         const int up = outOfLeft ? edge.left : edge.right, down = outOfLeft ? edge.right : edge.left;
         const int behind = stencil.behind[e][outOfLeft ? 0 : 1];
