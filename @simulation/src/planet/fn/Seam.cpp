@@ -102,7 +102,7 @@ size_t suture(Globe& globe, Band& band, const Substep& substep) {
             std::vector<int> skip;
             for (const PlanShare& r : candidate.receivers) skip.push_back(plan.global[size_t(r.piece)]);
             candidate.behind.clear();
-            for (const int l : wideAroundOf(globe, band, plan.global[size_t(candidate.piece)], cellsOf[c], skip)) candidate.behind.push_back(localOf(plan, globe, l));
+            for (const int l : wideAroundOf(globe, band, plan.global[size_t(candidate.piece)], cellsOf[c], skip, substep)) candidate.behind.push_back(localOf(plan, globe, l));
             candidate.delaminate = true;
         }
     }

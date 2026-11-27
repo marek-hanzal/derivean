@@ -110,8 +110,13 @@ void checkOceanAges(const Globe& globe) {
 // one of its pieces. Once both plates are one, no piece anywhere has room for the doubled piece's crust
 // within StackLimit: the plan refuses it, the wide reach finds no room either, and the crust delaminates
 // into the interior, so the seam closes with the stock and StackLimit kept. With room 700–950 km away
-// (`far`), beyond the ordinary reach and within the wide one, the crust goes there and nothing founders.
-void checkCrowdedSeam(bool far) {
+// (Room::Within), beyond the ordinary reach and within the wide one, the crust goes there and nothing
+// founders; with room only 1 050–1 300 km away (Room::Beyond, Codex DREV-CLAUDE-005-08) nothing goes there
+// and the crust founders.
+enum class Room { None, Within, Beyond };
+void checkCrowdedSeam(Room room) {
+    const bool far = room != Room::None;
+    const double nearest = room == Room::Beyond ? 1.05e6 : 7e5, farthest = room == Room::Beyond ? 1.3e6 : 9.5e5;
     Globe globe = makeGlobe(42, 5, PlateSpeeds::Today, TectonicsStart);
     const SphereGrid& grid = *globe.grid;
     int k = -1;
@@ -124,11 +129,12 @@ void checkCrowdedSeam(bool far) {
     }
     expect(k >= 0, "the crowded seam finds no piece on the equator");
     std::vector<int> roomy;
+    std::vector<double> roomyStock;
     for (int c = 0; far && c < grid.cells; ++c) {
         const double d = length(grid.centre[size_t(c)] - grid.centre[size_t(k)]) * PlanetRadius;
-        if (d < 7e5 || d > 9.5e5 || globe.pieces[size_t(c)].plate != 0) continue;
+        if (d < nearest || d > farthest || globe.pieces[size_t(c)].plate != 0) continue;
         globe.pieces[size_t(c)].stock.felsic *= 0.5, refreshColumn(globe.pieces[size_t(c)]);
-        roomy.push_back(c);
+        roomy.push_back(c), roomyStock.push_back(globe.pieces[size_t(c)].stock.felsic);
     }
     CrustPiece other = globe.pieces[size_t(k)];
     other.rotation = rotationAbout(normalized(cross(grid.centre[size_t(k)], {0, 0, -1})), 0.1 * std::sqrt(other.area) / PlanetRadius);
@@ -154,11 +160,19 @@ void checkCrowdedSeam(bool far) {
     const CrustStock now = totalStock(globe.pieces);
     expect(globe.stats.seamsRefused > 0, "the crowded seam finds room nearby", double(globe.stats.seamsRefused));
     expect(settled && after.ownHalf == 0 && globe.stats.unsettled == 0, "a seam with no room does not close", double(after.ownHalf));
-    if (!far) expect(globe.ledger.delaminated > 0 && globe.ledger.delaminated <= globe.ledger.interior.felsic, "the crowded seam delaminates nothing", globe.ledger.delaminated);
+    if (room != Room::Within) expect(globe.ledger.delaminated > 0 && globe.ledger.delaminated <= globe.ledger.interior.felsic, "the crowded seam delaminates nothing", globe.ledger.delaminated);
+    // What the roomy pieces gained, against the stock each held (a difference of stocks, so no product
+    // is contracted into it).
     double gained = 0;
-    for (const CrustPiece& piece : globe.pieces)
-        if (std::find(roomy.begin(), roomy.end(), piece.key.cell) != roomy.end() && piece.key.step < 0) gained += piece.stock.felsic - 0.5 * double(StackLimit) * piece.area;
-    if (far) expect(globe.ledger.delaminated == 0 && gained > 0, "the crowded seam delaminates crust its plate has room for", globe.ledger.delaminated);
+    long touched = 0;
+    for (const CrustPiece& piece : globe.pieces) {
+        const auto at = std::find(roomy.begin(), roomy.end(), piece.key.cell);
+        if (at == roomy.end() || piece.key.step >= 0) continue;
+        const double held = roomyStock[size_t(at - roomy.begin())];
+        gained += piece.stock.felsic - held, touched += piece.stock.felsic != held;
+    }
+    if (room == Room::Within) expect(globe.ledger.delaminated == 0 && gained > 0, "the crowded seam delaminates crust its plate has room for", globe.ledger.delaminated);
+    if (room == Room::Beyond) expect(touched == 0, "the crowded seam sends crust beyond the wide reach", gained);
     expect(now.felsic + globe.ledger.interior.felsic == start.felsic && now.basalt + globe.ledger.interior.basalt == start.basalt, "the crowded seam loses crust");
     for (const CrustPiece& piece : globe.pieces) expect(piece.stock.felsic <= double(StackLimit) * piece.area * (1 + 1e-12), "the crowded seam stacks over StackLimit");
 }
@@ -166,8 +180,9 @@ void checkCrowdedSeam(bool far) {
 } // namespace
 
 void testGlobeEpochs() {
-    checkCrowdedSeam(false);
-    checkCrowdedSeam(true);
+    checkCrowdedSeam(Room::None);
+    checkCrowdedSeam(Room::Within);
+    checkCrowdedSeam(Room::Beyond);
     Globe globe = makeGlobe(42, 5, PlateSpeeds::Today, TectonicsStart);
     enterGlobeEpoch(globe);
     couple(*globe.grid, globe.pieces, {}, false, globe.coupling);
