@@ -212,6 +212,7 @@ CubeColumn buildCubes(const sim::World& world, CubeKey key) {
         size_t last = first;
         while (last + 1 < levels.size() && levels[last + 1] - levels[last] < SheetGap) ++last;
         WaterSheet sheet{double(levels[last]), {}};
+        // The sheet's wet columns as rectangles, as greedy meshing cuts them (Lysenko 2012; docs/credits/rendering.md).
         std::vector<int32_t> mask(size_t(CubeSide) * CubeSide);
         for (int j = 0; j < CubeSide; ++j)
             for (int i = 0; i < CubeSide; ++i) mask[size_t(i) * CubeSide + j] = wet(i, j) && levelAt(i, j) >= levels[first] && levelAt(i, j) <= levels[last];

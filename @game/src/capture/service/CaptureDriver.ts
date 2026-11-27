@@ -1,4 +1,4 @@
-// 272 lines: one state machine over a shot's phases, which share the shot's bookkeeping; split by phase, that
+// 275 lines: one state machine over a shot's phases, which share the shot's bookkeeping; split by phase, that
 // state would pass through a layer that only forwards it.
 import type { Frame, Point } from "../../../contract/GameBridge";
 import type { WorldClock } from "../../calendar/service/WorldClock";

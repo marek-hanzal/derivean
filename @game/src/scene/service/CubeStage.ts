@@ -101,6 +101,8 @@ export function createCubeStage(scene: Scene, camera: PerspectiveCamera, world: 
     },
     // False hides the clouds, their shadows and what falls from them; the weather itself goes on.
     veil(shown: boolean) { cloudy = shown; },
+    // Stops the light's easing until the next pose: frames drawn without a pose (a bench) take no time.
+    hold() { dt = 0; },
     get cloudsShown() { return cloudy; },
     findWeather: (sought: WeatherSought) => field ? findWeather(field, sought) : undefined,
     counts: terrain.counts,

@@ -19,7 +19,7 @@ export function cloudShadow(shade: CloudShade, position: Node<"vec3">): Node<"fl
       const foot = position.xz.sub(towardsSun.xz.mul(position.y.sub(place.w).div(max(towardsSun.y, 0.12))));
       const at = foot.sub(place.xy).div(max(place.z, 1)).add(0.5);
       const edge = min(at, at.oneMinus());
-      // Four taps round the point: a shadow's edge is softer than a texel of the map (filtered as Reeves et al. 1987 do).
+      // Four taps round the point, averaged: a shadow's edge is softer than a texel of the map.
       const tap = (x: number, y: number) => texture(map, at.add(vec2(x, y))).level(float(0)).r;
       const lit = tap(Tap, Tap).add(tap(-Tap, Tap)).add(tap(Tap, -Tap)).add(tap(-Tap, -Tap)).mul(0.25);
       return { lit, held: smoothstep(0, 0.06, min(edge.x, edge.y)).mul(place.z.greaterThan(0).select(float(1), float(0))) };

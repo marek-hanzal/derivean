@@ -56,7 +56,7 @@ Williams, L. (1978). Casting curved shadows on curved surfaces. *ACM SIGGRAPH Co
 ### Reeves, Salesin and Cook 1987: percentage-closer filtering
 Reeves, W. T., Salesin, D. H., Cook, R. L. (1987). Rendering antialiased shadows with depth maps. *ACM SIGGRAPH Computer Graphics* 21(4), 283–291. doi:10.1145/37402.37435
 - **Model:** filter the result of the depth comparisons, not the depths, so a shadow's edge is a share of lit samples.
-- **Used in:** `@game/src/shadow/fn/sunlit.ts:15` (the comparison sampler's linear filter over four texels); `@game/src/clouds/fn/cloudShadow.ts:22` (four taps round the point in each cloud map).
+- **Used in:** `@game/src/shadow/fn/sunlit.ts:15` (the comparison sampler's linear filter over four texels).
 
 ### Dimitrov 2007: cascaded shadow maps
 Dimitrov, R. (2007). *Cascaded Shadow Maps*. NVIDIA Corporation, August 2007. https://developer.download.nvidia.com/SDK/10.5/opengl/src/cascaded_shadow_maps/doc/cascaded_shadow_maps.pdf
@@ -67,7 +67,7 @@ Dimitrov, R. (2007). *Cascaded Shadow Maps*. NVIDIA Corporation, August 2007. ht
 ### Lysenko 2012: greedy meshing
 Lysenko, M. (2012). Meshing in a Minecraft game. *0 FPS* (blog), 30 June 2012. https://0fps.net/2012/06/30/meshing-in-a-minecraft-game/
 - **Model:** the exposed faces of a voxel slice cut into as few rectangles as a greedy sweep finds, row by row.
-- **Used in:** `@engine/src/voxel/type/Mesh.hpp:23` (`mergeMask`), called by `@engine/src/voxel/fn/Mesh.cpp:10` and `@engine/src/horizon/fn/CubeChunk.cpp`.
+- **Used in:** `@engine/src/voxel/type/Mesh.hpp:23` (`mergeMask`), called by `@engine/src/voxel/fn/Mesh.cpp:10` and `@engine/src/horizon/fn/CubeChunk.cpp:215`.
 - **Approximations:** a rectangle grows only along an axis its corner occlusion is constant on, so it is not always the largest the sweep could make.
 
 ### cgerikj: binary greedy meshing

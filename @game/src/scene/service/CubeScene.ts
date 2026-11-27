@@ -97,26 +97,30 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
     cloudCost: () => null,
     // Time of a frame, as frames drawn back to back in batches of `frames` with the clouds shown and hidden in turn
     // until the GPU is done: the display's vsync cannot hold them back, so the difference is what the clouds cost.
-    // Median milliseconds a frame over the batches; null where the device cannot be waited on. A cloudy batch
-    // begins by drawing the cloud shadow maps again, as showing the clouds does.
+    // Median milliseconds a frame over the batches; null where the device cannot be waited on. Showing the clouds
+    // again draws both cloud shadow maps at once, so each batch begins with one frame left out of its time. The
+    // light does not ease while the bench draws; the clouds' picture is built up again afterwards.
     async bench(frames: number, batches = 6) {
       const device = (renderer.backend as { device?: { queue: { onSubmittedWorkDone(): Promise<void> } } }).device;
-      if (!stage || !device || benching) return null;
+      const benched = stage;
+      if (!benched || !device || benching) return null;
       const timed = { cloudy: [] as number[], clear: [] as number[] };
-      const shown = stage.cloudsShown;
+      const shown = benched.cloudsShown;
       benching = true;
+      benched.hold();
       try {
-        await device.queue.onSubmittedWorkDone();
         for (let batch = 0; batch < batches * 2; batch++) {
           const cloudy = batch % 2 === 0;
-          stage.veil(cloudy);
+          benched.veil(cloudy);
+          benched.draw(renderer, () => {});
+          await device.queue.onSubmittedWorkDone();
           const began = performance.now();
-          for (let frame = 0; frame < frames; frame++) stage.draw(renderer, () => {});
+          for (let frame = 0; frame < frames; frame++) benched.draw(renderer, () => {});
           await device.queue.onSubmittedWorkDone();
           timed[cloudy ? "cloudy" : "clear"].push((performance.now() - began) / frames);
         }
       } finally {
-        stage.veil(shown);
+        benched.veil(shown);
         benching = false;
       }
       const median = (values: number[]) => Number([...values].sort((a, b) => a - b)[values.length >> 1].toFixed(3));
