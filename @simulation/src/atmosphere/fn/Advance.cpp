@@ -54,9 +54,13 @@ void stepAtmosphere(Atmosphere& atmosphere, Workers& workers) {
         for (size_t kind = 0; kind < HazeKinds; ++kind) std::swap(haze.mass[kind].cells, haze.work[2 * kind].cells);
     }
 
+    // Row by row: a row's water reads what its heat has just written while it is still at hand.
+    // Each cell reads only its own column of what the other writes.
     workers.parallelFor(AirCells, [&](int begin, int end) {
-        stepHeat(atmosphere, begin, end);
-        stepWater(atmosphere, begin, end);
+        for (int z = begin; z < end; ++z) {
+            stepHeat(atmosphere, z, z + 1);
+            stepWater(atmosphere, z, z + 1);
+        }
     }, RowGrain);
     closeWater(atmosphere);
     stepPlume(atmosphere, workers);

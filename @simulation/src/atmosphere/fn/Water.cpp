@@ -89,7 +89,7 @@ void prepareWater(Atmosphere& atmosphere) {
 // one store and added to another; the row sums carry what crosses to the planet-wide stores.
 void stepWater(Atmosphere& atmosphere, int begin, int end) {
     const int n = AirCells;
-    const ColumnRates rates = columnRates(AirStep);
+    static const ColumnRates rates = columnRates(AirStep);
     const double perStep = 1.0 / AirStep, perSoil = 1.0 / SoilCapacity;
     const double oceanReach = atmosphere.openArea > 0 ? OceanReach * std::max(0.0, atmosphere.ocean) / atmosphere.openArea : 0.0;
 
