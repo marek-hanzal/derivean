@@ -163,7 +163,7 @@ cd @simulation && X=$(ls -d ~/.local/share/mise/installs/github-xmake-io-xmake/*
 
 - The Laplacian's local error at face edges (about 0.1) and the first-order edge gradient and stream fluxes there: the solution is second order, but a wind derived from ψ near seams is first order (2.6e-3 of the largest flux at cube vertices, level 6), and the same error feeds the slow growth of grid-scale vorticity at the cube vertices. A quadratic reconstruction of the edge gradient would make it second order; whether the imprint matters is S4's to see in the weather.
 - The tracer scheme diffuses across grid lines (l1 0.35 at level 6 for the cosine bell); humidity and heat in S4 may want FV3's dimensionally split PPM transport (Putman & Lin 2007).
-- Cost (Timing): single-threaded, Poisson-bound, Courant-limited. Memory 330 MB at 6 × 256² (an edge is 48 bytes of geometry, 112 of `EdgeStencil` and 16 of `carry`; chord and offset could be dropped or kept in floats), with about 180 MB more for a moment while `makeLaplacian` gathers its rows (448 bytes a cell).
+- Cost (Timing): single-threaded, Poisson-bound, Courant-limited. Memory 330 MB at 6 × 256², measured before `carry` added 12.6 MB (an edge is 48 bytes of geometry, 112 of `EdgeStencil` and 16 of `carry`; chord and offset could be dropped or kept in floats), with about 180 MB more for a moment while `makeLaplacian` gathers its rows (448 bytes a cell).
 - The eddy band's centre and width are today's metres, not Earth's (The eddy band, open for S4).
 - Williamson et al. cases 2 and 5 need the shallow-water equations (a height field), beyond a barotropic core.
 - Before the switch, from Codex's review of 89777e9 (`.out/review-mailbox/from-codex/DREV-CLAUDE-004-01.txt`), conditions for S4, not done here:
