@@ -48,6 +48,7 @@ WeatherState publish(sim::Atmosphere& air) {
 
 void collect(Weather& weather) {
     for (WeatherResult& result : weather.finished->collect()) {
+        weather.start.reset();
         weather.working = std::move(result.working);
         weather.seen = std::move(result.state);
         weather.flying = false;
@@ -62,7 +63,8 @@ void collect(Weather& weather) {
 void startWeather(Weather& weather, Nature& nature, const sim::Calendar& start) {
     weather.finished = std::make_shared<Mailbox<WeatherResult>>();
     weather.flying = true;
-    nature.air->submit([box = weather.finished, &planet = nature.world.planet, &pool = *nature.air, start] {
+    weather.start = std::make_shared<sim::Workers>(nature.startThreads);
+    weather.start->submit([box = weather.finished, &planet = nature.world.planet, &pool = *weather.start, start] {
         const auto began = Clock::now();
         auto air = std::make_shared<sim::Atmosphere>(sim::startAtmosphere(planet, start, pool));
         WeatherState state = publish(*air);

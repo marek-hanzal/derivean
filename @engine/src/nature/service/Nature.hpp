@@ -31,6 +31,7 @@ struct Nature {
     sim::World world;
     std::optional<sim::Workers> crew;
     std::optional<sim::Workers> air;
+    unsigned startThreads{};   // of the pool the first weather spins up on (nature/type/Weather.hpp)
     TileRequests tiles;
 };
 

@@ -31,6 +31,7 @@ struct Weather {
     std::shared_ptr<sim::Atmosphere> working;      // the state being stepped; the task in flight owns it while `flying`
     std::shared_ptr<Mailbox<WeatherResult>> finished;
     WeatherState seen;                             // newest finished state; empty until the atmosphere has started
+    std::shared_ptr<sim::Workers> start;           // the pool the first state spins up on, released when it arrives
     bool flying{};
     bool fresh{};                                  // `seen.clouds` has not gone out in a frame yet
     std::chrono::steady_clock::time_point cloudsSent{};
@@ -38,7 +39,10 @@ struct Weather {
     double stepMs{};
 };
 
-// Orders the first state for the start date; returns at once.
+// Orders the first state for the start date; returns at once. The spin-up is the whole of the
+// work until the first state is published, and the game waits for it: it runs on a pool of its
+// own, nature.startThreads wide, not on the two threads that step the weather afterwards. The
+// state does not depend on the thread count.
 void startWeather(Weather& weather, Nature& nature, const sim::Calendar& start);
 
 // Blocks until that first state exists.
