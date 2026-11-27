@@ -5,6 +5,8 @@
 #include "climate/fn/Snowpack.hpp"
 #include "planet/type/Planet.hpp"
 
+#include <cmath>
+
 namespace derivean::sim {
 namespace {
 
@@ -168,6 +170,9 @@ SnowYield stepSnow(Atmosphere& atmosphere, size_t cell, double seaLevelAir, doub
     const double days = AirStep / DaySeconds, perCover = 1.0 / SnowCoverMass, reach = thirst * Sublimation;
     double stored = 0, covered = 0;
     for (size_t rung = 0; rung < SnowRungs; ++rung) {
+        // A bare rung that nothing falls on stays bare and adds ±0 to sums that start at +0, which
+        // leaves them as they are, for air that is not NaN and finite areas.
+        if (falling == 0 && packs[rung] == 0 && !std::signbit(packs[rung])) continue;
         const SnowpackChange change = stepSnowpack(packs[rung], seaLevelAir - LapseRate * SnowLadder[rung], falling, days);
         const double sublimed = std::min(change.swe, reach * std::min(1.0, change.swe * perCover));
         const double kept = std::min(change.swe - sublimed, PackLimit);
