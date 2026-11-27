@@ -20,6 +20,25 @@ int mostSteps(const SphereHour& hour) {
     return int(std::clamp(most, 1.0, double(INT_MAX / 2)));
 }
 
+// Whether `steps` keep the leapfrog span 2Δt within the damping's certified bound,
+// 2 (window / steps) · stiffest ≤ 1, as a try would step: the one test of it.
+bool dampingAllows(const SphereHour& hour, int steps) {
+    const double step = hour.window / steps;
+    const double span = 2 * step;
+    return span * hour.stiffest <= 1;
+}
+
+// The fewest steps dampingAllows, at most mostSteps: from ceil(2 window · stiffest), moved by the
+// try's own test where rounding (an ulp near an integer) puts the two apart, up or down.
+int fewestSteps(const SphereHour& hour) {
+    const int most = mostSteps(hour);
+    const double span = 2 * hour.window;
+    int fewest = int(std::clamp(std::ceil(span * hour.stiffest), 1.0, double(most)));
+    while (fewest < most && !dampingAllows(hour, fewest)) ++fewest;
+    while (fewest > 1 && dampingAllows(hour, fewest - 1)) --fewest;
+    return fewest;
+}
+
 // The steps of the next window from the Courant number `worst` the last one reached with `steps`,
 // counted in double and capped at mostSteps, so a huge Courant number neither overflows nor asks for
 // steps shorter than allowed. After a window taken only at a later try the count does not fall and
@@ -28,7 +47,7 @@ void predict(SphereHour& hour, int steps, double worst, bool retried) {
     const double ceiling = hour.reserve * hour.limit;
     const double share = worst / ceiling;
     const double wanted = std::ceil(steps * share);
-    const int needed = int(std::clamp(wanted, 1.0, double(mostSteps(hour))));
+    const int needed = int(std::clamp(wanted, double(fewestSteps(hour)), double(mostSteps(hour))));
     if (needed > steps) {
         hour.steps = needed;
         hour.calm = 0;
@@ -56,7 +75,7 @@ bool tryWindow(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const
                const SphereForcingSource* source, const SphereForcing* held, const SphereFlow& start) {
     const int most = mostSteps(hour);
     SphereForcing filled;
-    int steps = std::min(hour.steps, most);
+    int steps = std::max(std::min(hour.steps, most), fewestSteps(hour));
     for (int attempt = 0; attempt < hour.attempts; ++attempt) {
         const double step = hour.window / steps;
         setStep(flow, step);
@@ -104,10 +123,11 @@ bool tryWindow(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const
     return false;   // the flow is `start` again since the last refusal
 }
 
-// One window as a transaction: a window shorter than the shortest step is refused before the flow or
-// the steps change; whatever a try throws (the source, an allocation) puts the flow and the hour back
-// as they came in and passes on. The snapshots are moved back, which allocates nothing, so the
-// restore holds when memory has run out (Codex DREV-CLAUDE-007-04); a copy could fail there too.
+// One window as a transaction: a window shorter than the shortest step, or one whose most steps the
+// damping's bound refuses, is refused before the flow or the steps change; whatever a try throws
+// (the source, an allocation) puts the flow and the hour back as they came in and passes on. The
+// snapshots are moved back, which allocates nothing, so the restore holds when memory has run out
+// (Codex DREV-CLAUDE-007-04); a copy could fail there too.
 static_assert(std::is_nothrow_move_assignable_v<SphereFlow> && std::is_nothrow_move_assignable_v<SphereHour>,
               "the hour's restore must not throw");
 bool advanceWindow(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
@@ -116,6 +136,11 @@ bool advanceWindow(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, c
     if (hour.window < hour.shortest) {
         // Built aside first: an allocation that fails leaves the last window's refusals in place.
         std::vector<HourTry> only{{HourRefusal::Shortest, 0, 0}};
+        hour.refusals.swap(only);
+        return false;
+    }
+    if (!dampingAllows(hour, mostSteps(hour))) {
+        std::vector<HourTry> only{{HourRefusal::Damping, mostSteps(hour), 0}};
         hour.refusals.swap(only);
         return false;
     }

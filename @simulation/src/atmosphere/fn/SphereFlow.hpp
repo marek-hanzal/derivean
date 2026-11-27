@@ -55,6 +55,10 @@ void setStep(SphereFlow& flow, double step);
 [[nodiscard]] bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
                                   const SphereForcing& forcing);
 
+// The level the next step starts from: the older level in the leapfrog, ζₙ in the forward step after
+// a restart. Closures that act on it (the damping, fn/SphereDamping) read it here.
+const std::vector<double>& baseLevel(const SphereFlow& flow);
+
 // Whether stepSphereFlow takes `forcing` on a grid of `cells`: each vector empty or one value per
 // cell, every value finite, every friction rate at least zero.
 bool admissibleForcing(const SphereForcing& forcing, size_t cells);

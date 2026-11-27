@@ -210,9 +210,22 @@ Sweby, P. K. (1984). High resolution schemes using flux limiters for hyperbolic 
 ### Courant, Friedrichs & Lewy 1928: the Courant limit of the wind step
 Courant, R., Friedrichs, K. & Lewy, H. (1928). Über die partiellen Differenzengleichungen der mathematischen Physik. *Mathematische Annalen* 100, 32–74. doi:10.1007/BF01448839
 - **Model:** an explicit step is stable only while the flow carries less than a cell's content out of it in one step; here the outflow Courant number summed over a cell's edges, kept below 0.4 for the wind.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereTransport.hpp:14`, `@simulation/src/atmosphere/type/SphereHour.hpp:24`; `docs/handoff/atmosphere-sphere.md:130`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereTransport.hpp:14`, `@simulation/src/atmosphere/type/SphereHour.hpp:26`; `docs/handoff/atmosphere-sphere.md:130`.
 - **Checked by:** `@simulation/test/AtmosphereSphereHour.cpp:73` (a window taken back at its second step and retaken in twice the steps, bit for bit a clean run).
 - **Approximations:** 0.4 is the tests' margin for the leapfrog with the filter, not a derived bound.
+
+### Jablonowski & Williamson 2011: biharmonic damping of the flow
+Jablonowski, C. & Williamson, D. L. (2011). The pros and cons of diffusion, filters and fixers in atmospheric general circulation models. In Lauritzen, P. H., Jablonowski, C., Taylor, M. A. & Nair, R. D. (eds.), *Numerical Techniques for Global Atmospheric Models*, Lecture Notes in Computational Science and Engineering 80, chapter 13, 381–493. Springer. doi:10.1007/978-3-642-11640-7_13
+- **Model:** scale-selective hyperdiffusion −ν ∇⁴ ζ as the grid-scale damping of a global model's vorticity, explicit on the older time level of the leapfrog.
+- **Used in:** `@simulation/src/atmosphere/type/SphereDamping.hpp:8`; `docs/handoff/atmosphere-sphere.md:141`.
+- **Checked by:** `@simulation/test/AtmosphereSphereDamping.cpp:192` (modes keep 1 − 2Δt ν λ² per two steps and lose ν ‖L m‖²), `:214` (bursts inside, on a face edge, at a vertex).
+- **Approximations:** −ν (A⁻¹K)² stands for −ν ∇⁴; it is positive semi-definite but not a consistent ∇⁴ at the seams (`docs/handoff/atmosphere-sphere.md:142`).
+
+### Gershgorin 1931: the certified bound of the damping
+Gerschgorin, S. (1931). Über die Abgrenzung der Eigenwerte einer Matrix. *Izvestija Akademii Nauk SSSR, Otdelenie matematičeskich i estestvennych nauk* (VII série) 6, 749–754. https://www.mathnet.ru/eng/im5235
+- **Model:** every eigenvalue of a matrix lies in a disc centred at a diagonal entry with radius the row's other magnitudes, so max_i Σ_j |M_ij| bounds them all; here M = A⁻¹K.
+- **Used in:** `@simulation/src/atmosphere/type/SphereDamping.hpp:20`, `@simulation/src/atmosphere/fn/SphereDamping.cpp:15`; `docs/handoff/atmosphere-sphere.md:143`.
+- **Checked by:** `@simulation/test/AtmosphereSphereDamping.cpp:48` (the bound above the estimate), `:238` (started by the forward step, below 0.976 the fastest mode keeps its sign, above it swings and decays, past 2.06 it grows).
 
 ### Neumaier 1974: compensated summation
 Neumaier, A. (1974). Rundungsfehleranalyse einiger Verfahren zur Summation endlicher Summen. *ZAMM – Zeitschrift für Angewandte Mathematik und Mechanik* 54(1), 39–51. doi:10.1002/zamm.19740540106

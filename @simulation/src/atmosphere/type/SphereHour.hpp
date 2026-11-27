@@ -11,6 +11,8 @@ enum class HourRefusal {
     Forcing,     // a step's forcing was not admissible (admissibleForcing); no further try
     Shortest,    // the steps cannot grow: the last try took window / shortest of them, or the window
                  // is shorter than `shortest` and no try is made (steps 0)
+    Damping,     // even window / shortest steps give a span 2Δt above 1 / stiffest (the damping's
+                 // certified bound); no try is made
 };
 
 struct HourTry {
@@ -38,6 +40,10 @@ struct SphereHour {
     int patience{3};
     int attempts{4};
     double shortest{30};   // s
+    // ν · bound² of the damping the forcing carries (dampingStiffness, 1/s; 0 without): a try is
+    // taken only while 2Δt · stiffest ≤ 1: a window starts at no fewer steps than that needs, the
+    // count never falls below it, and a window that cannot meet it is refused (Damping).
+    double stiffest{};
     int calm{};            // windows in a row that would need at most `lower` of the steps
     double courant{};      // the largest of the last accepted window, its end state included
     std::vector<HourTry> refusals;   // of the last window, in order; the caller logs them
