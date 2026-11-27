@@ -24,27 +24,41 @@ struct Vein {
     bool present{};
 };
 
-// The fracture of set `set` whose cell the point lies in. A fracture stays inside its lattice cell,
-// so the neighbours never need to be looked at.
-Vein veinOf(uint64_t seed, const OreField& field, int set, Vec2 material, float depth, bool shaped) {
+struct SetFrame {
+    double along, across;   // m; `across` at the datum
+};
+
+SetFrame frameOf(const OreField& field, int set, Vec2 material) {
     const double angle = field.strike + SetAngle[set];
     const double c = std::cos(angle), s = std::sin(angle);
-    const double along = material.x * c + material.z * s;
-    const double across = -material.x * s + material.z * c - double(depth) * SetLean[set];
-    const int64_t number = int64_t(std::floor(across / VeinSpacing));
+    return {material.x * c + material.z * s, -material.x * s + material.z * c};
+}
+
+VeinFracture fractureOf(uint64_t seed, const OreField& field, int set, int64_t number) {
     const uint64_t base = stream(seed, OreStream) + uint64_t(set);
-    Vein vein;
+    VeinFracture fracture;
+    fracture.number = number;
     // A fracture is sealed only while the ground around it is veined enough, so a vein ends where
     // the district thins rather than at a lattice edge.
-    if (unit(base, number, 1) >= 0.85 * field.veining) return vein;
-    const double centre = (double(number) + 0.15 + 0.70 * unit(base, number, 2)) * VeinSpacing;
+    fracture.sealed = !(unit(base, number, 1) >= 0.85 * field.veining);
+    if (!fracture.sealed) return fracture;
+    fracture.centre = (double(number) + 0.15 + 0.70 * unit(base, number, 2)) * VeinSpacing;
     const double widest = 0.2 + 2.4 * std::pow(unit(base, number, 3), 2.2);
-    vein.offset = across - centre;
-    vein.half = 0.5 * widest;
+    fracture.half = 0.5 * widest;
+    return fracture;
+}
+
+// The vein of set `set` at a point `across` the set and `depth` below the datum, in the cell of
+// `fracture`. A fracture stays inside its lattice cell, so the neighbours never need to be looked at.
+Vein veinOf(uint64_t seed, int set, const VeinFracture& fracture, double along, double across, float depth, bool shaped) {
+    Vein vein;
+    if (!fracture.sealed) return vein;
+    vein.offset = across - fracture.centre;
+    vein.half = fracture.half;
     vein.present = true;
     if (!shaped || std::abs(vein.offset) > 4.0 + vein.half) return vein;
     // Pinch and swell along strike and down dip; the mid-plane wanders by a few metres.
-    const uint64_t own = hash(base, number, 4);
+    const uint64_t own = hash(stream(seed, OreStream) + uint64_t(set), fracture.number, 4);
     vein.offset -= 3.0 * gradientNoise(own, along / 55.0, depth / 70.0);
     vein.half *= std::max(0.0, 0.45 + 1.4 * fractalNoise(own + 1, along / 75.0, depth / 95.0, 2));
     return vein;
@@ -93,10 +107,28 @@ OreField oreFieldAt(uint64_t seed, const StrataColumn& column, Vec2 material) {
 }
 
 Material cuttingRock(uint64_t seed, const OreField& field, Vec2 material, float depth, double laidDown) {
-    if (field.pipeRadius > 0 && laidDown < field.pipeEmplaced && pipeReach(field, material, depth) > 0) return Material::Kimberlite;
+    VeinColumn column{material};
+    return cuttingRock(seed, field, column, depth, laidDown);
+}
+
+Material cuttingRock(uint64_t seed, const OreField& field, VeinColumn& column, float depth, double laidDown) {
+    if (field.pipeRadius > 0 && laidDown < field.pipeEmplaced && pipeReach(field, column.material, depth) > 0) return Material::Kimberlite;
     if (field.veining <= 0 || laidDown >= field.emplaced) return Material::Air;
+    if (!column.framed) {
+        column.framed = true;
+        for (int set = 0; set < 2; ++set) {
+            const SetFrame frame = frameOf(field, set, column.material);
+            column.along[set] = frame.along, column.across[set] = frame.across;
+        }
+    }
     for (int set = 0; set < 2; ++set) {
-        const Vein vein = veinOf(seed, field, set, material, depth, true);
+        const double across = column.across[set] - double(depth) * SetLean[set];
+        const int64_t number = int64_t(std::floor(across / VeinSpacing));
+        if (!column.asked[set] || number != column.last[set].number) {
+            column.last[set] = fractureOf(seed, field, set, number);
+            column.asked[set] = true;
+        }
+        const Vein vein = veinOf(seed, set, column.last[set], column.along[set], across, depth, true);
         if (vein.present && std::abs(vein.offset) < vein.half) return Material::OreVein;
     }
     return Material::Air;
@@ -106,7 +138,9 @@ bool nearCuttingRock(uint64_t seed, const OreField& field, Vec2 material, float 
     if (field.pipeRadius > 0 && pipeReach(field, material, depth) > -double(margin) - 0.25 * field.pipeRadius) return true;
     if (field.veining <= 0) return false;
     for (int set = 0; set < 2; ++set) {
-        const Vein vein = veinOf(seed, field, set, material, depth, false);
+        const SetFrame frame = frameOf(field, set, material);
+        const double across = frame.across - double(depth) * SetLean[set];
+        const Vein vein = veinOf(seed, set, fractureOf(seed, field, set, int64_t(std::floor(across / VeinSpacing))), frame.along, across, depth, false);
         if (vein.present && std::abs(vein.offset) < vein.half * 2.2 + 3.0 + margin) return true;
     }
     return false;

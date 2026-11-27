@@ -22,10 +22,10 @@ constexpr float SmoothBed = 0.2f;       // friction of such a bed against a rock
 constexpr float ShallowSea = 0.283f;
 constexpr float ShallowDepth = 0.530f;
 
-// m², the square of the highest wave a wind of square speed `gale` raises over water `depth` deep.
+// m, the highest wave a wind of square speed `gale` raises over water `depth` deep.
 float shallowSea(float depth, float gale) {
-    const float g = float(Gravity), height = ShallowSea * std::tanh(ShallowDepth * std::pow(g * depth / gale, 0.75f)) * gale / g;
-    return height * height;
+    const float g = float(Gravity);
+    return ShallowSea * std::tanh(ShallowDepth * std::pow(g * depth / gale, 0.75f)) * gale / g;
 }
 
 // Share of the shallow-water friction a wind sea of `height` meets over a bed `depth` below: by
@@ -66,7 +66,7 @@ void raiseAt(const Domain& domain, Shore& shore, size_t i, size_t at, int k, boo
     float depth = water + swingOf(domain, water) - shore.top[i];
     if (depth <= 0 && energy > 0) depth += runUp(std::sqrt(energy), faceSlope(Sand, std::sqrt(crest)));
     if (depth <= 0) return;
-    const float gale = shore.gale[at], limit = std::sqrt(shallowSea(depth, gale)), most = std::min(FullSea * gale, limit);
+    const float gale = shore.gale[at], limit = shallowSea(depth, gale), most = std::min(FullSea * gale, limit);
     if (energy < most * most) {
         // Along the curve of this depth, from the deep-water height that stands for the fetch behind.
         // Nothing arriving stands for no fetch: atanh(0) is 0, and limit is above 0 here.

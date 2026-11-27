@@ -88,6 +88,15 @@ struct Bed {
 // `material` is the crust-attached position of the point itself; a column only knows its own.
 Bed bedAt(uint64_t seed, const StrataColumn& column, const StrataUnit& unit, float depth, Vec2 material);
 
+// The pattern of intrusive bodies at one crust-attached point, read the first time a bed there
+// asks for it. A column of voxels meets many beds at the same point, and the pattern does not
+// depend on depth. Serves one seed and one `material` only.
+struct BodyMemo {
+    double pattern{};
+    bool known{};
+};
+Bed bedAt(uint64_t seed, const StrataColumn& column, const StrataUnit& unit, float depth, Vec2 material, BodyMemo& bodies);
+
 // The whole unit averaged over its members: what a kilometre-scale process meets.
 RockTraits unitTraits(uint64_t seed, const StrataColumn& column, const StrataUnit& unit, Vec2 material);
 

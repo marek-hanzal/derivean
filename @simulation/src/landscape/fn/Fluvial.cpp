@@ -4,7 +4,7 @@
 
 #include <bit>
 
-// About 375 lines: the erosion factor, the implicit solve and the carrying of the load are three
+// About 380 lines: the erosion factor, the implicit solve and the carrying of the load are three
 // sweeps over one flow order that share one working state and are only meaningful together.
 namespace derivean::sim {
 namespace {
@@ -287,8 +287,15 @@ void carryLoad(Sweep& sweep, bool final) {
         // load its record carries. What arrives there is not fed: it also holds the load the
         // neighbour's own cells passed down to its lake, which that lake took already.
         if (sweep.flooded(i) && domain.hold[i] != Rim) {
-            if (final)
-                for (int c = 0; c < SedimentClasses; ++c) scratch.plume[c][i] += load[c] * sweep.dt;
+            if (final) {
+                bool fed = false;
+                for (int c = 0; c < SedimentClasses; ++c) {
+                    const float added = load[c] * sweep.dt;
+                    scratch.plume[c][i] += added;
+                    fed = fed || added != 0;
+                }
+                if (fed) scratch.plumeFed.push_back(int32_t(i));
+            }
             continue;
         }
         // The ledger is the tile's: load is booked where it crosses between the tile's own cells and
@@ -357,7 +364,8 @@ void cutAndFill(Domain& domain, FlowScratch& scratch) {
             }
         }
     }
-    for (auto& cloud : scratch.plume) cloud.assign(cells, 0.0f);
+    for (auto& cloud : scratch.plume)
+        if (cloud.size() != cells) cloud.assign(cells, 0.0f);
     for (int pass = 0; pass < Passes; ++pass) {
         measurePower(sweep);
         solveHeights(sweep);

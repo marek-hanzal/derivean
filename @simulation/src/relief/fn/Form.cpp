@@ -6,6 +6,8 @@
 #include "relief/type/City.hpp"
 #include "volcanic/fn/Volcanic.hpp"
 
+#include <optional>
+
 namespace derivean::sim {
 namespace {
 
@@ -67,6 +69,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     }
     const Vec2 material = setting.strata.material + (Vec2{x, z} - setting.strataCentre);
     const float fold = foldAt(setting.seed, setting.strata, material);
+    BodyMemo bodies;   // every bed of the column is read at `material`
     const float loose = ground.ground - ground.rock;
     // Rock that eruptions laid on the layering fills the column from the pile's floor up; the plug
     // of a conduit cuts pile and layering alike (volcanic/type/Pile.hpp).
@@ -74,6 +77,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     const Neck neck = setting.volcanic ? neckOf(*setting.volcanic, {x, z}) : Neck{};
     const Material plug = neck.rock;
     // A neck is one body whatever it cuts: its weathered skin is read from the rock surface alone.
+    // Flows read their skin across the same slope.
     const float neckSlope = std::sqrt(1.0f + ground.slope * ground.slope);
 
     // A void that comes within a thin roof of the rock surface is open: the cover over it has
@@ -93,6 +97,9 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     const float middle = std::max(0.0f, ground.datum - float(bottom + 0.5 * count * step));
     const bool cut = (setting.ore.veining != 0 || setting.ore.pipeRadius != 0) &&
                      nearCuttingRock(setting.seed, setting.ore, material, middle, float(0.35 * 0.5 * count * step + 1.0));
+    // The veins every point of the column is asked about; made only where one passes near.
+    std::optional<VeinColumn> veins;
+    if (cut) veins.emplace(VeinColumn{material});
     const float bare = float(1.0 - smoothstep(0.5 * BareCover, BareCover, loose));
     // Beds stand back from a face that is open to the weather: bare here and bare at its foot. A
     // steep rock surface buried in its own waste has no face.
@@ -105,11 +112,13 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     const auto massive = [](const RockTraits& rock) { return float(smoothstep(3.5, 5.5, rock.jointSpacing)) * (rock.bedding < 0.7f ? 1.0f : 0.0f); };
     RockCity city;
     city.floor = ground.rock;
-    {
+    // Massive rock scales the strength by at most one, so where exposure and bareness alone leave
+    // it under 0.05 no bed is read for it.
+    if (!(ground.pile.thickness > 0) && exposure * bare > 0.05f) {
         float depth = std::max(0.0f, ground.datum - ground.rock) + 0.1f;
         const StrataUnit unit = unitAt(setting.strata, depth, fold);
-        Bed top = bedAt(setting.seed, setting.strata, unit, depth, material);
-        city.strength = ground.pile.thickness > 0 ? 0.0f : massive(traitsOf(top.rock)) * exposure * bare;
+        Bed top = bedAt(setting.seed, setting.strata, unit, depth, material, bodies);
+        city.strength = massive(traitsOf(top.rock)) * exposure * bare;
         if (city.strength > 0.05f) {
             city.seed = setting.seed;
             city.mass = massFor(setting, top, unit.laidDown);
@@ -118,7 +127,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
         for (int guard = 0; city.strength > 0.05f && guard < 6; ++guard) {
             city.floor = ground.datum - top.bottom;
             depth = top.bottom + 0.05f;
-            top = bedAt(setting.seed, setting.strata, unitAt(setting.strata, depth, fold), depth, material);
+            top = bedAt(setting.seed, setting.strata, unitAt(setting.strata, depth, fold), depth, material, bodies);
             if (massive(traitsOf(top.rock)) < 0.5f) break;
         }
     }
@@ -127,7 +136,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     const bool grikes = setting.runoff > 0 && ground.pile.thickness <= 0, recessed = steep > 0.02f && loose > 0;
     const float surfaceDepth = std::max(0.0f, ground.datum - ground.rock) + 0.05f;
     const StrataUnit surfaceUnit = grikes || recessed ? unitAt(setting.strata, surfaceDepth, fold) : StrataUnit{};
-    const Bed surface = grikes || recessed ? bedAt(setting.seed, setting.strata, surfaceUnit, surfaceDepth, material) : Bed{};
+    const Bed surface = grikes || recessed ? bedAt(setting.seed, setting.strata, surfaceUnit, surfaceDepth, material, bodies) : Bed{};
 
     // Bare soluble rock opens along its joints into grikes as deep as `grike` below its surface.
     float grike = 0;
@@ -175,7 +184,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
                 }
             } else if (depth < bed.top || depth >= bed.bottom) {
                 const StrataUnit unit = unitAt(setting.strata, depth, fold);
-                bed = bedAt(setting.seed, setting.strata, unit, depth, material);
+                bed = bedAt(setting.seed, setting.strata, unit, depth, material, bodies);
                 laidDown = unit.laidDown;
                 layer = {1, 0};
                 seams = hasSeams(bed.rock);
@@ -194,7 +203,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
                 result = plug != Material::Air ? plug : member.rock;
                 // A thick flow parts into its columns within the skin of a bare face (volcanic/fn/Columns.cpp),
                 // only where the flow itself forms that face: under a bed above it nothing weathers.
-                const float faceHere = base ? partingFace : face, skin = (faceHere - y) / std::sqrt(1.0f + ground.slope * ground.slope);
+                const float faceHere = base ? partingFace : face, skin = (faceHere - y) / neckSlope;
                 const bool exposed = pileFloor + member.top >= faceHere - float(step);
                 if (plug == Material::Air && bare > 0.5f && exposed && columnOpen(setting.seed, ground.pile, member, x, z, skin, float(step))) result = Material::Air;
                 if (plug != Material::Air && bare > 0.5f && neckOpen(setting.seed, neck, x, y, z, (ground.rock - y) / neckSlope, float(step))) result = Material::Air;
@@ -205,7 +214,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
                     result = layer.rock;
                 }
                 if (cut) {
-                    const Material body = cuttingRock(setting.seed, setting.ore, material, depth, laidDown);
+                    const Material body = cuttingRock(setting.seed, setting.ore, *veins, depth, laidDown);
                     if (body != Material::Air) result = body;
                 }
                 if (plug != Material::Air) result = bare > 0.5f && neckOpen(setting.seed, neck, x, y, z, (ground.rock - y) / neckSlope, float(step)) ? Material::Air : plug;

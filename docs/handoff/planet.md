@@ -21,7 +21,7 @@ Builds; `testOre`, `testRockMass` and `testPlanetFuture` pass when linked alone 
 - **Plates travel with their crust** (`planet/fn/Motion.cpp`, `Crossing.cpp`, `Outline.cpp`, `planet/type/Line.hpp`). `Planet::owner` is the live owner of each cell; a cell changes hands only where arriving crust overrides what sinks; new floor at a parting goes to both sides in turn; `Planet::contact` is traced from `owner` every step. `contactAt` in `planet/fn/Sample.hpp` reads it blended.
 - **Cover record** (`strata/fn/Strata.cpp`): strata back up with their crust at a collision; `buryCover` turns dated strata under 6 km of younger ones into metamorphic older cover and older cover beyond 6 km into basement.
 - **Window-start column** (`strata/fn/Window.cpp`): `strataAt` returns the column as it stood when the region window opened. What the planet removed in the window goes back on top as the youngest unit present, what it laid down comes off, pluton roofs move with it; the amount is `StrataColumn::restored`. Every level and the voxel answer measure depth from a datum seeded at the window-start surface, so reading the present cover counted the window's erosion twice (3–11 km in ranges). On a range tile at 3.5 km, high land went from 0.4 % sedimentary / 65 metamorphic / 34 plutonic to 38 / 41 / 20. Tools that want the planet's present top add `restored` to the depth (`PlanetCommand.cpp`).
-- **Column** (`strata/fn/Column.cpp`): an unconformity at `StrataColumn::deformed` (strata laid down later share only the gentle warping); plutons cut every older unit as domes (`plutonRoof`); a belt quiet for 800 Myr reads as a shield; `Bed::thickness` is the bed's own thickness before clipping.
+- **Column** (`strata/fn/Column.cpp`, beds and plutons in `strata/fn/Bed.cpp`): an unconformity at `StrataColumn::deformed` (strata laid down later share only the gentle warping); plutons cut every older unit as domes (`plutonRoof`); a belt quiet for 800 Myr reads as a shield; `Bed::thickness` is the bed's own thickness before clipping.
 - **Solute**: 7 % of eroded rock leaves in solution and precipitates as carbonate on shelves by the room their water leaves, warm ones first; platforms keep 70 m of water (`planet/fn/Surface.cpp`). `ledger.precipitated` is part of `ledger.deposited`.
 - **Melt record**: `CrustColumn::melt`, `meltTime`, `erupted`, `meltSource`; `PastMark::melt`, `erupted`; `Planet::meltHeat`. `planet/fn/Heat.hpp`: `geothermAt`, `centreNear` (magmatic centres 46 km apart in the frame of the crust).
 - **Magmatic centres live 1.5 Myr** (`CentreLife` in `planet/fn/Heat.cpp`): each epoch draws a new lattice; `centreNear(planet, position, time)` returns the epoch with the cell. One fixed centre fed for a whole window piled 4–13 km of volcanic rock.
@@ -39,7 +39,7 @@ Builds; `testOre`, `testRockMass` and `testPlanetFuture` pass when linked alone 
 | `Denudation`, `SteepHeight` | `Surface.cpp` | 9 Myr, 2 500 m | How fast high ground is lowered |
 | `SoluteShare`, `PlatformDepth` | `Surface.cpp` | 0.07, 70 m | Carbonate share; more solute means more low flat land |
 | `ArcSurfaceShare` | `Contacts.cpp` | 0.35 | Lava and ash laid on arcs |
-| pluton levels, `RoofDepth`, `RoofMargin` | `strata/fn/Column.cpp` | −0.08 / 0.10, 2 200 m, 0.10 | Plutonic share at the surface |
+| pluton levels, `RoofDepth`, `RoofMargin` | `strata/fn/Bed.cpp` | −0.08 / 0.10, 2 200 m, 0.10 | Plutonic share at the surface |
 | `MetamorphicDepth`, `OlderLimit` | `strata/type/Strata.hpp` | 6 km each | Depth to basement |
 
 ## Decisions and why

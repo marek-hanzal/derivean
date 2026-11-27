@@ -42,7 +42,8 @@ Domain lake(float depth) {
 
 struct Outcome {
     double laid[SedimentClasses]{};   // m³ on the bed, by class
-    double suspended{};               // m³ left in the plume
+    double suspended{};               // m³ left in the plume, which leaves with the water as sent out
+    bool emptied{};                   // the plume holds nothing and lists no cell after it settled
 };
 
 Outcome settle(Domain& domain) {
@@ -50,12 +51,15 @@ Outcome settle(Domain& domain) {
     for (auto& cloud : scratch.plume) cloud.assign(domain.cells(), 0.0f);
     const size_t middle = domain.index(domain.size / 2, domain.size / 2);
     for (auto& cloud : scratch.plume) cloud[middle] = float(Volume);
+    scratch.plumeFed.push_back(int32_t(middle));
     const float area = float(domain.cell * domain.cell);
     settlePlume(domain, scratch, 1.0f, area);
     Outcome settled;
+    settled.suspended = domain.ledger.sedimentOut;
+    settled.emptied = scratch.plumeFed.empty();
     for (int c = 0; c < SedimentClasses; ++c) {
         for (size_t i = 0; i < domain.cells(); ++i) settled.laid[c] += double(domain.ground.sediment[c][i]) * area;
-        for (float volume : scratch.plume[c]) settled.suspended += volume;
+        for (float volume : scratch.plume[c]) settled.emptied = settled.emptied && volume == 0;
     }
     return settled;
 }
@@ -70,6 +74,7 @@ void testLandscapePlume() {
         for (int c = 0; c < SedimentClasses; ++c)
             expect(std::abs(settled.laid[c] - Volume) < 1e-4 * Volume, "a class did not reach the bed of a deep lake", settled.laid[c] - Volume);
         expect(settled.suspended < 1e-4 * Volume, "sediment stayed suspended in a deep lake", settled.suspended);
+        expect(settled.emptied, "the plume of a deep lake was not left empty for the next step");
         expect(std::abs(domain.ledger.deposited - 3 * Volume) < 1e-4 * Volume && domain.ledger.sedimentOut + domain.ledger.sedimentIn < 1e-4 * Volume,
                "the ledger of a deep lake moves sediment across the edge", domain.ledger.sedimentOut + domain.ledger.sedimentIn);
     }
@@ -81,6 +86,7 @@ void testLandscapePlume() {
         const Outcome settled = settle(domain);
         const double laid = settled.laid[Coarse] + settled.laid[Sand] + settled.laid[Fines];
         expect(laid > 0 && laid < 3 * Volume && settled.suspended > 0, "a film of water took all or none of the plume", laid);
+        expect(settled.emptied, "the plume of a film was not left empty for the next step");
         float highest = -1e9f;
         for (size_t i = 0; i < domain.cells(); ++i) highest = std::max(highest, domain.ground.rock[i] + domain.sedimentAt(i));
         expect(highest > -Film && highest <= -Freeboard + 1e-6f, "the plume's bed rose above its water or did not reach it", highest);
