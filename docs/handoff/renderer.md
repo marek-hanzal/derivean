@@ -176,5 +176,5 @@ The M key and `map/**` are the map stream's. The window title stays "DeRivean ·
 - Shadow map memory: three 4096² and one 2048² float depth maps (about 210 MB with their colour targets). Generous by the owner's rule; pull down only if a machine cannot hold it.
 - Risers of a one-cube step under a covered top: bed or cover (section 6)?
 - The cut between levels and the shadow cascades move in steps as the eye moves. Whether that reads as popping has not been watched in motion.
-- The `bands` texture is RGBA32F with linear filtering, which needs the `float32-filterable` feature; fine on Apple, unchecked elsewhere. Half floats would round heights to 8 m at altitude.
+- The `bands` texture is RGBA32F with linear filtering, which needs the `float32-filterable` feature; fine on Apple, unchecked elsewhere. Half floats round heights to 0.25 m below 1 km, 1 m to 4 km and 4 m from 8 to 16 km, over the 1 m allowed; they stay 32-bit (DREV-NEON-055).
 - The land light's ring holds a level's box and band at the default reach (128); at a larger `cubeReach` the outer squares share places with the inner ones and the farther ones read as not held (faces keep their own light there). Size the ring from `reach` if reach is raised.

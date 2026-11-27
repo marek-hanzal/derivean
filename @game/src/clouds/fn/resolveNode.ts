@@ -28,6 +28,8 @@ fn cloudResolve(at: vec2f, direction: vec3f, marched: texture_2d<f32>, remembere
   let clip = turned + pastMoved;
   let past = vec2f(clip.x / clip.w * 0.5 + 0.5, 0.5 - clip.y / clip.w * 0.5);
   let found = clip.w > 0.0 && all(past > vec2f(0.0)) && all(past < vec2f(1.0));
+  // Nothing of the past to keep: a first frame, or a cloud that was off the last frame's screen.
+  if (!found || persistence <= 0.0) { return now; }
   let unmoved = vec2f(turned.x, -turned.y) / max(turned.w, 1e-6) * 0.5;
   // Behind the last frame's eye the shift has no meaning; it then counts as large.
   let parallax = select(1000.0, length((past - unmoved - vec2f(0.5)) / texel), clip.w > 0.0 && turned.w > 0.0);
@@ -48,6 +50,6 @@ fn cloudResolve(at: vec2f, direction: vec3f, marched: texture_2d<f32>, remembere
   // sky, not to chase the noise.
   let slack = (most - least) * mix(0.75, 0.25, fast) + mix(0.06, 0.01, fast);
   let before = clamp(textureSampleLevel(remembered, linear, past, 0.0), least - slack, most + slack);
-  return select(now, mix(now, before, persistence), found);
+  return mix(now, before, persistence);
 }
 `);

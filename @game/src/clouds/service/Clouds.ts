@@ -89,7 +89,7 @@ export function createClouds() {
       const latest = field.latest;
       nodes.eye.value.copy(eye).sub(origin);
       if (!latest || !ready) return false;
-      field.update(now);
+      field.update(renderer, now);
       if (field.texture && nodes.bands.value !== field.texture) nodes.bands.value = field.texture;
       const span = latest.cell * latest.cells;
       nodes.grid.value.set(fract((origin.x - latest.origin[0]) / span), fract((origin.z - latest.origin[1]) / span), 1 / span, latest.cells);
