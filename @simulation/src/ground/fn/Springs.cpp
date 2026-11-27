@@ -8,6 +8,16 @@ void laySpringDeposits(Domain& domain, const std::vector<Spring>& springs, const
     altered.assign(domain.cells(), 0.0f);
     const int64_t firstX = int64_t(std::llround(domain.origin.x / domain.cell)), firstZ = int64_t(std::llround(domain.origin.z / domain.cell));
     for (const Spring& spring : springs) {
+        // Its water joins the last routing, so the pools it dammed hold it.
+        const auto feed = [&] {
+            const int64_t x = int64_t(std::floor(spring.position.x / domain.cell)), z = int64_t(std::floor(spring.position.z / domain.cell));
+            const int vx = int(x - firstX), vz = int(z - firstZ);
+            if (vx > 0 && vz > 0 && vx < domain.size - 1 && vz < domain.size - 1) domain.inflow[domain.index(vx, vz)] += (1.0f - spring.steamShare) * spring.discharge * float(YearSeconds);
+        };
+        if (laysNothing(spring, domain.cell)) {
+            feed();
+            continue;
+        }
         // A window on the ground level's own lattice, centred on the vent.
         SpringGround around;
         around.cell = domain.cell;
@@ -31,9 +41,7 @@ void laySpringDeposits(Domain& domain, const std::vector<Spring>& springs, const
                 if (around.crust[from] > detail.crust[own]) detail.crustKind[own] = around.kind[from];
                 detail.crust[own] += around.crust[from];
             }
-        // Its water joins the last routing, so the pools it dammed hold it.
-        const int vx = int(ventX - firstX), vz = int(ventZ - firstZ);
-        if (vx > 0 && vz > 0 && vx < domain.size - 1 && vz < domain.size - 1) domain.inflow[domain.index(vx, vz)] += (1.0f - spring.steamShare) * spring.discharge * float(YearSeconds);
+        feed();
     }
 }
 
