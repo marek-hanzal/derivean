@@ -14,9 +14,11 @@ constexpr float Precision = 0.005f;  // share of the fall a layer holds over one
 
 // Lava keeps running while its core is hot and stiffens fast once the crust has grown through it:
 // the yield strength stays near its hot value for most of the way and reaches the cold one at the end.
-float yieldAt(const Rheology& rheology, float heat) {
+// `ratio` is yieldCold / yieldHot. Lava that has spent no heat skips the pow: pow(ratio, 0) is 1.
+float yieldAt(const Rheology& rheology, float ratio, float heat) {
+    if (heat >= 1.0f) return rheology.yieldHot;
     const float spent = 1.0f - std::clamp(heat, 0.0f, 1.0f);
-    return rheology.yieldHot * std::pow(rheology.yieldCold / rheology.yieldHot, spent * spent * spent);
+    return rheology.yieldHot * std::pow(ratio, spent * spent * spent);
 }
 
 } // namespace
@@ -38,6 +40,13 @@ void feed(Emplacement& field, Worklist& work, size_t cell, float thickness) {
 long relax(Emplacement& field, const Rheology& rheology, Worklist& work, long visits) {
     const int width = field.width;
     const float cell = float(field.cell), area = cell * cell, least = std::max(Least, Tolerance * rheology.sheet);
+    const float ratio = rheology.yieldCold / rheology.yieldHot;
+    // The heat a step towards neighbour k uses up, over open ground and under water.
+    float wayOver[8], wayUnder[8];
+    for (int k = 0; k < 8; ++k) {
+        wayOver[k] = NeighborReach[k] * cell / rheology.coolLength;
+        wayUnder[k] = NeighborReach[k] * cell / (rheology.coolLength * QuenchShare);
+    }
     long used = 0;
     while (!work.heap.empty() && used < visits) {
         std::pop_heap(work.heap.begin(), work.heap.end());
@@ -50,7 +59,7 @@ long relax(Emplacement& field, const Rheology& rheology, Worklist& work, long vi
         const int x = int(i % size_t(width)), z = int(i / size_t(width));
         const float top = field.ground[i] + layer;
         // The fall over one cell's width that the layer just holds.
-        const float holds = yieldAt(rheology, field.heat[i]) / std::min(layer, rheology.sheet) * cell;
+        const float holds = yieldAt(rheology, ratio, field.heat[i]) / std::min(layer, rheology.sheet) * cell;
         // A surface may stand above its rest by a share of a flow unit, and by a share of the fall
         // it holds over a cell: no finer than the grid draws a slope.
         const float slack = std::max(least, Precision * holds);
@@ -90,7 +99,7 @@ long relax(Emplacement& field, const Rheology& rheology, Worklist& work, long vi
                 field.lost += double(part) * area;
                 continue;
             }
-            const float way = NeighborReach[k] * cell / (field.submerged(j) ? rheology.coolLength * QuenchShare : rheology.coolLength);
+            const float way = field.submerged(j) ? wayUnder[k] : wayOver[k];
             const float heat = field.heat[i] - way;
             if (heat <= 0) {
                 // Spent: it sets as it arrives.
