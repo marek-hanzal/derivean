@@ -16,7 +16,8 @@ namespace derivean::sim {
 // streamBackTwo, productBack, productBackTwo, levels) is always one accepted step: a step or a new
 // vorticity whose inversion does not converge leaves it as it was. Leapfrog and its filter need
 // equally spaced time levels, so the step is part of the state: set it with setStep, which restarts
-// the history when it changes; change vorticity only through setVorticity, which restarts it too.
+// the history when it changes; change vorticity and stream only through setVorticity, which restarts
+// it too (`known` takes K ψₙ for granted).
 struct SphereFlow {
     double rotation{};                 // Ω, 1/s
     std::vector<double> coriolis;      // f per cell, 1/s
@@ -30,6 +31,7 @@ struct SphereFlow {
     // CG's first residual is formed from them, so a flow keeps one Poisson (one K) from its start.
     std::vector<double> streamBack, streamBackTwo, productBack, productBackTwo, product;
     int levels{1};
+    bool known{};                      // trialProduct holds K ψₙ, left by the inversion that gave ψₙ
     int projection{3};                 // accepted ψ the first guess combines, 0 to 3 (0: the last ψ as it is)
     std::vector<double> flux;          // per edge, ψ(from) − ψ(to): m²/s per metre of depth, out of left
     PoissonReport inversion;           // of the last attempted inversion, accepted or not
@@ -39,7 +41,7 @@ struct SphereFlow {
     bool started{};                    // false until the first step after a restart (a forward step)
     // Work space, one call at a time per flow: the candidate state of a step before it is accepted,
     // and the tendency's intermediates.
-    // trialProduct is K trialStream when the first guess formed it.
+    // trialProduct: K trialStream when the first guess formed it, K ψₙ while `known`.
     std::vector<double> trialVorticity, trialBefore, trialStream, trialFlux, trialProduct;
     std::vector<double> tendency, absolute, atVertex;
 };

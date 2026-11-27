@@ -28,6 +28,8 @@ bool invertTrial(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& 
     flow.inversion = solveSpherePoisson(poisson, grid, flow.trialVorticity, flow.trialStream, flow.tolerance, flow.limit,
                                         withProduct ? &flow.trialProduct : nullptr);
     if (!flow.inversion.converged) return false;
+    // Below a tolerance of 1e-10 the solver formed K of the candidate ψ: kept for the next guess.
+    if (flow.inversion.product) std::swap(flow.trialProduct, poisson.product);
     flow.trialFlux = streamFluxOf(grid, stencil, flow.trialStream);
     return true;
 }
@@ -49,6 +51,7 @@ void acceptTrial(SphereFlow& flow) {
     std::swap(flow.productBackTwo, flow.productBack);
     std::swap(flow.productBack, flow.product);
     std::swap(flow.flux, flow.trialFlux);
+    flow.known = flow.inversion.product;
     // Without the projection no K ψ was formed, so only the new ψ itself counts.
     flow.levels = flow.projection > 0 ? std::min(flow.levels + 1, 3) : 1;
 }

@@ -121,7 +121,8 @@ void checkStepChange() {
 // steps with a shorter history included) and land 4.4e-11 of the largest vorticity from them, within
 // the solver's tolerance; the history restarts with setVorticity and setStep, and a run started with
 // the projection off forms no products, so switching it on later starts a fresh history. The guess's
-// K, the combination of the K dᵢ, lies within 2e-13 of the largest K ψ of K applied to the guess.
+// K, the combination of the K dᵢ, lies within 2e-13 of the largest K ψ of K applied to the guess;
+// below 1e-10 the inversion leaves K of its ψ for the next guess.
 void checkGuess() {
     const SphereGrid grid = makeSphereGrid(5);
     const SphereStencil stencil = makeSphereStencil(grid);
@@ -173,6 +174,21 @@ void checkGuess() {
         }
         const double gap = std::abs(std::sqrt(rr / bb) - projected.inversion.residual) / projected.tolerance;
         expect(gap < 1e-2, "the residual reported from the guess's K is not the true one", gap);
+    }
+    {
+        // Below 1e-10 the inversion leaves K of its ψ, which the next guess takes in place of its product.
+        SphereFlow tight = projected;
+        tight.tolerance = 1e-11;
+        expect(stepSphereFlow(tight, grid, stencil, poisson) && tight.known, "the tight inversion left no product");
+        std::vector<double> product;
+        applyMatrix(poisson.levels[0].stiffness, tight.stream, product);
+        expect(product == tight.trialProduct, "the product left is not K of the accepted ψ");
+        SphereFlow formed = tight;
+        formed.known = false;
+        expect(stepSphereFlow(tight, grid, stencil, poisson) && stepSphereFlow(formed, grid, stencil, poisson) && sameState(tight, formed),
+               "the product left changes the next step");
+        tight.tolerance = 1e-9;
+        expect(stepSphereFlow(tight, grid, stencil, poisson) && !tight.known, "a product was left above 1e-10");
     }
     double off = 0, top = 0;
     for (int c = 0; c < grid.cells; ++c) {

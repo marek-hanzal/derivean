@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <utility>
 
 namespace derivean::sim {
 
@@ -95,7 +96,10 @@ bool guessStream(SphereFlow& flow, const SphereGrid& grid, const SpherePoisson& 
         flow.trialStream = flow.stream;
         return false;
     }
-    applyMatrix(poisson.levels[0].stiffness, flow.stream, flow.product);
+    // K ψₙ, unless the inversion that gave ψₙ left it (the same product, bit for bit).
+    if (flow.known) std::swap(flow.product, flow.trialProduct);
+    else applyMatrix(poisson.levels[0].stiffness, flow.stream, flow.product);
+    flow.known = false;
     const Gram sums = count == 1   ? gramOf<1>(flow, grid)
                       : count == 2 ? gramOf<2>(flow, grid)
                                    : gramOf<3>(flow, grid);

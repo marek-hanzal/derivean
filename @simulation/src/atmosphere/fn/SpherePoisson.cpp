@@ -118,15 +118,17 @@ PoissonReport solveSpherePoisson(SpherePoisson& poisson, const SphereGrid& grid,
     // The recursive residual drifts from the true one below about 1e-13 of ‖b‖ (it fell to 1e-22
     // while the true one stayed at 2e-13). From TrustedResidual up the drift is at most 1.3e-5 of the
     // tolerance (levels 5 to 7, cold and warm; tested to a hundredth), so the recursive residual is
-    // reported; below it the report and `converged` come from one more product.
+    // reported; below it the report and `converged` come from one more product, of the result with its
+    // mean removed, so the product is K of the result as returned and the caller may keep it.
+    const double mean = areaMean(grid, result);
+    for (double& value : result) value -= mean;
     if (tolerance < TrustedResidual) {
         applyMatrix(poisson.levels[0].stiffness, result, q);
         for (size_t c = 0; c < n; ++c) r[c] = b[c] - q[c];
         report.residual = std::sqrt(dotOf(r, r)) / bNorm;
+        report.product = true;
     }
     report.converged = report.residual <= tolerance;
-    const double mean = areaMean(grid, result);
-    for (double& value : result) value -= mean;
     return report;
 }
 
