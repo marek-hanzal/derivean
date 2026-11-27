@@ -12,8 +12,8 @@ namespace derivean::sim {
 // faces' interiors are equal bit for bit (shareFaceInteriors makes them so), one face's values serve
 // all six. The rows within two cells of a face edge keep compressed sparse rows, in row order. Both
 // add the same products in the same column order as the assembled SphereMatrix, so the product is the
-// same bit for bit.
-struct StencilMatrix {
+// same bit for bit. The V-cycle's float copy (`narrowed`) is the same matrix rounded to float32.
+template <class Real> struct StencilMatrixOf {
     static constexpr int Margin = 2;    // interior rows have 2 ≤ i, j < side − 2
     static constexpr int Chunk = 64;    // rows of a grid line whose values are stored together
     static constexpr int Entries = 21;  // neighbours of an interior row
@@ -21,10 +21,12 @@ struct StencilMatrix {
     int interior{};                   // rows in the structured part, all six faces (0 when side < 5)
     bool shared{};                    // `inner` holds one face's interior, used by all six
     std::array<int, 21> offset{};     // column − row of the interior entries, ascending
-    std::vector<double> inner;        // 21 × interior (÷ 6 when shared), in the blocks above
+    std::vector<Real> inner;          // 21 × interior (÷ 6 when shared), in the blocks above
     std::vector<int> seamRow, start, column;   // the other rows, start[k] .. start[k + 1] − 1 for seamRow[k]
-    std::vector<double> value;
-    std::vector<double> diagonal;
+    std::vector<Real> value;
+    std::vector<Real> diagonal;
 };
+
+using StencilMatrix = StencilMatrixOf<double>;
 
 } // namespace derivean::sim

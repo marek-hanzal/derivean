@@ -8,8 +8,9 @@
 namespace derivean::sim {
 
 // With `multigrid`, CG is preconditioned by a V-cycle over the coarser levels; without, by the
-// diagonal (the two are compared in docs/handoff/atmosphere-sphere.md).
-SpherePoisson makeSpherePoisson(const SphereGrid& grid, const SphereStencil& stencil, bool multigrid = true);
+// diagonal (the two are compared in docs/handoff/atmosphere-sphere.md). With `narrow` the V-cycle
+// runs in float32 above the coarsest level; CG, its residual and the result stay double.
+SpherePoisson makeSpherePoisson(const SphereGrid& grid, const SphereStencil& stencil, bool multigrid = true, bool narrow = true);
 
 // Solves Δ result = source for the result with zero area mean. The source's area mean is the part no
 // field on a closed sphere can have as a Laplacian; it is removed and reported. `result` on entry is

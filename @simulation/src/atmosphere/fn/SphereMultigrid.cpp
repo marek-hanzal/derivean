@@ -1,9 +1,7 @@
 #include "atmosphere/fn/SphereMultigrid.hpp"
 
 #include "atmosphere/fn/SphereOperators.hpp"
-#include "atmosphere/fn/SphereStencil.hpp"
 #include "atmosphere/fn/StencilMatrix.hpp"
-#include "geometry/fn/SphereGrid.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -12,58 +10,28 @@
 namespace derivean::sim {
 namespace {
 
-// A multigrid V-cycle (Brandt 1977) on the quadtree's levels; the coarsest is solved by plain CG.
-constexpr int CoarsestLevel = 1;
-
 // The Chebyshev smoother damps the part of the spectrum of D⁻¹K in [ChebyshevLow, ChebyshevHigh] ·
 // λmax (Adams, Brezina, Hu & Tuminaro 2003): the low end is left to the coarser levels. The
 // polynomial grows only above 2θ = 1.25 times the estimate, so an estimate up to a fifth short is
-// safe; the power iteration falls short by under 1 % (tested to 5 %).
+// safe; the power iteration (PoissonLevel.cpp) falls short by under 1 % (tested to 5 %).
 constexpr double ChebyshevLow = 0.2, ChebyshevHigh = 1.05;
-constexpr int PowerSteps = 12;
-
-// λmax of D⁻¹K by power iteration from the grid-scale checkerboard, which lies close to the top of
-// the spectrum; the Rayleigh quotient xᵀKx / xᵀDx approaches λmax from below.
-double largestEigenvalue(PoissonLevel& level) {
-    const size_t n = level.inverseDiagonal.size();
-    std::vector<double>& x = level.direction;
-    std::vector<double>& kx = level.spare;
-    for (size_t c = 0; c < n; ++c) {
-        const int rest = int(c) % (level.side * level.side);
-        x[c] = ((rest % level.side + rest / level.side) % 2 == 0 ? 1.0 : -1.0) + 1e-3 * double(c % 7);
-    }
-    double estimate = 0;
-    for (int step = 0; step < PowerSteps; ++step) {
-        applyMatrix(level.stiffness, x, kx);
-        double kxx = 0, dxx = 0, largest = 0;
-        for (size_t c = 0; c < n; ++c) {
-            kxx += kx[c] * x[c];
-            dxx += x[c] * x[c] / level.inverseDiagonal[c];
-        }
-        estimate = kxx / dxx;
-        for (size_t c = 0; c < n; ++c) {
-            x[c] = level.inverseDiagonal[c] * kx[c];
-            largest = std::max(largest, std::abs(x[c]));
-        }
-        for (double& value : x) value /= largest;
-    }
-    return estimate;
-}
 
 // `degree` steps of the Chebyshev iteration for K x = b with the Jacobi preconditioner (Saad 2003,
 // Alg. 12.1). Before the coarse correction it starts from x = 0 (the first residual is b and needs no
 // product) and leaves the final residual b − K x in level.residual for the restriction; after it, it
-// starts from the corrected x and the final residual is not needed.
-void smooth(PoissonLevel& level, const std::vector<double>& b, std::vector<double>& x, int degree, bool before) {
+// starts from the corrected x and the final residual is not needed. The coefficients are computed in
+// double and rounded once to the level's precision.
+template <class Real>
+void smooth(PoissonLevelOf<Real>& level, const std::vector<Real>& b, std::vector<Real>& x, int degree, bool before) {
     const bool fromZero = before;
     const size_t n = b.size();
-    std::vector<double>& r = level.residual;
-    std::vector<double>& d = level.direction;
-    std::vector<double>& kd = level.spare;
+    std::vector<Real>& r = level.residual;
+    std::vector<Real>& d = level.direction;
+    std::vector<Real>& kd = level.spare;
     const double low = ChebyshevLow * level.largest, high = ChebyshevHigh * level.largest;
     const double theta = 0.5 * (high + low), delta = 0.5 * (high - low), sigma = theta / delta;
     double rho = 1 / sigma;
-    const double first = 1 / theta;
+    const Real first = Real(1 / theta);
     if (fromZero) {
         for (size_t c = 0; c < n; ++c) {
             r[c] = b[c];
@@ -80,7 +48,8 @@ void smooth(PoissonLevel& level, const std::vector<double>& b, std::vector<doubl
     }
     for (int k = 1; k < degree; ++k) {
         applyMatrix(level.stiffness, d, kd);
-        const double next = 1 / (2 * sigma - rho), keep = next * rho, push = 2 * next / delta;
+        const double next = 1 / (2 * sigma - rho);
+        const Real keep = Real(next * rho), push = Real(2 * next / delta);
         rho = next;
         for (size_t c = 0; c < n; ++c) {
             r[c] -= kd[c];
@@ -122,24 +91,32 @@ void solveCoarsest(PoissonLevel& level, const std::vector<double>& source, std::
     }
 }
 
+// The float32 cycle's coarsest step: its source widened (exactly), solved in double, its correction
+// rounded back.
+void solveCoarsest(PoissonLevel& level, const std::vector<float>& source, std::vector<float>& solution) {
+    for (size_t c = 0; c < source.size(); ++c) level.source[c] = source[c];
+    solveCoarsest(level, level.source, level.solution);
+    for (size_t c = 0; c < source.size(); ++c) solution[c] = float(level.solution[c]);
+}
+
 // Children of coarse cell (I, J) on a face are (2I, 2J), (2I + 1, 2J), (2I, 2J + 1), (2I + 1, 2J + 1).
-void restrictResidual(const PoissonLevel& fine, std::vector<double>& coarse) {
+template <class Real> void restrictResidual(const PoissonLevelOf<Real>& fine, std::vector<Real>& coarse) {
     const int side = fine.side, half = side / 2;
-    const double* r = fine.residual.data();
+    const Real* r = fine.residual.data();
     for (int face = 0; face < 6; ++face)
         for (int j = 0; j < half; ++j) {
             const size_t low = size_t((face * side + 2 * j) * side), high = low + size_t(side);
-            double* out = &coarse[size_t((face * half + j) * half)];
+            Real* out = &coarse[size_t((face * half + j) * half)];
             for (int i = 0; i < half; ++i) out[i] = r[low + 2 * i] + r[low + 2 * i + 1] + r[high + 2 * i] + r[high + 2 * i + 1];
         }
 }
 
-void prolongCorrection(const PoissonLevel& fine, const std::vector<double>& coarse, std::vector<double>& solution) {
+template <class Real> void prolongCorrection(const PoissonLevelOf<Real>& fine, const std::vector<Real>& coarse, std::vector<Real>& solution) {
     const int side = fine.side, half = side / 2;
     for (int face = 0; face < 6; ++face)
         for (int j = 0; j < half; ++j) {
             const size_t low = size_t((face * side + 2 * j) * side), high = low + size_t(side);
-            const double* in = &coarse[size_t((face * half + j) * half)];
+            const Real* in = &coarse[size_t((face * half + j) * half)];
             for (int i = 0; i < half; ++i) {
                 solution[low + 2 * i] += in[i];
                 solution[low + 2 * i + 1] += in[i];
@@ -149,53 +126,54 @@ void prolongCorrection(const PoissonLevel& fine, const std::vector<double>& coar
         }
 }
 
-void cycle(std::vector<PoissonLevel>& levels, size_t at, int degree, const std::vector<double>& source, std::vector<double>& solution) {
-    PoissonLevel& level = levels[at];
+// The V-cycle from level `at` down; the last level is solved by solveCoarsest on `coarsest`, in
+// double whatever the precision of the levels above it.
+template <class Real>
+void cycle(std::vector<PoissonLevelOf<Real>>& levels, PoissonLevel& coarsest, size_t at, int degree, const std::vector<Real>& source,
+           std::vector<Real>& solution) {
     if (at + 1 == levels.size()) {
-        solveCoarsest(level, source, solution);
+        solveCoarsest(coarsest, source, solution);
         return;
     }
-    PoissonLevel& coarse = levels[at + 1];
+    PoissonLevelOf<Real>& level = levels[at];
+    PoissonLevelOf<Real>& coarse = levels[at + 1];
+    assert(2 * coarse.side == level.side && !level.residual.empty());
     smooth(level, source, solution, degree, true);
     restrictResidual(level, coarse.source);
-    cycle(levels, at + 1, degree, coarse.source, coarse.solution);
+    cycle(levels, coarsest, at + 1, degree, coarse.source, coarse.solution);
     prolongCorrection(level, coarse.solution, solution);
     smooth(level, source, solution, degree, false);
 }
 
 } // namespace
 
-PoissonLevel makePoissonLevel(const SphereGrid& grid, const SphereStencil& stencil, LevelUse use) {
-    PoissonLevel level;
-    level.level = grid.level;
-    level.side = grid.side;
-    SphereMatrix laplacian = makeLaplacian(grid, stencil);
-    shareFaceInteriors(laplacian, grid.side);
-    level.stiffness = makeStencilMatrix(laplacian, grid.side);
-    const size_t n = size_t(grid.cells);
-    level.inverseDiagonal.resize(n);
-    for (size_t c = 0; c < n; ++c) level.inverseDiagonal[c] = 1.0 / level.stiffness.diagonal[c];
-    if (use == LevelUse::Diagonal) return level;
-    level.residual.assign(n, 0.0);
-    level.direction = level.spare = level.residual;
-    if (use != LevelUse::Finest) level.solution = level.source = level.residual;
-    if (use != LevelUse::Coarsest) level.largest = largestEigenvalue(level);
-    return level;
-}
-
-std::vector<PoissonLevel> coarserLevels(int finest) {
-    std::vector<PoissonLevel> levels;
-    for (int l = finest - 1; l >= CoarsestLevel; --l) {
-        const SphereGrid grid = makeSphereGrid(l);
-        levels.push_back(makePoissonLevel(grid, makeSphereStencil(grid), l == CoarsestLevel ? LevelUse::Coarsest : LevelUse::Coarser));
-    }
-    return levels;
-}
-
 void vCycle(std::vector<PoissonLevel>& levels, int smoothing, const std::vector<double>& r, std::vector<double>& z) {
     assert(smoothing >= 1 && levels.size() >= 2 && r.size() == levels[0].inverseDiagonal.size());
     z.resize(r.size());
-    cycle(levels, 0, smoothing, r, z);
+    cycle(levels, levels.back(), 0, smoothing, r, z);
+}
+
+// The float32 V-cycle as a low-precision preconditioner inside the double CG (Higham & Mary 2022,
+// §8.2). r is scaled by the power of two that brings its largest value into [0.5, 1), so that the
+// cycle works near 1 whatever the residual's size (a converging solve's falls to 1e-12 of the source
+// and below); its result is scaled back. Each factor is applied as two halves, so neither overflows
+// even for a subnormal residual, and every step is exact wherever the result is a normal number. The
+// cycle is linear, so this changes only its rounding. A zero residual, or one whose largest value is
+// infinite or NaN, is not scaled and reaches z as it would in double.
+void vCycle(std::vector<PoissonLevelOf<float>>& narrow, PoissonLevel& coarsest, int smoothing, const std::vector<double>& r, std::vector<double>& z) {
+    assert(smoothing >= 1 && narrow.size() >= 2 && r.size() == narrow[0].source.size());
+    double largest = 0;
+    for (double value : r) largest = std::max(largest, std::abs(value));
+    int exponent = 0;
+    if (std::isfinite(largest) && largest > 0) (void)std::frexp(largest, &exponent);
+    const int half = exponent / 2;
+    const double down = std::ldexp(1.0, -half), downRest = std::ldexp(1.0, half - exponent);
+    const double up = std::ldexp(1.0, half), upRest = std::ldexp(1.0, exponent - half);
+    PoissonLevelOf<float>& finest = narrow[0];
+    for (size_t c = 0; c < r.size(); ++c) finest.source[c] = float(r[c] * down * downRest);
+    cycle(narrow, coarsest, 0, smoothing, finest.source, finest.solution);
+    z.resize(r.size());
+    for (size_t c = 0; c < r.size(); ++c) z[c] = double(finest.solution[c]) * up * upRest;
 }
 
 } // namespace derivean::sim

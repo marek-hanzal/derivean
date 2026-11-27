@@ -1,5 +1,6 @@
 #include "atmosphere/fn/SpherePoisson.hpp"
 
+#include "atmosphere/fn/PoissonLevel.hpp"
 #include "atmosphere/fn/SphereMultigrid.hpp"
 #include "atmosphere/fn/SphereOperators.hpp"
 #include "atmosphere/fn/StencilMatrix.hpp"
@@ -15,7 +16,10 @@ constexpr double TrustedResidual = 1e-10;
 void precondition(SpherePoisson& poisson, const std::vector<double>& r, std::vector<double>& z) {
     if (poisson.multigrid) {
         assert(poisson.smoothing >= 1);   // without smoothing the V-cycle is singular and CG breaks down
-        vCycle(poisson.levels, poisson.smoothing, r, z);
+        if (poisson.narrow.empty())
+            vCycle(poisson.levels, poisson.smoothing, r, z);
+        else
+            vCycle(poisson.narrow, poisson.levels.back(), poisson.smoothing, r, z);
         return;
     }
     const std::vector<double>& inverse = poisson.levels[0].inverseDiagonal;
@@ -24,12 +28,22 @@ void precondition(SpherePoisson& poisson, const std::vector<double>& r, std::vec
 
 } // namespace
 
-SpherePoisson makeSpherePoisson(const SphereGrid& grid, const SphereStencil& stencil, bool multigrid) {
+SpherePoisson makeSpherePoisson(const SphereGrid& grid, const SphereStencil& stencil, bool multigrid, bool narrow) {
     SpherePoisson poisson;
     poisson.multigrid = multigrid && grid.level >= 2;
     poisson.levels.push_back(makePoissonLevel(grid, stencil, poisson.multigrid ? LevelUse::Finest : LevelUse::Diagonal));
     if (poisson.multigrid)
         for (PoissonLevel& level : coarserLevels(grid.level)) poisson.levels.push_back(std::move(level));
+    if (poisson.multigrid && narrow) {
+        poisson.narrow = narrowLevels(poisson.levels);
+        // From here on only the finest's matrix (CG's product) and the coarsest (solved in double) are
+        // read: the double levels between them and the finest's smoother space and diagonal are
+        // released, so `narrow` must not be emptied afterwards.
+        poisson.levels.erase(poisson.levels.begin() + 1, poisson.levels.end() - 1);
+        PoissonLevel& finest = poisson.levels[0];
+        for (std::vector<double>* unused : {&finest.inverseDiagonal, &finest.residual, &finest.direction, &finest.spare})
+            std::vector<double>().swap(*unused);
+    }
     return poisson;
 }
 
