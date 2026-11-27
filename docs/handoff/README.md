@@ -135,7 +135,11 @@ Gemini Neon joined on 26 Nov for performance profiling and image checks (`from-n
        - lightning in the ash column, through the lightning item.
        The volumes are raymarched like the clouds, with level of detail by distance, so a column 20–40 km high stands over the horizon from hundreds of kilometres.
      - Scale follows the eruption. A normal eruption makes a local mess: cone, flows, ash fall in sixteenths (item 6c). A supereruption (VEI 8) buries a continent in ash, collapses a caldera, and puts sulphate into the stratosphere. That sulphate dims and reddens sunsets worldwide through the haze, and it cools the climate for years once the steady climate on the sphere exists.
-     - Today seed 42 makes no VEI 6–7, because the planet's supply on land is short by about 3 (volcanic.md, "Frequency and size"). Large ones must come from the volcanic model, not from a script. An intervention may still call an eruption of a chosen size at a vent.
+     - Today seed 42 makes no VEI 6–7, because the planet's supply on land is short by about 3 (volcanic.md, "Frequency and size"). Large ones must come from the volcanic model, not from a script.
+     - **Owner's order for the sphere (27 Nov, about 23:40): volcanism copies Earth's, large eruptions included, within the simulation's rules and with no cheats.**
+       - Nothing scripted or forced; an eruption happens only where the model's magma, chamber and vent make it.
+       - Once S3d and S3e land, the volcanic survey has to match Earth: eruptions a year on land, km³/yr, and the VEI recurrence (Global Volcanism Program), including VEI 5–7 and the supereruption tail.
+       - An eruption the size of Vesuvius in AD 79 (VEI 5) must be livable in play: a Plinian column, a pumice fall that buries a town in metres of lapilli, then pyroclastic density currents that overrun it.
    - **Impacts from space, from the measured flux; no orbital mechanics (owner, 27 Nov).** The number of bodies of each size that strike per year follows the measured size–frequency distribution (Brown et al. 2002 from satellite-observed bolides, with the crater record for the large end). The flux is higher early in the planet's history. They are drawn statistically over the planet's surface.
      - **History (after S3e, a process over the crust on the sphere):**
        - craters by size from the flux, which the existing erosion then wears, fills with lakes or keeps as rings;
