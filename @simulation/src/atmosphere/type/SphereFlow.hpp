@@ -40,7 +40,8 @@ struct SphereFlow {
     double step{};                     // s, the spacing of the time levels; 0 until setStep
     bool started{};                    // false until the first step after a restart (a forward step)
     // Work space, one call at a time per flow: the candidate state of a step before it is accepted,
-    // and the tendency's intermediates.
+    // and the tendency's intermediates. atVertex is shared: tendencyOf fills it with the absolute
+    // vorticity at the vertices and reads it, then invertTrial fills it with ψ for the stream flux.
     // trialProduct: K trialStream when the first guess formed it, K ψₙ while `known`.
     std::vector<double> trialVorticity, trialBefore, trialStream, trialFlux, trialProduct;
     std::vector<double> tendency, absolute, atVertex;

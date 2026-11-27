@@ -30,8 +30,11 @@ struct EddyBand {
     // and sin λ.
     std::vector<int> memberCell;
     std::vector<double> memberWeight, memberCos, memberSin;
-    // Work space: coefficients per (l, m), and per member the field or the result and cos mλ, sin mλ.
-    std::vector<double> cosineTerms, sineTerms, memberValue, memberCosM, memberSinM;
+    // Work space: coefficients per (l, m); per member the weighted field, the result and cos mλ,
+    // sin mλ; per group P̄_mm and the four parity sums of one order; and one order's P̄_lm for the
+    // degrees lowest .. highest, index (l − max(m, lowest)) · groups + group (3.4 MB at 6 × 256²).
+    std::vector<double> cosineTerms, sineTerms, memberValue, memberResult, memberCosM, memberSinM;
+    std::vector<double> groupDiagonal, groupEvenC, groupOddC, groupEvenS, groupOddS, legendre;
 };
 
 } // namespace derivean::sim

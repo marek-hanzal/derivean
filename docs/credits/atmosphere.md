@@ -150,7 +150,7 @@ Hermeline, F. (2000). A finite volume method for the approximation of diffusion 
 
 Domelevo, K., Omnes, P. (2005). A finite volume method for the Laplace equation on almost arbitrary two-dimensional grids. *ESAIM: Mathematical Modelling and Numerical Analysis* 39(6), 1203–1249. doi:10.1051/m2an:2005047
 - **Model:** the Laplacian as the energy ½ Σ diamond |∇ψ|² over diamonds of two cell centres and an edge's two vertices, with the gradient on each diamond from the differences across and along the edge; symmetric and positive on distorted meshes.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereOperators.hpp:46`, `@simulation/src/atmosphere/fn/SphereOperators.cpp:125`; `docs/handoff/atmosphere-sphere.md:24`, `:26`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereOperators.hpp:50`, `@simulation/src/atmosphere/fn/SphereOperators.cpp:131`; `docs/handoff/atmosphere-sphere.md:24`, `:26`.
 - **Checked by:** `@simulation/test/AtmosphereSphere.cpp:101` (symmetry, null space, positivity, the split product the solver uses), `:61` (the faces' interiors shared, still symmetric bit for bit), `:175` (local error by place), `@simulation/test/AtmosphereSpherePoisson.cpp:36` (second-order solutions).
 - **Approximations:** the vertex unknowns are not solved for but replaced by least-squares fits of the cell values, so the operator is cell-centred; its local error at face edges stays at about a tenth of the value, while the solution is second order.
 
@@ -189,7 +189,7 @@ Higham, N. J., Mary, T. (2022). Mixed precision algorithms in numerical linear a
 Fischer, P. F. (1998). Projection techniques for iterative solution of Ax = b with successive right-hand sides. *Computer Methods in Applied Mechanics and Engineering* 163(1–4), 193–204. doi:10.1016/S0045-7825(98)00012-7 (record checked in Crossref, whose title drops "Ax = b"; the paper itself not read).
 - **Model:** the first guess of an iterative solve as the projection, in the energy norm x K x, of the new solution on the span of earlier solutions, so the first guess is never worse in that norm than any of them. Here the span is the last three accepted ψ of the flow, in differences, solved through a 3 × 3 Gram matrix; Fischer builds a K-orthonormal basis instead. Neon's DREV-NEON-019-01 (`.out/review-mailbox/from-neon/DREV-NEON-019-01.txt`) proposed it as the fallback to extrapolation in time.
 - **Used in:** `@simulation/src/atmosphere/fn/SphereFlowGuess.cpp:83`, `@simulation/src/atmosphere/fn/SphereFlow.hpp:39`; `docs/handoff/atmosphere-sphere.md:89`.
-- **Checked by:** `@simulation/test/AtmosphereSphereStep.cpp:126` (fewer iterations on the Rossby–Haurwitz wave, the flow within the tolerance, the guess's K as the combination of the K dᵢ, restarts), `:28` (a refused step leaves the history).
+- **Checked by:** `@simulation/test/AtmosphereSphereStep.cpp:154` (fewer iterations on the Rossby–Haurwitz wave, the flow within the tolerance, the guess's K as the combination of the K dᵢ, restarts), `:28` (a refused step leaves the history).
 - **Approximations:** only three levels; a difference whose Cholesky pivot falls below 1e-12 of its diagonal is dropped.
 
 ### Holmes and Featherstone 2002: normalised Legendre recursions
@@ -210,7 +210,7 @@ Sweby, P. K. (1984). High resolution schemes using flux limiters for hyperbolic 
 ### Neumaier 1974: compensated summation
 Neumaier, A. (1974). Rundungsfehleranalyse einiger Verfahren zur Summation endlicher Summen. *ZAMM – Zeitschrift für Angewandte Mathematik und Mechanik* 54(1), 39–51. doi:10.1002/zamm.19740540106
 - **Model:** the area means over the sphere summed with a running compensation.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereOperators.cpp:214`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereOperators.cpp:220`.
 - **Used in (S3b):** the planet's stock totals over crust pieces in key order, `@simulation/src/planet/fn/Pieces.hpp:39`.
 
 ### Haurwitz 1940: the Rossby–Haurwitz wave

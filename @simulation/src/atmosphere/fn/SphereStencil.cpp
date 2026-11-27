@@ -68,6 +68,7 @@ SphereStencil makeSphereStencil(const SphereGrid& grid) {
     stencil.weight.reserve(grid.vertex.size());
     for (const SphereVertex& vertex : grid.vertex) stencil.weight.push_back(fitVertex(grid, vertex));
     stencil.edge.resize(grid.edge.size());
+    stencil.behind.resize(grid.edge.size());
     for (int c = 0; c < grid.cells; ++c)
         for (int k = 0; k < 4; ++k) {
             const int e = grid.edges[size_t(c)][size_t(k)];
@@ -76,11 +77,19 @@ SphereStencil makeSphereStencil(const SphereGrid& grid) {
     for (int c = 0; c < grid.cells; ++c)
         for (int k = 0; k < 4; ++k) {
             const int e = grid.edges[size_t(c)][size_t(k)];
-            EdgeStencil& edge = stencil.edge[size_t(e)];
-            const int behind = neighbourOf(grid, c, (k + 2) % 4);
-            (grid.edge[size_t(e)].left == c ? edge.behindLeft : edge.behindRight) = behind;
+            stencil.behind[size_t(e)][grid.edge[size_t(e)].left == c ? 0 : 1] = neighbourOf(grid, c, (k + 2) % 4);
         }
+    stencil.carry.reserve(stencil.edge.size());
+    for (const EdgeStencil& edge : stencil.edge) stencil.carry.push_back({dot(edge.offset, edge.across), dot(edge.offset, edge.along)});
+    stencil.vertexCells.reserve(grid.vertex.size());
+    for (const SphereVertex& vertex : grid.vertex) {
+        std::array<int, 4> cells = vertex.cells;
+        for (int k = vertex.count; k < 4; ++k) cells[size_t(k)] = cells[0];
+        stencil.vertexCells.push_back(cells);
+    }
     return stencil;
 }
+
+void releaseEdgeTables(SphereStencil& stencil) { std::vector<EdgeStencil>().swap(stencil.edge); }
 
 } // namespace derivean::sim

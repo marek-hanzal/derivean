@@ -9,4 +9,8 @@ namespace derivean::sim {
 // weights, upstream cells), in the grid's edge and vertex order.
 SphereStencil makeSphereStencil(const SphereGrid& grid);
 
+// Drops the edge tables only the Laplacian's assembly and the diagnostic operators read (82 MB at
+// 6 × 256²); the step and the tracer keep working on the rest.
+void releaseEdgeTables(SphereStencil& stencil);
+
 } // namespace derivean::sim

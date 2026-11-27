@@ -30,7 +30,7 @@ bool invertTrial(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& 
     if (!flow.inversion.converged) return false;
     // Below a tolerance of 1e-10 the solver formed K of the candidate ψ: kept for the next guess.
     if (flow.inversion.product) std::swap(flow.trialProduct, poisson.product);
-    flow.trialFlux = streamFluxOf(grid, stencil, flow.trialStream);
+    streamFluxOf(grid, stencil, flow.trialStream, flow.trialFlux, flow.atVertex);
     return true;
 }
 
@@ -57,7 +57,7 @@ void acceptTrial(SphereFlow& flow) {
 }
 
 // −∇·(v q) per cell with the edge value of q the mean of its two cells moved to the edge's midpoint
-// by the edge gradient (EdgeStencil::offset).
+// by the edge gradient (EdgeStencil::offset, read as SphereStencil::carry).
 void tendencyOf(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, const std::vector<double>& vorticity,
                 std::vector<double>& tendency) {
     std::vector<double>& absolute = flow.absolute;
@@ -65,25 +65,29 @@ void tendencyOf(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& s
     for (size_t c = 0; c < absolute.size(); ++c) absolute[c] = vorticity[c] + flow.coriolis[c];
     std::vector<double>& at = flow.atVertex;
     vertexValues(grid, stencil, absolute, at);
-    assert(stencil.edge.size() == grid.edge.size());
+    assert(stencil.carry.size() == grid.edge.size());
     tendency.assign(size_t(grid.cells), 0.0);
     for (size_t e = 0; e < grid.edge.size(); ++e) {
         const SphereEdge& edge = grid.edge[e];
-        const EdgeStencil& metric = stencil.edge[e];
+        const std::array<double, 2>& carry = stencil.carry[e];
         const size_t l = size_t(edge.left), r = size_t(edge.right);
-        const Vec3 gradient = metric.across * (absolute[r] - absolute[l]) + metric.along * (at[size_t(edge.to)] - at[size_t(edge.from)]);
-        const double carried = flow.flux[e] * (0.5 * (absolute[l] + absolute[r]) + dot(gradient, metric.offset));
+        const double moved = carry[0] * (absolute[r] - absolute[l]) + carry[1] * (at[size_t(edge.to)] - at[size_t(edge.from)]);
+        const double carried = flow.flux[e] * (0.5 * (absolute[l] + absolute[r]) + moved);
         tendency[l] -= carried;
         tendency[r] += carried;
     }
     for (int c = 0; c < grid.cells; ++c) tendency[size_t(c)] /= grid.area[size_t(c)];
 }
 
-// The van Leer limiter (van Leer 1974) of the ratio of the upstream to the local difference.
-double limiter(double upstream, double local) {
+// The van Leer limiter (van Leer 1974) of the ratio r of the upstream to the local difference, times
+// the local difference: φ(r) · local = 2 · upstream · local / (upstream + local), zero where they
+// differ in sign, with one division instead of the ratio's two. It is formed as 2 · upstream · (local /
+// (upstream + local)), a share in (0, 1): the product itself falls below the normal range in a
+// tracer's tail (differences of 1e-165) and, rounded there, let the tracer dip below zero.
+double limitedDifference(double upstream, double local) {
     if (upstream * local <= 0) return 0;
-    const double ratio = upstream / local;
-    return 2 * ratio / (1 + ratio);
+    const double share = local / (upstream + local);
+    return 2 * upstream * share;
 }
 
 } // namespace
@@ -163,17 +167,17 @@ double outflowCourant(const SphereGrid& grid, const std::vector<double>& flux, d
 
 void advectTracer(const SphereGrid& grid, const SphereStencil& stencil, const std::vector<double>& flux, double step, std::vector<double>& tracer,
                   std::vector<double>& work) {
-    assert(stencil.edge.size() == grid.edge.size());
+    assert(stencil.behind.size() == grid.edge.size());
     work.assign(size_t(grid.cells), 0.0);
     for (size_t e = 0; e < flux.size(); ++e) {
         const SphereEdge& edge = grid.edge[e];
         const bool outOfLeft = flux[e] > 0;
         const int up = outOfLeft ? edge.left : edge.right, down = outOfLeft ? edge.right : edge.left;
-        const int behind = outOfLeft ? stencil.edge[e].behindLeft : stencil.edge[e].behindRight;
+        const int behind = stencil.behind[e][outOfLeft ? 0 : 1];
         const double local = tracer[size_t(down)] - tracer[size_t(up)];
         const double upstream = tracer[size_t(up)] - tracer[size_t(behind)];
         const double courant = std::abs(flux[e]) * step / grid.area[size_t(up)];
-        const double face = tracer[size_t(up)] + 0.5 * limiter(upstream, local) * (1 - courant) * local;
+        const double face = tracer[size_t(up)] + 0.5 * limitedDifference(upstream, local) * (1 - courant);
         const double moved = flux[e] * step * face;
         work[size_t(edge.left)] -= moved;
         work[size_t(edge.right)] += moved;
