@@ -17,8 +17,14 @@ double millisecondsSince(Clock::time_point start) {
 
 int64_t stepAt(const sim::Calendar& calendar) { return int64_t(std::floor(calendar.seconds / sim::AirStep)); }
 
-WeatherState publish(const sim::Atmosphere& air) {
+// What the game reads of the weather is its state: the step's work space and the Poisson solver
+// stay with the working copy, which they are handed back to.
+WeatherState publish(sim::Atmosphere& air) {
+    sim::AirWork work = std::move(air.work);
+    sim::PoissonSolver poisson = std::move(air.poisson);
     auto copy = std::make_shared<const sim::Atmosphere>(air);
+    air.work = std::move(work);
+    air.poisson = std::move(poisson);
     auto clouds = std::make_shared<const sim::CloudField>(sim::cloudField(*copy));
     return {std::move(copy), std::move(clouds)};
 }
