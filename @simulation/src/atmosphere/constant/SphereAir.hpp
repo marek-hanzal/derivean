@@ -36,6 +36,15 @@ inline constexpr double SphereEddyGrowth = 1.0 / (1.5 * 86400.0);     // 1/s
 inline constexpr double SphereShearPerGradient = 12.0;                // m/s per °C per degree
 inline constexpr double SphereShearLimit = 12.0;                      // m/s
 
+// The flat world's eddies at the same seconds and degrees (atmosphere/fn/Circulation.cpp and
+// Advance.cpp own them until the switch): the band of the vorticity is refreshed every EddyEvery,
+// EddyEvery = 4 wind steps of 30 minutes there, here in time since the steps per hour change; its
+// mean square per band of latitude, smoothed over EnvelopeReach either side (EnvelopeReach = 4 rows
+// of 2.8125°), stops the growth as it reaches EddyLimit².
+inline constexpr double SphereEddyEvery = 2 * 3600.0;     // s
+inline constexpr double SphereEnvelopeReach = 11.25;      // degrees
+inline constexpr double SphereEddyLimit = 1.5e-5;         // 1/s, root-mean-square vorticity
+
 // From PolarCap degrees to a pole the belts' zonal wind tapers to zero (sphereSeasonOf). A wind
 // tangent to the sphere has a value at a pole only if its zonal mean is zero there, and Stokes round
 // a cap of angular radius θ gives it the vorticity u / (R tan(θ/2)), which grows as 1/θ as the grid

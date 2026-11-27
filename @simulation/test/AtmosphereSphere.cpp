@@ -239,6 +239,7 @@ void testAtmosphereSphere() {
     checkInPlace();
     checkDamping();
     checkClosures();
+    checkEddies();
     checkSeason();
     checkSeasonInputs();
     checkSeasonPoles();

@@ -107,6 +107,7 @@ void checkRollback();
 void checkInPlace();
 void checkDamping();
 void checkClosures();
+void checkEddies();
 void checkSeason();
 void checkSeasonInputs();
 void checkSeasonPoles();
