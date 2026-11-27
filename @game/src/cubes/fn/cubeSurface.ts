@@ -103,12 +103,13 @@ export function cubeSurface({ sky, levels, palette, anchor, shadow, snow, land }
         .mul(mix(0.07, 0.2, loose)));
     });
     const bare = groundColor(texel.rgb, cube.add(0.5).mul(edge).add(anchor.sub(near)), loose, range, edge).mul(tone);
-    const lit = sunlit(shadow, positionWorld.add(normal.mul(edge.mul(0.02))));
+    // Held in a variable: the land light reads it inside its own branches, where three would build it again.
+    const lit = sunlit(shadow, positionWorld.add(normal.mul(edge.mul(0.02)))).toVar();
     // A riser on ground the snow lies on is the stair the lattice cuts into a covered slope, so it takes the snow
     // round it as a top does; on ground steeper than snow holds on it stays bare rock.
     const riser = normal.y.abs().lessThan(0.5);
     const stands = land && landNormal(land, levels, face.field(Face.level), edge, inside,
-      (point) => sunlit(shadow, point), around && riser.and(around.greaterThan(0)));
+      (point) => sunlit(shadow, point), normal.y.greaterThan(0.5), lit, around && riser.and(around.greaterThan(0)));
     const onRiser = stands && around ? select(riser, clamp(around.div(CoverMass), 0, 1), float(0))
       .mul(smoothstep(SnowHolds[0], SnowHolds[1], stands.steep).oneMinus()) : float(0);
     const share = snowed ? max(clamp(snowed.div(CoverMass), 0, 1), onRiser) : float(0);

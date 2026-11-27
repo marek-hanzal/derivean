@@ -21,8 +21,9 @@ const AnchorMetres = 1024;
 
 // Every face list of one cube size as a single draw. Lists come and go by key; each keeps a run of the batch's
 // instances, and its faces are counted from the batch's anchor, so the one mesh's matrix (the anchor in world
-// doubles, the cube edge as scale) places them all. A list that leaves has its run zeroed, which draws nothing,
-// and the runs are closed up once half of the batch is such holes. `side` is cubes along the edge of a chunk:
+// doubles, the cube edge as scale) places them all. A list that leaves has its run zeroed, which draws nothing:
+// a hole at the end of the batch is drawn no more, a new list takes the first hole it fits in, and the runs are
+// closed up in place once half of the batch is holes. `side` is cubes along the edge of a chunk:
 // anchors lie on the chunks' lattice. A batch that casts shadows has a second mesh over the same faces among the
 // casters.
 export function createFaceBatch(content: Group, material: Material, level: number, edge: number, side: number, casting?: Casting) {
@@ -30,6 +31,8 @@ export function createFaceBatch(content: Group, material: Material, level: numbe
   let packed = new Uint32Array(0);
   let used = 0;
   let holes = 0;
+  // The zeroed stretches below `used`, by where they lie, none touching another.
+  let free: { at: number; count: number }[] = [];
   let anchor: Point = [0, 0, 0];
   let cut: Cut | undefined;
   let capped = false;
@@ -84,7 +87,24 @@ export function createFaceBatch(content: Group, material: Material, level: numbe
     }
     used = next;
     holes = 0;
-    rebuild();
+    free = [];
+    touch(0, used);
+  }
+
+  // Takes a zeroed stretch into the holes, joined to those it touches, and stops drawing the holes at the end.
+  function vacate(at: number, count: number) {
+    let index = free.findIndex((hole) => hole.at > at);
+    if (index < 0) index = free.length;
+    free.splice(index, 0, { at, count });
+    if (index + 1 < free.length && at + count === free[index + 1].at) free.splice(index, 2, { at, count: count + free[index + 1].count });
+    if (index > 0 && free[index - 1].at + free[index - 1].count === at) free.splice(index - 1, 2, { at: free[index - 1].at, count: free[index - 1].count + free[index].count });
+    holes += count;
+    const last = free.at(-1);
+    if (last && last.at + last.count === used) {
+      used = last.at;
+      holes -= last.count;
+      free.pop();
+    }
   }
 
   function remove(key: number | string) {
@@ -93,13 +113,22 @@ export function createFaceBatch(content: Group, material: Material, level: numbe
     runs.delete(key);
     if (run.home) capped = false;
     packed.fill(0, run.at * FaceWords, (run.at + run.count) * FaceWords);
+    vacate(run.at, run.count);
     touch(run.at, run.count);
-    holes += run.count;
     if (holes > Tidy && holes * 2 > used) tidy();
   }
 
-  // Makes room for `count` more faces and gives them a run.
+  // Gives `count` faces a run: the first hole they fit in, or room at the end.
   function claim(key: number | string, count: number) {
+    const hole = free.findIndex((stretch) => stretch.count >= count);
+    if (hole >= 0) {
+      const run: Run = { at: free[hole].at, count };
+      if (free[hole].count === count) free.splice(hole, 1);
+      else free[hole] = { at: free[hole].at + count, count: free[hole].count - count };
+      holes -= count;
+      runs.set(key, run);
+      return run;
+    }
     if ((used + count) * FaceWords > packed.length) {
       const wider = new Uint32Array(Math.max(1024, 2 ** Math.ceil(Math.log2(used + count))) * FaceWords);
       wider.set(packed.subarray(0, used * FaceWords));
@@ -212,6 +241,7 @@ export function createFaceBatch(content: Group, material: Material, level: numbe
       mesh.geometry.dispose();
       mesh = caster = undefined;
       runs.clear();
+      free = [];
       used = holes = 0;
     },
   };
