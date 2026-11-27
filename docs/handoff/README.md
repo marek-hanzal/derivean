@@ -126,6 +126,34 @@ Gemini Neon joined on 26 Nov for performance profiling and image checks (`from-n
      - Sources go into the credits with the first change that uses them.
    - **Extremes where conditions exist.** Strong winds, tropical cyclones (genesis from sea surface temperature, shear, Coriolis and humidity; intensity and track from the simulated air and ocean), severe storms and tornadoes (from instability and shear; below the grid, so they are spawned and lived out locally). They come only from the simulated state, never as scripted events. After S4.10 and the ocean.
    - **Ocean currents.** Wind-driven gyres with western boundary currents, and the thermohaline circulation, on the sphere and coupled to the atmosphere through surface temperature, wind and fresh water. A new slice after S3e and S4.10.
+   - **Natural phenomena that follow from the simulated state (owner, 27 Nov: all of them, fire excepted). Each one is a small process over state the slices above provide, never a scripted effect.**
+     - Sky optics, over the light through the atmosphere and the rain and fog:
+       - rainbows: primary at 42° and secondary at 51° around the antisolar point, the dark band between, a white fogbow from small drops, only with the Sun below 42° and rain opposite it;
+       - the 22° halo and sun dogs from ice crystals in cirrus;
+       - crepuscular rays from volumetric shadows;
+       - the green flash, alpenglow, and the Belt of Venus with Earth's shadow;
+       - mirages over hot ground and cold sea;
+       - the glory;
+       - aurora as a simplified oval about the magnetic pole that widens with solar activity.
+     - Weather near the ground:
+       - dew, hoar frost, rime, and glaze from freezing rain, which coats the player's builds too;
+       - hail from strong updrafts;
+       - dust devils, dust storms and waterspouts;
+       - inversions and fog pools in valleys from cold-air drainage;
+       - föhn, katabatic winds, and sea and land breezes.
+     - Water and ground:
+       - storm surge, lake seiches and flash floods;
+       - lakes and rivers freezing and breaking up;
+       - landslides after heavy rain and snow avalanches;
+       - geysers on the hot springs;
+       - frost heave.
+   - **The night sky, early (owner, 27 Nov).**
+     - **Data:** stars at their real positions from a public catalogue (the Yale Bright Star Catalogue, about 9 100 stars to magnitude 6.5, or Hipparcos), with brightness from magnitude and colour from the B−V index, and the Milky Way from a public all-sky map (credited).
+     - **Fixed in time:** the universe is a constant. Positions are J2000 and are not propagated (no proper motion).
+     - **Motion:** the sky still turns with Earth's rotation and the axis's precession from S2, so the pole star changes over deep time.
+     - **Visibility:** stars dim with airmass and vanish in daylight and twilight. Until the physically based sky exists, they fade by the Sun's altitude.
+     - **Planets:** not shown, since other bodies are out of scope (owner, 26 Nov).
+     - **Owner of the work:** render-speed, after its current queue, against S2's frame. It needs no planet slice.
    - **Standing rule: everything reacts to the player.** Whatever the player builds or digs, however unrealistic, enters the simulated state through the interventions, and every process reads that state. Shelter, shadow, blocked wind, a roof in the rain and a dammed current all count. No process may assume the world is natural.
    - Each source (scattering, refraction, drop size distributions, cyclone genesis and intensity, ocean circulation) goes into `docs/credits/` with the change that first uses it.
 
