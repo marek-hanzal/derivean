@@ -116,6 +116,13 @@ Gough, D. O. (1981). Solar interior structure and luminosity variations. *Solar 
 - **Used in:** `@simulation/src/astronomy/constant/DeepTime.hpp:21`, `:24`; `@simulation/src/astronomy/fn/DeepTime.cpp:50`; `@simulation/src/astronomy/type/DeepTime.hpp:12`.
 - **Checked by:** `@simulation/test/AstronomyEvents.cpp:146`: the young Sun gives 1/1.4 of today's light.
 
+### Berger 1978: daily insolation
+Berger, A. (1978). Long-term variations of daily insolation and Quaternary climatic changes. *Journal of the Atmospheric Sciences* 35(12), 2362–2367. doi:10.1175/1520-0469(1978)035<2362:LTVODI>2.0.CO;2
+- **Model:** the daily mean insolation at the top of the air, W = (S / π)(h₀ sin φ sin δ + cos φ cos δ sin h₀), with cos h₀ = −tan φ tan δ, h₀ = π in polar day and 0 in polar night.
+- **Used in:** `@simulation/src/astronomy/fn/Place.hpp:38`, `@simulation/src/astronomy/fn/Place.cpp:57`.
+- **Checked by:** `@simulation/test/Astronomy.cpp:198`, against the minute-sampled mean of `insolation` over the 24 h around the instant (within 8.4 × 10⁻⁴ of the irradiance), and the pole's polar day S sin δ.
+- **Approximations:** the declination and the Sun's distance are held at the instant's for the whole day (they move by up to 0.4° and 0.03 % in a day).
+
 ### Laskar et al. 2004, 2011; Milankovitch 1941: orbital cycles (planned, S4b)
 Laskar, J., Robutel, P., Joutel, F., et al. (2004). A long-term numerical solution for the insolation quantities of the Earth. *Astronomy & Astrophysics* 428(1), 261–285. doi:10.1051/0004-6361:20041335
 
@@ -201,7 +208,7 @@ Morton, G. M. (1966). *A computer oriented geodetic data base and a new techniqu
 Williamson, D. L., Drake, J. B., Hack, J. J., Jakob, R., Swarztrauber, P. N. (1992). A standard test set for numerical approximations to the shallow water equations in spherical geometry. *Journal of Computational Physics* 102(1), 211–224. doi:10.1016/S0021-9991(05)80016-6
 - **Model:** the standard test cases the atmosphere's operator on the cubed sphere is to pass, after the degree-1 harmonic and the closed-mesh divergence sum.
 - **Used in:** planned, `docs/handoff/geometry.md:90`, `:109`.
-- **Checked by (atmosphere on the sphere):** case 1 (cosine bell) `@simulation/test/AtmosphereSphereFlow.cpp:25`, `:149`; case 6 (Rossby–Haurwitz wave) `@simulation/test/AtmosphereSphereFixture.hpp:57`; cases 2 and 5 need the shallow-water equations (`docs/handoff/atmosphere-sphere.md:168`).
+- **Checked by (atmosphere on the sphere):** case 1 (cosine bell) `@simulation/test/AtmosphereSphereFlow.cpp:26`, `:150`; case 6 (Rossby–Haurwitz wave) `@simulation/test/AtmosphereSphereFixture.hpp:57`; cases 2 and 5 need the shallow-water equations (`docs/handoff/atmosphere-sphere.md:193`).
 
 ### Jones 1999: conservative remapping
 Jones, P. W. (1999). First- and second-order conservative remapping schemes for grids in spherical coordinates. *Monthly Weather Review* 127(9), 2204–2210. doi:10.1175/1520-0493(1999)127<2204:FASOCR>2.0.CO;2

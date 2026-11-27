@@ -1,0 +1,113 @@
+#include "atmosphere/fn/SphereHour.hpp"
+
+#include "atmosphere/fn/SphereFlow.hpp"
+#include "atmosphere/fn/SphereTransport.hpp"
+
+#include <algorithm>
+#include <cassert>
+#include <climits>
+#include <cmath>
+
+namespace derivean::sim {
+namespace {
+
+// The most steps a window may take: none shorter than `shortest`, and few enough to double in an int.
+int mostSteps(const SphereHour& hour) {
+    const double most = std::floor(hour.window / hour.shortest);
+    return int(std::clamp(most, 1.0, double(INT_MAX / 2)));
+}
+
+// The steps of the next window from the Courant number `worst` the last one reached with `steps`,
+// counted in double and capped at mostSteps, so a huge Courant number neither overflows nor asks for
+// steps shorter than allowed. After a window taken only at a later try the count does not fall and
+// the calm count starts afresh.
+void predict(SphereHour& hour, int steps, double worst, bool retried) {
+    const double ceiling = hour.reserve * hour.limit;
+    const double share = worst / ceiling;
+    const double wanted = std::ceil(steps * share);
+    const int needed = int(std::clamp(wanted, 1.0, double(mostSteps(hour))));
+    if (needed > steps) {
+        hour.steps = needed;
+        hour.calm = 0;
+        return;
+    }
+    hour.steps = steps;
+    if (retried) {
+        hour.calm = 0;
+        return;
+    }
+    const double floor = hour.lower * steps;
+    if (needed > floor) {
+        hour.calm = 0;
+        return;
+    }
+    if (++hour.calm < hour.patience) return;
+    hour.steps = needed;
+    hour.calm = 0;
+}
+
+// One window; the forcing of each step from `source`, or `held` when there is none.
+bool advanceWindow(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
+                   const SphereForcingSource* source, const SphereForcing* held) {
+    assert(hour.window > 0 && hour.shortest > 0 && hour.steps >= 1 && hour.attempts >= 1);
+    hour.refusals.clear();
+    const SphereFlow start = flow;
+    const int most = mostSteps(hour);
+    SphereForcing filled;
+    int steps = std::min(hour.steps, most);
+    for (int attempt = 0; attempt < hour.attempts; ++attempt) {
+        const double step = hour.window / steps;
+        setStep(flow, step);
+        double worst = 0;
+        int at = 0;
+        bool refused = false;
+        HourRefusal reason{};
+        for (; at < steps; ++at) {
+            const double courant = outflowCourant(grid, flow.flux, step);
+            worst = std::max(worst, courant);
+            if (courant > hour.limit) {
+                refused = true, reason = HourRefusal::Courant;
+                break;
+            }
+            if (source) (*source)(flow, filled);
+            const SphereForcing& forcing = source ? filled : *held;
+            if (!admissibleForcing(forcing, size_t(grid.cells))) {
+                refused = true, reason = HourRefusal::Forcing;
+                break;
+            }
+            if (!stepSphereFlow(flow, grid, stencil, poisson, forcing)) {
+                refused = true, reason = HourRefusal::Inversion;
+                break;
+            }
+        }
+        if (!refused) {
+            worst = std::max(worst, outflowCourant(grid, flow.flux, step));
+            hour.courant = worst;
+            predict(hour, steps, worst, !hour.refusals.empty());
+            return true;
+        }
+        hour.refusals.push_back({reason, steps, at});
+        flow = start;
+        if (reason == HourRefusal::Forcing) break;   // more steps would not mend it
+        if (steps == most) {
+            hour.refusals.push_back({HourRefusal::Shortest, steps, 0});
+            break;
+        }
+        steps = std::min(2 * steps, most);
+    }
+    return false;   // the flow is `start` again since the last refusal
+}
+
+} // namespace
+
+bool advanceSphereHour(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil,
+                       SpherePoisson& poisson, const SphereForcingSource& source) {
+    return advanceWindow(hour, flow, grid, stencil, poisson, &source, nullptr);
+}
+
+bool advanceSphereHour(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil,
+                       SpherePoisson& poisson, const SphereForcing& forcing) {
+    return advanceWindow(hour, flow, grid, stencil, poisson, nullptr, &forcing);
+}
+
+} // namespace derivean::sim

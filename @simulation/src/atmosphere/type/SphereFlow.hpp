@@ -10,7 +10,8 @@ namespace derivean::sim {
 // carried by the wind of its own stream function, Δψ = ζ, and the planet's rotation enters through
 // the Coriolis parameter f = 2Ω sin φ, so the carried quantity is the absolute vorticity ζ + f
 // (Charney, Fjørtoft & von Neumann 1950). Nothing consumes it yet; S4 adds the closures today's
-// flat-world circulation has (relaxation, friction, eddy growth, damping) on top of this core.
+// flat-world circulation has (relaxation, friction, eddy growth, damping) on top of this core, as a
+// SphereForcing of the step.
 //
 // The state (vorticity, before, stream, flux, started, and the first guess's history: streamBack,
 // streamBackTwo, productBack, productBackTwo, levels) is always one accepted step: a step or a new

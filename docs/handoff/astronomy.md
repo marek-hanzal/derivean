@@ -20,7 +20,7 @@ One time input, one snapshot, free functions on the snapshot.
 - `fn/Sky.hpp`: `skyAt(Instant) → Sky` (`type/Sky.hpp`), about 0.6 µs. A `Sky` holds the geocentric Sun and Moon positions in metres in the Earth frame (`sun`, `moon`) and in the inertial frame (`sunInertial`, `moonInertial`), the sidereal angle, the precession, the mean Sun's longitude, and the deep-time state.
 - `fn/Orbit.*`: mean elements and their rates. The Sun's orbit is a Kepler ellipse of the Earth–Moon barycentre with the Earth's swing about it. The Moon's is a Kepler ellipse (a, e, i) with its node regressing and its perigee advancing, plus the Sun's perturbations of 0.01° and more (Meeus tables 47.A and 47.B: evection, variation, annual equation and their kin).
 - `fn/Frame.*`: the J2000 ecliptic → precession → equator of date → Earth frame by the sidereal angle; inertial ↔ ecliptic.
-- `fn/Place.*`: what a place sees. The caller gives `up` (unit, Earth frame) where only the direction matters, or `observer` (Earth-frame position, m) where the distance matters (the Moon's parallax is 0.95° on average and up to 1.02° at perigee). Functions: `sunDirection`, `moonDirection`, `sunElevation`, `moonElevation`, `sunDeclination`, `sunAngularRadius`, `moonAngularRadius`, `solarTime` (apparent), `meanSolarTime`, `equationOfTime`, `irradiance` (1/r², luminosity of the age), `insolation` (on level ground above the air).
+- `fn/Place.*`: what a place sees. The caller gives `up` (unit, Earth frame) where only the direction matters, or `observer` (Earth-frame position, m) where the distance matters (the Moon's parallax is 0.95° on average and up to 1.02° at perigee). Functions: `sunDirection`, `moonDirection`, `sunElevation`, `moonElevation`, `sunDeclination`, `sunAngularRadius`, `moonAngularRadius`, `solarTime` (apparent), `meanSolarTime`, `equationOfTime`, `irradiance` (1/r², luminosity of the age), `insolation` (on level ground above the air), `dailyMeanInsolation` (its mean over one solar day, closed form after Berger 1978; its acos is libm in a per-cell call, so it joins the determinism queue).
 - `fn/Eclipse.*`: `sunCoverage(sky, observer)` (share of the solar disc hidden), `solarShadow(sky)` (the Moon's shadow on the fundamental plane: axis distance, penumbra and umbra radii, north or south), `lunarShadow(sky, planetRadius)` (penumbral and umbral magnitudes, the share of the disc in the umbra).
 - `fn/Moonlight.*`: `lunarAge` (0 new, 0.5 full), `moonIllumination(sky, observer)`, `moonSunward` (from the Moon to the Sun).
 - `fn/Tide.*`: `tidePotential` (degrees 2 and 3, Moon and Sun), `equilibriumTide` (potential over gravity: the planet-wide shape on a rigid planet, not a height to add to a sea) and `wetTide` (that shape over a fixed wet mask, with the mask's own level correction, so the water's volume stays the same).
@@ -121,6 +121,7 @@ Present-day validity:
 - Per cell, take the cell's `up` from S1:
   - `insolation(sky, up)` in W/m² above the air replaces `dailyInsolation(latitude, declination)` × solar constant;
   - average it over the step's samples, or integrate a day by sampling `skyAt` (about 0.6 µs a call);
+  - `dailyMeanInsolation(sky, up)` gives the day's mean in closed form, with the declination and distance held at the instant's: within 8.4 × 10⁻⁴ of the irradiance (1.1 W/m²) of the mean sampled every minute over the 24 h around it, at every 15° of latitude and either side of the polar circles on four dates (`test/Astronomy.cpp` `testDailyInsolation`);
   - `sunElevation(sky, up)` replaces `sunDirectionAt`'s height, and `solarTime(sky, up)` replaces `hourOfDay` (local, so it varies with longitude);
   - `sunDeclination(sky)` replaces `declinationOn`.
 - Seasons, 1/r² and polar night come out of these with no switch. Day length is where `sunElevation` crosses the air's own horizon (refraction is the air's).
@@ -175,7 +176,6 @@ Only macOS (arm64, release) has been run.
 
 - When S4 and S6 have moved the consumers, delete `Calendar.hpp`'s `hourOfDay`, `declinationOn`, `lunarPhase`, `tideHeight` and their constants (S7).
 - Two facts still have two owners. `PresentAge` repeats `World::age{4.6e9}` (`simulation/type/World.hpp`), so S6 should make `World` use it. `JulianDay` repeats `Calendar.hpp`'s `DaySeconds`, which S7 deletes.
-- A daily-mean insolation for an `up`, in closed form, would spare S4's coarse steps the sampling. Add it when S4 asks.
 - The brief's "13.1 sidereal months a year at 620 Ma" is Williams' 13.1 synodic months (14.1 sidereal). The tests check synodic.
 - The deep-time day leaves out the solar tidal braking. Adding it would move 620 Ma from 22.09 h towards the record's 21.9 h; it is within the record's error already.
 - The early Moon (before 2450 Ma) has no record here. If the world's early history needs a close Moon (strong tides, a short day), that is a separate model choice.
@@ -200,6 +200,7 @@ Credited per AGENTS.md; the credits-sweep session moves them into `docs/credits.
   - the constant-Q tidal recession (ȧ ∝ a^−11/2) of the future Moon;
   - the solar driving of the Moon's nodal and apsidal precession (∝ n☉² / n☾) used to scale their periods with age.
 - **Yoder, C. F. (1995).** "Astrometric and Geodetic Properties of Earth and the Solar System." In *Global Earth Physics: A Handbook of Physical Constants*, AGU Reference Shelf 1, 1–31. doi:10.1029/RF001p0001. Informs: the Earth's polar moment of inertia (C = 0.3307 M R², 8.034 × 10³⁷ kg m²) in the angular-momentum day.
+- **Berger, A. (1978).** "Long-term variations of daily insolation and Quaternary climatic changes." *Journal of the Atmospheric Sciences* 35(12), 2362–2367. doi:10.1175/1520-0469(1978)035<2362:LTVODI>2.0.CO;2. Informs: the daily mean insolation at the top of the air, (S / π)(h₀ sin φ sin δ + cos φ cos δ sin h₀), in `dailyMeanInsolation`.
 - **Laskar, J., Robutel, P., Joutel, F., Gastineau, M., Correia, A. C. M., Levrard, B. (2004).** "A long-term numerical solution for the insolation quantities of the Earth." *Astronomy and Astrophysics* 428, 261–285. doi:10.1051/0004-6361:20041335.
 - **Laskar, J., Fienga, A., Gastineau, M., Manche, H. (2011).** "La2010: a new orbital solution for the long-term motion of the Earth." *Astronomy and Astrophysics* 532, A89. doi:10.1051/0004-6361/201116836.
   - Both Laskar papers inform the stated limit: the orbital cycles are not an exact ephemeris beyond about 50 Myr, so they are left to S4b.

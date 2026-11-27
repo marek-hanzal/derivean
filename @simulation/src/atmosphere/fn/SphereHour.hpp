@@ -1,0 +1,25 @@
+#pragma once
+
+#include "atmosphere/type/SphereFlow.hpp"
+#include "atmosphere/type/SphereForcing.hpp"
+#include "atmosphere/type/SphereHour.hpp"
+#include "atmosphere/type/SpherePoisson.hpp"
+#include "atmosphere/type/SphereStencil.hpp"
+#include "geometry/type/SphereGrid.hpp"
+
+namespace derivean::sim {
+
+// Moves the flow over one window (SphereHour), the forcing of each step from `source`
+// (SphereForcingSource), called before every step of every try. Returns true with the window taken;
+// false when every try was refused, with the flow as it was before the window, its history
+// included, the reasons in hour.refusals and hour.steps unchanged, so the same call repeats the same
+// tries. A refused try leaves nothing behind: the next one computes what a clean run from the
+// window's start with its steps computes, bit for bit (the source a function of the flow alone).
+[[nodiscard]] bool advanceSphereHour(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil,
+                                     SpherePoisson& poisson, const SphereForcingSource& source);
+
+// The same with one forcing held through the window (an empty one: no closures).
+[[nodiscard]] bool advanceSphereHour(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil,
+                                     SpherePoisson& poisson, const SphereForcing& forcing);
+
+} // namespace derivean::sim

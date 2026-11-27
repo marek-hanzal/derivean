@@ -7,6 +7,7 @@
 #include "atmosphere/fn/SphereFlow.hpp"
 #include "atmosphere/fn/SphereOperators.hpp"
 #include "atmosphere/fn/SpherePoisson.hpp"
+#include "atmosphere/fn/SphereTransport.hpp"
 #include "geometry/fn/Cell.hpp"
 
 #include <numbers>

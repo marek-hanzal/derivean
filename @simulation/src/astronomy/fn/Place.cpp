@@ -54,4 +54,24 @@ double irradiance(const Sky& sky) {
 
 double insolation(const Sky& sky, Vec3 up) { return irradiance(sky) * std::max(0.0, dot(up, sunDirection(sky))); }
 
+double dailyMeanInsolation(const Sky& sky, Vec3 up) {
+    // The Sun's height over the day is sin φ sin δ + cos φ cos δ cos h at hour angle h.
+    // cos φ from the equatorial components keeps its precision near the poles.
+    const double sinDeclination = sunDirection(sky).z, sinLatitude = up.z;
+    const double cosDeclination = std::sqrt(std::max(0.0, 1 - sinDeclination * sinDeclination));
+    const double alongX = up.x * up.x, alongY = up.y * up.y;
+    const double cosLatitude = std::sqrt(alongX + alongY);
+    const double steady = sinLatitude * sinDeclination, swing = cosLatitude * cosDeclination;
+    // cos h₀ = −steady / swing, clamped: at or past the polar circle the Sun stays up or down.
+    if (steady >= swing) return irradiance(sky) * steady;
+    if (steady <= -swing) return 0;
+    const double halfDay = std::acos(-steady / swing);
+    const double cosHalfDay = steady / swing;
+    const double sinHalfDay = std::sqrt(std::max(0.0, 1 - cosHalfDay * cosHalfDay));
+    // Each product its own statement (docs/windows.md, Determinism).
+    const double lit = halfDay * steady;
+    const double turning = swing * sinHalfDay;
+    return irradiance(sky) / std::numbers::pi * (lit + turning);
+}
+
 } // namespace derivean::sim
