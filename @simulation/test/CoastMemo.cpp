@@ -77,6 +77,25 @@ void testCoastMemo() {
         }
     expectCoast(rims > 0, "the check of the wave memo found no wet rim cell");
     agrees("a raise that kept unchanged cells differs from a full one after rim cells moved");
+    // Wet cells that were outside the box when the memo was last made whole, as the water left
+    // them in an earlier step, join it again with the very water and ground they had then.
+    const int strip = 6, wideX = shore.maxX;
+    int rejoined = 0;
+    for (int z = shore.minZ; z <= shore.maxZ; ++z)
+        for (int x = wideX - strip + 1; x <= wideX; ++x) {
+            const size_t i = domain.index(x, z);
+            if (shore.still[i] == NoWater) continue;
+            for (int k = 0; k < WaveDirections; ++k) {
+                const size_t at = trainIndex(domain.cells(), i, k);
+                rejoined += shore.wave[at] > 0;
+                shore.wave[at] = shore.arrive[at] = shore.crest[at] = 0;
+            }
+        }
+    shore.maxX = wideX - strip, shore.raised.valid = false;
+    raiseWaves(domain, shore);
+    shore.maxX = wideX;
+    expectCoast(rejoined > 0, "the check of the wave memo found no train in the strip it takes out of the box");
+    agrees("a raise that kept unchanged cells differs from a full one after wet cells rejoined the box");
     // A new sea level: the memo is not used.
     domain.seaLevel += 0.25;
     agrees("a raise after the sea level moved differs from a full one");

@@ -7,7 +7,9 @@
 namespace derivean::sim {
 namespace {
 
-constexpr float Reformed = 0.5f;   // share of the energy a depth holds below which a train is no longer breaking
+constexpr float Reformed = 0.5f;
+// A NaN no arithmetic yields (its quiet bit is clear), so no still water compares equal to it.
+constexpr float Unraised = std::bit_cast<float>(0x7fa5a5a5u);   // share of the energy a depth holds below which a train is no longer breaking
 
 constexpr float LooseBed = 0.1f;        // m of loose cover from which a bed is sand or mud to the waves, not rock
 constexpr float SmoothBed = 0.2f;       // friction of such a bed against a rock bench's
@@ -116,6 +118,9 @@ void raiseWaves(const Domain& domain, Shore& shore) {
         for (auto* field : {&memo.still, &memo.top, &memo.rock}) field->assign(cells, 0.0f);
         memo.changed.assign(cells, 1), memo.moved.assign(cells, 0);
     }
+    // A raise over every cell remembers the box alone: a cell outside it is worked out again
+    // whenever it joins the box, however its water and ground compare with an earlier step's.
+    if (!again) std::fill(memo.still.begin(), memo.still.end(), Unraised);
     const auto same = [](float a, float b) { return std::bit_cast<uint32_t>(a) == std::bit_cast<uint32_t>(b); };
     for (int z = shore.minZ; z <= shore.maxZ; ++z)
         for (int x = shore.minX; x <= shore.maxX; ++x) {
