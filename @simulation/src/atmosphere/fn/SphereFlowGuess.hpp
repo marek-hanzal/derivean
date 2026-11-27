@@ -7,7 +7,8 @@
 namespace derivean::sim {
 
 // The first guess of a step's ψ in flow.trialStream, from the accepted ψ levels and the candidate
-// vorticity flow.trialVorticity (SphereFlowGuess.cpp); flow.product receives K ψₙ.
-void guessStream(SphereFlow& flow, const SphereGrid& grid, const SpherePoisson& poisson);
+// vorticity flow.trialVorticity (SphereFlowGuess.cpp); flow.product receives K ψₙ. Returns whether
+// flow.trialProduct holds K of the guess (false when the guess is ψₙ itself).
+bool guessStream(SphereFlow& flow, const SphereGrid& grid, const SpherePoisson& poisson);
 
 } // namespace derivean::sim
