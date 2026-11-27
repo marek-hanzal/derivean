@@ -21,15 +21,26 @@ constexpr double PoleZ = -(90.0 - 48.0) / 360.0 * PlanetSpan;
 
 double wrapped(double value) { return value - std::floor(value / PlanetSpan) * PlanetSpan; }
 
-int cellUnder(const Globe& globe, Vec2 flat) { return indexOf(*globe.grid, cellOf(globeDirectionOf(flat), globe.grid->level)); }
+// The terms of globeDirectionOf that a flat row (its latitude) or column (its longitude) shares.
+struct Turn {
+    double cos{}, sin{};
+};
+Turn latitudeTurn(double z) {
+    const double phi = latitudeAt(z) * DegreesToRadians;
+    return {std::cos(phi), std::sin(phi)};
+}
+Turn longitudeTurn(double x) {
+    const double lambda = 2 * Pi * x / PlanetSpan;
+    return {std::cos(lambda), std::sin(lambda)};
+}
+Vec3 directionOf(Turn latitude, Turn longitude) { return {latitude.cos * longitude.cos, latitude.cos * longitude.sin, latitude.sin}; }
+
+Vec2 vectorIn(const SurfaceFrame& frame, BridgeJacobian j, Vec3 v) { return {dot(v, frame.first) / j.east, dot(v, frame.second) / j.north}; }
+Vec2 normalIn(const SurfaceFrame& frame, BridgeJacobian j, Vec3 n) { return normalized(Vec2{dot(n, frame.first) * j.east, dot(n, frame.second) * j.north}); }
 
 } // namespace
 
-Vec3 globeDirectionOf(Vec2 flat) {
-    const double phi = latitudeAt(flat.z) * DegreesToRadians;
-    const double lambda = 2 * Pi * flat.x / PlanetSpan;
-    return {std::cos(phi) * std::cos(lambda), std::cos(phi) * std::sin(lambda), std::sin(phi)};
-}
+Vec3 globeDirectionOf(Vec2 flat) { return directionOf(latitudeTurn(flat.z), longitudeTurn(flat.x)); }
 
 Vec2 flatPositionOf(Vec3 direction) {
     const Vec3 u = normalized(direction);
@@ -42,17 +53,9 @@ BridgeJacobian bridgeJacobianAt(double z) {
     return {BridgeScale * std::cos(latitudeAt(z) * DegreesToRadians), BridgeScale * northwardZ(z)};
 }
 
-Vec2 flatVector(Vec2 at, Vec3 v) {
-    const SurfaceFrame frame = geographicFrame(globeDirectionOf(at));
-    const BridgeJacobian j = bridgeJacobianAt(at.z);
-    return {dot(v, frame.first) / j.east, dot(v, frame.second) / j.north};
-}
+Vec2 flatVector(Vec2 at, Vec3 v) { return vectorIn(geographicFrame(globeDirectionOf(at)), bridgeJacobianAt(at.z), v); }
 
-Vec2 flatNormal(Vec2 at, Vec3 n) {
-    const SurfaceFrame frame = geographicFrame(globeDirectionOf(at));
-    const BridgeJacobian j = bridgeJacobianAt(at.z);
-    return normalized(Vec2{dot(n, frame.first) * j.east, dot(n, frame.second) * j.north});
-}
+Vec2 flatNormal(Vec2 at, Vec3 n) { return normalIn(geographicFrame(globeDirectionOf(at)), bridgeJacobianAt(at.z), n); }
 
 float flatStrikeOf(Vec3 direction, Vec3 n) {
     const Vec2 flat = flatNormal(flatPositionOf(direction), n);
@@ -79,10 +82,15 @@ Planet flatViewOf(const Globe& globe) {
 
     std::vector<Vec2> velocity(plates);
     std::vector<double> count(plates, 0.0);
+    // A cell's direction, frame and Jacobian are taken once, its row's and column's terms once a view.
+    std::vector<Turn> longitude(static_cast<size_t>(n));
+    for (int x = 0; x < n; ++x) longitude[size_t(x)] = longitudeTurn(planetCellCenter(x, 0).x);
     for (int z = 0; z < n; ++z) {
+        const Turn latitude = latitudeTurn(planetCellCenter(0, z).z);
+        const BridgeJacobian j = bridgeJacobianAt(planetCellCenter(0, z).z);
         for (int x = 0; x < n; ++x) {
-            const Vec2 at = planetCellCenter(x, z);
-            const int cell = cellUnder(globe, at);
+            const Vec3 direction = directionOf(latitude, longitude[size_t(x)]);
+            const int cell = indexOf(*globe.grid, cellOf(direction, globe.grid->level));
             const int piece = dominantPiece(globe.coupling, cell);
             const size_t i = planet.columns.index(x, z);
             if (piece >= 0) {
@@ -93,8 +101,8 @@ Planet flatViewOf(const Globe& globe) {
                 if (crust.plate < plates && crust.plate < globe.applied.size()) {
                     // By the sphere's area each flat cell stands for (cos φ), so the rows near the poles do not
                     // outweigh the plate's middle.
-                    const double weight = bridgeJacobianAt(at.z).east / BridgeScale;
-                    velocity[crust.plate] = velocity[crust.plate] + flatVector(at, velocityAt(globe.applied[crust.plate], globeDirectionOf(at))) * weight;
+                    const double weight = j.east / BridgeScale;
+                    velocity[crust.plate] = velocity[crust.plate] + vectorIn(geographicFrame(direction), j, velocityAt(globe.applied[crust.plate], direction)) * weight;
                     count[crust.plate] += weight;
                 }
             }
@@ -109,11 +117,12 @@ Planet flatViewOf(const Globe& globe) {
             const GlobeContact& contact = globe.contact.value[size_t(cell)];
             if (contact.across < 0) continue;
             ContactCell& flat = planet.contact.cells[i];
+            const SurfaceFrame frame = geographicFrame(direction);
             // The way to the contact, along its normal, is a displacement: J⁻¹ takes it to flat metres.
-            flat.distance = float(length(flatVector(at, contact.normal * double(contact.distance))));
+            flat.distance = float(length(vectorIn(frame, j, contact.normal * double(contact.distance))));
             flat.convergence = contact.convergence;
             flat.shear = contact.shear;
-            const Vec2 normal = flatNormal(at, contact.normal);
+            const Vec2 normal = normalIn(frame, j, contact.normal);
             flat.normalX = float(normal.x), flat.normalZ = float(normal.z);
             if (flat.distance < ContactReach) planet.contactZone.push_back(uint32_t(i));
         }
