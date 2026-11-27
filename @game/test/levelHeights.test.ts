@@ -8,7 +8,7 @@ import { createLevelHeights } from "../src/cubes/service/LevelHeights";
 // The slopes LevelHeights measures as squares come and go must be those the surface measured itself on every
 // fragment: the height of each column of a place's square and its neighbours as the GPU holds them, through the
 // owner of each place, the near and far reach of landNormal as it was. Each held square's heights must be the
-// highest top over each column among its chunks.
+// highest top over each column among its chunks, and every word that changed must lie in a range sent up.
 const Square = 32;
 const Ring = HeightBlocks * HeightBlocks;
 
@@ -63,6 +63,14 @@ test("slopes measured as squares come and go match the slopes the surface read i
   const heights = createLevelHeights(world);
   const owners = (heights.nodes.owners.value as StorageInstancedBufferAttribute).array as Float32Array;
   const columns = (heights.nodes.columns.value as StorageInstancedBufferAttribute).array as Float32Array;
+  // What the GPU holds: the buffers as created, then only the ranges each frame names as changed.
+  const uploads = [heights.nodes.owners.value, heights.nodes.columns.value] as StorageInstancedBufferAttribute[];
+  const mirrors = uploads.map((attribute) => Float32Array.from(attribute.array as Float32Array));
+  const upload = () => uploads.forEach((attribute, at) => {
+    const array = attribute.array as Float32Array;
+    for (const { start, count } of attribute.updateRanges) mirrors[at].set(array.subarray(start, start + count), start);
+    attribute.clearUpdateRanges();
+  });
   const held = new Map<number, { level: number; x: number; z: number; tops: Float64Array }>();
   let id = 0;
   for (let round = 0; round < 30; round++) {
@@ -81,6 +89,12 @@ test("slopes measured as squares come and go match the slopes the surface read i
       held.set(id, { level, x, z, tops: topsOf(made, floor) });
     }
     heights.place({ x: (random() - 0.5) * 2000, y: 0, z: (random() - 0.5) * 2000 }, [undefined, 2, 4]);
+    upload();
+    for (const [at, mirror] of mirrors.entries()) {
+      const array = uploads[at].array as Float32Array;
+      const differs = mirror.findIndex((value, index) => !Object.is(value, array[index]));
+      assert.equal(differs, -1, `round ${round}: ${at ? "columns" : "owners"} word ${differs} changed without an upload`);
+    }
     for (let tile = 0; tile < 2; tile++) {
       for (let spot = 0; spot < Ring; spot++) {
         const place = tile * Ring + spot;

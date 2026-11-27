@@ -48,7 +48,8 @@ export function landNormal(heights: LevelHeights["nodes"], table: LevelTable, le
     const at = ivec2(int(column.x), int(column.y));
     const square = ivec2(int(place.z).add(at.x.shiftRight(5)), int(place.w).add(at.y.shiftRight(5)));
     const spot = int(first).add(square.y.bitAnd(HeightBlocks - 1).mul(HeightBlocks)).add(square.x.bitAnd(HeightBlocks - 1));
-    const ours = heights.owners.element(spot.mul(2)).equal(float(square.x)).and(heights.owners.element(spot.mul(2).add(1)).equal(float(square.y)));
+    const owner = heights.owners.element(spot).toVar();
+    const ours = owner.x.equal(float(square.x)).and(owner.y.equal(float(square.y)));
     // Height, slope across the near reach, slope across both (landSlopes).
     const land = heights.columns.element(spot.mul(1024).add(at.y.bitAnd(31).mul(32)).add(at.x.bitAnd(31))).toVar();
     const own = select(ours, land.x, float(NoHeight)).toVar();

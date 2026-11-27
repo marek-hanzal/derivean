@@ -20,7 +20,7 @@ const wrap = (value: number) => ((value % HeightBlocks) + HeightBlocks) % Height
 // The slope round a column changes only when a square of ground does, so it is measured here (landSlopes) as the
 // squares come and go, not by every fragment: the GPU holds each column's height and slope, and the owner of each
 // place. A place changed changes the slopes within the far reach of its old square and of its new one; those are
-// measured again when the frame is placed, and a square's columns go up together.
+// measured again when the frame is placed, and the rows of a square that changed go up together.
 export function createLevelHeights(world: WorldInfo) {
   const finest = world.cubes?.finestLevel ?? 0;
   const tiles = (world.cubes?.coarsestLevel ?? finest) - finest + 1;
@@ -28,7 +28,7 @@ export function createLevelHeights(world: WorldInfo) {
   const slopes = new Float32Array(tiles * Ring * Square * Square * SlopeWords);
   for (let column = 0; column < slopes.length; column += SlopeWords) slopes[column] = NoHeight;
   const columns = instancedArray(slopes, "vec4");
-  const owners = instancedArray(new Float32Array(tiles * Ring * 2).fill(NoHeight), "float");
+  const owners = instancedArray(new Float32Array(tiles * Ring * 2).fill(NoHeight), "vec2");
   const measured = columns.value as StorageInstancedBufferAttribute;
   const held = owners.value as StorageInstancedBufferAttribute;
   // Per level: where the render origin lies, as the square it is in (z, w) and the columns past that square's
@@ -100,7 +100,7 @@ export function createLevelHeights(world: WorldInfo) {
         }
       }
       landSlopes(around, Square, slopes.subarray(place * Square * Square * SlopeWords, (place + 1) * Square * Square * SlopeWords), x0, x1, z0, z1);
-      measured.addUpdateRange(place * Square * Square * SlopeWords, Square * Square * SlopeWords);
+      measured.addUpdateRange((place * Square + z0) * Square * SlopeWords, (z1 - z0) * Square * SlopeWords);
       measured.needsUpdate = true;
     }
     stale.clear();
