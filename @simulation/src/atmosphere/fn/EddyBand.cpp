@@ -12,7 +12,7 @@ namespace derivean::sim {
 namespace {
 
 // Groups are worked through in blocks small enough that a block's recursion state stays in the
-// first cache level while every (l, m) pair passes over it.
+// first cache level while every degree l of one order passes over it.
 constexpr int Block = 256;
 
 // Cells whose |sin φ| differ by less than this from a group's first member join it. Cells the cube
