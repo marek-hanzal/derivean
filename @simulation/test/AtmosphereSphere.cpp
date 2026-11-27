@@ -94,8 +94,9 @@ void checkStiffness() {
     const double quotient = energy / mass * PlanetRadius * PlanetRadius;
     expect(std::abs(quotient - 2) < 3e-3, "Rayleigh quotient of the degree-1 harmonic is not 2 / R²", quotient);
     // The split form the solver uses gives the same product bit for bit, from the coarsest level
-    // (no structured rows) to one with a face interior of 60², and keeps the face interiors structured.
-    for (int level = 1; level <= 6; ++level) {
+    // (no structured rows) to level 7, whose face rows of 124 cells span two blocks of 64, and keeps
+    // the face interiors structured.
+    for (int level = 1; level <= 7; ++level) {
         const SphereGrid at = makeSphereGrid(level);
         const SphereMatrix full = makeLaplacian(at, makeSphereStencil(at));
         const StencilMatrix split = makeStencilMatrix(full, at.side);

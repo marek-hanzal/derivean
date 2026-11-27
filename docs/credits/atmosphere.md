@@ -150,7 +150,7 @@ Hermeline, F. (2000). A finite volume method for the approximation of diffusion 
 
 Domelevo, K., Omnes, P. (2005). A finite volume method for the Laplace equation on almost arbitrary two-dimensional grids. *ESAIM: Mathematical Modelling and Numerical Analysis* 39(6), 1203–1249. doi:10.1051/m2an:2005047
 - **Model:** the Laplacian as the energy ½ Σ diamond |∇ψ|² over diamonds of two cell centres and an edge's two vertices, with the gradient on each diamond from the differences across and along the edge; symmetric and positive on distorted meshes.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereOperators.hpp:46`, `@simulation/src/atmosphere/fn/SphereOperators.cpp:123`; `docs/handoff/atmosphere-sphere.md:24`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereOperators.hpp:46`, `@simulation/src/atmosphere/fn/SphereOperators.cpp:119`; `docs/handoff/atmosphere-sphere.md:24`.
 - **Checked by:** `@simulation/test/AtmosphereSphere.cpp:61` (symmetry, null space, positivity, the split product the solver uses), `:133` (local error by place), `@simulation/test/AtmosphereSpherePoisson.cpp:37` (second-order solutions).
 - **Approximations:** the vertex unknowns are not solved for but replaced by least-squares fits of the cell values, so the operator is cell-centred; its local error at face edges stays at about a tenth of the value, while the solution is second order.
 
@@ -175,14 +175,14 @@ Adams, M., Brezina, M., Hu, J., Tuminaro, R. (2003). Parallel multigrid smoothin
 ### Saad 2003: the Chebyshev iteration
 Saad, Y. (2003). *Iterative Methods for Sparse Linear Systems*, 2nd ed. SIAM, Philadelphia. doi:10.1137/1.9780898718003. Algorithm 12.1, "Chebyshev Acceleration", §12.3.2, p. 399.
 - **Model:** the three-term recurrence of the Chebyshev iteration on an interval [α, β] (θ, δ, σ₁ = θ/δ, ρₖ₊₁ = 1/(2σ₁ − ρₖ), dₖ₊₁ = ρₖ₊₁ρₖ dₖ + 2ρₖ₊₁/δ · rₖ₊₁), applied to K with the Jacobi preconditioner D⁻¹, of degree 3.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereMultigrid.cpp:52`; `docs/handoff/atmosphere-sphere.md:48`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereMultigrid.cpp:53`; `docs/handoff/atmosphere-sphere.md:48`.
 - **Checked by:** `@simulation/test/AtmosphereSpherePoisson.cpp:118`.
 
 ### Holmes and Featherstone 2002: normalised Legendre recursions
 Holmes, S. A., Featherstone, W. E. (2002). A unified approach to the Clenshaw summation and the recursive computation of very high degree and order normalised associated Legendre functions. *Journal of Geodesy* 76(5), 279–299. doi:10.1007/s00190-002-0216-2
 - **Model:** the 4π-normalised associated Legendre functions by the standard forward column recursions (their eqs. 11–13), for the spherical harmonics of the eddy band.
 - **Used in:** `@simulation/src/atmosphere/fn/SphereHarmonics.hpp:7`, `@simulation/src/atmosphere/fn/SphereHarmonics.cpp:9`, the eddy band's shared recursion `@simulation/src/atmosphere/fn/EddyBand.cpp:28`; `docs/handoff/atmosphere-sphere.md:82`.
-- **Checked by:** `@simulation/test/AtmosphereSphere.cpp:133` (Δ Y = −l(l + 1)/R² Y), `@simulation/test/AtmosphereSphereBand.cpp:66`, `:73` (the shared recursion against the harmonics mode by mode).
+- **Checked by:** `@simulation/test/AtmosphereSphere.cpp:134` (Δ Y = −l(l + 1)/R² Y), `@simulation/test/AtmosphereSphereBand.cpp:66`, `:73` (the shared recursion against the harmonics mode by mode).
 
 ### van Leer 1974; Sweby 1984: the limited tracer flux
 van Leer, B. (1974). Towards the ultimate conservative difference scheme. II. Monotonicity and conservation combined in a second-order scheme. *Journal of Computational Physics* 14(4), 361–370. doi:10.1016/0021-9991(74)90019-9
@@ -196,7 +196,7 @@ Sweby, P. K. (1984). High resolution schemes using flux limiters for hyperbolic 
 ### Neumaier 1974: compensated summation
 Neumaier, A. (1974). Rundungsfehleranalyse einiger Verfahren zur Summation endlicher Summen. *ZAMM – Zeitschrift für Angewandte Mathematik und Mechanik* 54(1), 39–51. doi:10.1002/zamm.19740540106
 - **Model:** the area means over the sphere summed with a running compensation.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereOperators.cpp:211`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereOperators.cpp:208`.
 - **Used in (S3b):** the planet's stock totals over crust pieces in key order, `@simulation/src/planet/fn/Pieces.hpp:39`.
 
 ### Haurwitz 1940: the Rossby–Haurwitz wave

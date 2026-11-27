@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <memory>
 
 namespace derivean::sim {
@@ -50,11 +51,6 @@ Stencil stencilOf(const SphereGrid& grid, const SphereStencil& tables, size_t e)
     for (int k = 0; k < from.count; ++k) addTo(stencil, from.cells[size_t(k)], metric.along * -fromWeight[size_t(k)]);
     return stencil;
 }
-
-struct Entry {
-    int column;
-    double value;
-};
 
 } // namespace
 
@@ -123,14 +119,14 @@ EdgeField streamFluxOf(const SphereGrid& grid, const SphereStencil& stencil, con
 SphereMatrix makeLaplacian(const SphereGrid& grid, const SphereStencil& tables) {
     // Rows gather their entries edge by edge, in edge order for every row, so K(p, q) and K(q, p)
     // add the same products in the same order and the matrix is symmetric bit for bit. The rows
-    // share one flat buffer of `capacity` slots each (21 inside a face, more near the cube vertices),
-    // found through a per-row hash of twice that many places; a row that outgrows it restarts the
-    // assembly with twice the room. A row reads at most 12 edges of at most 10 cells, so 128 slots
+    // share one flat buffer of `capacity` slots each (rows have 21 entries, 16 on level 1), found
+    // through a per-row hash of twice that many places; a row that outgrows it restarts the assembly
+    // with twice the room. A row reads at most 12 edges of at most 10 cells, so 128 slots (bits = 7)
     // always fit and a slot number + 1 fits the hash's byte.
     assert(tables.edge.size() == grid.edge.size() && tables.weight.size() == grid.vertex.size());
     const size_t cells = size_t(grid.cells);
     std::vector<int> count(cells);
-    for (int bits = 5;; ++bits) {
+    for (int bits = 5; bits <= 7; ++bits) {
         const size_t capacity = size_t(1) << bits, places = capacity * 2;
         const auto columns = std::make_unique_for_overwrite<int[]>(cells * capacity);
         const auto values = std::make_unique_for_overwrite<double[]>(cells * capacity);
@@ -186,6 +182,7 @@ SphereMatrix makeLaplacian(const SphereGrid& grid, const SphereStencil& tables) 
         }
         return matrix;
     }
+    std::abort();   // unreachable: 128 slots hold any row (above)
 }
 
 void applyMatrix(const SphereMatrix& matrix, const CellField& field, CellField& result) {
