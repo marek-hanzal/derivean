@@ -5,6 +5,7 @@
 #include "measure/fn/Dependencies.hpp"
 #include "measure/fn/Digest.hpp"
 #include "measure/fn/Fingerprint.hpp"
+#include "planet/constant/Scale.hpp"
 #include "planet/fn/Sample.hpp"
 #include "simulation/fn/Query.hpp"
 #include "simulation/fn/Spawn.hpp"
@@ -164,8 +165,9 @@ int measureFingerprint(const Arguments& arguments) {
                 static_cast<unsigned long long>(all));
     if (missing) std::printf("missing %zu dependencies the atlas does not hold\n", missing);
 
-    // --blocks 1: a block of voxels over the middle of each ground target, cut once to build the
-    // tiles it reads and then timed again; its materials hashed like a tile.
+    // --blocks 1: blocks of voxels over the middle of each ground target, cut once to build the
+    // tiles they read and then timed again; their materials hashed like a tile. One crosses the
+    // surface, a chunk lies in the air above it and one in the mantle under the crust.
     if (arguments.number("blocks", 0) != 0)
         for (const auto& [what, key] : targets) {
             if (key.level != Level::Ground) continue;
@@ -174,15 +176,23 @@ int measureFingerprint(const Arguments& arguments) {
             const Tile& tile = *held;
             const size_t middle = size_t(TileCells / 2) * TileCells + TileCells / 2;
             const double top = tile.now.rock[middle] + tile.now.sediment[0][middle] + tile.now.sediment[1][middle] + tile.now.sediment[2][middle];
-            const double span = tileSpan(Level::Ground);
-            const Block block{(key.x + 0.5) * span - 16, std::floor(top) - 48, (key.z + 0.5) * span - 16, 1.0, 32, 64, 32};
-            std::vector<Material> materials(size_t(block.countX) * size_t(block.countY) * size_t(block.countZ));
-            sampleBlock(world, block, materials.data());
-            constexpr int Repeats = 20;
-            lap();
-            for (int repeat = 0; repeat < Repeats; ++repeat) sampleBlock(world, block, materials.data());
-            const double each = lap() / Repeats;
-            std::printf("block %-13s %016llx  %.2f ms each\n", what.c_str(), static_cast<unsigned long long>(digestOf(materials.data(), materials.size() * sizeof(Material))), 1000 * each);
+            const double span = tileSpan(Level::Ground), x = (key.x + 0.5) * span - 16, z = (key.z + 0.5) * span - 16;
+            const std::pair<const char*, Block> blocks[] = {{"", {x, std::floor(top) - 48, z, 1.0, 32, 64, 32}},
+                                                            {" air", {x, std::floor(top) + 64, z, 1.0, 32, 32, 32}},
+                                                            {" deep", {x, MantleTop - 48, z, 1.0, 32, 32, 32}}};
+            for (const auto& [kind, block] : blocks) {
+                std::vector<Material> materials(size_t(block.countX) * size_t(block.countY) * size_t(block.countZ));
+                sampleBlock(world, block, materials.data());
+                constexpr int Repeats = 20;
+                lap();
+                const Usage before = usageNow();
+                for (int repeat = 0; repeat < Repeats; ++repeat) sampleBlock(world, block, materials.data());
+                const Usage after = usageNow();
+                const double each = lap() / Repeats;
+                std::printf("block %-18s %016llx  %.2f ms each  instructions %.4g\n", (what + kind).c_str(),
+                            static_cast<unsigned long long>(digestOf(materials.data(), materials.size() * sizeof(Material))), 1000 * each,
+                            (after.instructions - before.instructions) / Repeats);
+            }
         }
 
     if (arguments.number("time", 0) == 0) return 0;
