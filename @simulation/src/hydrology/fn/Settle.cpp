@@ -82,12 +82,16 @@ void refreshLakes(const BasinTree& tree, Lakes& lakes) {
 
 namespace {
 
-// Fullness while water is being poured. It only ever grows during one settling, so a basin found
-// full is remembered.
+// Water poured into the tree. Fullness only grows while it is poured, so a basin found full is
+// remembered, and `skip` shortens chains of full basins: a shortcut stays true.
 struct Pouring {
     const BasinTree& tree;
-    std::vector<double>& own;
+    const std::vector<double>& own;
     std::vector<uint8_t> brim;
+    std::vector<int32_t> skip;
+
+    Pouring(const BasinTree& tree, const std::vector<double>& own)
+        : tree(tree), own(own), brim(tree.basins.size(), 0), skip(tree.basins.size(), -1) {}
 
     bool full(int32_t id) {
         if (brim[size_t(id)]) return true;
@@ -96,9 +100,55 @@ struct Pouring {
         if (basin.child >= 0 && own[size_t(id)] <= 0 && !(full(basin.child) && full(tree.basins[size_t(basin.child)].sibling))) return false;
         return brim[size_t(id)] = 1;
     }
+
+    // Where the water of a full basin goes next: up into the parent once the sibling is full too,
+    // otherwise across the saddle.
+    int32_t next(int32_t id) {
+        if (skip[size_t(id)] >= 0) return skip[size_t(id)];
+        const Basin& basin = tree.basins[size_t(id)];
+        return basin.parent > 0 && full(basin.sibling) ? basin.parent : basin.over;
+    }
+
+    // The first basin with room from `at` on; 0 when the water leaves the grid.
+    int32_t room(int32_t at) {
+        int32_t open = at;
+        while (open != 0 && full(open)) open = next(open);
+        while (at != open) {
+            const int32_t following = next(at);
+            skip[size_t(at)] = open;
+            at = following;
+        }
+        return open;
+    }
+
+    // `store` is the vector `own` reads. Returns what left the grid.
+    double pour(std::vector<double>& store, int32_t at, double volume) {
+        while (volume > 0) {
+            at = room(at);
+            if (at == 0) return volume;
+            const double space = tree.basins[size_t(at)].capacity - store[size_t(at)];
+            if (volume < space) {
+                store[size_t(at)] += volume;
+                return 0.0;
+            }
+            store[size_t(at)] = tree.basins[size_t(at)].capacity;
+            volume -= space;
+        }
+        return 0.0;
+    }
 };
 
 } // namespace
+
+int32_t pourTarget(const BasinTree& tree, const std::vector<double>& own, int32_t leaf) {
+    Pouring pouring(tree, own);
+    return pouring.room(leaf);
+}
+
+double pour(const BasinTree& tree, std::vector<double>& own, int32_t leaf, double volume) {
+    Pouring pouring(tree, own);
+    return pouring.pour(own, leaf, volume);
+}
 
 Lakes settle(WaterGrid& grid, const BasinTree& tree, std::vector<Tally> parcels, WaterFlows& flows) {
     const size_t count = tree.basins.size(), cells = grid.cells();
@@ -114,43 +164,10 @@ Lakes settle(WaterGrid& grid, const BasinTree& tree, std::vector<Tally> parcels,
 
     Lakes lakes;
     lakes.own.assign(count, 0.0);
-    Pouring pouring{tree, lakes.own, std::vector<uint8_t>(count, 0)};
-    const auto full = [&](int32_t id) { return pouring.full(id); };
-    // Where the water of a full basin goes next: up into the parent once the sibling is full too,
-    // otherwise across the saddle. `skip` shortens chains of full basins; fullness only grows
-    // during one settling, so a shortcut stays true.
-    std::vector<int32_t> skip(count, -1);
-    const auto next = [&](int32_t id) {
-        if (skip[size_t(id)] >= 0) return skip[size_t(id)];
-        const Basin& basin = tree.basins[size_t(id)];
-        return basin.parent > 0 && full(basin.sibling) ? basin.parent : basin.over;
-    };
-    double escaped = parcels[0].water;
-    for (size_t leaf = 1; leaf < count; ++leaf) {
-        double volume = parcels[leaf].water;
-        int32_t at = int32_t(leaf);
-        while (volume > 0) {
-            int32_t open = at;
-            while (open != 0 && full(open)) open = next(open);
-            while (at != open) {
-                const int32_t following = next(at);
-                skip[size_t(at)] = open;
-                at = following;
-            }
-            if (at == 0) {
-                escaped += volume;
-                break;
-            }
-            const double room = tree.basins[size_t(at)].capacity - lakes.own[size_t(at)];
-            if (volume < room) {
-                lakes.own[size_t(at)] += volume;
-                break;
-            }
-            lakes.own[size_t(at)] = tree.basins[size_t(at)].capacity;
-            volume -= room;
-        }
-    }
-    flows.outflow.water += escaped;
+    Pouring pouring(tree, lakes.own);
+    double across = parcels[0].water;   // what leaves across the rim
+    for (size_t leaf = 1; leaf < count; ++leaf) across += pouring.pour(lakes.own, int32_t(leaf), parcels[leaf].water);
+    flows.outflow.water += across;
     flows.outflow.salt += parcels[0].salt;
 
     // Standing water of the rim tops up whatever lies open to it, at that water's own strength.

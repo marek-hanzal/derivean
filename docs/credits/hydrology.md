@@ -62,6 +62,22 @@ Darcy, H. (1856). *Les fontaines publiques de la ville de Dijon*. Victor Dalmont
 - **Model:** seepage through a gravel barrier proportional to head gradient; named as a secondary, not modelled, outflow.
 - **Used in:** `docs/handoff/coast.md:186` (reasoning only, no code).
 
+### Torricelli 1644; Kirchhoff 1869; Lienhard and Lienhard 1984: flow through a strait's throat
+Torricelli, E. (1644). *Opera geometrica*. Florentiae: typis Amatoris Massae & Laurentii de Landis. https://archive.org/details/operageometrica00torr (the section *De motu gravium naturaliter descendentium* and its appendix on the motion of water; the page of the efflux statement not checked)
+
+Kirchhoff, G. (1869). Zur Theorie freier Flüssigkeitsstrahlen. *Journal für die reine und angewandte Mathematik* 70, 289–298. doi:10.1515/crll.1869.70.289 (the value 0.611 is the standard result of this theory, not read from the paper)
+
+Lienhard (V), J. H., Lienhard (IV), J. H. (1984). Velocity coefficients for free jets from sharp-edged orifices. *Journal of Fluids Engineering* 106(1), 13–17. doi:10.1115/1.3242391
+- **Model:** water leaves an opening at √(2gH) under the head H over it (Torricelli); the jet of a sharp-edged opening contracts to π/(π+2) ≈ 0.61 of its area (Kirchhoff, free streamlines); the velocity coefficient of such jets is close to 1 (Lienhard and Lienhard), so the discharge coefficient is the contraction, C = 0.6. A strait passes Q = C·A·√(2gH); with the lower surface over the bed the same law runs submerged under the difference of the two surfaces.
+- **Used in:** `@simulation/src/hydrology/fn/Strait.cpp:55`, `@simulation/src/hydrology/constant/Water.hpp:10`.
+- **Checked by:** `testVerticalWalls` in `@simulation/test/HydrologySea.cpp` (free and submerged outflow against the closed form, 1e-9).
+- **Approximations:** Kirchhoff's value is for a two-dimensional slot; measured round sharp-edged orifices give 0.60–0.62. A dug channel is not an orifice: its friction and length are not modelled, and the submerged case uses the same coefficient.
+
+### Garcia-Castellanos et al. 2009: a strait floods a basin below sea level
+Garcia-Castellanos, D., Estrada, F., Jiménez-Munt, I., Gorini, C., Fernàndez, M., Vergés, J., De Vicente, R. (2009). Catastrophic flood of the Mediterranean after the Messinian salinity crisis. *Nature* 462(7274), 778–781. doi:10.1038/nature08555
+- **Reference data:** the Zanclean flood, the Atlantic refilling a drawn-down Mediterranean through the Strait of Gibraltar: Earth's case of the planet's acceptance scenario, a strait into a dry basin below sea level.
+- **Used in:** `docs/handoff/interventions.md` (the acceptance scenario); the design review that asked for it (`.out/review-mailbox/from-codex/DREV-CLAUDE-003-01.txt`, V8).
+
 ### Fournier 1977: silica held by water against quartz
 Fournier, R. O. (1977). Chemical geothermometers and mixing models for geothermal systems. *Geothermics* 5(1–4), 41–50. doi:10.1016/0375-6505(77)90007-4
 - **Model:** quartz solubility log₁₀ C = 5.19 − 1309 / T, the silica a spring brings up from hot rock.

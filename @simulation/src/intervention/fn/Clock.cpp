@@ -15,14 +15,16 @@ void pass(World& world, double to) {
     state.calendar.seconds = to;
 }
 
-// An opening acts on the planet's sea. A stroke makes the tiles around it live, brings the groups
+// A strait acts on the planet's sea. A stroke makes the tiles around it live, brings the groups
 // it changes or joins to the present so that they meet on one date, and changes their columns.
 void apply(World& world, const Edit& edit) {
     Overlay& overlay = world.interventions.overlay;
-    if (edit.kind == EditKind::Void) {
-        const Vec2 point = planetPoint(world.options.seed, edit.from);
-        const int32_t cell = wrapIndex(floorToInt(point.z / PlanetCell), PlanetCells) * PlanetCells + wrapIndex(floorToInt(point.x / PlanetCell), PlanetCells);
-        openVoid(world.ocean, {cell, edit.area, edit.heightFrom});
+    if (edit.kind == EditKind::Strait) {
+        const auto cellAt = [&](Vec2 at) {
+            const Vec2 point = planetPoint(world.options.seed, at);
+            return wrapIndex(floorToInt(point.z / PlanetCell), PlanetCells) * PlanetCells + wrapIndex(floorToInt(point.x / PlanetCell), PlanetCells);
+        };
+        openStrait(world.ocean, {cellAt(edit.from), cellAt(edit.to), edit.area, edit.heightFrom});
         return;
     }
     Vec2 low, high;
@@ -78,7 +80,9 @@ void jumpTo(World& world, double seconds) {
         state.overlay = Overlay{};
         state.applied = 0;
         state.calendar.seconds = 0;
-        world.ocean = fillOcean(world.planet, world.options.age);
+        const std::shared_ptr<const Ocean> start = world.ocean.start;
+        world.ocean = start ? Ocean(*start) : fillOcean(world.planet, world.options.age);
+        world.ocean.start = start;
     }
     advance(world, seconds - state.calendar.seconds);
     syncLive(world);

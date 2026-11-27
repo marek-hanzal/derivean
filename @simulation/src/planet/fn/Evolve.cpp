@@ -46,7 +46,7 @@ void fillPrimordial(Planet& planet, double time, Workers& workers) {
 
 void setWater(Planet& planet) {
     planet.surfaceKelvin = coolingSurface(planet.time);
-    planet.surfaceWater = std::max(0.0, planet.ledger.waterInventory * condensedShare(planet.time) - planet.ledger.waterEscaped);
+    planet.surfaceWater = std::max(0.0, planet.ledger.waterInventory * condensedShare(planet.time));
 }
 
 } // namespace

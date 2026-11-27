@@ -44,13 +44,28 @@ River thresholds used throughout are chosen, not derived: Region 1e8, Local 2e6,
 
 ### Tests
 
-All share one fixture world (seed 42, 1.2 Gyr) and a focus on high ground whose tiles are first-pass at every level; the 8 Gyr planet for the far-future check evolves on its own thread from the first use of the fixture.
+All share one fixture world (seed 42, 1.2 Gyr) and a focus on high ground whose tiles are first-pass at every level; the 8 Gyr planet for the far-future check evolves on its own thread, started by the runner when `testPlanetFuture` is chosen (not by the fixture, so a filtered run such as `simulation-tests chart` does not wait for it at exit).
+
+Determinism, what each check compares bit for bit. `testLandscapeWorld` cuts its voxel block in the fixture world only (`checkDeterminism(..., freshBlock = false)`): in the fresh one-thread world that block needs the focus's ground water and so the 3 × 3 Local and Region tiles around it, built alone, about 21 minutes. `terra measure determinism` cuts it in both worlds; both now build through the graph (`surveyAt` → `requireOver` → `buildAll`), so it compares graph against graph. Not compared anywhere: one whole independent world against another down to voxels; each product is compared instead, over finished inputs where named.
+
+| Product | Thread count | Request order | Check |
+| --- | --- | --- | --- |
+| Planet | fresh world on 1 worker vs the fixture's pool | — | `testLandscapeWorld` |
+| Region, Local, Site terrain (the focus chain, the ordered pass-1 Site tile and everything they wait for) | fresh world on 1 worker vs pool | fresh world asks last first | `testLandscapeWorld`; replay of the Site tile against the same neighbours |
+| Region and Local terrain of pass 3 (waits for all eight neighbours) | `Setting::workers` null vs pool, over the world's finished neighbours | — | `testLandscapeWorld` (`checkLastPass`) |
+| Regional ground water | `Setting::workers` null vs pool, focus Region tile | — | `testGroundwaterRegion` |
+| Local ground water | `Setting::workers` null vs pool, focus Local tile and its east neighbour edge; three threads asking at once | — | `testGroundwaterTile` |
+| Ground terrain with springs | `Setting::workers` null vs pool | neighbours made in the opposite order | `testGroundTile` |
+| Ground terrain, build path | Demand vs graph, 1 and 4 workers (synthetic Site and aquifer) | — | `testBuildGraphTile` |
+| Voxels | — | one point through every block that holds it | `testGroundTile` (`throughBlock`) |
+| Weather | 2 vs 5 workers, one jump vs quarter days | — | `testAtmosphere` (`testDeterminism`); plume 2 vs 3 workers in `testPlume` |
+| Live state after interventions | fresh world on 1 worker vs pool | — | `testIntervention` (`InterventionReplay.cpp`) |
 
 | Test | Holds | Status |
 | --- | --- | --- |
 | `testLandscapeRegularity` | The reference readings above stay on their side of each threshold | passed on the tree of 26 Nov 01:14 |
 | `testLandscapePlane` | Site plane: gully p95 ≤ 0.25 cell (1 m), nothing at grid scale, mean within 0.5 m. Local plane at 22.5°: heading error < 15°, grid-scale share ≤ 5 %. Crease gathers water (gathered > plane + 0.2, axis share > 21 %) | **fails** on the tree of 26 Nov 01:14: site plane gully p95 10.7 m. Passed on the planet-frozen tree of 25 Nov 23:38 |
-| `testLandscapeWorld` | Determinism as above; ledger equals per-cell totals at every level; Region residual within [−dissolved − 5 %, +5 %] of turnover | last run 25 Nov 23:38: passed |
+| `testLandscapeWorld` | Determinism as above (no fresh voxel block, see the table); ledger equals per-cell totals at every level; Region residual within [−dissolved − 5 %, +5 %] of turnover | last run 25 Nov 23:38: passed |
 | `testInspect` | Provenance classifies eight hand-built cases; record equals ground-level `surveyAt`; every listed column run equals `materialAt` | last run 25 Nov 23:38: passed |
 | `testPlanetFuture` | At 8 Gyr: highest < 12 km, 1-in-100 land < 8 km, thickest crust < 120 km, mean crust < 24.75 km, land 3–60 %, deepest > −9000 m, eroded = deposited within 1 % | last run 25 Nov 23:38: passed |
 

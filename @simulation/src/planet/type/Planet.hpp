@@ -78,7 +78,6 @@ struct PlanetLedger {
     double erupted{};        // arc, rift and hotspot additions
     double precipitated{};   // the part of `deposited` that came out of solution as carbonate
     double waterInventory{}; // all water the body holds
-    double waterEscaped{};   // lost through the void
 };
 
 struct Planet {

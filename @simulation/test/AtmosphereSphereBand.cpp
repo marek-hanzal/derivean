@@ -70,12 +70,50 @@ void checkResponse() {
     expect(fine.inside < 2.5e-3 && fine.outside < 2.5e-3, "band response is off at level 6", std::max(fine.inside, fine.outside));
 }
 
+// The filter's shared recursion (cells grouped by |sin φ|, the sign of the south by parity, cos mλ
+// and sin mλ factored out of the sum over l) is an identity: on level 4 it matches the band summed
+// mode by mode from harmonicAt at every cell, to rounding. Groups hold at most the cube's 16 images
+// of a cell, at one latitude to the last place.
+void checkGrouping() {
+    const SphereGrid grid = makeSphereGrid(4);
+    EddyBand band = makeEddyBand(grid, SphereEddyWavelength, SphereEddyReach);
+    for (size_t g = 0; g + 1 < band.groupStart.size(); ++g) {
+        expect(band.groupStart[g + 1] - band.groupStart[g] <= 16, "a latitude group is larger than the cube's symmetry", double(g));
+        for (int j = band.groupStart[g]; j < band.groupStart[g + 1]; ++j) {
+            const double z = grid.centre[size_t(band.memberCell[size_t(j)])].z;
+            expect(std::abs(std::abs(z) - band.groupSine[g]) <= 1e-15, "a group spans more than one latitude", z);
+            expect((j < band.groupSouth[g]) == (z >= 0), "a group's members are not north before south", z);
+        }
+    }
+    std::vector<double> field = harmonicField(grid, 12, 5), result;
+    for (int c = 0; c < grid.cells; ++c) field[size_t(c)] += 0.3 * grid.centre[size_t(c)].x * grid.centre[size_t(c)].z;
+    filterEddyBand(band, field, result);
+    std::vector<double> direct(size_t(grid.cells), 0.0);
+    const double sphere = 4 * std::numbers::pi * PlanetRadius * PlanetRadius;
+    double scale = 0;
+    for (int l = band.lowest; l <= band.highest; ++l)
+        for (int order = -l; order <= l; ++order) {
+            if (order == 0) continue;
+            const std::vector<double> y = harmonicField(grid, l, order);
+            double coefficient = 0;
+            for (int c = 0; c < grid.cells; ++c) coefficient += grid.area[size_t(c)] / sphere * field[size_t(c)] * y[size_t(c)];
+            for (int c = 0; c < grid.cells; ++c) direct[size_t(c)] += eddyGain(band, l) * coefficient * y[size_t(c)];
+        }
+    double worst = 0;
+    for (int c = 0; c < grid.cells; ++c) {
+        scale = std::max(scale, std::abs(direct[size_t(c)]));
+        worst = std::max(worst, std::abs(result[size_t(c)] - direct[size_t(c)]));
+    }
+    expect(scale > 0.1 && worst < 1e-12 * scale, "the grouped filter differs from the direct sum", worst / scale);
+}
+
 } // namespace
 
 namespace derivean::sim::atmosphere_sphere_test {
 
 void checkEddyBand() {
     checkDegrees();
+    checkGrouping();
     checkResponse();
 }
 

@@ -14,8 +14,12 @@ derivean::sim::Vec2 testFocus();
 // can be asked there at the cost of that one ground tile.
 derivean::sim::Vec2 testSpot();
 
-// The planet long after the present. It needs as long as every other landscape check together and
-// none of their results, so it is evolved on a thread of its own from the first use of testWorld.
+// The present world (seed 42, 4.6 Gyr) for the checks that need today's glaciated ranges and coasts.
+derivean::sim::World& testWorldPresent();
+
+// The planet long after the present, evolved on one thread of its own. The runner starts it ahead
+// when testPlanetFuture is among the chosen checks, so that it overlaps them; farFuture waits for it.
+void startFarFuture();
 const derivean::sim::PlanetSummary& farFuture();
 
 void expectLandscape(bool passed, const char* message, double value = 0);

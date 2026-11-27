@@ -1,5 +1,6 @@
 #include "simulation/fn/Query.hpp"
 
+#include "simulation/fn/BuildGraph.hpp"
 #include "simulation/fn/Live.hpp"
 #include "simulation/fn/Reader.hpp"
 #include "volcanic/fn/Volcanic.hpp"
@@ -15,8 +16,13 @@ constexpr float RunningWater = 2.0e6f;   // m³/yr above which a cell holds a vi
 void requireOver(World& world, Level level, double minX, double minZ, double maxX, double maxZ, double margin) {
     world.atlas.bind(world);
     const TileKey low = tileAt(level, {minX - margin, minZ - margin}), high = tileAt(level, {maxX + margin, maxZ + margin});
+    std::vector<BuildKey> targets;
     for (int z = low.z; z <= high.z; ++z)
-        for (int x = low.x; x <= high.x; ++x) world.atlas.require({level, x, z});
+        for (int x = low.x; x <= high.x; ++x) targets.push_back({BuildProduct::Terrain, {level, x, z}});
+    // Through the build graph, not Atlas::require: a Demand build parks its thread on every input
+    // another thread holds, so the pool sleeps behind the one thread that works out the shared
+    // ground water and its 3 x 3 Local and Region tiles.
+    buildAll(world, targets);
 }
 
 bool readSurface(TileReader& reader, Vec2 position, SurfaceSample& sample) {
