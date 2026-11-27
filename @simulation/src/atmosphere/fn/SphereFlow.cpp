@@ -113,6 +113,8 @@ void setStep(SphereFlow& flow, double step) {
     restart(flow);
 }
 
+const std::vector<double>& baseLevel(const SphereFlow& flow) { return flow.started ? flow.before : flow.vorticity; }
+
 bool admissibleForcing(const SphereForcing& forcing, size_t cells) {
     if (!forcing.tendency.empty()) {
         if (forcing.tendency.size() != cells) return false;
@@ -146,7 +148,7 @@ void plainLevel(SphereFlow& flow, size_t n) {
 void forcedLevel(SphereFlow& flow, const SphereGrid& grid, const SphereForcing& forcing) {
     const size_t n = size_t(grid.cells);
     const bool pushed = !forcing.tendency.empty(), braked = !forcing.friction.empty();
-    const std::vector<double>& base = flow.started ? flow.before : flow.vorticity;
+    const std::vector<double>& base = baseLevel(flow);
     const double span = flow.started ? 2 * flow.step : flow.step;
     std::vector<double>& keeps = flow.trialBefore;
     double held = 0, weight = 0;

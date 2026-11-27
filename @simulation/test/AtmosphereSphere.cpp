@@ -235,6 +235,8 @@ void testAtmosphereSphere() {
     checkStep();
     checkForcing();
     checkHour();
+    checkRollback();
+    checkDamping();
     checkEddyBand();
     checkLatitudeBands();
 }
