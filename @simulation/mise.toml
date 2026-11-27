@@ -38,7 +38,7 @@ run = "xmake build --yes terra simulation-tests"
 [tasks.test]
 description = "Run the simulation checks without the engine, one process per test group side by side"
 depends = ["build"]
-run = "bash test/groups.sh ../.out/simulation/build"
+run = "node test/groups.mjs ../.out/simulation/build"
 
 [tasks.terra]
 description = "Run the diagnostics tool, for example: mise run terra -- map --seed 42 --age 4.6e9"

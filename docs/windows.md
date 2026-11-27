@@ -18,7 +18,7 @@ mise run setup
 mise run play
 ```
 
-These are the macOS steps, unchanged; on Windows the native build, its tests, the addon under Node and Electron and the renderer build are verified one by one ([hand-over](handoff/windows.md)), the mise tasks end to end and the game window not yet.
+These are the macOS steps, unchanged; on Windows the native build, its tests, the addon under Node and Electron, the renderer build, and the simulation's `build` and `test` tasks and the addon's `build` task are verified ([hand-over](handoff/windows.md)); the other tasks and the game window not yet. No task needs a Unix shell: the simulation's `test` task is a Node script.
 
 If `@game/node_modules/electron/dist/electron.exe` is missing after `mise run setup`, Electron's install script did not run; `node @game/node_modules/electron/install.js` downloads the binary.
 
