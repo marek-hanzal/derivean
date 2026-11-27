@@ -25,7 +25,7 @@ float retreatOf(const Domain& domain, const Shore& shore, size_t i, float withst
     const float cutBack = shore.notch[i], benched = std::min(1.0f, cutBack / NotchBench);
     float rate = 0;
     for (int k = 0; k < WaveDirections; ++k) {
-        const float arriving = std::sqrt(shore.arrive[i * WaveDirections + size_t(k)]);
+        const float arriving = std::sqrt(shore.arrive[trainIndex(domain.cells(), i, k)]);
         if (arriving <= withstand) continue;
         float height = arriving + (std::min(arriving, Breaker * depth) - arriving) * benched;
         height /= 1.0f + BedFriction * height * cutBack / (depth * depth);
@@ -58,7 +58,7 @@ void suspend(Domain& domain, Shore& shore, size_t from, float mud) {
                 next = n, far = away;
         }
         float highest = 0;
-        for (int k = 0; k < WaveDirections; ++k) highest = std::max(highest, shore.arrive[at * WaveDirections + size_t(k)]);
+        for (int k = 0; k < WaveDirections; ++k) highest = std::max(highest, shore.arrive[trainIndex(domain.cells(), at, k)]);
         const float depth = shore.still[at] == NoWater ? 0.0f : shore.still[at] - shore.top[at];
         const bool calm = depth * depth >= MudLine * MudLine * highest;
         if (next == at) {

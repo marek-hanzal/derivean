@@ -39,7 +39,7 @@ void seasOfPlanet(Domain& domain, Shore& shore, const Setting& setting) {
                 for (int along = first; along <= second; ++along) {
                     int x, z;
                     place(along, x, z);
-                    shore.beyond[domain.index(x, z) * WaveDirections + size_t(k)] = low + (high - low) * float(along - first) / float(second - first);
+                    shore.beyond[trainIndex(domain.cells(), domain.index(x, z), k)] = low + (high - low) * float(along - first) / float(second - first);
                 }
             }
         }
@@ -67,7 +67,7 @@ void seasOfParent(Domain& domain, Shore& shore, const TileLookup& lookup) {
                 const float weight = float((corner & 1 ? fx - double(ix) : 1 - (fx - double(ix))) * (corner >> 1 ? fz - double(iz) : 1 - (fz - double(iz))));
                 for (int k = 0; k < WaveDirections; ++k) height[k] += weight * WaveQuantum * float(tile->shore->height[cell * WaveDirections + size_t(k)]);
             }
-            for (int k = 0; k < WaveDirections; ++k) shore.beyond[domain.index(x, z) * WaveDirections + size_t(k)] = height[k] * height[k];
+            for (int k = 0; k < WaveDirections; ++k) shore.beyond[trainIndex(domain.cells(), domain.index(x, z), k)] = height[k] * height[k];
         }
     }
 }
@@ -112,7 +112,7 @@ std::shared_ptr<const ShoreRecord> recordShore(const Domain& domain) {
             const size_t from = domain.index(x + Halo, z + Halo), to = size_t(z) * TileCells + size_t(x);
             record->notch[to] = shore.notch[from], record->cut[to] = shore.cut[from], record->laid[to] = shore.laid[from];
             for (int k = 0; k < WaveDirections; ++k) {
-                const size_t at = from * WaveDirections + size_t(k);
+                const size_t at = trainIndex(cells, from, k);
                 // Water keeps the train that leaves it; land, which lets none through, the one that strikes it.
                 const float energy = look.wave[at] > 0 ? look.wave[at] : look.arrive[at];
                 record->height[to * WaveDirections + size_t(k)] = uint8_t(std::min(255.0f, std::sqrt(energy) / WaveQuantum + 0.5f));

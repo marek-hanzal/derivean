@@ -24,7 +24,7 @@ ShoreGrid shoreGridOf(const Domain& domain) {
         if (!shore) continue;
         grid.notch[i] = shore->notch[i], grid.cut[i] = shore->cut[i];
         for (int k = 0; k < WaveDirections; ++k)
-            grid.wave[i] = std::max(grid.wave[i], std::sqrt(std::max(shore->wave[i * WaveDirections + size_t(k)], shore->arrive[i * WaveDirections + size_t(k)])));
+            grid.wave[i] = std::max(grid.wave[i], std::sqrt(std::max(shore->wave[trainIndex(domain.cells(), i, k)], shore->arrive[trainIndex(domain.cells(), i, k)])));
     }
     return grid;
 }
