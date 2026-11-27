@@ -114,14 +114,14 @@ fn stroke(away: f32, rate: f32, reach: f32) -> f32 {
   var flow = 0.0;
   var coarse = 0.0;
   var foreign = 0.0;
-  // The waters of the 4 × 4 texels, for the four around the point.
-  var kinds: array<i32, 16>;
+  // The waters of the four texels around the point, the middle of the 4 × 4.
+  var kinds = vec4i(0);
   for (var j = 0; j < 4; j++) {
     for (var i = 0; i < 4; i++) {
       let texel = textureLoad(relief, within(corner + vec2i(i - 1, j - 1)), 0);
       let weight = wx[i] * wz[j];
       let detail = code(texel.z);
-      kinds[j * 4 + i] = code(texel.w);
+      if (i >= 1 && i <= 2 && j >= 1 && j <= 2) { kinds[(j - 1) * 2 + i - 1] = code(texel.w); }
       coarse += select(0.0, weight, detail == 0);
       foreign += select(0.0, weight, detail != here);
       let ground = texel.x;
@@ -131,7 +131,10 @@ fn stroke(away: f32, rate: f32, reach: f32) -> f32 {
       // A stream is a chain of single texels: full strength over three decades of flow, so greater rivers draw
       // wider.
       let discharge = texel.y;
-      flow += weight * select(0.0, 0.6 + 0.4 * clamp((log2(discharge) - chart.streamFloorLog) / 10.0, 0.0, 1.0), discharge >= chart.streamFloor);
+      // select() would take log2 of no flow too, which WGSL leaves undefined.
+      if (discharge >= chart.streamFloor) {
+        flow += weight * (0.6 + 0.4 * clamp((log2(discharge) - chart.streamFloorLog) / 10.0, 0.0, 1.0));
+      }
     }
   }
 
@@ -146,7 +149,7 @@ fn stroke(away: f32, rate: f32, reach: f32) -> f32 {
     for (var i = 0; i < 2; i++) {
       let texel = textureLoad(climate, within(corner + vec2i(i, j)), 0);
       let weight = select(t.x, 1.0 - t.x, i == 0) * select(t.y, 1.0 - t.y, j == 0);
-      let kind = kinds[(j + 1) * 4 + i + 1];
+      let kind = kinds[j * 2 + i];
       if (kind == ${ChartWater.Sea} || kind == ${ChartWater.Lake}) {
         wet += weight;
         level += weight * texel.x;

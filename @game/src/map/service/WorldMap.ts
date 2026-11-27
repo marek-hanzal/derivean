@@ -31,7 +31,9 @@ const ScaleBarRoom = 150;
 // simulating with a pilot that only waits.
 export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "chart">, host: MapHost) {
   const chrome = buildMapChrome(root);
-  let drawing: { surface: ChartSurface; feed: ChartFeed } | undefined;
+  let drawing: { device: GPUDevice; surface: ChartSurface; feed: ChartFeed } | undefined;
+  // Devices the map cannot draw with: lost, or refusing its shaders.
+  const unusable = new WeakSet<GPUDevice>();
   let open = false;
   let following = true;
   let view: MapView = { x: 0, z: 0, scale: 0 };
@@ -68,18 +70,24 @@ export function createWorldMap(root: HTMLElement, bridge: Pick<GameBridge, "char
     else if (resume === "never") unlocked();
   }
 
-  // What the map draws with, built on first use once the scene's device is there. A canvas that cannot draw
-  // with it leaves the map shut.
+  // What the map draws with, built on first use once the scene's device is there, and built again on the device
+  // there is now once the one it was built on is lost. A lost device, or one that refuses the map's shaders,
+  // leaves it shut until the scene has another.
   function draws() {
-    if (drawing) return drawing;
     const device = host.device();
-    if (!device) return undefined;
+    if (drawing?.surface.usable && drawing.device === device) return drawing;
+    drawing?.feed.rest();
+    drawing?.surface.dispose();
+    drawing = undefined;
+    if (!device || unusable.has(device)) return undefined;
+    void device.lost.then(() => unusable.add(device));
     try {
       const surface = createChartSurface(chrome.canvas, device, (error) => {
         console.error("The map cannot be drawn", error);
+        unusable.add(device);
         hide("never");
       });
-      drawing = { surface, feed: createChartFeed(bridge, surface, (error) => {
+      drawing = { device, surface, feed: createChartFeed(bridge, surface, (error) => {
         console.error("The map could not be charted", error);
         hide("never");
       }) };

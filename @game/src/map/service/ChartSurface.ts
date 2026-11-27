@@ -27,7 +27,8 @@ const Widest32 = 3.4028234663852886e38;
 // Draws charts on a canvas of its own, with the scene's WebGPU device. A chart's rasters go to the GPU in two
 // sheets of four channels (chartShader), and are coloured there: the page's thread only interleaves each pane
 // into them as it arrives and writes that part of the sheets, never more than a pane at a time.
-// `failed` hears of a shader or pipeline the device refused; the surface then draws nothing.
+// `failed` hears of a shader or pipeline the device refused; the surface then draws nothing, as it does once the
+// device is lost or the surface disposed (`usable`).
 export function createChartSurface(canvas: HTMLCanvasElement, device: GPUDevice, failed: (error: unknown) => void) {
   const context = canvas.getContext("webgpu");
   if (!context) throw new Error("The map needs a WebGPU canvas");
@@ -60,11 +61,14 @@ export function createChartSurface(canvas: HTMLCanvasElement, device: GPUDevice,
     fragment: { module: stretchModule, entryPoint: "stretch", targets: [{ format }] },
   });
 
+  // A refusal heard after the surface was disposed concerns no map on screen; a lost device rejects instead.
+  let disposed = false;
   void device.popErrorScope().then((error) => {
-    if (!error) return;
+    if (!error || disposed) return;
     broken = true;
     failed(new Error(`Map shader: ${error.message}`));
-  });
+  }).catch(() => { broken = true; });
+  void device.lost.then(() => { broken = true; });
 
   const uniforms = device.createBuffer({ size: ChartUniformBytes, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
   const words = new ArrayBuffer(ChartUniformBytes);
@@ -106,17 +110,20 @@ export function createChartSurface(canvas: HTMLCanvasElement, device: GPUDevice,
 
   // A view in motion is drawn into this texture at one pixel per CSS pixel and stretched onto the canvas, which
   // keeps its size: on a dense display that is a fraction of the work, and resizing a canvas costs frames.
-  let reduced: { texture: GPUTexture; bindings: GPUBindGroup; width: number; height: number } | undefined;
+  let reduced: { texture: GPUTexture; view: GPUTextureView; bindings: GPUBindGroup; width: number; height: number } | undefined;
 
   return {
+    get usable() { return !broken; },
     // Starts the next chart: a sheet of size² texels that `put` fills pane by pane, all of it, and `show`
     // brings on screen.
     begin(size: number) {
+      if (broken) return;
       if (back.size !== size && spare.size === size) [back, spare] = [spare, back];
       if (back.size !== size) allot(back, size);
     },
     // Writes one pane with its north-west pixel at (column, row) of the sheet begun last.
     put(pane: Chart, column: number, row: number) {
+      if (broken) return;
       const texels = pane.size * pane.size;
       if (staging.size !== pane.size) staging = { size: pane.size, relief: new Float32Array(texels * 4), climate: new Float32Array(texels * 4) };
       const { relief, climate } = staging;
@@ -136,6 +143,7 @@ export function createChartSurface(canvas: HTMLCanvasElement, device: GPUDevice,
       device.queue.writeTexture({ texture: back.climate, origin: [column, row] }, climate, layout, [pane.size, pane.size]);
     },
     show(place: SheetPlace) {
+      if (broken) return;
       Object.assign(back, place);
       [front, back, spare] = [back, spare, front];
       charted = true;
@@ -154,11 +162,12 @@ export function createChartSurface(canvas: HTMLCanvasElement, device: GPUDevice,
       if (lesser && (reduced?.width !== w || reduced?.height !== h)) {
         reduced?.texture.destroy();
         const texture = device.createTexture({ size: [w, h], format: "rgba8unorm", usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
+        const view = texture.createView();
         const bindings = device.createBindGroup({
           layout: stretchPipeline.getBindGroupLayout(0),
-          entries: [{ binding: 0, resource: { buffer: canvasSize } }, { binding: 1, resource: texture.createView() }, { binding: 2, resource: stretched }],
+          entries: [{ binding: 0, resource: { buffer: canvasSize } }, { binding: 1, resource: view }, { binding: 2, resource: stretched }],
         });
-        reduced = { texture, bindings, width: w, height: h };
+        reduced = { texture, view, bindings, width: w, height: h };
       }
       const ratio = w / width;
       // World metres leave JavaScript numbers here, as offsets from the chart's corner in texels.
@@ -180,7 +189,7 @@ export function createChartSurface(canvas: HTMLCanvasElement, device: GPUDevice,
       const encoder = device.createCommandEncoder({ label: "chart" });
       const onScreen = context.getCurrentTexture().createView();
       const chartPass = encoder.beginRenderPass({
-        colorAttachments: [{ view: lesser ? reduced!.texture.createView() : onScreen, loadOp: "clear", storeOp: "store", clearValue: [0, 0, 0, 1] }],
+        colorAttachments: [{ view: lesser ? reduced!.view : onScreen, loadOp: "clear", storeOp: "store", clearValue: [0, 0, 0, 1] }],
       });
       chartPass.setPipeline(lesser ? lesserPipeline : sharpPipeline);
       chartPass.setBindGroup(0, front.bindings);
@@ -197,6 +206,19 @@ export function createChartSurface(canvas: HTMLCanvasElement, device: GPUDevice,
         stretchPass.end();
       }
       device.queue.submit([encoder.finish()]);
+    },
+    // Frees what the surface holds on the device; it draws nothing after.
+    dispose() {
+      broken = disposed = true;
+      for (const held of [front, back, spare]) {
+        held.relief.destroy();
+        held.climate.destroy();
+      }
+      reduced?.texture.destroy();
+      reduced = undefined;
+      uniforms.destroy();
+      canvasSize.destroy();
+      context.unconfigure();
     },
   };
 }
