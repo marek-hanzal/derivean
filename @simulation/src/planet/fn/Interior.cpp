@@ -33,15 +33,19 @@ double interiorOpening(const Globe& globe, int t, const LatticeSlot& slot, const
     const SphereGrid& grid = *globe.grid;
     const int plate = globe.pieces[size_t(t)].plate;
     std::vector<SpherePolygon> over;
-    double sum = 0;
+    double sum = 0, most = 0;
     for (const int l : near)
         if (globe.pieces[size_t(l)].plate != plate) return -1;
     const PreparedPolygon ready = preparedOf(slot.footprint);
     for (const int l : near) {
         const SpherePolygon footprint = footprintOf(grid, globe.pieces[size_t(l)]);
         const double o = overlapArea(ready, footprint);
-        if (o > 0) over.push_back(footprint), sum += o;
+        if (o > 0) over.push_back(footprint), sum += o, most = std::max(most, o);
     }
+    // The union covers the largest overlap (to UnionShortfall), so a slot that one piece already leaves
+    // under BornShare open is closed whatever the union gives: its bound is returned instead.
+    const double atMost = (slot.area - most) / slot.area + UnionShortfall;
+    if (over.size() > 1 && atMost < BornShare) return atMost;
     double covered = sum;
     if (over.size() > 1) {
         const TangentPlane plane = tangentPlaneAt(rotate(globe.pieces[size_t(t)].rotation, grid.centre[size_t(slot.birth)]));

@@ -92,7 +92,7 @@ bool openSlot(Globe& globe, const Band& band, int cell, int plate, Vec3 normal, 
             const double cover = overlapArea(home, footprint);
             if (cover <= 0) continue;
             const double area = grid.area[size_t(next)], reach = 2.5 * std::sqrt(area) / PlanetRadius;
-            double own = 0, sum = 0;
+            double own = 0, sum = 0, most = 0;
             over.clear();
             for (size_t i = 0; i < near.size(); ++i) {
                 const int l = near[i];
@@ -100,10 +100,13 @@ bool openSlot(Globe& globe, const Band& band, int cell, int plate, Vec3 normal, 
                 if (dot(d, d) >= reach * reach) continue;
                 const double o = overlapArea(ready, nearFootprint[i]);
                 if (o <= 0) continue;
-                over.push_back(int(i)), sum += o;
+                over.push_back(int(i)), sum += o, most = std::max(most, o);
                 if (globe.pieces[size_t(l)].plate == plate) own += o;
             }
             if (own > SlotClash * area) continue;
+            // The union covers the largest overlap, so a slot that one piece leaves too closed to fill or
+            // be born in needs no union (planet/fn/Interior.cpp does the same).
+            if (over.size() > 1 && sum > 0.5 * area && (area - most) / area + UnionShortfall < (cellOpen ? SlotFill : BornShare)) continue;
             double covered = sum;
             if (over.size() > 1 && sum > 0.5 * area) {
                 const TangentPlane plane = tangentPlaneAt(centre);

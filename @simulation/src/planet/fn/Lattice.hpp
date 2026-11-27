@@ -15,6 +15,7 @@ namespace derivean::sim {
 inline constexpr double BornShare = 0.5;   // of a cell left uncovered by the union of its pieces
 inline constexpr double SlotClash = 0.02;  // of a lattice slot its own plate may already cover (rounding of shared edges)
 inline constexpr double SlotHint = 0.1;    // a cell whose overlaps sum to less than 1 − this may hold an open slot
+inline constexpr double UnionShortfall = 1e-9;   // of a slot the union of its clipped neighbours may fall short of the largest overlap (another tangent plane, Clipper2's integer grid: about 1e-12)
 inline constexpr double SlotFill = 0.25;   // of a slot left open for it to fill an open cell that has no open slot
 
 // The area of a cell the given pieces cover together: the union of their footprints clipped to the

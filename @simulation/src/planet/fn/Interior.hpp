@@ -32,7 +32,8 @@ struct LatticeSlot {
 LatticeSlot slotOf(const Globe& globe, int t, int k);
 
 // The share of a slot of t's plate that `near` (every piece that may reach it: those over its cell and
-// that cell's ring) leaves uncovered, or −1 when a piece of another plate is among them.
+// that cell's ring) leaves uncovered, or −1 when a piece of another plate is among them. A slot that one
+// piece leaves under BornShare open gets a bound under BornShare instead (no union is taken).
 double interiorOpening(const Globe& globe, int t, const LatticeSlot& slot, const std::vector<int>& near, long& unions);
 
 // The most open slot inside one plate, open by half or more, next to a live piece over a deciding cell
