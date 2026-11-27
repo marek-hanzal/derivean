@@ -51,7 +51,7 @@ void settlePlume(Domain& domain, FlowScratch& scratch, float dt, float area) {
                 domain.depositionRate[i] += 0.4f * laid / dt;
                 if (owned(i)) domain.ledger.deposited += double(laid) * area, laidHere += double(laid) * area;
             }
-            if (round + 1 == Rounds) break;
+            if (round + 1 == Rounds) continue;   // the last round only lays, every class
             std::fill(next.begin(), next.end(), 0.0f);
             for (int z = 1; z < size - 1; ++z) {
                 for (int x = 1; x < size - 1; ++x) {
