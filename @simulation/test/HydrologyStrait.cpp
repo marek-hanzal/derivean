@@ -174,10 +174,14 @@ void testFractionalCut() {
         walked.opened = 0;
         walked.seconds = 0x1p53 - 1.0;
         expect(roundEnd(walked) > walked.seconds, "the last round does not end past now", walked.seconds);
+        walked.seconds = 0x1p53 - 86400.0;   // the year's round would end past the cutoff (DREV-011-07)
+        expect(roundEnd(walked) == 0x1p53, "the last round does not end on the cutoff", roundEnd(walked) - 0x1p53);
         for (const double far : {0x1p53, 10062568091.0 * 31557600.0, 1070162113858.0 * 31557600.0, 1e24}) {
             walked.seconds = far;
             expect(std::isinf(roundEnd(walked)), "rounds are followed past 2^53 s", far);
         }
+        walked.opened = walked.seconds = 0x1p126;   // cut where 2^53 s no longer moves the clock
+        expect(std::isinf(roundEnd(walked)), "rounds are followed where the cutoff does not move the clock", walked.seconds);
         for (const double span : {7200.0, 14400.0, 28800.0, DaySeconds + 1.0}) {
             const bool settled = span < DaySeconds;   // a day and a second is integrated on its own
             Ocean cut = chain(opened), whole = chain(std::floor(opened));
