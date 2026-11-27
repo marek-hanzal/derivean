@@ -2,6 +2,8 @@
 
 #include <array>
 #include <bit>
+#include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 
 // Both meshers read solid cells as rows of bits, 64 cells a word, as binary greedy meshing does (cgerikj, Binary
@@ -89,27 +91,51 @@ std::array<BitRows, 3> solidRows(const Voxels& voxels, Bounds box) {
         for (int z = 0; z < size.z; ++z) {
             const Material* cell = &voxels[box.min + Cell{0, y, z}];
             uint64_t* alongX = row(rows[2], z, y);
+            uint64_t bits = 0;
             for (int x = 0; x < size.x; ++x) {
-                if (cell[x] == Material::Air) continue;
-                alongX[x >> 6] |= uint64_t(1) << (x & 63);
-                row(rows[0], x, z)[y >> 6] |= uint64_t(1) << (y & 63);
-                row(rows[1], y, x)[z >> 6] |= uint64_t(1) << (z & 63);
+                if (cell[x] != Material::Air) {
+                    bits |= uint64_t(1) << (x & 63);
+                    row(rows[0], x, z)[y >> 6] |= uint64_t(1) << (y & 63);
+                    row(rows[1], y, x)[z >> 6] |= uint64_t(1) << (z & 63);
+                }
+                if ((x & 63) == 63 || x == size.x - 1) {
+                    alongX[x >> 6] = bits;
+                    bits = 0;
+                }
             }
         }
     return rows;
 }
 
+// Occlusion of the four corners of a face from the eight cells round the air cell it looks into. The key holds
+// three bits from each of the rows before, at and after that cell: bit 0 the cell before along u, 1 the cell
+// itself (never read), 2 the one after. A corner counts the two edge cells and the diagonal it touches, 3 when both edges are solid.
+constexpr std::array<uint8_t, 512> OcclusionOfKey = [] {
+    std::array<uint8_t, 512> table{};
+    for (int key = 0; key < 512; ++key) {
+        const auto bit = [&](int rowAlongV, int alongU) { return (key >> (3 * rowAlongV + alongU)) & 1; };
+        int packed = 0;
+        for (int corner = 0; corner < 4; ++corner) {
+            const int alongU = corner & 1 ? 2 : 0, alongV = corner & 2 ? 2 : 0;
+            const int first = bit(1, alongU), second = bit(alongV, 1);
+            packed |= (first && second ? 3 : first + second + bit(alongV, alongU)) << (2 * corner);
+        }
+        table[size_t(key)] = uint8_t(packed);
+    }
+    return table;
+}();
+
+// Bits cell - 1 to cell + 1 of a row.
+uint32_t around(const uint64_t* row, int cell) {
+    const int low = cell - 1;
+    if ((low & 63) <= 61) return uint32_t(row[low >> 6] >> (low & 63)) & 7;
+    return uint32_t(test(row, low)) | uint32_t(test(row, cell)) << 1 | uint32_t(test(row, cell + 1)) << 2;
+}
+
 // Occlusion of the four corners of a unit face that looks into the air cell at bit `cell` of row `at` in `layer`.
 int32_t occlusion(const BitRows& rows, int layer, int at, int cell) {
-    int32_t packed = 0;
-    for (int corner = 0; corner < 4; ++corner) {
-        const int alongU = corner & 1 ? 1 : -1, alongV = corner & 2 ? 1 : -1;
-        const uint64_t* beside = row(rows, layer, at + alongV);
-        const bool first = test(row(rows, layer, at), cell + alongU), second = test(beside, cell);
-        const int solid = first && second ? 3 : int(first) + int(second) + int(test(beside, cell + alongU));
-        packed |= solid << (2 * corner);
-    }
-    return packed;
+    const uint32_t key = around(row(rows, layer, at - 1), cell) | around(row(rows, layer, at), cell) << 3 | around(row(rows, layer, at + 1), cell) << 6;
+    return OcclusionOfKey[key];
 }
 
 // A mask entry is material + occlusion · 256, negative for a face that looks down its axis.
@@ -131,8 +157,12 @@ FaceMesh meshFaces(const Voxels& voxels, Bounds inner) {
         const int height = size[v];
         const BitRows& rows = solid[axis];
         std::vector<int32_t> mask(size_t(width) * height);
-        Cell step{};
+        // A step of one cell along the axis and along u, in the voxels' index.
+        Cell step{}, alongU{};
         step[axis] = 1;
+        alongU[u] = 1;
+        const ptrdiff_t stepAt = ptrdiff_t(voxels.index(inner.min + step)) - ptrdiff_t(voxels.index(inner.min));
+        const ptrdiff_t stepU = ptrdiff_t(voxels.index(inner.min + alongU)) - ptrdiff_t(voxels.index(inner.min));
         // Layer `plane` of the padded box holds the cells before the plane, `plane + 1` those after it; bit and row
         // k of the padded box are cell k - 1 of the inner one.
         for (int plane = 0; plane <= size[axis]; ++plane) {
@@ -140,6 +170,10 @@ FaceMesh meshFaces(const Voxels& voxels, Bounds inner) {
             for (int j = 0; j < height; ++j) {
                 const uint64_t* before = row(rows, plane, j + 1);
                 const uint64_t* after = row(rows, plane + 1, j + 1);
+                Cell start = inner.min;
+                start[axis] += plane;
+                start[v] += j;
+                const Material* cells = voxels.cells.data() + voxels.index(start);
                 for (int word = 0; word < rows.words; ++word) {
                     const uint64_t inside = span(word, 1, width + 1);
                     const uint64_t up = plane > 0 ? before[word] & ~after[word] & inside : 0;
@@ -147,13 +181,10 @@ FaceMesh meshFaces(const Voxels& voxels, Bounds inner) {
                     for (uint64_t faces = up | down; faces; faces &= faces - 1) {
                         const int bit = std::countr_zero(faces);
                         const int i = word * 64 + bit - 1;
-                        Cell point = inner.min;
-                        point[axis] += plane;
-                        point[u] += i;
-                        point[v] += j;
+                        const Material* point = cells + i * stepU;
                         int32_t entry;
-                        if ((up >> bit) & 1) entry = int32_t(voxels[point - step]) + (occlusion(rows, plane + 1, j + 1, i + 1) << 8);
-                        else entry = -(int32_t(voxels[point]) + (occlusion(rows, plane, j + 1, i + 1) << 8));
+                        if ((up >> bit) & 1) entry = int32_t(point[-stepAt]) + (occlusion(rows, plane + 1, j + 1, i + 1) << 8);
+                        else entry = -(int32_t(point[0]) + (occlusion(rows, plane, j + 1, i + 1) << 8));
                         mask[size_t(j) * width + i] = entry;
                         any = true;
                     }
