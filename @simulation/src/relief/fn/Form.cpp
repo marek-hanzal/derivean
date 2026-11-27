@@ -75,6 +75,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     const Neck neck = setting.volcanic ? neckOf(*setting.volcanic, {x, z}) : Neck{};
     const Material plug = neck.rock;
     // A neck is one body whatever it cuts: its weathered skin is read from the rock surface alone.
+    // Flows read their skin across the same slope.
     const float neckSlope = std::sqrt(1.0f + ground.slope * ground.slope);
 
     // A void that comes within a thin roof of the rock surface is open: the cover over it has
@@ -106,11 +107,13 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     const auto massive = [](const RockTraits& rock) { return float(smoothstep(3.5, 5.5, rock.jointSpacing)) * (rock.bedding < 0.7f ? 1.0f : 0.0f); };
     RockCity city;
     city.floor = ground.rock;
-    {
+    // Massive rock scales the strength by at most one, so where exposure and bareness alone leave
+    // it under 0.05 no bed is read for it.
+    if (ground.pile.thickness <= 0 && exposure * bare > 0.05f) {
         float depth = std::max(0.0f, ground.datum - ground.rock) + 0.1f;
         const StrataUnit unit = unitAt(setting.strata, depth, fold);
         Bed top = bedAt(setting.seed, setting.strata, unit, depth, material, bodies);
-        city.strength = ground.pile.thickness > 0 ? 0.0f : massive(traitsOf(top.rock)) * exposure * bare;
+        city.strength = massive(traitsOf(top.rock)) * exposure * bare;
         if (city.strength > 0.05f) {
             city.seed = setting.seed;
             city.mass = massFor(setting, top, unit.laidDown);
@@ -195,7 +198,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
                 result = plug != Material::Air ? plug : member.rock;
                 // A thick flow parts into its columns within the skin of a bare face (volcanic/fn/Columns.cpp),
                 // only where the flow itself forms that face: under a bed above it nothing weathers.
-                const float faceHere = base ? partingFace : face, skin = (faceHere - y) / std::sqrt(1.0f + ground.slope * ground.slope);
+                const float faceHere = base ? partingFace : face, skin = (faceHere - y) / neckSlope;
                 const bool exposed = pileFloor + member.top >= faceHere - float(step);
                 if (plug == Material::Air && bare > 0.5f && exposed && columnOpen(setting.seed, ground.pile, member, x, z, skin, float(step))) result = Material::Air;
                 if (plug != Material::Air && bare > 0.5f && neckOpen(setting.seed, neck, x, y, z, (ground.rock - y) / neckSlope, float(step))) result = Material::Air;
