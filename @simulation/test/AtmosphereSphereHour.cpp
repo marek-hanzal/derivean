@@ -45,7 +45,7 @@ Spin spinning(int steps, double courant) {
     std::vector<double> vorticity = s.shape;
     for (double& v : vorticity) v *= 1e-5;
     expect(setVorticity(s.flow, s.grid, s.stencil, s.poisson, vorticity), "the solid rotation did not invert");
-    const double scale = courant / (outflowCourant(s.grid, s.flow.flux, Hour / steps));
+    const double scale = courant / (outflowCourant(s.grid, s.stencil, s.flow.flux, Hour / steps));
     for (double& v : vorticity) v *= scale;
     expect(setVorticity(s.flow, s.grid, s.stencil, s.poisson, vorticity), "the solid rotation did not invert");
     return s;

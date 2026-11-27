@@ -43,23 +43,39 @@ SphereClosures makeSphereClosures(const SphereGrid& grid, const SpherePoisson& p
     return closures;
 }
 
-void fillClosures(SphereClosures& closures, const SphereGrid& grid, const SpherePoisson& poisson, const SphereFlow& flow,
-                  SphereForcing& forcing) {
-    if (!closuresFit(closures, poisson)) throw std::invalid_argument("the closures do not fit this Poisson or their jet");
+namespace {
+
+// The relaxation and the damping of closures that fit `poisson` (closuresFit, checked by the caller).
+// addDamping still compares its K with the damping's own at every step.
+void fillTendency(SphereClosures& closures, const SphereGrid& grid, const SpherePoisson& poisson, const SphereFlow& flow,
+                  std::vector<double>& tendency) {
     const std::vector<double>& level = baseLevel(flow);
     bandMeans(closures.bands, grid, level, closures.mean);
     for (size_t b = 0; b < closures.mean.size(); ++b) closures.mean[b] = (closures.jet[b] - closures.mean[b]) / closures.relaxation;
-    spreadBands(closures.bands, closures.mean, forcing.tendency);
-    addDamping(closures.damping, grid, poisson.levels[0].stiffness, level, forcing.tendency);
+    spreadBands(closures.bands, closures.mean, tendency);
+    addDamping(closures.damping, grid, poisson.levels[0].stiffness, level, tendency);
+}
+
+} // namespace
+
+void fillClosures(SphereClosures& closures, const SphereGrid& grid, const SpherePoisson& poisson, const SphereFlow& flow,
+                  SphereForcing& forcing) {
+    if (!closuresFit(closures, poisson)) throw std::invalid_argument("the closures do not fit this Poisson or their jet");
+    fillTendency(closures, grid, poisson, flow, forcing.tendency);
     forcing.friction.assign(closures.friction.begin(), closures.friction.end());
 }
 
+// closuresFit once a window (Neon DREV-NEON-065): within it the closures and the Poisson are the same
+// objects and nothing changes them, the source only reads them, so the fit holds at every step; the
+// friction is the hour's fixed one, read in place.
 bool advanceClosedHour(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
                        SphereClosures& closures) {
     if (!closuresFit(closures, poisson)) throw std::invalid_argument("the closures do not fit this Poisson or their jet");
     hour.stiffest = dampingStiffness(closures.damping);
-    return advanceSphereHour(hour, flow, grid, stencil, poisson,
-                             [&](const SphereFlow& state, SphereForcing& forcing) { fillClosures(closures, grid, poisson, state, forcing); });
+    return advanceSphereHour(
+        hour, flow, grid, stencil, poisson,
+        [&](const SphereFlow& state, SphereForcing& forcing) { fillTendency(closures, grid, poisson, state, forcing.tendency); },
+        closures.friction);
 }
 
 } // namespace derivean::sim

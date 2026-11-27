@@ -18,7 +18,9 @@ namespace derivean::sim {
 // vorticity whose inversion does not converge leaves it as it was. Leapfrog and its filter need
 // equally spaced time levels, so the step is part of the state: set it with setStep, which restarts
 // the history when it changes; change vorticity and stream only through setVorticity, which restarts
-// it too (`known` takes K ψₙ for granted).
+// it too (`known` takes K ψₙ for granted). The hour takes a refused try back by these, the step,
+// `known` with trialProduct and the last inversion's report (SphereFlowStart, fn/SphereHour.cpp's
+// eachStateVector), so a field added to the state joins them there; the rest is work space or fixed.
 struct SphereFlow {
     double rotation{};                 // Ω, 1/s
     std::vector<double> coriolis;      // f per cell, 1/s

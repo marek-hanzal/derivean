@@ -143,7 +143,7 @@ The barotropic core on the cubed sphere, `docs/handoff/atmosphere-sphere.md`. Pu
 Charney, J. G., Fjørtoft, R., von Neumann, J. (1950). Numerical integration of the barotropic vorticity equation. *Tellus* 2(4), 237–254. doi:10.3402/tellusa.v2i4.8607 (the original Wiley record is doi:10.1111/j.2153-3490.1950.tb00336.x)
 - **Model:** ∂ζ/∂t = −∇·(v (ζ + f)) with the wind from the stream function, ζ = Δψ, f = 2Ω sin φ.
 - **Used in:** `@simulation/src/atmosphere/fn/SphereFlow.hpp:30`, `@simulation/src/atmosphere/type/SphereFlow.hpp:12`; `docs/handoff/atmosphere-sphere.md:83`.
-- **Checked by:** `@simulation/test/AtmosphereSphereFlow.cpp:55` (the Rossby–Haurwitz wave), `:114` (steady solid rotation), `@simulation/test/AtmosphereSphereDrift.cpp:42` (unforced drift over 30 days).
+- **Checked by:** `@simulation/test/AtmosphereSphereFlow.cpp:57` (the Rossby–Haurwitz wave), `:116` (steady solid rotation), `@simulation/test/AtmosphereSphereDrift.cpp:42` (unforced drift over 30 days).
 
 ### Hermeline 2000; Domelevo and Omnes 2005: the discrete duality Laplacian
 Hermeline, F. (2000). A finite volume method for the approximation of diffusion operators on distorted meshes. *Journal of Computational Physics* 160(2), 481–499. doi:10.1006/jcph.2000.6466
@@ -203,14 +203,14 @@ van Leer, B. (1974). Towards the ultimate conservative difference scheme. II. Mo
 
 Sweby, P. K. (1984). High resolution schemes using flux limiters for hyperbolic conservation laws. *SIAM Journal on Numerical Analysis* 21(5), 995–1011. doi:10.1137/0721062
 - **Model:** upwind flux plus a Lax–Wendroff correction limited by the van Leer limiter of the ratio of successive differences.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereTransport.hpp:19`, `@simulation/src/atmosphere/fn/SphereTransport.cpp:10`; `docs/handoff/atmosphere-sphere.md:98`.
-- **Checked by:** `@simulation/test/AtmosphereSphereFlow.cpp:155` (mass, bounds, a uniform tracer).
+- **Used in:** `@simulation/src/atmosphere/fn/SphereTransport.hpp:20`, `@simulation/src/atmosphere/fn/SphereTransport.cpp:10`; `docs/handoff/atmosphere-sphere.md:98`.
+- **Checked by:** `@simulation/test/AtmosphereSphereFlow.cpp:157` (mass, bounds, a uniform tracer).
 - **Approximations:** the correction runs along one grid line per edge; across the lines the scheme is upwind and diffusive.
 
 ### Courant, Friedrichs & Lewy 1928: the Courant limit of the wind step
 Courant, R., Friedrichs, K. & Lewy, H. (1928). Über die partiellen Differenzengleichungen der mathematischen Physik. *Mathematische Annalen* 100, 32–74. doi:10.1007/BF01448839
 - **Model:** an explicit step is stable only while the flow carries less than a cell's content out of it in one step; here the outflow Courant number summed over a cell's edges, kept below 0.4 for the wind.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereTransport.hpp:14`, `@simulation/src/atmosphere/type/SphereHour.hpp:26`; `docs/handoff/atmosphere-sphere.md:130`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereTransport.hpp:14`, `@simulation/src/atmosphere/type/SphereHour.hpp:45`; `docs/handoff/atmosphere-sphere.md:130`.
 - **Checked by:** `@simulation/test/AtmosphereSphereHour.cpp:73` (a window taken back at its second step and retaken in twice the steps, bit for bit a clean run).
 - **Approximations:** 0.4 is the tests' margin for the leapfrog with the filter, not a derived bound.
 
@@ -236,7 +236,7 @@ Neumaier, A. (1974). Rundungsfehleranalyse einiger Verfahren zur Summation endli
 ### Haurwitz 1940: the Rossby–Haurwitz wave
 Haurwitz, B. (1940). The motion of atmospheric disturbances on the spherical Earth. *Journal of Marine Research* 3(3), 254–267. https://elischolar.library.yale.edu/journal_of_marine_research/575 (unverified: pages, given as 254–267 by Williamson et al. 1992 and as 245–267 elsewhere)
 - **Model:** the wave of wavenumber 4 as an exact solution of the non-divergent barotropic vorticity equation, turning at ν = (R(3 + R) ω − 2Ω) / ((1 + R)(2 + R)) (Williamson et al. 1992, eq. 136 of the ORNL/TM-11895 report).
-- **Checked by:** `@simulation/test/AtmosphereSphereFixture.hpp:57`, `@simulation/test/AtmosphereSphereFlow.cpp:55`, `@simulation/test/AtmosphereSphereStep.cpp:79`; `docs/handoff/atmosphere-sphere.md:102`.
+- **Checked by:** `@simulation/test/AtmosphereSphereFixture.hpp:58`, `@simulation/test/AtmosphereSphereFlow.cpp:57`, `@simulation/test/AtmosphereSphereStep.cpp:79`; `docs/handoff/atmosphere-sphere.md:102`.
 
 ## Snow (approved, not yet written)
 

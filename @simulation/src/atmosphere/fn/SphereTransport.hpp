@@ -12,8 +12,9 @@ namespace derivean::sim {
 
 // The largest share of a cell's content the fluxes take out of it in `step` (the outflow Courant
 // number summed over its edges; Courant, Friedrichs & Lewy 1928). The tests step at 0.4 (flow) and
-// 0.45 (tracer).
-double outflowCourant(const SphereGrid& grid, const std::vector<double>& flux, double step);
+// 0.45 (tracer). Each cell's edges are summed in the cell's own order (SphereGrid::edges), their
+// sides read from the stencil's 16-byte topology, not the grid's 48-byte edge (Neon DREV-NEON-059).
+double outflowCourant(const SphereGrid& grid, const SphereStencil& stencil, const std::vector<double>& flux, double step);
 
 // Moves a passive tracer (amount per area) one forward step with the edge fluxes: upwind plus a
 // van Leer-limited (van Leer 1974) Lax–Wendroff correction along the grid line (Sweby 1984), so the
