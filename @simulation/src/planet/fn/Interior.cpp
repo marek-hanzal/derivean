@@ -36,21 +36,32 @@ void setFootprint(const Globe& globe, int t, LatticeSlot& slot) {
     slot.footprint = rotated(polygonOf(*globe.grid, slot.birth), globe.pieces[size_t(t)].rotation);
 }
 
-// interiorOpening with near[i]'s footprint and cap from of(i), so that a caller measuring many slots
-// takes each piece's once. `over` is scratch.
-template <class Of>
-double openingOf(const Globe& globe, int t, const LatticeSlot& slot, const std::vector<int>& near, Of of, std::vector<size_t>& over, long& unions) {
-    const SphereGrid& grid = *globe.grid;
+// Whether a piece of another plate than t's is among `near`.
+bool otherPlateNear(const Globe& globe, int t, const std::vector<int>& near) {
     const int plate = globe.pieces[size_t(t)].plate;
     for (const int l : near)
-        if (globe.pieces[size_t(l)].plate != plate) return -1;
+        if (globe.pieces[size_t(l)].plate != plate) return true;
+    return false;
+}
+
+// interiorOpening of a slot with no other plate near, with near[i]'s footprint and cap from of(i), so
+// that a caller measuring many slots takes each piece's once. `over` is scratch. Where only closed or
+// open is asked (`closedOnly`), the first overlap that leaves the slot under BornShare open by the
+// union's bound ends the measure with that bound: the union covers its largest overlap to
+// UnionShortfall, and with no other overlap the slot's openness is that overlap's own.
+template <class Of>
+double openingOf(const Globe& globe, int t, const LatticeSlot& slot, const std::vector<int>& near, Of of, bool closedOnly, std::vector<size_t>& over, long& unions) {
+    const SphereGrid& grid = *globe.grid;
     over.clear();
     double sum = 0, most = 0;
     const PreparedPolygon ready = preparedOf(slot.footprint);
     for (size_t i = 0; i < near.size(); ++i) {
         const auto [footprint, cap] = of(i);
         const double o = overlapArea(ready, *footprint, *cap);
-        if (o > 0) over.push_back(i), sum += o, most = std::max(most, o);
+        if (o <= 0) continue;
+        over.push_back(i), sum += o, most = std::max(most, o);
+        const double bound = (slot.area - o) / slot.area + UnionShortfall;
+        if (closedOnly && bound < BornShare) return bound;
     }
     // The union covers the largest overlap (to UnionShortfall), so a slot that one piece already leaves
     // under BornShare open is closed whatever the union gives: its bound is returned instead.
@@ -81,8 +92,9 @@ double interiorOpening(const Globe& globe, int t, const LatticeSlot& slot, const
     std::vector<SpherePolygon> footprints;
     std::vector<PolygonCap> caps;
     for (const int l : near) footprints.push_back(footprintOf(*globe.grid, globe.pieces[size_t(l)])), caps.push_back(capOf(footprints.back()));
+    if (otherPlateNear(globe, t, near)) return -1;
     std::vector<size_t> over;
-    return openingOf(globe, t, slot, near, [&](size_t i) { return std::pair{&footprints[i], &caps[i]}; }, over, unions);
+    return openingOf(globe, t, slot, near, [&](size_t i) { return std::pair{&footprints[i], &caps[i]}; }, false, over, unions);
 }
 
 bool interiorSlot(Globe& globe, Band& band, int cell, InteriorSlot& found) {
@@ -138,12 +150,13 @@ bool interiorSlot(Globe& globe, Band& band, int cell, InteriorSlot& found) {
             }
             band.slotStamp[at] = band.slotGeneration, band.slotOpen[at] = -1;
             if (!deciding || !listed) continue;
-            setFootprint(globe, t, s);
             near.clear();
             gather(near, s.cell);
             for (const int32_t other : (*globe.rings)[size_t(s.cell)])
                 if (other >= 0) gather(near, other);
-            const double open = openingOf(globe, t, s, near, footprintAt, over, globe.stats.unions);
+            if (otherPlateNear(globe, t, near)) continue;   // closed: another plate is near
+            setFootprint(globe, t, s);
+            const double open = openingOf(globe, t, s, near, footprintAt, true, over, globe.stats.unions);
             band.slotOpen[at] = float(open);
             if (open < BornShare || open <= best) continue;
             best = open, found = {{s.birth, globe.pieces[size_t(t)].rotation}, globe.pieces[size_t(t)].plate, t, s.cell};
