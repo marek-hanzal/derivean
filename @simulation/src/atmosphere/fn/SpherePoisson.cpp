@@ -85,19 +85,13 @@ PoissonReport solveSpherePoisson(SpherePoisson& poisson, const SphereGrid& grid,
         p = z;
         rz = dotOf(r, z);
     }
-    // The products p · q and r · r are summed in the loops that form q and r, in ascending order, as
-    // dotOf sums them; the product is its own statement so it is not contracted into a fused
-    // multiply-add, which dotOf's vectorised loop does not use either.
-    const double* direction = p.data();
-    double* product = q.data();
+    // K · p goes through applyMatrix, whose NEON kernel outruns the row-by-row forEachProduct on arm64,
+    // and p · q is a separate pass. r · r is summed in the loop that forms r, in ascending order as
+    // dotOf sums it; the product is its own statement so it is not contracted into a fused
+    // multiply-add, which dotOf does not use either.
     while (report.residual > tolerance && report.iterations < limit) {
-        double pq = 0;
-        forEachProduct(poisson.levels[0].stiffness, direction, [&](size_t c, double kp) {
-            product[c] = kp;
-            const double term = direction[c] * kp;
-            pq += term;
-        });
-        const double alpha = rz / pq;
+        applyMatrix(poisson.levels[0].stiffness, p, q);
+        const double alpha = rz / dotOf(p, q);
         double rr = 0;
         for (size_t c = 0; c < n; ++c) {
             result[c] += alpha * p[c];
