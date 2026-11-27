@@ -16,6 +16,7 @@ Ground a person stands on that is not empty and not smooth: stones, rills, ledge
 - After settling (`ground/fn/Finish.cpp`): frozen-ground flow and sorting, stones, stream-bed steps and pools, spring deposits, then water.
 - Queries: `sampleBlock` reads ground tiles plus seams, ore, caves, spring crust and stones; `surfaceAt` / `surveyAt` take a `finest` level (default Site); `stoneAt`; `overlayLive` lays session edits over answers by site cell (`simulation/fn/Live.cpp`).
 - Measured on seed 42 (planet state before the last rock changes, machine loaded): 1 907 stones per hectare on a granite headwater, 668 on a limestone plain; rill spacing median 8–12 m with scatter 0.8–1.0; coarse budget closes exactly; one tile 1.2–1.7 s on one thread; a 4 m voxel chunk 0.56–0.74 ms; 100 m × 100 m of new ground in 5.5 s with Site tiles present.
+- `sampleBlock` (27 Nov, tile-speed stream, d4e97fc) reads the runoff of the site cells a block spans once into a grid and keeps the ground tile under the last column; bit for bit (`terra measure fingerprint --blocks 1`). A 32 × 64 × 32 block on a glaciated Site and at a river mouth, 4.6 Gyr, tiles built: 4.9 → 1.0 ms. The grid assumes `Block::step > 0`.
 
 ## What arises from what
 

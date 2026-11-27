@@ -55,7 +55,8 @@ void routeWater(Domain& domain, FlowScratch& scratch) {
     if (!ground) travelled.assign(cells, 0.0f), scratch.gathered.resize(cells);
     const float sea = float(domain.seaLevel);
     // Cells that carry a river a finished neighbour handed on (Domain::handsOn), and every cell below them.
-    std::vector<uint8_t> handed(domain.settledWay.empty() ? 0 : cells, 0);
+    std::vector<uint8_t>& handed = scratch.handed;
+    handed.assign(domain.settledWay.empty() ? 0 : cells, 0);
 
     // Upstream cells first: by the time a cell is visited it has received all of its water.
     for (size_t step = cells; step-- > 0;) {

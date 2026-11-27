@@ -49,7 +49,7 @@ struct Sweep {
     float holds(int kind, float depth) const { return profileSlope(kind, depth, surge, face[kind]); }
 
     // A cell the train crosses: the water covers it, or the train's swash does.
-    bool covered(size_t i) const { return i != Outside && shore.wave[i * WaveDirections + size_t(train)] > 0; }
+    bool covered(size_t i) const { return i != Outside && shore.wave[trainIndex(domain.cells(), i, train)] > 0; }
     size_t toward(size_t i, int k) const {
         const int x = int(i % size_t(domain.size)) + NeighborX[k], z = int(i / size_t(domain.size)) + NeighborZ[k];
         return x < 0 || z < 0 || x >= domain.size || z >= domain.size ? Outside : domain.index(x, z);
@@ -177,7 +177,7 @@ struct Sweep {
         shore.load[Coarse][i] = shore.load[Sand][i] = 0;
         shore.surf[i] &= 1;
         if (!covered(i)) return;
-        const size_t at = i * WaveDirections + size_t(train), straight = toward(i, train);
+        const size_t at = trainIndex(domain.cells(), i, train), straight = toward(i, train);
         const float water = shore.still[i], depth = water - shore.top[i], height = std::sqrt(shore.arrive[at]);
         surge = std::sqrt(shore.crest[at]);
         for (int kind = 0; kind < SedimentClasses; ++kind) face[kind] = faceSlope(kind, surge);
@@ -306,7 +306,7 @@ void findSurf(const Domain& domain, Shore& shore) {
             shore.surf[i] = 0;
             if (shore.still[i] == NoWater) continue;
             float highest = 0;
-            for (int k = 0; k < WaveDirections; ++k) highest = std::max(highest, shore.arrive[i * WaveDirections + size_t(k)]);
+            for (int k = 0; k < WaveDirections; ++k) highest = std::max(highest, shore.arrive[trainIndex(domain.cells(), i, k)]);
             float shoal = shore.still[i] - shore.top[i];
             if (x > 0 && z > 0 && x < domain.size - 1 && z < domain.size - 1)
                 for (int k = 0; k < 8; ++k) shoal = std::min(shoal, shore.still[i] - 0.5f * (shore.top[i] + shore.top[domain.index(x + NeighborX[k], z + NeighborZ[k])]));

@@ -77,7 +77,7 @@ float flatSea(Level level, float depth, double storm, double swell, int x) {
     routeWater(domain, scratch);
     Shore& shore = shoreOf(domain);
     readStanding(domain, shore), spreadWater(domain, shore), raiseWaves(domain, shore);
-    return std::sqrt(shore.wave[domain.index(x < 0 ? domain.size - 2 : x, domain.size / 2) * WaveDirections + 0]);
+    return std::sqrt(shore.wave[trainIndex(domain.cells(), domain.index(x < 0 ? domain.size - 2 : x, domain.size / 2), 0)]);
 }
 
 // Wave growth against the fetch-limited forecast of the Shore Protection Manual (1984, eq. 3-39):
@@ -192,12 +192,39 @@ void threads() {
     expect(alone.shore->ledger.cut > 0, "the full step loop cut no rock on an exposed chalk shore", alone.shore->ledger.cut);
 }
 
+// A raise after the ground moved within a step works out again only what the move reaches
+// (WaveMemo, coast/type/Shore.hpp); it must leave every train as a raise over all cells does.
+void memoAgrees() {
+    CoastSpec spec;
+    spec.rock = Material::Limestone, spec.other = Material::Chalk;
+    spec.joints = 0.8, spec.windFrom = 30;
+    Domain domain = worked(spec, 4);
+    Shore& shore = shoreOf(domain);
+    readStanding(domain, shore), spreadWater(domain, shore), raiseWaves(domain, shore);
+    const std::vector<float> before = shore.wave;
+    int moved = 0;
+    for (size_t i = 0; i < domain.cells(); i += 37) {
+        if (shore.still[i] == NoWater) continue;
+        shore.top[i] += 0.3f * float(1 + moved % 3);
+        if (moved % 4 == 0) domain.ground.rock[i] -= 0.5f;
+        ++moved;
+    }
+    raiseWaves(domain, shore);
+    Shore full = shore;
+    full.raised.valid = false;
+    raiseWaves(domain, full);
+    const auto same = [](const std::vector<float>& a, const std::vector<float>& b) { return a.size() == b.size() && std::memcmp(a.data(), b.data(), a.size() * sizeof(float)) == 0; };
+    expect(moved > 100 && !same(before, shore.wave), "the check of the wave memo moved no train", moved);
+    expect(same(shore.wave, full.wave) && same(shore.arrive, full.arrive) && same(shore.crest, full.crest), "a raise that kept unchanged cells differs from a full one");
+}
+
 } // namespace
 
 void testCoastVoid();    // CoastVoid.cpp
 void testCoastLakes();   // CoastLake.cpp
 
 void testCoast() {
+    memoAgrees();
     testCoastVoid();
     waveGrowth();
     rockCoasts();

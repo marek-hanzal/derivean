@@ -16,8 +16,28 @@ struct CoastLedger {
 
 inline constexpr float NoWater = -1e30f;
 
+// Index of train `k` at cell `i` of a domain of `cells` cells in the per-train arrays of a Shore. A
+// sweep carries one train at a time, so each train's values lie side by side.
+inline size_t trainIndex(size_t cells, size_t i, int k) { return size_t(k) * cells + i; }
+
+// What the last raiseWaves of a step read of each cell. A train depends on nothing else that changes
+// within a step but the trains of the three cells behind it, so the next raise works out again only
+// the cells whose ground or water moved and those a changed train reaches; every other cell would
+// come out to the same bits (coast/fn/Waves.cpp; testCoast compares against a full raise). It rests
+// on: spreadWater runs before the first raise of every step and clears `valid`; Domain::hold,
+// Domain::seaLevel, `gale` and `beyond` do not change between raises of a step; and every cell with
+// still water has its ring of neighbours inside the box, so a cell that joins the box within a step
+// has no water and no trains.
+struct WaveMemo {
+    bool valid{};                 // false until the trains of this step were raised over every cell; spreadWater clears it
+    const Domain* domain{};       // the domain they were raised over
+    double seaLevel{};
+    std::vector<float> still, top, rock;   // per cell, as that raise read them
+    std::vector<uint8_t> changed, moved;   // per cell: inputs changed since; trains of the current direction changed
+};
+
 // The coast's working state of one replay. Per-cell arrays have Domain::cells() entries; the wave
-// arrays have WaveDirections values per cell.
+// arrays hold WaveDirections blocks of as many, one per train (trainIndex).
 struct Shore {
     std::vector<float> gale;      // m²/s², per train: square of the storm wind that drives it over a cell; fixed for a replay
     std::vector<float> beyond;    // m², per train: what arrives at a Rim cell from outside the domain; empty where none does
@@ -35,6 +55,7 @@ struct Shore {
     std::vector<uint8_t> surf;    // 1 where some train can move the bed or runs over dry ground; 2 where a load waits in the current sweep
     std::vector<uint8_t> stream;  // 1 where running water keeps the bed at still water: a river, a lake's sill, their path through the shallows
     int minX{}, maxX{-1}, minZ{}, maxZ{-1};        // box around every cell with still water, one cell wider
+    WaveMemo raised;
     CoastLedger ledger;
 };
 
