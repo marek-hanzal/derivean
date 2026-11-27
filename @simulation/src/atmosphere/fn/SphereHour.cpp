@@ -7,6 +7,8 @@
 #include <cassert>
 #include <climits>
 #include <cmath>
+#include <type_traits>
+#include <utility>
 
 namespace derivean::sim {
 namespace {
@@ -103,23 +105,28 @@ bool tryWindow(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const
 }
 
 // One window as a transaction: a window shorter than the shortest step is refused before the flow or
-// the steps change; whatever a try throws (the source, an allocation) puts the flow and the hour back as they
-// came in and passes on.
+// the steps change; whatever a try throws (the source, an allocation) puts the flow and the hour back
+// as they came in and passes on. The snapshots are moved back, which allocates nothing, so the
+// restore holds when memory has run out (Codex DREV-CLAUDE-007-04); a copy could fail there too.
+static_assert(std::is_nothrow_move_assignable_v<SphereFlow> && std::is_nothrow_move_assignable_v<SphereHour>,
+              "the hour's restore must not throw");
 bool advanceWindow(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
                    const SphereForcingSource* source, const SphereForcing* held) {
     assert(hour.window > 0 && hour.shortest > 0 && hour.steps >= 1 && hour.attempts >= 1);
     if (hour.window < hour.shortest) {
-        hour.refusals.assign(1, {HourRefusal::Shortest, 0, 0});
+        // Built aside first: an allocation that fails leaves the last window's refusals in place.
+        std::vector<HourTry> only{{HourRefusal::Shortest, 0, 0}};
+        hour.refusals.swap(only);
         return false;
     }
-    const SphereHour entry = hour;
-    const SphereFlow start = flow;
+    SphereHour entry = hour;
+    SphereFlow start = flow;
     hour.refusals.clear();
     try {
         return tryWindow(hour, flow, grid, stencil, poisson, source, held, start);
     } catch (...) {
-        flow = start;
-        hour = entry;
+        flow = std::move(start);
+        hour = std::move(entry);
         throw;
     }
 }
