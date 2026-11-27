@@ -1,17 +1,18 @@
-// The plates of the real generator across a reorganisation (Codex DREV-CLAUDE-005-04): level 5, seed
-// 42, the kinematics alone from TectonicsStart through the first new epoch (step 103) and 27 steps on.
+// The plates of the real generator across a reorganisation (Codex DREV-CLAUDE-005-04; lead, 27 Nov):
+// level 5, seed 42, the kinematics alone from TectonicsStart through the first new epoch (step 103) and
+// 27 steps on.
 // - In the first epoch the band leaves no cell open by half or more at the end of any step and nothing
 //   outside it is open or doubled by more than 0.05 (one lattice per plate).
 // - Dealing the pieces to the new plates moves the old boundaries' holes and overlaps inside one plate
-//   without moving a footprint; the seam closing then consumes every piece its own plate covers by half
-//   or more and fills every cell of the old band open by half or more, so that afterwards no cell
-//   anywhere is open by half or more and no piece is half covered by its own plate.
-// - The steps after keep the band's cells under half open again; the stock of felsic crust and basalt
-//   with the interior stays exact throughout.
-// Outside the band a rigid plate of two lattices can carry a seam's hole of under half a row diagonally
-// over a mantle cell and open it by more (up to √2 of the row, docs/handoff/planet-globe.md), so after
-// the reorganisation the outside is reported in the hand-over, not held to a gate per mantle cell.
+//   without moving a footprint; the seam closing then leaves no piece half covered by its own plate and
+//   no slot inside a plate half open (GlobeGaps.hpp).
+// - The steps after keep both gates in the plate's frame and no cell of a boundary proper (two plates
+//   within its ring) open by half; the stock of felsic crust and basalt with the interior stays exact.
+// A rigid plate of two lattices carries a seam's gap of under half a slot diagonally over the mantle
+// cells and opens them by up to √2 of it, so per mantle cell inside a plate the cover is reported
+// (docs/handoff/planet-globe.md), not gated.
 #include "GlobeFixture.hpp"
+#include "GlobeGaps.hpp"
 
 #include "chronology/constant/Timeline.hpp"
 #include "geometry/constant/Sphere.hpp"
@@ -44,32 +45,24 @@ Covers coversOf(const Globe& globe) {
     return {measureCover(globe, outside), measureCover(globe, band.decide)};
 }
 
-// The largest share of a piece that other pieces of its own plate cover together.
-double worstOwnCover(const Globe& globe) {
-    const SphereGrid& grid = *globe.grid;
-    Coupling exact;
-    couple(grid, globe.pieces, {}, true, exact);
-    double worst = 0;
-    std::vector<int> others;
-    std::vector<PlanePolygon> parts;
-    for (size_t k = 0; k < globe.pieces.size(); ++k) {
-        const CrustPiece& piece = globe.pieces[k];
-        others.clear();
-        for (int32_t s = exact.pieceStart[k]; s < exact.pieceStart[k + 1]; ++s) {
-            const int cell = exact.byPiece[size_t(s)].cell;
-            for (int32_t w = exact.cellStart[size_t(cell)]; w < exact.cellStart[size_t(cell) + 1]; ++w) {
-                const int l = exact.byCell[size_t(w)].piece;
-                if (l != int(k) && globe.pieces[size_t(l)].plate == piece.plate && std::find(others.begin(), others.end(), l) == others.end()) others.push_back(l);
+// The cells of the boundaries proper: with pieces of two plates within their ring.
+GlobeCover coreCover(const Globe& globe) {
+    const Coupling& c = globe.coupling;
+    std::vector<uint8_t> skip(size_t(globe.grid->cells), 1);
+    for (int cell = 0; cell < globe.grid->cells; ++cell) {
+        int plate = -1;
+        const auto look = [&](int at) {
+            for (int32_t s = c.cellStart[size_t(at)]; s < c.cellStart[size_t(at) + 1]; ++s) {
+                const int p = globe.pieces[size_t(c.byCell[size_t(s)].piece)].plate;
+                if (plate < 0) plate = p;
+                else if (p != plate) skip[size_t(cell)] = 0;
             }
-        }
-        if (others.empty()) continue;
-        const TangentPlane plane = tangentPlaneAt(centreOf(grid, piece));
-        const PlanePolygon own = projected(plane, footprintOf(grid, piece));
-        parts.clear();
-        for (const int l : others) parts.push_back(clipped(projected(plane, footprintOf(grid, globe.pieces[size_t(l)])), own));
-        worst = std::max(worst, unionArea(parts).area / piece.area);
+        };
+        look(cell);
+        for (const int32_t other : (*globe.rings)[size_t(cell)])
+            if (other >= 0) look(other);
     }
-    return worst;
+    return measureCover(globe, skip);
 }
 
 double drift(const Globe& globe, const CrustStock& start) {
@@ -107,17 +100,22 @@ void testGlobeEpochs() {
     const Covers dealt = coversOf(globe);
     expect(dealt.outside.worstHole > 0.3 && dealt.outside.worstOverlap > 0.3, "dealing the pieces anew no longer moves a boundary's defects inside a plate", dealt.outside.worstHole);
     closeSeams(globe, old, index);
-    const GlobeCover closed = measureCover(globe);
-    expect(closed.worstHole < 0.5, "a cell stays open by half or more after the seams close", closed.worstHole);
-    expect(worstOwnCover(globe) < 0.5, "a piece stays half covered by its own plate after the seams close", worstOwnCover(globe));
-    expect(globe.stats.sutured > 0 && globe.stats.fossil > 0, "the seams closed nothing", double(globe.stats.sutured));
+    const Gaps closed = measureGaps(globe);
+    expect(closed.ownCover < 0.5, "a piece stays half covered by its own plate after the seams close", closed.ownCover);
+    expect(closed.slotOpen < 0.5, "a slot inside a plate stays half open after the seams close", closed.slotOpen);
+    expect(globe.stats.sutured > 0 && globe.stats.fossil > 0 && globe.stats.unsettled == 0, "the seams closed nothing or did not settle", double(globe.stats.sutured));
+    const long sutured = globe.stats.sutured;
     expect(drift(globe, start) < 1e-12, "the reorganisation loses crust", drift(globe, start));
 
     for (const int end = index + 27; index < end; ++index) {
         step(globe, index);
+        expect(globe.stats.unsettledSubsteps == 0, "a substep used all its rounds of births and sutures", double(globe.stats.unsettledSubsteps));
         if (index % 3 != 2) continue;
-        const Covers c = coversOf(globe);
-        expect(c.band.worstHole < 0.5, "the band leaves a cell open by half or more after the reorganisation", c.band.worstHole);
+        const GlobeCover core = coreCover(globe);
+        expect(core.worstHole < 0.5, "a boundary leaves a cell open by half or more after the reorganisation", core.worstHole);
+        const Gaps gaps = measureGaps(globe);
+        expect(gaps.ownCover < 0.5 && gaps.slotOpen < 0.5, "a plate is half open or half doubled in its own frame after the reorganisation", std::max(gaps.ownCover, gaps.slotOpen));
     }
+    expect(globe.stats.sutured > sutured, "no seam closes in the band after the reorganisation", double(globe.stats.sutured - sutured));
     expect(drift(globe, start) < 1e-12, "the steps after the reorganisation lose crust", drift(globe, start));
 }

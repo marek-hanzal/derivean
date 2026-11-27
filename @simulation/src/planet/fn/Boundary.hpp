@@ -22,26 +22,24 @@ struct Substep {
 // continent, older ocean under younger (the higher plate index on a tie); two continents do not sink.
 bool sinksUnder(const Globe& globe, int donor, int survivor);
 
+// Whether a piece carries continental crust (at least OceanicLimit).
+bool continentalPiece(const CrustPiece& piece);
+
+// A transfer plan's rule for a donor that reaches a survivor: it sinks under the survivor, or both are
+// ocean, which never stack, so a chain that ends on an older ocean still sends the donor down.
+bool sinksInPlan(const Globe& globe, int donor, int survivor);
+
 // The unit tangent at `from` along the great circle towards `to`.
 Vec3 towards(Vec3 from, Vec3 to);
 
 // planet/fn/Consume.cpp: the pieces overriding plates cover by half or more, the plan, its booking.
 void consumeInBand(Globe& globe, Band& band, const Substep& substep);
 
-// planet/fn/Spread.cpp: new pieces in deciding cells uncovered by half or more where a contact opens.
-void bearInBand(Globe& globe, Band& band, const Substep& substep);
-
-// Fills a cell left open by half or more where no contact opens (Codex DREV-CLAUDE-005-04): a seam
-// between two lattices of one plate, or a hole at a closing or sliding contact that consumption did not
-// make (holdOpening keeps it from making one). A new piece of `plate` goes into the slot of its lattice
-// that covers most of the cell, else onto the cell itself, with crust necked from continental
-// neighbours or ocean floor (layNewPiece).
-bool fillCell(Globe& globe, Band& band, int cell, int plate, PieceKey key, double bornAt);
-
-// Lays `fresh` (key, plate, birth cell, rotation, area and bornAt set) over `cell` and joins it to the
-// band: crust necked from its plate's continental neighbours across the cell's edges when `stretch`
-// (S3-design.md §4), else ocean floor, 7 km of basalt from the interior.
-void layNewPiece(Globe& globe, Band& band, CrustPiece fresh, int cell, bool stretch);
+// planet/fn/Spread.cpp: new pieces in deciding cells uncovered by half or more where a contact opens,
+// and in slots half open inside one plate. A substep bears up to BearRounds times, again after each
+// suture of its seams that consumed something (planet/fn/Seam.hpp); `round` numbers them.
+inline constexpr int BearRounds = 6;
+void bearInBand(Globe& globe, Band& band, const Substep& substep, int round);
 
 // The end of a step's or a reorganisation's band work: the consumed gone, the pieces in key order and
 // the coupling of the whole globe, exact for the band's pieces and cloud-in-cell for the rest.

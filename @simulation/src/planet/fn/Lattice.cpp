@@ -72,7 +72,7 @@ bool openSlot(Globe& globe, const Band& band, int cell, int plate, Vec3 normal, 
     for (const int32_t other : (*globe.rings)[size_t(cell)])
         if (other >= 0) gather(other);
     std::sort(near.begin(), near.end(), [&](int a, int b) { return globe.pieces[size_t(a)].key < globe.pieces[size_t(b)].key; });
-    double best = 0, bestCover = 0;   // the open slot covering most of the cell; else, in an open cell, the fill covering most of it
+    double best = 0, bestCover = 0;   // the most open slot; else, in an open cell, the fill covering most of it
     Slot fill;
     std::vector<int> over;
     for (const int t : near) {

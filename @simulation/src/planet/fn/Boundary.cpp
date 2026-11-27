@@ -6,6 +6,7 @@
 #include "planet/fn/Coupling.hpp"
 #include "planet/fn/Pieces.hpp"
 #include "planet/fn/Rotate.hpp"
+#include "planet/fn/Seam.hpp"
 #include "tectonics/fn/Euler.hpp"
 
 #include <algorithm>
@@ -51,17 +52,22 @@ void turn(std::vector<CrustPiece>& pieces, const std::vector<Rotation>& step, co
     }
 }
 
-bool continental(const CrustPiece& piece) { return piece.column.crust >= float(OceanicLimit); }
 
 } // namespace
 
 bool sinksUnder(const Globe& globe, int donor, int survivor) {
     const CrustPiece& d = globe.pieces[size_t(donor)];
     const CrustPiece& s = globe.pieces[size_t(survivor)];
-    if (continental(d)) return false;
-    if (continental(s)) return true;
+    if (continentalPiece(d)) return false;
+    if (continentalPiece(s)) return true;
     if (d.column.oceanAge != s.column.oceanAge) return d.column.oceanAge > s.column.oceanAge;
     return d.plate > s.plate;
+}
+
+bool continentalPiece(const CrustPiece& piece) { return piece.column.crust >= float(OceanicLimit); }
+
+bool sinksInPlan(const Globe& globe, int donor, int survivor) {
+    return sinksUnder(globe, donor, survivor) || (!continentalPiece(globe.pieces[size_t(donor)]) && !continentalPiece(globe.pieces[size_t(survivor)]));
 }
 
 Vec3 towards(Vec3 from, Vec3 to) {
@@ -91,7 +97,14 @@ void advancePlates(Globe& globe, double dt, int step, int refine) {
         coupleBand(globe, band);
         const Substep substep{step, index, dt / substeps};
         consumeInBand(globe, band, substep);
-        bearInBand(globe, band, substep);
+        // Sutures follow every round of births, so no piece is left half covered by its own plate, and
+        // the births come again after a suture, which nothing holds back, until a round consumes nothing.
+        int round = 0;
+        for (; round < BearRounds; ++round) {
+            bearInBand(globe, band, substep, round);
+            if (sutureBand(globe, band, substep) == 0) break;
+        }
+        globe.stats.unsettledSubsteps += round == BearRounds;
         ++globe.stats.substeps;
     }
     clockPhase(globe, GlobePhase::Substeps, mark);

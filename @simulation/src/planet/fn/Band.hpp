@@ -6,10 +6,11 @@ namespace derivean::sim {
 
 // The boundary band of one planet step (S3-design.md §4). The core is every cell that has pieces of
 // two plates within its ring, read from the coupling at the step's start. Within the step a plate
-// moves at most `sweep` rings, so births and consumptions can only happen in the core widened by
-// sweep + 1 rings (`decide`), and only pieces listed within 2 · sweep + 3 rings of the core can reach
-// a deciding cell (a ring more than the sweep and the footprint need, for the ring metric against the
-// geodesic one): those are the band's pieces, the only ones coupled exactly in the substeps. Deciding
+// moves at most `sweep` rings, so consumptions happen in the core widened by sweep + 1 rings (`decide`)
+// and births over a deciding cell or a ring further (a slot of a lattice beside one), and only pieces
+// listed within 2 · sweep + 3 rings of the core can reach those: the band's pieces, the only ones
+// coupled exactly in the substeps. A piece outside them starts at least sweep + 2 rings from a deciding
+// cell and so ends a substep at least 2 rings from one. Deciding
 // is never done from cloud-in-cell weights. The weights list every piece in the cell of its centre, and
 // `requireBandHeld` checks along every substep's turn that no piece outside the band reaches a deciding
 // cell.
@@ -30,6 +31,12 @@ struct Band {
     // The pieces born in the current substep, with their exact overlaps per region cell, so every later
     // birth of the substep reads them (Codex DREV-CLAUDE-005-01); coupleBand folds them into the lists.
     std::vector<std::vector<PieceWeight>> born;   // per region cell
+    // The openness of lattice slots inside one plate (planet/fn/Interior.hpp) as last measured, per
+    // piece and edge, valid while its stamp is `slotGeneration`: a new substep, a new piece and a
+    // consumed one each start a new generation, so nothing measured before them is read.
+    std::vector<float> slotOpen;
+    std::vector<uint32_t> slotStamp;
+    uint32_t slotGeneration{1};
 };
 
 // Marks the band from the globe's coupling at the start of a step.
@@ -38,16 +45,24 @@ void markBand(const Globe& globe, int sweep, Band& band);
 // Exact overlaps of every live band piece as the pieces stand; lists per region cell.
 void coupleBand(const Globe& globe, Band& band);
 
-// The pieces outside the band whose centre at the step's start lies within sweep + 3 rings of a deciding
-// cell: the only ones a step's turn could bring to one (a ring more than the footprint needs, for the
-// ring metric against the geodesic one). Read before the pieces outside the band turn.
+// The rings round a point within which every cell that a footprint centred there can reach lies: a
+// footprint reaches at most its cell's largest chord to a corner from its centre, and two of those plus
+// a quarter of the shortest edge (about two edges, the rhombic cells at the cube's corners included)
+// stay under three rings of the narrowest cells on the cubed sphere, while a piece outside the band
+// stays at least two rings, 2.5 edges, from a deciding cell (Band), so the check cannot fail falsely.
+inline constexpr int GuardRings = 3;
+
+// The pieces outside the band whose centre at the step's start lies within sweep + GuardRings + 1 rings
+// of a deciding cell: the only ones a step's turn could bring to one, since the sweep is taken from the
+// fastest plate. Read before the pieces outside the band turn.
 std::vector<int32_t> nearBand(const Globe& globe, const Band& band);
 
 // Fatal when one of `near` reaches a deciding cell in the substep it has just turned through (`dt`, yr):
 // the band missed it (Codex DREV-CLAUDE-005-04). Checked after the turn, at the piece's end position and
-// back along its arc at points at most half the shortest edge apart, the substep's start included. A
-// footprint is one cell turned, so with its centre within a quarter edge of a point it reaches no further
-// than the ring of that point's cell.
+// back along its arc at points at most half the shortest edge apart, the substep's start included: a
+// deciding cell within GuardRings of a point is reached when its centre is nearer than the two cells'
+// largest chords to a corner (`SphereGrid::reach`) and a quarter of the shortest edge (the envelope ρ_k +
+// ρ_c of S3-design.md §4 V3, so a piece born in a large cell that drifts among small ones is caught).
 void requireBandHeld(const Globe& globe, const Band& band, const std::vector<int32_t>& near, double dt, double shortest);
 
 // Adds a piece born in this substep to the band with its exact overlaps.
@@ -73,7 +88,8 @@ template <class Live> void forLive(const Band& band, int cell, Live live) {
     forListed(band, cell, live);
     const int32_t r = band.region[size_t(cell)];
     if (r < 0) return;
-    for (const PieceWeight& w : band.born[size_t(r)]) live(w.piece, w.area);
+    for (const PieceWeight& w : band.born[size_t(r)])
+        if (!band.dead[size_t(w.piece)]) live(w.piece, w.area);   // a birth sutured in its own substep is gone
 }
 
 } // namespace derivean::sim

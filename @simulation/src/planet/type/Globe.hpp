@@ -115,9 +115,11 @@ struct GlobeStats {
     long substeps{}, rounds{}, births{}, consumptions{}, cancelled{}, deferred{}, churned{}, welded{};   // welded: births with no lattice slot
     long contested{};   // candidates two or more overriding plates cover (triple junctions)
     long bandCells{}, exactPieces{}, unions{};
-    long filled{};   // births in cells open by half or more where no contact opens (fillCell)
+    long filled{};   // births where no contact opens: fillCell (at closings too) and fillSlot in the band (not the fossils' slots)
     long held{};   // candidates held back since consuming them would open a cell by more than half
-    long sutured{}, seamsKept{}, fossil{};   // at reorganisations: consumed by their own plate, kept for want of room, born in old band cells
+    long sutured{}, seamsKept{}, fossil{};   // seams: consumed by their own plate, kept for want of room, born in old band slots at reorganisations
+    long unsettled{};                         // reorganisations whose seams did not settle in SeamRounds
+    long unsettledSubsteps{};                 // substeps whose sutures still consumed after BearRounds rounds of births
 };
 
 struct Globe {

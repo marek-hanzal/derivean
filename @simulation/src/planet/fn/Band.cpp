@@ -30,6 +30,18 @@ void widen(const std::vector<CellRing>& rings, std::vector<uint8_t>& set, std::v
     std::sort(cells.begin(), cells.end());
 }
 
+// The cells within `count` rings of one cell (a few dozen).
+void around(const std::vector<CellRing>& rings, int cell, int count, std::vector<int32_t>& out) {
+    out.assign(1, cell);
+    for (int ring = 0, from = 0; ring < count; ++ring) {
+        const int to = int(out.size());
+        for (int i = from; i < to; ++i)
+            for (const int32_t other : rings[size_t(out[size_t(i)])])
+                if (other >= 0 && std::find(out.begin(), out.end(), other) == out.end()) out.push_back(other);
+        from = to;
+    }
+}
+
 } // namespace
 
 void markBand(const Globe& globe, int sweep, Band& band) {
@@ -110,13 +122,14 @@ void coupleBand(const Globe& globe, Band& band) {
             if (r >= 0) band.lists[size_t(fill[size_t(r)]++)] = {band.pieces[b], w.area};
         }
     band.born.assign(band.regionCells.size(), {});
+    ++band.slotGeneration;
 }
 
 std::vector<int32_t> nearBand(const Globe& globe, const Band& band) {
     const SphereGrid& grid = *globe.grid;
     std::vector<uint8_t> near = band.decide;
     std::vector<int32_t> cells = band.cells;
-    widen(*globe.rings, near, cells, band.sweep + 3);
+    widen(*globe.rings, near, cells, band.sweep + GuardRings + 1);
     std::vector<int32_t> pieces;
     for (size_t k = 0; k < band.member.size(); ++k)
         if (!band.member[k] && near[size_t(indexOf(grid, cellOf(centreOf(grid, globe.pieces[k]), grid.level)))]) pieces.push_back(int32_t(k));
@@ -125,16 +138,22 @@ std::vector<int32_t> nearBand(const Globe& globe, const Band& band) {
 
 void requireBandHeld(const Globe& globe, const Band& band, const std::vector<int32_t>& near, double dt, double shortest) {
     const SphereGrid& grid = *globe.grid;
+    const double between = 0.25 * shortest / PlanetRadius;   // of a point of the arc from the nearest sample
+    std::vector<int32_t> cells;
     for (const int32_t k : near) {
         const CrustPiece& piece = globe.pieces[size_t(k)];
         const Vec3 euler = globe.applied[piece.plate];
         const int samples = std::max(1, int(std::ceil(length(euler) * PlanetRadius * dt / (0.5 * shortest))));
         for (int j = 0; j <= samples; ++j) {
             const Rotation back = j == 0 ? piece.rotation : compose(rotationOf(euler, -dt * j / samples), piece.rotation);
-            const int cell = indexOf(grid, cellOf(rotate(back, grid.centre[size_t(piece.birth)]), grid.level));
-            bool reaches = band.decide[size_t(cell)];
-            for (const int32_t other : (*globe.rings)[size_t(cell)]) reaches = reaches || (other >= 0 && band.decide[size_t(other)]);
-            require(!reaches, "a piece outside the band reaches a deciding cell", double(k));
+            const Vec3 at = rotate(back, grid.centre[size_t(piece.birth)]);
+            around(*globe.rings, indexOf(grid, cellOf(at, grid.level)), GuardRings, cells);
+            for (const int32_t c : cells) {
+                if (!band.decide[size_t(c)]) continue;
+                const Vec3 d = at - grid.centre[size_t(c)];
+                const double apart = grid.reach[size_t(piece.birth)] + grid.reach[size_t(c)] + between;
+                require(dot(d, d) >= apart * apart, "a piece outside the band reaches a deciding cell", double(k));
+            }
         }
     }
 }
@@ -143,6 +162,7 @@ void joinBand(const Globe& globe, Band& band, int piece) {
     band.member.resize(globe.pieces.size(), 0);
     band.dead.resize(globe.pieces.size(), 0);
     band.member[size_t(piece)] = 1;
+    ++band.slotGeneration;
     band.pieces.push_back(piece);
     std::vector<CellWeight> weights;
     std::vector<int> cells, work;

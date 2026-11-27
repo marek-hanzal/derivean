@@ -19,8 +19,7 @@ void markStacked(CrustPiece& piece, double time, float strike) {
     piece.column.basement = Basement::Orogen;
 }
 
-// A seam closes inside one plate (substep index < 0, planet/fn/Seam.hpp), so its stacking brakes nothing.
-void book(Globe& globe, const Transfer& t, const std::vector<int>& global, std::vector<Cover>& covers, std::vector<int>& coverOf, bool brakes) {
+void book(Globe& globe, const Transfer& t, const std::vector<int>& global, std::vector<Cover>& covers, std::vector<int>& coverOf, bool boundary) {
     CrustPiece& from = globe.pieces[size_t(global[size_t(t.from)])];
     const double felsic = takeFelsic(from, t.felsic);
     const double basalt = std::clamp(t.basalt, 0.0, from.stock.basalt);
@@ -46,19 +45,23 @@ void book(Globe& globe, const Transfer& t, const std::vector<int>& global, std::
     Cover share = covers[size_t(coverOf[size_t(t.from)])];
     scaleCover(share, float(t.cover * from.area / to.area));
     stackCover(to.record.cover, share);
-    const Vec3 at = centreOf(*globe.grid, to);
-    markStacked(to, globe.time, flatStrikeOf(at, towards(at, centreOf(*globe.grid, from))));
-    if (brakes) globe.motion[from.plate].resistance += felsic;
+    if (boundary) {
+        const Vec3 at = centreOf(*globe.grid, to);
+        markStacked(to, globe.time, flatStrikeOf(at, towards(at, centreOf(*globe.grid, from))));
+        globe.motion[from.plate].resistance += felsic;
+    }
     globe.ledger.stacked += felsic;
 }
 
 } // namespace
 
-int PlanPieces::localOf(const Globe& globe, int piece) {
+int localOf(PlanPieces& plan, const Globe& globe, int piece) {
+    std::vector<int>& local = plan.local;
+    PlanInput& input = plan.input;
     if (local[size_t(piece)] >= 0) return local[size_t(piece)];
     const CrustPiece& p = globe.pieces[size_t(piece)];
-    local[size_t(piece)] = int(global.size());
-    global.push_back(piece);
+    local[size_t(piece)] = int(plan.global.size());
+    plan.global.push_back(piece);
     input.key.push_back(p.key);
     input.plate.push_back(p.plate);
     input.felsic.push_back(p.stock.felsic);
@@ -68,13 +71,13 @@ int PlanPieces::localOf(const Globe& globe, int piece) {
     return local[size_t(piece)];
 }
 
-void applyPlan(Globe& globe, Band& band, const PlanPieces& pieces, const PlanResult& plan, const Substep& substep) {
+void applyPlan(Globe& globe, Band& band, const PlanPieces& pieces, const PlanResult& plan, const Substep& substep, bool boundary) {
     const std::vector<int>& global = pieces.global;
     // Covers are read as they stood before any transfer, so a donor's share does not depend on order.
     std::vector<Cover> covers;
     std::vector<int> coverOf(global.size(), -1);
     for (const int d : plan.consumed) coverOf[size_t(d)] = int(covers.size()), covers.push_back(globe.pieces[size_t(global[size_t(d)])].record.cover);
-    for (const Transfer& t : plan.transfers) book(globe, t, global, covers, coverOf, substep.index >= 0);
+    for (const Transfer& t : plan.transfers) book(globe, t, global, covers, coverOf, boundary);
     for (const int d : plan.consumed) globe.ledger.consumedFelsic += pieces.input.felsic[size_t(d)];
     const double now = globe.time + (substep.index + 1) * substep.duration;
     for (const int d : plan.consumed) {
@@ -86,6 +89,7 @@ void applyPlan(Globe& globe, Band& band, const PlanPieces& pieces, const PlanRes
         globe.ledger.subducted += gone.stock.felsic;
         gone.stock = {};
         band.dead[size_t(k)] = 1;
+        ++band.slotGeneration;
         globe.ledger.consumed += gone.area;
         ++globe.stats.consumptions;
         if (gone.key.step >= 0 && now - gone.bornAt < ChurnAge) globe.ledger.churned += gone.area, ++globe.stats.churned;
