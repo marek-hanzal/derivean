@@ -4,6 +4,7 @@
 #include "groundwater/fn/Regional.hpp"
 #include "groundwater/fn/Stages.hpp"
 
+#include <optional>
 #include <stdexcept>
 
 namespace derivean::sim {
@@ -37,26 +38,48 @@ std::shared_ptr<const RegionalTile> Aquifers::findRegional(TileKey region) const
 }
 
 template <class T, class Build>
-std::shared_ptr<const T> Aquifers::once(Slots<T>& slots, TileKey key, Build&& build) {
-    {
+std::shared_ptr<const T> Aquifers::once(Slots<T>& slots, TileKey key, Workers* workers, bool wait, Build&& build) {
+    // A thread that claimed a local tile waits for region tiles and landscape tiles only, one
+    // that claimed a region tile for landscape tiles only, and the landscape tiles ground water
+    // asks the atlas for never ask for ground water. Only a ground tile asks, and nothing here
+    // waits for one. A waiter without a claim of its own works the pool's queue meanwhile; one
+    // with a claim only waits (Workers::Claim).
+    const auto settled = [&] { return slots[key].tile != nullptr || !slots[key].claimed; };
+    std::optional<Workers::Claim> claim;
+    while (true) {
+        if (!wait) {
+            // Asked ahead: built or under way is enough.
+            std::lock_guard lock(mutex_);
+            Slot<T>& slot = slots[key];
+            if (slot.tile || slot.claimed) return slot.tile;
+            slot.claimed = true;
+            claim.emplace();
+            break;
+        }
+        if (workers)
+            workers->helpUntil([&] {
+                std::lock_guard lock(mutex_);
+                return settled();
+            });
         std::unique_lock lock(mutex_);
-        // A thread that claimed a local tile waits for region tiles and landscape tiles only, one
-        // that claimed a region tile for landscape tiles only, and the landscape tiles ground
-        // water asks the atlas for never ask for ground water: sleeping here cannot close a circle.
-        // Only a ground tile asks, and nothing here waits for one.
-        done_.wait(lock, [&] { return slots[key].tile != nullptr || !slots[key].claimed; });
+        // Another waiter may have claimed it since: wait again.
+        if (workers && !settled()) continue;
+        done_.wait(lock, settled);
         Slot<T>& slot = slots[key];
         if (slot.tile) return slot.tile;
         // Unclaimed: never built, or the build threw and gave the claim back. A tile is a pure
         // function of the setting and the key, so a waiter then works it out itself rather than
         // sharing a failure that may have been the machine's.
         slot.claimed = true;
+        claim.emplace();
+        break;
     }
     // A build that throws gives the claim back, so that nobody waits for it forever.
     struct Release {
         Aquifers& owner;
         Slots<T>& slots;
         TileKey key;
+        Workers* workers;
         bool done{};
         ~Release() {
             if (done) return;
@@ -65,8 +88,9 @@ std::shared_ptr<const T> Aquifers::once(Slots<T>& slots, TileKey key, Build&& bu
                 slots[key].claimed = false;
             }
             owner.done_.notify_all();
+            if (workers) workers->notify();
         }
-    } release{*this, slots, key};
+    } release{*this, slots, key, workers};
     std::shared_ptr<const T> tile = build();
     {
         std::lock_guard lock(mutex_);
@@ -74,16 +98,37 @@ std::shared_ptr<const T> Aquifers::once(Slots<T>& slots, TileKey key, Build&& bu
     }
     release.done = true;
     done_.notify_all();
+    if (workers) workers->notify();
     return tile;
 }
 
-std::shared_ptr<const RegionalTile> Aquifers::requireRegional(Atlas& atlas, TileKey region, BuildMode mode) {
-    return once(regional_, region, [&] {
+std::shared_ptr<const RegionalTile> Aquifers::requireRegional(Atlas& atlas, TileKey region, BuildMode mode) { return regional(atlas, region, mode, true); }
+
+std::shared_ptr<const RegionalTile> Aquifers::regional(Atlas& atlas, TileKey region, BuildMode mode, bool wait) {
+    return once(regional_, region, atlas.setting().workers, wait, [&] {
         std::shared_ptr<const Tile> held[9];
         const Tile* around[9];
         requireAround(atlas, region, mode, held, around);
         return std::shared_ptr<const RegionalTile>(buildRegional(atlas.setting(), region, around));
     });
+}
+
+void Aquifers::requestRegional(Atlas& atlas, TileKey region) {
+    {
+        std::lock_guard lock(mutex_);
+        Slot<RegionalTile>& slot = regional_[region];
+        if (slot.tile || slot.claimed || slot.requested) return;
+        slot.requested = true;
+    }
+    // The task never waits: a region someone else builds is left to them. A build that throws here
+    // is left to whoever requires the tile: it builds anew and gets the exception itself, where the
+    // pool has nobody to pass it to.
+    atlas.setting().workers->submit([this, &atlas, region] {
+        try {
+            regional(atlas, region, BuildMode::Demand, false);
+        } catch (...) {
+        }
+    }, 1000 - int(region.level) * 100 - 1);
 }
 
 std::vector<std::shared_ptr<const RegionalTile>> Aquifers::regionsUnder(Atlas& atlas, TileKey local, BuildMode mode) {
@@ -97,7 +142,11 @@ std::vector<std::shared_ptr<const RegionalTile>> Aquifers::regionsUnder(Atlas& a
 }
 
 std::shared_ptr<const GroundwaterTile> Aquifers::require(Atlas& atlas, TileKey local, BuildMode mode) {
-    return once(slots_, local, [&] {
+    return once(slots_, local, atlas.setting().workers, true, [&] {
+        // The regional flow under the field reads no local tile: the pool builds it side by side
+        // with the local tiles and with each other, and regionsUnder takes it or waits for it.
+        if (mode == BuildMode::Demand && atlas.setting().workers)
+            for (const TileKey region : aquiferRegions(local)) requestRegional(atlas, region);
         std::shared_ptr<const Tile> held[9];
         const Tile* around[9];
         requireAround(atlas, local, mode, held, around);

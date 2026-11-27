@@ -26,6 +26,12 @@ public:
     // The regional flow of a region tile, from the nine region tiles around it; as `require`.
     std::shared_ptr<const RegionalTile> requireRegional(Atlas& atlas, TileKey region, BuildMode mode = BuildMode::Demand);
 
+    // Starts the regional flow of a region tile on the atlas's pool, just below the priority of
+    // the region tiles it reads and above the local ones, so that a local build finds its regions
+    // under way; whoever requires it meanwhile waits for it or builds it. The task holds this and
+    // the atlas: the pool must stop before either goes, as World's destructor makes sure.
+    void requestRegional(Atlas& atlas, TileKey region);
+
     // The regional flow of the region tiles under the field of a local tile: what `require` hands
     // its build (fn/Inflow.hpp).
     std::vector<std::shared_ptr<const RegionalTile>> regionsUnder(Atlas& atlas, TileKey local, BuildMode mode = BuildMode::Demand);
@@ -41,12 +47,15 @@ private:
     struct Slot {
         std::shared_ptr<const T> tile;
         bool claimed{};
+        bool requested{};   // handed to the pool ahead (requestRegional)
     };
     template <class T>
     using Slots = std::unordered_map<TileKey, Slot<T>, TileKeyHash>;
 
     template <class T, class Build>
-    std::shared_ptr<const T> once(Slots<T>& slots, TileKey key, Build&& build);
+    std::shared_ptr<const T> once(Slots<T>& slots, TileKey key, Workers* workers, bool wait, Build&& build);
+    // `wait` false returns at once, null, where someone else has claimed the region.
+    std::shared_ptr<const RegionalTile> regional(Atlas& atlas, TileKey region, BuildMode mode, bool wait);
 
     mutable std::mutex mutex_;
     std::condition_variable done_;
