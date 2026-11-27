@@ -1,6 +1,7 @@
 #include "planet/fn/Boundary.hpp"
 
 #include "chronology/constant/Timeline.hpp"
+#include "core/fn/Listed.hpp"
 #include "geometry/constant/Sphere.hpp"
 #include "geometry/fn/Cell.hpp"
 #include "geometry/fn/Overlap.hpp"
@@ -168,7 +169,7 @@ void consumeInBand(Globe& globe, Band& band, const Substep& substep) {
             deciding = deciding || band.decide[size_t(cell)];
             const BandList list = listOf(band, cell);
             for (const PieceWeight* w = list.begin; w != list.end; ++w)
-                if (globe.pieces[size_t(w->piece)].plate != piece.plate && std::find(partners.begin(), partners.end(), w->piece) == partners.end())
+                if (globe.pieces[size_t(w->piece)].plate != piece.plate && !listed(partners, int(w->piece)))
                     partners.push_back(w->piece);
         }
         if (!deciding || partners.empty()) continue;

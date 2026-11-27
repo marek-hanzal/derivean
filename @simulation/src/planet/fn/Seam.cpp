@@ -1,5 +1,6 @@
 #include "planet/fn/Seam.hpp"
 
+#include "core/fn/Listed.hpp"
 #include "geometry/fn/Overlap.hpp"
 #include "geometry/fn/SpherePolygon.hpp"
 #include "geometry/fn/Union.hpp"
@@ -59,7 +60,7 @@ size_t suture(Globe& globe, Band& band, const Substep& substep) {
             deciding = deciding || band.decide[size_t(cell)];
             forLive(band, cell, [&](int l, double) {
                 if (l != k && globe.pieces[size_t(l)].plate == piece.plate && !tiles(globe.pieces[size_t(l)], piece) &&
-                    std::find(over.begin(), over.end(), l) == over.end())
+                    !listed(over, l))
                     over.push_back(l);
             });
         }

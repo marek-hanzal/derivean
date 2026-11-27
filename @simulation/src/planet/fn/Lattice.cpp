@@ -1,5 +1,6 @@
 #include "planet/fn/Lattice.hpp"
 
+#include "core/fn/Listed.hpp"
 #include "geometry/constant/Sphere.hpp"
 #include "geometry/fn/Overlap.hpp"
 #include "geometry/fn/Rotation.hpp"
@@ -88,7 +89,7 @@ bool openSlot(Globe& globe, const Band& band, int cell, int plate, Vec3 normal, 
     std::vector<int> near;
     const auto gather = [&](int c) {
         forLive(band, c, [&](int k, double) {
-            if (std::find(near.begin(), near.end(), k) == near.end()) near.push_back(k);
+            if (!listed(near, k)) near.push_back(k);
         });
     };
     gather(cell);

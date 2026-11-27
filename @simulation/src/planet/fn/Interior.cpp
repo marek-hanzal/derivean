@@ -1,5 +1,6 @@
 #include "planet/fn/Interior.hpp"
 
+#include "core/fn/Listed.hpp"
 #include "geometry/fn/Cell.hpp"
 #include "geometry/fn/Overlap.hpp"
 #include "geometry/fn/Rotation.hpp"
@@ -62,7 +63,7 @@ bool interiorSlot(Globe& globe, Band& band, int cell, InteriorSlot& found) {
     std::vector<int> templates, near;
     const auto gather = [&](std::vector<int>& into, int c) {
         forLive(band, c, [&](int k, double) {
-            if (std::find(into.begin(), into.end(), k) == into.end()) into.push_back(k);
+            if (!listed(into, k)) into.push_back(k);
         });
     };
     gather(templates, cell);
