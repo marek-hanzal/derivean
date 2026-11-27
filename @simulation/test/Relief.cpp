@@ -46,6 +46,12 @@ double worstFace(const Domain& domain, double sound) {
     return worst;
 }
 
+// A tile sends out no more sediment than it eroded and took in. Loads are carried as floats and
+// booked in doubles where they cross the edge, so a tile that passes on nearly all it takes in
+// matches to a float's rounding of that throughput (Local 906 584 of the young world: 4e3 m³ over
+// on 3.1e12), not to a cubic metre.
+bool sendsNoMore(const TileLedger& ledger) { return ledger.sedimentOut <= ledger.eroded + ledger.sedimentIn + 1e-7 * (ledger.eroded + ledger.sedimentIn) + 1; }
+
 // m of ground the water took off the tile's own cells, as a mean over them.
 double erodedFrom(const Domain& domain) { return domain.ledger.eroded / (domain.cell * domain.cell * TileCells * TileCells); }
 
@@ -196,11 +202,7 @@ void testReliefCover() {
         const LooseStand stand = looseStand(tile, cell);
         expectLandscape(stand.unsupported < std::max(4.0, 0.25 * cell), "loose cover stands steeper than its repose on a finished tile", stand.unsupported);
         expectLandscape(stand.thickest < 100, "a finished tile carries a column of loose cover", stand.thickest);
-        // Loads are carried as floats and booked in doubles where they cross the edge, so a tile that
-        // passes nearly all it takes in matches to about 1e-7 of that, not to a cubic metre.
-        const TileLedger& ledger = tile.ledger;
-        const double slack = 1e-6 * (ledger.eroded + ledger.sedimentIn) + 1;
-        expectLandscape(ledger.sedimentOut <= ledger.eroded + ledger.sedimentIn + slack, "a tile sends out more sediment than it eroded and took in", ledger.sedimentOut / (ledger.eroded + ledger.sedimentIn + 1));
+        expectLandscape(sendsNoMore(tile.ledger), "a tile sends out more sediment than it eroded and took in", tile.ledger.sedimentOut / (tile.ledger.eroded + tile.ledger.sedimentIn + 1));
     }
 }
 
@@ -240,5 +242,5 @@ void testReliefLedger() {
     const TileLedger& ledger = world.atlas.require({Level::Local, 705, 261})->ledger;
     std::printf("relief: coast tile 705 261 eroded %.3g m3, took in %.3g, sent out %.3g\n", ledger.eroded, ledger.sedimentIn, ledger.sedimentOut);
     expectLandscape(ledger.eroded > 0 && ledger.sedimentOut > 0, "the coast tile neither eroded nor sent out sediment", ledger.eroded);
-    expectLandscape(ledger.sedimentOut <= ledger.eroded + ledger.sedimentIn + 1, "a coast tile sends out more sediment than it eroded and took in", ledger.sedimentOut / (ledger.eroded + ledger.sedimentIn + 1));
+    expectLandscape(sendsNoMore(ledger), "a coast tile sends out more sediment than it eroded and took in", ledger.sedimentOut / (ledger.eroded + ledger.sedimentIn + 1));
 }
