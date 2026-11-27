@@ -169,6 +169,10 @@ void testFractionalCut() {
             expect(end > walked.seconds && round < 64, "a round does not end past the time it starts at", walked.seconds - walked.opened);
             walked.seconds = end;
         }
+        // Far past 2^53 s a year's division rounds short (DREV-011-03): still a step on.
+        walked.seconds = 10062568091.0 * 31557600.0;
+        walked.opened = 0;
+        expect(roundEnd(walked) > walked.seconds, "a round far in time does not end past now", walked.seconds);
         for (const double span : {7200.0, 14400.0, 28800.0, DaySeconds + 1.0}) {
             const bool settled = span < DaySeconds;   // a day and a second is integrated on its own
             Ocean cut = chain(opened), whole = chain(std::floor(opened));

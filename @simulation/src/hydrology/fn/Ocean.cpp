@@ -99,9 +99,14 @@ double nextRoundOffset(double age) {
 // A round ends where `opened + offset` rounds to, and the integration stops on that stored time.
 // The age read back from it can fall short of the offset, so the search starts half the first
 // round early, at most one end back, and takes whole rounds until the stored end lies past now.
+// Past 2^53 s an offset divided by the year can round below its own round, which would give the
+// same offset back; a step that does not move takes the longest round instead.
 double roundEnd(const Ocean& ocean) {
     double offset = nextRoundOffset(ocean.seconds - ocean.opened - 0.5 * FirstRound);
-    while (ocean.opened + offset <= ocean.seconds && std::isfinite(offset)) offset = nextRoundOffset(offset);
+    while (ocean.opened + offset <= ocean.seconds && std::isfinite(offset)) {
+        const double next = nextRoundOffset(offset);
+        offset = next > offset ? next : offset + LongestRound;
+    }
     return ocean.opened + offset;
 }
 
