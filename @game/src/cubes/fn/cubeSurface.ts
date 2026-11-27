@@ -63,8 +63,12 @@ export function cubeSurface({ sky, levels, palette, anchor, shadow, snow, land }
     return mass;
   })(), "vSnow");
   // The snow round a face, one value for the whole face, read at its middle: what the ground in front of a riser
-  // sends back.
-  const around = snow && varying(snowMass(snow, modelWorldMatrix.mul(vec4(face.middle, 1)).xyz, sky.airSea), "vSnowAround");
+  // sends back, and, through the land light, of a top on a slope. A batch's holes read none.
+  const around = snow && varying(Fn(() => {
+    const mass = float(0).toVar();
+    If(face.held, () => { mass.assign(snowMass(snow, modelWorldMatrix.mul(vec4(face.middle, 1)).xyz, sky.airSea)); });
+    return mass;
+  })(), "vSnowAround");
   material.colorNode = Fn(() => {
     const { row, edge } = levelRows(levels, face);
     const normal = face.normal.normalize();
