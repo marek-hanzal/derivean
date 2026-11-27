@@ -20,7 +20,8 @@ namespace derivean::sim {
 //   circles lifting MoistDepth · LiftTime of air per unit, so Σ_b B_b overturning_b is zero too;
 // - growth is EddyGrowth · storminess of the band's temperature gradient (°C per degree, centred; a
 //   polar band takes itself for the band past the pole, as the flat world's rows wrap) at its
-//   latitude, and the shear the thermal wind of that gradient, westerly where the air cools poleward,
+//   latitude, the two-layer supercriticality (Phillips 1954; Stone 1978), and the shear the thermal
+//   wind of that gradient (Holton & Hakim 2012), westerly where the air cools poleward,
 //   ShearPerGradient · sin 2|φ| per °C per degree, at most ShearLimit either way.
 // Each half needs a band centred in [15°, 35°) and one in [55°, 75°), as every count from 8 has (the
 // grid's side, the count to use, is 8 at level 3), and the base a positive contrast in each; both

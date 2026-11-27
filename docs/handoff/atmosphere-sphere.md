@@ -240,3 +240,4 @@ All listed in `docs/credits/atmosphere.md` ("The atmosphere on the sphere"):
 - Jablonowski & Williamson (2011), biharmonic hyperdiffusion; Gershgorin (1931), the certified bound of the damping;
 - Neumaier (1974), the compensated area sums;
 - Haurwitz (1940), the Rossby–Haurwitz wave; Williamson et al. (1992), the test cases.
+- Phillips (1954), Stone (1978), the two-layer supercriticality behind `storminess`; Holton & Hakim (2012), the thermal wind of the season's shear.
