@@ -156,12 +156,12 @@ long dealStranded(Globe& globe, const PlateRegions& regions, const std::vector<i
     return moved;
 }
 
-// Drops the plates no piece is left on, in order, and renumbers the rest.
-void dropEmptyPlates(Globe& globe) {
+// Drops the plates no piece is left on, in order, and renumbers the rest; whether it dropped any.
+bool dropEmptyPlates(Globe& globe) {
     const size_t n = globe.epoch.plates.size();
     std::vector<long> pieces(n, 0);
     for (const CrustPiece& piece : globe.pieces) ++pieces[piece.plate];
-    if (std::find(pieces.begin(), pieces.end(), 0) == pieces.end()) return;
+    if (std::find(pieces.begin(), pieces.end(), 0) == pieces.end()) return false;
     std::vector<int32_t> to(n, -1);
     std::vector<EulerPlate> plates;
     std::vector<GlobeMotion> motion;
@@ -179,12 +179,14 @@ void dropEmptyPlates(Globe& globe) {
     for (CrustPiece& piece : globe.pieces) piece.plate = uint16_t(to[piece.plate]);
     globe.epoch.plates = std::move(plates), globe.motion = std::move(motion), globe.applied = std::move(applied);
     if (globe.epoch.sites) globe.epoch.sites = sites;
+    return true;
 }
 
 // One pass: every region large enough splits off; if none does and `joins`, every other fragment joins
-// the plate round it, and the pieces of a plate with no cell the plate under them. Whether anything moved.
-bool regroup(Globe& globe, bool joins, std::vector<int32_t>& joined) {
-    const PlateRegions regions = plateRegionsOf(globe);
+// the plate round it, and the pieces of a plate with no cell the plate under them. Whether anything moved;
+// where nothing did, `still` takes the regions measured, which are then the globe's.
+bool regroup(Globe& globe, bool joins, std::vector<int32_t>& joined, PlateRegions& still) {
+    PlateRegions regions = plateRegionsOf(globe);
     std::vector<int32_t> to = splitsOf(globe, regions);
     const bool split = std::any_of(to.begin(), to.end(), [](int32_t p) { return p >= 0; });
     if (split) {
@@ -197,18 +199,26 @@ bool regroup(Globe& globe, bool joins, std::vector<int32_t>& joined) {
             }
         return true;
     }
-    if (!joins) return false;
+    if (!joins) {
+        still = std::move(regions);
+        return false;
+    }
     to = joinsOf(globe, regions);
     const long count = long(std::count_if(to.begin(), to.end(), [](int32_t p) { return p >= 0; }));
     if (count > 0) deal(globe, regions, to, joined);
     const long stranded = dealStranded(globe, regions, to, joined);
     globe.stats.fragmentsJoined += count, globe.stats.strandedPieces += stranded;
-    return count > 0 || stranded > 0;
+    if (count > 0 || stranded > 0) return true;
+    still = std::move(regions);
+    return false;
 }
 
-// Passes until nothing moves, WholePasses at most; keepPlatesWhole checks the end.
-void settle(Globe& globe, bool joins, std::vector<int32_t>& joined) {
-    for (int pass = 0; pass < WholePasses && regroup(globe, joins, joined); ++pass) {}
+// Passes until nothing moves, WholePasses at most; keepPlatesWhole checks the end. Whether a pass moved
+// nothing, its regions in `still`.
+bool settle(Globe& globe, bool joins, std::vector<int32_t>& joined, PlateRegions& still) {
+    for (int pass = 0; pass < WholePasses; ++pass)
+        if (!regroup(globe, joins, joined, still)) return true;
+    return false;
 }
 
 } // namespace
@@ -216,17 +226,19 @@ void settle(Globe& globe, bool joins, std::vector<int32_t>& joined) {
 void keepPlatesWhole(Globe& globe, int step) {
     // Closing phase 0 is the reorganisation's (planet/fn/Seam.hpp); the joins take 1 to ClosingRounds and
     // the last round only splits.
+    PlateRegions regions;
+    bool measured = false;   // `regions` are the globe's
     for (int phase = 1;; ++phase) {
         std::vector<int32_t> joined;
-        settle(globe, phase <= ClosingRounds, joined);
+        measured = settle(globe, phase <= ClosingRounds, joined, regions);
         if (joined.empty()) break;
+        measured = false;
         Band band;
         markBandAt(globe, 1, joined, band);
         closeSeams(globe, band, step, phase);
     }
-    dropEmptyPlates(globe);
+    if (dropEmptyPlates(globe) || !measured) regions = plateRegionsOf(globe);
     // Whole: every plate one region, whichever way the step got there.
-    const PlateRegions regions = plateRegionsOf(globe);
     bool whole = regions.largest.size() == globe.epoch.plates.size();
     for (size_t r = 0; r < regions.plate.size() && whole; ++r) whole = regions.largest[size_t(regions.plate[r])] == int32_t(r);
     for (size_t p = 0; p < regions.largest.size() && whole; ++p) whole = regions.largest[p] >= 0;
