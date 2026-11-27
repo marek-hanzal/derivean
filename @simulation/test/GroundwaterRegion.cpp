@@ -2,10 +2,12 @@
 #include "LandscapeFixture.hpp"
 
 #include "groundwater/fn/Inflow.hpp"
+#include "groundwater/fn/Reads.hpp"
 #include "groundwater/fn/Regional.hpp"
 #include "simulation/type/World.hpp"
 
 #include <cmath>
+#include <cstring>
 #include <cstdio>
 
 using namespace derivean::sim;
@@ -173,6 +175,21 @@ void testGroundwaterRegion() {
     const TileKey real = tileAt(Level::Region, testFocus());
     const std::shared_ptr<const RegionalTile> tile = world.groundwater.requireRegional(world.atlas, real);
     checkBudget(*tile, "the regional flow of a real region tile loses water");
+    // The same tile on this thread alone, without the pool its columns are read on: bit for bit.
+    {
+        Setting alone = world.atlas.setting();
+        alone.workers = nullptr;
+        std::shared_ptr<const Tile> held[9];
+        const Tile* around[9];
+        const auto reads = aquiferTerrain(real);
+        for (size_t i = 0; i < reads.size(); ++i) around[i] = (held[i] = world.atlas.find(reads[i])).get();
+        const std::shared_ptr<const RegionalTile> single = buildRegional(alone, real, around);
+        const auto sameBits = [](const auto& a, const auto& b) { return a.size() == b.size() && (a.empty() || std::memcmp(a.data(), b.data(), a.size() * sizeof(a[0])) == 0); };
+        expectWater(sameBits(single->recharge, tile->recharge) && sameBits(single->upwelling, tile->upwelling) && sameBits(single->head, tile->head) &&
+                        sameBits(single->outlet, tile->outlet) && sameBits(single->rate, tile->rate) && sameBits(single->high, tile->high) &&
+                        sameBits(single->far, tile->far) && sameBits(single->deep, tile->deep) && std::memcmp(&single->budget, &tile->budget, sizeof(RegionalBudget)) == 0,
+                    "a region tile's regional flow depends on the number of threads");
+    }
     const RegionalBudget& b = tile->budget;
     expectWater(b.recharge > 0 && b.arriving > 0, "a real region tile has no regional flow", b.recharge);
     int outlets[5] = {};

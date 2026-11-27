@@ -144,7 +144,10 @@ void testGroundTile() {
 
     // Close to an edge whose far side nobody has asked for yet: the survey must build what it reads
     // across the edge, and so answer the same before and after more ground around it exists.
-    const TileKey west{Level::Ground, key.x - 1, key.z};
+    // Earlier checks on the shared world may have finished ground west of the tile (testChart's
+    // ground survey at the focus does), so the edge is the first one westward with nothing beyond.
+    TileKey west{Level::Ground, key.x - 1, key.z};
+    while (world.atlas.find({Level::Ground, west.x - 1, west.z})) --west.x;
     const Vec2 near{west.x * span + 0.3, north + 20.1};
     expectGround(world.atlas.find({Level::Ground, west.x - 1, west.z}) == nullptr, "the tile across the edge was built before the edge was asked for");
     const SurfaceSample first = surveyAt(world, near, Level::Ground);

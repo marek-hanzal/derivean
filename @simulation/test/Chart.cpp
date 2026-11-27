@@ -120,7 +120,12 @@ void testChart() {
     while (world.atlas.find(tileAt(Level::Local, edge))) edge.x += tileSpan(Level::Local);
     edge.x = std::floor(edge.x / tileSpan(Level::Local)) * tileSpan(Level::Local);
     const Chart local = chartOf(world, {edge, 24576, 96});
-    const Chart region = chartOf(world, {focus, 393216, 96});
+    // Likewise the region chart: ground tiles ask for the ground water of their Local tile, which
+    // finishes the 3 x 3 Region tiles around it, as wide as this chart.
+    Vec2 regionEdge = focus;
+    while (world.atlas.find(tileAt(Level::Region, regionEdge))) regionEdge.x += tileSpan(Level::Region);
+    regionEdge.x = std::floor(regionEdge.x / tileSpan(Level::Region)) * tileSpan(Level::Region);
+    const Chart region = chartOf(world, {regionEdge, 393216, 96});
     const Chart planet = chartOf(world, {focus, PlanetSpan, 96});
     const auto bySite = checkAgainstSurface(world, site), byLocal = checkAgainstSurface(world, local);
     expect(checkAgainstSurface(world, cells)[3] == 96 * 96, "a chart of the site tile under the focus read something else");
@@ -131,7 +136,7 @@ void testChart() {
     expect(byPlanet[0] == 96 * 96, "a chart too coarse for tiles read some", byPlanet[0]);
     expect(site.tiles == before, "a chart does not carry the number of finished tiles", double(site.tiles));
 
-    expect(same(site, chartOf(world, {focus, 1536, 96})) && same(region, chartOf(world, {focus, 393216, 96})), "the same request over the same tiles gave two charts");
+    expect(same(site, chartOf(world, {focus, 1536, 96})) && same(region, chartOf(world, {regionEdge, 393216, 96})), "the same request over the same tiles gave two charts");
     const Vec2 corner{std::floor(focus.x / 4096) * 4096, std::floor(focus.z / 4096) * 4096};
     checkQuarters(world, {corner, 2048, 128});
     checkQuarters(world, {corner, 32768, 128});

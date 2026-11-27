@@ -44,7 +44,8 @@ double landMean(const Atmosphere& air, const AirField& field) {
 } // namespace
 
 void testPlume() {
-    Workers workers;
+    // Two threads for the flat grid, as in testAtmosphere; the daily steps below take three.
+    Workers workers(2);
     const Atmosphere clean = startAtmosphere(plainPlanet(), onDay(0), workers);
     int row = 0;
     for (int z = 0; z < AirCells / 2; ++z)
@@ -67,8 +68,8 @@ void testPlume() {
     addSource(once, eruption);
     addSource(daily, eruption);
     advanceAtmosphere(once, onDay(20), workers);
-    Workers two(2);
-    for (int day = 1; day <= 20; ++day) advanceAtmosphere(daily, onDay(day), two);
+    Workers three(3);
+    for (int day = 1; day <= 20; ++day) advanceAtmosphere(daily, onDay(day), three);
     bool same = once.plume.fallen.cells == daily.plume.fallen.cells && once.airTemperature.cells == daily.airTemperature.cells && once.plume.patches.size() == daily.plume.patches.size();
     for (size_t level = 0; level < PlumeLevels; ++level) same = same && once.plume.dust[level].cells == daily.plume.dust[level].cells && once.plume.veil[level].cells == daily.plume.veil[level].cells;
     expect(same, "one jump and daily steps on other threads gave different plumes");
