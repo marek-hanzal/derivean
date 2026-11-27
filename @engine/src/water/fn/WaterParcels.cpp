@@ -2,14 +2,18 @@
 #include "particles/type/VoxelContact.hpp"
 #include "physics/constant/Gravity.hpp"
 #include "physics/service/JoltRuntime.hpp"
+#include "water/constant/ParcelRoots.hpp"
 
 #include <cmath>
 
 namespace derivean {
 namespace {
 
+static_assert(ParcelRoots.size() == WaterUnits + 1);
+
+// A parcel carries at most a cell's water, `amount` 0 to WaterUnits.
 double parcelWidth(int amount) {
-    return VoxelSize * std::cbrt(amount / double(WaterUnits));
+    return VoxelSize * ParcelRoots[size_t(amount)];
 }
 
 bool poolContact(const WaterState& state, Position at, double half) {
