@@ -192,8 +192,9 @@ void testSolarTime() {
 }
 
 // The closed-form daily mean against the mean of insolation sampled every minute over the 24 h
-// centred on the instant, at every 15° of latitude and either side of the polar circles on four dates (solstices,
-// equinox, perihelion); and its two ends, polar day (the pole's sin δ) and polar night (zero).
+// centred on the instant, at every 15° of latitude and either side of the polar circles on four
+// dates (solstices, equinox, perihelion); and its two ends, polar day (the pole's sin δ) and polar
+// night (zero).
 void testDailyInsolation() {
     double worst = 0;
     for (double date : {2460389.625, 2460483.0, 2460312.5, 2461030.5})

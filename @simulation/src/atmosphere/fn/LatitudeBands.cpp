@@ -33,7 +33,10 @@ LatitudeBands makeLatitudeBands(const SphereGrid& grid, int count) {
         bands.area[size_t(first) + 1] += north;
     }
     double total = 0;
-    for (double area : bands.area) total += area;
+    for (double area : bands.area) {
+        assert(area > 0);
+        total += area;
+    }
     bands.boundary.assign(size_t(count) + 1, 0.0);
     bands.rim.assign(size_t(count) + 1, 0.0);
     bands.boundary[0] = -1, bands.boundary[size_t(count)] = 1;

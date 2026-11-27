@@ -10,12 +10,12 @@ namespace derivean::sim {
 // centres bracket its latitude, linearly in latitude; cells poleward of the outermost centres belong
 // to the outermost band. The weights w_ib (1 − share on `first`, share on first + 1) sum to one per
 // cell, so with B_b = Σ_i A_i w_ib the band mean Σ_i A_i w_ib f_i / B_b and the spread back to the
-// cells through the same w_ib keep the area integral.
+// cells through the same w_ib keep the area integral. `centre` is the band's nominal latitude; the
+// polar band's weights reach past it to the pole, so it is not their centroid there.
 //
-// One band to the grid's side (two cells along a meridian; 2.8° at level 6, the flat world's row)
-// leaks 1e-3 of a unit m = 4 wave into the means on levels 4 to 8; bands of one cell leak 1.4e-2,
-// because the cells of an equatorial face's row change latitude along it in step with the bands
-// (test/AtmosphereSphereBands.cpp).
+// The count to use is the grid's side (two cells along a meridian; 2.8° at level 6, the flat
+// world's row); why, and how much a wave that is not zonal leaks into the means:
+// docs/handoff/atmosphere-sphere.md (bands of latitude).
 struct LatitudeBands {
     int count{};
     double width{};               // rad
