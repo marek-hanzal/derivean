@@ -241,6 +241,7 @@ void testAtmosphereSphere() {
     checkClosures();
     checkSeason();
     checkSeasonInputs();
+    checkSeasonPoles();
     checkEddyBand();
     checkLatitudeBands();
 }

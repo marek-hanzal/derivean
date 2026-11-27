@@ -2,6 +2,7 @@
 
 #include "atmosphere/fn/SphereStencil.hpp"
 #include "atmosphere/type/SphereFlow.hpp"
+#include "atmosphere/constant/SphereAir.hpp"
 #include "geometry/fn/SphereGrid.hpp"
 #include "atmosphere/fn/SphereHarmonics.hpp"
 #include "geometry/constant/Sphere.hpp"
@@ -85,6 +86,12 @@ inline bool sameState(const SphereFlow& a, const SphereFlow& b) {
            a.inversion.sourceMean == b.inversion.sourceMean;
 }
 
+// The share of the belts' wind sphereSeasonOf keeps at a boundary of sine `sine`, as its header states.
+inline double polarShareOf(double sine) {
+    const double x = std::min(1.0, std::sqrt(1 - sine * sine) / SpherePolarCapCosine);
+    return 0.5 * x * (3 - x * x);
+}
+
 // Tests run on several resolutions; levels 4 to 6 keep the suite fast (6 × 16² to 6 × 64² cells).
 void checkPoisson();
 void checkMultigrid();
@@ -102,5 +109,6 @@ void checkDamping();
 void checkClosures();
 void checkSeason();
 void checkSeasonInputs();
+void checkSeasonPoles();
 
 } // namespace derivean::sim::atmosphere_sphere_test

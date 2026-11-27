@@ -20,6 +20,15 @@ constexpr double Degrees = 180.0 / std::numbers::pi;
 // Latitude the belts of a latitude correspond to once they have followed the sun.
 double beltLatitude(double latitude, double shift) { return latitude - shift * std::cos(latitude / Degrees); }
 
+// The share of the belts' wind kept at a boundary of sine `sine`: 1 to SpherePolarCap, then
+// x (3 − x²) / 2 with x = cos φ / cos PolarCap. Linear in cos φ at the pole, so u / cos φ and the
+// polar band's vorticity stay finite as the grid refines; with zero slope at PolarCap, so the wind's
+// derivative, and with it the jet, has no step there for the closure to relax the flow to.
+double polarShare(double sine) {
+    const double x = std::min(1.0, std::sqrt(std::max(0.0, 1 - sine * sine)) / SpherePolarCapCosine);
+    return 0.5 * x * (3 - x * x);
+}
+
 // Each half's contrast in `field`, north then south: the area-weighted mean of its subtropical bands
 // less that of its subpolar ones. As differences of means a constant cancels, as it does between the
 // flat world's equal counts of rows.
@@ -68,7 +77,7 @@ SphereSeason sphereSeasonOf(const LatitudeBands& bands, double day, const std::v
         const double belt = beltLatitude(latitude, shift);
         const double drive = mix(strength[1], strength[0], smoothstep(-10.0, 10.0, belt));
         const BeltWind wind = beltWind(belt);
-        season.eastward[k] = SphereJetDrive * drive * wind.east;
+        season.eastward[k] = SphereJetDrive * drive * wind.east * polarShare(bands.boundary[k]);
         season.northward[k] = wind.poleward * (belt >= 0 ? 1.0 : -1.0);
     }
     zonalWindVorticity(bands, season.eastward, season.jet);

@@ -13,7 +13,9 @@ namespace derivean::sim {
 //   late, and blow JetDrive times as hard as each half's subtropics (15° to 35°) are warmer than its
 //   subpolar bands (55° to 75°), against the same contrast of `base`, clamped to 0.5 to 1.8; each
 //   contrast is a difference of area-weighted means (B_b), so a constant cancels, as between the
-//   flat world's equal counts of rows;
+//   flat world's equal counts of rows; poleward of PolarCap (75°) the zonal wind tapers to zero at
+//   the pole, x (3 − x²) / 2 with x = cos φ / cos PolarCap, so it has a value there and the polar
+//   bands' vorticity converges as the grid refines (constant/SphereAir.hpp);
 // - the jet is that zonal wind's vorticity by Stokes (zonalWindVorticity), so Σ_b B_b jet_b telescopes
 //   to zero (balancedJet);
 // - the cells' surface branch is the belts' poleward wind, its convergence through the boundaries'

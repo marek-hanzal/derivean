@@ -36,4 +36,16 @@ inline constexpr double SphereEddyGrowth = 1.0 / (1.5 * 86400.0);     // 1/s
 inline constexpr double SphereShearPerGradient = 12.0;                // m/s per °C per degree
 inline constexpr double SphereShearLimit = 12.0;                      // m/s
 
+// From PolarCap degrees to a pole the belts' zonal wind tapers to zero (sphereSeasonOf). A wind
+// tangent to the sphere has a value at a pole only if its zonal mean is zero there, and Stokes round
+// a cap of angular radius θ gives it the vorticity u / (R tan(θ/2)), which grows as 1/θ as the grid
+// refines while u does not vanish; the belts' wind, JetDrive times the flat world's beltWind (whose
+// rows wrap and have no pole), keeps −1.18 m/s there (Codex DREV-CLAUDE-010-01). 75° is a convention,
+// the comparison probe's of DREV-CLAUDE-010-01: the middle of the annual-mean belts' polar cell (60° to
+// 90°, the zeros of beltWind's poleward branch; the season moves its equatorward edge, not the cap),
+// so the easterlies keep their speed over the cell's equatorward half and weaken over its poleward
+// half. Its cosine is a literal, so no libm call sets the taper (docs/windows.md#determinism).
+inline constexpr double SpherePolarCap = 75.0;                          // degrees
+inline constexpr double SpherePolarCapCosine = 0.25881904510252074;     // cos 75°
+
 } // namespace derivean::sim

@@ -55,7 +55,8 @@ std::array<double, 2> contrastOf(const LatitudeBands& bands, const std::vector<d
 }
 
 // With the temperature at its annual mean the belts blow JetDrive times beltWind at the shifted
-// latitude; the jet is their vorticity by Stokes: round every boundary the bands south of it hold
+// latitude, poleward of PolarCap times the header's share (the caps: AtmosphereSphereSeasonPoles);
+// the jet is their vorticity by Stokes: round every boundary the bands south of it hold
 // −rim · u (to 1e-12), and it has no area integral (balancedJet). The surface branch is the belts'
 // poleward wind, by the belts' half (days 100 and 220, the belts either side of the equator); the
 // cells' lifting has no area integral either.
@@ -72,7 +73,8 @@ void checkBelts() {
             const double latitude = std::asin(bands.boundary[k]) * Degrees;
             const double belt = latitude - shift * std::cos(latitude / Degrees);
             between += (belt >= 0) != (latitude >= 0) && std::abs(beltWind(belt).poleward) > 1e-3;
-            worst = std::max(worst, std::abs(season.eastward[k] - SphereJetDrive * beltWind(belt).east));
+            const double kept = polarShareOf(bands.boundary[k]);
+            worst = std::max(worst, std::abs(season.eastward[k] - SphereJetDrive * beltWind(belt).east * kept));
             worst = std::max(worst, std::abs(season.northward[k] - beltWind(belt).poleward * (belt >= 0 ? 1.0 : -1.0)));
             const double circulation = bands.rim[k] * season.eastward[k];
             held = k == 0 ? 0 : held + bands.area[k - 1] * season.jet[k - 1];
