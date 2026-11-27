@@ -13,18 +13,19 @@ size_t cellIndex(Cell point, Cell tile) {
     return size_t((offset.y * VoxelsPerMeter + offset.z) * VoxelsPerMeter + offset.x);
 }
 
-// Marks a cell that holds water awake.
-void rouse(WaterState& state, Cell point) {
+// Marks a cell that holds water awake; false where it holds none.
+bool rouse(WaterState& state, Cell point) {
     const Cell tile = tileOf(point);
     WaterBrick* found = brickAt(state, tile);
-    if (!found) return;
+    if (!found) return false;
     WaterBrick& brick = *found;
     const size_t index = cellIndex(point, tile);
-    if (!brick.amount[index]) return;
+    if (!brick.amount[index]) return false;
     brick.awake[index / 64] |= uint64_t(1) << (index % 64);
-    if (brick.listed) return;
+    if (brick.listed) return true;
     brick.listed = true;
     state.rousing.push_back(tile);
+    return true;
 }
 
 } // namespace
@@ -47,7 +48,7 @@ int waterAt(const WaterState& state, Cell point) {
 void wakeWater(WaterState& state, Cell point) {
     rouse(state, point);
     for (Cell direction : Neighbors) rouse(state, point + direction);
-    for (int y = point.y - 2; waterAt(state, {point.x, y, point.z}); --y) rouse(state, {point.x, y, point.z});
+    for (int y = point.y - 2; rouse(state, {point.x, y, point.z}); --y) {}
 }
 
 void wakeWater(WaterState& state, std::span<const Cell> changed) {
@@ -102,8 +103,9 @@ void seedWater(WaterState& state, const VoxelWorld& world, Bounds area, int fill
 }
 
 bool displaceWater(WaterState& state, const VoxelWorld& world, Cell point) {
-    int remaining = waterAt(state, point);
-    if (!remaining) return true;
+    const int held = waterAt(state, point);
+    if (!held) return true;
+    int remaining = held;
     // Cells within four steps of the point, by their offset in the 9³ box around it.
     constexpr int Reach = 4, Box = 2 * Reach + 1;
     std::bitset<Box * Box * Box> seen;
@@ -122,15 +124,16 @@ bool displaceWater(WaterState& state, const VoxelWorld& world, Cell point) {
             const Cell distance = neighbor - point;
             if (std::abs(distance.x) + std::abs(distance.y) + std::abs(distance.z) > Reach ||
                 materialAt(world, neighbor) != Material::Air || !see(distance)) continue;
-            const int amount = std::min(remaining, WaterUnits - waterAt(state, neighbor));
+            const int there = waterAt(state, neighbor);
+            const int amount = std::min(remaining, WaterUnits - there);
             remaining -= amount;
             if (amount) transfers.emplace_back(neighbor, amount);
             if (!remaining) break;
-            if (waterAt(state, neighbor) + amount == WaterUnits) frontier.push_back(neighbor);
+            if (there + amount == WaterUnits) frontier.push_back(neighbor);
         }
     }
     if (remaining) return false;
-    addWater(state, point, -waterAt(state, point));
+    addWater(state, point, -held);
     for (const auto& [cell, amount] : transfers) addWater(state, cell, amount);
     return true;
 }
