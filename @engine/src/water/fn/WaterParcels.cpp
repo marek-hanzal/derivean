@@ -3,20 +3,27 @@
 #include "physics/constant/Gravity.hpp"
 #include "physics/service/JoltRuntime.hpp"
 
+#include <array>
 #include <cmath>
 
 namespace derivean {
 namespace {
 
+// A parcel holds at most a cell's water, so its width is looked up by amount.
 double parcelWidth(int amount) {
-    return VoxelSize * std::cbrt(amount / double(WaterUnits));
+    static const std::array<double, WaterUnits + 1> widths = [] {
+        std::array<double, WaterUnits + 1> table{};
+        for (int units = 0; units <= WaterUnits; ++units) table[size_t(units)] = VoxelSize * std::cbrt(units / double(WaterUnits));
+        return table;
+    }();
+    return amount >= 0 && amount <= WaterUnits ? widths[size_t(amount)] : VoxelSize * std::cbrt(amount / double(WaterUnits));
 }
 
 bool poolContact(const WaterState& state, Position at, double half) {
     at[1] -= half;
     const Cell cell = cellAt(at);
-    const double surface = (cell.y + waterAt(state, cell) / double(WaterUnits)) * VoxelSize;
-    return waterAt(state, cell) && at[1] <= surface;
+    const int amount = waterAt(state, cell);
+    return amount && at[1] <= (cell.y + amount / double(WaterUnits)) * VoxelSize;
 }
 
 void absorb(WaterState& state, WaterParcel& parcel, Cell target) {

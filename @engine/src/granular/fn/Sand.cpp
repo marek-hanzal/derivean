@@ -14,10 +14,10 @@ constexpr float GrainSize = VoxelSize;
 
 std::optional<Cell> fallDirection(const VoxelWorld& world, Cell voxel) {
     if (materialAt(world, voxel + Cell{0, -1, 0}) == Material::Air) return Cell{};
-    const auto& sand = materialInfo(Material::Sand);
-    const float minimum = std::tan(sand.angleOfRepose * (std::numbers::pi_v<float> / 180.0f));
+    static const float minimum = std::tan(materialInfo(Material::Sand).angleOfRepose * (std::numbers::pi_v<float> / 180.0f));
+    const size_t first = CellHash{}(voxel);
     for (size_t i = 0; i < Neighbors.size(); ++i) {
-        const Cell side = Neighbors[(i + CellHash{}(voxel)) % Neighbors.size()];
+        const Cell side = Neighbors[(i + first) % Neighbors.size()];
         if (side.y || materialAt(world, voxel + side) != Material::Air) continue;
         const Cell support = voxel + side + Cell{0, -1, 0};
         if (materialAt(world, support) != Material::Air) continue;

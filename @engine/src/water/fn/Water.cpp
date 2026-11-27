@@ -53,8 +53,10 @@ void wakeWater(WaterState& state, Cell point) {
 void wakeWater(WaterState& state, std::span<const Cell> changed) {
     for (Cell point : changed) {
         wakeWater(state, point);
-        state.meshDirty.insert(chunkOf(point));
-        for (Cell direction : Neighbors) state.meshDirty.insert(chunkOf(point + direction));
+        const Cell key = chunkOf(point);
+        state.meshDirty.insert(key);
+        for (Cell direction : Neighbors)
+            if (const Cell boundary = chunkOf(point + direction); boundary != key) state.meshDirty.insert(boundary);
     }
 }
 
