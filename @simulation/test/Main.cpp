@@ -43,6 +43,8 @@ void testPlanetFuture();
 void testHydrology();
 void testGroundForms();
 void testGroundTile();
+void testFingerprintWorld();
+void testFingerprintPresent();
 void testIntervention();
 void testInterventionQueries();
 void testOre();
@@ -106,12 +108,14 @@ constexpr Test Tests[] = {
     {"testReliefCover", testReliefCover, "world"},
     {"testReliefGlaciatedSite", testReliefGlaciatedSite, "present"},
     {"testReliefLedger", testReliefLedger, "present"},
+    {"testFingerprintPresent", testFingerprintPresent, "present"},
     {"testInspect", testInspect, "world"},
     {"testChart", testChart, "world"},
     {"testPlanetFuture", testPlanetFuture, "unit"},
     {"testHydrology", testHydrology, "unit"},
     {"testGroundForms", testGroundForms, "unit"},
     {"testGroundTile", testGroundTile, "world"},
+    {"testFingerprintWorld", testFingerprintWorld, "world"},
     {"testIntervention", testIntervention, "intervention"},
     {"testInterventionQueries", testInterventionQueries, "unit"},
     {"testOre", testOre, "unit"},

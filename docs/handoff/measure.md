@@ -61,6 +61,7 @@ Determinism, what each check compares bit for bit. `testLandscapeWorld` cuts its
 | Voxels | — | one point through every block that holds it | `testGroundTile` (`throughBlock`) |
 | Weather | 2 vs 5 workers, one jump vs quarter days | — | `testAtmosphere` (`testDeterminism`); plume 2 vs 3 workers in `testPlume` |
 | Live state after interventions | fresh world on 1 worker vs pool | — | `testIntervention` (`InterventionReplay.cpp`) |
+| Every field of a few tiles against stored prints (`measure/fn/Fingerprint.hpp`): young world Region, Local, Site and the pass-2 Ground tile at the focus; present world coast Local 705 261, glaciated Site 5474 9868 and the Region tiles under them | — | — | `testFingerprintWorld` (world group), `testFingerprintPresent` (present group). Prints per platform in `test/StoredPrints.hpp`, since macOS and Windows libm differ. A change claimed bit for bit leaves them; a change meant to move the world replaces them with the lines the failing test prints, in the same commit |
 
 | Test | Holds | Status |
 | --- | --- | --- |
