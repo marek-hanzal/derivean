@@ -1,4 +1,4 @@
-// About 270 lines, one owner: the last sheet's pass over a finer domain's bed. What it takes up
+// About 280 lines, one owner: the last sheet's pass over a finer domain's bed. What it takes up
 // and where it lodges it read the same flow, the same shelter and the same stripped depth.
 #include "icesheet/fn/Local.hpp"
 
@@ -75,9 +75,13 @@ SheetLoad takeUpBed(Domain& domain, SheetWork& work, const ParentSheet& parent) 
     std::vector<float> factor(cells, 1.0f);
     if (deepest > 0)
         for (size_t i = 0; i < cells; ++i) factor[i] = pluckFactor(domain, i);
-    // Twice over the plucking footprint: a basin's walls slope from the zone into sound rock.
-    const std::vector<float> plucked = deepest > 0 ? boxMean(boxMean(factor, domain.size, PluckRadius), domain.size, PluckRadius) : factor;
-    const std::vector<float> around = deepest > 0 ? boxMean(factor, domain.size, MeanRadius) : factor;
+    // Twice over the plucking footprint: a basin's walls slope from the zone into sound rock. Read
+    // only where there are basins to cut.
+    std::vector<float> plucked, around, along;
+    if (deepest > 0) {
+        boxMean(factor, domain.size, PluckRadius, plucked, along), boxMean(plucked, domain.size, PluckRadius, plucked, along);
+        boxMean(factor, domain.size, MeanRadius, around, along);
+    }
     // Which way the weak zones run, from the gradients of the plucking over its footprint taken
     // without their sign (a structure tensor): defined on a zone's axis as well as on its walls.
     std::vector<float> xx(cells, 0.0f), xz(cells, 0.0f), zz(cells, 0.0f);
@@ -89,7 +93,7 @@ SheetLoad takeUpBed(Domain& domain, SheetWork& work, const ParentSheet& parent) 
                 const size_t i = domain.index(x, z);
                 xx[i] = gx * gx, xz[i] = gx * gz, zz[i] = gz * gz;
             }
-        xx = boxMean(xx, domain.size, 2 * PluckRadius), xz = boxMean(xz, domain.size, 2 * PluckRadius), zz = boxMean(zz, domain.size, 2 * PluckRadius);
+        for (std::vector<float>* field : {&xx, &xz, &zz}) boxMean(*field, domain.size, 2 * PluckRadius, *field, along);
     }
     for (int z = 0; z < domain.size; ++z) {
         for (int x = 0; x < domain.size; ++x) {
@@ -150,6 +154,9 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
     for (auto& part : washed) part.assign(cells, 0.0f);
     std::vector<int32_t> rank(cells);
     for (size_t k = 0; k < cells; ++k) rank[size_t(order[k])] = int32_t(k);
+    // The ground of every cell, kept as it is laid on.
+    std::vector<float> ground(cells);
+    for (size_t i = 0; i < cells; ++i) ground[i] = groundOf(domain, i);
 
     for (const int32_t cell : order) {
         const size_t i = size_t(cell);
@@ -161,12 +168,12 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
         // A cell that does not evolve keeps nothing; beyond the ice it is not carried on either.
         if (!free && !iced) continue;
         // As high as till stands against the lowest neighbour.
-        const float here = groundOf(domain, i);
+        const float here = ground[i];
         float room = 1e30f, pit = 1e30f;
         for (int k = 0; k < 8; ++k) {
             const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
             if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
-            const float there = groundOf(domain, domain.index(nx, nz));
+            const float there = ground[domain.index(nx, nz)];
             room = std::min(room, there + TillRepose * NeighborReach[k] * float(domain.cell) - here);
             pit = std::min(pit, there - here);
         }
@@ -177,6 +184,7 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
             const float kept = std::min(1.0f, room / total);
             const float stays[SedimentClasses] = {load[0] * kept, load[1] * kept, load[2] * kept};
             lay(domain, i, stays, work.left.moraine);
+            ground[i] = groundOf(domain, i);
             // The rest starts down the ground from this cell's lower bare neighbours, so none of it
             // settles on the moraine; with none, the water takes all of it.
             float fall[8], falls = 0;
@@ -185,7 +193,7 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
                 const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
                 if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
                 const size_t n = domain.index(nx, nz);
-                if (parent.iceThen[n] < LeastSheet && domain.hold[n] == Free && groundOf(domain, n) < groundOf(domain, i)) falls += fall[k] = (groundOf(domain, i) - groundOf(domain, n)) / NeighborReach[k];
+                if (parent.iceThen[n] < LeastSheet && domain.hold[n] == Free && ground[n] < ground[i]) falls += fall[k] = (ground[i] - ground[n]) / NeighborReach[k];
             }
             float gone = load[Fines] * (1 - kept);
             if (falls <= 0) gone = total * (1 - kept);
@@ -235,7 +243,7 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
                 const int ux = x - int(std::lround(flow.x * k)), uz = z - int(std::lround(flow.z * k));
                 if (ux < 0 || uz < 0 || ux >= size || uz >= size) break;
                 const size_t u = domain.index(ux, uz);
-                cavity = std::max(cavity, groundOf(domain, u) - carried.unstripped[u] - ShelterSlope * float(k * domain.cell) - here);
+                cavity = std::max(cavity, ground[u] - carried.unstripped[u] - ShelterSlope * float(k * domain.cell) - here);
             }
             cavity *= pressing;
             const float lodging = weights <= 0 ? 1.0f : std::min(1.0f, cavity / total + (1.0f - std::exp(-1.0f / float(LodgeCells))));
@@ -244,6 +252,7 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
             kept = std::min(lodging, room / total);
             const float stays[SedimentClasses] = {load[0] * kept, load[1] * kept, load[2] * kept};
             lay(domain, i, stays, work.left.till);
+            ground[i] = groundOf(domain, i);
         }
         if (free && weights > 0)
             for (int c = 0; c < SedimentClasses; ++c) work.left.passing[c][i] = load[c] * (1 - kept);
@@ -269,7 +278,7 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
         }
     }
     std::vector<float> beyond(cells);
-    for (size_t i = 0; i < cells; ++i) beyond[i] = parent.iceThen[i] >= LeastSheet ? 1e30f : groundOf(domain, i);
+    for (size_t i = 0; i < cells; ++i) beyond[i] = parent.iceThen[i] >= LeastSheet ? 1e30f : ground[i];
     washBeyond(domain, beyond, washed, work.left.outwash);
 }
 
