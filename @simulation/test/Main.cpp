@@ -73,7 +73,8 @@ struct Test {
 //   intervention  the intervention test's own world and its one-thread twin
 //   weather  the flat atmosphere stepped for simulated years, and the short weather checks
 //   unit     everything that builds its own fixture (the plume's atmosphere too, to even the two
-//            out), and the far-future planet
+//            out), the far-future planet, and testCoast, which reads only the fixture's planet and
+//            would otherwise add a minute on one thread to the longest group
 // In the order they run.
 constexpr Test Tests[] = {
     {"testBuildGraph", testBuildGraph, "unit"},
@@ -119,7 +120,7 @@ constexpr Test Tests[] = {
     {"testGroundwaterRegion", testGroundwaterRegion, "world"},
     {"testVolcanicLaws", testVolcanicLaws, "unit"},
     {"testVolcanicLive", testVolcanicLive, "unit"},
-    {"testCoast", testCoast, "world"},
+    {"testCoast", testCoast, "unit"},
     {"testHaze", testHaze, "weather"},
     {"testLevelConsistency", testLevelConsistency, "world"},
 };
