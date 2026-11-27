@@ -131,9 +131,10 @@ PreparedPolygon preparedOf(const SpherePolygon& polygon) {
     return ready;
 }
 
-double overlapArea(const PreparedPolygon& a, const SpherePolygon& b) {
+double overlapArea(const PreparedPolygon& a, const SpherePolygon& b) { return overlapArea(a, b, capOf(b)); }
+
+double overlapArea(const PreparedPolygon& a, const SpherePolygon& b, const PolygonCap& capB) {
     const PolygonCap& capA = a.cap;
-    const PolygonCap capB = capOf(b);
     assert(capA.reach < LargestReach && capB.reach < LargestReach);
     if (length(capA.centre - capB.centre) > capA.reach + capB.reach + ApartMargin) return 0;
     const Plane plane{capA.centre, a.first, a.second};

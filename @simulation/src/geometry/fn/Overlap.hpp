@@ -39,5 +39,7 @@ struct PreparedPolygon {
 };
 PreparedPolygon preparedOf(const SpherePolygon& polygon);
 double overlapArea(const PreparedPolygon& a, const SpherePolygon& b);
+// The same with b's cap, capOf(b), already taken.
+double overlapArea(const PreparedPolygon& a, const SpherePolygon& b, const PolygonCap& capB);
 
 } // namespace derivean::sim

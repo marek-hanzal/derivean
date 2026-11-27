@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geometry/fn/SpherePolygon.hpp"
 #include "planet/type/Globe.hpp"
 
 namespace derivean::sim {
@@ -39,6 +40,12 @@ struct Band {
     std::vector<float> slotOpen;
     std::vector<uint32_t> slotStamp;
     uint32_t slotGeneration{1};
+    // Scratch of one interiorSlot call (planet/fn/Interior.cpp): the footprint and cap of each piece it
+    // reads, per piece of the globe, valid while its stamp is `footprintCall`.
+    std::vector<SpherePolygon> footprint;
+    std::vector<PolygonCap> footprintCap;
+    std::vector<uint32_t> footprintStamp;
+    uint32_t footprintCall{};
 };
 
 // Marks the band from the globe's coupling at the start of a step.
