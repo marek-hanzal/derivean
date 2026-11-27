@@ -8,12 +8,15 @@ import { createCubeStage } from "./CubeStage";
 // The world on screen: the WebGPU renderer and its camera, which outlive worlds; `load` swaps the stage. Depth
 // is reversed in a float buffer, because one view holds cubes 6 cm from the eye and mountains hundreds of
 // kilometres away. The scene is drawn multisampled into the cloud pass's own target, so the canvas itself needs no
-// antialiasing. Nothing is drawn until the device is there; `backend` then says what three.js got, WebGPU or
-// its WebGL 2 fallback. A device that cannot be had is reported through `failed`.
+// antialiasing. The game draws with WebGPU alone: three.js would fall back to WebGL 2 where WebGPU cannot be had,
+// and that is switched off (three 0.187 offers no option for it, so its `_getFallback` is cleared), and a renderer
+// that still came up on anything else is refused. Nothing is drawn until the device is there; one that cannot be
+// had is reported through `failed`.
 export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unknown) => void): WorldView {
   const renderer = new WebGPURenderer({
     canvas, antialias: false, powerPreference: "high-performance", reversedDepthBuffer: true, trackTimestamp: true,
   });
+  (renderer as unknown as { _getFallback: null })._getFallback = null;
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = Exposure;
@@ -36,8 +39,9 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
   let benching = false;
 
   void renderer.init().then(() => {
-    backend = (renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend ? "WebGPU" : "WebGL 2 (three.js fallback)";
-  }).catch(failed);
+    if (!(renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend) throw new Error("not a WebGPU device");
+    backend = "WebGPU";
+  }).catch((error: unknown) => failed(new Error(`WebGPU is required: ${error instanceof Error ? error.message : String(error)}`)));
 
   return {
     get backend() { return backend; },

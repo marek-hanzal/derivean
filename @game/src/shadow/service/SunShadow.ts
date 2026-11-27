@@ -111,9 +111,6 @@ export function createSunShadow(world: WorldInfo, levels: LevelTable, clouds?: C
     // view is drawn, once the levels are placed.
     cast(renderer: WebGPURenderer, state: ShadowView) {
       frame++;
-      // The maps and their test assume reversed depth, which a WebGL 2 fallback without clip control lacks: there
-      // every square stays empty and nothing is shadowed.
-      if (!renderer.reversedDepthBuffer) return;
       group.position.copy(state.origin).negate();
       group.updateMatrix();
       let next = -1;

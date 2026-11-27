@@ -72,8 +72,7 @@ export function createClouds() {
     // Places the fields for a render origin and an eye, both in world metres. False while there is no cloud to
     // draw.
     update(renderer: WebGPURenderer, origin: Vector3, eye: Vector3, now: number) {
-      // The noise is made by compute shaders, which three.js's WebGL 2 fallback does not run: it shows no clouds.
-      if (!noise && (renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend) {
+      if (!noise) {
         noise = noiseVolumes(renderer);
         nodes.shapes.value = noise.shapes;
         nodes.details.value = noise.details;

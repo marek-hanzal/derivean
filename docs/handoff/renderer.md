@@ -43,7 +43,7 @@ Not verified:
 - Shadows and level boundaries in motion: the live capture's six stills one second apart at walking speed show no hole or flicker, but stills cannot show popping.
 - Voxel water and particles after digging (the dig shots show the hole and pieces, no water).
 - The cloud cost on other GPUs. Here, timed as 240 frames drawn back to back with the clouds hidden and shown (`__bench` in a scratch build, load 20 to 30): ground looking up 5.1 → 6.2 ms, 300 m 4.1 → 5.9 ms, inside the band at 2 km 4.0 → 7.7 ms, above at 8 km 3.0 → 6.5 ms. Clouds cost 1 to 3.7 ms. Live boost flights hold p50 8.3 ms, p99 9.3 ms with and without clouds (load about 40). `cloudCost` still reports null; the GPU timestamp is not trusted.
-- Linux, Windows, and three's WebGL 2 fallback backend.
+- Linux and Windows. WebGPU only, no fallback: three.js's WebGL 2 backend is switched off (`CubeScene.ts`), and without a WebGPU device the game shows "WebGPU is required" and draws nothing.
 
 Missing: culling inside a batch; fog on three's own materials (particles, brush); specular from material roughness; a colour per liquid for voxel water (one colour for all, magma included).
 
@@ -83,7 +83,7 @@ After the lead's commit fad4529: one clean-air extinction from C++, the hour's h
 - Clouds (`clouds/**`): the march, resolve and density are WGSL through `wgslFn`, a near line-for-line port of the GLSL, because the march's loops and early outs read better there than in TSL. Textures are function arguments (WGSL binds them where three declares them); the struct `CloudSky` and the parameters come from one field list (`constant/density.ts`, `fn/cloudArgs.ts`). Every sample uses `textureSampleLevel` or `textureLoad`, which WGSL allows in non-uniform control flow. The cover levels are read with `textureLoad` and blended by hand, so they need no sampler.
 - The cloud pass owns the scene's target (multisampled colour and float depth) because it reads both; with clouds hidden it only copies the scene to the screen. The renderer's own antialiasing is off: the canvas only receives that copy.
 - Under cloud the sun is dimmed by the clouds' own shadows where the maps reach (96 km), and by the cloud over the eye beyond it and for three's own lights; `Daylight` no longer dims it by the cover as well. The sky light still follows the cover (`Daylight.cover`).
-- The noise is written to storage textures by compute shaders; three's WebGL 2 fallback cannot, so it draws no clouds.
+- The noise is written to storage textures by compute shaders.
 - What the clouds cost (27 Nov, DREV-NEON-011; replays of `.out/render-speed/replay/rec-neon`, Retina 1728×1052 points, M3 Max, load 19–46, each variant a build of its own, `.out/render-speed/variants/build.py`): about 4.1–4.7 ms a frame at 2 km among cumulus, 2.2–2.9 ms from the ground looking up; identical runs differ by up to 0.7 ms. Half of it and more is the light towards the sun: without the five sun samples a step it is 1.8–2.1 ms at 2 km. Wisps cost nothing measurable, nor does the phase function: taking the back lobes once a ray and `d·√d` for `pow(d, 1.5)` (kept, exact) changed nothing, and stopping the sun samples past an optical depth of 20 or dropping wisps behind 15 % of light changed nothing either (both dropped). Reading the three far sun samples only every other step saves 0.5–0.8 ms but changes 11–18 % of the pixels of some views by more than 6 % (rejected). What would cut it: the light towards the sun read from a volume of optical depth drawn a few times a second (as cloud shadow maps are) in place of the far samples; that changes the look and is not done.
 - Octaves of ground variation finer than the cube they are drawn on are left out; they would be noise from cube to cube.
 - Deep water is opaque (visibility about 25 m); the old 20 % see-through showed a sunlit bed 2 km down. No shore line is drawn: the `fwidth` line of the smooth water fires on every step of a cube bed.
@@ -109,7 +109,7 @@ Traps:
 - The contract moves: on 26 Nov it changed from nine `int16` a face to `Quads` during this work. Read `GameBridge.ts` before trusting a recording or this file.
 - The engine's landing and the planet's surface move between engine builds. Pin `world.spawn` or a shot `position` for like-for-like captures.
 - A `Vector4` starts with w = 1; a uniform array of places that means "held" in w must be filled with zeros.
-- Whether the backend is WebGPU is known only after `renderer.init()`; a world may load before that. Decide backend-dependent node graphs inside a `Fn` (its only argument is the node builder when it is called without inputs: `builder.renderer.backend.isWebGPUBackend`), not when the stage is made.
+- WebGPU only, no fallback (owner, 27 Nov): `CubeScene` clears three.js's fallback (three 0.187 has no option for it; the constructor sets `_getFallback`) and refuses a renderer that came up on anything but WebGPU, so no node graph branches on the backend.
 - The capture driver takes a shot as `stalled` after 8 s without arrivals (chunks, far or cube chunks, or a change in any `tiles.*.finished`, the last asked for by the engine stream); every shot of both pair runs is marked so, and `dataLevels` in the record says how much stand-in data it shows.
 
 
@@ -177,4 +177,3 @@ The M key and `map/**` are the map stream's. The window title stays "DeRivean ·
 - The cut between levels and the shadow cascades move in steps as the eye moves. Whether that reads as popping has not been watched in motion.
 - The `bands` texture is RGBA32F with linear filtering, which needs the `float32-filterable` feature; fine on Apple, unchecked elsewhere. Half floats would round heights to 8 m at altitude.
 - The land light's ring holds a level's box and band at the default reach (128); at a larger `cubeReach` the outer squares share places with the inner ones and the farther ones read as not held (faces keep their own light there). Size the ring from `reach` if reach is raised.
-- The WebGL 2 fallback still keeps the level heights on the CPU (about 13 MB) though it never reads them.

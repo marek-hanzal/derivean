@@ -14,7 +14,7 @@ export interface BenchRecord {
 
 // What draws the world (CubeScene): the session feeds it frames and poses, the HUD and captures read it.
 export interface WorldView {
-  // What three.js got: WebGPU, its WebGL 2 fallback, or "starting" until the device is there.
+  // "WebGPU" once the device is there, "starting" until then.
   readonly backend: string;
   load(world: WorldInfo): void;
   unload(): void;
