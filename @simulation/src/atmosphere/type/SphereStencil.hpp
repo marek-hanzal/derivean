@@ -26,10 +26,6 @@ struct EdgeStencil {
     // faces' grid lines meet the edge obliquely, so a value carried through the edge is the mean of
     // its two cells plus gradient · offset.
     Vec3 offset;        // m
-    // The cells behind left and behind right: across the edge opposite this one in each cell's own
-    // numbering, the upstream cell of a limited advective flux.
-    int behindLeft{};
-    int behindRight{};
 };
 
 // `weight[v]` gives a value at vertex v from the values of its cells (SphereVertex::cells, in that
@@ -42,10 +38,21 @@ struct EdgeStencil {
 // `carry[e]` is edge e's offset projected on its gradient weights, (offset · across, offset · along):
 // the advected value's move to the edge's midpoint is carry · (right − left, to − from), read in
 // 16 bytes an edge instead of the three vectors' 72.
+//
+// A step reads only the hot tables: carry, weight, `vertexCells` and `behind`. `edge` (104 bytes an
+// edge) builds the Laplacian and serves the diagnostic operators (gradientOf, curlOf), and
+// releaseEdgeTables drops it once the Poisson solver is made.
 struct SphereStencil {
     std::vector<EdgeStencil> edge;
     std::vector<std::array<double, 4>> weight;
     std::vector<std::array<double, 2>> carry;
+    // Per vertex its cells (SphereVertex::cells), four always: a cube vertex's three are followed by
+    // its first again, whose weight is zero, so a vertex value is one four-term sum without the grid's
+    // 48-byte vertex.
+    std::vector<std::array<int, 4>> vertexCells;
+    // Per edge the cells behind left and behind right: across the edge opposite this one in each
+    // cell's own numbering, the upstream cell of a limited advective flux.
+    std::vector<std::array<int, 2>> behind;
 };
 
 } // namespace derivean::sim

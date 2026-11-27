@@ -163,13 +163,13 @@ double outflowCourant(const SphereGrid& grid, const std::vector<double>& flux, d
 
 void advectTracer(const SphereGrid& grid, const SphereStencil& stencil, const std::vector<double>& flux, double step, std::vector<double>& tracer,
                   std::vector<double>& work) {
-    assert(stencil.edge.size() == grid.edge.size());
+    assert(stencil.behind.size() == grid.edge.size());
     work.assign(size_t(grid.cells), 0.0);
     for (size_t e = 0; e < flux.size(); ++e) {
         const SphereEdge& edge = grid.edge[e];
         const bool outOfLeft = flux[e] > 0;
         const int up = outOfLeft ? edge.left : edge.right, down = outOfLeft ? edge.right : edge.left;
-        const int behind = outOfLeft ? stencil.edge[e].behindLeft : stencil.edge[e].behindRight;
+        const int behind = stencil.behind[e][outOfLeft ? 0 : 1];
         const double local = tracer[size_t(down)] - tracer[size_t(up)];
         const double upstream = tracer[size_t(up)] - tracer[size_t(behind)];
         const double courant = std::abs(flux[e]) * step / grid.area[size_t(up)];

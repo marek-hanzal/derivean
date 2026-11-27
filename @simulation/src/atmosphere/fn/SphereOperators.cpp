@@ -11,11 +11,12 @@
 namespace derivean::sim {
 namespace {
 
-double vertexValue(const SphereGrid& grid, const SphereStencil& stencil, const CellField& field, int vertex) {
-    const SphereVertex& v = grid.vertex[size_t(vertex)];
-    const std::array<double, 4>& weight = stencil.weight[size_t(vertex)];
+// Four terms at every vertex: a cube vertex's fourth has weight zero, which adds nothing.
+double vertexValue(const SphereStencil& stencil, const CellField& field, size_t vertex) {
+    const std::array<int, 4>& cells = stencil.vertexCells[vertex];
+    const std::array<double, 4>& weight = stencil.weight[vertex];
     double sum = 0;
-    for (int k = 0; k < v.count; ++k) sum += weight[size_t(k)] * field[size_t(v.cells[size_t(k)])];
+    for (int k = 0; k < 4; ++k) sum += weight[size_t(k)] * field[size_t(cells[size_t(k)])];
     return sum;
 }
 
@@ -55,9 +56,9 @@ Stencil stencilOf(const SphereGrid& grid, const SphereStencil& tables, size_t e)
 } // namespace
 
 void vertexValues(const SphereGrid& grid, const SphereStencil& stencil, const CellField& field, CellField& result) {
-    assert(stencil.weight.size() == grid.vertex.size());
+    assert(stencil.weight.size() == grid.vertex.size() && stencil.vertexCells.size() == grid.vertex.size());
     result.resize(grid.vertex.size());
-    for (size_t v = 0; v < result.size(); ++v) result[v] = vertexValue(grid, stencil, field, int(v));
+    for (size_t v = 0; v < result.size(); ++v) result[v] = vertexValue(stencil, field, v);
 }
 
 CellField vertexValues(const SphereGrid& grid, const SphereStencil& stencil, const CellField& field) {

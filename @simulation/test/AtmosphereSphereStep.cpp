@@ -116,6 +116,34 @@ void checkStepChange() {
     expect(staleOff > 20 * shortOff, "the stale leapfrog step is not caught by the test", staleOff / amplitude);
 }
 
+// A stencil without its edge tables (releaseEdgeTables) steps the wave and moves a tracer to the
+// same bits as the whole one: the step reads only the hot tables.
+void checkReleased() {
+    const SphereGrid grid = makeSphereGrid(4);
+    const SphereStencil whole = makeSphereStencil(grid);
+    SphereStencil released = whole;
+    releaseEdgeTables(released);
+    expect(released.edge.empty(), "the edge tables were not released");
+    SpherePoisson poisson = makeSpherePoisson(grid, whole);
+    const double rotation = rotationRateAt(PresentAge);
+    SphereFlow a = makeSphereFlow(grid, rotation);
+    expect(setVorticity(a, grid, whole, poisson, rossbyHaurwitz(grid, rotation, 0)), "the wave did not invert");
+    setStep(a, 600);
+    SphereFlow b = a;
+    std::vector<double> tracerA(size_t(grid.cells)), tracerB, work;
+    for (int c = 0; c < grid.cells; ++c) tracerA[size_t(c)] = 1 + grid.centre[size_t(c)].x;
+    tracerB = tracerA;
+    bool accepted = true;
+    for (int s = 0; s < 5; ++s) {
+        accepted = stepSphereFlow(a, grid, whole, poisson) && accepted;
+        advectTracer(grid, whole, a.flux, 600, tracerA, work);
+        accepted = stepSphereFlow(b, grid, released, poisson) && accepted;
+        advectTracer(grid, released, b.flux, 600, tracerB, work);
+    }
+    expect(accepted, "a step was not accepted");
+    expect(sameState(a, b) && tracerA == tracerB, "a released stencil steps differently");
+}
+
 // The first guess projected on the last three ψ (DREV-NEON-019): 20 steps of the wave at level 5 to
 // 1e-9 take 0.58 of the iterations of starting from the last ψ (3.5 against 6 a step, the first
 // steps with a shorter history included) and land 4.4e-11 of the largest vorticity from them, within
@@ -209,6 +237,7 @@ void checkStep() {
     checkFailure();
     checkStepChange();
     checkGuess();
+    checkReleased();
 }
 
 } // namespace derivean::sim::atmosphere_sphere_test
