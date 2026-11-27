@@ -58,6 +58,25 @@ template <int Count> Gram gramOf(const SphereFlow& flow, const SphereGrid& grid)
     return sums;
 }
 
+// The guess Σ wᵢ dᵢ and its K, the same combination of the K dᵢ, so CG's first residual needs no
+// product. It differs from K applied to the guess by that product's own rounding: 3.5e-12 of the
+// largest K ψ at level 8, as much as moving every value of the guess by one ulp, growing fourfold a
+// level. The weights of the differences left out are zero.
+template <int Count> void combine(SphereFlow& flow, const double w[3]) {
+    const double *s0 = flow.stream.data(), *s1 = flow.streamBack.data(), *s2 = flow.streamBackTwo.data();
+    const double *p0 = flow.product.data(), *p1 = flow.productBack.data(), *p2 = flow.productBackTwo.data();
+    double *guess = flow.trialStream.data(), *product = flow.trialProduct.data();
+    const double w0 = w[0], w1 = w[1], w2 = w[2];
+    const size_t n = flow.stream.size();
+    for (size_t c = 0; c < n; ++c) {
+        double d1 = 0, d2 = 0, k1 = 0, k2 = 0;
+        if constexpr (Count > 1) d1 = s0[c] - s1[c], k1 = p0[c] - p1[c];
+        if constexpr (Count > 2) d2 = d1 - (s1[c] - s2[c]), k2 = k1 - (p1[c] - p2[c]);
+        guess[c] = w0 * s0[c] + w1 * d1 + w2 * d2;
+        product[c] = w0 * p0[c] + w1 * k1 + w2 * k2;
+    }
+}
+
 } // namespace
 
 // The first guess of the next step's ψ (Fischer 1998): the combination of the last `count` accepted
@@ -68,18 +87,15 @@ template <int Count> Gram gramOf(const SphereFlow& flow, const SphereGrid& grid)
 // further from the solution in that norm than the last ψ or its extrapolation in time; CG stops on
 // the residual, not that norm, so fewer iterations are measured, not guaranteed. It changes only
 // where CG starts, so the result moves within the solver's tolerance.
-void guessStream(SphereFlow& flow, const SphereGrid& grid, const SpherePoisson& poisson) {
+bool guessStream(SphereFlow& flow, const SphereGrid& grid, const SpherePoisson& poisson) {
     assert(flow.projection >= 0 && flow.projection <= 3);
     const int count = std::min(flow.projection, flow.levels);
     const size_t n = flow.stream.size();
     if (count == 0) {
         flow.trialStream = flow.stream;
-        return;
+        return false;
     }
-    const std::vector<double>& s0 = flow.stream;
-    const std::vector<double>& s1 = flow.streamBack;
-    const std::vector<double>& s2 = flow.streamBackTwo;
-    applyMatrix(poisson.levels[0].stiffness, s0, flow.product);
+    applyMatrix(poisson.levels[0].stiffness, flow.stream, flow.product);
     const Gram sums = count == 1   ? gramOf<1>(flow, grid)
                       : count == 2 ? gramOf<2>(flow, grid)
                                    : gramOf<3>(flow, grid);
@@ -116,12 +132,12 @@ void guessStream(SphereFlow& flow, const SphereGrid& grid, const SpherePoisson& 
             if (kept[k]) sum -= l[k][i] * w[k];
         w[i] = sum / l[i][i];
     }
-    std::vector<double>& guess = flow.trialStream;
-    guess.resize(n);
-    for (size_t c = 0; c < n; ++c) {
-        const double d1 = count > 1 ? s0[c] - s1[c] : 0, d2 = count > 2 ? d1 - (s1[c] - s2[c]) : 0;
-        guess[c] = w[0] * s0[c] + w[1] * d1 + w[2] * d2;
-    }
+    flow.trialStream.resize(n);
+    flow.trialProduct.resize(n);
+    if (count == 1) combine<1>(flow, w);
+    else if (count == 2) combine<2>(flow, w);
+    else combine<3>(flow, w);
+    return true;
 }
 
 } // namespace derivean::sim

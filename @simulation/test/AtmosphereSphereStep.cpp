@@ -5,8 +5,10 @@
 
 #include "astronomy/constant/DeepTime.hpp"
 #include "atmosphere/fn/SphereFlow.hpp"
+#include "atmosphere/fn/SphereFlowGuess.hpp"
 #include "atmosphere/fn/SphereOperators.hpp"
 #include "atmosphere/fn/SpherePoisson.hpp"
+#include "atmosphere/fn/StencilMatrix.hpp"
 
 using namespace derivean::sim;
 using namespace derivean::sim::atmosphere_sphere_test;
@@ -118,7 +120,8 @@ void checkStepChange() {
 // 1e-9 take 0.58 of the iterations of starting from the last ψ (3.5 against 6 a step, the first
 // steps with a shorter history included) and land 4.4e-11 of the largest vorticity from them, within
 // the solver's tolerance; the history restarts with setVorticity and setStep, and a run started with
-// the projection off forms no products, so switching it on later starts a fresh history.
+// the projection off forms no products, so switching it on later starts a fresh history. The guess's
+// K, the combination of the K dᵢ, lies within 2e-13 of the largest K ψ of K applied to the guess.
 void checkGuess() {
     const SphereGrid grid = makeSphereGrid(5);
     const SphereStencil stencil = makeSphereStencil(grid);
@@ -139,6 +142,38 @@ void checkGuess() {
         more += last.inversion.iterations;
     }
     expect(projected.levels == 3 && fewer * 3 < more * 2, "the projected guess does not save iterations", double(fewer) / more);
+    // The guess's K for one, two and three levels; below 1e-9 the solver forms its own (a wrong one
+    // given changes nothing); the reported residual of the projected run against the true one.
+    for (int projection = 1; projection <= 3; ++projection) {
+        SphereFlow next = projected;
+        next.projection = projection;
+        next.trialVorticity = next.vorticity;
+        expect(guessStream(next, grid, poisson), "the projected guess did not form its product", projection);
+        std::vector<double> product;
+        applyMatrix(poisson.levels[0].stiffness, next.trialStream, product);
+        double apart = 0, scale = 0;
+        for (int c = 0; c < grid.cells; ++c) {
+            apart = std::max(apart, std::abs(next.trialProduct[size_t(c)] - product[size_t(c)]));
+            scale = std::max(scale, std::abs(product[size_t(c)]));
+        }
+        expect(apart < 2e-13 * scale, "K of the guess is not the combination of the K dᵢ", apart / scale);
+    }
+    {
+        std::vector<double> given = projected.stream, own = projected.stream, wrong(given.size(), 1.0);
+        const PoissonReport a = solveSpherePoisson(poisson, grid, projected.vorticity, given, 1e-10, 60, &wrong);
+        const PoissonReport b = solveSpherePoisson(poisson, grid, projected.vorticity, own, 1e-10, 60);
+        expect(given == own && a.iterations == b.iterations, "a given product was used below 1e-9");
+        std::vector<double> kpsi;
+        applyMatrix(poisson.levels[0].stiffness, projected.stream, kpsi);
+        const double mean = areaMean(grid, projected.vorticity);
+        double rr = 0, bb = 0;
+        for (int c = 0; c < grid.cells; ++c) {
+            const double source = -grid.area[size_t(c)] * (projected.vorticity[size_t(c)] - mean), r = source - kpsi[size_t(c)];
+            rr += r * r, bb += source * source;
+        }
+        const double gap = std::abs(std::sqrt(rr / bb) - projected.inversion.residual) / projected.tolerance;
+        expect(gap < 1e-2, "the residual reported from the guess's K is not the true one", gap);
+    }
     double off = 0, top = 0;
     for (int c = 0; c < grid.cells; ++c) {
         off = std::max(off, std::abs(projected.vorticity[size_t(c)] - last.vorticity[size_t(c)]));

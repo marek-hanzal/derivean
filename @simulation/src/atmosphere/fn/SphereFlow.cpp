@@ -21,9 +21,12 @@ constexpr double FilterStrength = 0.1;
 constexpr double FilterSplit = 0.53;
 
 // Inverts the candidate vorticity into the candidate stream function and fluxes, starting from the
-// guess in flow.trialStream; the accepted state is not touched.
-bool invertTrial(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson) {
-    flow.inversion = solveSpherePoisson(poisson, grid, flow.trialVorticity, flow.trialStream, flow.tolerance, flow.limit);
+// guess in flow.trialStream (whose K is flow.trialProduct when `withProduct`); the accepted state is
+// not touched.
+bool invertTrial(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
+                 bool withProduct = false) {
+    flow.inversion = solveSpherePoisson(poisson, grid, flow.trialVorticity, flow.trialStream, flow.tolerance, flow.limit,
+                                        withProduct ? &flow.trialProduct : nullptr);
     if (!flow.inversion.converged) return false;
     flow.trialFlux = streamFluxOf(grid, stencil, flow.trialStream);
     return true;
@@ -134,8 +137,8 @@ bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStenci
             flow.trialVorticity[c] = next - (1 - FilterSplit) * curve;
         }
     }
-    guessStream(flow, grid, poisson);
-    if (!invertTrial(flow, grid, stencil, poisson)) return false;
+    const bool withProduct = guessStream(flow, grid, poisson);
+    if (!invertTrial(flow, grid, stencil, poisson, withProduct)) return false;
     acceptTrial(flow);
     std::swap(flow.before, flow.trialBefore);
     flow.started = true;

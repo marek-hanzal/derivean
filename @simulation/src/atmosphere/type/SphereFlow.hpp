@@ -25,7 +25,9 @@ struct SphereFlow {
     std::vector<double> stream;        // ψ, m²/s, zero area mean
     // The accepted ψ one and two steps back and their K ψ, for the first guess of the next inversion;
     // `levels` counts the accepted ψ one step apart, stream included, the older ones with their K ψ
-    // (1 to 3; 1 after a restart or a step without the projection). `product` is work space: K ψₙ from the guess until the step is accepted.
+    // (1 to 3; 1 after a restart or a step without the projection). `product` is work space: K ψₙ from
+    // the guess until the step is accepted. The K ψ are those of the Poisson the flow steps with and
+    // CG's first residual is formed from them, so a flow keeps one Poisson (one K) from its start.
     std::vector<double> streamBack, streamBackTwo, productBack, productBackTwo, product;
     int levels{1};
     int projection{3};                 // accepted ψ the first guess combines, 0 to 3 (0: the last ψ as it is)
@@ -37,7 +39,8 @@ struct SphereFlow {
     bool started{};                    // false until the first step after a restart (a forward step)
     // Work space, one call at a time per flow: the candidate state of a step before it is accepted,
     // and the tendency's intermediates.
-    std::vector<double> trialVorticity, trialBefore, trialStream, trialFlux;
+    // trialProduct is K trialStream when the first guess formed it.
+    std::vector<double> trialVorticity, trialBefore, trialStream, trialFlux, trialProduct;
     std::vector<double> tendency, absolute, atVertex;
 };
 
