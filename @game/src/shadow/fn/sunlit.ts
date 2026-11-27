@@ -11,14 +11,17 @@ type Float = Node<"float">;
 const leaves = (towards: Float, low: Float, high: Float, at: Float) =>
   select(towards.greaterThanEqual(0), high.sub(at).div(max(towards, 1e-4)), low.sub(at).div(min(towards, -1e-4)));
 
-// Share of the sun's light that reaches a point in render space, 0 in shadow. A map holds the faces that look
-// away from the sun, so a lit face never shadows itself and needs no slope bias: the point is lit where it lies
-// nearer the sun than the first such face on its ray. Under cloud it is less again, by the clouds' own shadows.
+// Share of the sun's light that reaches a point in render space, 0 in shadow: depth maps seen from the sun
+// (Williams 1978), the comparisons filtered over four texels (Reeves, Salesin and Cook 1987; both in
+// docs/credits/rendering.md). A map holds the faces that look away from the sun, so a lit face never shadows
+// itself and needs no slope bias: the point is lit where it lies nearer the sun than the first such face on its
+// ray. Under cloud it is less again, by the clouds' own shadows.
 //
 // A point takes the shadows of the cascade whose square of ground it lies in, cast by cubes of its own size, and
 // from every coarser cascade only what lies beyond that square: there the coarser map holds the same ground
 // again as larger cubes, which would shadow it a second time and elsewhere. So the point is moved along its ray
-// to where the ray leaves the square before it is looked up in the next map.
+// to where the ray leaves the square before it is looked up in the next map. Every map is read for every point:
+// the coarser maps carry the shadow of a ridge outside the finer square.
 export function sunlit(shadow: ShadowNodes, position: Node<"vec3">): Float {
   return Fn(() => {
     const lit = float(1).toVar();

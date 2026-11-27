@@ -31,7 +31,7 @@ The aim is that every physical model carries its source, the model taken, where 
 | Ice sheets, glacial erosion and firn | [credits/ice.md](credits/ice.md) | 7 |
 | Atmosphere, haze, clouds and snow | [credits/atmosphere.md](credits/atmosphere.md) | 33 |
 | Astronomy and the geometry of the sphere | [credits/astronomy-geometry.md](credits/astronomy-geometry.md) | 28 |
-| Rendering | [credits/rendering.md](credits/rendering.md) | 8 |
+| Rendering | [credits/rendering.md](credits/rendering.md) | 13 |
 | Engine, libraries and tools | [credits/libraries.md](credits/libraries.md) | 12 |
 | Reference data for comparison with Earth | [credits/reference-data.md](credits/reference-data.md) | 12 |
 

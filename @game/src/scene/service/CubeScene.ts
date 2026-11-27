@@ -32,6 +32,8 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
   let covered = false;
   let width = 0;
   let height = 0;
+  // While a bench runs it alone draws, so the frames it times are not shared with the display's.
+  let benching = false;
 
   void renderer.init().then(() => {
     backend = (renderer.backend as { isWebGPUBackend?: boolean }).isWebGPUBackend ? "WebGPU" : "WebGL 2 (three.js fallback)";
@@ -61,7 +63,7 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
     apply(frame: Frame) { stage?.apply(frame); },
     target(point: Point | undefined, shape: BrushShape, radius: number) { stage?.target(point, shape, radius); },
     draw(entered: boolean, yaw: number, pitch: number, dt: number, time: number) {
-      if (!stage || covered || backend === "starting") return;
+      if (!stage || covered || benching || backend === "starting") return;
       if (canvas.clientWidth !== width || canvas.clientHeight !== height) {
         width = canvas.clientWidth;
         height = canvas.clientHeight;
@@ -89,6 +91,35 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
     levelCounts: () => stage?.counts() ?? [],
     air: () => stage?.air ?? null,
     cloudCost: () => null,
+    // Time of a frame, as frames drawn back to back in batches of `frames` with the clouds shown and hidden in turn
+    // until the GPU is done: the display's vsync cannot hold them back, so the difference is what the clouds cost.
+    // Median milliseconds a frame over the batches; null where the device cannot be waited on. A cloudy batch
+    // begins by drawing the cloud shadow maps again, as showing the clouds does.
+    async bench(frames: number, batches = 6) {
+      const device = (renderer.backend as { device?: { queue: { onSubmittedWorkDone(): Promise<void> } } }).device;
+      if (!stage || !device || benching) return null;
+      const timed = { cloudy: [] as number[], clear: [] as number[] };
+      const shown = stage.cloudsShown;
+      benching = true;
+      try {
+        await device.queue.onSubmittedWorkDone();
+        for (let batch = 0; batch < batches * 2; batch++) {
+          const cloudy = batch % 2 === 0;
+          stage.veil(cloudy);
+          const began = performance.now();
+          for (let frame = 0; frame < frames; frame++) stage.draw(renderer, () => {});
+          await device.queue.onSubmittedWorkDone();
+          timed[cloudy ? "cloudy" : "clear"].push((performance.now() - began) / frames);
+        }
+      } finally {
+        stage.veil(shown);
+        benching = false;
+      }
+      const median = (values: number[]) => Number([...values].sort((a, b) => a - b)[values.length >> 1].toFixed(3));
+      const cloudy = median(timed.cloudy);
+      const clear = median(timed.clear);
+      return { frames, batches, cloudyMs: cloudy, clearMs: clear, cloudMs: Number((cloudy - clear).toFixed(3)), ...timed };
+    },
     timings: () => ({ cpuMs, gpuMs }),
     renderStats,
   };

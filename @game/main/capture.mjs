@@ -43,6 +43,9 @@ function checkShot(file, shot) {
     && brush === undefined)) reject(file, `shot ${shot.name} has a malformed turn or one with a cruise or brush`);
   if (shot.map !== undefined && !(finite(shot.map?.span) && shot.map.span > 0)) reject(file, `shot ${shot.name} has a malformed map`);
   if (!readiness(shot.ready)) reject(file, `shot ${shot.name} asks for readiness other than ${Readiness.join(", ")}`);
+  const { bench } = shot;
+  if (bench !== undefined && !(Number.isInteger(bench?.frames) && bench.frames > 0
+    && (bench.batches === undefined || (Number.isInteger(bench.batches) && bench.batches > 0)))) reject(file, `shot ${shot.name} has a malformed bench`);
 }
 
 // The plan named by DERIVEAN_CAPTURE, or null for a normal run. src/capture/type/CapturePlan.ts owns its shape.
@@ -91,8 +94,15 @@ export function serveCapture(plan, window, handle) {
   handle("derivean:capture-plan", () => plan);
   handle("derivean:capture-shot", async ({ name, record }) => {
     alive();
-    if (!plan.shots.some((shot) => shot.name === name)) throw new Error(`Unplanned capture shot ${name}`);
     await mkdir(plan.out, { recursive: true });
+    // A shot's bench comes after its picture, as a record of its own.
+    const benched = plan.shots.find((shot) => shot.bench && `${shot.name}-bench` === name);
+    if (benched) {
+      await writeFile(path.join(plan.out, `${name}.json`), `${JSON.stringify(record, null, 2)}\n`);
+      console.log(`Benched ${benched.name}: ${JSON.stringify({ cloudyMs: record?.cloudyMs, clearMs: record?.clearMs, cloudMs: record?.cloudMs })}`);
+      return;
+    }
+    if (!plan.shots.some((shot) => shot.name === name)) throw new Error(`Unplanned capture shot ${name}`);
     const image = await window.webContents.capturePage();
     if (image.isEmpty()) throw new Error(`The window gave no image for ${name}`);
     const { width } = window.getContentBounds();

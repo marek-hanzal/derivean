@@ -198,6 +198,7 @@ async function boot() {
       drawMs: scene.timings(), haze: hazeRecord(scene.air()),
     }),
     survey: (x, z) => dataLevels(window.derivean, x, z),
+    bench: (frames, batches) => scene.bench(frames, batches),
   }));
   session.start(plan.world);
 }

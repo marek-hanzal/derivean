@@ -1,5 +1,7 @@
-// Side in metres and resolution of the map of cloud shadows around the eye, and how often it is redrawn.
-export const ShadowSpan = 96000;
+// Sides in metres of the maps of cloud shadows around the eye, near and far, their resolution, and how often they
+// are redrawn. The near map is the ground round the player at 16 m a texel; the far one, at 94 m, carries the
+// shadows out to 48 km. A point takes the near map where it has it and the far one beyond.
+export const ShadowSpans = [16000, 96000] as const;
 export const ShadowSize = 1024;
 export const ShadowMs = 200;
 

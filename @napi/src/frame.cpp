@@ -1,5 +1,7 @@
 #include "convert.hpp"
 
+#include <algorithm>
+
 namespace derivean {
 namespace {
 
@@ -38,7 +40,9 @@ Napi::Value clouds(Napi::Env env, const Frame& frame) {
     output["rain"] = packed(env, field.rain);
     output["snow"] = packed(env, field.snow);
     const auto& lying = frame.cloudsAir->snow.cells;
-    output["snowpack"] = packed(env, std::vector<float>(lying.begin(), lying.end()));
+    auto snowpack = Napi::Float32Array::New(env, lying.size());
+    std::transform(lying.begin(), lying.end(), snowpack.Data(), [](auto mass) { return float(mass); });
+    output["snowpack"] = snowpack;
     output["snowLadder"] = packed(env, field.snowLadder);
     output["snowLine"] = packed(env, field.snowLine);
     output["seaLevel"] = field.seaLevel;

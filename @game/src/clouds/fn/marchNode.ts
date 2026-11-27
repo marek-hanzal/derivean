@@ -15,6 +15,8 @@ fn cloudMarch(direction: vec3f, limit: f32, dither: f32, eye: vec3f, sun: vec3f,
   var stepLength = vec3f(${list(StepLengths)});
   var sunStep = vec3f(${list(SunSteps)});
   let cosine = dot(direction, sun);
+  // The back lobes do not depend on the cloud, so a ray takes them once (cloudSunlit).
+  let backLobes = vec3f(cloudLobe(cosine, -0.35), cloudLobe(cosine, -0.175), cloudLobe(cosine, -0.0875));
   let daylight = sunLight.r + sunLight.g + sunLight.b > 0.002;
   var scattered = vec3f(0.0);
   var through = 1.0;
@@ -68,10 +70,11 @@ fn cloudMarch(direction: vec3f, limit: f32, dither: f32, eye: vec3f, sun: vec3f,
         }
       }
       let height = clamp((p.y + c.datum - range.x) / (range.y - range.x), 0.0, 1.0);
-      let light = sunLight * cloudSunlit(cosine, shade, found.y) * 5.6
+      let light = sunLight * cloudSunlit(cosine, backLobes, shade, found.y) * 5.6
         + (skyAmbient * mix(0.4, 1.0, height) + groundAmbient * (1.0 - height) * 0.35) * 0.34;
       let absorbed = 1.0 - exp(-sigma * pace);
-      let hazed = 1.0 - exp(-pow(haze * t, 2.0));
+      let hazeDepth = haze * t;
+      let hazed = 1.0 - exp(-hazeDepth * hazeDepth);
       scattered += through * absorbed * mix(light, horizon, hazed);
       through *= 1.0 - absorbed;
       t += pace;
@@ -82,21 +85,21 @@ fn cloudMarch(direction: vec3f, limit: f32, dither: f32, eye: vec3f, sun: vec3f,
 `, [wgsl(DensityWgsl), wgsl(`
 fn cloudLobe(cosine: f32, g: f32) -> f32 {
   let g2 = g * g;
-  return (1.0 - g2) / (12.566 * pow(1.0 + g2 - 2.0 * g * cosine, 1.5));
+  let d = 1.0 + g2 - 2.0 * g * cosine;
+  return (1.0 - g2) / (12.566 * d * sqrt(d));
 }
 
 // Sunlight scattered at a point with \`shade\` of optical depth between it and the sun. Henyey-Greenstein with a
 // forward peak and a back lobe; each further order of scattering is broader, weaker, and less shaded, which is
-// what keeps thick cloud bright inside. Ice scatters less sharply back than droplets.
-fn cloudSunlit(cosine: f32, shade: f32, ice: f32) -> f32 {
+// what keeps thick cloud bright inside. Ice scatters less sharply back than droplets. \`backLobes\` are the back
+// lobes of the three orders for this ray's \`cosine\`; the orders' shading is exp(-shade / 4) squared and squared again.
+fn cloudSunlit(cosine: f32, backLobes: vec3f, shade: f32, ice: f32) -> f32 {
   let forward = mix(0.8, 0.7, ice);
   let back = mix(0.22, 0.1, ice);
-  var sum = 0.0;
-  var order = 1.0;
-  for (var n = 0; n < 3; n++) {
-    sum += order * mix(cloudLobe(cosine, forward * order), cloudLobe(cosine, -0.35 * order), back) * exp(-shade * order);
-    order *= 0.5;
-  }
-  return sum;
+  let quarter = exp(-shade * 0.25);
+  let halved = quarter * quarter;
+  return mix(cloudLobe(cosine, forward), backLobes.x, back) * halved * halved
+    + 0.5 * mix(cloudLobe(cosine, forward * 0.5), backLobes.y, back) * halved
+    + 0.25 * mix(cloudLobe(cosine, forward * 0.25), backLobes.z, back) * quarter;
 }
 `)]);

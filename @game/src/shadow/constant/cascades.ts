@@ -1,7 +1,8 @@
-// The sun's shadows are kept in cascades: depth maps seen from the sun, each centred on the ground under the eye
-// and each holding the levels of cubes whose cubes are about as wide as its texels. A level's box reaches a fixed
-// number of its cubes from the eye, so four levels to a cascade and a map twice as wide as the coarsest of them
-// make a texel as wide as a cube of the finest: a step one cube high then still casts a shadow a texel wide.
+// The sun's shadows are kept in cascades (Dimitrov 2007): depth maps seen from the sun (Williams 1978; both in
+// docs/credits/rendering.md), each centred on the ground under the eye and each holding the levels of cubes whose
+// cubes are about as wide as its texels. A level's box reaches a fixed number of its cubes from the eye, so four
+// levels to a cascade and a map twice as wide as the coarsest of them make a texel as wide as a cube of the
+// finest: a step one cube high then still casts a shadow a texel wide.
 export const LevelsPerCascade = 4;
 export const Cascades = 4;
 
