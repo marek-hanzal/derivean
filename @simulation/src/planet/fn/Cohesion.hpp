@@ -6,15 +6,6 @@ namespace derivean::sim {
 
 class Workers;
 
-// Each plate is one region of the mantle grid (lead, 27 Nov; planet/fn/Regions): its cells joined
-// through its own and free cells, so only another plate's cells cut it. Earth's plates follow Bird (2003,
-// docs/credits): none is smaller than about 0.002 sr, and a plate cut in two by its boundaries is two
-// plates. A level-5 cell is 0.0017–0.0024 sr, so a plate is also two cells at least (lead, 27 Nov): one
-// cell cut off joins. Both count crust that stands there: the area its plate covers and the cells it owns
-// by OwnedShare, not a cell's whole area for a rounding sliver (Codex DREV-CLAUDE-008-01).
-inline constexpr double MicroplateArea = 0.002;   // sr
-inline constexpr int MicroplateCells = 2;
-
 // Keeps every plate one region after a planet step. A region that is not its plate's largest and has
 // MicroplateArea and MicroplateCells becomes a plate of its own: it takes the parent's Euler vector and
 // motion (a new id) and its pieces keep their record, so it moves on as before and the model's forces

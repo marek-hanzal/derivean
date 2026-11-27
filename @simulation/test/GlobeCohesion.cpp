@@ -1,5 +1,6 @@
-// Targeted cases of keepPlatesWhole on hand-made level-5 globes (Codex DREV-CLAUDE-008-01, whose
-// fixtures these follow; lead's decisions of 27 Nov):
+// Targeted cases of keepPlatesWhole on hand-made globes (Codex DREV-CLAUDE-008-01 and -02, whose
+// fixtures these follow; lead's decisions of 27 Nov). 260 lines: one fixture per case, each a few
+// dozen lines of set-up that only that case reads.
 // - A one-cell fragment bordered by four plates joins the one with the longest border in metres.
 // - A fragment parted from its plate's other cells by free cells alone is one region with them: nothing
 //   joins, splits or is reported unsettled.
@@ -8,11 +9,16 @@
 //   nothing splits off.
 // - A region of the covered area and cells splits off with a new id; a plate left with no piece ends
 //   once; ids are unique and given in order; a second pass repeats no event; the stock closes.
+// - Pieces of one plate that overlap one another are measured by their union, exactly and with
+//   cloud-in-cell weights: their summed overlaps reach 0.002 sr, the union does not, and nothing splits.
 #include "GlobeFixture.hpp"
 
 #include "chronology/constant/Timeline.hpp"
 #include "geometry/constant/Sphere.hpp"
+#include "geometry/fn/Cell.hpp"
+#include "geometry/fn/Rotation.hpp"
 #include "geometry/fn/SphereGrid.hpp"
+#include "geometry/fn/Union.hpp"
 #include "planet/fn/Cohesion.hpp"
 #include "planet/fn/Coupling.hpp"
 #include "planet/fn/Pieces.hpp"
@@ -186,6 +192,60 @@ void checkIdentity() {
     expect(globe.stats.wholeUnsettled == 0 && stockCloses(globe, stock) && platesValid(globe), "the identity fixture does not close");
 }
 
+// Codex's covered-area fixture (DREV-CLAUDE-008-02): four whole-cell pieces of plate 0 on level 6, each
+// moved by part of a cell so that they overlap one another, ringed by plate 1, coupled exactly or by
+// cloud-in-cell weights. Their overlaps summed per cell reach 0.002 sr, the union of their footprints
+// does not: the region's area is that union, and the fragment joins rather than splits.
+void checkOverlappingCover(bool exact) {
+    Globe globe = makeGlobe(42, 6, PlateSpeeds::Today, TectonicsStart);
+    enterGlobeEpoch(globe);
+    globe.epoch.plates.resize(2), globe.epoch.sites = 2, globe.motion.resize(2), globe.applied.resize(2);
+    const SphereGrid& grid = *globe.grid;
+    const std::vector<CrustPiece> original = globe.pieces;
+    constexpr int i = 9, j = 27;
+    globe.pieces.clear();
+    for (int a = i - 3; a <= i + 4; ++a)
+        for (int b = j - 3; b <= j + 4; ++b)
+            if (a == i - 3 || a == i + 4 || b == j - 3 || b == j + 4) globe.pieces.push_back(original[size_t(cellAtFace0(grid, a, b))]), globe.pieces.back().plate = 1;
+    for (int a = 48; a < 56; ++a) globe.pieces.push_back(original[size_t(cellAtFace0(grid, a, 57))]), globe.pieces.back().plate = 0;
+    int fragment = -1;
+    const TangentPlane plane = tangentPlaneAt(grid.centre[size_t(cellAtFace0(grid, i, j))]);
+    std::vector<PlanePolygon> footprints;
+    for (int k = 0; k < 4; ++k) {
+        const int cell = cellAtFace0(grid, i + (k & 1), j + (k >> 1));
+        const Cell birth = cellAt(grid, cell);
+        CrustPiece piece = original[size_t(cell)];
+        const Vec3 p = grid.centre[size_t(cell)];
+        const Vec3 along = grid.centre[size_t(cellAtFace0(grid, birth.i + 1, birth.j))] - p, across = grid.centre[size_t(cellAtFace0(grid, birth.i, birth.j + 1))] - p;
+        const Vec3 target = normalized(p + along * ((k & 1) ? 0.32 : 0.45) + across * 0.46), axis = cross(p, target);
+        piece.rotation = rotationAbout(axis, std::atan2(length(axis), dot(p, target)));
+        piece.plate = 0;
+        if (k == 0) fragment = indexOf(grid, cellOf(centreOf(grid, piece), grid.level));
+        footprints.push_back(projected(plane, footprintOf(grid, piece)));
+        globe.pieces.push_back(piece);
+    }
+    const double cover = unionArea(footprints).area / (PlanetRadius * PlanetRadius);   // 0.00193172 sr (Codex)
+    sortPieces(globe.pieces);
+    const CrustStock stock = totalStock(globe.pieces);
+    couple(grid, globe.pieces, {}, exact, globe.coupling);
+    const PlateRegions regions = plateRegionsOf(globe);
+    const int32_t r = regions.region[size_t(fragment)];
+    expect(r >= 0 && regions.plate[size_t(r)] == 0 && regions.largest[0] != r, "the covered-area fixture's fragment is not a fragment of plate 0", exact);
+    double bound = 0;
+    for (size_t c = 0; c < regions.region.size(); ++c) {
+        if (regions.region[c] != r || regions.owner[c] != 0) continue;
+        double sum = 0;
+        for (int32_t s = globe.coupling.cellStart[c]; s < globe.coupling.cellStart[c + 1]; ++s)
+            if (globe.pieces[size_t(globe.coupling.byCell[size_t(s)].piece)].plate == 0) sum += globe.coupling.byCell[size_t(s)].area;
+        bound += std::min(sum, grid.area[c]) / (PlanetRadius * PlanetRadius);
+    }
+    expect(bound >= MicroplateArea && cover < MicroplateArea - 1e-5 && regions.cells[size_t(r)] >= MicroplateCells, "the covered-area fixture is not between bound and union", bound);
+    expect(std::abs(regions.area[size_t(r)] - cover) <= 1e-6 * cover, "a fragment's area counts overlapping crust twice", regions.area[size_t(r)] / cover - 1);
+    keepPlatesWhole(globe, 1);
+    expect(globe.splits.empty() && globe.stats.fragmentsJoined > 0 && globe.stats.wholeUnsettled == 0 && stockCloses(globe, stock) && platesValid(globe),
+           "overlapping crust under 0.002 sr splits off a plate", globe.splits.empty() ? 0 : globe.splits.front().area);
+}
+
 } // namespace
 
 void testGlobeCohesion() {
@@ -193,4 +253,6 @@ void testGlobeCohesion() {
     checkParted();
     checkRoundingOverlap();
     checkIdentity();
+    checkOverlappingCover(true);
+    checkOverlappingCover(false);
 }
