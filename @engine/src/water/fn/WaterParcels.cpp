@@ -81,9 +81,10 @@ bool advanceParcel(WaterState& state, const VoxelWorld& world, WaterParcel& parc
             return false;
         }
         const Position sample = interpolate(from, to, fraction);
-        const bool solid = touchesTerrain(world, sample, half);
+        const Contact contact = probeTerrain(world, sample, half);
+        const bool solid = contact != Contact::Clear;
         // Ground that is not loaded offers no surface yet; the parcel waits as it is.
-        if (solid && reachesUnloaded(world, sample, half)) {
+        if (contact == Contact::Unloaded) {
             parcel.velocity[1] += Gravity * step;
             return false;
         }

@@ -100,10 +100,10 @@ void stepSand(SandState& sand, VoxelWorld& world, WaterState& water, double dt, 
                 return false;
             }
             const Position sample = interpolate(from, to, fraction);
-            if (touchesTerrain(world, sample, GrainSize * 0.5)) {
+            if (const Contact contact = probeTerrain(world, sample, GrainSize * 0.5); contact != Contact::Clear) {
                 // Ground that is not loaded offers no surface yet. The grain waits as it is, so
                 // where it ends up does not depend on what was loaded when it got here.
-                if (reachesUnloaded(world, sample, GrainSize * 0.5)) {
+                if (contact == Contact::Unloaded) {
                     grain.velocity[1] += Gravity * dt;
                     return false;
                 }
