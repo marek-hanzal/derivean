@@ -157,6 +157,7 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
     // The ground of every cell, kept as it is laid on.
     std::vector<float> ground(cells);
     for (size_t i = 0; i < cells; ++i) ground[i] = groundOf(domain, i);
+    const float lodged = 1.0f - std::exp(-1.0f / float(LodgeCells));
 
     for (const int32_t cell : order) {
         const size_t i = size_t(cell);
@@ -246,7 +247,7 @@ void lodgeTill(Domain& domain, SheetWork& work, const ParentSheet& parent, Sheet
                 cavity = std::max(cavity, ground[u] - carried.unstripped[u] - ShelterSlope * float(k * domain.cell) - here);
             }
             cavity *= pressing;
-            const float lodging = weights <= 0 ? 1.0f : std::min(1.0f, cavity / total + (1.0f - std::exp(-1.0f / float(LodgeCells))));
+            const float lodging = weights <= 0 ? 1.0f : std::min(1.0f, cavity / total + lodged);
             // A hollow in the ice surface has nowhere to pass its load on: it keeps what fits, no
             // higher than till stands against its lowest neighbour.
             kept = std::min(lodging, room / total);
