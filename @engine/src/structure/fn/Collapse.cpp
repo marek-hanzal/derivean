@@ -4,7 +4,6 @@
 #include <array>
 #include <cstdint>
 #include <span>
-#include <unordered_map>
 
 namespace derivean {
 namespace {
@@ -13,11 +12,17 @@ constexpr int SearchPadding = 4 * VoxelsPerMeter;
 
 struct Island {
     std::vector<Cell> cells;
-    std::unordered_map<int, float> links;
+    std::vector<std::pair<int, float>> links;   // other island, the capacity of the leaf between; a few at most
     float mass{};
     float direct{};
     bool stable{};
 };
+
+void link(Island& island, int other, float capacity) {
+    const auto found = std::find_if(island.links.begin(), island.links.end(), [other](const auto& entry) { return entry.first == other; });
+    if (found == island.links.end()) island.links.emplace_back(other, capacity);
+    else found->second += capacity;
+}
 
 bool horizon(Bounds area, Cell point) {
     return point.x == area.min.x || point.y == area.min.y || point.z == area.min.z
@@ -73,8 +78,8 @@ void discover(const Voxels& voxels, Volume<int>& owners,
                 const int other = owners[neighbor] - 1;
                 if (other < 0 || other == int(i)) continue;
                 const float capacity = materialInfo(Material::Leaf).support;
-                island.links[other] += capacity;
-                islands[other].links[int(i)] += capacity;
+                link(island, other, capacity);
+                link(islands[size_t(other)], int(i), capacity);
             }
         }
     }
