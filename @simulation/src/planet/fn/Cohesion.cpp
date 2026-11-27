@@ -1,4 +1,4 @@
-// 269 lines, one owner: a pass's splits, joins and the dealing of their pieces share PlateRegions and
+// 270 lines, one owner: a pass's splits, joins and the dealing of their pieces share PlateRegions and
 // the order of keepPlatesWhole, which splitting them apart would only forward.
 #include "planet/fn/Cohesion.hpp"
 
@@ -147,7 +147,8 @@ std::vector<int32_t> deal(Globe& globe, const PlateRegions& regions, const std::
         for (int32_t w = real.begin[k]; w < real.end[k]; ++w) {
             const CellWeight& weight = real.weights[size_t(w)];
             const int32_t r = regions.region[size_t(weight.cell)];
-            if (r >= 0 && to[size_t(r)] >= 0 && regions.plate[size_t(r)] == piece.plate && weight.area > most) most = weight.area, target[k] = to[size_t(r)], from[k] = r;
+            if (r < 0 || to[size_t(r)] < 0 || regions.plate[size_t(r)] != piece.plate || weight.area < OwnedShare * grid.area[size_t(weight.cell)]) continue;   // under OwnedShare is no cover, as for a cell
+            if (weight.area > most) most = weight.area, target[k] = to[size_t(r)], from[k] = r;
         }
     }
     for (size_t k = 0; k < globe.pieces.size(); ++k) {
