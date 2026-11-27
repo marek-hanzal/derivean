@@ -122,7 +122,7 @@ void projectWater(Game& game, Frame& frame, Cell center, const std::unordered_se
         return true;
     });
     const bool waterDue = game.water.ticks >= game.lastWaterProjection + 2;
-    for (const auto& [key, count] : game.water.chunks) {
+    for (const auto& [key, bricks] : game.water.chunks) {
         if (distance(key, center) > Visibility) continue;
         const bool enters = view.water.insert(key).second;
         if (!enters && !edited.contains(key) && !(waterDue && game.water.meshDirty.contains(key))) continue;

@@ -40,9 +40,11 @@ struct WaterBrick {
 struct WaterState {
     std::unordered_map<Cell, WaterBrick, CellHash> bricks;   // by tile
     std::unordered_map<Cell, size_t, CellHash> chunks;       // chunk: its bricks that hold water
-    std::vector<Cell> rousing;                               // bricks woken since the last tick, a key at most once per wake
+    std::vector<Cell> rousing;                               // bricks woken since the last tick, each key once
     std::unordered_set<Cell, CellHash> meshDirty;
-    mutable CellCache<WaterBrick> found;   // what brick lookups found; addWater and dropBrick forget the keys they change
+    // What brick lookups found; addWater and dropBrick forget the keys they change. Even a const lookup
+    // writes it, so the water is read on the game thread only.
+    mutable CellCache<WaterBrick> found;
 
     std::vector<WaterParcel> parcels;
     std::vector<WaterFoam> foam;

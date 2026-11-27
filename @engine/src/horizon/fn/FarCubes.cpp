@@ -57,8 +57,7 @@ void plan(FarCubes& far, int index, Position eye, CubeDelta& delta) {
         forget(far, level, slot->second, delta);
         slot = level.slots.erase(slot);
     }
-    // What is missing shrinks a box; what is only stale waits behind it. Each column's place in that
-    // order is read once, as it is listed.
+    // What is missing shrinks a box; what is only stale waits behind it.
     using Order = std::pair<bool, int>;
     std::vector<std::pair<Order, Cell>> listed;
     for (int z = centre.z - load; z <= centre.z + load; ++z)

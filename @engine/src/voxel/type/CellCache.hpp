@@ -10,7 +10,8 @@ namespace derivean {
 // What lookups in a map keyed by cell found, a node or its absence, remembered by where the key lies:
 // four apart along each axis, so the keys around a point take different slots. It serves a
 // std::unordered_map, whose nodes keep their place until erased; whoever inserts or erases a key
-// forgets it here.
+// forgets it here. The slots point into one map, so a copy or a move starts empty and a moved-from
+// cache is emptied: neither may answer for another map's nodes.
 template<typename T>
 struct CellCache {
     static constexpr int Side = 4;
@@ -20,6 +21,19 @@ struct CellCache {
         bool held{};   // the slot answers for its key
     };
     std::array<Slot, Side * Side * Side> slots{};
+
+    CellCache() = default;
+    CellCache(const CellCache&) {}
+    CellCache(CellCache&& other) noexcept { other.slots = {}; }
+    CellCache& operator=(const CellCache&) {
+        slots = {};
+        return *this;
+    }
+    CellCache& operator=(CellCache&& other) noexcept {
+        slots = {};
+        other.slots = {};
+        return *this;
+    }
 };
 
 template<typename T>

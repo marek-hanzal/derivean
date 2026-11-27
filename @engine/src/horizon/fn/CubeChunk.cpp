@@ -140,7 +140,7 @@ CubeColumn buildCubes(const sim::World& world, CubeKey key) {
                 if (std::isnan(levelAt(a, b))) return false;
         return true;
     };
-    // Read once for every column the cubes look at: the tops, the sheets and their masks all ask.
+    // Which of the columns the cubes look at stand under water.
     std::vector<uint8_t> wetness(size_t(Side) * Side);
     for (int j = -Halo; j < CubeSide + Halo; ++j)
         for (int i = -Halo; i < CubeSide + Halo; ++i) wetness[size_t(j + Halo) * Side + size_t(i + Halo)] = wet(i, j);

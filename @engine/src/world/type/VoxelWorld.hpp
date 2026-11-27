@@ -65,7 +65,8 @@ struct VoxelWorld {
     int voidLevel{WorldFloorLevel};                  // chunk level below which there is nothing
     std::optional<StreamedExtent> streamed;          // absent: the stored voxels are all there is
     // What chunk lookups found: reads cluster in space. Only VoxelWorld.cpp inserts and erases chunks, and
-    // forgets each such key here.
+    // forgets each such key here. Even a const lookup writes it, so a world is read on one thread only:
+    // the game's, which hands workers samples of it.
     mutable CellCache<TerrainChunk> found;
 };
 
