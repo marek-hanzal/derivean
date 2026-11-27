@@ -74,13 +74,14 @@ fn cloudMarch(direction: vec3f, limit: f32, dither: f32, eye: vec3f, sun: vec3f,
         }
       }
       let height = clamp((p.y + c.datum - range.x) / (range.y - range.x), 0.0, 1.0);
-      let light = sunLight * cloudSunlit(cosine, backLobes, shade, found.y) * 5.6
-        + (skyAmbient * mix(0.4, 1.0, height) + groundAmbient * (1.0 - height) * 0.35) * 0.34;
-      let absorbed = 1.0 - exp(-sigma * pace);
+      // When the sun's light sums under 0.002, the cloud is lit by the sky alone.
+      var light = (skyAmbient * mix(0.4, 1.0, height) + groundAmbient * (1.0 - height) * 0.35) * 0.34;
+      if (daylight) { light += sunLight * cloudSunlit(cosine, backLobes, shade, found.y) * 5.6; }
+      let passed = exp(-sigma * pace);
       let hazeDepth = haze * t;
       let hazed = 1.0 - exp(-hazeDepth * hazeDepth);
-      scattered += through * absorbed * mix(light, horizon, hazed);
-      through *= 1.0 - absorbed;
+      scattered += through * (1.0 - passed) * mix(light, horizon, hazed);
+      through *= passed;
       t += pace;
     }
   }
