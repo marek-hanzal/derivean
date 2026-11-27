@@ -25,6 +25,27 @@ Frame frameOf(const JointSet& set, Vec2 material, float depth) {
     return {material.x * c + material.z * s, -material.x * s + material.z * c - double(depth) * set.lean};
 }
 
+// jointDistance at a point already in the frame of the set.
+float distanceIn(uint64_t seed, const RockMass& mass, int set, int order, const Frame& frame, float depth) {
+    const JointSet& joints = mass.sets[set];
+    float spacing = joints.spacing;
+    for (int k = 0; k < order; ++k) spacing *= OrderStep;
+    const uint64_t base = hash(stream(seed, DomainStream) + 17, int64_t(mass.domain), set * JointOrders + order);
+    // Wider orders are broken through more completely: a zone runs on where single joints end.
+    const double through = 1.0 - (1.0 - joints.persistence) * std::pow(0.45, order);
+    const int64_t nearest = int64_t(std::floor(frame.across / spacing));
+    float best = 1e9f;
+    for (int64_t plane = nearest - 1; plane <= nearest + 1; ++plane) {
+        const int64_t segment = int64_t(std::floor(frame.along / (spacing * SegmentLength) + unit(base, plane, 1)));
+        if (unit(base, plane, segment + 2) >= through) continue;
+        const double wander = 0.08 * spacing * gradientNoise(hash(base, plane, 0), frame.along / (3.0 * spacing), depth / (4.0 * spacing));
+        const double at = (double(plane) + 0.2 + 0.6 * unit(base, plane, 0)) * spacing + wander;
+        best = std::min(best, float(std::abs(frame.across - at)));
+    }
+    // The three planes looked at are every plane within one spacing, so the answer is whole up to there.
+    return best <= spacing ? best : 1e9f;
+}
+
 } // namespace
 
 RockMass rockMassAt(uint64_t seed, const StrataColumn& column, const Bed& bed, double laidDown, Vec2 material) {
@@ -73,24 +94,7 @@ RockMass rockMassAt(uint64_t seed, const StrataColumn& column, const Bed& bed, d
 }
 
 float jointDistance(uint64_t seed, const RockMass& mass, int set, int order, Vec2 material, float depth) {
-    const JointSet& joints = mass.sets[set];
-    float spacing = joints.spacing;
-    for (int k = 0; k < order; ++k) spacing *= OrderStep;
-    const Frame frame = frameOf(joints, material, depth);
-    const uint64_t base = hash(stream(seed, DomainStream) + 17, int64_t(mass.domain), set * JointOrders + order);
-    // Wider orders are broken through more completely: a zone runs on where single joints end.
-    const double through = 1.0 - (1.0 - joints.persistence) * std::pow(0.45, order);
-    const int64_t nearest = int64_t(std::floor(frame.across / spacing));
-    float best = 1e9f;
-    for (int64_t plane = nearest - 1; plane <= nearest + 1; ++plane) {
-        const int64_t segment = int64_t(std::floor(frame.along / (spacing * SegmentLength) + unit(base, plane, 1)));
-        if (unit(base, plane, segment + 2) >= through) continue;
-        const double wander = 0.08 * spacing * gradientNoise(hash(base, plane, 0), frame.along / (3.0 * spacing), depth / (4.0 * spacing));
-        const double at = (double(plane) + 0.2 + 0.6 * unit(base, plane, 0)) * spacing + wander;
-        best = std::min(best, float(std::abs(frame.across - at)));
-    }
-    // The three planes looked at are every plane within one spacing, so the answer is whole up to there.
-    return best <= spacing ? best : 1e9f;
+    return distanceIn(seed, mass, set, order, frameOf(mass.sets[set], material, depth), depth);
 }
 
 float columnJointDistance(uint64_t seed, uint64_t body, Vec2 across, float width) {
@@ -104,11 +108,14 @@ float columnJointDistance(uint64_t seed, uint64_t body, Vec2 across, float width
 float fractureShare(uint64_t seed, const RockMass& mass, Vec2 material, float depth, float width) {
     double intact = 1.0 - mass.crush;
     for (int set = 0; set < JointSets; ++set) {
-        float spacing = mass.sets[set].spacing;
+        float spacing = mass.sets[set].spacing, widest = spacing;
+        for (int k = 1; k < JointOrders; ++k) widest *= OrderStep;
+        if (widest < 3.0f * width) continue;
+        const Frame frame = frameOf(mass.sets[set], material, depth);
         for (int order = 0; order < JointOrders; ++order, spacing *= OrderStep) {
             if (spacing < 3.0f * width) continue;
             const float half = 0.5f * CorridorShare * spacing * float(order + 1);
-            const float covered = std::clamp((half + 0.5f * width - jointDistance(seed, mass, set, order, material, depth)) / width, 0.0f, 1.0f);
+            const float covered = std::clamp((half + 0.5f * width - distanceIn(seed, mass, set, order, frame, depth)) / width, 0.0f, 1.0f);
             intact *= 1.0 - covered * std::min(1.0f, 2.0f * half / width + 0.25f);
         }
     }
