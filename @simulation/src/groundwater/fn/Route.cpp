@@ -105,6 +105,8 @@ void routeGroundWater(WaterField& field) {
     // and the rows beside it, so a row none of whose rows around changed in the last sweep gathers
     // what it gathered then: it is copied, and in the sweep beyond it has nothing under way (its
     // lag would be its flux less itself, 0). Nodes no sweep writes hold their start in both buffers.
+    // Both short cuts, and skipping the neighbours in the first sweep, take recharges, levels and
+    // shares to be finite, as the budget of every tile does (testGroundwaterTile).
     for (int sweep = 0; sweep <= RouteSweeps; ++sweep) {
         const bool beyond = sweep == RouteSweeps;
         forRows(field, [&](int begin, int end) {
