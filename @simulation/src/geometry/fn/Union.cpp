@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <utility>
 #include <cstdio>
 #include <cstdlib>
 
@@ -16,23 +17,28 @@ constexpr double Scale = 1e12;   // integer units per plane unit
 
 // Signed spherical excess of the fan from the tangent point (0, 0, 1) over a closed plane contour:
 // tan(E/2) = P0 · (Pa × Pb) / (|Pa||Pb| + P0·Pa |Pb| + Pa·Pb + P0·Pb |Pa|) with P = (x, y, 1) and |P0| = 1,
-// where P0 · (Pa × Pb) is the plane cross product xa yb − ya xb.
-double fanExcess(const double* x, const double* y, size_t count) {
+// where P0 · (Pa × Pb) is the plane cross product xa yb − ya xb. `corner(k)` gives corner k's (x, y);
+// each corner's |P| is taken once and carried to the next triangle.
+template <class Corner>
+double fanExcess(size_t count, Corner corner) {
     double excess = 0;
+    const auto [x0, y0] = corner(0);
+    const double n0 = std::sqrt(1 + x0 * x0 + y0 * y0);
+    double xa = x0, ya = y0, na = n0;
     for (size_t k = 0; k < count; ++k) {
-        const size_t next = (k + 1) % count;
-        const double na = std::sqrt(1 + x[k] * x[k] + y[k] * y[k]), nb = std::sqrt(1 + x[next] * x[next] + y[next] * y[next]);
-        const double triple = x[k] * y[next] - y[k] * x[next];
-        const double denominator = na * nb + nb + (1 + x[k] * x[next] + y[k] * y[next]) + na;
+        const bool last = k + 1 == count;
+        const auto [xb, yb] = last ? std::pair{x0, y0} : corner(k + 1);
+        const double nb = last ? n0 : std::sqrt(1 + xb * xb + yb * yb);
+        const double triple = xa * yb - ya * xb;
+        const double denominator = na * nb + nb + (1 + xa * xb + ya * yb) + na;
         excess += 2 * std::atan2(triple, denominator);
+        xa = xb, ya = yb, na = nb;
     }
     return excess;
 }
 
 double contourArea(const Clipper2Lib::Path64& path) {
-    std::vector<double> x(path.size()), y(path.size());
-    for (size_t k = 0; k < path.size(); ++k) x[k] = double(path[k].x) / Scale, y[k] = double(path[k].y) / Scale;
-    return fanExcess(x.data(), y.data(), path.size()) * PlanetRadius * PlanetRadius;
+    return fanExcess(path.size(), [&](size_t k) { return std::pair{double(path[k].x) / Scale, double(path[k].y) / Scale}; }) * PlanetRadius * PlanetRadius;
 }
 
 double side(double ax, double ay, double bx, double by, double px, double py) {
@@ -94,8 +100,7 @@ PlanePolygon clipped(PlanePolygon subject, const PlanePolygon& clip) {
         PlanePolygon kept;
         const int n = subject.count;
         double previous = side(clip.x[a], clip.y[a], clip.x[b], clip.y[b], subject.x[size_t(n - 1)], subject.y[size_t(n - 1)]);
-        for (int k = 0; k < n; ++k) {
-            const size_t before = size_t((k + n - 1) % n), at = size_t(k);
+        for (size_t at = 0, before = size_t(n - 1); at < size_t(n); before = at++) {
             const double now = side(clip.x[a], clip.y[a], clip.x[b], clip.y[b], subject.x[at], subject.y[at]);
             if ((now >= 0) != (previous >= 0)) {
                 const double t = previous / (previous - now);
@@ -118,7 +123,7 @@ PlanePolygon clipped(PlanePolygon subject, const PlanePolygon& clip) {
 
 double sphericalArea(const PlanePolygon& polygon) {
     if (polygon.count < 3) return 0;
-    return fanExcess(polygon.x.data(), polygon.y.data(), size_t(polygon.count)) * PlanetRadius * PlanetRadius;
+    return fanExcess(size_t(polygon.count), [&](size_t k) { return std::pair{polygon.x[k], polygon.y[k]}; }) * PlanetRadius * PlanetRadius;
 }
 
 UnionArea unionArea(const std::vector<PlanePolygon>& polygons) {
