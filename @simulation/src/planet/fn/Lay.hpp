@@ -11,7 +11,7 @@ namespace derivean::sim {
 // (Codex DREV-CLAUDE-005-04; holdOpening keeps it from making one). A new piece of the plate of `like`
 // goes into the most open slot of its lattice over the cell, else onto the cell itself, with crust
 // necked from continental neighbours, or ocean floor as old as `like`'s when `like` is too thin to neck
-// (age 0 would turn the polarity of sinksUnder at the trench).
+// (the hole is the trench's rounding, not new floor).
 bool fillCell(Globe& globe, Band& band, int cell, int like, PieceKey key, double bornAt);
 
 // Fills the most open slot inside one plate next to a deciding cell, open by half or more

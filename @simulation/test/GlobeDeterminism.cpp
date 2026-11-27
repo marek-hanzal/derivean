@@ -62,7 +62,7 @@ void expectSame(const Globe& a, const Globe& b, const char* what) {
                std::equal(a.contact.value.begin(), a.contact.value.end(), b.contact.value.begin(), sameContact),
            what);
     expect(a.motion.size() == b.motion.size() && a.applied.size() == b.applied.size(), what);
-    for (size_t p = 0; p < a.motion.size(); ++p) expect(sameBits(a.motion[p].resistance, b.motion[p].resistance) && sameBits(a.applied[p], b.applied[p]), what, double(p));
+    for (size_t p = 0; p < a.motion.size(); ++p) expect(sameBits(a.motion[p].resistance, b.motion[p].resistance) && sameBits(a.motion[p].oceanAge, b.motion[p].oceanAge) && sameBits(a.applied[p], b.applied[p]), what, double(p));
     expect(sameBits(a.seaLevel, b.seaLevel) && a.seaLevels == b.seaLevels && sameBits(a.ledger, b.ledger), what);
 }
 

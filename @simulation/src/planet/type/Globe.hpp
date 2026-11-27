@@ -78,9 +78,12 @@ struct Coupling {
 };
 inline constexpr int CouplingSlots = 16;
 
-// A plate's brake inside an epoch: continental crust jammed at its leading contacts, m³.
+// What a plate carries through an epoch besides its Euler vector.
 struct GlobeMotion {
-    double resistance{};
+    double resistance{};   // m³: continental crust jammed at its leading contacts, its brake
+    // yr: the area mean of the age of the plate's ocean floor as the epoch starts, 0 for a plate with no
+    // ocean then. Which of two oceans sinks is the plates' choice, not the pieces' (sinksUnder).
+    double oceanAge{};
 };
 
 // The nearest cell of another plate as a cell of the mantle grid sees it, with the relative motion of

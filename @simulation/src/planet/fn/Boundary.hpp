@@ -19,8 +19,16 @@ struct Substep {
 };
 
 // Whether `donor` is the denser of two crusts and sinks under `survivor` (S3-design.md §3): ocean under
-// continent, older ocean under younger (the higher plate index on a tie); two continents do not sink.
+// continent, the older plate's ocean under the younger's by the mean age of their ocean floor as the
+// epoch began (GlobeMotion::oceanAge; the higher plate index on a tie); two continents do not sink. A
+// trench so keeps one polarity along its length and through the epoch, as on Earth, where a polarity
+// turns only with a reorganisation (Stern 2002, docs/credits). Floor born at a contact during the epoch
+// therefore cannot turn a trench (handoff, stage 2b).
 bool sinksUnder(const Globe& globe, int donor, int survivor);
+
+// Whether the ocean of `plate` sinks under the ocean of `other` (sinksUnder's rule for two oceans,
+// which the arcs of planet/fn/GlobeContacts read too); never within one plate.
+bool oceanSinks(const Globe& globe, int plate, int other);
 
 // Whether a piece carries continental crust (at least OceanicLimit).
 bool continentalPiece(const CrustPiece& piece);

@@ -3,8 +3,8 @@
 // ages away from it on both sides, nothing is born where the contact closes, the
 // crust that goes into the interior is the consumed crust less the accreted wedge, a collision stops
 // at StackLimit and backs up without losing volume, the footprints keep covering the sphere, three
-// plates meeting at a trench and at a ridge triple junction conserve their crust, and the weld moves new
-// crust by the union of its plate's cover, not the sum.
+// plates meeting at a trench and at a ridge triple junction conserve their crust, the weld moves new
+// crust by the union of its plate's cover, not the sum, and two oceans meet with their plates' polarity.
 #include "GlobeHemispheres.hpp"
 
 #include "geometry/constant/Sphere.hpp"
@@ -205,6 +205,21 @@ void checkWeld() {
     expect(std::abs(turn - united / std::sqrt(grid.area[size_t(south)]) / PlanetRadius) < 1e-12 * side, "the weld does not turn by the union", turn / side);
 }
 
+// The plate whose ocean floor was older as the epoch began sinks along the whole trench (sinksUnder),
+// though every piece of the other plate is older; either plate, so neither the index nor the pieces decide.
+void checkTrenchPolarity() {
+    for (int older = 0; older < 2; ++older) {
+        Hemispheres h = hemispheres({1, 0, 0}, 0.05, 300.0f, 300.0f);
+        Globe& globe = h.globe;
+        globe.motion[size_t(older)].oceanAge = 80 * Myr, globe.motion[size_t(1 - older)].oceanAge = 20 * Myr;
+        long left[2] = {}, kept[2] = {};
+        for (CrustPiece& piece : globe.pieces) piece.column.oceanAge = float((piece.plate == older ? 50 : 120) * Myr), ++left[piece.plate];
+        for (int i = 0; i < 20; ++i) advance(h, Step);
+        for (const CrustPiece& piece : globe.pieces) kept[piece.plate] += piece.key.step < 0;
+        expect(kept[older] < left[older] && kept[1 - older] == left[1 - older], "a trench between two oceans follows the pieces' ages, not the plates'", double(older));
+    }
+}
+
 } // namespace
 
 void testGlobeBoundary() {
@@ -212,4 +227,5 @@ void testGlobeBoundary() {
     checkCollision();
     checkTripleJunction();
     checkWeld();
+    checkTrenchPolarity();
 }

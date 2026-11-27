@@ -34,6 +34,16 @@ Forsyth, D., Uyeda, S. (1975). On the relative importance of the driving forces 
 - **Model:** slab pull is about an order of magnitude stronger than the other forces and basal drag is stronger under continents, so plates with slabs move fast and continental plates slowly; a plate's speed falls with its continental share.
 - **Used in:** `@simulation/src/tectonics/type/Euler.hpp:25`, `@simulation/src/tectonics/fn/Euler.cpp` (`targetSpeed`).
 
+### Stern 2002: which plate sinks at a trench
+Stern, R. J. (2002). Subduction zones. *Reviews of Geophysics* 40(4), 1012. doi:10.1029/2001RG000108
+- **Model:** oceanic lithosphere sinks because it grows denser as it ages, so at a trench between two oceans the older plate goes down; a trench keeps its polarity, which turns only in a reorganisation such as an arc meeting a continent.
+- **Used in:** `@simulation/src/planet/fn/Boundary.hpp` (`sinksUnder`), `@simulation/src/planet/fn/Rotate.cpp` (each plate's mean ocean age as its epoch starts).
+
+### Bird 2003: the plates of today's Earth
+Bird, P. (2003). An updated digital model of plate boundaries. *Geochemistry, Geophysics, Geosystems* 4(3), 1027. doi:10.1029/2001GC000252
+- **Reference data:** 52 plates, 14 large and 38 small; each plate is one region, the small ones plates of their own; the list is incomplete below the Shetland plate, 72 240 km².
+- **Used in:** `@simulation/test/GlobeCohesion.hpp` (a plate's cells outside its largest region), the cohesion gate in `docs/handoff/planet-globe.md` (stage 2b).
+
 ### White, McKenzie and O'Nions 1992: thickness of oceanic crust
 White, R. S., McKenzie, D., O'Nions, R. K. (1992). Oceanic crustal thickness from seismic measurements and rare earth element inversions. *Journal of Geophysical Research: Solid Earth* 97(B13), 19683–19715. doi:10.1029/92JB01749
 - **Reference data:** normal oceanic crust is 7.1 ± 0.8 km thick; new ocean floor takes 7 km of basalt from the interior and a trench returns it.

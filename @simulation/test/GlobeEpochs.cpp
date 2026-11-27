@@ -8,9 +8,14 @@
 //   no slot inside a plate half open (GlobeGaps.hpp).
 // - The steps after keep both gates in the plate's frame and no cell of a boundary proper (two plates
 //   within its ring) open by half; the stock of felsic crust and basalt with the interior stays exact.
+// - Each plate stays one region (GlobeCohesion.hpp): under 1 % of the cells lie outside their plate's
+//   largest region at the end of the first epoch and 27 steps after the reorganisation.
+// - The plates' mean ocean ages that set the trenches' polarity for the epoch (sinksUnder) are those of
+//   the floor dealt to them.
 // A rigid plate of two lattices carries a seam's gap of under half a slot diagonally over the mantle
 // cells and opens them by up to √2 of it, so per mantle cell inside a plate the cover is reported
 // (docs/handoff/planet-globe.md), not gated.
+#include "GlobeCohesion.hpp"
 #include "GlobeFixture.hpp"
 #include "GlobeGaps.hpp"
 
@@ -27,6 +32,8 @@
 #include "planet/fn/Seam.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <string>
 
 using namespace derivean::sim;
 using namespace derivean::sim::globe_test;
@@ -77,6 +84,24 @@ void step(Globe& globe, int index) {
     globe.time += PlanetStep;
 }
 
+void expectCohesive(const Globe& globe, const char* when) {
+    const Cohesion cohesion = measureCohesion(globe);
+    const double stray = double(cohesion.stray) / double(cohesion.cells);
+    expect(stray < 0.01, (std::string("a plate breaks into regions by ") + when).c_str(), stray);
+}
+
+// The plates' mean ocean ages as enterGlobeEpoch sets them, after the pieces are dealt to the new plates
+// (test 7 checks that a trench follows them).
+void checkOceanAges(const Globe& globe) {
+    std::vector<double> age(globe.motion.size(), 0), area(globe.motion.size(), 0);
+    for (const CrustPiece& piece : globe.pieces)
+        if (!continentalPiece(piece)) age[piece.plate] += double(piece.column.oceanAge) * piece.area, area[piece.plate] += piece.area;
+    for (size_t p = 0; p < age.size(); ++p) {
+        const double mean = area[p] > 0 ? age[p] / area[p] : 0;
+        expect(std::abs(globe.motion[p].oceanAge - mean) <= 1e-9 * std::max(1.0, mean), "a plate's mean ocean age is not its floor's", double(p));
+    }
+}
+
 } // namespace
 
 void testGlobeEpochs() {
@@ -93,10 +118,12 @@ void testGlobeEpochs() {
         expect(c.outside.worstHole < 0.05 && c.outside.worstOverlap < 0.05, "a plate of one lattice is open or doubled outside the band", std::max(c.outside.worstHole, c.outside.worstOverlap));
     }
     expect(index > 60 && index < 160, "the first epoch is not where the fixture expects it", index);
+    expectCohesive(globe, "the first epoch");
 
     Band old;
     markBand(globe, 1, old);
     enterGlobeEpoch(globe);
+    checkOceanAges(globe);
     const Covers dealt = coversOf(globe);
     expect(dealt.outside.worstHole > 0.3 && dealt.outside.worstOverlap > 0.3, "dealing the pieces anew no longer moves a boundary's defects inside a plate", dealt.outside.worstHole);
     closeSeams(globe, old, index);
@@ -117,5 +144,6 @@ void testGlobeEpochs() {
         expect(gaps.ownCover < 0.5 && gaps.slotOpen < 0.5, "a plate is half open or half doubled in its own frame after the reorganisation", std::max(gaps.ownCover, gaps.slotOpen));
     }
     expect(globe.stats.sutured > sutured, "no seam closes in the band after the reorganisation", double(globe.stats.sutured - sutured));
+    expectCohesive(globe, "the steps after the reorganisation");
     expect(drift(globe, start) < 1e-12, "the steps after the reorganisation lose crust", drift(globe, start));
 }

@@ -60,8 +60,13 @@ bool sinksUnder(const Globe& globe, int donor, int survivor) {
     const CrustPiece& s = globe.pieces[size_t(survivor)];
     if (continentalPiece(d)) return false;
     if (continentalPiece(s)) return true;
-    if (d.column.oceanAge != s.column.oceanAge) return d.column.oceanAge > s.column.oceanAge;
-    return d.plate > s.plate;
+    return oceanSinks(globe, d.plate, s.plate);
+}
+
+bool oceanSinks(const Globe& globe, int plate, int other) {
+    const double own = globe.motion[size_t(plate)].oceanAge, their = globe.motion[size_t(other)].oceanAge;
+    if (own != their) return own > their;
+    return plate > other;
 }
 
 bool continentalPiece(const CrustPiece& piece) { return piece.column.crust >= float(OceanicLimit); }
