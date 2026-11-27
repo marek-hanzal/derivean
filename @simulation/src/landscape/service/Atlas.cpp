@@ -1,6 +1,7 @@
 #include "landscape/service/Atlas.hpp"
 
 #include "landscape/fn/Build.hpp"
+#include "simulation/constant/BuildPriority.hpp"
 #include "simulation/type/World.hpp"
 
 #include <algorithm>
@@ -45,13 +46,14 @@ std::shared_ptr<const Tile> Atlas::require(TileKey key, BuildMode mode) {
         slot.claimed = true;
     }
 
-    // A ground tile asks for ground water, whose waiters may work the pool's queue: this thread
-    // must not, or a neighbour taken from the queue could wait for this tile on its own stack.
-    const Workers::Claim claim;
+    // A ground tile asks for ground water, whose waiters work the pool's queue: this thread then
+    // takes only work above its level, so no neighbour can wait for this tile on its own stack.
+    // Inside the try, so that a wait against the order gives the slot back as it throws.
     try {
+        const Workers::Claim claim(Workers::above(terrainPriority(key.level), true));
         const std::vector<TileKey> needed = dependencies(key);
         if (mode == BuildMode::Demand)
-            for (const TileKey other : needed) request(other, 1000 - int(other.level) * 100);
+            for (const TileKey other : needed) request(other, terrainPriority(other.level));
         std::vector<std::shared_ptr<const Tile>> held;
         held.reserve(needed.size());
         for (const TileKey other : needed) {

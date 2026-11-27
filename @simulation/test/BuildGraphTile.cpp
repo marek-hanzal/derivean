@@ -3,6 +3,7 @@
 
 #include "ground/type/Detail.hpp"
 #include "measure/fn/Digest.hpp"
+#include "simulation/constant/BuildPriority.hpp"
 #include "simulation/fn/BuildGraph.hpp"
 #include "simulation/type/World.hpp"
 
@@ -65,7 +66,11 @@ void testBuildGraphTile() {
         expectGround(ready == std::vector{GroundNode}, "the build graph did not admit the prepared Ground tile", threads);
         const auto build = std::make_shared<std::packaged_task<void()>>([&graph, key = ready.front()] { buildReady(graph, key); });
         auto completed = build->get_future();
-        graph.workers.submit([build] { (*build)(); });
+        // As a part of buildAll would run it, holding a prepared build's priority.
+        graph.workers.submit([build] {
+            const Workers::Claim part(preparedPriority);
+            (*build)();
+        });
         completed.get();
         const auto actual = graph.atlas.find(GroundKey);
         expectGround(actual && actual->detail, "the graph did not publish ground detail", threads);

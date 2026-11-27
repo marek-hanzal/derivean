@@ -3,18 +3,27 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <climits>
 #include <memory>
+#include <stdexcept>
 
 namespace derivean::sim {
 namespace {
 
-thread_local int claimsHeld = 0;
+thread_local int claimCeiling = INT_MIN;
 
 } // namespace
 
-Workers::Claim::Claim() { ++claimsHeld; }
+Workers::Claim::Claim(int ceiling) : previous_(claimCeiling) { claimCeiling = std::max(previous_, ceiling); }
 
-Workers::Claim::~Claim() { --claimsHeld; }
+Workers::Claim::~Claim() { claimCeiling = previous_; }
+
+int Workers::ceiling() { return claimCeiling; }
+
+int Workers::above(int priority, bool ordered) {
+    if (priority > claimCeiling || (ordered && priority == claimCeiling)) return priority;
+    throw std::logic_error("a thread waits for work that does not rank above what it holds");
+}
 
 Workers::Workers(unsigned threads) {
     if (threads == 0) threads = std::max(1u, std::thread::hardware_concurrency() - 1);
@@ -86,7 +95,7 @@ void Workers::loop() {
 void Workers::helpUntil(const std::function<bool()>& done) {
     std::unique_lock lock(mutex_);
     while (!done()) {
-        if (claimsHeld == 0 && !stopping_ && runOne(lock)) continue;
+        if (!stopping_ && !queue_.empty() && queue_.front().priority > claimCeiling && runOne(lock)) continue;
         wake_.wait_for(lock, std::chrono::milliseconds(2));
     }
 }
@@ -97,7 +106,7 @@ void Workers::notify() {
     wake_.notify_all();
 }
 
-void Workers::parallelFor(int count, const std::function<void(int, int)>& body, int grain) {
+void Workers::parallelFor(int count, const std::function<void(int, int)>& body, int grain, int priority) {
     if (count <= 0) return;
     const int parts = std::clamp(count / std::max(1, grain), 1, int(threads_.size()) + 1);
     if (parts == 1) {
@@ -126,13 +135,13 @@ void Workers::parallelFor(int count, const std::function<void(int, int)>& body, 
             shared.done.notify_all();
         }
     };
-    // The caller waits for every part, and it may hold a claim: a part on another thread holds one
-    // as well, so that it never runs a task that could wait for the caller's.
+    // The caller waits for every part, and it may hold a claim: a part on another thread holds
+    // its priority, so that it runs only tasks that rank above all the part may wait for.
     for (int helper = 1; helper < parts; ++helper)
-        submit([share, work] {
-            const Claim claim;
+        submit([share, work, priority] {
+            const Claim claim(priority);
             work(*share);
-        }, 1 << 20);
+        }, priority);
     work(*share);
     std::unique_lock lock(share->mutex);
     share->done.wait(lock, [&] { return share->finished.load() == share->parts; });
