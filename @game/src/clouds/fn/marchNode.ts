@@ -22,8 +22,12 @@ fn cloudMarch(direction: vec3f, limit: f32, dither: f32, eye: vec3f, sun: vec3f,
   var through = 1.0;
 
   for (var k = 0; k < 3; k++) {
+    if (through < 0.01) { break; }
     let band = select(2 - k, k, direction.y >= 0.0);
     let range = cloudRange(c, band);
+    let size = smallRepeat(band);
+    let wind = cloudWind(c, band);
+    let drift = cloudDrift(c, band);
     if (range.z <= 0.0) { continue; }
     let low = range.x - c.datum - eye.y;
     let high = range.y - c.datum - eye.y;
@@ -43,7 +47,7 @@ fn cloudMarch(direction: vec3f, limit: f32, dither: f32, eye: vec3f, sun: vec3f,
       if (t >= leave || through < 0.01) { break; }
       let pace = max(stepLength[band], t * ${StepGrowth});
       let p = eye + direction * t;
-      let found = bandCloud(c, ${CloudTextures}, band, p, cloudCell(c, p), t < ${WispReach.toFixed(1)});
+      let found = bandCloudOf(c, ${CloudTextures}, band, range, size, wind, drift, p, cloudCell(c, p), t < ${WispReach.toFixed(1)});
       let sigma = found.x;
       if (sigma <= 0.0) {
         strode = pace * ${ClearStride};

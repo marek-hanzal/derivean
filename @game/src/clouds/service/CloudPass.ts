@@ -38,7 +38,8 @@ export function createCloudPass(clouds: CloudNodes, sky: SkyNodes, viewDistance:
   const texel = uniform(new Vector2(1, 1));
   const persistence = uniform(0);
   const marchSize = uniform(new Vector2(1, 1));
-  const shown = uniform(0);
+  // 1 / log2(far): depths are compared by their logarithm, as a share of the far plane's.
+  const overSpread = uniform(1 / Math.log2(1000));
   const marchedNode = texture(marched.texture);
   const rememberedNode = texture(memory[0].texture);
   const shownNode = texture(memory[1].texture);
@@ -78,8 +79,7 @@ export function createCloudPass(clouds: CloudNodes, sky: SkyNodes, viewDistance:
   compose.fragmentNode = Fn(() => {
     const at = uv();
     const color = texture(scene.texture, at);
-    const spread = log2(far);
-    const own = log2(ahead(at)).div(spread);
+    const own = log2(ahead(at));
     const place = at.mul(marchSize).sub(0.5);
     const corner = floor(place);
     const part = place.sub(corner);
@@ -89,13 +89,16 @@ export function createCloudPass(clouds: CloudNodes, sky: SkyNodes, viewDistance:
       const offset = vec2(x, y);
       const there = corner.add(offset).add(0.5).div(marchSize);
       const share = mix(part.oneMinus(), part, offset);
-      const weight = share.x.mul(share.y).div(abs(log2(ahead(there)).div(spread).sub(own)).add(0.0005));
+      const weight = share.x.mul(share.y).div(abs(log2(ahead(there)).sub(own)).mul(overSpread).add(0.0005));
       cloud.addAssign(shownNode.sample(there).level(float(0)).mul(weight));
       total.addAssign(weight);
     }
-    const over = mix(vec4(0, 0, 0, 1), cloud.div(max(total, 1e-6)), shown);
+    const over = cloud.div(max(total, 1e-6));
     return vec4(color.rgb.mul(over.a).add(over.rgb), 1);
   })();
+  // Without clouds the scene goes to the screen as it is.
+  const copy = new NodeMaterial();
+  copy.fragmentNode = vec4(texture(scene.texture, uv()).rgb, 1);
   const quad = new QuadMesh(march);
   const size = new Vector2();
   const turned = new Matrix4();
@@ -131,37 +134,38 @@ export function createCloudPass(clouds: CloudNodes, sky: SkyNodes, viewDistance:
     finish(renderer: WebGPURenderer, camera: PerspectiveCamera, eye: Vector3, cloudy: boolean) {
       near.value = camera.near;
       far.value = camera.far;
-      shown.value = Number(cloudy);
-      if (cloudy) {
-        const tangent = Math.tan(camera.fov * Math.PI / 360);
-        camera.updateMatrixWorld();
-        turn.value.copy(camera.matrixWorld);
-        lens.value.set(tangent * camera.aspect, tangent);
-        const moved = pastMoved.value.set(eye.x - lastEye.x, eye.y - lastEye.y, eye.z - lastEye.z, 0);
-        lastEye.copy(eye);
-        jitter.value = (frames * 0.61803398875) % 1;
-        persistence.value = frames === 0 ? 0 : Persistence;
-        // This frame looks the last frame's picture up through the last frame's lens, turned but not moved.
-        turned.copy(camera.matrixWorldInverse).setPosition(0, 0, 0);
-        const lensNow = turned.premultiply(camera.projectionMatrix);
-        pastClip.value.copy(frames === 0 ? lensNow : clip);
-        moved.applyMatrix4(pastClip.value);
-        clip.copy(lensNow);
-        draw(renderer, march, marched);
-        rememberedNode.value = memory[current].texture;
-        current = 1 - current;
-        draw(renderer, resolve, memory[current]);
-        shownNode.value = memory[current].texture;
-        frames++;
-      } else {
+      overSpread.value = 1 / Math.log2(camera.far);
+      if (!cloudy) {
         frames = 0;
+        draw(renderer, copy, null);
+        return;
       }
+      const tangent = Math.tan(camera.fov * Math.PI / 360);
+      camera.updateMatrixWorld();
+      turn.value.copy(camera.matrixWorld);
+      lens.value.set(tangent * camera.aspect, tangent);
+      const moved = pastMoved.value.set(eye.x - lastEye.x, eye.y - lastEye.y, eye.z - lastEye.z, 0);
+      lastEye.copy(eye);
+      jitter.value = (frames * 0.61803398875) % 1;
+      persistence.value = frames === 0 ? 0 : Persistence;
+      // This frame looks the last frame's picture up through the last frame's lens, turned but not moved.
+      turned.copy(camera.matrixWorldInverse).setPosition(0, 0, 0);
+      const lensNow = turned.premultiply(camera.projectionMatrix);
+      pastClip.value.copy(frames === 0 ? lensNow : clip);
+      moved.applyMatrix4(pastClip.value);
+      clip.copy(lensNow);
+      draw(renderer, march, marched);
+      rememberedNode.value = memory[current].texture;
+      current = 1 - current;
+      draw(renderer, resolve, memory[current]);
+      shownNode.value = memory[current].texture;
+      frames++;
       draw(renderer, compose, null);
     },
     // Forgets the picture built so far, for a cut such as a teleport.
     forget() { frames = 0; },
     dispose() {
-      for (const each of [scene, marched, ...memory, march, resolve, compose, depth]) each.dispose();
+      for (const each of [scene, marched, ...memory, march, resolve, compose, copy, depth]) each.dispose();
     },
   };
 }
