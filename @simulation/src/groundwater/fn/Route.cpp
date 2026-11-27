@@ -34,9 +34,13 @@ Borne passedThrough(const WaterField& field, size_t cell, int storey, const Mixi
     // storey is soluble rock at all. Melt cooling below charges deep water with carbon dioxide.
     const float soluble = storey == Upper ? column.upperSoluble / std::max(1.0f, std::min(20.0f, column.ground - column.floor))
                                           : std::max(0.0f, column.solubleTop - column.solubleBottom) / 60.0f;
-    const float gas = AirCarbonDioxide * (1.0f + MagmaticGas * column.heat.magmatic * std::min(1.0f, depth / GasDepth));
-    const float warm = std::min(HottestRock, rockTemperature(column.heat, column.warmth, depth));
-    out.lime += std::max(0.0f, calciteLoad(gas, warm) - out.lime) * std::min(1.0f, 4.0f * soluble);
+    // Where the storey holds none it would add max(0, load - lime) × 0 = +0, and lime is never -0
+    // (it is a flow-weighted mean of loads that start at +0), so the load is not worked out there.
+    if (soluble != 0.0f) {
+        const float gas = AirCarbonDioxide * (1.0f + MagmaticGas * column.heat.magmatic * std::min(1.0f, depth / GasDepth));
+        const float warm = std::min(HottestRock, rockTemperature(column.heat, column.warmth, depth));
+        out.lime += std::max(0.0f, calciteLoad(gas, warm) - out.lime) * std::min(1.0f, 4.0f * soluble);
+    }
     const float level = field.level[cell * 2 + size_t(storey)];
     const float wet = storey == Upper ? 0.3f : std::clamp((level - column.base) / std::max(1.0f, column.roof - column.base), 0.05f, 1.0f);
     out.age = std::min(OldestWater, out.age + (storey == Upper ? column.upperStore : column.lowerStore) * wet * WaterCellArea * inverse);
