@@ -14,6 +14,8 @@ namespace derivean::sim {
 SphereDamping makeSphereDamping(const SphereGrid& grid, const StencilMatrix& stiffness, double decay);
 
 // Adds −ν A⁻¹ K A⁻¹ K `level` to `tendency` (1/s², sized to the cells; empty is taken as zeros).
+// `stiffness` must be the K object the damping was made from (compared by address): any other throws
+// std::invalid_argument before `tendency` changes, since ν and the bound are that K's.
 // `level` is the one the step starts from (baseLevel in fn/SphereFlow), so in the leapfrog it acts
 // on the older level, as today's flat step does.
 void addDamping(SphereDamping& damping, const SphereGrid& grid, const StencilMatrix& stiffness, const std::vector<double>& level,

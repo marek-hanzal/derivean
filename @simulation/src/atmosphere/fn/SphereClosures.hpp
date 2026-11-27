@@ -17,17 +17,27 @@ namespace derivean::sim {
 // starts at zero.
 SphereClosures makeSphereClosures(const SphereGrid& grid, const SpherePoisson& poisson, const std::vector<double>& height, int bands);
 
+// Σ_b B_b jet_b, rounding apart, is zero: one finite value per band and |Σ_b B_b jet_b| ≤
+// JetBalance · Σ_b B_b |jet_b|. A jet from zonalWindVorticity telescopes so; the step takes ζ's area
+// mean out whatever the forcing adds, so a jet that did not would fight that projection unseen.
+inline constexpr double JetBalance = 1e-12;
+[[nodiscard]] bool balancedJet(const SphereClosures& closures);
+
+// Whether the closures may force a flow that inverts with `poisson`: their damping was made from its
+// K and their jet is balancedJet.
+[[nodiscard]] bool closuresFit(const SphereClosures& closures, const SpherePoisson& poisson);
+
 // The forcing of the next step from the level it starts from (baseLevel): per band
-// (jet − ⟨level⟩) / relaxation spread back to the cells, plus the damping with `stiffness`, the K it
-// was made from; the friction rates.
-void fillClosures(SphereClosures& closures, const SphereGrid& grid, const StencilMatrix& stiffness, const SphereFlow& flow,
+// (jet − ⟨level⟩) / relaxation spread back to the cells, plus the damping with `poisson`'s K; the
+// friction rates. Throws std::invalid_argument unless closuresFit, before `forcing` changes.
+void fillClosures(SphereClosures& closures, const SphereGrid& grid, const SpherePoisson& poisson, const SphereFlow& flow,
                   SphereForcing& forcing);
 
 // One window of the flow forced by the closures, its steps held to the same damping's bound: sets
 // hour.stiffest to the damping's stiffness, then advanceSphereHour with fillClosures as the source.
-// Throws std::invalid_argument, before anything changes, unless `poisson` is the one the closures
-// were made from. hour.stiffest stays set after a refusal or an exception (the same call repeats the
-// same tries).
+// Throws std::invalid_argument unless closuresFit, before anything changes, hour.stiffest included.
+// Once the window has begun, hour.stiffest stays set after its refusal or an exception from within
+// it (the same call repeats the same tries).
 [[nodiscard]] bool advanceClosedHour(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil,
                                      SpherePoisson& poisson, SphereClosures& closures);
 

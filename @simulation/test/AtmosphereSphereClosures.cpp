@@ -17,6 +17,7 @@
 #include "geometry/fn/SphereGrid.hpp"
 
 #include <cmath>
+#include <limits>
 #include <stdexcept>
 
 using namespace derivean::sim;
@@ -43,8 +44,7 @@ std::vector<double> solidJet(const LatitudeBands& bands, double speed) {
 // A damping five times stiffer than production's (decay 6 h / 5) needs more steps an hour than the
 // Courant number does (three, at 2Δt · stiffest 0.93; production's takes one); the closed hour takes
 // them, and its window is the clean run of the same steps with a damping made separately from the
-// same K, the relaxation and the friction, bit for bit. Closures made from another Poisson are
-// refused before anything changes.
+// same K, the relaxation and the friction, bit for bit.
 void checkWiring() {
     const SphereGrid grid = makeSphereGrid(4);
     const SphereStencil stencil = makeSphereStencil(grid);
@@ -64,14 +64,6 @@ void checkWiring() {
         SphereHour hour;
         expect(advanceClosedHour(hour, other, grid, stencil, poisson, production) && other.step == Hour,
                "production's damping took more than one step", Hour / other.step);
-        SpherePoisson elsewhere = makeSpherePoisson(grid, stencil);
-        bool refused = false;
-        try {
-            (void)advanceClosedHour(hour, other, grid, stencil, elsewhere, production);
-        } catch (const std::invalid_argument&) {
-            refused = true;
-        }
-        expect(refused && other.step == Hour, "closures of another Poisson were not refused");
     }
     SphereHour hour;
     expect(advanceClosedHour(hour, flow, grid, stencil, poisson, closures), "the closed window was not taken");
@@ -89,7 +81,7 @@ void checkWiring() {
         spreadBands(closures.bands, mean, pull);
         forcing.tendency = pull;
         SphereForcing filled;
-        fillClosures(closures, grid, poisson.levels[0].stiffness, clean, filled);
+        fillClosures(closures, grid, poisson, clean, filled);
         addDamping(separate, grid, poisson.levels[0].stiffness, baseLevel(clean), forcing.tendency);
         forcing.friction.assign(size_t(grid.cells), 1 / SphereSurfaceDrag);
         expect(filled.tendency == forcing.tendency && filled.friction == forcing.friction, "fillClosures is not the closures' forcing", k);
@@ -112,7 +104,7 @@ void checkRelaxation() {
     SphereFlow flow = makeSphereFlow(grid, rotationRateAt(PresentAge));
     expect(setVorticity(flow, grid, stencil, poisson, std::vector<double>(size_t(grid.cells), 0.0)), "rest did not invert");
     SphereForcing forcing;
-    fillClosures(closures, grid, poisson.levels[0].stiffness, flow, forcing);
+    fillClosures(closures, grid, poisson, flow, forcing);
     double total = 0, scale = 0;
     for (int c = 0; c < grid.cells; ++c) {
         const double content = grid.area[size_t(c)] * forcing.tendency[size_t(c)];
@@ -150,10 +142,74 @@ void checkFriction() {
     }
 }
 
+// Closures that do not fit are refused before anything changes, the flow, hour.stiffest and the
+// forcing as they came in, in release builds too (Codex DREV-CLAUDE-009-01): closures of another
+// Poisson; a damping made from another K though the Poisson is the flow's (K × 0.1: ν 100 times
+// larger, bound² 100 times smaller, so 2Δt · stiffest would read 0.56 where the damping on the
+// flow's K is at 56 and the amplitude grew 17.5 times); a jet empty, one band too long, with a
+// constant mean, with a NaN or with an infinity.
+void checkRefusals() {
+    const SphereGrid grid = makeSphereGrid(4);
+    const SphereStencil stencil = makeSphereStencil(grid);
+    SpherePoisson poisson = makeSpherePoisson(grid, stencil);
+    SpherePoisson elsewhere = makeSpherePoisson(grid, stencil);
+    SphereFlow flow = makeSphereFlow(grid, rotationRateAt(PresentAge));
+    std::vector<double> start = harmonicField(grid, 4, 2);
+    for (double& v : start) v *= 1e-6;
+    expect(setVorticity(flow, grid, stencil, poisson, start), "the start did not invert");
+    SphereClosures fit = makeSphereClosures(grid, poisson, {}, grid.side);
+    fit.jet = solidJet(fit.bands, 10);
+    StencilMatrix scaled = poisson.levels[0].stiffness;
+    for (double& v : scaled.inner) v *= 0.1;
+    for (double& v : scaled.value) v *= 0.1;
+    std::vector<SphereClosures> unfit(7, fit);
+    unfit[1].damping = makeSphereDamping(grid, scaled, SphereGridDamping);
+    unfit[2].jet.clear();
+    unfit[3].jet.push_back(0.0);
+    for (double& j : unfit[4].jet) j = 1e-6;
+    unfit[5].jet[3] = std::numeric_limits<double>::quiet_NaN();
+    unfit[6].jet[3] = std::numeric_limits<double>::infinity();
+    const char* what[] = {"another Poisson", "a damping of another K", "an empty jet", "a jet one band too long", "a jet with a mean",
+                          "a jet with a NaN", "a jet with an infinity"};
+    for (size_t u = 0; u < unfit.size(); ++u) {
+        SpherePoisson& used = u == 0 ? elsewhere : poisson;
+        const SphereFlow before = flow;
+        SphereHour hour;
+        hour.stiffest = 0.123;
+        bool refused = false;
+        try {
+            (void)advanceClosedHour(hour, flow, grid, stencil, used, unfit[u]);
+        } catch (const std::invalid_argument&) {
+            refused = true;
+        }
+        expect(refused && hour.stiffest == 0.123 && sameFlow(flow, before) && !closuresFit(unfit[u], used), what[u]);
+        SphereForcing forcing;
+        forcing.tendency.assign(3, 7.0);
+        refused = false;
+        try {
+            fillClosures(unfit[u], grid, used, flow, forcing);
+        } catch (const std::invalid_argument&) {
+            refused = true;
+        }
+        expect(refused && forcing.tendency == std::vector<double>(3, 7.0) && forcing.friction.empty(), what[u]);
+    }
+    expect(closuresFit(fit, poisson), "fitting closures were refused");
+    // The damping refuses any K but its own wherever it is used.
+    std::vector<double> tendency(size_t(grid.cells), 0.0);
+    bool refused = false;
+    try {
+        addDamping(fit.damping, grid, elsewhere.levels[0].stiffness, flow.vorticity, tendency);
+    } catch (const std::invalid_argument&) {
+        refused = true;
+    }
+    expect(refused && tendency == std::vector<double>(size_t(grid.cells), 0.0), "the damping took another K");
+}
+
 } // namespace
 
 void derivean::sim::atmosphere_sphere_test::checkClosures() {
     checkWiring();
+    checkRefusals();
     checkRelaxation();
     checkFriction();
 }

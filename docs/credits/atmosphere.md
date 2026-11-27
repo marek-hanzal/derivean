@@ -217,14 +217,14 @@ Courant, R., Friedrichs, K. & Lewy, H. (1928). Über die partiellen Differenzeng
 ### Jablonowski & Williamson 2011: biharmonic damping of the flow
 Jablonowski, C. & Williamson, D. L. (2011). The pros and cons of diffusion, filters and fixers in atmospheric general circulation models. In Lauritzen, P. H., Jablonowski, C., Taylor, M. A. & Nair, R. D. (eds.), *Numerical Techniques for Global Atmospheric Models*, Lecture Notes in Computational Science and Engineering 80, chapter 13, 381–493. Springer. doi:10.1007/978-3-642-11640-7_13
 - **Model:** scale-selective hyperdiffusion −ν ∇⁴ ζ as the grid-scale damping of a global model's vorticity, explicit on the older time level of the leapfrog.
-- **Used in:** `@simulation/src/atmosphere/type/SphereDamping.hpp:8`; `docs/handoff/atmosphere-sphere.md:141`.
+- **Used in:** `@simulation/src/atmosphere/type/SphereDamping.hpp:10`; `docs/handoff/atmosphere-sphere.md:141`.
 - **Checked by:** `@simulation/test/AtmosphereSphereDamping.cpp:192` (modes keep 1 − 2Δt ν λ² per two steps and lose ν ‖L m‖²), `:214` (bursts inside, on a face edge, at a vertex).
 - **Approximations:** −ν (A⁻¹K)² stands for −ν ∇⁴; it is positive semi-definite but not a consistent ∇⁴ at the seams (`docs/handoff/atmosphere-sphere.md:142`).
 
 ### Gershgorin 1931: the certified bound of the damping
 Gerschgorin, S. (1931). Über die Abgrenzung der Eigenwerte einer Matrix. *Izvestija Akademii Nauk SSSR, Otdelenie matematičeskich i estestvennych nauk* (VII série) 6, 749–754. https://www.mathnet.ru/eng/im5235
 - **Model:** every eigenvalue of a matrix lies in a disc centred at a diagonal entry with radius the row's other magnitudes, so max_i Σ_j |M_ij| bounds them all; here M = A⁻¹K.
-- **Used in:** `@simulation/src/atmosphere/type/SphereDamping.hpp:21`, `@simulation/src/atmosphere/fn/SphereDamping.cpp:15`; `docs/handoff/atmosphere-sphere.md:143`.
+- **Used in:** `@simulation/src/atmosphere/type/SphereDamping.hpp:26`, `@simulation/src/atmosphere/fn/SphereDamping.cpp:16`; `docs/handoff/atmosphere-sphere.md:143`.
 - **Checked by:** `@simulation/test/AtmosphereSphereDamping.cpp:48` (the bound above the estimate), `:238` (started by the forward step, below 0.976 the fastest mode keeps its sign, above it swings and decays, past 2.06 it grows).
 
 ### Neumaier 1974: compensated summation
