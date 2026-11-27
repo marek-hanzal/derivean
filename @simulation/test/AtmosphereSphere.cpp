@@ -60,7 +60,8 @@ void checkGrid() {
 
 // The six faces' interiors agree to rounding; shared from face 0 they keep K symmetric bit for bit
 // and positive, the split form stores one face and still gives the shared matrix's product bit for
-// bit, and the product moves by rounding only.
+// bit, in applyMatrix's line-major pass as in forEachProduct's row order, and the product moves by
+// rounding only.
 void checkSharedFaces() {
     for (int level = 2; level <= 7; ++level) {
         const SphereGrid grid = makeSphereGrid(level);
@@ -88,6 +89,9 @@ void checkSharedFaces() {
         applyMatrix(shared, field, after);
         applyMatrix(split, field, splitProduct);
         expect(splitProduct == after, "the shared split product differs from the shared matrix's", level);
+        std::vector<double> fused(field.size());
+        forEachProduct(split, field.data(), [&fused](size_t r, double sum) { fused[r] = sum; });
+        expect(fused == splitProduct, "forEachProduct differs from the shared split product", level);
         double moved = 0, energy = 0;
         for (int c = 0; c < grid.cells; ++c) {
             moved = std::max(moved, std::abs(after[size_t(c)] - before[size_t(c)]));

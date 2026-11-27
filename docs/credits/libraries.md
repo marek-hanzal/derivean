@@ -24,6 +24,13 @@ Part of [Credits](../credits.md). A citation credits the people whose work we bu
 
 No code from either project is in the repository, so neither licence binds the build; they are listed as credit.
 
+## Platform documentation
+
+| Document | Publisher | What it informs |
+| --- | --- | --- |
+| [Arm Neon Intrinsics Reference](https://arm-software.github.io/acle/neon_intrinsics/advsimd.html), part of the [Arm C Language Extensions](https://github.com/ARM-software/acle) | Arm Limited, 2014–2026, read 27 Nov 2026 | `vld1q_f64`, `vextq_f64`, `vfmaq_f64` (FMLA) and `vst1q_f64` in the arm64 kernel of the shared stiffness product, `@simulation/src/atmosphere/fn/StencilMatrix.cpp:47` |
+| [Clang Compiler User's Manual](https://clang.llvm.org/docs/UsersManual.html), `-ffp-contract` | LLVM Project, web edition read 27 Nov 2026 (Xcode's clang 21 here) | `on`, the default for C and C++, fuses a multiply and an add within one statement; the arm64 kernel's fused sums equal the scalar ones because of it (`@simulation/src/atmosphere/fn/StencilMatrix.hpp:86`) |
+
 ## Data
 
 No third-party dataset is bundled or read at run time. The datasets and measurements the planet is compared with are cited under [reference data](reference-data.md); images on Wikimedia Commons linked from `docs/reference-landscapes.md` are linked, not copied, and keep their own licences.
