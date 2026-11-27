@@ -24,10 +24,16 @@ std::future<PlanetSummary>& farEvolution() {
 } // namespace
 
 World& testWorld() {
-    farEvolution();
     static World world({42, 1.2e9, 0});
     return world;
 }
+
+World& testWorldPresent() {
+    static World world({42, 4.6e9, 0});
+    return world;
+}
+
+void startFarFuture() { farEvolution(); }
 
 const PlanetSummary& farFuture() {
     static const PlanetSummary summary = farEvolution().get();

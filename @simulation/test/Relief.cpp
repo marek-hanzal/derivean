@@ -206,7 +206,7 @@ void testReliefCover() {
 // ground around it. Both are what an ice-sheet's Leave pass and one-cell fins used to leave. The
 // place is a trough wall on seed 42 (`terra view` from 5606144, 10107264 towards it).
 void testReliefGlaciatedSite() {
-    World world({42, 4.6e9, 0});
+    World& world = testWorldPresent();
     const Tile& tile = *world.atlas.require(tileAt(Level::Site, {5605504, 10105024}));
     const double cell = specOf(Level::Site).cell;
     float iceAge = 0;
@@ -233,7 +233,7 @@ void testReliefGlaciatedSite() {
 // as sediment it eroded or took in. The load a finished neighbour's record carries into its own sea
 // is that neighbour's, and the tile's plume must not take it again.
 void testReliefLedger() {
-    World world({42, 4.6e9, 0});
+    World& world = testWorldPresent();
     const TileLedger& ledger = world.atlas.require({Level::Local, 705, 261})->ledger;
     std::printf("relief: coast tile 705 261 eroded %.3g m3, took in %.3g, sent out %.3g\n", ledger.eroded, ledger.sedimentIn, ledger.sedimentOut);
     expectLandscape(ledger.eroded > 0 && ledger.sedimentOut > 0, "the coast tile neither eroded nor sent out sediment", ledger.eroded);

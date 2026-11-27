@@ -58,7 +58,7 @@ bool DeterminismReport::identical() const {
     return true;
 }
 
-DeterminismReport checkDeterminism(World& first, Vec2 focus, Level finest, Level orderLevel, int orderPass, bool thorough) {
+DeterminismReport checkDeterminism(World& first, Vec2 focus, Level finest, Level orderLevel, int orderPass, bool thorough, bool freshBlock) {
     DeterminismReport report;
     const TileKey ordered = tileOfPass(orderLevel, focus, orderPass);
     const TileKey deepest = tileAt(finest, focus);
@@ -75,12 +75,13 @@ DeterminismReport checkDeterminism(World& first, Vec2 focus, Level finest, Level
 
     WorldOptions options = first.options;
     options.threads = 1;
-    std::future<Fresh> other = std::async(std::launch::async, [options, keys, focus, voxels] {
+    const bool freshVoxels = voxels && freshBlock;
+    std::future<Fresh> other = std::async(std::launch::async, [options, keys, focus, freshVoxels] {
         Fresh fresh;
         World second(options);
         fresh.tiles.resize(keys.size());
         for (size_t i = keys.size(); i-- > 0;) fresh.tiles[i] = second.atlas.require(keys[i]);
-        if (voxels) fresh.block = blockAt(second, focus);
+        if (freshVoxels) fresh.block = blockAt(second, focus);
         fresh.planet = digestOf(second.planet);
         fresh.eroded = second.planet.ledger.eroded;
         return fresh;
@@ -116,7 +117,7 @@ DeterminismReport checkDeterminism(World& first, Vec2 focus, Level finest, Level
     report.replayed = differenceOf(*first.atlas.require(deepest), *replayTile(first.atlas.setting(), deepest, needed.lookup()));
 
     const Fresh fresh = other.get();
-    if (voxels) report.blockFresh = changed(block, fresh.block);
+    if (freshVoxels) report.blockFresh = changed(block, fresh.block);
     report.planetDigest = digestOf(first.planet);
     report.planetSame = report.planetDigest == fresh.planet;
     const double eroded = std::max(std::abs(first.planet.ledger.eroded), std::abs(fresh.eroded));
