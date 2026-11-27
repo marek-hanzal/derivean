@@ -25,13 +25,18 @@ void requireOver(World& world, Level level, double minX, double minZ, double max
     buildAll(world, targets);
 }
 
+SurfaceHome surfaceHome(TileReader& reader, Vec2 position) {
+    const double cell = specOf(reader.level).cell;
+    const int64_t x = int64_t(std::floor(position.x / cell)), z = int64_t(std::floor(position.z / cell));
+    const int32_t tileX = int32_t(std::floor(double(x) / TileCells)), tileZ = int32_t(std::floor(double(z) / TileCells));
+    return {x, z, tileX, tileZ, reader.tile(tileX, tileZ)};
+}
+
 bool readSurface(TileReader& reader, Vec2 position, SurfaceSample& sample) {
     const double cell = specOf(reader.level).cell;
     const double fx = position.x / cell - 0.5, fz = position.z / cell - 0.5;
     const int64_t ix = int64_t(std::floor(fx)), iz = int64_t(std::floor(fz));
-    const int64_t nearX = int64_t(std::floor(position.x / cell)), nearZ = int64_t(std::floor(position.z / cell));
-    const int32_t homeX = int32_t(std::floor(double(nearX) / TileCells)), homeZ = int32_t(std::floor(double(nearZ) / TileCells));
-    const Tile* home = reader.tile(homeX, homeZ);
+    const auto [nearX, nearZ, homeX, homeZ, home] = surfaceHome(reader, position);
     if (!home) return false;
 
     // A tap in a tile that is not finished falls back to the nearest cell of the home tile.

@@ -103,11 +103,11 @@ uint64_t cubeDetail(const sim::World& world, CubeKey key) {
     uint64_t detail = 0;
     int probe = 0;
     for (double dz : {-reach, size + reach})
-        for (double dx : {-reach, size + reach}) detail |= uint64_t(surfaceOrPlanet(ground, {x + dx, z + dz}).level) << (3 * probe++);
+        for (double dx : {-reach, size + reach}) detail |= uint64_t(surfaceLevel(ground, {x + dx, z + dz})) << (3 * probe++);
     for (int j = 0; j < WaterProbes; ++j)
         for (int i = 0; i < WaterProbes; ++i) {
             const sim::Vec2 place{x - Ring * edge + i * wide / (WaterProbes - 1), z - Ring * edge + j * wide / (WaterProbes - 1)};
-            detail |= uint64_t(surfaceOrPlanet(water, place).level) << (3 * probe++);
+            detail |= uint64_t(surfaceLevel(water, place)) << (3 * probe++);
         }
     return detail;
 }
