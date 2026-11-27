@@ -11,7 +11,8 @@ namespace derivean::sim {
 // bounds the wind step and the transport, and a passive tracer moved with them.
 
 // The largest share of a cell's content the fluxes take out of it in `step` (the outflow Courant
-// number summed over its edges). The tests step at 0.4 (flow) and 0.45 (tracer).
+// number summed over its edges; Courant, Friedrichs & Lewy 1928). The tests step at 0.4 (flow) and
+// 0.45 (tracer).
 double outflowCourant(const SphereGrid& grid, const std::vector<double>& flux, double step);
 
 // Moves a passive tracer (amount per area) one forward step with the edge fluxes: upwind plus a

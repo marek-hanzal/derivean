@@ -1,7 +1,8 @@
-// The closures' forcing in the sphere's step (SphereForcing, S4.1; Codex DREV-CLAUDE-007-01 point
-// 1): an empty forcing is the plain step, friction keeps exactly keep = 1 / (1 + span · r) of the
-// level before the area mean is taken out where it is kept, both time levels keep a zero mean, and
-// a refused step publishes nothing.
+// The closures' forcing in the sphere's step (SphereForcing, S4.1; S4 plan, binding correction 1):
+// an empty forcing is the plain step, the forced path is the plain level plus span · F less one
+// constant, friction keeps exactly keep = 1 / (1 + span · r) of the level before the area mean is
+// taken out where it is kept, both time levels keep a zero mean, and a refused step publishes
+// nothing.
 #include "AtmosphereSphereFixture.hpp"
 
 #include "astronomy/constant/DeepTime.hpp"
@@ -29,7 +30,7 @@ struct Setup {
     SphereFlow flow;
 };
 
-// Level 4, the Rossby–Haurwitz wave, a step of 600 s.
+// The Rossby–Haurwitz wave at `level`, a step of 600 s.
 Setup waveAt(int level) {
     Setup s{makeSphereGrid(level), {}, {}, {}};
     s.stencil = makeSphereStencil(s.grid);
@@ -129,7 +130,7 @@ void checkFriction() {
 }
 
 // 200 steps of tendency and friction: both time levels keep a zero area mean to rounding, though
-// the tendency has a mean of its own, and the vorticity stays finite and bounded.
+// the tendency has a mean of its own.
 void checkMean() {
     Setup s = waveAt(4);
     const SphereForcing forcing = forcingOf(s.grid, true, true);
@@ -139,6 +140,53 @@ void checkMean() {
         worst = std::max(worst, std::max(meanShare(s.grid, s.flow.vorticity), meanShare(s.grid, s.flow.before)));
     }
     expect(worst < 1e-14, "a forced time level has an area mean", worst);
+}
+
+// The forced path against the plain step, forward and in the leapfrog: with a tendency of zeros it is
+// the plain level less its mean (rounding apart, 1e-15 of the largest value), and with a tendency F
+// the plain level plus span · F less one constant for every cell.
+void checkPushed() {
+    for (bool leapfrog : {false, true}) {
+        Setup s = waveAt(4);
+        if (leapfrog) expect(stepSphereFlow(s.flow, s.grid, s.stencil, s.poisson), "the first step was not accepted");
+        const double span = leapfrog ? 2 * s.flow.step : s.flow.step;
+        const std::vector<double> now = s.flow.vorticity;
+        SphereFlow plain = s.flow;
+        expect(stepSphereFlow(plain, s.grid, s.stencil, s.poisson), "the plain step was not accepted");
+        const std::vector<double> base = leapfrog ? unfiltered(plain, now) : plain.vorticity;
+        double top = 0;
+        for (double v : base) top = std::max(top, std::abs(v));
+        for (bool zeros : {true, false}) {
+            SphereForcing forcing = forcingOf(s.grid, true, false);
+            if (zeros) forcing.tendency.assign(size_t(s.grid.cells), 0.0);
+            SphereFlow pushed = s.flow;
+            expect(stepSphereFlow(pushed, s.grid, s.stencil, s.poisson, forcing), "the pushed step was not accepted", zeros);
+            const std::vector<double> level = leapfrog ? unfiltered(pushed, now) : pushed.vorticity;
+            double low = 1e300, high = -1e300;
+            for (int c = 0; c < s.grid.cells; ++c) {
+                const double shift = base[size_t(c)] + span * forcing.tendency[size_t(c)] - level[size_t(c)];
+                low = std::min(low, shift), high = std::max(high, shift);
+            }
+            expect(high - low < 1e-14 * top, "the forced level is not the plain one plus span · F less a constant", (high - low) / top);
+            if (zeros) expect(std::abs(high) < 1e-15 * top, "a tendency of zeros moves the plain level", high / top);
+        }
+    }
+}
+
+// From a start with an area mean (setVorticity keeps the given one in ζ), the forced step takes it
+// out of each new level and the filter carries what the older level holds out within steps: after
+// 30 steps both levels are at rounding (4e-16 of Σ A |ζ|, from a mean of 1e-2 of the largest ζ).
+void checkMeanStart() {
+    Setup s = waveAt(4);
+    std::vector<double> start = s.flow.vorticity;
+    double top = 0;
+    for (double v : start) top = std::max(top, std::abs(v));
+    for (double& v : start) v += 1e-2 * top;
+    expect(setVorticity(s.flow, s.grid, s.stencil, s.poisson, start), "the start did not invert");
+    const SphereForcing forcing = forcingOf(s.grid, true, true);
+    for (int k = 0; k < 30; ++k) expect(stepSphereFlow(s.flow, s.grid, s.stencil, s.poisson, forcing), "a forced step was not accepted", k);
+    const double worst = std::max(meanShare(s.grid, s.flow.vorticity), meanShare(s.grid, s.flow.before));
+    expect(worst < 1e-14, "the start's mean stays in a forced time level", worst);
 }
 
 // A forced step whose inversion does not converge publishes nothing, and its retry computes what a
@@ -179,5 +227,7 @@ void derivean::sim::atmosphere_sphere_test::checkForcing() {
     checkEmpty();
     checkFriction();
     checkMean();
+    checkPushed();
+    checkMeanStart();
     checkRefused();
 }

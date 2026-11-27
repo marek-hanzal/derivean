@@ -43,14 +43,20 @@ void setStep(SphereFlow& flow, double step);
 // step (setStep not called) it returns false and does nothing.
 [[nodiscard]] bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson);
 
-// The same step with the closures' forcing (SphereForcing; Codex DREV-CLAUDE-007-01 point 1). Over
-// the span s (2Δt, or Δt in a forward step) the level before (ζₙ in a forward step) takes
+// The same step with the closures' forcing (SphereForcing; S4 plan, binding correction 1). Over the
+// span s (2Δt, or Δt in a forward step) the level before (ζₙ in a forward step) takes
 // x = before + s · (advection + tendency), friction keeps keep = 1 / (1 + s · r) of it, and the area
 // mean is taken out where it is kept: next = keep · (x − c), c = Σ A keep x / Σ A keep, so
 // Σ A next = 0 to rounding whatever r and the tendency are. Then the filter and the inversion as
-// above; both time levels keep a zero mean. A forcing with both vectors empty is the step above, bit
-// for bit; one with a value not finite, or a rate below zero, is refused (false, nothing changed).
+// above. Both time levels keep a zero mean once they have one: setVorticity keeps the mean it is
+// given in ζ, and from such a start the filter carries it out of the older level within steps. A
+// forcing with both vectors empty is the step above, bit for bit; one that is not admissible
+// (admissibleForcing) is refused (false, nothing changed).
 [[nodiscard]] bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
                                   const SphereForcing& forcing);
+
+// Whether stepSphereFlow takes `forcing` on a grid of `cells`: each vector empty or one value per
+// cell, every value finite, every friction rate at least zero.
+bool admissibleForcing(const SphereForcing& forcing, size_t cells);
 
 } // namespace derivean::sim

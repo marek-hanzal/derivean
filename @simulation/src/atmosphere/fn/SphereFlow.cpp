@@ -113,11 +113,7 @@ void setStep(SphereFlow& flow, double step) {
     restart(flow);
 }
 
-namespace {
-
-// Whether a forcing can be applied: its vectors empty or one value per cell, every value finite and
-// every friction rate at least zero.
-bool admissible(const SphereForcing& forcing, size_t cells) {
+bool admissibleForcing(const SphereForcing& forcing, size_t cells) {
     if (!forcing.tendency.empty()) {
         if (forcing.tendency.size() != cells) return false;
         for (double t : forcing.tendency)
@@ -131,12 +127,28 @@ bool admissible(const SphereForcing& forcing, size_t cells) {
     return true;
 }
 
-// Into flow.trialVorticity, the forced level next = keep · (x − c) of stepSphereFlow with a forcing.
-// The products are statements of their own, so neither platform fuses them (docs/windows.md).
-void forcedLevel(SphereFlow& flow, const SphereGrid& grid, const SphereForcing& forcing, const std::vector<double>& base, double span) {
+namespace {
+
+// Into flow.trialVorticity, the new level without forcing: ζₙ + Δt F in the forward step, ζₙ₋₁ + 2Δt F
+// in the leapfrog, F the advection's tendency.
+void plainLevel(SphereFlow& flow, size_t n) {
+    const double step = flow.step;
+    if (!flow.started) {
+        for (size_t c = 0; c < n; ++c) flow.trialVorticity[c] = flow.vorticity[c] + step * flow.tendency[c];
+    } else {
+        for (size_t c = 0; c < n; ++c) flow.trialVorticity[c] = flow.before[c] + 2 * step * flow.tendency[c];
+    }
+}
+
+// Into flow.trialVorticity, the forced level next = keep · (x − c) of stepSphereFlow with a forcing;
+// flow.trialBefore holds keep per cell until the filter or the forward step writes it. The products
+// in the sums are statements of their own, so neither platform fuses them (docs/windows.md).
+void forcedLevel(SphereFlow& flow, const SphereGrid& grid, const SphereForcing& forcing) {
     const size_t n = size_t(grid.cells);
     const bool pushed = !forcing.tendency.empty(), braked = !forcing.friction.empty();
-    flow.keep.resize(n);
+    const std::vector<double>& base = flow.started ? flow.before : flow.vorticity;
+    const double span = flow.started ? 2 * flow.step : flow.step;
+    std::vector<double>& keeps = flow.trialBefore;
     double held = 0, weight = 0;
     for (size_t c = 0; c < n; ++c) {
         const double total = pushed ? flow.tendency[c] + forcing.tendency[c] : flow.tendency[c];
@@ -148,7 +160,7 @@ void forcedLevel(SphereFlow& flow, const SphereGrid& grid, const SphereForcing& 
             keep = 1 / (1 + brake);
         }
         flow.trialVorticity[c] = x;
-        flow.keep[c] = keep;
+        keeps[c] = keep;
         const double kept = grid.area[c] * keep;
         const double content = kept * x;
         held += content;
@@ -157,12 +169,33 @@ void forcedLevel(SphereFlow& flow, const SphereGrid& grid, const SphereForcing& 
     const double centre = held / weight;
     for (size_t c = 0; c < n; ++c) {
         const double off = flow.trialVorticity[c] - centre;
-        flow.trialVorticity[c] = flow.keep[c] * off;
+        flow.trialVorticity[c] = keeps[c] * off;
     }
 }
 
-// The candidate's first guess and inversion, then the candidate becomes the state.
-bool finishStep(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson) {
+} // namespace
+
+bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
+                    const SphereForcing& forcing) {
+    if (!(flow.step > 0)) return false;   // also NaN
+    const size_t n = size_t(grid.cells);
+    const bool forced = !forcing.tendency.empty() || !forcing.friction.empty();
+    if (forced && !admissibleForcing(forcing, n)) return false;
+    tendencyOf(flow, grid, stencil, flow.vorticity, flow.tendency);
+    flow.trialVorticity.resize(n);
+    flow.trialBefore.resize(n);
+    if (forced) forcedLevel(flow, grid, forcing);
+    else plainLevel(flow, n);
+    if (!flow.started) {
+        for (size_t c = 0; c < n; ++c) flow.trialBefore[c] = flow.vorticity[c];
+    } else {
+        for (size_t c = 0; c < n; ++c) {
+            const double next = flow.trialVorticity[c];
+            const double curve = 0.5 * FilterStrength * (flow.before[c] - 2 * flow.vorticity[c] + next);
+            flow.trialBefore[c] = flow.vorticity[c] + FilterSplit * curve;
+            flow.trialVorticity[c] = next - (1 - FilterSplit) * curve;
+        }
+    }
     const bool withProduct = guessStream(flow, grid, poisson);
     if (!invertTrial(flow, grid, stencil, poisson, withProduct)) return false;
     acceptTrial(flow);
@@ -171,52 +204,9 @@ bool finishStep(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& s
     return true;
 }
 
-} // namespace
-
 bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson) {
-    if (!(flow.step > 0)) return false;   // also NaN
-    const double step = flow.step;
-    const size_t n = size_t(grid.cells);
-    tendencyOf(flow, grid, stencil, flow.vorticity, flow.tendency);
-    flow.trialVorticity.resize(n);
-    flow.trialBefore.resize(n);
-    if (!flow.started) {
-        for (size_t c = 0; c < n; ++c) {
-            flow.trialVorticity[c] = flow.vorticity[c] + step * flow.tendency[c];
-            flow.trialBefore[c] = flow.vorticity[c];
-        }
-    } else {
-        for (size_t c = 0; c < n; ++c) {
-            const double next = flow.before[c] + 2 * step * flow.tendency[c];
-            const double curve = 0.5 * FilterStrength * (flow.before[c] - 2 * flow.vorticity[c] + next);
-            flow.trialBefore[c] = flow.vorticity[c] + FilterSplit * curve;
-            flow.trialVorticity[c] = next - (1 - FilterSplit) * curve;
-        }
-    }
-    return finishStep(flow, grid, stencil, poisson);
-}
-
-bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
-                    const SphereForcing& forcing) {
-    if (forcing.tendency.empty() && forcing.friction.empty()) return stepSphereFlow(flow, grid, stencil, poisson);
-    if (!(flow.step > 0) || !admissible(forcing, size_t(grid.cells))) return false;
-    const size_t n = size_t(grid.cells);
-    tendencyOf(flow, grid, stencil, flow.vorticity, flow.tendency);
-    flow.trialVorticity.resize(n);
-    flow.trialBefore.resize(n);
-    if (!flow.started) {
-        forcedLevel(flow, grid, forcing, flow.vorticity, flow.step);
-        flow.trialBefore = flow.vorticity;
-    } else {
-        forcedLevel(flow, grid, forcing, flow.before, 2 * flow.step);
-        for (size_t c = 0; c < n; ++c) {
-            const double next = flow.trialVorticity[c];
-            const double curve = 0.5 * FilterStrength * (flow.before[c] - 2 * flow.vorticity[c] + next);
-            flow.trialBefore[c] = flow.vorticity[c] + FilterSplit * curve;
-            flow.trialVorticity[c] = next - (1 - FilterSplit) * curve;
-        }
-    }
-    return finishStep(flow, grid, stencil, poisson);
+    static const SphereForcing None;
+    return stepSphereFlow(flow, grid, stencil, poisson, None);
 }
 
 } // namespace derivean::sim

@@ -7,8 +7,9 @@ namespace derivean::sim {
 // Why a try at a window was taken back (SphereHour::refusals).
 enum class HourRefusal {
     Courant,     // a step would have taken more than `limit` of a cell's content out of it
-    Inversion,   // a step's inversion did not converge, or its forcing was refused
-    Shortest,    // the doubled steps would be shorter than `shortest`
+    Inversion,   // a step's inversion did not converge
+    Forcing,     // a step's forcing was not admissible (admissibleForcing); no further try
+    Shortest,    // the steps cannot grow: the last try took window / shortest of them
 };
 
 struct HourTry {
@@ -17,13 +18,16 @@ struct HourTry {
     int at{};      // the step it stopped before, 0 to steps − 1
 };
 
-// The flow's step controller over one window (an hour), Codex DREV-CLAUDE-007-01 point 5: the window
-// is split into `steps` equal wind steps, predicted from the windows before; each step's true outflow
-// Courant number is checked before it is taken, and a window that fails anywhere is taken back as a
-// whole and tried again with twice the steps, at most `attempts` times and never below `shortest`.
-// After a window, the count rises at once to keep the Courant number below reserve · limit, and falls
-// only after `patience` windows in a row that would need at most `lower` of it, so that setStep, which
-// restarts the leapfrog, runs only on a real change.
+// The flow's step controller over one window (an hour); S4 plan, binding correction 5 (Codex's
+// review DREV-CLAUDE-007-01, point 4). The window is split into `steps` equal wind steps, predicted
+// from the windows before; each step's true outflow Courant number (Courant, Friedrichs & Lewy
+// 1928) is checked before it is taken, and a window that fails anywhere is taken back as a whole and
+// tried again with twice the steps, never more than window / shortest, at most `attempts` times.
+// After a window the count rises at once to keep the Courant number below reserve · limit (up to
+// window / shortest), and falls only after `patience` windows in a row, each taken at its first try,
+// that would need at most `lower` of it, so that setStep, which restarts the leapfrog, runs only on
+// a real change. A window taken only at a later try keeps the steps that worked and starts the calm
+// count afresh.
 struct SphereHour {
     double window{3600};   // s
     int steps{1};          // wind steps of the next window

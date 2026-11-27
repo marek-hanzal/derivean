@@ -43,10 +43,9 @@ struct SphereFlow {
     // Work space, one call at a time per flow: the candidate state of a step before it is accepted,
     // and the tendency's intermediates. atVertex is shared: tendencyOf fills it with the absolute
     // vorticity at the vertices and reads it, then invertTrial fills it with ψ for the stream flux.
-    // trialProduct: K trialStream when the first guess formed it, K ψₙ while `known`. keep: the
-    // forcing's friction factor per cell over the step's span.
+    // trialProduct: K trialStream when the first guess formed it, K ψₙ while `known`.
     std::vector<double> trialVorticity, trialBefore, trialStream, trialFlux, trialProduct;
-    std::vector<double> tendency, absolute, atVertex, keep;
+    std::vector<double> tendency, absolute, atVertex;
 };
 
 } // namespace derivean::sim
