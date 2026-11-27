@@ -30,7 +30,7 @@ double megabytesOf(const Tile& tile) {
         bytes += (ground->rock.capacity() + ground->datum.capacity()) * sizeof(float);
         for (const auto& layer : ground->sediment) bytes += layer.capacity() * sizeof(float);
     }
-    for (const auto* field : {&tile.water, &tile.discharge, &tile.load, &tile.uplift, &tile.rebound, &tile.ice, &tile.iceAge, &tile.erosionRate,
+    for (const auto* field : {&tile.water, &tile.discharge, &tile.load, &tile.uplift, &tile.rebound, &tile.ice, &tile.iceAge, &tile.iceSpeed, &tile.erosionRate,
                               &tile.depositionRate, &tile.eroded, &tile.deposited, &tile.uplifted, &tile.rain, &tile.warmth})
         bytes += field->capacity() * sizeof(float);
     return double(bytes) / (1024.0 * 1024.0);

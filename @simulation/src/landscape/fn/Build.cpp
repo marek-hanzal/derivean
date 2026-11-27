@@ -24,7 +24,7 @@ void allocate(Domain& domain) {
     domain.unit.assign(cells, UnitCache{});
     for (auto* field : {&domain.tectonic, &domain.residual, &domain.weakness, &domain.quality, &domain.rebound, &domain.trend, &domain.uplift, &domain.rain,
                         &domain.warmth, &domain.warmthNow, &domain.rainBase, &domain.runoff, &domain.inflow, &domain.inflowLoad, &domain.settledFlow, &domain.settledLoad, &domain.windX, &domain.windZ, &domain.rimSlope, &domain.rimFloor, &domain.surface,
-                        &domain.level, &domain.discharge, &domain.ice, &domain.iceAge, &domain.erosionRate, &domain.depositionRate,
+                        &domain.level, &domain.discharge, &domain.ice, &domain.iceAge, &domain.iceSpeed, &domain.erosionRate, &domain.depositionRate,
                         &domain.eroded, &domain.deposited, &domain.uplifted, &domain.shed})
         field->assign(cells, 0.0f);
     domain.order.reserve(cells);

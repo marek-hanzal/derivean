@@ -3,6 +3,9 @@
 #include "landscape/fn/Forcing.hpp"
 #include "planet/fn/Sample.hpp"
 
+// About 260 lines: a domain's start from the planet or its parent; the parent grid reader, the ice
+// trace and the inflow at the edge serve that start only.
+
 namespace derivean::sim {
 namespace {
 
@@ -131,7 +134,11 @@ void seedFromParent(Domain& domain, const Setting& setting, const TileLookup& lo
     const bool ground = domain.key.level == Level::Ground;
     domain.standing.assign(domain.cells(), -1e9f);
     domain.lakeFloor.assign(domain.cells(), -1e9f);
-    if (domain.key.level == Level::Site) traceIce(domain, parent, parentCell);
+    if (domain.key.level == Level::Site) {
+        traceIce(domain, parent, parentCell);
+        domain.parentIceTop.assign(domain.cells(), -1e9f);
+        domain.parentIceSpeed.assign(domain.cells(), 0.0f);
+    }
     for (int z = 0; z < domain.size; ++z) {
         for (int x = 0; x < domain.size; ++x) {
             const size_t i = domain.index(x, z);
@@ -189,6 +196,18 @@ void seedFromParent(Domain& domain, const Setting& setting, const TileLookup& lo
             domain.residual[i] = domain.rebound[i] = 0;
             domain.rain[i] = parent.linear(fx, fz, [](const Tile& t, size_t c) { return t.rain[c]; });
             domain.trend[i] = rock + loose;
+            if (!domain.parentIceTop.empty()) {
+                // The ice the parent held at its last maximum, over the cells its outline covers: its
+                // valley glaciers and, where one came, the sheet in its iceAge. Every glacial of the
+                // window had that ice over the Site; the sheet stage after the replay lays only the
+                // last sheet's deposits. Cold phases put it over the Site (Glacial.cpp).
+                const auto ice = [](const Tile& t, size_t c) { return t.iceAge[c]; };
+                const int64_t px = int64_t(std::floor(here.x / parentCell)), pz = int64_t(std::floor(here.z / parentCell));
+                if (parent.at(px, pz, ice) > 0) {
+                    domain.parentIceTop[i] = rock + loose + std::max(0.0f, parent.linear(fx, fz, ice));
+                    domain.parentIceSpeed[i] = std::max(0.0f, parent.linear(fx, fz, [](const Tile& t, size_t c) { return t.iceSpeed[c]; }));
+                }
+            }
         }
     }
     injectInflow(domain, {parentCell, [&](int64_t gx, int64_t gz) { return parent.at(gx, gz, [](const Tile& t, size_t c) { return t.discharge[c]; }); },

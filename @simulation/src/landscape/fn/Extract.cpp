@@ -162,7 +162,7 @@ void extractTile(const Domain& domain, const FlowScratch& scratch, Tile& tile) {
     tile.ledger = domain.ledger;
     tile.aeolian = windRecordOf(domain);
     copyGround(domain, tile.now, 0);
-    for (auto* field : {&tile.water, &tile.discharge, &tile.load, &tile.iceAge, &tile.uplift, &tile.rebound, &tile.ice, &tile.erosionRate, &tile.depositionRate,
+    for (auto* field : {&tile.water, &tile.discharge, &tile.load, &tile.iceAge, &tile.iceSpeed, &tile.uplift, &tile.rebound, &tile.ice, &tile.erosionRate, &tile.depositionRate,
                         &tile.eroded, &tile.deposited, &tile.uplifted, &tile.rain, &tile.warmth, &tile.shed})
         field->resize(cells);
     tile.upIce = domain.upIce;
@@ -189,6 +189,7 @@ void extractTile(const Domain& domain, const FlowScratch& scratch, Tile& tile) {
             tile.rebound[to] = domain.rebound[from];
             tile.ice[to] = domain.ice[from];
             tile.iceAge[to] = domain.iceAge[from];
+            tile.iceSpeed[to] = domain.iceSpeed[from];
             tile.erosionRate[to] = domain.erosionRate[from];
             tile.depositionRate[to] = domain.depositionRate[from];
             tile.eroded[to] = domain.eroded[from];

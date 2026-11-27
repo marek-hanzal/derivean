@@ -4,6 +4,7 @@
 #include "climate/type/Climate.hpp"
 #include "ground/fn/Stages.hpp"
 #include "groundwater/fn/Sinking.hpp"
+#include "icesheet/fn/Dating.hpp"
 #include "landscape/fn/Forcing.hpp"
 #include "volcanic/fn/Volcanic.hpp"
 
@@ -27,10 +28,14 @@ void stepDomain(Domain& domain, FlowScratch& scratch, const Setting& setting) {
     dissolveSinks(domain);
     if (ground) widenChannels(domain);
     // Cold phases alternate with warm ones while a finer level settles, as glacials and
-    // interglacials did; the last steps are warm, so rivers and lakes occupy what the ice left.
-    // A ground tile is far smaller than a glacier and takes the ice of its parent as given.
+    // interglacials did. The window ends warm: the world's present is an interglacial that began at
+    // `lastTermination`, at least one step and as many as it spans, so rivers and lakes occupy what
+    // the ice left but walls have not yet buried its valleys in talus (Earth's has lasted 11.7 kyr,
+    // Walker et al. 2009, less than one step of either level). A ground tile is far smaller than a
+    // glacier and takes the ice of its parent as given.
     const Window window = windowAt(domain.key.level, setting.age);
-    const bool cold = !dated && !ground && domain.taken < window.steps - window.steps / 5 && domain.taken % 5 >= 2;
+    const int warm = std::max(1, int(std::ceil((setting.age - lastTermination(setting.age)) / domain.step)));
+    const bool cold = !dated && !ground && domain.taken < window.steps - warm && domain.taken % 5 >= 2;
     if (cold) {
         const float halfRange = float(zonalClimate(setting.seed, domain.origin.z + 0.5 * domain.size * domain.cell, setting.age).seasonal);
         const float deepest = -float(1.5 + 5.5 * smoothstep(3.0, -1.0, greenhouseOffset(setting.seed, setting.age)));

@@ -3,6 +3,8 @@
 #include "climate/fn/Seasons.hpp"
 #include "landscape/fn/Blur.hpp"
 
+// About 270 lines: one pass of a glacier, from where its snow gathers through what it grinds to
+// where its load is laid; the flux, depth and speed fields are shared by every part of it.
 namespace derivean::sim {
 namespace {
 
@@ -17,6 +19,9 @@ constexpr float SlidingErosion = 2.7e-7f;    // yr/m: bed lowering over the squa
 constexpr float GlacierHalfWidth = 250.0f;   // m over which a glacier spreads its speed across its bed
 constexpr float ThickestShare = 2.0f;        // a cell's ice slides at most this many times the glacier's mean speed
 constexpr float BedReach = 40.0f;            // m: half-width of the surface a glacier's bed and its snow are judged on; finer cells are averaged
+// m of loose bed that deforms under sliding ice and moves with it at half its speed on average. The
+// deforming layer measured under Breiðamerkurjökull is about half a metre (Boulton & Hindmarsh 1987).
+constexpr float TillLayer = 0.5f;
 
 // m/yr a glacier slides at that passes `flux` m³/yr of ice. It grows wider and thicker as it grows,
 // so its speed rises slowly: Aletsch, about 8e7 m³/yr, slides at some 60 m/yr.
@@ -30,8 +35,10 @@ float slidingSpeed(float flux) { return 1.56f * std::pow(flux, 0.2f); }
 // slides over its whole bed, fastest where it is thickest; the bed is lowered with the square of
 // that speed, so a trough deepens where ice gathers and its walls are left to fail, while ridges
 // the ice does not cover keep their height. What the ice plucks travels with it and is dropped
-// where it ends. `cooling` (°C, zero or negative) selects the climate: zero for the present, the
-// depth of a glacial maximum for a cold phase.
+// where it ends, and so does the loose cover of its bed: debris that falls into a glaciated valley
+// leaves with the ice. A Site tile lies inside its parent's glacier and is under that ice in a cold
+// phase. `cooling` (°C, zero or negative) selects the climate: zero for the present, the depth of a
+// glacial maximum for a cold phase.
 void glaciate(Domain& domain, FlowScratch& scratch, float halfRange, float cooling, bool erode) {
     const size_t cells = domain.cells();
     const int size = domain.size;
@@ -122,6 +129,12 @@ void glaciate(Domain& domain, FlowScratch& scratch, float halfRange, float cooli
             }
         }
     }
+    // A Site tile is a kilometre of a glacier kilometres long: its own snow builds some 20 m of ice
+    // where its parent's trough held 300–500 m. In a cold phase the parent's ice stands over it as it
+    // stood over the parent's ground, and slides as fast.
+    const bool underParent = erode && !domain.parentIceTop.empty();
+    if (underParent)
+        for (size_t i = 0; i < cells; ++i) depth[i] = std::max(depth[i], domain.parentIceTop[i] - domain.surface[i]);
     for (size_t i = 0; i < cells; ++i) domain.ice[i] = depth[i];
     if (!erode) return;
 
@@ -135,13 +148,16 @@ void glaciate(Domain& domain, FlowScratch& scratch, float halfRange, float cooli
     scratch.blurA.resize(cells);
     scratch.blurB.resize(cells);
     for (size_t i = 0; i < cells; ++i) {
-        speed[i] = depth[i] > 0 ? slidingSpeed(flux[i]) : 0.0f;
+        speed[i] = depth[i] > 0 ? std::max(slidingSpeed(flux[i]), underParent ? domain.parentIceSpeed[i] : 0.0f) : 0.0f;
         thick[i] = depth[i];
         scratch.blurA[i] = depth[i] > 0 ? 1.0f : 0.0f;
     }
     meanOver(speed, scratch.blurA, scratch.blurB, size, radius);
     for (size_t i = 0; i < cells; ++i) scratch.blurA[i] = depth[i] > 0 ? 1.0f : 0.0f;
     meanOver(thick, scratch.blurA, scratch.blurB, size, radius);
+    // What a finer level reads of this glacier: how fast it slid at its greatest.
+    for (size_t i = 0; i < cells; ++i)
+        if (depth[i] > 0) domain.iceSpeed[i] = std::max(domain.iceSpeed[i], speed[i]);
     // On a fine tile the bed is ground as the glacier sees it: every cell inside its outline at
     // the depth of the ice around it, so a rib of rock in the bed goes down with the bed.
     // `bed` now holds that depth, `scratch.blurA` the share of the window under ice.
@@ -158,12 +174,20 @@ void glaciate(Domain& domain, FlowScratch& scratch, float halfRange, float cooli
         const float cut = std::min(SlidingErosion * sliding * sliding * dt, 0.5f * ice);
         const float loose = domain.sedimentAt(i);
         const float fromLoose = std::min(cut, loose);
+        // The loose bed left under the ice deforms with it: a layer `TillLayer` deep moving at half
+        // the sliding speed carries 0.5·u·h m² a year past each metre of the glacier's width, far more
+        // than the ice grinds off rock. At these cells and steps that exceeds any cover once the ice
+        // slides at all (over a kilometre a step at 1 m/yr on a Site cell), so sliding ice sweeps its
+        // bed and the cover rides with the plucked rock to the ice front; only where the speed is
+        // zero does it stay (no frozen bed is modelled). Valley glaciers leave little till under their trunk.
+        const float carried = std::min(loose - fromLoose, 0.5f * TillLayer * sliding * dt / cell);
+        const float taken = fromLoose + carried;
         for (int c = 0; c < SedimentClasses; ++c)
-            if (loose > 0) domain.ground.sediment[c][i] -= fromLoose * domain.ground.sediment[c][i] / loose;
+            if (loose > 0) domain.ground.sediment[c][i] -= taken * domain.ground.sediment[c][i] / loose;
         domain.ground.rock[i] -= cut - fromLoose;
-        debris[i] += cut * area;
-        domain.eroded[i] += cut;
-        if (domain.owned(int(i % size_t(size)), int(i / size_t(size)))) domain.ledger.eroded += double(cut) * area;
+        debris[i] += (cut + carried) * area;
+        domain.eroded[i] += cut + carried;
+        if (domain.owned(int(i % size_t(size)), int(i / size_t(size)))) domain.ledger.eroded += double(cut + carried) * area;
     }
 
     // What the ice plucked rides with it to where it ends and stays there as a moraine of unsorted
