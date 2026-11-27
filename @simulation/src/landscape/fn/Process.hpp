@@ -11,13 +11,20 @@ namespace derivean::sim {
 // whole replay.
 struct FlowScratch {
     std::vector<float> share;                    // cells × 8: part of a cell's outflow that leaves towards each neighbour
+    std::vector<uint8_t> ways;                   // cutAndFill: bit k set where share k is not zero or less; most cells drain to one neighbour
     std::vector<float> next;                     // m, surface after cutting and filling
     std::vector<float> flux[SedimentClasses];    // m³/yr of sediment passing through
     std::vector<float> settle[SedimentClasses];  // m laid down this step, by class
     std::vector<float> plume[SedimentClasses];   // m³ of sediment suspended in standing water
+    std::vector<int32_t> plumeCells[SedimentClasses], plumeReached;   // cells a class's plume may hold anything in, rising
+    std::vector<float> plumeNext;                // one round's spread; zero outside the cells it reached
+    std::vector<uint8_t> plumeMark;              // 1 on the cells of `plumeReached`; zero between rounds
     std::vector<float> power, coverPower;        // K·dt·(Q^m - threshold)/cell, the implicit erosion factor of a cell's rock and of the loose cover on it
     std::vector<float> room;                     // m a bed can rise before it dams a cell upstream
-    std::vector<int32_t> head, link, pit;        // bucket queue of the flood
+    std::vector<int32_t> head, link, pit;        // bucket queue of the flood; every bucket empty between floods
+    std::vector<uint64_t> filled, filledWords;   // a bit per bucket that holds a cell, and a bit per word of those
+    std::vector<uint8_t> handed;                 // routing: cells that carry a river a finished neighbour handed on
+    std::vector<float> fresh[SedimentClasses];   // m each cell lays next pass, by class, while the load is carried
     std::vector<uint8_t> visited;
     std::vector<float> moved[SedimentClasses + 1];   // slope transfers; the last entry is rock
     std::vector<float> broke;                    // m of rock each cell lost to failure this step

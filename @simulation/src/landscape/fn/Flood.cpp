@@ -2,6 +2,7 @@
 
 #include "groundwater/fn/Sinking.hpp"
 
+#include <bit>
 #include <limits>
 #include <utility>
 #include <vector>
@@ -33,7 +34,14 @@ void floodLevels(Domain& domain, FlowScratch& scratch) {
     const float width = std::max((high - low) / float(Buckets - 2), fine ? 2e-5f : 1e-3f);
     const auto bucketOf = [&](float level) { return std::min(Buckets - 1, int((level - low) / width)); };
 
-    scratch.head.assign(size_t(Buckets), -1);
+    // The buckets are left empty by every flood, so only their size is set here. A bit per bucket
+    // and a bit per word of those say which hold cells: the next one is found without walking the
+    // empty ones, which on the ground level are nearly all of a million.
+    if (scratch.head.size() != size_t(Buckets)) scratch.head.assign(size_t(Buckets), -1);
+    std::vector<uint64_t>& filled = scratch.filled;
+    std::vector<uint64_t>& words = scratch.filledWords;
+    filled.assign(size_t(Buckets) / 64, 0);
+    words.assign(size_t(Buckets) / 4096, 0);
     scratch.link.assign(cells, -1);
     scratch.visited.assign(cells, 0);
     scratch.pit.clear();
@@ -47,8 +55,25 @@ void floodLevels(Domain& domain, FlowScratch& scratch) {
             scratch.pit.push_back(cell);
             return;
         }
+        if (scratch.head[size_t(bucket)] < 0) {
+            filled[size_t(bucket) >> 6] |= uint64_t(1) << (bucket & 63);
+            words[size_t(bucket) >> 12] |= uint64_t(1) << ((bucket >> 6) & 63);
+        }
         scratch.link[size_t(cell)] = scratch.head[size_t(bucket)];
         scratch.head[size_t(bucket)] = cell;
+    };
+    // The lowest bucket at or above `from` that holds a cell; the last bucket when none does, where
+    // a walk over the empty ones would have stopped.
+    const auto nextFilled = [&](int from) {
+        size_t word = size_t(from) >> 6;
+        if (const uint64_t bits = filled[word] & (~uint64_t(0) << (from & 63))) return int(word * 64 + size_t(std::countr_zero(bits)));
+        for (size_t group = word >> 6, first = (word & 63) + 1; group < words.size(); ++group, first = 0) {
+            const uint64_t mask = first >= 64 ? 0 : words[group] & (~uint64_t(0) << first);
+            if (!mask) continue;
+            word = group * 64 + size_t(std::countr_zero(mask));
+            return int(word * 64 + size_t(std::countr_zero(filled[word])));
+        }
+        return Buckets - 1;
     };
 
     // Water leaves through the rim cells the coarser level marks as outlets and through the sea.
@@ -88,7 +113,7 @@ void floodLevels(Domain& domain, FlowScratch& scratch) {
             cell = scratch.pit.back();
             scratch.pit.pop_back();
         } else {
-            while (current < Buckets - 1 && (current < 0 || scratch.head[size_t(current)] < 0)) ++current;
+            current = nextFilled(std::max(current, 0));
             cell = scratch.head[size_t(current)];
             if (cell < 0) {
                 // Only cells reached solely across a handed-on step are left: they are flooded on from
@@ -110,6 +135,10 @@ void floodLevels(Domain& domain, FlowScratch& scratch) {
                 continue;
             }
             scratch.head[size_t(current)] = scratch.link[size_t(cell)];
+            if (scratch.head[size_t(current)] < 0) {
+                filled[size_t(current) >> 6] &= ~(uint64_t(1) << (current & 63));
+                if (!filled[size_t(current) >> 6]) words[size_t(current) >> 12] &= ~(uint64_t(1) << ((current >> 6) & 63));
+            }
         }
         domain.rank[size_t(cell)] = int32_t(domain.order.size());
         domain.order.push_back(cell);
