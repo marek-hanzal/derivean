@@ -1,5 +1,6 @@
 #include "core/fn/Approx.hpp"
 #include "core/fn/ApproxAngle.hpp"
+#include "core/fn/ApproxErf.hpp"
 #include "core/fn/Exact.hpp"
 #include "core/fn/Hash.hpp"
 
@@ -14,11 +15,11 @@
 #include <numbers>
 #include <vector>
 
-// The bounds and properties core/fn/Approx.hpp and ApproxAngle.hpp promise, against CORE-MATH:
-// random arguments over each function's domain, dense runs of neighbouring floats where the
-// argument reduction changes branch, and the exact values the comments name. Every float is
-// checked by `terra approx-check` on the heavy machine. 255 lines: one table of functions and the
-// checks of the same two headers, cohesive.
+// The bounds and properties core/fn/Approx.hpp, ApproxAngle.hpp and ApproxErf.hpp promise, against
+// CORE-MATH: random arguments over each function's domain, dense runs of neighbouring floats where
+// the argument reduction changes branch, and the exact values the comments name. Every float is
+// checked by `terra approx-check` on the heavy machine. 280 lines: one table of functions and the
+// checks of the same three headers, cohesive.
 
 namespace {
 
@@ -138,12 +139,19 @@ void testApprox() {
         {"tanh near 0", approx::tanh, approx::tanh, exact::tanh, exact::tanh, -1e-3, 1e-3, true, {}, +1},
         {"atanh", approx::atanh, approx::atanh, exact::atanh, exact::atanh, -1, 1, false, {-0.17157287525380990, 0.17157287525380990, 0.999}, +1},
         {"atanh near 0", approx::atanh, approx::atanh, exact::atanh, exact::atanh, -1e-3, 1e-3, true, {}, +1},
+        {"sinh", approx::sinh, approx::sinh, exact::sinh, exact::sinh, -715, 715, false, {-22, -0.34657359027997264, 0, 0.34657359027997264, 22, 709.78, 710.47}, +1},
+        {"sinh near 0", approx::sinh, approx::sinh, exact::sinh, exact::sinh, -1e-3, 1e-3, true, {}, +1},
+        {"erf", approx::erf, approx::erf, exact::erf, exact::erf, -7, 7, false, {-6, -3.25, -2, -1, 0, 1, 2, 3.25, 3.92, 6}, +1},
+        {"erf near 0", approx::erf, approx::erf, exact::erf, exact::erf, -1e-3, 1e-3, true, {}, +1},
         {"cbrt", approx::cbrt, approx::cbrt, exact::cbrt, exact::cbrt, -1e300, 1e300, true, {1, 2, 4, 8, 0.5, 1e-3}, +1},
         {"sin", approx::sin, approx::sin, exact::sin, exact::sin, -1e5, 1e5, false, quarters, 0},
         {"sin near 0", approx::sin, approx::sin, exact::sin, exact::sin, -1, 1, true, {}, 0},
         {"cos", approx::cos, approx::cos, exact::cos, exact::cos, -1e5, 1e5, false, quarters, 0},
         {"sin far", approx::sin, approx::sin, exact::sin, exact::sin, 1e5, 0x1p17, false, {}, 0},
         {"cos far", approx::cos, approx::cos, exact::cos, exact::cos, -0x1p17, -1e5, false, {}, 0},
+        {"tan", approx::tan, approx::tan, exact::tan, exact::tan, -1e5, 1e5, false, quarters, 0},
+        {"tan near 0", approx::tan, approx::tan, exact::tan, exact::tan, -1, 1, true, {}, 0},
+        {"atan", approx::atan, approx::atan, exact::atan, exact::atan, -1e30, 1e30, true, {-2.414213562373095, -1, -0.41421356237309515, 0, 0.41421356237309515, 1, 2.414213562373095}, +1},
         {"acos", approx::acos, approx::acos, exact::acos, exact::acos, -1, 1, false, {-1, -0.5, 0, 0.5, 1}, -1},
     };
     uint64_t salt = 1;
@@ -227,7 +235,9 @@ void testApprox() {
         approx::sincos(z, s, c);
         float sf, cf;
         approx::sincos(float(z), sf, cf);
-        const bool kept = std::signbit(approx::sin(z)) == std::signbit(z) && std::signbit(approx::sin(float(z))) == std::signbit(z) &&
+        const bool kept = std::signbit(approx::tan(z)) == std::signbit(z) && std::signbit(approx::atan(z)) == std::signbit(z) &&
+                          std::signbit(approx::sinh(z)) == std::signbit(z) && std::signbit(approx::erf(z)) == std::signbit(z) &&
+                          std::signbit(approx::sin(z)) == std::signbit(z) && std::signbit(approx::sin(float(z))) == std::signbit(z) &&
                           std::signbit(s) == std::signbit(z) && std::signbit(sf) == std::signbit(z) && c == 1 && cf == 1 &&
                           std::signbit(approx::tanh(z)) == std::signbit(z) && std::signbit(approx::atanh(z)) == std::signbit(z) &&
                           std::signbit(approx::cbrt(z)) == std::signbit(z) && std::signbit(approx::expm1(z)) == std::signbit(z);
@@ -235,6 +245,18 @@ void testApprox() {
     }
     expect(approx::atan2(0.0, 1.0) == 0 && approx::atan2(1.0, 0.0) == 0x1.921fb54442d18p+0 && approx::atan2(0.0, -1.0) == 0x1.921fb54442d18p+1, "atan2 on the axes");
     expect(std::signbit(approx::atan2(-0.0, 1.0)) && approx::atan2(-0.0, -1.0) == -0x1.921fb54442d18p+1, "atan2 keeps the sign of zero");
+    expect(approx::erf(0.0) == 0 && approx::erf(6.0) == 1 && approx::erf(-30.0f) == -1 && approx::erf(1e300) == 1, "erf at 0 and far");
+    expect(approx::atan(std::numeric_limits<double>::infinity()) == 0x1.921fb54442d18p+0 && approx::atan(1.0) == 0x1.921fb54442d18p-1, "atan at ∞ and 1");
+    expect(approx::sinh(800.0) == std::numeric_limits<double>::infinity() && approx::sinh(-710.0) > -std::numeric_limits<double>::infinity(), "sinh as far as it is finite");
+    for (const double edge : {0x1.633ce8fb9f87dp+9, 0x1.633ce8fb9f87ep+9, -0x1.633ce8fb9f87dp+9, -0x1.633ce8fb9f87ep+9})
+        within(approx::sinh(edge), exact::sinh(edge), "sinh at the overflow threshold", edge);
+    // tan increases between its poles: on a fine grid, wherever no pole lies between neighbours.
+    for (int i = -2000000; i < 2000000; ++i) {
+        const double x = i * 1e-5, next = (i + 1) * 1e-5;
+        if (std::floor(x / pi + 0.5) != std::floor(next / pi + 0.5)) continue;
+        expect(approx::tan(next) >= approx::tan(x), "tan increasing between poles", x);
+    }
+    expect(approx::tan(0.0) == 0 && approx::sinh(0.0) == 0, "tan(0) = 0, sinh(0) = 0");
     expect(approx::acos(1.0) == 0 && approx::acos(-1.0) == 0x1.921fb54442d18p+1 && approx::acos(2.0) != approx::acos(2.0), "acos at the ends");
     for (int i = 0; i < Samples; ++i) {
         const double x = draw(salt + 3, i, -1e5, 1e5), t = draw(salt + 4, i, -1e3, 1e3);
@@ -243,6 +265,9 @@ void testApprox() {
         expect(same(approx::sin(-x), -approx::sin(x)) && same(approx::cos(-x), approx::cos(x)), "sin odd, cos even", x);
         expect(std::abs(approx::tanh(t)) <= 1 && same(approx::tanh(-t), -approx::tanh(t)), "tanh odd, |tanh| ≤ 1", t);
         expect(same(approx::cbrt(-t), -approx::cbrt(t)), "cbrt odd", t);
+        expect(same(approx::sinh(-t), -approx::sinh(t)) && same(approx::tan(-x), -approx::tan(x)), "sinh, tan odd", t);
+        expect(same(approx::erf(-t * 1e-2), -approx::erf(t * 1e-2)) && std::abs(approx::erf(t * 1e-2)) <= 1, "erf odd, |erf| ≤ 1", t);
+        expect(same(approx::atan(-x), -approx::atan(x)) && std::abs(approx::atan(x)) <= 0x1.921fb54442d18p+0, "atan odd, in [−π/2, π/2]", x);
         const double a = approx::atan2(x, t);
         expect(a >= -0x1.921fb54442d18p+1 && a <= 0x1.921fb54442d18p+1 && (a >= 0) == (x >= 0), "atan2 in [−π, π], upper half for y ≥ 0", x);
         const double c = approx::acos(std::clamp(x * 1e-5, -1.0, 1.0));

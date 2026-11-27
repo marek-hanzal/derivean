@@ -1,6 +1,7 @@
 #include "Arguments.hpp"
 #include "core/fn/Approx.hpp"
 #include "core/fn/ApproxAngle.hpp"
+#include "core/fn/ApproxErf.hpp"
 #include "core/fn/Exact.hpp"
 #include "core/fn/Hash.hpp"
 
@@ -139,9 +140,13 @@ int approxCheckCommand(const Arguments& arguments) {
     one("log2", +1, [](float x) { return approx::log2(x); }, [](float x) { return exact::log2(x); });
     one("tanh", +1, [](float x) { return approx::tanh(x); }, [](float x) { return exact::tanh(x); });
     one("atanh", +1, [](float x) { return approx::atanh(x); }, [](float x) { return exact::atanh(x); });
+    one("sinh", +1, [](float x) { return approx::sinh(x); }, [](float x) { return exact::sinh(x); });
+    one("erf", +1, [](float x) { return approx::erf(x); }, [](float x) { return exact::erf(x); });
     one("cbrt", +1, [](float x) { return approx::cbrt(x); }, [](float x) { return exact::cbrt(x); });
     one("sin", 0, [](float x) { return approx::sin(x); }, [](float x) { return exact::sin(x); });
     one("cos", 0, [](float x) { return approx::cos(x); }, [](float x) { return exact::cos(x); });
+    one("tan", 0, [](float x) { return approx::tan(x); }, [](float x) { return exact::tan(x); });
+    one("atan", +1, [](float x) { return approx::atan(x); }, [](float x) { return exact::atan(x); });
     one("acos", -1, [](float x) { return approx::acos(x); }, [](float x) { return exact::acos(x); });
     if (only.empty() || only == "pow")
         fine = report("pow", runPairs([](float x, float y) { return std::pair{approx::pow(x, y), exact::pow(x, y)}; }, pairs, 1), true) && fine;

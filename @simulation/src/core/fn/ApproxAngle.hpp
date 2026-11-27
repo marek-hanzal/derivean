@@ -7,8 +7,8 @@
 #include <cmath>
 #include <cstdint>
 
-// Sine, cosine and arcs for the simulation's hot calls, built and bounded as core/fn/Approx.hpp
-// says: double 1e-10 relative, float 1 ulp, the same bits on macOS and Windows.
+// Sine, cosine, tangent and arcs for the simulation's hot calls, built and bounded as
+// core/fn/Approx.hpp says: double 1e-10 relative, float 1 ulp, the same bits on macOS and Windows.
 
 namespace derivean::sim::approx {
 
@@ -87,6 +87,26 @@ inline void sincos(float x, float& sine, float& cosine) {
     cosine = float(c);
 }
 
+// Tangent. Odd, tan(0) = 0, increasing between its poles to within the bound: sin r / cos r of the
+// reduced r, or −cos r / sin r in the odd quadrants.
+inline double tan(double x) {
+    if (!(std::abs(x) < detail::Reduced)) return exact::tan(x);
+    int quadrant;
+    const double r = detail::reduce(x, quadrant);
+    const double s = detail::sinKernel(r), c = detail::cosKernel(r);
+    return quadrant & 1 ? -c / s : s / c;
+}
+inline float tan(float x) { return float(tan(double(x))); }
+
+// Arc tangent. Odd, increasing to within the bound, in [−π/2, π/2], atan(0) = 0 and ±π/2 at ±∞ as
+// rounded to double: the kernel of atan2 on |x| ≤ 1, π/2 − atan(1/|x|) beyond.
+inline double atan(double x) {
+    if (x != x) return x;
+    const double a = std::abs(x);
+    return std::copysign(a <= 1 ? detail::atanUnit(a) : detail::HalfPi - detail::atanUnit(1 / a), x);
+}
+inline float atan(float x) { return float(atan(double(x))); }
+
 // The angle of (x, y) from the x axis. In [−π, π], in the quadrant of (x, y); on the axes exactly
 // 0, ±π/2 and ±π as rounded to double; the sign of y's zero kept, as the C library does.
 inline double atan2(double y, double x) {
@@ -115,6 +135,8 @@ inline float acos(float x) { return float(acos(double(x))); }
 
 template<typename T> void sin(T) = delete;
 template<typename T> void cos(T) = delete;
+template<typename T> void tan(T) = delete;
+template<typename T> void atan(T) = delete;
 template<typename T> void acos(T) = delete;
 template<typename A, typename B> void atan2(A, B) = delete;
 template<typename T, typename S> void sincos(T, S&, S&) = delete;
