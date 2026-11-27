@@ -26,7 +26,8 @@ void drainOcean(Ocean& ocean, double seconds);
 void settleOcean(Ocean& ocean);
 
 // s, end of the round the sea is in when throats in different places take turns: past `seconds`,
-// so every round moves the sea on. Infinite from 2^53 s after the newest cut, where the turns end.
+// so every round moves the sea on. The last round ends on the cutoff 2^53 s after the newest cut;
+// infinite from there, where the turns end.
 double roundEnd(const Ocean& ocean);
 
 Tally stockOf(const WaterGrid& grid);

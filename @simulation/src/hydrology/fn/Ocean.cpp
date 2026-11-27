@@ -102,12 +102,14 @@ double nextRoundOffset(double age) {
 // The age read back from it can fall short of the offset, so the search starts half the first
 // round early, at most one end back, and takes whole rounds until the stored end lies past now.
 // Rounds are followed while their offsets are whole seconds held exactly, below 2^53 s (285 Myr)
-// after the newest cut; past that the turns end and every throat runs on its own.
+// after the newest cut, and the last of them ends on that cutoff as it is stored; past it, or where
+// the stored cutoff does not lie past the cut at all, the turns end and every throat runs on its own.
 double roundEnd(const Ocean& ocean) {
-    if (!(ocean.seconds - ocean.opened < RoundsUntil)) return std::numeric_limits<double>::infinity();
-    double offset = nextRoundOffset(ocean.seconds - ocean.opened - 0.5 * FirstRound);
-    while (ocean.opened + offset <= ocean.seconds) offset = nextRoundOffset(offset);
-    return ocean.opened + offset;
+    const double age = ocean.seconds - ocean.opened, cutoff = ocean.opened + RoundsUntil;
+    if (!(age < RoundsUntil && ocean.seconds < cutoff)) return std::numeric_limits<double>::infinity();
+    for (double offset = nextRoundOffset(age - 0.5 * FirstRound); offset < RoundsUntil; offset = nextRoundOffset(offset))
+        if (ocean.opened + offset > ocean.seconds) return ocean.opened + offset;
+    return cutoff;
 }
 
 namespace {
