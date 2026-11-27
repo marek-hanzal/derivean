@@ -3,6 +3,7 @@
 #include "SeaFixture.hpp"
 
 #include <array>
+#include <cmath>
 
 using namespace derivean::sim;
 using namespace derivean::sim::sea;
@@ -169,10 +170,14 @@ void testFractionalCut() {
             expect(end > walked.seconds && round < 64, "a round does not end past the time it starts at", walked.seconds - walked.opened);
             walked.seconds = end;
         }
-        // Far past 2^53 s a year's division rounds short (DREV-011-03): still a step on.
-        walked.seconds = 10062568091.0 * 31557600.0;
+        // The last whole-second round before 2^53 s still ends past now; from there the turns end.
         walked.opened = 0;
-        expect(roundEnd(walked) > walked.seconds, "a round far in time does not end past now", walked.seconds);
+        walked.seconds = 0x1p53 - 1.0;
+        expect(roundEnd(walked) > walked.seconds, "the last round does not end past now", walked.seconds);
+        for (const double far : {0x1p53, 10062568091.0 * 31557600.0, 1070162113858.0 * 31557600.0, 1e24}) {
+            walked.seconds = far;
+            expect(std::isinf(roundEnd(walked)), "rounds are followed past 2^53 s", far);
+        }
         for (const double span : {7200.0, 14400.0, 28800.0, DaySeconds + 1.0}) {
             const bool settled = span < DaySeconds;   // a day and a second is integrated on its own
             Ocean cut = chain(opened), whole = chain(std::floor(opened));
