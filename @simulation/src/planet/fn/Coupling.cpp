@@ -31,8 +31,8 @@ void add(std::vector<CellWeight>& weights, int cell, double area) {
 
 double exactWeights(const SphereGrid& grid, const CrustPiece& piece, std::vector<CellWeight>& weights, std::vector<int>& cells, std::vector<int>& work) {
     weights.clear();
-    const SpherePolygon footprint = footprintOf(grid, piece);
-    candidateCells(grid, footprint, cells, work);
+    const PreparedPolygon footprint = preparedOf(footprintOf(grid, piece));
+    candidateCells(grid, footprint.cap, cells, work);
     double sum = 0;
     for (const int cell : cells) {
         const double area = overlapArea(footprint, polygonOf(grid, cell));

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geometry/fn/SpherePolygon.hpp"
 #include "geometry/type/SphereGrid.hpp"
 #include "geometry/type/SpherePolygon.hpp"
 
@@ -22,5 +23,7 @@ namespace derivean::sim {
 // is reused. Meant for footprints of about one cell (4 to 13 candidates measured at levels 5 and 7): the
 // visited set is a linear list.
 void candidateCells(const SphereGrid& grid, const SpherePolygon& footprint, std::vector<int>& cells, std::vector<int>& work);
+// The same from the footprint's cap (capOf), when the caller has it.
+void candidateCells(const SphereGrid& grid, const PolygonCap& cap, std::vector<int>& cells, std::vector<int>& work);
 
 } // namespace derivean::sim

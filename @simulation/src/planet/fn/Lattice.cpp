@@ -61,7 +61,7 @@ double weldTurn(Globe& globe, const Band& band, int cell, int plate, Vec3 x, Vec
 // a zero `normal` (a seam inside one plate, planet/fn/Seam.hpp) a slot may lie across any edge of T.
 bool openSlot(Globe& globe, const Band& band, int cell, int plate, Vec3 normal, bool cellOpen, Slot& slot) {
     const SphereGrid& grid = *globe.grid;
-    const SpherePolygon home = polygonOf(grid, cell);
+    const PreparedPolygon home = preparedOf(polygonOf(grid, cell));
     std::vector<int> near;
     const auto gather = [&](int c) {
         forLive(band, c, [&](int k, double) {
@@ -72,6 +72,10 @@ bool openSlot(Globe& globe, const Band& band, int cell, int plate, Vec3 normal, 
     for (const int32_t other : (*globe.rings)[size_t(cell)])
         if (other >= 0) gather(other);
     std::sort(near.begin(), near.end(), [&](int a, int b) { return globe.pieces[size_t(a)].key < globe.pieces[size_t(b)].key; });
+    std::vector<Vec3> nearCentre(near.size());
+    std::vector<SpherePolygon> nearFootprint(near.size());
+    for (size_t i = 0; i < near.size(); ++i)
+        nearCentre[i] = centreOf(grid, globe.pieces[size_t(near[i])]), nearFootprint[i] = footprintOf(grid, globe.pieces[size_t(near[i])]);
     double best = 0, bestCover = 0;   // the most open slot; else, in an open cell, the fill covering most of it
     Slot fill;
     std::vector<int> over;
@@ -84,17 +88,19 @@ bool openSlot(Globe& globe, const Band& band, int cell, int plate, Vec3 normal, 
             const Vec3 centre = rotate(template_.rotation, grid.centre[size_t(next)]);
             if (dot(normal, normal) > 0 && dot(centre - from, normal) <= 0) continue;
             const SpherePolygon footprint = rotated(polygonOf(grid, next), template_.rotation);
+            const PreparedPolygon ready = preparedOf(footprint);
             const double cover = overlapArea(home, footprint);
             if (cover <= 0) continue;
             const double area = grid.area[size_t(next)], reach = 2.5 * std::sqrt(area) / PlanetRadius;
             double own = 0, sum = 0;
             over.clear();
-            for (const int l : near) {
-                const Vec3 d = centreOf(grid, globe.pieces[size_t(l)]) - centre;
+            for (size_t i = 0; i < near.size(); ++i) {
+                const int l = near[i];
+                const Vec3 d = nearCentre[i] - centre;
                 if (dot(d, d) >= reach * reach) continue;
-                const double o = overlapArea(footprint, footprintOf(grid, globe.pieces[size_t(l)]));
+                const double o = overlapArea(ready, nearFootprint[i]);
                 if (o <= 0) continue;
-                over.push_back(l), sum += o;
+                over.push_back(int(i)), sum += o;
                 if (globe.pieces[size_t(l)].plate == plate) own += o;
             }
             if (own > SlotClash * area) continue;
@@ -103,7 +109,7 @@ bool openSlot(Globe& globe, const Band& band, int cell, int plate, Vec3 normal, 
                 const TangentPlane plane = tangentPlaneAt(centre);
                 const PlanePolygon clip = projected(plane, footprint);
                 std::vector<PlanePolygon> parts;
-                for (const int l : over) parts.push_back(clipped(projected(plane, footprintOf(grid, globe.pieces[size_t(l)])), clip));
+                for (const int i : over) parts.push_back(clipped(projected(plane, nearFootprint[size_t(i)]), clip));
                 ++globe.stats.unions;
                 covered = unionArea(parts).area;
             }

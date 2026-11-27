@@ -32,20 +32,22 @@ LatticeSlot slotOf(const Globe& globe, int t, int k) {
 double interiorOpening(const Globe& globe, int t, const LatticeSlot& slot, const std::vector<int>& near, long& unions) {
     const SphereGrid& grid = *globe.grid;
     const int plate = globe.pieces[size_t(t)].plate;
-    std::vector<int> over;
+    std::vector<SpherePolygon> over;
     double sum = 0;
     for (const int l : near)
         if (globe.pieces[size_t(l)].plate != plate) return -1;
+    const PreparedPolygon ready = preparedOf(slot.footprint);
     for (const int l : near) {
-        const double o = overlapArea(slot.footprint, footprintOf(grid, globe.pieces[size_t(l)]));
-        if (o > 0) over.push_back(l), sum += o;
+        const SpherePolygon footprint = footprintOf(grid, globe.pieces[size_t(l)]);
+        const double o = overlapArea(ready, footprint);
+        if (o > 0) over.push_back(footprint), sum += o;
     }
     double covered = sum;
     if (over.size() > 1) {
         const TangentPlane plane = tangentPlaneAt(rotate(globe.pieces[size_t(t)].rotation, grid.centre[size_t(slot.birth)]));
         const PlanePolygon clip = projected(plane, slot.footprint);
         std::vector<PlanePolygon> parts;
-        for (const int l : over) parts.push_back(clipped(projected(plane, footprintOf(grid, globe.pieces[size_t(l)])), clip));
+        for (const SpherePolygon& footprint : over) parts.push_back(clipped(projected(plane, footprint), clip));
         ++unions;
         covered = unionArea(parts).area;
     }
@@ -65,6 +67,7 @@ bool interiorSlot(Globe& globe, Band& band, int cell, InteriorSlot& found) {
     std::sort(templates.begin(), templates.end(), [&](int a, int b) { return globe.pieces[size_t(a)].key < globe.pieces[size_t(b)].key; });
     double best = 0;
     const SphereGrid& grid = *globe.grid;
+    if (band.slotStamp.size() < globe.pieces.size() * 4) band.slotStamp.resize(globe.pieces.size() * 4, 0), band.slotOpen.resize(globe.pieces.size() * 4, 0);
     for (const int t : templates) {
         const CrustPiece& piece = globe.pieces[size_t(t)];
         for (int k = 0; k < 4; ++k) {
@@ -74,7 +77,6 @@ bool interiorSlot(Globe& globe, Band& band, int cell, InteriorSlot& found) {
             for (const int l : templates) held = held || (globe.pieces[size_t(l)].birth == birth && sameLattice(globe.pieces[size_t(l)], piece));
             if (held) continue;
             const size_t at = size_t(t) * 4 + size_t(k);
-            if (band.slotStamp.size() < globe.pieces.size() * 4) band.slotStamp.resize(globe.pieces.size() * 4, 0), band.slotOpen.resize(globe.pieces.size() * 4, 0);
             if (band.slotStamp[at] == band.slotGeneration && band.slotOpen[at] < float(BornShare)) continue;   // closed when last measured
             const LatticeSlot s = slotOf(globe, t, k);
             bool deciding = band.decide[size_t(s.cell)], listed = true;

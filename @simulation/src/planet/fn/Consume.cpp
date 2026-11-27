@@ -175,7 +175,7 @@ void consumeInBand(Globe& globe, Band& band, const Substep& substep) {
         std::sort(partners.begin(), partners.end(), [&](int a, int b) { return globe.pieces[size_t(a)].key < globe.pieces[size_t(b)].key; });
         overriders.clear();
         double sum = 0, most = 0;
-        const SpherePolygon footprint = footprintOf(grid, piece);
+        const PreparedPolygon footprint = preparedOf(footprintOf(grid, piece));
         for (const int l : partners) {
             if (!overrides(globe, l, k)) continue;
             const double overlap = overlapArea(footprint, footprintOf(grid, globe.pieces[size_t(l)]));

@@ -65,7 +65,7 @@ size_t suture(Globe& globe, Band& band, const Substep& substep) {
         }
         if (!deciding || over.empty()) continue;
         std::sort(over.begin(), over.end(), [&](int a, int c) { return globe.pieces[size_t(a)].key < globe.pieces[size_t(c)].key; });
-        const SpherePolygon footprint = footprintOf(grid, piece);
+        const PreparedPolygon footprint = preparedOf(footprintOf(grid, piece));
         receivers.clear(), overlap.clear();
         double sum = 0, most = 0;
         for (const int l : over) {
