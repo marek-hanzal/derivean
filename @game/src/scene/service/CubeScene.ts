@@ -45,6 +45,7 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
 
   return {
     get backend() { return backend; },
+    get device() { return backend === "WebGPU" ? (renderer.backend as unknown as { device: GPUDevice }).device : undefined; },
     load(world: WorldInfo) {
       stage?.dispose();
       stage = createCubeStage(scene, camera, world);

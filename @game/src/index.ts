@@ -78,7 +78,7 @@ function compose() {
     game.dataset.mode = locked ? "play" : enterable || broken ? "menu" : "boot";
     if (!locked && enterable) playLabel.textContent = session.visited ? "Resume world" : "Enter world";
   });
-  const map = createWorldMap(select(document, "#map"), window.derivean, { playing: () => controls.locked(), lock: () => controls.lock() });
+  const map = createWorldMap(select(document, "#map"), window.derivean, { playing: () => controls.locked(), lock: () => controls.lock(), device: () => scene.device });
   const clock = createWorldClock();
   const clockPanel = createClockPanel(menu, hudRoot, clock);
   const session = createWorldSession(cubeWorlds(window.derivean), scene, metrics, clock, {

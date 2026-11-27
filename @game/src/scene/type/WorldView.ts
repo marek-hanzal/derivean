@@ -1,3 +1,4 @@
+/// <reference types="@webgpu/types" />
 import type { BrushShape, Frame, Point, WorldInfo } from "../../../contract/GameBridge";
 import type { WeatherSought } from "../../clouds/fn/findWeather";
 import type { SeenAir } from "../../sky/type/SeenAir";
@@ -16,6 +17,8 @@ export interface BenchRecord {
 export interface WorldView {
   // "WebGPU" once the device is there, "starting" until then.
   readonly backend: string;
+  // The WebGPU device, once it is there, for what else draws with it (the map).
+  readonly device: GPUDevice | undefined;
   load(world: WorldInfo): void;
   unload(): void;
   // True while something opaque lies over the canvas, as the map does: the world is kept but not drawn.
