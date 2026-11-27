@@ -84,5 +84,6 @@ void checkForcing();
 void checkHour();
 void checkRollback();
 void checkDamping();
+void checkClosures();
 
 } // namespace derivean::sim::atmosphere_sphere_test

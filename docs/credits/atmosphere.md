@@ -224,7 +224,7 @@ Jablonowski, C. & Williamson, D. L. (2011). The pros and cons of diffusion, filt
 ### Gershgorin 1931: the certified bound of the damping
 Gerschgorin, S. (1931). Über die Abgrenzung der Eigenwerte einer Matrix. *Izvestija Akademii Nauk SSSR, Otdelenie matematičeskich i estestvennych nauk* (VII série) 6, 749–754. https://www.mathnet.ru/eng/im5235
 - **Model:** every eigenvalue of a matrix lies in a disc centred at a diagonal entry with radius the row's other magnitudes, so max_i Σ_j |M_ij| bounds them all; here M = A⁻¹K.
-- **Used in:** `@simulation/src/atmosphere/type/SphereDamping.hpp:20`, `@simulation/src/atmosphere/fn/SphereDamping.cpp:15`; `docs/handoff/atmosphere-sphere.md:143`.
+- **Used in:** `@simulation/src/atmosphere/type/SphereDamping.hpp:21`, `@simulation/src/atmosphere/fn/SphereDamping.cpp:15`; `docs/handoff/atmosphere-sphere.md:143`.
 - **Checked by:** `@simulation/test/AtmosphereSphereDamping.cpp:48` (the bound above the estimate), `:238` (started by the forward step, below 0.976 the fastest mode keeps its sign, above it swings and decays, past 2.06 it grows).
 
 ### Neumaier 1974: compensated summation

@@ -15,4 +15,13 @@ namespace derivean::sim {
 inline constexpr double SphereEddyWavelength = PlanetSpan / 7.0;   // m
 inline constexpr double SphereEddyReach = 0.5;                     // half-width, share of the centre wavenumber
 
+// The flat world's closures at the same seconds and metres (atmosphere/fn/Circulation.cpp owns them
+// until the switch): the zonal mean returns to its belts over MeanRelaxation, friction is a rate of
+// (1 + h / RoughHeight) / SurfaceDrag at terrain height h, and the damping's fastest mode decays
+// over GridDamping.
+inline constexpr double SphereMeanRelaxation = 4 * 86400.0;   // s
+inline constexpr double SphereSurfaceDrag = 12 * 86400.0;     // s
+inline constexpr double SphereRoughHeight = 1500.0;           // m
+inline constexpr double SphereGridDamping = 6 * 3600.0;       // s
+
 } // namespace derivean::sim
