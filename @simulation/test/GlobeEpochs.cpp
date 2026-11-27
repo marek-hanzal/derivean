@@ -8,6 +8,7 @@
 //   no slot inside a plate half open (GlobeGaps.hpp).
 // - The steps after keep both gates in the plate's frame and no cell of a boundary proper (two plates
 //   within its ring) open by half; the stock of felsic crust and basalt with the interior stays exact.
+// - A seam whose crust finds no room within StackLimit is reported as not settled, with the stock kept.
 // - Each plate stays one region (GlobeCohesion.hpp): under 1 % of the cells lie outside their plate's
 //   largest region at the end of the first epoch and 27 steps after the reorganisation.
 // - The plates' mean ocean ages that set the trenches' polarity for the epoch (sinksUnder) are those of
@@ -22,6 +23,7 @@
 #include "chronology/constant/Timeline.hpp"
 #include "geometry/constant/Sphere.hpp"
 #include "geometry/fn/Overlap.hpp"
+#include "geometry/fn/Rotation.hpp"
 #include "geometry/fn/SpherePolygon.hpp"
 #include "geometry/fn/Union.hpp"
 #include "planet/fn/Boundary.hpp"
@@ -102,9 +104,45 @@ void checkOceanAges(const Globe& globe) {
     }
 }
 
+// A seam with no room (Codex DREV-CLAUDE-005-05): every piece of a level-5 sphere holds StackLimit of
+// crust, an old boundary runs along the equator and a second continental piece lies 0.1 of a cell off
+// one of its pieces. Once both plates are one, no plan can place the doubled piece's crust within
+// StackLimit; the closing must say it did not settle and keep the stock.
+void checkCrowdedSeam() {
+    Globe globe = makeGlobe(42, 5, PlateSpeeds::Today, TectonicsStart);
+    const SphereGrid& grid = *globe.grid;
+    int k = -1;
+    for (int c = 0; c < grid.cells; ++c) {
+        CrustPiece& piece = globe.pieces[size_t(c)];
+        piece.plate = grid.centre[size_t(c)].z < 0 ? 1 : 0;
+        piece.stock.felsic = double(StackLimit) * piece.area;
+        refreshColumn(piece);
+        if (k < 0 && piece.plate == 0 && grid.centre[size_t(c)].z < 0.04 && grid.centre[size_t(c)].x > 0.8) k = c;
+    }
+    expect(k >= 0, "the crowded seam finds no piece on the equator");
+    CrustPiece other = globe.pieces[size_t(k)];
+    other.rotation = rotationAbout(normalized(cross(grid.centre[size_t(k)], {0, 0, -1})), 0.1 * std::sqrt(other.area) / PlanetRadius);
+    other.plate = 1, other.key = {0, other.birth, 0};
+    globe.pieces.push_back(other);
+    globe.motion.assign(2, GlobeMotion{});
+    couple(grid, globe.pieces, {}, true, globe.coupling);
+    Band old;
+    markBand(globe, 1, old);
+    for (CrustPiece& piece : globe.pieces) piece.plate = 0;   // the old boundary is now a seam inside one plate
+    expect(measureGaps(globe).ownHalf > 0, "the crowded seam is not half covered by its own plate");
+    const CrustStock start = totalStock(globe.pieces);
+    const bool settled = closeSeams(globe, old, 1);
+    const Gaps after = measureGaps(globe);
+    const CrustStock now = totalStock(globe.pieces);
+    expect(after.ownHalf == 0 || (!settled && globe.stats.unsettled == 1 && globe.stats.seamsKept > 0), "a seam with no room is called settled", double(after.ownHalf));
+    expect(now.felsic + globe.ledger.interior.felsic == start.felsic && now.basalt + globe.ledger.interior.basalt == start.basalt, "the crowded seam loses crust");
+    for (const CrustPiece& piece : globe.pieces) expect(piece.stock.felsic <= double(StackLimit) * piece.area * (1 + 1e-12), "the crowded seam stacks over StackLimit");
+}
+
 } // namespace
 
 void testGlobeEpochs() {
+    checkCrowdedSeam();
     Globe globe = makeGlobe(42, 5, PlateSpeeds::Today, TectonicsStart);
     enterGlobeEpoch(globe);
     couple(*globe.grid, globe.pieces, {}, false, globe.coupling);
@@ -130,13 +168,13 @@ void testGlobeEpochs() {
     const Gaps closed = measureGaps(globe);
     expect(closed.ownCover < 0.5, "a piece stays half covered by its own plate after the seams close", closed.ownCover);
     expect(closed.slotOpen < 0.5, "a slot inside a plate stays half open after the seams close", closed.slotOpen);
-    expect(globe.stats.sutured > 0 && globe.stats.fossil > 0 && globe.stats.unsettled == 0, "the seams closed nothing or did not settle", double(globe.stats.sutured));
+    expect(globe.stats.sutured > 0 && globe.stats.fossil > 0 && globe.stats.unsettled == 0 && globe.stats.seamsKept == 0, "the seams closed nothing or did not settle", double(globe.stats.sutured));
     const long sutured = globe.stats.sutured;
     expect(drift(globe, start) < 1e-12, "the reorganisation loses crust", drift(globe, start));
 
     for (const int end = index + 27; index < end; ++index) {
         step(globe, index);
-        expect(globe.stats.unsettledSubsteps == 0, "a substep used all its rounds of births and sutures", double(globe.stats.unsettledSubsteps));
+        expect(globe.stats.unsettledSubsteps == 0 && globe.stats.refusedSubsteps == 0, "a substep used all its rounds of births and sutures or kept a seam", double(globe.stats.unsettledSubsteps));
         if (index % 3 != 2) continue;
         const GlobeCover core = coreCover(globe);
         expect(core.worstHole < 0.5, "a boundary leaves a cell open by half or more after the reorganisation", core.worstHole);

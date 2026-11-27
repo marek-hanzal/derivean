@@ -60,7 +60,7 @@ std::vector<int> aroundOf(const Globe& globe, const Band& band, int k, const std
     return around;
 }
 
-size_t suture(Globe& globe, Band& band, const Substep& substep) {
+Sutures suture(Globe& globe, Band& band, const Substep& substep) {
     const SphereGrid& grid = *globe.grid;
     PlanPieces plan{{}, {}, std::vector<int>(globe.pieces.size(), -1)};
     std::vector<int> over, receivers, cells, work, scratch;
@@ -108,15 +108,14 @@ size_t suture(Globe& globe, Band& band, const Substep& substep) {
         for (const int l : aroundOf(globe, band, k, cells, receivers)) candidate.behind.push_back(localOf(plan, globe, l));
         plan.input.candidates.push_back(std::move(candidate));
     }
-    if (plan.input.candidates.empty()) return 0;
+    if (plan.input.candidates.empty()) return {};
     plan.input.sinks = [&](int donor, int survivor) { return sinksInPlan(globe, plan.global[size_t(donor)], plan.global[size_t(survivor)]); };
     const PlanResult result = planTransfers(plan.input);
     globe.stats.rounds += result.rounds;
     globe.stats.deferred += long(result.deferred.size());
     globe.stats.sutured += long(result.consumed.size());
-    globe.stats.seamsKept += long(result.cancelled.size());
     applyPlan(globe, band, plan, result, substep, false);
-    return result.consumed.size();
+    return {result.consumed.size(), result.cancelled.size()};
 }
 
 constexpr int BirthsPerRound = 3;   // fossil births a cell may take in a closing round
@@ -178,24 +177,29 @@ void reorganisePlates(Globe& globe, int step) {
     closeSeams(globe, band, step);
 }
 
-size_t sutureBand(Globe& globe, Band& band, const Substep& substep) {
-    size_t total = 0;
-    for (size_t consumed = 1; consumed > 0;) total += consumed = suture(globe, band, substep);
+Sutures sutureBand(Globe& globe, Band& band, const Substep& substep) {
+    Sutures total, last{1, 0};
+    while (last.consumed > 0) last = suture(globe, band, substep), total.consumed += last.consumed;
+    total.refused = last.refused;
     return total;
 }
 
-void closeSeams(Globe& globe, Band& band, int step) {
+bool closeSeams(Globe& globe, Band& band, int step) {
     const Substep seam{step, -1, 0.0};
     // A suture can leave a cycle for the next round and a fossil can cover a neighbour by the rest of
     // its half, so both repeat until neither changes anything (a few rounds; bounded for safety).
     int round = 0;
+    Sutures sutures;
     for (; round < SeamRounds; ++round) {
         coupleBand(globe, band);   // the last round's fossils become candidates of this one's sutures
-        const size_t changed = sutureBand(globe, band, seam) + fill(globe, band, seam, round);
-        if (changed == 0) break;
+        sutures = sutureBand(globe, band, seam);
+        if (sutures.consumed + fill(globe, band, seam, round) == 0) break;
     }
-    globe.stats.unsettled += round == SeamRounds;
+    const bool settled = round < SeamRounds && sutures.refused == 0;
+    globe.stats.seamsKept += long(sutures.refused);
+    globe.stats.unsettled += !settled;
     settleBand(globe, band);
+    return settled;
 }
 
 } // namespace derivean::sim

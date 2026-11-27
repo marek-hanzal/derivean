@@ -120,8 +120,10 @@ struct GlobeStats {
     long bandCells{}, exactPieces{}, unions{};
     long filled{};   // births where no contact opens: fillCell (at closings too) and fillSlot in the band (not the fossils' slots)
     long held{};   // candidates held back since consuming them would open a cell by more than half
-    long sutured{}, seamsKept{}, fossil{};   // seams: consumed by their own plate, kept for want of room, born in old band slots at reorganisations
-    long unsettled{};                         // reorganisations whose seams did not settle in SeamRounds
+    long sutured{}, fossil{};   // seams: consumed by their own plate, born in old band slots at reorganisations
+    long seamsKept{};           // pieces a closing or a substep ended half covered by their own plate for want of room
+    long unsettled{};           // reorganisations whose seams did not settle in SeamRounds or kept a piece
+    long refusedSubsteps{};     // substeps that ended with a seam kept for want of room
     long unsettledSubsteps{};                 // substeps whose sutures still consumed after BearRounds rounds of births
 };
 

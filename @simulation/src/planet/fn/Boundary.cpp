@@ -105,11 +105,14 @@ void advancePlates(Globe& globe, double dt, int step, int refine) {
         // Sutures follow every round of births, so no piece is left half covered by its own plate, and
         // the births come again after a suture, which nothing holds back, until a round consumes nothing.
         int round = 0;
+        Sutures sutures;
         for (; round < BearRounds; ++round) {
             bearInBand(globe, band, substep, round);
-            if (sutureBand(globe, band, substep) == 0) break;
+            if ((sutures = sutureBand(globe, band, substep)).consumed == 0) break;
         }
         globe.stats.unsettledSubsteps += round == BearRounds;
+        globe.stats.seamsKept += long(sutures.refused);
+        globe.stats.refusedSubsteps += sutures.refused > 0;
         ++globe.stats.substeps;
     }
     clockPhase(globe, GlobePhase::Substeps, mark);
