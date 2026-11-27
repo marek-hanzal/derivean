@@ -17,7 +17,8 @@ constexpr double Day = 86400.0;
 
 bool sameState(const SphereFlow& a, const SphereFlow& b) {
     return a.vorticity == b.vorticity && a.before == b.before && a.stream == b.stream && a.flux == b.flux && a.started == b.started &&
-           a.step == b.step;
+           a.step == b.step && a.levels == b.levels && a.streamBack == b.streamBack && a.streamBackTwo == b.streamBackTwo &&
+           a.productBack == b.productBack && a.productBackTwo == b.productBackTwo;
 }
 
 // Level 3, a smooth vorticity, CG cut to zero iterations (the case of DREV-CLAUDE-004). A step
@@ -40,8 +41,9 @@ void checkFailure() {
     flow.limit = 60;
     expect(setVorticity(flow, grid, stencil, poisson, vorticity), "the start did not invert", flow.inversion.residual);
     setStep(flow, 120);
-    // Once in the forward step after the start, once in the leapfrog after it.
-    for (int phase = 0; phase < 2; ++phase) {
+    // Once in the forward step after the start, then in the leapfrog with two and three levels of the
+    // first guess's history.
+    for (int phase = 0; phase < 3; ++phase) {
         const SphereFlow clean = flow;
         flow.limit = 0;
         expect(!stepSphereFlow(flow, grid, stencil, poisson) && flow.inversion.residual > flow.tolerance, "an unconverged step was accepted",
@@ -96,7 +98,7 @@ void checkStepChange() {
     setStep(shortened, step);
     expect(shortened.started, "the same step restarted the history");
     setStep(shortened, rest);
-    expect(!shortened.started && shortened.before == shortened.vorticity, "a new step did not restart the history");
+    expect(!shortened.started && shortened.before == shortened.vorticity && shortened.levels == 1, "a new step did not restart the history");
     stale.step = rest;   // bypasses setStep: a leapfrog step of `rest` from levels `step` apart
     accepted = stepSphereFlow(shortened, grid, stencil, poisson) && stepSphereFlow(stale, grid, stencil, poisson) && accepted;
     expect(accepted, "a step of the window was not accepted");
@@ -112,6 +114,42 @@ void checkStepChange() {
     expect(staleOff > 20 * shortOff, "the stale leapfrog step is not caught by the test", staleOff / amplitude);
 }
 
+// The first guess projected on the last three ψ (DREV-NEON-019): 20 steps of the wave at level 5 to
+// 1e-9 take 0.58 of the iterations of starting from the last ψ (3.5 against 6 a step, the first
+// steps with a shorter history included) and land 4.4e-11 of the largest vorticity from them, within
+// the solver's tolerance; the history restarts with setVorticity and setStep, and a run started with
+// the projection off forms no products, so switching it on later starts a fresh history.
+void checkGuess() {
+    const SphereGrid grid = makeSphereGrid(5);
+    const SphereStencil stencil = makeSphereStencil(grid);
+    SpherePoisson poisson = makeSpherePoisson(grid, stencil);
+    const double rotation = rotationRateAt(PresentAge);
+    SphereFlow projected = makeSphereFlow(grid, rotation);
+    expect(setVorticity(projected, grid, stencil, poisson, rossbyHaurwitz(grid, rotation, 0)) && projected.levels == 1,
+           "the start did not restart the guess's history");
+    SphereFlow last = projected;
+    last.projection = 0;
+    const double step = 0.4 / outflowCourant(grid, projected.flux, 1.0);
+    setStep(projected, step);
+    setStep(last, step);
+    int fewer = 0, more = 0;
+    for (int s = 0; s < 20; ++s) {
+        expect(stepSphereFlow(projected, grid, stencil, poisson) && stepSphereFlow(last, grid, stencil, poisson), "a step was not accepted", s);
+        fewer += projected.inversion.iterations;
+        more += last.inversion.iterations;
+    }
+    expect(projected.levels == 3 && fewer * 3 < more * 2, "the projected guess does not save iterations", double(fewer) / more);
+    double off = 0, top = 0;
+    for (int c = 0; c < grid.cells; ++c) {
+        off = std::max(off, std::abs(projected.vorticity[size_t(c)] - last.vorticity[size_t(c)]));
+        top = std::max(top, std::abs(last.vorticity[size_t(c)]));
+    }
+    expect(off < 1e-9 * top, "the projected guess moves the flow beyond the solver's tolerance", off / top);
+    setStep(projected, step / 2);
+    expect(projected.levels == 1, "a new step did not restart the guess's history");
+    expect(last.levels == 1, "steps without the projection keep a history without products", last.levels);
+}
+
 } // namespace
 
 namespace derivean::sim::atmosphere_sphere_test {
@@ -119,6 +157,7 @@ namespace derivean::sim::atmosphere_sphere_test {
 void checkStep() {
     checkFailure();
     checkStepChange();
+    checkGuess();
 }
 
 } // namespace derivean::sim::atmosphere_sphere_test
