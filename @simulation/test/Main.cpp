@@ -31,6 +31,7 @@ void testClouds();
 void testAtmosphere();
 void testSnow();
 void testPlume();
+void testPlumeEnds();
 void testLandscapePlume();
 void testIceSheet();
 void testIceSheetLocal();
@@ -109,6 +110,7 @@ constexpr Test Tests[] = {
     {"testAtmosphere", testAtmosphere, "weather"},
     {"testSnow", testSnow, "weather"},
     {"testPlume", testPlume, "unit"},
+    {"testPlumeEnds", testPlumeEnds, "unit"},
     {"testLandscapePlume", testLandscapePlume, "unit"},
     {"testIceSheet", testIceSheet, "unit"},
     {"testIceSheetLocal", testIceSheetLocal, "unit"},

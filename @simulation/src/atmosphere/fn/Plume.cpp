@@ -50,6 +50,7 @@ void book(Plume& plume, const AshPatch& landed) {
             plume.fallRate.cells[cell] += landed.mass * share / (AirCellArea * AirStep);
         }
     }
+    plume.falling = true;
 }
 
 // What one source gives off in `seconds` of a step.
@@ -136,6 +137,7 @@ void settle(Atmosphere& atmosphere) {
         plume.dustFallen.cells[cell] += ash;
         plume.fallen.cells[cell] += ash;
         plume.fallRate.cells[cell] += ash / AirStep;
+        plume.falling = plume.falling || ash > 0;
         ashFallen += ash;
         sulphurFallen += sulphur;
         const double ashDepth = AshOptics * dustOver, veilDepth = VeilOptics * veilOver;
@@ -197,8 +199,9 @@ void stepPlume(Atmosphere& atmosphere, Workers& workers) {
     const double from = double(atmosphere.step) * AirStep, to = from + AirStep;
     bool emitting = false;
     for (const AirSource& source : plume.sources) emitting = emitting || (source.end > from && source.start < to);
-    if (!emitting && !plume.aloft && !plume.sooted) return;
+    if (!emitting && !plume.aloft && !plume.sooted && !plume.falling) return;
     std::fill(plume.fallRate.cells.begin(), plume.fallRate.cells.end(), 0.0);
+    plume.falling = false;
     for (const AirSource& source : plume.sources) {
         const double seconds = std::min(to, source.end) - std::max(from, source.start);
         if (seconds > 0) emit(atmosphere, source, seconds);
