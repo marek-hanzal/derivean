@@ -238,7 +238,7 @@ bool settle(Globe& globe, bool joins, std::vector<int32_t>& joined, PlateRegions
 
 } // namespace
 
-void keepPlatesWhole(Globe& globe, int step) {
+void keepPlatesWhole(Globe& globe, int step, Workers* workers) {
     // Closing phase 0 is the reorganisation's (planet/fn/Seam.hpp); the joins take 1 to ClosingRounds and
     // the last round only splits.
     PlateRegions regions;
@@ -250,7 +250,7 @@ void keepPlatesWhole(Globe& globe, int step) {
         measured = false;
         Band band;
         markBandAt(globe, 1, joined, band);
-        closeSeams(globe, band, step, phase);
+        closeSeams(globe, band, step, phase, workers);
     }
     if (dropEmptyPlates(globe) || !measured) regions = plateRegionsOf(globe);
     // Whole: every plate one region, whichever way the step got there.

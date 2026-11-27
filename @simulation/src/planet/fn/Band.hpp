@@ -4,6 +4,8 @@
 
 namespace derivean::sim {
 
+class Workers;
+
 // The boundary band of one planet step (S3-design.md §4). The core is every cell that has pieces of
 // two plates within its ring, read from the coupling at the step's start. Within the step a plate
 // moves at most `sweep` rings, so consumptions happen in the core widened by sweep + 1 rings (`decide`)
@@ -47,7 +49,7 @@ void markBand(const Globe& globe, int sweep, Band& band);
 void markBandAt(const Globe& globe, int sweep, const std::vector<int32_t>& cells, Band& band);
 
 // Exact overlaps of every live band piece as the pieces stand; lists per region cell.
-void coupleBand(const Globe& globe, Band& band);
+void coupleBand(const Globe& globe, Band& band, Workers* workers = nullptr);
 
 // The rings round a point within which every cell that a footprint centred there can reach lies: a
 // footprint reaches at most its cell's largest chord to a corner from its centre, and two of those plus

@@ -4,6 +4,7 @@
 #include "geometry/fn/Cell.hpp"
 #include "geometry/fn/Rotation.hpp"
 #include "geometry/fn/SphereGrid.hpp"
+#include "core/service/Workers.hpp"
 #include "planet/fn/Coupling.hpp"
 #include "planet/fn/Pieces.hpp"
 
@@ -12,6 +13,8 @@
 
 namespace derivean::sim {
 namespace {
+
+constexpr int BandGrain = 64;   // band pieces a pool range takes at least
 
 // Widens a set of cells by `rings` rings, in place; `cells` lists the set.
 void widen(const std::vector<CellRing>& rings, std::vector<uint8_t>& set, std::vector<int32_t>& cells, int count) {
@@ -109,23 +112,33 @@ void markBandAt(const Globe& globe, int sweep, const std::vector<int32_t>& cells
     fillBand(globe, sweep, core, coreCells, band);
 }
 
-void coupleBand(const Globe& globe, Band& band) {
+void coupleBand(const Globe& globe, Band& band, Workers* workers) {
     const SphereGrid& grid = *globe.grid;
     const size_t n = band.pieces.size();
-    band.weightStart.assign(n + 1, 0);
-    band.weights.clear();
-    std::vector<CellWeight> weights;
-    std::vector<int> cells, work;
-    for (size_t b = 0; b < n; ++b) {
-        const int32_t piece = band.pieces[b];
-        if (!band.dead[size_t(piece)]) {
+    // Each band piece fills its own slots (in parallel when a pool is given), then they are packed in
+    // band order: the same bits for any number of threads.
+    std::vector<CellWeight> slots(n * CouplingSlots);
+    std::vector<uint8_t> counts(n, 0);
+    const auto weigh = [&](int begin, int end) {
+        std::vector<CellWeight> weights;
+        std::vector<int> cells, work;
+        for (size_t b = size_t(begin); b < size_t(end); ++b) {
+            const int32_t piece = band.pieces[b];
+            if (band.dead[size_t(piece)]) continue;
             const CrustPiece& crust = globe.pieces[size_t(piece)];
             const double sum = exactWeights(grid, crust, weights, cells, work);
             require(std::abs(sum - crust.area) <= 1e-9 * crust.area, "exact overlaps of a band footprint miss its area", sum / crust.area - 1);
-            for (CellWeight& w : weights) band.weights.push_back({w.cell, w.area * crust.area / sum});
+            require(weights.size() <= size_t(CouplingSlots), "a band footprint meets too many cells", double(weights.size()));
+            for (size_t s = 0; s < weights.size(); ++s) slots[b * CouplingSlots + s] = {weights[s].cell, weights[s].area * crust.area / sum};
+            counts[b] = uint8_t(weights.size());
         }
-        band.weightStart[b + 1] = int32_t(band.weights.size());
-    }
+    };
+    if (workers) workers->parallelFor(int(n), weigh, BandGrain);
+    else weigh(0, int(n));
+    band.weightStart.assign(n + 1, 0);
+    for (size_t b = 0; b < n; ++b) band.weightStart[b + 1] = band.weightStart[b] + counts[b];
+    band.weights.resize(size_t(band.weightStart[n]));
+    for (size_t b = 0; b < n; ++b) std::copy_n(slots.begin() + std::ptrdiff_t(b * CouplingSlots), counts[b], band.weights.begin() + band.weightStart[b]);
     band.listStart.assign(band.regionCells.size() + 1, 0);
     for (const CellWeight& w : band.weights)
         if (band.region[size_t(w.cell)] >= 0) ++band.listStart[size_t(band.region[size_t(w.cell)]) + 1];

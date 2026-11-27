@@ -4,6 +4,8 @@
 
 namespace derivean::sim {
 
+class Workers;
+
 // Each plate is one region of the mantle grid (lead, 27 Nov; planet/fn/Regions): its cells joined
 // through its own and free cells, so only another plate's cells cut it. Earth's plates follow Bird (2003,
 // docs/credits): none is smaller than about 0.002 sr, and a plate cut in two by its boundaries is two
@@ -24,6 +26,6 @@ inline constexpr int MicroplateCells = 2;
 // by the moving region they cover most. A plate left with no piece is dropped in the same step, the
 // plates after it renumbered, and globe.plateEnds records it; stats.wholeUnsettled counts a step that
 // ends with a plate other than one region with a cell: one that another plate's cells cut in two.
-void keepPlatesWhole(Globe& globe, int step);
+void keepPlatesWhole(Globe& globe, int step, Workers* workers = nullptr);
 
 } // namespace derivean::sim

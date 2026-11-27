@@ -166,11 +166,11 @@ size_t fill(Globe& globe, Band& band, const Substep& substep, int round, int fir
 
 } // namespace
 
-void reorganisePlates(Globe& globe, int step) {
+void reorganisePlates(Globe& globe, int step, Workers* workers) {
     Band band;
     markBand(globe, 1, band);
     enterGlobeEpoch(globe);
-    closeSeams(globe, band, step, 0);
+    closeSeams(globe, band, step, 0, workers);
 }
 
 size_t sutureBand(Globe& globe, Band& band, const Substep& substep) {
@@ -179,18 +179,18 @@ size_t sutureBand(Globe& globe, Band& band, const Substep& substep) {
     return total;
 }
 
-bool closeSeams(Globe& globe, Band& band, int step, int phase) {
+bool closeSeams(Globe& globe, Band& band, int step, int phase, Workers* workers) {
     const Substep seam{step, -1, 0.0};
     // A suture can leave a cycle for the next round and a fossil can cover a neighbour by the rest of
     // its half, so both repeat until neither changes anything (a few rounds; bounded for safety).
     int round = 0;
     for (; round < SeamRounds; ++round) {
-        coupleBand(globe, band);   // the last round's fossils become candidates of this one's sutures
+        coupleBand(globe, band, workers);   // the last round's fossils become candidates of this one's sutures
         if (sutureBand(globe, band, seam) + fill(globe, band, seam, round, phase * SeamKeys) == 0) break;
     }
     const bool settled = round < SeamRounds;
     globe.stats.unsettled += !settled;
-    settleBand(globe, band, phase > 0);
+    settleBand(globe, band, phase > 0, workers);
     return settled;
 }
 
