@@ -11,7 +11,6 @@
 
 #include "chronology/constant/Timeline.hpp"
 #include "geometry/constant/Sphere.hpp"
-#include "geometry/fn/Rotation.hpp"
 #include "geometry/fn/SpherePolygon.hpp"
 #include "geometry/fn/Union.hpp"
 #include "planet/fn/Cohesion.hpp"
@@ -34,27 +33,6 @@ void ringOf(Globe& globe, const std::vector<CrustPiece>& original, int i, int j)
     for (int a = i - 3; a <= i + 4; ++a)
         for (int b = j - 3; b <= j + 4; ++b)
             if (a == i - 3 || a == i + 4 || b == j - 3 || b == j + 4) globe.pieces.push_back(original[size_t(cellAtFace0(*globe.grid, a, b))]), globe.pieces.back().plate = 1;
-}
-
-// m² cell `c` holds of the given pieces' footprints, by clipping and union.
-double cellCover(const Globe& globe, int c, const std::vector<CrustPiece>& pieces) {
-    const SphereGrid& grid = *globe.grid;
-    const TangentPlane plane = tangentPlaneAt(grid.centre[size_t(c)]);
-    const PlanePolygon cell = projected(plane, polygonOf(grid, c));
-    std::vector<PlanePolygon> parts;
-    for (const CrustPiece& piece : pieces) {
-        const PlanePolygon part = clipped(projected(plane, footprintOf(grid, piece)), cell);
-        if (part.count >= 3) parts.push_back(part);
-    }
-    return parts.empty() ? 0 : unionArea(parts).area;
-}
-
-// sr a region's cells hold of the given pieces' footprints.
-double coverOf(const Globe& globe, const PlateRegions& regions, int32_t region, const std::vector<CrustPiece>& pieces) {
-    double cover = 0;
-    for (int c = 0; c < globe.grid->cells; ++c)
-        if (regions.region[size_t(c)] == region) cover += cellCover(globe, c, pieces);
-    return cover / (PlanetRadius * PlanetRadius);
 }
 
 // sr of a region's plate-0 weights, each cell at most whole.
@@ -89,11 +67,9 @@ void checkOverlappingCover(bool exact) {
     for (int k = 0; k < 4; ++k) {
         const int cell = cellAtFace0(grid, i + (k & 1), j + (k >> 1));
         const Cell birth = cellAt(grid, cell);
-        CrustPiece piece = original[size_t(cell)];
         const Vec3 p = grid.centre[size_t(cell)];
         const Vec3 along = grid.centre[size_t(cellAtFace0(grid, birth.i + 1, birth.j))] - p, across = grid.centre[size_t(cellAtFace0(grid, birth.i, birth.j + 1))] - p;
-        const Vec3 target = normalized(p + along * ((k & 1) ? 0.32 : 0.45) + across * 0.46), axis = cross(p, target);
-        piece.rotation = rotationAbout(axis, std::atan2(length(axis), dot(p, target)));
+        CrustPiece piece = turnedTo(globe, original[size_t(cell)], normalized(p + along * ((k & 1) ? 0.32 : 0.45) + across * 0.46));
         piece.plate = 0;
         if (k == 0) fragment = indexOf(grid, cellOf(centreOf(grid, piece), grid.level));
         footprints.push_back(projected(plane, footprintOf(grid, piece)));
@@ -130,11 +106,9 @@ void checkCloudCover(bool largest, double shift) {
     std::vector<CrustPiece> patch;
     for (int y = 0; y < 2; ++y)
         for (int x = 0; x < 2; ++x) {
-            CrustPiece piece = original[size_t(cellAtFace0(grid, 16 + x, 31 + y))];
-            const Vec3 born = grid.centre[size_t(piece.birth)], p = grid.centre[size_t(cellAtFace0(grid, i + x, j + y))];
+            const Vec3 p = grid.centre[size_t(cellAtFace0(grid, i + x, j + y))];
             const Vec3 u = grid.centre[size_t(cellAtFace0(grid, i + x + 1, j + y))] - p, v = grid.centre[size_t(cellAtFace0(grid, i + x, j + y + 1))] - p;
-            const Vec3 target = normalized(p + u * shift + v * shift), axis = cross(born, target);
-            piece.rotation = rotationAbout(axis, std::atan2(length(axis), dot(born, target)));
+            CrustPiece piece = turnedTo(globe, original[size_t(cellAtFace0(grid, 16 + x, 31 + y))], normalized(p + u * shift + v * shift));
             piece.plate = 0;
             patch.push_back(piece);
         }
@@ -172,7 +146,7 @@ void checkCloudCover(bool largest, double shift) {
                 for (int32_t s = globe.coupling.cellStart[size_t(c)]; s < globe.coupling.cellStart[size_t(c) + 1]; ++s)
                     if (globe.pieces[size_t(globe.coupling.byCell[size_t(s)].piece)].plate == 0) weight += globe.coupling.byCell[size_t(s)].area;
                 cic += weight >= share;
-                if (area >= share) ++standing, cover += area / (PlanetRadius * PlanetRadius);
+                if (standsOn(globe, c, patch)) ++standing, cover += area / (PlanetRadius * PlanetRadius);
             }
         expect(cic == 4 && standing == 14 && cover > MicroplateArea, "the unmoved patch's weights do not keep to four cells", double(standing));
         expect(regions.cells[size_t(moved)] == standing && std::abs(regions.area[size_t(moved)] - cover) <= 1e-9 * cover,
