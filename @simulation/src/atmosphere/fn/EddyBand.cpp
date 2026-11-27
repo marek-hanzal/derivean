@@ -6,53 +6,58 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <numeric>
 
 namespace derivean::sim {
 namespace {
 
-// Cells are worked through in blocks small enough that a block's recursion state stays in the first
-// cache level while every (l, m) pair passes over it.
+// Groups are worked through in blocks small enough that a block's recursion state stays in the
+// first cache level while every (l, m) pair passes over it.
 constexpr int Block = 256;
 
-// Runs the recursion of P̄_lm over one block of cells, order by order, and hands each (l, m) with a
-// positive gain to `use` with the block's P̄_lm · cos mλ and P̄_lm · sin mλ.
-template <class Use>
-void walkBlock(const EddyBand& band, int first, int count, Use use) {
-    double diagonal[Block], cosM[Block], sinM[Block], before[Block], now[Block], next[Block], c[Block], s[Block];
+// Cells whose |sin φ| differ by less than this from a group's first member join it. Cells the cube
+// maps onto each other agree to one unit in the last place (2.2e-16 measured on levels 3 to 9);
+// different latitudes lie further apart (1.2e-11 at level 9).
+constexpr double SameLatitude = 1e-15;
+
+// The recursion state of one block of groups for one order m, stepped from l = m upward.
+struct Legendre {
+    double diagonal[Block], before[Block], now[Block];
+};
+
+// Steps `state.now` from P̄_(l−1)m to P̄_lm for every group of the block (l > m), by the forward
+// column recursion of SphereHarmonics.cpp (Holmes & Featherstone 2002, eqs. 11–13).
+void stepDegree(const EddyBand& band, int first, int count, int l, int m, Legendre& state) {
     const int width = band.highest + 1;
+    const double a = l == m + 1 ? legendreNext(m) : band.a[size_t(l * width + m)];
+    const double b = l == m + 1 ? 0.0 : band.b[size_t(l * width + m)];
     for (int k = 0; k < count; ++k) {
-        diagonal[k] = 1;
-        cosM[k] = 1;
-        sinM[k] = 0;
+        const double next = a * band.groupSine[size_t(first + k)] * state.now[k] - b * state.before[k];
+        state.before[k] = state.now[k];
+        state.now[k] = next;
     }
-    for (int m = 1; m <= band.highest; ++m) {
-        const double step = legendreDiagonal(m), upward = legendreNext(m);
-        for (int k = 0; k < count; ++k) {
-            const size_t cell = size_t(first + k);
-            diagonal[k] *= step * band.cosine[cell];
-            const double turned = cosM[k] * band.cosLongitude[cell] - sinM[k] * band.sinLongitude[cell];
-            sinM[k] = sinM[k] * band.cosLongitude[cell] + cosM[k] * band.sinLongitude[cell];
-            cosM[k] = turned;
-            before[k] = 0;
-            now[k] = diagonal[k];
-        }
-        for (int l = m; l <= band.highest; ++l) {
-            if (l > m) {
-                const double a = l == m + 1 ? upward : band.a[size_t(l * width + m)];
-                const double b = l == m + 1 ? 0.0 : band.b[size_t(l * width + m)];
-                for (int k = 0; k < count; ++k) {
-                    next[k] = a * band.sine[size_t(first + k)] * now[k] - b * before[k];
-                    before[k] = now[k];
-                    now[k] = next[k];
-                }
-            }
-            if (l < band.lowest) continue;
-            for (int k = 0; k < count; ++k) {
-                c[k] = now[k] * cosM[k];
-                s[k] = now[k] * sinM[k];
-            }
-            use(l, m, c, s);
-        }
+}
+
+// Starts order m: P̄_mm from P̄_(m−1)(m−1), and cos mλ, sin mλ of the members from those of m − 1.
+void startOrder(EddyBand& band, int first, int count, int m, Legendre& state) {
+    const double step = legendreDiagonal(m);
+    for (int k = 0; k < count; ++k) {
+        state.diagonal[k] *= step * band.groupCosine[size_t(first + k)];
+        state.before[k] = 0;
+        state.now[k] = state.diagonal[k];
+    }
+    for (int j = band.groupStart[size_t(first)]; j < band.groupStart[size_t(first + count)]; ++j) {
+        const double c = band.memberCosM[size_t(j)], s = band.memberSinM[size_t(j)];
+        band.memberCosM[size_t(j)] = c * band.memberCos[size_t(j)] - s * band.memberSin[size_t(j)];
+        band.memberSinM[size_t(j)] = s * band.memberCos[size_t(j)] + c * band.memberSin[size_t(j)];
+    }
+}
+
+void startBlock(EddyBand& band, int first, int count, Legendre& state) {
+    for (int k = 0; k < count; ++k) state.diagonal[k] = 1;
+    for (int j = band.groupStart[size_t(first)]; j < band.groupStart[size_t(first + count)]; ++j) {
+        band.memberCosM[size_t(j)] = 1;
+        band.memberSinM[size_t(j)] = 0;
     }
 }
 
@@ -79,55 +84,128 @@ EddyBand makeEddyBand(const SphereGrid& grid, double wavelength, double reachSha
             band.a[size_t(l * width + m)] = legendreA(l, m);
             band.b[size_t(l * width + m)] = legendreB(l, m);
         }
+    std::vector<int> order(size_t(grid.cells));
+    std::iota(order.begin(), order.end(), 0);
+    auto latitude = [&](int c) { return std::abs(grid.centre[size_t(c)].z); };
+    std::stable_sort(order.begin(), order.end(), [&](int p, int q) { return latitude(p) < latitude(q); });
+    // Groups by |sin φ|, then each group's southern members moved behind its northern ones.
+    std::vector<int> grouped;
+    for (size_t k = 0; k < order.size(); ++k) {
+        const int c = order[k];
+        if (k == 0 || latitude(c) - latitude(grouped[size_t(band.groupStart.back())]) >= SameLatitude)
+            band.groupStart.push_back(int(grouped.size()));
+        grouped.push_back(c);
+    }
+    band.groupStart.push_back(int(grouped.size()));
     const double sphere = 4 * std::numbers::pi * PlanetRadius * PlanetRadius;
-    for (int c = 0; c < grid.cells; ++c) {
+    for (size_t g = 0; g + 1 < band.groupStart.size(); ++g) {
+        const auto first = grouped.begin() + band.groupStart[g], last = grouped.begin() + band.groupStart[g + 1];
+        const auto south = std::stable_partition(first, last, [&](int c) { return grid.centre[size_t(c)].z >= 0; });
+        band.groupSouth.push_back(int(south - grouped.begin()));
+        const Vec3 d = grid.centre[size_t(*first)];
+        band.groupSine.push_back(std::abs(d.z));
+        band.groupCosine.push_back(std::hypot(d.x, d.y));
+    }
+    for (int c : grouped) {
         const Vec3 d = grid.centre[size_t(c)];
         const double around = std::hypot(d.x, d.y);
-        band.sine.push_back(d.z);
-        band.cosine.push_back(around);
-        band.cosLongitude.push_back(around > 0 ? d.x / around : 1.0);
-        band.sinLongitude.push_back(around > 0 ? d.y / around : 0.0);
-        band.weight.push_back(grid.area[size_t(c)] / sphere);
+        band.memberCell.push_back(c);
+        band.memberWeight.push_back(grid.area[size_t(c)] / sphere);
+        band.memberCos.push_back(around > 0 ? d.x / around : 1.0);
+        band.memberSin.push_back(around > 0 ? d.y / around : 0.0);
     }
     band.cosineTerms.assign(band.a.size(), 0.0);
     band.sineTerms = band.cosineTerms;
+    band.memberValue.assign(size_t(grid.cells), 0.0);
+    band.memberCosM = band.memberSinM = band.memberValue;
     return band;
 }
 
 double eddyGain(const EddyBand& band, int degree) { return degree <= band.highest ? band.gain[size_t(degree)] : 0.0; }
 
+// Analysis: the coefficient of (l, m) is Σ over groups of P̄_lm(group) times the group's sum of
+// w cos mλ (and w sin mλ), its southern members' sum with the sign (−1)^(l+m). Synthesis runs the
+// same recursion and adds, per member, cos mλ and sin mλ times the sums over l of coefficient · P̄_lm,
+// split by the parity of l + m so the sign is applied once per order.
 void filterEddyBand(EddyBand& band, const std::vector<double>& field, std::vector<double>& result) {
-    const int cells = int(field.size()), width = band.highest + 1;
+    const int width = band.highest + 1, groups = int(band.groupSine.size());
     std::fill(band.cosineTerms.begin(), band.cosineTerms.end(), 0.0);
     std::fill(band.sineTerms.begin(), band.sineTerms.end(), 0.0);
-    double weighted[Block];
-    for (int first = 0; first < cells; first += Block) {
-        const int count = std::min(Block, cells - first);
-        for (int k = 0; k < count; ++k) weighted[k] = band.weight[size_t(first + k)] * field[size_t(first + k)];
-        walkBlock(band, first, count, [&](int l, int m, const double* c, const double* s) {
-            double sumC = 0, sumS = 0;
+    for (size_t j = 0; j < band.memberCell.size(); ++j) band.memberValue[j] = band.memberWeight[j] * field[size_t(band.memberCell[j])];
+    Legendre state;
+    double evenC[Block], oddC[Block], evenS[Block], oddS[Block];
+    for (int first = 0; first < groups; first += Block) {
+        const int count = std::min(Block, groups - first);
+        startBlock(band, first, count, state);
+        for (int m = 1; m <= band.highest; ++m) {
+            startOrder(band, first, count, m, state);
             for (int k = 0; k < count; ++k) {
-                sumC += weighted[k] * c[k];
-                sumS += weighted[k] * s[k];
+                const int g = first + k, south = band.groupSouth[size_t(g)];
+                double northC = 0, southC = 0, northS = 0, southS = 0;
+                for (int j = band.groupStart[size_t(g)]; j < south; ++j) {
+                    northC += band.memberValue[size_t(j)] * band.memberCosM[size_t(j)];
+                    northS += band.memberValue[size_t(j)] * band.memberSinM[size_t(j)];
+                }
+                for (int j = south; j < band.groupStart[size_t(g) + 1]; ++j) {
+                    southC += band.memberValue[size_t(j)] * band.memberCosM[size_t(j)];
+                    southS += band.memberValue[size_t(j)] * band.memberSinM[size_t(j)];
+                }
+                evenC[k] = northC + southC;
+                oddC[k] = northC - southC;
+                evenS[k] = northS + southS;
+                oddS[k] = northS - southS;
             }
-            band.cosineTerms[size_t(l * width + m)] += sumC;
-            band.sineTerms[size_t(l * width + m)] += sumS;
-        });
+            for (int l = m; l <= band.highest; ++l) {
+                if (l > m) stepDegree(band, first, count, l, m, state);
+                if (l < band.lowest) continue;
+                const double* c = (l + m) % 2 == 0 ? evenC : oddC;
+                const double* s = (l + m) % 2 == 0 ? evenS : oddS;
+                double sumC = 0, sumS = 0;
+                for (int k = 0; k < count; ++k) {
+                    sumC += state.now[k] * c[k];
+                    sumS += state.now[k] * s[k];
+                }
+                band.cosineTerms[size_t(l * width + m)] += sumC;
+                band.sineTerms[size_t(l * width + m)] += sumS;
+            }
+        }
     }
     for (int l = 0; l <= band.highest; ++l)
         for (int m = 0; m <= band.highest; ++m) {
             band.cosineTerms[size_t(l * width + m)] *= band.gain[size_t(l)];
             band.sineTerms[size_t(l * width + m)] *= band.gain[size_t(l)];
         }
-    result.assign(size_t(cells), 0.0);
-    for (int first = 0; first < cells; first += Block) {
-        const int count = std::min(Block, cells - first);
-        double* out = &result[size_t(first)];
-        walkBlock(band, first, count, [&](int l, int m, const double* c, const double* s) {
-            const double termC = band.cosineTerms[size_t(l * width + m)], termS = band.sineTerms[size_t(l * width + m)];
-            for (int k = 0; k < count; ++k) out[k] += termC * c[k] + termS * s[k];
-        });
+    std::fill(band.memberValue.begin(), band.memberValue.end(), 0.0);
+    for (int first = 0; first < groups; first += Block) {
+        const int count = std::min(Block, groups - first);
+        startBlock(band, first, count, state);
+        for (int m = 1; m <= band.highest; ++m) {
+            startOrder(band, first, count, m, state);
+            for (int k = 0; k < count; ++k) evenC[k] = oddC[k] = evenS[k] = oddS[k] = 0;
+            for (int l = m; l <= band.highest; ++l) {
+                if (l > m) stepDegree(band, first, count, l, m, state);
+                if (l < band.lowest) continue;
+                const double termC = band.cosineTerms[size_t(l * width + m)], termS = band.sineTerms[size_t(l * width + m)];
+                double* c = (l + m) % 2 == 0 ? evenC : oddC;
+                double* s = (l + m) % 2 == 0 ? evenS : oddS;
+                for (int k = 0; k < count; ++k) {
+                    c[k] += termC * state.now[k];
+                    s[k] += termS * state.now[k];
+                }
+            }
+            for (int k = 0; k < count; ++k) {
+                const int g = first + k, south = band.groupSouth[size_t(g)];
+                const double northC = evenC[k] + oddC[k], northS = evenS[k] + oddS[k];
+                const double southC = evenC[k] - oddC[k], southS = evenS[k] - oddS[k];
+                for (int j = band.groupStart[size_t(g)]; j < south; ++j)
+                    band.memberValue[size_t(j)] += band.memberCosM[size_t(j)] * northC + band.memberSinM[size_t(j)] * northS;
+                for (int j = south; j < band.groupStart[size_t(g) + 1]; ++j)
+                    band.memberValue[size_t(j)] += band.memberCosM[size_t(j)] * southC + band.memberSinM[size_t(j)] * southS;
+            }
+        }
     }
+    result.assign(band.memberCell.size(), 0.0);
+    for (size_t j = 0; j < band.memberCell.size(); ++j) result[size_t(band.memberCell[j])] = band.memberValue[j];
 }
 
 } // namespace derivean::sim

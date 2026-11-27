@@ -2,50 +2,72 @@
 
 #include "hydrology/constant/Water.hpp"
 #include "hydrology/fn/Ocean.hpp"
+#include "landscape/fn/Forcing.hpp"
+#include "SeaFixture.hpp"
+
+#include <memory>
 
 using namespace derivean::sim;
 
 namespace {
 
-// A finite ocean with a hole in its floor: the stock falls, what is lost is in the ledger, and
-// seas behind sills are left behind with their water and their salt.
+// The planet's ocean is a finite stock in bodies that straits connect. A strait from the ocean to
+// a dry depression above it moves nothing: water does not climb; nor does a strait within the
+// ocean. The planet's sea fills everything under its level until S3e and so has no dry depression
+// under it; a fixture on the planet grid carries the flow through the same edits and replay.
 void testOcean(World& world) {
-    const ScenarioReport report = runOceanDrain(world);
+    const ScenarioReport report = runStrait(world);
+    expectLive(report.failure.empty() && report.stages.size() == 3, "the strait scenario did not run", double(report.stages.size()));
     expectClosed(report);
     const auto value = [&](size_t stage, const char* measure) { return valueOf(report, stage, measure); };
     const WorldBudget& start = report.stages[0].budget;
-    const WorldBudget& shaft = report.stages[1].budget;
-    const WorldBudget& breach = report.stages[2].budget;
-    const WorldBudget& last = report.stages[3].budget;
-    expectLive(start.escaped.water == 0 && start.ocean.water > 0.99 * world.planet.surfaceWater && start.ocean.water < 1.01 * world.planet.surfaceWater,
+    const WorldBudget& last = report.stages[2].budget;
+    expectLive(start.ocean.water > 0.99 * world.planet.surfaceWater && start.ocean.water < 1.01 * world.planet.surfaceWater,
                "the ocean does not start as the planet's surface water", start.ocean.water / world.planet.surfaceWater);
     expectLive(std::abs(start.ocean.salt / start.ocean.water - world.ocean.salinity) < 1e-9 && world.ocean.salinity > 20 && world.ocean.salinity < 36, "the ocean's salinity is off", world.ocean.salinity);
-
-    // A century through a mine shaft: the head hardly changes, so the loss is the orifice law.
-    const double expected = OrificeCoefficient * 100.0 * std::sqrt(2 * Gravity * value(1, "head over the mouth")) * 100 * YearSeconds;
-    expectLive(std::abs(shaft.escaped.water - expected) < 0.01 * expected, "the shaft does not drain by the orifice law", shaft.escaped.water / expected);
-    expectLive(value(1, "sea level") < value(0, "sea level") - 0.05 && value(1, "sea level") > value(0, "sea level") - 1.0, "a century of the shaft did not lower the sea by decimetres");
-    expectLive(std::abs(shaft.escaped.salt / shaft.escaped.water - world.ocean.salinity) < 1e-9, "water left without its salt");
-
-    // The breach: the sea falls past sills, and what lies behind them stays.
-    expectLive(breach.ocean.water < 0.8 * shaft.ocean.water && last.ocean.water < breach.ocean.water, "the breach does not drain the ocean");
-    expectLive(value(2, "cut-off seas") >= 1 && breach.cutOff.water > 0 && last.cutOff.water >= breach.cutOff.water * (1 - 1e-12), "no sea was cut off behind a sill");
-    expectLive(std::abs(last.cutOff.salt / last.cutOff.water - world.ocean.salinity) < 1e-9, "the cut-off seas changed their salinity");
-    expectLive(value(3, "head over the mouth") < 1e-6 && last.ocean.water < 1e-3 * start.ocean.water, "the connected ocean did not drain to the opening", value(3, "head over the mouth"));
-    expectLive(last.cutOff.water > 1e-4 * start.ocean.water, "nothing worth the name was left behind the sills", last.cutOff.water / start.ocean.water);
-    // What depended on the water changes with it: the open water the air can draw on shrinks.
-    expectLive(value(3, "open water cells") < 0.95 * value(0, "open water cells"), "the open water did not shrink");
+    expectLive(value(0, "depression above the sea") > 0, "the depression does not lie above the sea", value(0, "depression above the sea"));
+    expectLive(world.ocean.straits.size() == 2 && world.ocean.straits[0].a == world.ocean.anchor && world.ocean.straits[1].a == world.ocean.anchor, "the straits do not start at the ocean's anchor");
+    expectLive(last.moved.water == 0 && value(2, "changes of the sea") == 0, "water ran up a strait or within one body", last.moved.water);
+    expectLive(last.ocean.water == start.ocean.water && last.others.water == start.others.water && value(2, "sea level") == value(0, "sea level"), "the bodies changed");
+    expectLive(value(2, "open water cells") == value(0, "open water cells"), "the open water changed");
     int open = 0;
     for (int z = 0; z < PlanetCells; ++z)
         for (int x = 0; x < PlanetCells; ++x) open += openWaterAt(world.ocean, x, z);
-    expectLive(open == int(value(3, "open water cells")), "the open-water accessor disagrees with the sea");
+    expectLive(open == int(value(2, "open water cells")), "the open-water accessor disagrees with the sea");
 
     // The same history replayed in one jump ends in the same sea.
-    const double escaped = world.ocean.escaped.water, now = world.interventions.calendar.seconds;
+    const std::vector<double> depth = world.ocean.grid.depth, salt = world.ocean.grid.salt;
+    const double now = world.interventions.calendar.seconds;
     jumpTo(world, 0);
-    expectLive(world.ocean.escaped.water == 0 && world.interventions.calendar.seconds == 0, "a jump back to the start left the sea drained");
+    // The straits were cut at the start, so they are cut again there.
+    expectLive(world.interventions.calendar.seconds == 0 && world.ocean.straits.size() == 2 && world.ocean.changes == 0 && world.ocean.grid.depth == depth, "a jump back to the start did not rebuild the untouched sea");
     jumpTo(world, now);
-    expectLive(std::abs(world.ocean.escaped.water - escaped) <= Closed * escaped, "the replayed sea differs", world.ocean.escaped.water - escaped);
+    expectLive(world.ocean.straits.size() == 2 && world.ocean.grid.depth == depth && world.ocean.grid.salt == salt, "the replayed sea differs");
+}
+
+// A sea and a dry bowl below it on the planet grid, in the world: the strait edit lets the sea into
+// the bowl, the budget closes, and a jump back and forward again replays the same sea.
+void testStraitWorld(World& world) {
+    forgetInterventions(world);
+    Ocean fixture = sea::boxes(PlanetCells, PlanetCells, 100.0, {{20, 20, 60, 60, -1000.0, -20.0}, {100, 20, 110, 30, -300.0}}, PlanetCell);
+    fixture.pristineLevel = -20.0;
+    fixture.salinity = sea::Salinity;
+    fixture.start = std::make_shared<const Ocean>(fixture);
+    world.ocean = fixture;
+    const auto at = [&](int x, int z) { return worldPoint(world.options.seed, planetCellCenter(x, z)); };
+    intervene(world, strait(at(40, 40), at(105, 25), 1e7, -290.0));
+    advance(world, YearSeconds);
+    const WorldBudget budget = budgetOf(world);
+    const size_t bowl = size_t(25 * PlanetCells + 105);
+    expectLive(world.ocean.moved[0].water > 1e12 && world.ocean.grid.depth[bowl] > 0 && world.ocean.changes > 0, "the strait edit did not let the sea into the bowl", world.ocean.moved[0].water);
+    expectLive(budget.others.water > 0 && waterImbalance(budget) <= Closed && saltImbalance(budget) <= Closed, "the strait lost water or salt in the world", saltImbalance(budget));
+    const std::vector<double> depth = world.ocean.grid.depth, salt = world.ocean.grid.salt;
+    const double now = world.interventions.calendar.seconds;
+    jumpTo(world, 0);
+    expectLive(world.ocean.straits.size() == 1 && world.ocean.changes == 0 && world.ocean.grid.depth == fixture.grid.depth, "a jump back did not rebuild the fixture's sea");
+    jumpTo(world, now);
+    expectLive(world.ocean.grid.depth == depth && world.ocean.grid.salt == salt, "the replayed fixture's sea differs");
+    forgetInterventions(world);
 }
 
 // The cascade: an upper lake is let into a lower one, which reaches its sill and floods a third.
@@ -109,6 +131,7 @@ void testIntervention() {
     World world({42, 1.2e9, 0});
     testClock(world);
     testOcean(world);
+    testStraitWorld(world);
     const StreamSite site = findStream(world);
     expectLive(site.found, "the world has no stream to work on");
     testCascade(world, site);

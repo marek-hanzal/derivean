@@ -5,6 +5,7 @@
 #include "atmosphere/fn/SphereMultigrid.hpp"
 #include "atmosphere/fn/SphereOperators.hpp"
 #include "atmosphere/fn/SpherePoisson.hpp"
+#include "atmosphere/fn/StencilMatrix.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -115,6 +116,41 @@ void checkFailure() {
            slow.iterations);
 }
 
+// From a tolerance of 1e-10 up the solve reports CG's recursive residual; on levels 5 to 7, cold and
+// warm, it stays within a hundredth of the tolerance of the true ‖b − K ψ‖ / ‖b‖.
+void checkReportedResidual() {
+    for (int level = 5; level <= 7; ++level) {
+        const SphereGrid grid = makeSphereGrid(level);
+        const SphereStencil stencil = makeSphereStencil(grid);
+        SpherePoisson poisson = makeSpherePoisson(grid, stencil);
+        const std::vector<double> u = harmonicField(grid, 4, 2);
+        std::vector<double> source = u, psi(size_t(grid.cells), 0.0), product, nudged;
+        for (double& value : source) value *= laplacianEigenvalue(4);
+        for (double tolerance : {1e-10, 1e-9, 1e-6}) {
+            for (int start = 0; start < 2; ++start) {
+                // Warm: from the solution of a source scaled by up to 1 + 2000 · tolerance.
+                std::fill(psi.begin(), psi.end(), 0.0);
+                if (start == 1) {
+                    nudged = source;
+                    for (size_t c = 0; c < nudged.size(); ++c) nudged[c] *= 1 + 1e3 * tolerance * double(c % 3);
+                    (void)solveSpherePoisson(poisson, grid, nudged, psi, tolerance, 100);
+                }
+                const PoissonReport report = solveSpherePoisson(poisson, grid, source, psi, tolerance, 100);
+                applyMatrix(poisson.levels[0].stiffness, psi, product);
+                double rr = 0, bb = 0;
+                for (size_t c = 0; c < psi.size(); ++c) {
+                    const double b = -grid.area[c] * (source[c] - report.sourceMean);
+                    rr += (b - product[c]) * (b - product[c]);
+                    bb += b * b;
+                }
+                const double truth = std::sqrt(rr / bb);
+                expect(report.converged && std::abs(truth - report.residual) < 1e-2 * tolerance, "the recursive residual drifts from the true one",
+                       std::abs(truth - report.residual) / tolerance);
+            }
+        }
+    }
+}
+
 // Preconditioned CG needs a symmetric positive preconditioner: y · B x = x · B y and x · B x > 0 for
 // the V-cycle B on residual-like fields (zero sum).
 void checkPreconditioner() {
@@ -144,6 +180,38 @@ void checkPreconditioner() {
     }
 }
 
+// The smoother's interval rests on λmax(D⁻¹K) estimated from 12 power steps: on levels 2 to 5 the
+// estimate is below the value 2000 steps from a random start converge to (both are Rayleigh
+// quotients, so lower bounds) and within 5 % of it.
+void checkLargestEigenvalue() {
+    for (int level = 2; level <= 5; ++level) {
+        const SphereGrid grid = makeSphereGrid(level);
+        const PoissonLevel at = makePoissonLevel(grid, makeSphereStencil(grid), LevelUse::Coarser);
+        std::uint64_t state = uint64_t(level);
+        std::vector<double> x(size_t(grid.cells)), kx;
+        for (double& value : x) {
+            state = state * 6364136223846793005ull + 1442695040888963407ull;
+            value = double(state >> 11) / double(1ull << 53) - 0.5;
+        }
+        double largest = 0;
+        for (int step = 0; step < 2000; ++step) {
+            applyMatrix(at.stiffness, x, kx);
+            double kxx = 0, dxx = 0, top = 0;
+            for (size_t c = 0; c < x.size(); ++c) {
+                kxx += kx[c] * x[c];
+                dxx += x[c] * x[c] / at.inverseDiagonal[c];
+            }
+            largest = kxx / dxx;
+            for (size_t c = 0; c < x.size(); ++c) {
+                x[c] = at.inverseDiagonal[c] * kx[c];
+                top = std::max(top, std::abs(x[c]));
+            }
+            for (double& value : x) value /= top;
+        }
+        expect(at.largest <= largest * (1 + 1e-9) && at.largest > 0.95 * largest, "λmax of D⁻¹K is misestimated", at.largest / largest);
+    }
+}
+
 } // namespace
 
 namespace derivean::sim::atmosphere_sphere_test {
@@ -153,6 +221,8 @@ void checkPoisson() {
     checkNullMode();
     checkFailure();
     checkPreconditioner();
+    checkLargestEigenvalue();
+    checkReportedResidual();
 }
 
 } // namespace derivean::sim::atmosphere_sphere_test

@@ -21,19 +21,22 @@ public:
     // Builds the nine local tiles the answer reads if they are missing, and the regional flow of
     // the region tiles they lie in; blocks until it is there. A build that throws passes the
     // exception to its caller; whoever waited for it builds anew.
-    std::shared_ptr<const GroundwaterTile> require(Atlas& atlas, TileKey local);
+    std::shared_ptr<const GroundwaterTile> require(Atlas& atlas, TileKey local, BuildMode mode = BuildMode::Demand);
 
     // The regional flow of a region tile, from the nine region tiles around it; as `require`.
-    std::shared_ptr<const RegionalTile> requireRegional(Atlas& atlas, TileKey region);
+    std::shared_ptr<const RegionalTile> requireRegional(Atlas& atlas, TileKey region, BuildMode mode = BuildMode::Demand);
 
     // The regional flow of the region tiles under the field of a local tile: what `require` hands
     // its build (fn/Inflow.hpp).
-    std::vector<std::shared_ptr<const RegionalTile>> regionsUnder(Atlas& atlas, TileKey local);
+    std::vector<std::shared_ptr<const RegionalTile>> regionsUnder(Atlas& atlas, TileKey local, BuildMode mode = BuildMode::Demand);
 
     // Finished or null; never blocks on a build.
     std::shared_ptr<const GroundwaterTile> find(TileKey local) const;
+    std::shared_ptr<const RegionalTile> findRegional(TileKey region) const;
 
 private:
+    friend struct BuildGraphFixture;
+
     template <class T>
     struct Slot {
         std::shared_ptr<const T> tile;

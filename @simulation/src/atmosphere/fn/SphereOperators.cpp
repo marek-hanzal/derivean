@@ -4,6 +4,9 @@
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <memory>
 
 namespace derivean::sim {
 namespace {
@@ -48,11 +51,6 @@ Stencil stencilOf(const SphereGrid& grid, const SphereStencil& tables, size_t e)
     for (int k = 0; k < from.count; ++k) addTo(stencil, from.cells[size_t(k)], metric.along * -fromWeight[size_t(k)]);
     return stencil;
 }
-
-struct Entry {
-    int column;
-    double value;
-};
 
 } // namespace
 
@@ -120,37 +118,71 @@ EdgeField streamFluxOf(const SphereGrid& grid, const SphereStencil& stencil, con
 
 SphereMatrix makeLaplacian(const SphereGrid& grid, const SphereStencil& tables) {
     // Rows gather their entries edge by edge, in edge order for every row, so K(p, q) and K(q, p)
-    // add the same products in the same order and the matrix is symmetric bit for bit.
+    // add the same products in the same order and the matrix is symmetric bit for bit. The rows
+    // share one flat buffer of `capacity` slots each (rows have 21 entries, 16 on level 1), found
+    // through a per-row hash of twice that many places; a row that outgrows it restarts the assembly
+    // with twice the room. A row reads at most 12 edges of at most 10 cells, so 128 slots (bits = 7)
+    // always fit and a slot number + 1 fits the hash's byte.
     assert(tables.edge.size() == grid.edge.size() && tables.weight.size() == grid.vertex.size());
-    std::vector<std::vector<Entry>> rows(size_t(grid.cells));
-    for (auto& row : rows) row.reserve(25);
-    for (size_t e = 0; e < grid.edge.size(); ++e) {
-        const Stencil stencil = stencilOf(grid, tables, e);
-        const double diamond = tables.edge[e].diamond;
-        for (int p = 0; p < stencil.count; ++p) {
-            std::vector<Entry>& row = rows[size_t(stencil.cell[p])];
-            for (int q = 0; q < stencil.count; ++q) {
-                const double value = diamond * dot(stencil.weight[p], stencil.weight[q]);
-                auto found = std::find_if(row.begin(), row.end(), [&](const Entry& e) { return e.column == stencil.cell[q]; });
-                if (found == row.end()) row.push_back({stencil.cell[q], value});
-                else found->value += value;
+    const size_t cells = size_t(grid.cells);
+    std::vector<int> count(cells);
+    for (int bits = 5; bits <= 7; ++bits) {
+        const size_t capacity = size_t(1) << bits, places = capacity * 2;
+        const auto columns = std::make_unique_for_overwrite<int[]>(cells * capacity);
+        const auto values = std::make_unique_for_overwrite<double[]>(cells * capacity);
+        std::vector<uint8_t> hash(cells * places, uint8_t(0));   // slot + 1, 0 is empty
+        std::fill(count.begin(), count.end(), 0);
+        bool fits = true;
+        for (size_t e = 0; e < grid.edge.size() && fits; ++e) {
+            const Stencil stencil = stencilOf(grid, tables, e);
+            const double diamond = tables.edge[e].diamond;
+            for (int p = 0; p < stencil.count && fits; ++p) {
+                const size_t row = size_t(stencil.cell[p]);
+                int* column = &columns[row * capacity];
+                double* value = &values[row * capacity];
+                uint8_t* place = &hash[row * places];
+                int& used = count[row];
+                for (int q = 0; q < stencil.count; ++q) {
+                    const double add = diamond * dot(stencil.weight[p], stencil.weight[q]);
+                    const int cell = stencil.cell[q];
+                    size_t h = (uint32_t(cell) * 2654435761u) >> (31 - bits);
+                    while (place[h] != 0 && column[place[h] - 1] != cell) h = (h + 1) & (places - 1);
+                    if (place[h] != 0) value[place[h] - 1] += add;
+                    else if (size_t(used) < capacity) {
+                        place[h] = uint8_t(used + 1);
+                        column[used] = cell;
+                        value[used++] = add;
+                    } else {
+                        fits = false;
+                        break;
+                    }
+                }
             }
         }
-    }
-    SphereMatrix matrix;
-    matrix.start.reserve(rows.size() + 1);
-    matrix.diagonal.resize(rows.size());
-    matrix.start.push_back(0);
-    for (size_t r = 0; r < rows.size(); ++r) {
-        std::sort(rows[r].begin(), rows[r].end(), [](const Entry& a, const Entry& b) { return a.column < b.column; });
-        for (const Entry& entry : rows[r]) {
-            matrix.column.push_back(entry.column);
-            matrix.value.push_back(entry.value);
-            if (entry.column == int(r)) matrix.diagonal[r] = entry.value;
+        if (!fits) continue;
+        SphereMatrix matrix;
+        matrix.start.resize(cells + 1);
+        matrix.diagonal.resize(cells);
+        for (size_t r = 0; r < cells; ++r) matrix.start[r + 1] = matrix.start[r] + count[r];
+        matrix.column.resize(size_t(matrix.start[cells]));
+        matrix.value.resize(size_t(matrix.start[cells]));
+        std::vector<int> order(capacity);
+        for (size_t r = 0; r < cells; ++r) {
+            const int* column = &columns[r * capacity];
+            const double* value = &values[r * capacity];
+            const int used = count[r];
+            for (int k = 0; k < used; ++k) order[size_t(k)] = k;
+            std::sort(order.begin(), order.begin() + used, [&](int a, int b) { return column[a] < column[b]; });
+            for (int k = 0; k < used; ++k) {
+                const size_t at = size_t(matrix.start[r] + k);
+                matrix.column[at] = column[order[size_t(k)]];
+                matrix.value[at] = value[order[size_t(k)]];
+                if (matrix.column[at] == int(r)) matrix.diagonal[r] = matrix.value[at];
+            }
         }
-        matrix.start.push_back(int(matrix.column.size()));
+        return matrix;
     }
-    return matrix;
+    std::abort();   // unreachable: 128 slots hold any row (above)
 }
 
 void applyMatrix(const SphereMatrix& matrix, const CellField& field, CellField& result) {

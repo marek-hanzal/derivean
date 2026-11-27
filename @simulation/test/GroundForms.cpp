@@ -152,7 +152,16 @@ void frozenGroundSorts() {
     measure(coarseBefore, finesBefore, spreadBefore);
     FlowScratch scratch;
     floodLevels(domain, scratch);
-    std::vector<uint8_t> sorted;
+    std::vector<uint8_t> sorted{1};
+    const Ground before = domain.ground;
+    expectGround(!workFrozenGround(domain, scratch, sorted, FrostMovement::PassThrough),
+                 "disabled frost movement reported that it moved ground");
+    expectGround(sorted == std::vector<uint8_t>(domain.cells(), 0), "disabled frost movement marked sorted cells");
+    expectGround(domain.ground.rock == before.rock && domain.ground.datum == before.datum,
+                 "disabled frost movement changed the rock");
+    for (int layer = 0; layer < SedimentClasses; ++layer)
+        expectGround(domain.ground.sediment[layer] == before.sediment[layer],
+                     "disabled frost movement changed the mantle");
     workFrozenGround(domain, scratch, sorted);
     measure(coarseAfter, finesAfter, spreadAfter);
     expectGround(std::abs(coarseAfter - coarseBefore) < 1e-3 * coarseBefore && std::abs(finesAfter - finesBefore) < 1e-3 * finesBefore, "frost sorting made or lost mantle", coarseAfter - coarseBefore);

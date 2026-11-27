@@ -14,12 +14,16 @@ void add(Tally& to, const Tally& part) {
 // a few tiles cannot hide in the rounding of an ocean or behind a century of river passing through.
 // Only where more than a hundred thousand times the tiles' own stock has passed through them is
 // the error measured against a hundred-thousandth of that instead: sums of doubles end there.
+// A body its straits did not book counts too: the sum over all bodies would hide what moved between them.
 double imbalanceOf(const WorldBudget& b, double Tally::*part) {
     const WaterFlows& f = b.flows;
-    const double sea = std::abs(b.ocean.*part + b.cutOff.*part + b.escaped.*part - b.oceanAtStart.*part) / std::max(1.0, b.oceanAtStart.*part);
+    // The salt of the sea is in its bodies and in the crust of the cells that fell dry.
+    const bool salt = part == &Tally::salt;
+    const double crust = salt ? b.crust : 0.0, crustAtStart = salt ? b.crustAtStart : 0.0;
+    const double sea = std::abs(b.ocean.*part + b.others.*part + crust - (b.oceanAtStart.*part + crustAtStart)) / std::max(1.0, b.oceanAtStart.*part + crustAtStart);
     const double live = b.live.*part - (b.adopted.*part + f.inflow.*part + f.rain.*part + f.fromBody.*part - f.evaporation.*part - f.outflow.*part);
     const double passed = f.inflow.*part + f.rain.*part + f.fromBody.*part + f.evaporation.*part + f.outflow.*part;
-    return sea + std::abs(live) / std::max({1.0, b.live.*part, b.adopted.*part, 1e-5 * passed});
+    return std::max(sea, b.unbooked.*part) + std::abs(live) / std::max({1.0, b.live.*part, b.adopted.*part, 1e-5 * passed});
 }
 
 } // namespace
@@ -30,14 +34,17 @@ WorldBudget budgetOf(World& world) {
     const Ocean& ocean = world.ocean;
     WorldBudget budget;
     const std::vector<SeaBody> bodies = seaBodies(ocean);
-    budget.seaLevel = ocean.openings.empty() ? ocean.pristineLevel : double(ocean.grid.ground[size_t(ocean.openings.front().cell)]);
-    for (size_t i = 0; i < bodies.size(); ++i) {
-        const bool main = ocean.openings.empty() ? i == 0 : bodies[i].draining;
-        add(main ? budget.ocean : budget.cutOff, bodies[i].stock);
-        if (main) budget.seaLevel = bodies[i].level;
+    budget.seaLevel = ocean.pristineLevel;
+    for (const SeaBody& body : bodies) {
+        add(body.ocean ? budget.ocean : budget.others, body.stock);
+        if (body.ocean) budget.seaLevel = body.level;
     }
-    budget.escaped = ocean.escaped;
+    for (const Tally& moved : ocean.moved) add(budget.moved, {std::abs(moved.water), std::abs(moved.salt)});
     budget.oceanAtStart = ocean.initial;
+    budget.oceanAtStart.salt -= ocean.initialCrust;
+    budget.crust = crustOf(ocean.grid);
+    budget.crustAtStart = ocean.initialCrust;
+    budget.unbooked = ocean.unbooked;
 
     const double area = specOf(Level::Site).cell * specOf(Level::Site).cell;
     for (const auto& entry : overlay.tiles) {

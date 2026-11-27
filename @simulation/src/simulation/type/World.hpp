@@ -11,6 +11,7 @@ struct WorldOptions {
     uint64_t seed{42};
     double age{4.6e9};      // yr since the hot initial body
     unsigned threads{0};    // 0 picks one less than the machine has
+    FrostMovement frostMovement{FrostMovement::Apply};
 };
 
 // One world: the evolved planet and the landscapes derived from it on demand, which stay untouched,
@@ -18,6 +19,7 @@ struct WorldOptions {
 // its live water. `planet` and the atlas are never written after construction.
 struct World {
     explicit World(WorldOptions options);
+    ~World();
     World(const World&) = delete;
     World& operator=(const World&) = delete;
 

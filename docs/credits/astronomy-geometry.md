@@ -201,7 +201,7 @@ Morton, G. M. (1966). *A computer oriented geodetic data base and a new techniqu
 Williamson, D. L., Drake, J. B., Hack, J. J., Jakob, R., Swarztrauber, P. N. (1992). A standard test set for numerical approximations to the shallow water equations in spherical geometry. *Journal of Computational Physics* 102(1), 211–224. doi:10.1016/S0021-9991(05)80016-6
 - **Model:** the standard test cases the atmosphere's operator on the cubed sphere is to pass, after the degree-1 harmonic and the closed-mesh divergence sum.
 - **Used in:** planned, `docs/handoff/geometry.md:90`, `:109`.
-- **Checked by (atmosphere on the sphere):** case 1 (cosine bell) `@simulation/test/AtmosphereSphereFlow.cpp:25`, `:149`; case 6 (Rossby–Haurwitz wave) `@simulation/test/AtmosphereSphereFixture.hpp:57`; cases 2 and 5 need the shallow-water equations (`docs/handoff/atmosphere-sphere.md:130`).
+- **Checked by (atmosphere on the sphere):** case 1 (cosine bell) `@simulation/test/AtmosphereSphereFlow.cpp:25`, `:149`; case 6 (Rossby–Haurwitz wave) `@simulation/test/AtmosphereSphereFixture.hpp:57`; cases 2 and 5 need the shallow-water equations (`docs/handoff/atmosphere-sphere.md:142`).
 
 ### Jones 1999: conservative remapping
 Jones, P. W. (1999). First- and second-order conservative remapping schemes for grids in spherical coordinates. *Monthly Weather Review* 127(9), 2204–2210. doi:10.1175/1520-0493(1999)127<2204:FASOCR>2.0.CO;2

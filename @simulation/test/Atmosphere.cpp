@@ -220,7 +220,9 @@ void testYears(Workers& workers) {
 } // namespace
 
 void testAtmosphere() {
-    Workers workers;
+    // Two threads: a 128 x 128 grid stepped hour by hour gains nothing from more, and waking a
+    // whole pool every step costs more than the step. testDeterminism compares other counts.
+    Workers workers(2);
     testDeterminism();
     testDryPlanet(workers);
     testYears(workers);

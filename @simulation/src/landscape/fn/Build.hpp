@@ -10,6 +10,8 @@ namespace derivean::sim {
 
 // Returns a finished tile or null. A builder only ever asks for the tiles `dependencies` listed.
 using TileLookup = std::function<const Tile*(TileKey)>;
+struct GroundwaterTile;
+using AquiferLookup = std::function<std::shared_ptr<const GroundwaterTile>(TileKey)>;
 
 // Tiles that must be finished first: the parents that cover the domain and the neighbours of an
 // earlier pass. Fixed by the key alone, which is what makes the result independent of visiting order.
@@ -20,10 +22,6 @@ std::vector<TileKey> dependencies(TileKey key);
 // The local tiles whose ground water a tile reads: a ground tile the springs within SpringReach
 // of it (ground/fn/Finish.cpp, springsIn); no other level reads ground water.
 std::vector<TileKey> groundwaterRead(TileKey key);
-// The landscape tiles the ground water of local tile `local` is built from
-// (groundwater/service/Aquifers.cpp): the nine local tiles around it, and the nine region tiles
-// around each region tile under the corners of those, once each.
-std::vector<TileKey> groundwaterSources(TileKey local);
 
 // Build.cpp — the domain at the start of its window.
 Domain buildDomain(const Setting& setting, TileKey key, const TileLookup& lookup);
@@ -55,7 +53,7 @@ void extractTile(const Domain& domain, const FlowScratch& scratch, Tile& tile);
 
 // Replay.cpp — one step, and the whole window from build to the finished tile.
 void stepDomain(Domain& domain, FlowScratch& scratch, const Setting& setting);
-std::shared_ptr<Tile> replayTile(const Setting& setting, TileKey key, const TileLookup& lookup);
+std::shared_ptr<Tile> replayTile(const Setting& setting, TileKey key, const TileLookup& lookup, const AquiferLookup& aquifers = {});
 
 // A coarser flow field read by global cell index: discharge in m³/yr and the neighbour it leaves by.
 struct CoarseFlow {

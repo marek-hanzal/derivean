@@ -55,10 +55,13 @@ SiteColumn siteColumn(World& world, int64_t cellX, int64_t cellZ);
 
 // Budget.cpp — where every cubic metre of water, kilogram of salt and cubic metre of solid is.
 struct WorldBudget {
-    Tally ocean;          // the sea that openings drain; the largest sea while there are none
-    Tally cutOff;         // seas with no connection to it
-    Tally escaped;        // gone into the void
-    Tally oceanAtStart;
+    Tally ocean;          // the body that holds Ocean::anchor
+    Tally others;         // every other body
+    Tally oceanAtStart;   // what all of them held at the start
+    double crust{};       // kg of salt on the dry cells of the planet grid
+    double crustAtStart{};
+    Tally moved;          // what went through the straits, summed without sign
+    Tally unbooked;       // worst share of a body's change its account did not explain
     Tally live;           // standing on live tiles
     Tally adopted;        // what those tiles held when they became live
     WaterFlows flows;     // what crossed their edge since
