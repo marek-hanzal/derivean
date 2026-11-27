@@ -123,3 +123,21 @@ test("slopes measured as squares come and go match the slopes the surface read i
     }
   }
 });
+
+test("a place two squares want follows the eye to the nearer one", () => {
+  const world = { cubes: { finestLevel: 1, coarsestLevel: 1 } } as unknown as WorldInfo;
+  const heights = createLevelHeights(world);
+  const owners = (heights.nodes.owners.value as StorageInstancedBufferAttribute).array as Float32Array;
+  const edge = 2;
+  const span = Square * edge;
+  // A top over the whole square at plane 3.
+  const flat = Uint32Array.from([(1 << 30 | 1 << 28 | 31 << 23 | 31 << 18 | 3) >>> 0, 0]);
+  heights.place({ x: span / 2, y: 0, z: span / 2 }, [undefined, edge]);
+  heights.add(1, 1, edge, [0, 0, 0], flat);
+  heights.add(2, 1, edge, [HeightBlocks * span, 0, 0], flat);
+  assert.deepEqual([...owners.subarray(0, 2)], [0, 0], "the square the eye is in holds the place");
+  heights.place({ x: HeightBlocks * span + span / 2, y: 0, z: span / 2 }, [undefined, edge]);
+  assert.deepEqual([...owners.subarray(0, 2)], [HeightBlocks, 0], "the place goes to the square the eye moved into");
+  heights.place({ x: span / 2, y: 0, z: span / 2 }, [undefined, edge]);
+  assert.deepEqual([...owners.subarray(0, 2)], [0, 0], "and back");
+});

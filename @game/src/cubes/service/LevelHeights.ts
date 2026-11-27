@@ -44,6 +44,10 @@ export function createLevelHeights(world: WorldInfo) {
   // The squares that want each place.
   const wanting = new Map<number, Set<string>>();
   const eye = { x: 0, z: 0 };
+  // Per level, the half square the eye was in along x and z when places were last awarded, NaN for none. Two
+  // squares that want a place lie HeightBlocks squares apart, an even number, so which is nearer turns at the
+  // middle of a square: half squares catch it.
+  const awardedAt = new Float64Array(LevelSlots * 2).fill(NaN);
   const edges: number[] = [];
   // The square each place holds as the GPU sees it, and the places whose slopes are to be measured again, with
   // the columns [x0, x1) × [z0, z1) that changed.
@@ -197,8 +201,9 @@ export function createLevelHeights(world: WorldInfo) {
     },
     // Where each level's ring lies against the render origin, for the surface to find a column from a point.
     // `drawn` holds the edge of every level the frame names, by level.
+    // A place two squares want goes to the one nearer the eye, so as the eye moves into another half square of a
+    // level, that level's contested places are awarded again.
     place(origin: { x: number; y: number; z: number }, drawn: readonly (number | undefined)[]) {
-      measure();
       eye.x = origin.x;
       eye.z = origin.z;
       lift.value = origin.y;
@@ -206,10 +211,21 @@ export function createLevelHeights(world: WorldInfo) {
         const edge = drawn[level];
         const ours = edge !== undefined && level >= finest && level - finest < tiles;
         firsts.array[level] = ours ? (level - finest) * Ring : -1;
-        if (!ours) continue;
+        if (!ours) {
+          awardedAt[level * 2] = awardedAt[level * 2 + 1] = NaN;
+          continue;
+        }
         const [x, z] = [origin.x / edge / Square, origin.z / edge / Square];
         (places.array[level] as Vector4).set((x - Math.floor(x)) * Square, (z - Math.floor(z)) * Square, Math.floor(x), Math.floor(z));
+        const [halfX, halfZ] = [Math.floor(2 * x), Math.floor(2 * z)];
+        if (awardedAt[level * 2] === halfX && awardedAt[level * 2 + 1] === halfZ) continue;
+        [awardedAt[level * 2], awardedAt[level * 2 + 1]] = [halfX, halfZ];
+        const [first, last] = [(level - finest) * Ring, (level - finest + 1) * Ring];
+        for (const [place, wanted] of wanting) {
+          if (place >= first && place < last && wanted.size > 1) award(place);
+        }
       }
+      measure();
     },
     dispose() {
       chunks.clear();
@@ -218,6 +234,7 @@ export function createLevelHeights(world: WorldInfo) {
       wanting.clear();
       stale.clear();
       shown.fill(undefined);
+      awardedAt.fill(NaN);
       // Frees the GPU buffers: the renderer drops an attribute's buffer when the attribute is disposed.
       measured.dispose();
       held.dispose();
