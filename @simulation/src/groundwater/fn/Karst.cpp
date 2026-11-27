@@ -16,7 +16,8 @@ constexpr float OffZone = 4.0f;           // times as much where none does
 constexpr float OpenWater = 0.25f;        // share of it into a stream or standing water, and over the lip of a bed
 constexpr float Thin = 0.3f;              // m of water running on a tight bed
 
-float grown(float used) { return FlowEase * std::pow(used / FlowUnit, 0.8f); }
+// pow(±0, 0.8) is +0, so a step that carried nothing, most of them, skips the pow and gives the same 0.
+float grown(float used) { return used == 0.0f ? 0.0f : FlowEase * std::pow(used / FlowUnit, 0.8f); }
 
 bool onZone(const WaterField& field, size_t cell) {
     if (!field.column[cell].fissured) return false;
