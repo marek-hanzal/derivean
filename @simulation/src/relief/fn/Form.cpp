@@ -53,10 +53,21 @@ float exposureAt(TileReader& reader, Vec2 position) {
 void formColumn(const FormSetting& setting, const GroundLattice& lattice, float exposure, const CaveField* caves, double x, double z,
                 double bottom, double step, int count, Material* out, size_t stride) {
     const GroundPoint ground = lattice.at(x, z);
+    const float top = ground.ground + ground.crust;
+    // Air above the surface, and below the crust the melt and the mantle, are known from the height
+    // of a sample alone. A column with no sample between is written from that and nothing else.
+    const auto outside = [&](float y) { return y < WorldFloor || y >= top + 1.0f || y < MantleTop; };
+    const auto outsideAt = [&](float y) { return y < WorldFloor || y >= top + 1.0f ? Material::Air : y < MeltTop ? Material::Magma : Material::Peridotite; };
+    if (count > 0) {
+        const float first = float(bottom + 0.5 * step), last = float(bottom + (count - 1 + 0.5) * step);
+        if (std::min(first, last) >= top + 1.0f || std::max(first, last) < MantleTop) {
+            for (int k = count - 1; k >= 0; --k) out[size_t(k) * stride] = outsideAt(float(bottom + (k + 0.5) * step));
+            return;
+        }
+    }
     const Vec2 material = setting.strata.material + (Vec2{x, z} - setting.strataCentre);
     const float fold = foldAt(setting.seed, setting.strata, material);
     const float loose = ground.ground - ground.rock;
-    const float top = ground.ground + ground.crust;
     // Rock that eruptions laid on the layering fills the column from the pile's floor up; the plug
     // of a conduit cuts pile and layering alike (volcanic/type/Pile.hpp).
     const float pileFloor = ground.rock - ground.pile.thickness;
@@ -112,21 +123,23 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
         }
     }
 
+    // The bed just under the rock surface, which grikes open and whose recess the cover follows.
+    const bool grikes = setting.runoff > 0 && ground.pile.thickness <= 0, recessed = steep > 0.02f && loose > 0;
+    const float surfaceDepth = std::max(0.0f, ground.datum - ground.rock) + 0.05f;
+    const StrataUnit surfaceUnit = grikes || recessed ? unitAt(setting.strata, surfaceDepth, fold) : StrataUnit{};
+    const Bed surface = grikes || recessed ? bedAt(setting.seed, setting.strata, surfaceUnit, surfaceDepth, material) : Bed{};
+
     // Bare soluble rock opens along its joints into grikes as deep as `grike` below its surface.
     float grike = 0;
-    if (setting.runoff > 0 && ground.pile.thickness <= 0) {
-        const float depth = std::max(0.0f, ground.datum - ground.rock) + 0.05f;
-        const StrataUnit unit = unitAt(setting.strata, depth, fold);
-        const Bed surface = bedAt(setting.seed, setting.strata, unit, depth, material);
+    if (grikes) {
         const Pavement pavement = pavementOf(surface.rock, loose, setting.runoff);
-        if (pavement.halfWidth > 0) grike = grikeDepth(setting.seed, pavement, massFor(setting, surface, unit.laidDown), material, depth);
+        if (pavement.halfWidth > 0) grike = grikeDepth(setting.seed, pavement, massFor(setting, surface, surfaceUnit.laidDown), material, surfaceDepth);
     }
 
     // Where the bed at the surface stands back from the face, the thin cover on it lies that much lower.
     float sunk = 0;
-    if (steep > 0.02f && loose > 0) {
-        const float depth = std::max(0.0f, ground.datum - ground.rock) + 0.05f;
-        const float recess = recessOf(traitsOf(bedAt(setting.seed, setting.strata, unitAt(setting.strata, depth, fold), depth, material).rock)) * steep;
+    if (recessed) {
+        const float recess = recessOf(traitsOf(surface.rock)) * steep;
         sunk = std::max(0.0f, lie - lattice.lieAt(x + ground.fall.x * recess, z + ground.fall.z * recess));
     }
 
@@ -148,9 +161,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     for (int k = count - 1; k >= 0; --k) {
         const float y = float(bottom + (k + 0.5) * step);
         Material& result = out[size_t(k) * stride];
-        if (y < WorldFloor || y >= top + 1.0f) result = Material::Air;
-        else if (y < MeltTop) result = Material::Magma;
-        else if (y < MantleTop) result = Material::Peridotite;
+        if (outside(y)) result = outsideAt(y);
         else {
             const float depth = std::max(0.0f, ground.datum - y);
             const bool inPile = ground.pile.thickness > 0 && y >= pileFloor;
