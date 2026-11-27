@@ -1,5 +1,7 @@
 #pragma once
 
+#include "atmosphere/type/StencilMatrix.hpp"
+
 #include <vector>
 
 namespace derivean::sim {
@@ -15,7 +17,10 @@ namespace derivean::sim {
 // s ν bound² ≤ 1 on a certified upper bound: that certifies s ν λ_max² ≤ 1, not the ≈ 0.55 that
 // (estimate / bound)² suggests, and no monotone step, not for an arbitrary history nor a sum of forces.
 // ν is set from an estimate of λ_max so the fastest mode decays in `decay`.
+// `stiffness` is the K object it was made from, compared by address at every use (addDamping), never
+// read: its ν and bound belong to that K alone; a copied Poisson is another K (Codex 009-01).
 struct SphereDamping {
+    const StencilMatrix* stiffness{};
     double decay{};      // s, e-folding time of the fastest mode
     double estimate{};   // 1/m², λ_max of A⁻¹K by power iteration, from below
     double bound{};      // 1/m², max_i Σ_j |K_ij| / A_i ≥ λ_max (Gershgorin 1931)

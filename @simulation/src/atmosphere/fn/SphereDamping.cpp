@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <stdexcept>
 
 namespace derivean::sim {
 namespace {
@@ -61,6 +62,7 @@ double powerEstimate(const SphereGrid& grid, const StencilMatrix& stiffness, std
 SphereDamping makeSphereDamping(const SphereGrid& grid, const StencilMatrix& stiffness, double decay) {
     assert(decay > 0);
     SphereDamping damping;
+    damping.stiffness = &stiffness;
     damping.decay = decay;
     damping.bound = gershgorinBound(grid, stiffness);
     damping.estimate = powerEstimate(grid, stiffness, damping.work, damping.twice);
@@ -71,6 +73,7 @@ SphereDamping makeSphereDamping(const SphereGrid& grid, const StencilMatrix& sti
 
 void addDamping(SphereDamping& damping, const SphereGrid& grid, const StencilMatrix& stiffness, const std::vector<double>& level,
                 std::vector<double>& tendency) {
+    if (&stiffness != damping.stiffness) throw std::invalid_argument("the damping was made from another K");
     const size_t n = size_t(grid.cells);
     assert(level.size() == n);
     if (tendency.empty()) tendency.assign(n, 0.0);
