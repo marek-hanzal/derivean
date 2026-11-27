@@ -36,7 +36,8 @@ inline ColumnBlend blendColumns(const Planet& planet, Vec2 position) {
 }
 
 // Plate contact kinematics at a position, blended from the four cells around it so nothing steps
-// at a cell edge. Interiors beyond ContactReach answer with twice that distance and no motion.
+// at a cell edge. A record beyond ContactReach carries no motion; it answers with its distance, twice
+// ContactReach at most (an interior), or the flat history's own just beyond reach.
 struct ContactSample {
     double distance{};      // m to the nearest plate contact
     double convergence{};   // m/yr, positive where the plates close
