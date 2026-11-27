@@ -83,6 +83,8 @@ void fillBand(const Globe& globe, int sweep, const std::vector<uint8_t>& core, c
     band.regionCells = reached;
     band.region.assign(size_t(grid.cells), -1);
     for (size_t r = 0; r < reached.size(); ++r) band.region[size_t(reached[r])] = int32_t(r);
+    band.slotCell.assign(size_t(grid.cells), -1);
+    band.mixedStamp.assign(size_t(grid.cells), 0);
 
     band.member.assign(globe.pieces.size(), 0);
     band.dead.assign(globe.pieces.size(), 0);

@@ -49,6 +49,11 @@ struct Band {
     std::vector<PolygonCap> footprintCap;
     std::vector<uint32_t> footprintStamp;
     uint32_t footprintCall{};
+    // Per cell, for interiorSlot: whether a slot centred over it is measured (1, 0, or −1 not yet
+    // known; a property of `decide` and `region` alone), and the generation in which pieces of two
+    // plates were seen over it and its ring (births only add pieces, so that holds for the generation).
+    std::vector<int8_t> slotCell;
+    std::vector<uint32_t> mixedStamp;
 };
 
 // Marks the band from the globe's coupling at the start of a step.

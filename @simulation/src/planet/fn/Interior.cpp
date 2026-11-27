@@ -44,6 +44,9 @@ bool otherPlateNear(const Globe& globe, int t, const std::vector<int>& near) {
     return false;
 }
 
+// Whether `near` holds pieces of two plates or more.
+bool platesMixed(const Globe& globe, const std::vector<int>& near) { return !near.empty() && otherPlateNear(globe, near[0], near); }
+
 // interiorOpening of a slot with no other plate near, with near[i]'s footprint and cap from of(i), so
 // that a caller measuring many slots takes each piece's once. `over` is scratch. Where only closed or
 // open is asked (`closedOnly`), the first overlap that leaves the slot under BornShare open by the
@@ -78,6 +81,23 @@ double openingOf(const Globe& globe, int t, const LatticeSlot& slot, const std::
         covered = unionArea(parts).area;
     }
     return std::max(0.0, slot.area - covered) / slot.area;
+}
+
+// Whether a slot centred over `cell` is measured: the cell is deciding or next to one, and the band's
+// region holds the two rings round it.
+bool measuredOver(const Globe& globe, Band& band, int cell) {
+    int8_t& known = band.slotCell[size_t(cell)];
+    if (known < 0) {
+        bool deciding = band.decide[size_t(cell)], listed = true;
+        for (const int32_t other : (*globe.rings)[size_t(cell)]) {
+            if (other < 0) continue;
+            deciding = deciding || band.decide[size_t(other)];
+            listed = listed && band.region[size_t(other)] >= 0;
+            for (const int32_t far : (*globe.rings)[size_t(other)]) listed = listed && (far < 0 || band.region[size_t(far)] >= 0);
+        }
+        known = int8_t(deciding && listed);
+    }
+    return known;
 }
 
 } // namespace
@@ -141,20 +161,15 @@ bool interiorSlot(Globe& globe, Band& band, int cell, InteriorSlot& found) {
             const size_t at = size_t(t) * 4 + size_t(k);
             if (band.slotStamp[at] == band.slotGeneration && band.slotOpen[at] < float(BornShare)) continue;   // closed when last measured
             LatticeSlot s = slotAt(globe, t, k);
-            bool deciding = band.decide[size_t(s.cell)], listed = true;
-            for (const int32_t other : (*globe.rings)[size_t(s.cell)]) {
-                if (other < 0) continue;
-                deciding = deciding || band.decide[size_t(other)];
-                listed = listed && band.region[size_t(other)] >= 0;
-                for (const int32_t far : (*globe.rings)[size_t(other)]) listed = listed && (far < 0 || band.region[size_t(far)] >= 0);
-            }
             band.slotStamp[at] = band.slotGeneration, band.slotOpen[at] = -1;
-            if (!deciding || !listed) continue;
+            // Closed where another plate is near.
+            if (!measuredOver(globe, band, s.cell) || band.mixedStamp[size_t(s.cell)] == band.slotGeneration) continue;
             near.clear();
             gather(near, s.cell);
             for (const int32_t other : (*globe.rings)[size_t(s.cell)])
                 if (other >= 0) gather(near, other);
-            if (otherPlateNear(globe, t, near)) continue;   // closed: another plate is near
+            if (platesMixed(globe, near)) band.mixedStamp[size_t(s.cell)] = band.slotGeneration;
+            if (otherPlateNear(globe, t, near)) continue;
             setFootprint(globe, t, s);
             const double open = openingOf(globe, t, s, near, footprintAt, true, over, globe.stats.unions);
             band.slotOpen[at] = float(open);
