@@ -110,4 +110,22 @@ int dominantPiece(const Coupling& coupling, int cell) {
     return best;
 }
 
+double bookCell(const Coupling& coupling, std::vector<CrustPiece>& pieces, int cell, double volume) {
+    const double covered = coupling.covered[size_t(cell)];
+    if (covered <= 0) return 0;
+    Sum booked;
+    for (int32_t k = coupling.cellStart[size_t(cell)]; k < coupling.cellStart[size_t(cell) + 1]; ++k) {
+        const PieceWeight& w = coupling.byCell[size_t(k)];
+        CrustPiece& piece = pieces[size_t(w.piece)];
+        const double share = volume * (w.area / covered);
+        if (share >= 0) {
+            giveFelsic(piece, share);
+            booked.add(share);
+        } else {
+            booked.add(-takeFelsic(piece, -share));
+        }
+    }
+    return booked.value();
+}
+
 } // namespace derivean::sim
