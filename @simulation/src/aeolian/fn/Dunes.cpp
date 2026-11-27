@@ -139,7 +139,9 @@ void send(SandBed& bed, Work& work, int x, int z, Vec2 heading, double hop, doub
     if (fell == from && inside && kind != BedCell::Wall) {
         float ahead = 0;
         for (int c = 0; c < 4; ++c) ahead += share[c] * work.top[to[c]];
-        if (ahead - work.top[from] > climb * float(std::hypot(moveX, moveZ))) {
+        // Higher than the climb allows over the length of the hop, compared in squares.
+        const float rise = ahead - work.top[from];
+        if (rise > 0 && double(rise) * rise > double(climb) * climb * (moveX * moveX + moveZ * moveZ)) {
             work.taken[from] = kind == BedCell::Open ? -work.flight[from] : 0.0f;
             return;
         }

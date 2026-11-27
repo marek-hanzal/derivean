@@ -115,8 +115,8 @@ void readRegionalColumns(const Setting& setting, TileKey key, const Tile* const 
                 walkBeds(bed, walk);
                 const DeepColumn deep = deepColumnOf(walk.layers, walk.count);
                 column.transmissivity = deep.transmissivity, column.confined = deep.confined, column.depth = std::max(0.0f, column.ground - walk.base);
-                const float slope = float(std::hypot(tiles.ground(gx + 1, gz) - tiles.ground(gx - 1, gz), tiles.ground(gx, gz + 1) - tiles.ground(gx, gz - 1)) / (2 * cell));
-                const Soak soak{tile.rain[from], tile.warmth[from], slope, {bed.cover[0], bed.cover[1], bed.cover[2]}, tile.ice[from], Material(tile.rock[from])};
+                const float riseX = tiles.ground(gx + 1, gz) - tiles.ground(gx - 1, gz), riseZ = tiles.ground(gx, gz + 1) - tiles.ground(gx, gz - 1);
+                const Soak soak{tile.rain[from], tile.warmth[from], float(std::sqrt(riseX * riseX + riseZ * riseZ) / (2 * cell)), {bed.cover[0], bed.cover[1], bed.cover[2]}, tile.ice[from], Material(tile.rock[from])};
                 // As a local column takes it (fn/Columns.cpp): the cell's own soak and what a dry
                 // country's loose bed took from passing floods beyond that share.
                 const float share = infiltrationShare(soak);
@@ -209,7 +209,7 @@ std::shared_ptr<RegionalTile> solveRegional(TileKey key, const std::vector<Regio
         const int x = at % size, z = at / size;
         if (parent[i] >= 0) {
             const size_t to = size_t(parent[i]);
-            const double step = std::hypot(double(int(to % size_t(size)) - x), double(int(to / size_t(size)) - z)) * cell;
+            const double step = (int(to % size_t(size)) != x && int(to / size_t(size)) != z ? std::sqrt(2.0) : 1.0) * cell;   // to a neighbour
             all[to] += all[i], own[to] += own[i], rate[to] += rate[i], high[to] += high[i], deep[to] += deep[i], far[to] += far[i] + all[i] * step;
             continue;
         }

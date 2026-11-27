@@ -62,7 +62,7 @@ RockMass rockMassAt(uint64_t seed, const StrataColumn& column, const Bed& bed, d
     const float share = folded || column.foldSpan <= QuietFoldSpan ? 1.0f : QuietFoldSpan / column.foldSpan;
     const double slopeX = share * (foldAt(seed, column, material + Vec2{DipBase, 0}) - foldAt(seed, column, material - Vec2{DipBase, 0})) / (2 * DipBase);
     const double slopeZ = share * (foldAt(seed, column, material + Vec2{0, DipBase}) - foldAt(seed, column, material - Vec2{0, DipBase})) / (2 * DipBase);
-    mass.dip = float(std::atan(std::hypot(slopeX, slopeZ)));
+    mass.dip = float(std::atan(std::sqrt(slopeX * slopeX + slopeZ * slopeZ)));
     mass.dipDirection = std::atan2(-slopeZ, -slopeX);
 
     // Joints of layered rock stand about as far apart as its beds are thick; massive rock keeps its own.
