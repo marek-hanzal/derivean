@@ -28,10 +28,6 @@ public:
         JPH::Factory::sInstance = &factory_;
         JPH::RegisterTypes();
     }
-    ~InitializeJolt() {
-        JPH::UnregisterTypes();
-        JPH::Factory::sInstance = nullptr;
-    }
 private:
     JPH::Factory factory_;
 };
@@ -54,7 +50,10 @@ TerrainShape terrainShape(const Voxels& voxels) {
 }
 
 JoltRuntime::JoltRuntime() {
-    static InitializeJolt library;
+    // Lives for the whole process and never unregisters: abandon() leaves nature.crew and the Jolt
+    // job threads running until exit, so static destruction must not take Jolt's globals from them.
+    static const auto* library = new InitializeJolt();
+    (void)library;
     resources_ = std::make_unique<Resources>();
 }
 
