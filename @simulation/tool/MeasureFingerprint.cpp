@@ -8,6 +8,7 @@
 #include "measure/fn/Dependencies.hpp"
 #include "measure/fn/Digest.hpp"
 #include "planet/fn/Sample.hpp"
+#include "simulation/fn/Query.hpp"
 #include "simulation/fn/Spawn.hpp"
 
 #include <algorithm>
@@ -119,7 +120,7 @@ double cpuSeconds(const timeval& t) { return double(t.tv_sec) + 1e-6 * double(t.
 
 } // namespace
 
-// terra measure fingerprint [--age 1.2e9|4.6e9] [--threads n] [--time 0|1]
+// terra measure fingerprint [--age 1.2e9|4.6e9] [--threads n] [--time 0|1] [--blocks 0|1]
 // Builds a fixed set of tiles of seed 42 (river, coast and glaciated country at every level) and
 // prints one hash over every field of each of them and of every tile they were built from. Two
 // builds that print the same lines made the same world to the bit. With --time 1 each target is
@@ -173,7 +174,8 @@ int measureFingerprint(const Arguments& arguments) {
     int perLevel[LevelCount]{};
     for (const auto& [key, print] : prints) {
         // Beside the print, the ledger and the cover, to say by how much a tile moved.
-        const Tile& tile = *world.atlas.find(key);
+        const auto held = world.atlas.find(key);
+        const Tile& tile = *held;
         double cover[SedimentClasses]{};
         for (int c = 0; c < SedimentClasses; ++c)
             for (const float m : tile.now.sediment[c]) cover[c] += m;
@@ -185,6 +187,26 @@ int measureFingerprint(const Arguments& arguments) {
     }
     std::printf("prints %zu (region %d local %d site %d ground %d)  all %016llx\n", prints.size(), perLevel[1], perLevel[2], perLevel[3], perLevel[4],
                 static_cast<unsigned long long>(all));
+
+    // --blocks 1: a block of voxels over the middle of each ground target, cut once to build the
+    // tiles it reads and then timed again; its materials hashed like a tile.
+    if (arguments.number("blocks", 0) != 0)
+        for (const auto& [what, key] : targets) {
+            if (key.level != Level::Ground) continue;
+            const auto held = world.atlas.find(key);
+            const Tile& tile = *held;
+            const size_t middle = size_t(TileCells / 2) * TileCells + TileCells / 2;
+            const double top = tile.now.rock[middle] + tile.now.sediment[0][middle] + tile.now.sediment[1][middle] + tile.now.sediment[2][middle];
+            const double span = tileSpan(Level::Ground);
+            const Block block{(key.x + 0.5) * span - 16, std::floor(top) - 48, (key.z + 0.5) * span - 16, 1.0, 32, 64, 32};
+            std::vector<Material> materials(size_t(block.countX) * size_t(block.countY) * size_t(block.countZ));
+            sampleBlock(world, block, materials.data());
+            constexpr int Repeats = 20;
+            lap();
+            for (int repeat = 0; repeat < Repeats; ++repeat) sampleBlock(world, block, materials.data());
+            const double each = lap() / Repeats;
+            std::printf("block %-13s %016llx  %.2f ms each\n", what.c_str(), static_cast<unsigned long long>(digestOf(materials.data(), materials.size() * sizeof(Material))), 1000 * each);
+        }
 
     if (arguments.number("time", 0) == 0) return 0;
     // One thread: the replay alone, as the atlas makes it, without the pool a ground tile may use.
