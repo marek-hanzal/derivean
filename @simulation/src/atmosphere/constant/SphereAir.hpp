@@ -24,4 +24,16 @@ inline constexpr double SphereSurfaceDrag = 12 * 86400.0;     // s
 inline constexpr double SphereRoughHeight = 1500.0;           // m
 inline constexpr double SphereGridDamping = 6 * 3600.0;       // s
 
+// The flat world's season at the same degrees and seconds (atmosphere/fn/Season.cpp owns them until
+// the switch): the belts follow BeltShift degrees per degree of solar declination BeltLag days late,
+// blow JetDrive times their climatological speed scaled by each half's temperature contrast, feed
+// weather systems at up to EddyGrowth, and the westerlies shear by ShearPerGradient per °C per degree
+// of latitude, at most ShearLimit.
+inline constexpr double SphereBeltShift = 0.35;                       // degrees per degree of declination
+inline constexpr double SphereBeltLag = 30.0;                         // days
+inline constexpr double SphereJetDrive = 1.6;
+inline constexpr double SphereEddyGrowth = 1.0 / (1.5 * 86400.0);     // 1/s
+inline constexpr double SphereShearPerGradient = 12.0;                // m/s per °C per degree
+inline constexpr double SphereShearLimit = 12.0;                      // m/s
+
 } // namespace derivean::sim

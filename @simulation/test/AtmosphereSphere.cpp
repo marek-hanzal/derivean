@@ -238,6 +238,8 @@ void testAtmosphereSphere() {
     checkRollback();
     checkDamping();
     checkClosures();
+    checkSeason();
+    checkSeasonInputs();
     checkEddyBand();
     checkLatitudeBands();
 }
