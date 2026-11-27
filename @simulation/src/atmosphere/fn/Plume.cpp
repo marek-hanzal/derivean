@@ -21,6 +21,9 @@ constexpr double ColumnSpread = 0.15;   // spread at the source over the height 
 constexpr double ColumnHeat = 1.0e7;    // J/m²/K of the air column that a source's heat warms
 constexpr double ClearSky = 1e-7;       // planet-mean optical depth below which what is left aloft is put down and the sky counts as clean
 constexpr double BuryingSnow = 5.0;     // kg/m² of fresh snow that hides the ash under it e-fold
+// kg/m² of ash on snow below which it is gone: it darkens the snow by under 2e-9 of a full blanket
+// (Heat.cpp), and without a floor a trace buried ever deeper would lie on until the exponent underflowed.
+constexpr double TraceAsh = 1e-9;
 constexpr int Carriers = 3 * PlumeLevels;
 
 double sum(const Field<double>& field) {
@@ -177,8 +180,8 @@ void soot(Atmosphere& atmosphere) {
         const double lying = atmosphere.snow.cells[cell] > 0
                                  ? (plume.onSnow.cells[cell] + plume.fallRate.cells[cell] * AirStep) * std::exp(-atmosphere.snowRate.cells[cell] * AirStep / BuryingSnow)
                                  : 0.0;
-        plume.onSnow.cells[cell] = lying;
-        plume.sooted = plume.sooted || lying > 0;
+        plume.onSnow.cells[cell] = lying >= TraceAsh ? lying : 0.0;
+        plume.sooted = plume.sooted || lying >= TraceAsh;
     }
 }
 
