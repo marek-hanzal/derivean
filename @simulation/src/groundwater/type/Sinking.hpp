@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 namespace derivean::sim {
@@ -24,6 +25,7 @@ struct SinkWork {
     std::vector<float> extra;                   // scratch: m³/yr still to pass on from each cell
     std::vector<int32_t> lakeOf, pour;          // scratch: the lake whose catchment holds a cell; the cell each lake runs over into (fn/Spill.cpp)
     std::vector<std::vector<int32_t>> lakes;    // scratch: the cells of each lake's catchment
+    std::vector<std::pair<int32_t, int32_t>> due;   // scratch: heap of the cells with water to pass on, by rank (fn/Spill.cpp)
     double spilled{}, overEdge{};               // m³/yr this step: run over passes (once per pass); left over the domain's edge or into a finished neighbour's cells
 
     bool active() const { return !rate.empty(); }

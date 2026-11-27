@@ -102,7 +102,9 @@ OutwashTotals washBeyond(Domain& domain, const std::vector<float>& ground, std::
     order.reserve(cells);
     {
         using Entry = std::pair<float, int32_t>;
-        std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> open;
+        std::vector<Entry> heap;
+        heap.reserve(cells);   // every cell enters once
+        std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> open(std::greater<Entry>{}, std::move(heap));
         std::vector<bool> reached(cells, false);
         for (int z = 0; z < size; ++z)
             for (int x = 0; x < size; ++x) {

@@ -1,5 +1,6 @@
 #include "groundwater/fn/Karst.hpp"
 
+#include <cassert>
 #include <queue>
 
 namespace derivean::sim {
@@ -107,10 +108,13 @@ KarstNet drainKarst(const WaterField& field) {
     Use use{std::vector<float>(nodes * 8, 0.0f), std::vector<float>(nodes, 0.0f)};
     std::vector<uint8_t> settled(nodes);
     using Reached = std::pair<float, int32_t>;
+    std::vector<Reached> heap;
+    heap.reserve(members.size());
+    std::priority_queue<Reached, std::vector<Reached>, std::greater<Reached>> open(std::greater<Reached>{}, std::move(heap));   // empty after every round
     for (int round = 0; round < Rounds; ++round) {
+        assert(open.empty());
         // Lowest stand for every node, found from the lowest outlets upward. A node is settled when
         // it is first taken at its final stand; the node it drains to was settled before it.
-        std::priority_queue<Reached, std::vector<Reached>, std::greater<Reached>> open;
         for (const int32_t node : members) {
             net.parent[size_t(node)] = -1, net.toward[size_t(node)] = 255, settled[size_t(node)] = 0;
             net.head[size_t(node)] = std::max(leastHead(field, size_t(node)), wayOut(field, use, size_t(node), net.outlet[size_t(node)]));
