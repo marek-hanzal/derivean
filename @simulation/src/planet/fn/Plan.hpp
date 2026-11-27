@@ -22,7 +22,10 @@ struct PlanShare {
 struct PlanCandidate {
     int piece{};
     std::vector<PlanShare> receivers;
-    std::vector<int> behind;   // pieces of its own plate behind it, against its motion, nearest first (up to 8)
+    std::vector<int> behind;   // pieces of its own plate behind it, nearest first (up to 8; a suture's widened donor up to 64)
+    // What neither its receivers nor `behind` have room for goes into the interior instead of cancelling
+    // it (a suture's last resort: TransferKind::Delaminate).
+    bool delaminate{};
 };
 
 struct PlanInput {
@@ -43,6 +46,7 @@ enum class TransferKind : uint8_t {
     Accrete,   // donor → survivor: the scraped share of the sediment
     Collide,   // donor → survivor: crust stacked
     Back,      // donor → a piece of its own plate behind it: what the survivors had no room for
+    Delaminate,   // donor → interior: felsic crust no piece had room for, the doubled root that founders
 };
 
 struct Transfer {

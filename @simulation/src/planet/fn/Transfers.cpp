@@ -27,7 +27,7 @@ void book(Globe& globe, const Transfer& t, const std::vector<int>& global, std::
     if (t.to < 0) {
         globe.ledger.interior.felsic += felsic;
         globe.ledger.interior.basalt += basalt;
-        globe.ledger.subducted += felsic;
+        (t.kind == TransferKind::Delaminate ? globe.ledger.delaminated : globe.ledger.subducted) += felsic;
         return;
     }
     CrustPiece& to = globe.pieces[size_t(global[size_t(t.to)])];

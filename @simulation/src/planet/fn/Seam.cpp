@@ -4,6 +4,7 @@
 #include "geometry/fn/SpherePolygon.hpp"
 #include "geometry/fn/Union.hpp"
 #include "planet/constant/Scale.hpp"
+#include "planet/fn/Around.hpp"
 #include "planet/fn/Boundary.hpp"
 #include "planet/fn/Coupling.hpp"
 #include "planet/fn/Interior.hpp"
@@ -19,7 +20,6 @@ namespace derivean::sim {
 namespace {
 
 constexpr double SeamShare = 0.5;   // of a piece its own plate covers when the seam consumes it (as at a boundary)
-constexpr int Around = 8;           // pieces of its plate around a donor that its surplus may go to
 constexpr int SeamRounds = 8;       // of sutures and fills
 
 // How much of k the given pieces cover together, in k's tangent plane.
@@ -33,39 +33,13 @@ double unionOverPiece(Globe& globe, int k, const std::vector<int>& pieces) {
     return unionArea(parts).area;
 }
 
-// The live pieces of k's plate over k's cells and their rings that do not overlap it, nearest first
-// (the lower key on a tie): where a donor's surplus goes when the pieces over it are full.
-std::vector<int> aroundOf(const Globe& globe, const Band& band, int k, const std::vector<int>& cells, const std::vector<int>& skip) {
-    const CrustPiece& piece = globe.pieces[size_t(k)];
-    const Vec3 x = centreOf(*globe.grid, piece);
-    std::vector<std::pair<double, int>> found;
-    const auto consider = [&](int l, double) {
-        const CrustPiece& other = globe.pieces[size_t(l)];
-        if (l == k || other.plate != piece.plate || std::find(skip.begin(), skip.end(), l) != skip.end()) return;
-        for (const auto& f : found)
-            if (f.second == l) return;
-        const Vec3 d = centreOf(*globe.grid, other) - x;
-        found.push_back({dot(d, d), l});
-    };
-    for (const int cell : cells) {
-        forLive(band, cell, consider);
-        for (const int32_t other : (*globe.rings)[size_t(cell)])
-            if (other >= 0) forLive(band, other, consider);
-    }
-    std::sort(found.begin(), found.end(), [&](const auto& a, const auto& c) {
-        return a.first != c.first ? a.first < c.first : globe.pieces[size_t(a.second)].key < globe.pieces[size_t(c.second)].key;
-    });
-    std::vector<int> around;
-    for (size_t i = 0; i < found.size() && int(i) < Around; ++i) around.push_back(found[i].second);
-    return around;
-}
-
-Sutures suture(Globe& globe, Band& band, const Substep& substep) {
+size_t suture(Globe& globe, Band& band, const Substep& substep) {
     const SphereGrid& grid = *globe.grid;
     PlanPieces plan{{}, {}, std::vector<int>(globe.pieces.size(), -1)};
     std::vector<int> over, receivers, cells, work, scratch;
     std::vector<double> overlap;
     std::vector<CellWeight> weights;
+    std::vector<std::vector<int>> cellsOf;   // per candidate
     // The pieces coupled at the substep's start, then those born in it (planet/fn/Band.hpp).
     const size_t coupled = band.weightStart.size() - 1;
     for (size_t b = 0; b < band.pieces.size(); ++b) {
@@ -107,15 +81,35 @@ Sutures suture(Globe& globe, Band& band, const Substep& substep) {
         for (size_t i = 0; i < receivers.size(); ++i) candidate.receivers.push_back({localOf(plan, globe, receivers[i]), overlap[i] / sum});
         for (const int l : aroundOf(globe, band, k, cells, receivers)) candidate.behind.push_back(localOf(plan, globe, l));
         plan.input.candidates.push_back(std::move(candidate));
+        cellsOf.push_back(cells);
     }
-    if (plan.input.candidates.empty()) return {};
+    if (plan.input.candidates.empty()) return 0;
     plan.input.sinks = [&](int donor, int survivor) { return sinksInPlan(globe, plan.global[size_t(donor)], plan.global[size_t(survivor)]); };
-    const PlanResult result = planTransfers(plan.input);
-    globe.stats.rounds += result.rounds;
+    // A donor the plan refuses for want of room spreads its crust farther through its plate, and what finds
+    // no room there either is the doubled root that founders into the mantle (Kay & Kay 1993, docs/credits),
+    // so the seam closes with the stock held by the interior (lead, 27 Nov). Only a widened donor
+    // delaminates, and the plan is made again until none is refused: a widened reach may take the room
+    // another donor had, which is then widened in turn. Every pass widens one donor more, so at most N.
+    PlanResult result;
+    for (;;) {
+        result = planTransfers(plan.input);
+        globe.stats.rounds += result.rounds;
+        if (result.cancelled.empty()) break;
+        globe.stats.seamsRefused += long(result.cancelled.size());
+        for (size_t c = 0; c < plan.input.candidates.size(); ++c) {
+            PlanCandidate& candidate = plan.input.candidates[c];
+            if (std::find(result.cancelled.begin(), result.cancelled.end(), candidate.piece) == result.cancelled.end()) continue;
+            std::vector<int> skip;
+            for (const PlanShare& r : candidate.receivers) skip.push_back(plan.global[size_t(r.piece)]);
+            candidate.behind.clear();
+            for (const int l : wideAroundOf(globe, band, plan.global[size_t(candidate.piece)], cellsOf[c], skip)) candidate.behind.push_back(localOf(plan, globe, l));
+            candidate.delaminate = true;
+        }
+    }
     globe.stats.deferred += long(result.deferred.size());
     globe.stats.sutured += long(result.consumed.size());
     applyPlan(globe, band, plan, result, substep, false);
-    return {result.consumed.size(), result.cancelled.size()};
+    return result.consumed.size();
 }
 
 constexpr int BirthsPerRound = 3;   // fossil births a cell may take in a closing round
@@ -177,10 +171,9 @@ void reorganisePlates(Globe& globe, int step) {
     closeSeams(globe, band, step);
 }
 
-Sutures sutureBand(Globe& globe, Band& band, const Substep& substep) {
-    Sutures total, last{1, 0};
-    while (last.consumed > 0) last = suture(globe, band, substep), total.consumed += last.consumed;
-    total.refused = last.refused;
+size_t sutureBand(Globe& globe, Band& band, const Substep& substep) {
+    size_t total = 0;
+    for (size_t consumed = 1; consumed > 0;) total += consumed = suture(globe, band, substep);
     return total;
 }
 
@@ -189,14 +182,11 @@ bool closeSeams(Globe& globe, Band& band, int step) {
     // A suture can leave a cycle for the next round and a fossil can cover a neighbour by the rest of
     // its half, so both repeat until neither changes anything (a few rounds; bounded for safety).
     int round = 0;
-    Sutures sutures;
     for (; round < SeamRounds; ++round) {
         coupleBand(globe, band);   // the last round's fossils become candidates of this one's sutures
-        sutures = sutureBand(globe, band, seam);
-        if (sutures.consumed + fill(globe, band, seam, round) == 0) break;
+        if (sutureBand(globe, band, seam) + fill(globe, band, seam, round) == 0) break;
     }
-    const bool settled = round < SeamRounds && sutures.refused == 0;
-    globe.stats.seamsKept += long(sutures.refused);
+    const bool settled = round < SeamRounds;
     globe.stats.unsettled += !settled;
     settleBand(globe, band);
     return settled;

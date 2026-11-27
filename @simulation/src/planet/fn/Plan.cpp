@@ -127,6 +127,10 @@ PlanResult planTransfers(const PlanInput& input) {
                 left -= put;
                 result.transfers.push_back({k, b, TransferKind::Back, put, 0.0, put / felsic});
             }
+            if (left > FitTolerance * felsic && candidate.delaminate) {
+                result.transfers.push_back({k, -1, TransferKind::Delaminate, left, 0.0, 0.0});
+                left = 0;
+            }
             if (left > FitTolerance * felsic) unplaced.push_back({k, left});
             result.consumed.push_back(k);
         }

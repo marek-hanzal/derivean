@@ -115,8 +115,8 @@ void printMotion(const Globe& globe) {
     std::printf("\n");
     const GlobeLedger& l = globe.ledger;
     const CrustStock stock = totalStock(globe.pieces);
-    std::printf("ledger km3: eroded %.3g deposited %.3g erupted %.3g subducted %.3g accreted %.3g precipitated %.3g stacked %.3g\n", l.eroded / 1e9,
-                l.deposited / 1e9, l.erupted / 1e9, l.subducted / 1e9, l.accreted / 1e9, l.precipitated / 1e9, l.stacked / 1e9);
+    std::printf("ledger km3: eroded %.3g deposited %.3g erupted %.3g subducted %.3g accreted %.3g precipitated %.3g stacked %.3g delaminated %.3g\n", l.eroded / 1e9,
+                l.deposited / 1e9, l.erupted / 1e9, l.subducted / 1e9, l.accreted / 1e9, l.precipitated / 1e9, l.stacked / 1e9, l.delaminated / 1e9);
     std::printf("stock km3: felsic %.4g basalt %.4g, interior gained felsic %.3g basalt %.3g; born %.3g km2 consumed %.3g km2\n", stock.felsic / 1e9, stock.basalt / 1e9,
                 l.interior.felsic / 1e9, l.interior.basalt / 1e9, l.born / 1e6, l.consumed / 1e6);
 }

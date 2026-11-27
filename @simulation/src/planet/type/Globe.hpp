@@ -102,6 +102,7 @@ struct GlobeContact {
 struct GlobeLedger {
     double eroded{}, deposited{}, precipitated{};
     double subducted{}, accreted{}, erupted{}, stacked{};
+    double delaminated{};           // m³ of felsic crust a suture sent into the interior for want of room (in `interior`; Kay & Kay 1993, docs/credits)
     double born{}, consumed{};      // m² of footprint made at ridges and consumed at trenches and collisions
     double consumedFelsic{};        // m³ the consumed pieces held when they were consumed
     double churned{};               // m² of footprint consumed within ChurnAge of its birth (S3-design.md test 14)
@@ -121,9 +122,8 @@ struct GlobeStats {
     long filled{};   // births where no contact opens: fillCell (at closings too) and fillSlot in the band (not the fossils' slots)
     long held{};   // candidates held back since consuming them would open a cell by more than half
     long sutured{}, fossil{};   // seams: consumed by their own plate, born in old band slots at reorganisations
-    long seamsKept{};           // pieces a closing or a substep ended half covered by their own plate for want of room
-    long unsettled{};           // reorganisations whose seams did not settle in SeamRounds or kept a piece
-    long refusedSubsteps{};     // substeps that ended with a seam kept for want of room
+    long seamsRefused{};        // suture donors a plan found no room for nearby: placed farther or delaminated
+    long unsettled{};           // reorganisations whose seams did not settle in SeamRounds
     long unsettledSubsteps{};                 // substeps whose sutures still consumed after BearRounds rounds of births
 };
 

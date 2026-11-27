@@ -44,6 +44,17 @@ Bird, P. (2003). An updated digital model of plate boundaries. *Geochemistry, Ge
 - **Reference data:** 52 plates, 14 large and 38 small; each plate is one region, the small ones plates of their own; the list is incomplete below the Shetland plate, 72 240 km².
 - **Used in:** `@simulation/test/GlobeCohesion.hpp` (a plate's cells outside its largest region), the cohesion gate in `docs/handoff/planet-globe.md` (stage 2b).
 
+### Kay and Kay 1993: a thickened crustal root founders
+Kay, R. W. and Kay, S. M. (1993). Delamination and delamination magmatism. *Tectonophysics* 219(1–3), 177–189. doi:10.1016/0040-1951(93)90295-U
+- **Model:** the lower root of crust thickened in an orogen turns to eclogite, grows denser than the mantle and founders into it, so a doubled crust loses mass downwards rather than stacking without bound.
+- **Used in:** `@simulation/src/planet/fn/Seam.cpp` (`suture`: what a seam's donor finds no room for within `StackLimit` delaminates), `@simulation/src/planet/fn/Plan.hpp` (`TransferKind::Delaminate`), `GlobeLedger::delaminated`.
+
+### Scholl and von Huene 2007, 2009: how much crust returns to the mantle
+Scholl, D. W. and von Huene, R. (2007). Crustal recycling at modern subduction zones applied to the past: issues of growth and preservation of continental basement crust, mantle geochemistry, and supercontinent reconstruction. In *4-D Framework of Continental Crust*, Geological Society of America Memoir 200, 9–32. doi:10.1130/2007.1200(02)
+Scholl, D. W. and von Huene, R. (2009). Implications of estimated magmatic additions and recycling losses at the subduction zones of accretionary (non-collisional) and collisional (suturing) orogens. *Geological Society, London, Special Publications* 318, 105–125. doi:10.1144/SP318.4
+- **Numbers:** about 2.5 km³/yr of continental crust returns to the mantle at today's ocean-margin subduction zones, by sediment subduction and subduction erosion; delamination adds to it. The order of a few km³/yr is the check on the delaminated flux.
+- **Used in:** the check of the flux into the mantle (delaminated and subducted felsic crust, km³/yr) in `docs/handoff/planet-globe.md` (stage 2b); `terra globe` prints both ledgers.
+
 ### White, McKenzie and O'Nions 1992: thickness of oceanic crust
 White, R. S., McKenzie, D., O'Nions, R. K. (1992). Oceanic crustal thickness from seismic measurements and rare earth element inversions. *Journal of Geophysical Research: Solid Earth* 97(B13), 19683–19715. doi:10.1029/92JB01749
 - **Reference data:** normal oceanic crust is 7.1 ± 0.8 km thick; new ocean floor takes 7 km of basalt from the interior and a trench returns it.
