@@ -21,6 +21,7 @@ constexpr double Scale = 1e12;   // integer units per plane unit
 // each corner's |P| is taken once and carried to the next triangle.
 template <class Corner>
 double fanExcess(size_t count, Corner corner) {
+    if (count < 3) return 0;   // no area, and corner(0) may not exist
     double excess = 0;
     const auto [x0, y0] = corner(0);
     const double n0 = std::sqrt(1 + x0 * x0 + y0 * y0);
