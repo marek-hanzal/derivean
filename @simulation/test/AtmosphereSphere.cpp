@@ -234,4 +234,5 @@ void testAtmosphereSphere() {
     checkDrift();
     checkStep();
     checkEddyBand();
+    checkLatitudeBands();
 }

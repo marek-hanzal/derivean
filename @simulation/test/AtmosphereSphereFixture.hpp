@@ -79,5 +79,6 @@ void checkTracer();
 void checkDrift();
 void checkStep();
 void checkEddyBand();
+void checkLatitudeBands();
 
 } // namespace derivean::sim::atmosphere_sphere_test
