@@ -73,6 +73,10 @@ void findWays(WaterField& field) {
 // bounds how far an edge's error creeps in (constant/Hydraulics.hpp). What a step adds along each
 // edge is fixed by the columns and is worked out once.
 void spreadLevels(WaterField& field) {
+    // Half the way to each neighbour, the run a gradient is taken over on either side of the edge.
+    static constexpr float Run[8] = {float(WaterCell) * NeighborReach[0] * 0.5f, float(WaterCell) * NeighborReach[1] * 0.5f, float(WaterCell) * NeighborReach[2] * 0.5f,
+                                     float(WaterCell) * NeighborReach[3] * 0.5f, float(WaterCell) * NeighborReach[4] * 0.5f, float(WaterCell) * NeighborReach[5] * 0.5f,
+                                     float(WaterCell) * NeighborReach[6] * 0.5f, float(WaterCell) * NeighborReach[7] * 0.5f};
     const int size = field.size;
     const size_t cells = field.cells();
     constexpr float Unreached = 1e30f;
@@ -107,8 +111,7 @@ void spreadLevels(WaterField& field) {
                     const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
                     if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
                     const AquiferColumn& other = field.column[field.index(nx, nz)];
-                    const float run = float(WaterCell) * NeighborReach[k] * 0.5f;
-                    lowerUp[i * 8 + size_t(k)] = run * (lowerOwn / ease(column, k) + leastGradient(other, lowerT(other)) / ease(other, k));
+                    lowerUp[i * 8 + size_t(k)] = Run[k] * (lowerOwn / ease(column, k) + leastGradient(other, lowerT(other)) / ease(other, k));
                     if (Way(field.way[i * 8 + size_t(k)]) == Way::Along)
                         upperFall[i * 8 + size_t(k)] = upperOwn / ease(column, k) + leastGradient(other, other.upperT) / ease(other, k);
                 }
@@ -137,12 +140,11 @@ void spreadLevels(WaterField& field) {
                         const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
                         if (nx < 0 || nz < 0 || nx >= size || nz >= size) continue;
                         const size_t j = field.index(nx, nz);
-                        const float run = float(WaterCell) * NeighborReach[k] * 0.5f;
                         const float up = lowerUp[i * 8 + size_t(k)];
                         const float stand = field.level[j * 2 + Lower] + up;
                         lowest = std::min(lowest, stand);
                         if (rise[j] < Unreached && (rise[j] + up < least || (rise[j] + up == least && stand < nearest))) least = rise[j] + up, nearest = stand;
-                        if (Way(field.way[i * 8 + size_t(k)]) == Way::Along) upper = std::min(upper, field.level[j * 2 + Upper] + run * upperFall[i * 8 + size_t(k)]);
+                        if (Way(field.way[i * 8 + size_t(k)]) == Way::Along) upper = std::min(upper, field.level[j * 2 + Upper] + Run[k] * upperFall[i * 8 + size_t(k)]);
                     }
                     next[i * 2 + Upper] = column.perched ? std::clamp(upper, column.floor, std::max(column.floor, column.ground)) : column.ground;
                     const bool drains = drainsLower(column), reached = !column.perched && least < Unreached;
