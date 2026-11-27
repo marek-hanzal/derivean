@@ -30,6 +30,12 @@ struct Over {
 };
 Over overOf(const Globe& globe, const Band& band, int cell, int plate, Vec3 x, Vec3 normal);
 
+// Whether the pieces of `over` cover more than `half` (m²) of the cell: over.sum > half and either
+// over.most > half or unionInCell(...) > half. The union is taken only where its bounds leave the answer
+// open: it is at least the largest overlap, and at least the sum less the overlaps of every pair of
+// pieces from two lattices (pieces of one lattice tile and do not overlap; Bonferroni).
+bool coversOver(const Globe& globe, int cell, const Over& over, double half, long& unions);
+
 // How far (rad) to move a new footprint from its cell along `normal` to weld it onto its own plate.
 double weldTurn(Globe& globe, const Band& band, int cell, int plate, Vec3 x, Vec3 normal);
 

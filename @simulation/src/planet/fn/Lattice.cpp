@@ -6,12 +6,18 @@
 #include "geometry/fn/SphereGrid.hpp"
 #include "geometry/fn/SpherePolygon.hpp"
 #include "geometry/fn/Union.hpp"
+#include "planet/fn/Interior.hpp"
 #include "planet/fn/Pieces.hpp"
 
 #include <algorithm>
 #include <cmath>
 
 namespace derivean::sim {
+namespace {
+
+constexpr double BoundMargin = 1e-6;   // of a cell, by which a bound of a union must clear what it decides
+
+} // namespace
 
 double unionInCell(const Globe& globe, int cell, const std::vector<int>& pieces, double sum, long& unions) {
     const SphereGrid& grid = *globe.grid;
@@ -22,6 +28,23 @@ double unionInCell(const Globe& globe, int cell, const std::vector<int>& pieces,
     for (const int k : pieces) parts.push_back(clipped(projected(plane, footprintOf(grid, globe.pieces[size_t(k)])), own));
     ++unions;
     return unionArea(parts).area;
+}
+
+bool coversOver(const Globe& globe, int cell, const Over& over, double half, long& unions) {
+    if (over.sum <= half) return false;
+    if (over.most > half) return true;
+    const SphereGrid& grid = *globe.grid;
+    // Bounds decide only clear of `half` by this share of the cell, far over the rounding of the band's
+    // normalised weights and of the union's clipped parts (about 1e-12).
+    const double clear = half + BoundMargin * grid.area[size_t(cell)];
+    std::vector<SpherePolygon> footprint(over.pieces.size());
+    for (size_t i = 0; i < over.pieces.size(); ++i) footprint[i] = footprintOf(grid, globe.pieces[size_t(over.pieces[i])]);
+    double least = over.sum;
+    for (size_t i = 0; i < over.pieces.size() && least > clear; ++i)
+        for (size_t j = 0; j < i && least > clear; ++j)
+            if (!tiles(globe.pieces[size_t(over.pieces[i])], globe.pieces[size_t(over.pieces[j])])) least -= overlapArea(footprint[i], footprint[j]);
+    if (least > clear) return true;
+    return unionInCell(globe, cell, over.pieces, over.sum, unions) > half;
 }
 
 Over overOf(const Globe& globe, const Band& band, int cell, int plate, Vec3 x, Vec3 normal) {

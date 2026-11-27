@@ -155,7 +155,7 @@ size_t fill(Globe& globe, Band& band, const Substep& substep, int round, int fir
             ++globe.stats.fossil, ++filled;
         const double half = BornShare * globe.grid->area[size_t(cell)];
         const Over over = overOf(globe, band, cell, -1, {}, {});
-        if (over.sum > half && (over.most > half || unionInCell(globe, cell, over.pieces, over.sum, globe.stats.unions) > half)) continue;
+        if (coversOver(globe, cell, over, half, globe.stats.unions)) continue;
         const CellPlates at = platesAt(globe, band, cell);
         if (!at.two || at.largest < 0) continue;
         fillCell(globe, band, cell, at.largest, {substep.step, cell, -1 - first - (SeamRounds * BirthsPerRound + round)}, globe.time);

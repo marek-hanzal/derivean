@@ -75,7 +75,7 @@ bool bearCell(Globe& globe, Band& band, int cell, const Substep& substep, int or
         // A closed cell still looks for a slot while its overlaps sum to under 1 − SlotHint.
         const Over over = overOf(globe, band, cell, -1, {}, {});
         const double half = BornShare * area;
-        const bool open = !(over.sum > half && (over.most > half || unionInCell(globe, cell, over.pieces, over.sum, globe.stats.unions) > half));
+        const bool open = !coversOver(globe, cell, over, half, globe.stats.unions);
         const bool closed = !open && over.sum >= (1 - SlotHint) * area;
         // Inside one plate a gap is a slot of its lattice open by half or more, not a mantle cell a seam
         // crosses (planet/fn/Interior.hpp); such a slot is filled first, wherever no other plate is near
