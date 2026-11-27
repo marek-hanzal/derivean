@@ -28,6 +28,9 @@ bool onZone(const WaterField& field, size_t cell) {
 struct Use {
     std::vector<float> step;     // nodes × 8: m³/yr each step carried
     std::vector<float> outlet;   // per node: m³/yr that left through it
+    // cells × 8: planeAlong of the step from a cell towards neighbour k, 255 until first asked. The
+    // joints do not change from round to round, so each step's grade is worked out once.
+    std::vector<uint8_t> grade;
 };
 
 // Whether the water of a node can go on to the node (to, toStorey) in direction k.
@@ -38,16 +41,20 @@ bool joined(const WaterField& field, size_t from, int storey, int toStorey, int 
 }
 
 // m of head the step from a node towards neighbour k uses up.
-float lossOf(const WaterField& field, const Use& use, size_t from, int storey, size_t to, int k) {
-    int set = 0;
-    return float(WaterCell) * NeighborReach[k] * Fall / (PlaneEase[planeAlong(field, from, to, k, set)] + grown(use.step[(from * 2 + size_t(storey)) * 8 + size_t(k)]));
+float lossOf(const WaterField& field, Use& use, size_t from, int storey, size_t to, int k) {
+    uint8_t& grade = use.grade[from * 8 + size_t(k)];
+    if (grade == 255) {
+        int set = 0;
+        grade = uint8_t(planeAlong(field, from, to, k, set));
+    }
+    return float(WaterCell) * NeighborReach[k] * Fall / (PlaneEase[grade] + grown(use.step[(from * 2 + size_t(storey)) * 8 + size_t(k)]));
 }
 
 // m: the lowest a node's water can stand: on the tight bed it runs on, for the upper storey.
 float leastHead(const WaterField& field, size_t node) { return node & 1 ? -1e30f : field.column[node / 2].floor + Thin; }
 
 // The level at which a node's water gets out without passing another node of the tile, and how.
-float wayOut(const WaterField& field, const Use& use, size_t node, Outlet& outlet) {
+float wayOut(const WaterField& field, Use& use, size_t node, Outlet& outlet) {
     const size_t cell = node / 2;
     const int storey = int(node & 1), x = int(cell % size_t(field.size)), z = int(cell / size_t(field.size));
     const AquiferColumn& column = field.column[cell];
@@ -105,7 +112,7 @@ KarstNet drainKarst(const WaterField& field) {
                 if (field.karst[field.index(x, z) * 2 + size_t(storey)]) members.push_back(int32_t(field.index(x, z) * 2 + size_t(storey)));
     if (members.empty()) return net;
 
-    Use use{std::vector<float>(nodes * 8, 0.0f), std::vector<float>(nodes, 0.0f)};
+    Use use{std::vector<float>(nodes * 8, 0.0f), std::vector<float>(nodes, 0.0f), std::vector<uint8_t>(field.cells() * 8, 255)};
     std::vector<uint8_t> settled(nodes);
     using Reached = std::pair<float, int32_t>;
     std::vector<Reached> heap;
