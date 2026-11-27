@@ -53,9 +53,8 @@ export function airLight(sky: SkyNodes, direction: Vec3, range: Float) {
 // is the sky towards the horizon, the light of air too deep to see past, which already holds what the haze
 // absorbs (skyLight's horizon); taking it off again here would count it twice. At the end of the view the ground
 // has become the clear sky just above the horizon in its direction, which is what the background draws there, so
-// the terrain never ends in an edge.
-export function airFade(sky: SkyNodes, color: Vec3, fromEye: Vec3) {
-  const range = length(fromEye);
+// the terrain never ends in an edge. `range` is the length of `fromEye`, for a caller that holds it.
+export function airFade(sky: SkyNodes, color: Vec3, fromEye: Vec3, range: Float = length(fromEye)) {
   const from = cameraPosition.y.sub(sky.airSea);
   const to = from.add(fromEye.y);
   const fine = sky.airHazeSpectrum.mul(bandMean(sky.airEye.z, sky.airEye.w, from, to, sky.airHaze.y).mul(sky.airHaze.x));

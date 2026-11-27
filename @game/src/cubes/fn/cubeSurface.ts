@@ -129,7 +129,7 @@ export function cubeSurface({ sky, levels, palette, anchor, shadow, snow, land }
     const below = snow && around ? mix(sky.groundLight, vec3(fallen).mul(snow.color), clamp(around.div(CoverMass), 0, 1).mul(sky.plain.oneMinus())) : undefined;
     const itself = faceLight(sky, normal, open, lit, below);
     const light = stands ? mix(itself, faceLight(sky, stands.normal, open, stands.lit, below), stands.share) : itself;
-    return vec4(airFade(sky, albedo.mul(light).div(PI), fromEye), 1);
+    return vec4(airFade(sky, albedo.mul(light).div(PI), fromEye, range), 1);
   })();
   return material;
 }

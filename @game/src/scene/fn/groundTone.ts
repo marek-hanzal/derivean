@@ -1,4 +1,4 @@
-import { Fn, If, clamp, dot, float, floor, fract, mix, smoothstep, vec3 } from "three/tsl";
+import { Fn, If, clamp, dot, float, floor, fract, mix, smoothstep, step, vec3 } from "three/tsl";
 import type { Node } from "three/webgpu";
 import { GroundRepeat } from "../constant/grain";
 
@@ -14,15 +14,21 @@ export const groundHash = Fn(([at]: [Vec3]) => {
   return fract(cell.x.add(cell.y).mul(cell.z));
 });
 
-// Value noise in cells of one unit that repeats after `repeat` cells along each axis.
+// Value noise in cells of one unit that repeats after `repeat` cells along each axis. `repeat` is a whole number,
+// so the cell past a wrapped one is one further, or the first again. A division that rounds a whole multiple of
+// `repeat` just low wraps it to `repeat`, which is folded to 0 like the cell past it.
 const groundNoise = Fn(([at, repeat]: [Vec3, Vec3]) => {
-  const cell = floor(at);
+  const low = wrap(floor(at), repeat).toVar();
+  low.subAssign(repeat.mul(step(repeat, low)));
+  const next = low.add(1);
+  const high = next.sub(repeat.mul(step(repeat, next))).toVar();
   const part = fract(at).toVar();
   part.assign(part.mul(part).mul(part.mul(-2).add(3)));
-  const corner = (x: number, y: number, z: number) => groundHash(wrap(cell.add(vec3(x, y, z)), repeat));
-  const low = mix(mix(corner(0, 0, 0), corner(1, 0, 0), part.x), mix(corner(0, 1, 0), corner(1, 1, 0), part.x), part.y);
-  const high = mix(mix(corner(0, 0, 1), corner(1, 0, 1), part.x), mix(corner(0, 1, 1), corner(1, 1, 1), part.x), part.y);
-  return mix(low, high, part.z);
+  const corner = (x: number, y: number, z: number) =>
+    groundHash(vec3(x ? high.x : low.x, y ? high.y : low.y, z ? high.z : low.z));
+  const near = mix(mix(corner(0, 0, 0), corner(1, 0, 0), part.x), mix(corner(0, 1, 0), corner(1, 1, 0), part.x), part.y);
+  const far = mix(mix(corner(0, 0, 1), corner(1, 0, 1), part.x), mix(corner(0, 1, 1), corner(1, 1, 1), part.x), part.y);
+  return mix(near, far, part.z);
 });
 
 // What makes a stretch of one material look like ground instead of paint. None of it is simulated: the material
@@ -52,7 +58,10 @@ export function groundColor(base: Vec3, at: Vec3, loose: Float, range: Float, ed
     });
     return value;
   };
-  const stain = groundNoise(at.div(256), vec3(GroundRepeat / 256)).sub(0.5).mul(smoothstep(128, 384, edge).oneMinus());
+  const stain = float(0).toVar();
+  If(edge.lessThan(384), () => {
+    stain.assign(groundNoise(at.div(256), vec3(GroundRepeat / 256)).sub(0.5).mul(smoothstep(128, 384, edge).oneMinus()));
+  });
   const mottle = octave(25.6, 3.7, 5000, 16000);
   const patchy = octave(6.4, 9.1, 1200, 4000);
   const fine = octave(1.6, 5.3, 120, 400);
