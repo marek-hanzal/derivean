@@ -126,6 +126,16 @@ Gemini Neon joined on 26 Nov for performance profiling and image checks (`from-n
      - Sources go into the credits with the first change that uses them.
    - **Extremes where conditions exist.** Strong winds, tropical cyclones (genesis from sea surface temperature, shear, Coriolis and humidity; intensity and track from the simulated air and ocean), severe storms and tornadoes (from instability and shear; below the grid, so they are spawned and lived out locally). They come only from the simulated state, never as scripted events. After S4.10 and the ocean.
    - **Ocean currents.** Wind-driven gyres with western boundary currents, and the thermohaline circulation, on the sphere and coupled to the atmosphere through surface temperature, wind and fresh water. A new slice after S3e and S4.10.
+   - **Live eruptions, visible from afar and as large as the simulation makes them (owner, 27 Nov).** The simulation side exists: `outbreaksBetween`, `outbreakOf` (column after Mastin 2009, lava plume, style, rates) and `airSourcesOf` in `volcanic/`, and the near field goes in as a Deposit edit. Nothing calls them in play yet (docs/handoff/volcanic.md).
+     - The engine runs a vent's eruptions in live time.
+     - Everything is drawn from simulated fields, never sprites or billboards:
+       - the column, the umbrella cloud and the drifting ash plume, from the atmosphere's ash and gas;
+       - pyroclastic currents;
+       - fountains and lava, as emissive sources by their temperature under the rule for light;
+       - lightning in the ash column, through the lightning item.
+       The volumes are raymarched like the clouds, with level of detail by distance, so a column 20–40 km high stands over the horizon from hundreds of kilometres.
+     - Scale follows the eruption. A normal eruption makes a local mess: cone, flows, ash fall in sixteenths (item 6c). A supereruption (VEI 8) buries a continent in ash, collapses a caldera, and puts sulphate into the stratosphere. That sulphate dims and reddens sunsets worldwide through the haze, and it cools the climate for years once the steady climate on the sphere exists.
+     - Today seed 42 makes no VEI 6–7, because the planet's supply on land is short by about 3 (volcanic.md, "Frequency and size"). Large ones must come from the volcanic model, not from a script. An intervention may still call an eruption of a chosen size at a vent.
    - **Impacts from space, from the measured flux; no orbital mechanics (owner, 27 Nov).** The number of bodies of each size that strike per year follows the measured size–frequency distribution (Brown et al. 2002 from satellite-observed bolides, with the crater record for the large end). The flux is higher early in the planet's history. They are drawn statistically over the planet's surface.
      - **History (after S3e, a process over the crust on the sphere):**
        - craters by size from the flux, which the existing erosion then wears, fills with lakes or keeps as rings;
