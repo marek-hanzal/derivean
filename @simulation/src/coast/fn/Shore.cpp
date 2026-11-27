@@ -2,6 +2,9 @@
 
 #include "landscape/fn/Process.hpp"
 
+// About 270 lines: one step of the coast and the booking of what it did, which reads the state the
+// step began with; apart, the booking would need that state handed to it field by field.
+
 namespace derivean::sim {
 namespace {
 
@@ -48,6 +51,16 @@ void book(Domain& domain, Shore& shore, const std::vector<float>& cutBefore) {
             domain.ledger.deposited += double(won) * area;
         }
     }
+}
+
+// m³ of broken rock waiting in the surf of the tile's own cells, which are all Free.
+double pendingOwned(const Domain& domain, const Shore& shore) {
+    double sum = 0;
+    for (int z = 0; z < domain.size; ++z)
+        for (int x = 0; x < domain.size; ++x)
+            if (domain.owned(x, z))
+                for (const auto& kind : shore.pending) sum += kind[domain.index(x, z)];
+    return sum * domain.cell * domain.cell;
 }
 
 } // namespace
@@ -213,6 +226,8 @@ void workShores(Domain& domain, FlowScratch& scratch) {
     if (!water && !last) return;
     for (size_t i = 0; i < domain.cells(); ++i) shore.before[i] = looseAt(domain, i);
     const std::vector<float> cutBefore = shore.cut;
+    const TileLedger ledgerBefore = domain.ledger;
+    const double waitingBefore = pendingOwned(domain, shore);
     if (water) {
         const bool dated = domain.key.level == Level::Region;
         const double years = dated ? std::min(domain.step, StandTime) : StandTime * domain.step / std::max(domain.step, domain.endTime - domain.startTime);
@@ -239,11 +254,16 @@ void workShores(Domain& domain, FlowScratch& scratch) {
                 const float laid = shore.still[i] == NoWater ? waiting : std::clamp(layingLevel(domain, shore, i, shore.still[i]) - shore.top[i], 0.0f, waiting);
                 domain.ground.sediment[kind][i] += laid, shore.top[i] += laid;
                 shore.ledger.left += double(waiting - laid) * area;
-                if (domain.owned(int(i % size_t(domain.size)), int(i / size_t(domain.size)))) domain.ledger.sedimentOut += double(waiting - laid) * area;
                 waiting = 0;
             }
     }
     book(domain, shore, cutBefore);
+    // Net of the step on the tile's own cells: what the waves took, less what they laid, what
+    // dissolved and what the surf there holds more. The rest crossed the tile's edge, out or in:
+    // drift, mud and what the last step leaves in the surf; what went out and came back cancels.
+    const double crossed = (domain.ledger.eroded - ledgerBefore.eroded) - (domain.ledger.deposited - ledgerBefore.deposited) -
+                           (domain.ledger.dissolved - ledgerBefore.dissolved) - (pendingOwned(domain, shore) - waitingBefore);
+    (crossed > 0 ? domain.ledger.sedimentOut : domain.ledger.sedimentIn) += std::abs(crossed);
 }
 
 float layingLevel(const Domain& domain, const Shore& shore, size_t i, float water) { return shore.stream[i] ? water : water + swingOf(domain, water); }

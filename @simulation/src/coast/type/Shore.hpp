@@ -25,9 +25,9 @@ inline size_t trainIndex(size_t cells, size_t i, int k) { return size_t(k) * cel
 // the cells whose ground or water moved and those a changed train reaches; every other cell would
 // come out to the same bits (coast/fn/Waves.cpp; testCoast compares against a full raise). It rests
 // on: spreadWater runs before the first raise of every step and clears `valid`; Domain::hold,
-// Domain::seaLevel, `gale` and `beyond` do not change between raises of a step; and every cell with
-// still water has its ring of neighbours inside the box, so a cell that joins the box within a step
-// has no water and no trains.
+// Domain::seaLevel, `gale` and `beyond` do not change between raises of a step; and a cell is kept
+// only against what a raise of it read: the box of the raise that makes the memo whole is all it
+// remembers, so a cell that joins the box later is worked out again.
 struct WaveMemo {
     bool valid{};                 // false until the trains of this step were raised over every cell; spreadWater clears it
     const Domain* domain{};       // the domain they were raised over

@@ -40,7 +40,9 @@ struct Ground {
 // Totals in m³ of solid over the tile's own cells for the replayed window.
 struct TileLedger {
     double uplifted{}, eroded{}, deposited{}, weathered{}, dissolved{}, failed{};
-    double sedimentIn{}, sedimentOut{};   // carried across the domain edge by rivers
+    // Carried across the edge between the tile's own cells and the rest of the domain, halo
+    // included: by rivers, ice and meltwater per crossing; the plume and the shore as the net of a step.
+    double sedimentIn{}, sedimentOut{};
 };
 
 // Rock the ice of the last glacial maximum passed over on its way to a place: where the boulders
