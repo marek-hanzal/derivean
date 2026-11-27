@@ -126,6 +126,18 @@ Gemini Neon joined on 26 Nov for performance profiling and image checks (`from-n
      - Sources go into the credits with the first change that uses them.
    - **Extremes where conditions exist.** Strong winds, tropical cyclones (genesis from sea surface temperature, shear, Coriolis and humidity; intensity and track from the simulated air and ocean), severe storms and tornadoes (from instability and shear; below the grid, so they are spawned and lived out locally). They come only from the simulated state, never as scripted events. After S4.10 and the ocean.
    - **Ocean currents.** Wind-driven gyres with western boundary currents, and the thermohaline circulation, on the sphere and coupled to the atmosphere through surface temperature, wind and fresh water. A new slice after S3e and S4.10.
+   - **Impacts from space, from the measured flux; no orbital mechanics (owner, 27 Nov).** The number of bodies of each size that strike per year follows the measured size–frequency distribution (Brown et al. 2002 from satellite-observed bolides, with the crater record for the large end). The flux is higher early in the planet's history. They are drawn statistically over the planet's surface.
+     - **History (after S3e, a process over the crust on the sphere):**
+       - craters by size from the flux, which the existing erosion then wears, fills with lakes or keeps as rings;
+       - ejecta layers in the strata as marker beds, and impact glass such as tektites (the moldavites of the Ries impact);
+       - a large one (about 10 km, about once per 100 Myr) arrives from the same statistics. At first it leaves only the crater and the layer, and its climate (impact winter) comes once the steady climate on the sphere exists.
+     - **Live play:**
+       - bolides and airbursts, lit by the rule for light from the sky and with a pressure wave;
+       - small stones that survive and fall as meteorites, which can hit anything, the player included;
+       - rare crater-forming impacts at the real rate.
+
+       At the real flux a player is practically never hit, and a crater nearby is never seen. An intervention can therefore call an impact of a chosen size to a chosen place. The crater cuts into the player's builds as into the ground.
+     - Sources (flux, crater scaling such as Holsapple's, entry and airburst models) go into the credits with their first use.
    - **Natural phenomena that follow from the simulated state (owner, 27 Nov: all of them, fire excepted). Each one is a small process over state the slices above provide, never a scripted effect.**
      - Sky optics, over the light through the atmosphere and the rain and fog:
        - rainbows: primary at 42° and secondary at 51° around the antisolar point, the dark band between, a white fogbow from small drops, only with the Sun below 42° and rain opposite it;
