@@ -42,6 +42,10 @@ struct Band {
 // Marks the band from the globe's coupling at the start of a step.
 void markBand(const Globe& globe, int sweep, Band& band);
 
+// Marks a band whose core is the given cells, as markBand widens its own (planet/fn/Cohesion: the cells
+// a fragment of a plate leaves when it joins the plate around it).
+void markBandAt(const Globe& globe, int sweep, const std::vector<int32_t>& cells, Band& band);
+
 // Exact overlaps of every live band piece as the pieces stand; lists per region cell.
 void coupleBand(const Globe& globe, Band& band);
 

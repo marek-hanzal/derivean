@@ -43,6 +43,7 @@ void enterGlobeEpoch(Globe& globe) {
     }
     setEuler(globe.epoch, sin2, continental, globe.speeds);
     globe.motion.assign(plates, GlobeMotion{});
+    for (GlobeMotion& motion : globe.motion) motion.id = globe.platesMade++;
     // The polarity of the plate's trenches for the epoch (sinksUnder; Stern 2002, docs/credits). A plate
     // with no ocean now keeps age 0, so the ocean it opens in the epoch overrides every older plate's.
     std::vector<double> ocean(plates, 0.0);   // the plate's ocean floor, m²

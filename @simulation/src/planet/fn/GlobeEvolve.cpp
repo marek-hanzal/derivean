@@ -4,6 +4,7 @@
 #include "core/fn/Hash.hpp"
 #include "geometry/constant/Sphere.hpp"
 #include "planet/fn/Boundary.hpp"
+#include "planet/fn/Cohesion.hpp"
 #include "planet/fn/Coupling.hpp"
 #include "planet/fn/FlatView.hpp"
 #include "planet/fn/GlobeContacts.hpp"
@@ -67,6 +68,8 @@ void stepGlobe(Globe& globe, int64_t step, Workers& workers) {
     setWater(globe);
     advancePlates(globe, PlanetStep, int(step));
     auto mark = std::chrono::steady_clock::now();
+    keepPlatesWhole(globe, int(step));
+    clockPhase(globe, GlobePhase::Whole, mark);
     traceGlobeContacts(globe);
     actOnGlobeContacts(globe, PlanetStep);
     relaxGlobeThickCrust(globe, PlanetStep);

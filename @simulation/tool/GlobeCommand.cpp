@@ -109,7 +109,7 @@ void printMotion(const Globe& globe) {
     std::printf("pieces %zu  substeps %ld  births %ld  consumptions %ld  cancelled %ld  deferred %ld  rounds %ld  unions %ld  band cells per step %.0f\n",
                 globe.pieces.size(), s.substeps, s.births, s.consumptions, s.cancelled, s.deferred, s.rounds, s.unions,
                 double(s.bandCells) / std::max<size_t>(1, globe.seaLevels.size()));
-    const char* names[] = {"band", "substeps", "rest", "couple", "contacts", "elevation", "climate", "surface"};
+    const char* names[] = {"band", "substeps", "rest", "couple", "whole", "contacts", "elevation", "climate", "surface"};
     std::printf("phases s:");
     for (size_t p = 0; p < s.seconds.size(); ++p) std::printf(" %s %.2f", names[p], s.seconds[p]);
     std::printf("\n");
@@ -157,7 +157,9 @@ int globeCommand(const Arguments& arguments) {
     const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
     std::printf("seed %llu age %.4g yr  globe time %.4g yr  level %d (%d cells)  speeds %s  %.2f s\n", static_cast<unsigned long long>(seed), age, globe.time, level,
                 globe.grid->cells, speeds == PlateSpeeds::Earth ? "earth" : "today", seconds);
-    std::printf("epoch %d (%zu plates)\n", globe.epoch.index, globe.epoch.plates.size());
+    const size_t sites = globe.epoch.sites ? globe.epoch.sites : globe.epoch.plates.size();
+    std::printf("epoch %d (%zu plates, %zu of them its sites); history: %zu splits, %zu plates dropped, %ld fragments joined\n", globe.epoch.index,
+                globe.epoch.plates.size(), sites, globe.splits.size(), globe.plateEnds.size(), globe.stats.fragmentsJoined);
     printSurface(globe);
     printMotion(globe);
     // The crust with what the interior gained against the primordial body, relative (§5: no balancing account).

@@ -50,8 +50,10 @@ inline constexpr int BearRounds = 6;
 void bearInBand(Globe& globe, Band& band, const Substep& substep, int round);
 
 // The end of a step's or a reorganisation's band work: the consumed gone, the pieces in key order and
-// the coupling of the whole globe, exact for the band's pieces and cloud-in-cell for the rest.
-void settleBand(Globe& globe, const Band& band);
+// the coupling of the whole globe, exact for the band's pieces and cloud-in-cell for the rest; with
+// `keepExact` also exact for the pieces the coupling before it had exact (a closing after the step's own
+// band work, planet/fn/Cohesion, keeps the step's boundaries exact for the contacts and the next band).
+void settleBand(Globe& globe, const Band& band, bool keepExact);
 
 inline constexpr float StackLimit = 64000.0f;   // m of crust a collision can stack before it backs up
 

@@ -10,8 +10,11 @@
 //   within its ring) open by half; the stock of felsic crust and basalt with the interior stays exact.
 // - A seam whose crust finds no room within StackLimit nearby spreads it through its plate and
 //   delaminates the rest, and closes with the stock and StackLimit kept.
-// - Each plate stays one region (GlobeCohesion.hpp): under 1 % of the cells lie outside their plate's
-//   largest region at the end of the first epoch and 27 steps after the reorganisation.
+// - After every step each plate is one region with a cell (planet/fn/Cohesion, stats.wholeUnsettled; no
+//   region of MicroplateCells and MicroplateArea apart, GlobeCohesion.hpp), fragments do join the plate
+//   round them, and under 1 % of the cells lie outside their plate's largest region at the end of the
+//   first epoch and 27 steps after the reorganisation; the closing leaves every surviving piece its
+//   birth, area, rotation and age.
 // - The plates' mean ocean ages that set the trenches' polarity for the epoch (sinksUnder) are those of
 //   the floor dealt to them.
 // A rigid plate of two lattices carries a seam's gap of under half a slot diagonally over the mantle
@@ -36,7 +39,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <string>
 
 using namespace derivean::sim;
 using namespace derivean::sim::globe_test;
@@ -83,14 +85,30 @@ double drift(const Globe& globe, const CrustStock& start) {
 
 void step(Globe& globe, int index) {
     advancePlates(globe, PlanetStep, index);
+    keepPlatesWhole(globe, index);
+    const Cohesion cohesion = measureCohesion(globe);
+    expect(cohesion.fragment < MicroplateArea && globe.stats.wholeUnsettled == 0, "a plate is not one region with a cell after a step", cohesion.fragment);
+    const PlateRegions regions = plateRegionsOf(globe);
+    for (size_t p = 0; p < globe.epoch.plates.size(); ++p)
+        expect(p < regions.largest.size() && regions.largest[p] >= 0, "a plate holds no cell after a step", double(p));
     for (CrustPiece& piece : globe.pieces) piece.column.oceanAge += float(PlanetStep);
     globe.time += PlanetStep;
 }
 
-void expectCohesive(const Globe& globe, const char* when) {
+void expectCohesive(const Globe& globe, const char* what) {
     const Cohesion cohesion = measureCohesion(globe);
-    const double stray = double(cohesion.stray) / double(cohesion.cells);
-    expect(stray < 0.01, (std::string("a plate breaks into regions by ") + when).c_str(), stray);
+    expect(100 * cohesion.stray < cohesion.cells, what, double(cohesion.stray) / double(cohesion.cells));
+}
+
+// Codex DREV-CLAUDE-005-06: a piece that survives a closing keeps what it was born with.
+void expectSameSurvivors(const std::vector<CrustPiece>& before, const std::vector<CrustPiece>& after, const char* what) {
+    expect(std::is_sorted(before.begin(), before.end(), [](const CrustPiece& a, const CrustPiece& b) { return a.key < b.key; }), what);
+    for (const CrustPiece& piece : after) {
+        const auto was = std::lower_bound(before.begin(), before.end(), piece, [](const CrustPiece& a, const CrustPiece& b) { return a.key < b.key; });
+        if (was == before.end() || !(was->key == piece.key)) continue;
+        expect(was->birth == piece.birth && sameBits(was->area, piece.area) && sameBits(was->rotation, piece.rotation) && sameBits(was->column.oceanAge, piece.column.oceanAge),
+               what, double(piece.key.cell));
+    }
 }
 
 // The plates' mean ocean ages as enterGlobeEpoch sets them, after the pieces are dealt to the new plates
@@ -147,15 +165,10 @@ void checkCrowdedSeam(Room room) {
     for (CrustPiece& piece : globe.pieces) piece.plate = 0;   // the old boundary is now a seam inside one plate
     expect(measureGaps(globe).ownHalf > 0, "the crowded seam is not half covered by its own plate");
     const CrustStock start = totalStock(globe.pieces);
-    const std::vector<CrustPiece> before = globe.pieces;
-    const bool settled = closeSeams(globe, old, 1);
-    for (const CrustPiece& piece : globe.pieces) {
-        const auto was = std::find_if(before.begin(), before.end(), [&](const CrustPiece& p) { return p.key == piece.key; });
-        if (was == before.end()) continue;
-        const bool same = was->birth == piece.birth && was->area == piece.area && was->rotation.w == piece.rotation.w && was->rotation.x == piece.rotation.x &&
-                          was->rotation.y == piece.rotation.y && was->rotation.z == piece.rotation.z && was->column.oceanAge == piece.column.oceanAge;
-        expect(same, "the crowded seam changes a surviving piece's identity", double(piece.key.cell));
-    }
+    std::vector<CrustPiece> before = globe.pieces;
+    std::sort(before.begin(), before.end(), [](const CrustPiece& a, const CrustPiece& b) { return a.key < b.key; });
+    const bool settled = closeSeams(globe, old, 1, 0);
+    expectSameSurvivors(before, globe.pieces, "the crowded seam changes a surviving piece's identity");
     const Gaps after = measureGaps(globe);
     const CrustStock now = totalStock(globe.pieces);
     expect(globe.stats.seamsRefused > 0, "the crowded seam finds room nearby", double(globe.stats.seamsRefused));
@@ -196,15 +209,17 @@ void testGlobeEpochs() {
         expect(c.outside.worstHole < 0.05 && c.outside.worstOverlap < 0.05, "a plate of one lattice is open or doubled outside the band", std::max(c.outside.worstHole, c.outside.worstOverlap));
     }
     expect(index > 60 && index < 160, "the first epoch is not where the fixture expects it", index);
-    expectCohesive(globe, "the first epoch");
+    expectCohesive(globe, "a plate breaks into regions by the first epoch's end");
 
     Band old;
     markBand(globe, 1, old);
+    const std::vector<CrustPiece> before = globe.pieces;
     enterGlobeEpoch(globe);
     checkOceanAges(globe);
     const Covers dealt = coversOf(globe);
     expect(dealt.outside.worstHole > 0.3 && dealt.outside.worstOverlap > 0.3, "dealing the pieces anew no longer moves a boundary's defects inside a plate", dealt.outside.worstHole);
-    closeSeams(globe, old, index);
+    closeSeams(globe, old, index, 0);
+    expectSameSurvivors(before, globe.pieces, "the closing changes a surviving piece's identity");
     const Gaps closed = measureGaps(globe);
     expect(closed.ownCover < 0.5, "a piece stays half covered by its own plate after the seams close", closed.ownCover);
     expect(closed.slotOpen < 0.5, "a slot inside a plate stays half open after the seams close", closed.slotOpen);
@@ -222,6 +237,7 @@ void testGlobeEpochs() {
         expect(gaps.ownCover < 0.5 && gaps.slotOpen < 0.5, "a plate is half open or half doubled in its own frame after the reorganisation", std::max(gaps.ownCover, gaps.slotOpen));
     }
     expect(globe.stats.sutured > sutured, "no seam closes in the band after the reorganisation", double(globe.stats.sutured - sutured));
-    expectCohesive(globe, "the steps after the reorganisation");
+    expectCohesive(globe, "a plate breaks into regions in the steps after the reorganisation");
+    expect(globe.stats.fragmentsJoined > 0, "no fragment of a plate joins the plate round it", double(globe.stats.fragmentsJoined));
     expect(drift(globe, start) < 1e-12, "the steps after the reorganisation lose crust", drift(globe, start));
 }

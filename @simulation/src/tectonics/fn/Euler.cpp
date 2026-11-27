@@ -22,8 +22,9 @@ Vec3 unitOf(uint64_t seed, int a, int b) {
     return {r * std::cos(angle), r * std::sin(angle), z};
 }
 
-// Angle between neighbouring sites of n evenly spread on the sphere.
-double spacingOf(const EulerEpoch& epoch) { return std::sqrt(4 * Pi / double(epoch.plates.size())); }
+// Angle between neighbouring sites of n evenly spread on the sphere; plates split within the epoch are
+// no sites.
+double spacingOf(const EulerEpoch& epoch) { return std::sqrt(4 * Pi / double(epoch.sites ? epoch.sites : epoch.plates.size())); }
 
 // Bends the great-circle contacts; the same warp serves every query of the epoch. Distances in units
 // of the site spacing, as the flat warp's lattice units.
@@ -48,6 +49,7 @@ EulerEpoch eulerEpochAt(uint64_t worldSeed, double time) {
     epoch.seed = flat.seed;
     const int n = flat.lattice * flat.lattice;
     epoch.plates.resize(size_t(n));
+    epoch.sites = size_t(n);
     // A Fibonacci lattice (González 2010) spreads n sites evenly; the epoch turns it at random and
     // jitters each site by up to 0.4 of the spacing, as the flat lattice is jittered by 0.4 of a cell.
     const Rotation turn = rotationAbout(unitOf(epoch.seed, 0, -1), 2 * Pi * unit(epoch.seed, 0, -1, 3));
@@ -70,7 +72,8 @@ int plateAt(const EulerEpoch& epoch, Vec3 direction) {
     const Vec3 x = warped(epoch, direction);
     double best = 1e30;
     int plate = 0;
-    for (size_t k = 0; k < epoch.plates.size(); ++k) {
+    const size_t sites = epoch.sites ? epoch.sites : epoch.plates.size();
+    for (size_t k = 0; k < sites; ++k) {
         const double distance = centralAngle(x, epoch.plates[k].site) / epoch.plates[k].reach;
         if (distance < best) best = distance, plate = int(k);
     }

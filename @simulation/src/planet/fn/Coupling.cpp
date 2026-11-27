@@ -63,6 +63,7 @@ void couple(const SphereGrid& grid, const std::vector<CrustPiece>& pieces, const
     const size_t n = pieces.size();
     coupling.slots.resize(n * CouplingSlots);
     coupling.counts.assign(n, 0);
+    coupling.exact.assign(n, 0);
     std::vector<CellWeight> weights;
     std::vector<int> cells, work;
     for (size_t k = 0; k < n; ++k) {
@@ -71,6 +72,7 @@ void couple(const SphereGrid& grid, const std::vector<CrustPiece>& pieces, const
             const double sum = exactWeights(grid, piece, weights, cells, work);
             require(std::abs(sum - piece.area) <= CoverageTolerance * piece.area, "exact overlaps of a footprint miss its area", sum / piece.area - 1);
             for (CellWeight& w : weights) w.area *= piece.area / sum;
+            coupling.exact[k] = 1;
         } else {
             cicWeights(grid, piece, weights);
         }

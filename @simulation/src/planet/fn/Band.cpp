@@ -42,13 +42,39 @@ void around(const std::vector<CellRing>& rings, int cell, int count, std::vector
     }
 }
 
+// The band round a marked core: its deciding cells, its region and the pieces listed there.
+void fillBand(const Globe& globe, int sweep, const std::vector<uint8_t>& core, const std::vector<int32_t>& coreCells, Band& band) {
+    const SphereGrid& grid = *globe.grid;
+    const std::vector<CellRing>& rings = *globe.rings;
+    const Coupling& coupling = globe.coupling;
+    band.sweep = sweep;
+    band.decide = core;
+    band.cells = coreCells;
+    widen(rings, band.decide, band.cells, sweep + 1);
+    std::vector<uint8_t> reach = core;
+    std::vector<int32_t> reached = coreCells;
+    widen(rings, reach, reached, 2 * sweep + 3);
+    band.regionCells = reached;
+    band.region.assign(size_t(grid.cells), -1);
+    for (size_t r = 0; r < reached.size(); ++r) band.region[size_t(reached[r])] = int32_t(r);
+
+    band.member.assign(globe.pieces.size(), 0);
+    band.dead.assign(globe.pieces.size(), 0);
+    band.pieces.clear();
+    for (const int32_t cell : reached)
+        for (int32_t k = coupling.cellStart[size_t(cell)]; k < coupling.cellStart[size_t(cell) + 1]; ++k) {
+            const int32_t piece = coupling.byCell[size_t(k)].piece;
+            if (!band.member[size_t(piece)]) band.member[size_t(piece)] = 1, band.pieces.push_back(piece);
+        }
+    std::sort(band.pieces.begin(), band.pieces.end());
+}
+
 } // namespace
 
 void markBand(const Globe& globe, int sweep, Band& band) {
     const SphereGrid& grid = *globe.grid;
     const std::vector<CellRing>& rings = *globe.rings;
     const Coupling& coupling = globe.coupling;
-    band.sweep = sweep;
     // A cell's plate, or -2 where two plates already share it, -1 where nothing covers it.
     std::vector<int32_t> plate(size_t(grid.cells), -1);
     for (int cell = 0; cell < grid.cells; ++cell)
@@ -71,25 +97,16 @@ void markBand(const Globe& globe, int sweep, Band& band) {
         }
         if (mixed) core[size_t(cell)] = 1, coreCells.push_back(cell);
     }
-    band.decide = core;
-    band.cells = coreCells;
-    widen(rings, band.decide, band.cells, sweep + 1);
-    std::vector<uint8_t> reach = core;
-    std::vector<int32_t> reached = coreCells;
-    widen(rings, reach, reached, 2 * sweep + 3);
-    band.regionCells = reached;
-    band.region.assign(size_t(grid.cells), -1);
-    for (size_t r = 0; r < reached.size(); ++r) band.region[size_t(reached[r])] = int32_t(r);
+    fillBand(globe, sweep, core, coreCells, band);
+}
 
-    band.member.assign(globe.pieces.size(), 0);
-    band.dead.assign(globe.pieces.size(), 0);
-    band.pieces.clear();
-    for (const int32_t cell : reached)
-        for (int32_t k = coupling.cellStart[size_t(cell)]; k < coupling.cellStart[size_t(cell) + 1]; ++k) {
-            const int32_t piece = coupling.byCell[size_t(k)].piece;
-            if (!band.member[size_t(piece)]) band.member[size_t(piece)] = 1, band.pieces.push_back(piece);
-        }
-    std::sort(band.pieces.begin(), band.pieces.end());
+void markBandAt(const Globe& globe, int sweep, const std::vector<int32_t>& cells, Band& band) {
+    std::vector<uint8_t> core(size_t(globe.grid->cells), 0);
+    std::vector<int32_t> coreCells;
+    for (const int32_t cell : cells)
+        if (!core[size_t(cell)]) core[size_t(cell)] = 1, coreCells.push_back(cell);
+    std::sort(coreCells.begin(), coreCells.end());
+    fillBand(globe, sweep, core, coreCells, band);
 }
 
 void coupleBand(const Globe& globe, Band& band) {

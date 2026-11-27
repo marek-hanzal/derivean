@@ -142,21 +142,23 @@ CellPlates platesAt(const Globe& globe, const Band& band, int cell) {
 
 // Every slot inside one plate next to a cell of the old band and open by half or more gets a new piece
 // of that plate (fillSlot): the last spreading of a fossil ridge, ocean floor or crust necked from
-// continental neighbours. Up to BirthsPerRound per cell and round, the key's order −1 − (round · BirthsPerRound + n).
-// A cell of the old band where two plates now meet and that a suture left open by half takes a piece as
-// at a closing boundary (fillCell, order −1 − (SeamRounds · BirthsPerRound + round)), so the new boundaries start
-// with no cell open by half.
-size_t fill(Globe& globe, Band& band, const Substep& substep, int round) {
+// continental neighbours. Up to BirthsPerRound per cell and round, the key's order
+// −1 − first − (round · BirthsPerRound + n). A cell of the old band where two plates now meet and that a
+// suture left open by half takes a piece as at a closing boundary (fillCell, order
+// −1 − first − (SeamRounds · BirthsPerRound + round)), so the new boundaries start with no cell open by half.
+// `first` is a closing's SeamKeys · phase, so two closings of one step give their births distinct keys.
+constexpr int SeamKeys = SeamRounds * (BirthsPerRound + 1);
+size_t fill(Globe& globe, Band& band, const Substep& substep, int round, int first) {
     size_t filled = 0;
     for (const int32_t cell : band.cells) {
-        for (int n = 0; n < BirthsPerRound && fillSlot(globe, band, cell, {substep.step, cell, -1 - (round * BirthsPerRound + n)}, globe.time); ++n)
+        for (int n = 0; n < BirthsPerRound && fillSlot(globe, band, cell, {substep.step, cell, -1 - first - (round * BirthsPerRound + n)}, globe.time); ++n)
             ++globe.stats.fossil, ++filled;
         const double half = BornShare * globe.grid->area[size_t(cell)];
         const Over over = overOf(globe, band, cell, -1, {}, {});
         if (over.sum > half && (over.most > half || unionInCell(globe, cell, over.pieces, over.sum, globe.stats.unions) > half)) continue;
         const CellPlates at = platesAt(globe, band, cell);
         if (!at.two || at.largest < 0) continue;
-        fillCell(globe, band, cell, at.largest, {substep.step, cell, -1 - (SeamRounds * BirthsPerRound + round)}, globe.time);
+        fillCell(globe, band, cell, at.largest, {substep.step, cell, -1 - first - (SeamRounds * BirthsPerRound + round)}, globe.time);
         ++globe.stats.fossil, ++filled;
     }
     return filled;
@@ -168,7 +170,7 @@ void reorganisePlates(Globe& globe, int step) {
     Band band;
     markBand(globe, 1, band);
     enterGlobeEpoch(globe);
-    closeSeams(globe, band, step);
+    closeSeams(globe, band, step, 0);
 }
 
 size_t sutureBand(Globe& globe, Band& band, const Substep& substep) {
@@ -177,18 +179,18 @@ size_t sutureBand(Globe& globe, Band& band, const Substep& substep) {
     return total;
 }
 
-bool closeSeams(Globe& globe, Band& band, int step) {
+bool closeSeams(Globe& globe, Band& band, int step, int phase) {
     const Substep seam{step, -1, 0.0};
     // A suture can leave a cycle for the next round and a fossil can cover a neighbour by the rest of
     // its half, so both repeat until neither changes anything (a few rounds; bounded for safety).
     int round = 0;
     for (; round < SeamRounds; ++round) {
         coupleBand(globe, band);   // the last round's fossils become candidates of this one's sutures
-        if (sutureBand(globe, band, seam) + fill(globe, band, seam, round) == 0) break;
+        if (sutureBand(globe, band, seam) + fill(globe, band, seam, round, phase * SeamKeys) == 0) break;
     }
     const bool settled = round < SeamRounds;
     globe.stats.unsettled += !settled;
-    settleBand(globe, band);
+    settleBand(globe, band, phase > 0);
     return settled;
 }
 
