@@ -15,8 +15,8 @@ namespace derivean::sim {
 // placed. The result depends on the bed and its seed alone.
 void blowBed(SandBed& bed, const WindRegime& regime, const DuneRun& run);
 
-// Rounds each sector of the rose blows in one year of `year` rounds, in sector order; sectors too
-// weak for a single round are left out.
+// Turns.cpp — rounds each sector of the rose blows in one year of `year` rounds, in sector order;
+// sectors too weak for a single round are left out.
 std::vector<int> windTurns(const WindRegime& regime, int year);
 
 // Shadow.cpp — marks the cells below the line that falls at ShadowTan from every higher point

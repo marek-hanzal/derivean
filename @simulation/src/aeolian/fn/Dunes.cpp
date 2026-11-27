@@ -35,6 +35,7 @@ constexpr int LandingRounds = 12;    // rounds without lifting in which sand sti
 
 struct Work {
     std::vector<float> flight, arriving, taken, line, gust;
+    std::vector<float> top;     // the bed's surface while a round's sand is aimed: it moves only after
     std::vector<uint8_t> shadow;
     int gusts{};   // lattice points per side
     // Bands of rows that send their sand side by side: every other band at once, so two that run
@@ -73,7 +74,8 @@ void cutBands(const SandBed& bed, const DuneRun& run, Work& work) {
 // ground (as in `castShadow`): the far cell's sand on the ground of the nearest cell on this side.
 // Read with the far side's own ground, a domain whose ground falls across it sees a wall over its
 // upwind edge, where nothing lifts and all the sand coming round the torus stops.
-float topAt(const SandBed& bed, int x, int z) {
+float topAt(const SandBed& bed, const Work& work, int x, int z) {
+    if (unsigned(x) < unsigned(bed.size) && unsigned(z) < unsigned(bed.size)) return work.top[bed.index(x, z)];
     const int last = bed.size - 1;
     const size_t near = bed.index(std::clamp(x, 0, last), std::clamp(z, 0, last));
     return bed.base[near] + bed.sand[bed.index(wrapped(x, bed.size), wrapped(z, bed.size))];
@@ -86,19 +88,23 @@ void drawGusts(const SandBed& bed, Work& work, uint64_t round) {
     for (size_t k = 0; k < work.gust.size(); ++k) work.gust[k] = 1.0f + Gust * (2 * float(unit(hash(bed.seed, int64_t(round), int64_t(k)))) - 1);
 }
 
+// Where in its gust a cell lies, by its place among the GustCells cells across the gust.
+constexpr float GustPart[GustCells] = {0.0f / GustCells, 1.0f / GustCells, 2.0f / GustCells};
+static_assert(GustCells == 3);
+
 // What a cell in the wind gives up this round.
 float lifted(const SandBed& bed, const Work& work, int x, int z, Vec2 heading, const DuneRun& run) {
-    const float here = bed.top(bed.index(x, z)), cell = float(bed.cell);
+    const float here = work.top[bed.index(x, z)], cell = float(bed.cell);
     const double backX = x - heading.x * run.hop, backZ = z - heading.z * run.hop;
     const int lowX = int(std::floor(backX)), lowZ = int(std::floor(backZ));
     const float partX = float(backX - lowX), partZ = float(backZ - lowZ);
-    const float upwind = (topAt(bed, lowX, lowZ) * (1 - partX) + topAt(bed, lowX + 1, lowZ) * partX) * (1 - partZ) +
-                         (topAt(bed, lowX, lowZ + 1) * (1 - partX) + topAt(bed, lowX + 1, lowZ + 1) * partX) * partZ;
+    const float upwind = (topAt(bed, work, lowX, lowZ) * (1 - partX) + topAt(bed, work, lowX + 1, lowZ) * partX) * (1 - partZ) +
+                         (topAt(bed, work, lowX, lowZ + 1) * (1 - partX) + topAt(bed, work, lowX + 1, lowZ + 1) * partX) * partZ;
     const float slope = (here - upwind) / (cell * float(run.hop));
     const float rise = slope > 0 ? slope * (1.0f - slope / StallSlope) : slope;
-    const float crest = (here - 0.25f * (topAt(bed, x - 1, z) + topAt(bed, x + 1, z) + topAt(bed, x, z - 1) + topAt(bed, x, z + 1))) / cell;
+    const float crest = (here - 0.25f * (topAt(bed, work, x - 1, z) + topAt(bed, work, x + 1, z) + topAt(bed, work, x, z - 1) + topAt(bed, work, x, z + 1))) / cell;
     const int gx = x / GustCells, gz = z / GustCells;
-    const float tx = float(x % GustCells) / GustCells, tz = float(z % GustCells) / GustCells;
+    const float tx = GustPart[x % GustCells], tz = GustPart[z % GustCells];
     const float* row = &work.gust[size_t(gz) * size_t(work.gusts) + size_t(gx)];
     const float gust = (row[0] * (1 - tx) + row[1] * tx) * (1 - tz) + (row[work.gusts] * (1 - tx) + row[work.gusts + 1] * tx) * tz;
     return std::min(bed.sand[bed.index(x, z)], run.slab * std::clamp(1.0f + SlopeGain * rise + CrestGain * crest, LeastGain, MostGain) * gust);
@@ -115,7 +121,7 @@ void send(SandBed& bed, Work& work, int x, int z, Vec2 heading, double hop, doub
     const BedCell kind = bed.kind[from];
     const float out = work.flight[from] + work.taken[from];
     if (out <= 0) return;
-    const double aside = std::clamp(double((topAt(bed, x, z + 1) - topAt(bed, x, z - 1)) * heading.x - (topAt(bed, x + 1, z) - topAt(bed, x - 1, z)) * heading.z) / (2 * bed.cell), -MostAside, MostAside) * Deflect;
+    const double aside = std::clamp(double((topAt(bed, work, x, z + 1) - topAt(bed, work, x, z - 1)) * heading.x - (topAt(bed, work, x + 1, z) - topAt(bed, work, x - 1, z)) * heading.z) / (2 * bed.cell), -MostAside, MostAside) * Deflect;
     const double moveX = heading.x * hop + aside * heading.z, moveZ = heading.z * hop - aside * heading.x;
     const int strides = int(std::ceil(std::max(std::abs(moveX), std::abs(moveZ))));
     size_t fell = from;
@@ -132,8 +138,8 @@ void send(SandBed& bed, Work& work, int x, int z, Vec2 heading, double hop, doub
     const bool inside = lowX >= 0 && lowZ >= 0 && lowX + 1 < size && lowZ + 1 < size;
     if (fell == from && inside && kind != BedCell::Wall) {
         float ahead = 0;
-        for (int c = 0; c < 4; ++c) ahead += share[c] * bed.top(to[c]);
-        if (ahead - bed.top(from) > climb * float(std::hypot(moveX, moveZ))) {
+        for (int c = 0; c < 4; ++c) ahead += share[c] * work.top[to[c]];
+        if (ahead - work.top[from] > climb * float(std::hypot(moveX, moveZ))) {
             work.taken[from] = kind == BedCell::Open ? -work.flight[from] : 0.0f;
             return;
         }
@@ -148,6 +154,9 @@ void launch(SandBed& bed, Work& work, Vec2 heading, double hop, const DuneRun& r
     const int size = bed.size;
     // What every cell gives is settled before any of it moves, and the bed changes only after all
     // of it has been aimed: no cell's share or path depends on the order of the sweep.
+    eachRange(bed, size, [&](int begin, int end) {
+        for (size_t i = bed.index(0, begin); i < bed.index(0, end); ++i) work.top[i] = bed.top(i);
+    });
     eachRange(bed, size, [&](int begin, int end) {
         for (int z = begin; z < end; ++z)
             for (int x = 0; x < size; ++x) {
@@ -197,26 +206,6 @@ void land(SandBed& bed, Work& work, float slab, bool last) {
 
 } // namespace
 
-std::vector<int> windTurns(const WindRegime& regime, int year) {
-    std::vector<int> turns;
-    if (regime.potential <= 0) return turns;
-    // Largest remainders: the rounds add up to the year and follow the shares as closely as whole rounds can.
-    int given[RoseSectors], total = 0;
-    double rest[RoseSectors];
-    for (int k = 0; k < RoseSectors; ++k) {
-        const double exact = year * regime.drift[size_t(k)] / regime.potential;
-        given[k] = int(exact), rest[k] = exact - given[k], total += given[k];
-    }
-    for (; total < year; ++total) {
-        int most = 0;
-        for (int k = 1; k < RoseSectors; ++k)
-            if (rest[k] > rest[most]) most = k;
-        ++given[most], rest[most] = -1;
-    }
-    for (int k = 0; k < RoseSectors; ++k) turns.insert(turns.end(), size_t(given[k]), k);
-    return turns;
-}
-
 void blowBed(SandBed& bed, const WindRegime& regime, const DuneRun& run) {
     const std::vector<int> turns = windTurns(regime, run.year);
     if (turns.empty() || run.rounds <= 0) return;
@@ -225,6 +214,7 @@ void blowBed(SandBed& bed, const WindRegime& regime, const DuneRun& run) {
     work.flight.assign(bed.cells(), 0.0f);
     work.arriving.assign(bed.cells(), 0.0f);
     work.taken.assign(bed.cells(), 0.0f);
+    work.top.assign(bed.cells(), 0.0f);
     slideAll(bed);
     const int rounds = run.rounds + LandingRounds;
     for (int round = 0; round < rounds; ++round) {
