@@ -177,10 +177,11 @@ void actOnGlobeContacts(Globe& globe, double dt) {
             if (column->crust > ArcCeiling) continue;
             const double far = 2.0 * contact.distance + std::sqrt(grid.area[size_t(cell)]);
             const Vec3 there = rotate(rotationAbout(cross(x, contact.normal), far / PlanetRadius), x);
-            const CrustColumn* other = viewColumn(globe, indexOf(grid, cellOf(there, grid.level)));
+            const int beyond = indexOf(grid, cellOf(there, grid.level));
+            const CrustColumn* other = viewColumn(globe, beyond);
             // The denser side sinks: ocean under continent, the older plate's ocean under the younger's
             // (oceanSinks): an arc rises where the other side sinks under this one.
-            const int across = globe.owner.value[size_t(indexOf(grid, cellOf(there, grid.level)))];
+            const int across = globe.owner.value[size_t(beyond)];
             if (!other || !oceanic(*other) || (oceanic(*column) && (across == plate || !oceanSinks(globe, across, plate)))) continue;
             const double offset = (contact.distance - ArcOffset) / ArcWidth;
             const double gain = ArcYield * closing * dt * std::exp(-offset * offset) / ArcNorm;
