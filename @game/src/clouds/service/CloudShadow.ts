@@ -1,4 +1,6 @@
-import { LinearFilter, type Node, NodeMaterial, QuadMesh, RenderTarget, UnsignedByteType, Vector3, Vector4, type WebGPURenderer } from "three/webgpu";
+import {
+  LinearFilter, type Node, NodeMaterial, QuadMesh, RedFormat, RenderTarget, UnsignedByteType, Vector3, Vector4, type WebGPURenderer,
+} from "three/webgpu";
 import { uniform, uv, vec4, wgsl, wgslFn } from "three/tsl";
 import { DensityWgsl } from "../constant/density";
 import { ForwardShare, ForwardThinning, LeastThrough, ShadowMs, ShadowSize, ShadowSpans } from "../constant/shadow";
@@ -40,7 +42,8 @@ fn cloudThrough(at: vec2f, place: vec4f, sun: vec3f, ${CloudParams}) -> f32 {
 export function createCloudShadow(clouds: CloudNodes, sun: Node<"vec3">) {
   const args = cloudArgs(clouds);
   const maps = ShadowSpans.map((span) => {
-    const target = new RenderTarget(ShadowSize, ShadowSize, { type: UnsignedByteType, depthBuffer: false });
+    // One byte a texel: the share let through is all a map holds (r8unorm).
+    const target = new RenderTarget(ShadowSize, ShadowSize, { format: RedFormat, type: UnsignedByteType, depthBuffer: false });
     target.texture.minFilter = target.texture.magFilter = LinearFilter;
     const drawn = uniform(new Vector4());
     const material = new NodeMaterial();

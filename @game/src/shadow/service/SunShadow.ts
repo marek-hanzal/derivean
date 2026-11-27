@@ -1,6 +1,6 @@
 import {
-  DepthTexture, FloatType, GreaterEqualCompare, Group, LinearFilter, Matrix4, OrthographicCamera, RedFormat, RenderTarget, Scene,
-  UnsignedByteType, Vector3, Vector4, type WebGPURenderer,
+  DepthTexture, FloatType, GreaterEqualCompare, Group, LinearFilter, Matrix4, OrthographicCamera, RenderTarget, Scene, Vector3, Vector4,
+  type WebGPURenderer,
 } from "three/webgpu";
 import { uniform, uniformArray } from "three/tsl";
 import type { WorldInfo } from "../../../contract/GameBridge";
@@ -50,12 +50,15 @@ export function createSunShadow(world: WorldInfo, levels: LevelTable, clouds?: C
     const depth = new DepthTexture(size, size, FloatType);
     depth.compareFunction = GreaterEqualCompare;
     depth.minFilter = depth.magFilter = LinearFilter;
-    const target = new RenderTarget(size, size, { depthTexture: depth, format: RedFormat, type: UnsignedByteType, generateMipmaps: false });
+    // Depth alone: a cascade has no colour to write.
+    const target = new RenderTarget(size, size, { depthTexture: depth, count: 0, generateMipmaps: false });
     // Half the width of the box of the coarsest level cast into the cascade; the last one's is the view.
     const half = index === Cascades - 1 ? view : reach * world.voxelSize * 2 ** ((index + 1) * LevelsPerCascade - 1);
     const camera = new OrthographicCamera(-half * MapRoom[index], half * MapRoom[index], half * MapRoom[index], -half * MapRoom[index], 0, 2 * half * MapDepth);
     camera.layers.set(index);
-    return { size, depth, target, camera, half, drawn: undefined as Drawn | undefined };
+    // `kept` is written over at every draw; `drawn` is it once the map holds something.
+    const kept: Drawn = { centre: new Vector3(), sun: new Vector3(), square: { min: [0, 0, 0], max: [0, 0, 0] }, stamp: 0, frame: 0, clip: new Matrix4() };
+    return { size, depth, target, camera, half, kept, drawn: undefined as Drawn | undefined };
   });
   const nodes: ShadowNodes = {
     maps: cascades.map(({ depth }) => depth),
@@ -98,9 +101,14 @@ export function createSunShadow(world: WorldInfo, levels: LevelTable, clouds?: C
     renderer.render(casters, camera);
     renderer.setRenderTarget(null);
     // The renderer has given the camera its reversed projection by now.
-    const clip = new Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
-      .multiply(scratch.makeTranslation(-origin.x, -origin.y, -origin.z));
-    cascade.drawn = { centre: centre.clone(), sun: sun.clone(), square, stamp: stamp(index), frame, clip };
+    const { kept } = cascade;
+    kept.clip.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse).multiply(scratch.makeTranslation(-origin.x, -origin.y, -origin.z));
+    kept.centre.copy(centre);
+    kept.sun.copy(sun);
+    kept.square = square;
+    kept.stamp = stamp(index);
+    kept.frame = frame;
+    cascade.drawn = kept;
   }
 
   return {

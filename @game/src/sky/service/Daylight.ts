@@ -1,7 +1,8 @@
 import { Color, Vector2, Vector3, Vector4 } from "three/webgpu";
-import { uniform } from "three/tsl";
+import { renderGroup, uniform } from "three/tsl";
 import type { Point } from "../../../contract/GameBridge";
 import { Adaptation, AirEnd, ExposedLight, Exposure, ExposureRange, GroundBounce, GroundTint, ReliefSun, StillAir } from "../constant/air";
+import { eyeAir } from "../fn/aerial";
 import { createSkyLight, setSkyLight } from "../fn/skyLight";
 import type { AirOptics } from "../type/AirOptics";
 import type { HazeAir } from "../type/HazeAir";
@@ -38,8 +39,12 @@ export function createDaylight(viewDistance: number, optics: AirOptics) {
     airShare: uniform(1),
     airEnd: uniform(new Vector2(viewDistance * AirEnd, viewDistance)),
     airVeil: uniform(new Vector4()),
+    airEye: uniform(new Vector4()),
     plain: uniform(0),
   };
+  nodes.airEye.setGroup(renderGroup).onRenderUpdate(({ camera }) => {
+    if (camera) eyeAir(camera.matrixWorld.elements[13] - nodes.airSea.value, nodes.airHaze.value.y, nodes.airClean.value.w, nodes.airEye.value);
+  });
   let exposure = Exposure;
   let plain = false;
   // Share of the sky under cloud and that cloud's optical depth, eased.

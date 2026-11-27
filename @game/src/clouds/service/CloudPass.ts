@@ -1,6 +1,6 @@
 import {
   DepthTexture, FloatType, HalfFloatType, LinearFilter, Matrix4, type Node, NodeMaterial, type PerspectiveCamera, QuadMesh, RenderTarget,
-  type Scene, Vector2, Vector3, type WebGPURenderer,
+  type Scene, Vector2, Vector3, Vector4, type WebGPURenderer,
 } from "three/webgpu";
 import {
   Fn, abs, float, floor, fract, hash, log2, max, min, mix, perspectiveDepthToViewZ, sampler, screenCoordinate, select, texture, uint,
@@ -34,7 +34,7 @@ export function createCloudPass(clouds: CloudNodes, sky: SkyNodes, viewDistance:
   const lens = uniform(new Vector2(1, 1));
   const jitter = uniform(0);
   const pastClip = uniform(new Matrix4());
-  const eyeMoved = uniform(new Vector3());
+  const pastMoved = uniform(new Vector4());
   const texel = uniform(new Vector2(1, 1));
   const persistence = uniform(0);
   const marchSize = uniform(new Vector2(1, 1));
@@ -69,7 +69,7 @@ export function createCloudPass(clouds: CloudNodes, sky: SkyNodes, viewDistance:
   const resolve = new NodeMaterial();
   resolve.fragmentNode = resolveNode({
     at: uv(), direction: direction(uv()), marched: marchedNode, remembered: rememberedNode, linear: sampler(marchedNode), pastClip,
-    eyeMoved, eye: clouds.eye, datum: clouds.datum, range0: clouds.ranges[0], range1: clouds.ranges[1], range2: clouds.ranges[2],
+    pastMoved, eye: clouds.eye, datum: clouds.datum, range0: clouds.ranges[0], range1: clouds.ranges[1], range2: clouds.ranges[2],
     texel, persistence,
   });
   // Each pixel weighs the four cloud texels around it by how close their scene depth is to its own, so a ridge in
@@ -137,7 +137,7 @@ export function createCloudPass(clouds: CloudNodes, sky: SkyNodes, viewDistance:
         camera.updateMatrixWorld();
         turn.value.copy(camera.matrixWorld);
         lens.value.set(tangent * camera.aspect, tangent);
-        eyeMoved.value.copy(eye).sub(lastEye);
+        const moved = pastMoved.value.set(eye.x - lastEye.x, eye.y - lastEye.y, eye.z - lastEye.z, 0);
         lastEye.copy(eye);
         jitter.value = (frames * 0.61803398875) % 1;
         persistence.value = frames === 0 ? 0 : Persistence;
@@ -145,6 +145,7 @@ export function createCloudPass(clouds: CloudNodes, sky: SkyNodes, viewDistance:
         turned.copy(camera.matrixWorldInverse).setPosition(0, 0, 0);
         const lensNow = turned.premultiply(camera.projectionMatrix);
         pastClip.value.copy(frames === 0 ? lensNow : clip);
+        moved.applyMatrix4(pastClip.value);
         clip.copy(lensNow);
         draw(renderer, march, marched);
         rememberedNode.value = memory[current].texture;

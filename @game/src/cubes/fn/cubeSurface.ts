@@ -1,6 +1,6 @@
 import { MeshBasicNodeMaterial, type Node, type Texture, type UniformNode, type Vector3 } from "three/webgpu";
 import {
-  Fn, If, PI, cameraPosition, clamp, float, floor, fract, fwidth, int, ivec2, length, luminance, max, min, mix, modelWorldMatrix, positionWorld, smoothstep,
+  Fn, If, PI, cameraPosition, clamp, exp2, float, floor, fract, fwidth, int, ivec2, length, luminance, max, min, mix, modelWorldMatrix, positionWorld, smoothstep,
   select, step, textureLoad, uint, varying, vec3, vec4,
 } from "three/tsl";
 import { GrainCells, GroundRepeat } from "../../scene/constant/grain";
@@ -122,7 +122,7 @@ export function cubeSurface({ sky, levels, palette, anchor, shadow, snow, land }
     // along an axis its occlusion does not change on.
     const corner = (index: number) => float(face.field(Face.occlusion).shiftRight(uint(index * 2)).bitAnd(uint(3)));
     const across = clamp(face.across, 0, 1);
-    const open = float(Open).pow(mix(mix(corner(0), corner(1), across.x), mix(corner(2), corner(3), across.x), across.y));
+    const open = exp2(mix(mix(corner(0), corner(1), across.x), mix(corner(2), corner(3), across.x), across.y).mul(Math.log2(Open)));
     // Snow sends back far more of the light than bare ground: the bounce takes its share of the snow's colour.
     // Plain shading keeps its neutral bounce.
     const fallen = luminance(sky.groundLight).div(GroundBounce);
