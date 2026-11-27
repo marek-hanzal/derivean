@@ -64,8 +64,9 @@ void move(Game& game, const Command& command, double scale, const Footing& footi
 }
 
 // The footing under a point, read again only where the point stands elsewhere or a tile has
-// finished since: the atlas only gains tiles and counts each, and footingAt reads x and z alone.
-// The count is taken before the read, so a tile finishing during it makes the next call read again.
+// finished since. footingAt reads x and z alone, from the atlas and the session's overlay and sea;
+// the game writes neither within a frame, and the atlas only gains tiles and counts each. The count
+// is taken before the read, so a tile finishing during it makes the next call read again.
 struct FootingMemo {
     double x{NAN}, z{NAN};
     size_t tiles{};

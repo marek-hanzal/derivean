@@ -18,16 +18,28 @@ Position interpolate(Position from, Position to, double fraction) {
     return from;
 }
 
-bool touchesTerrain(const VoxelWorld& world, Position point, double halfSize) {
+namespace {
+
+struct Touch {
+    Cell cell;
+    Material material;
+};
+
+// The first cell of the cube, in (y, z, x) order, that is not air.
+std::optional<Touch> touched(const VoxelWorld& world, Position point, double halfSize) {
     const double radius = std::max(0.0, halfSize - 0.00001);
     const Cell min = cellAt({point[0] - radius, point[1] - radius, point[2] - radius});
     const Cell max = cellAt({point[0] + radius, point[1] + radius, point[2] + radius});
     for (int y = min.y; y <= max.y; ++y)
         for (int z = min.z; z <= max.z; ++z)
             for (int x = min.x; x <= max.x; ++x)
-                if (materialAt(world, {x, y, z}) != Material::Air) return true;
-    return false;
+                if (const Material material = materialAt(world, {x, y, z}); material != Material::Air) return Touch{{x, y, z}, material};
+    return std::nullopt;
 }
+
+} // namespace
+
+bool touchesTerrain(const VoxelWorld& world, Position point, double halfSize) { return touched(world, point, halfSize).has_value(); }
 
 bool reachesUnloaded(const VoxelWorld& world, Position point, double halfSize) {
     if (!world.streamed) return false;
@@ -43,17 +55,10 @@ bool reachesUnloaded(const VoxelWorld& world, Position point, double halfSize) {
 // A touched cell in a chunk that is not known lies inside the cube reachesUnloaded reads; any other
 // touch leaves that answer to it. Unloaded is bedrock's material, so the chunk itself is asked.
 Contact probeTerrain(const VoxelWorld& world, Position point, double halfSize) {
-    const double radius = std::max(0.0, halfSize - 0.00001);
-    const Cell min = cellAt({point[0] - radius, point[1] - radius, point[2] - radius});
-    const Cell max = cellAt({point[0] + radius, point[1] + radius, point[2] + radius});
-    for (int y = min.y; y <= max.y; ++y)
-        for (int z = min.z; z <= max.z; ++z)
-            for (int x = min.x; x <= max.x; ++x)
-                if (const Material material = materialAt(world, {x, y, z}); material != Material::Air) {
-                    if (material == Unloaded && !known(world, chunkOf({x, y, z}))) return Contact::Unloaded;
-                    return reachesUnloaded(world, point, halfSize) ? Contact::Unloaded : Contact::Solid;
-                }
-    return Contact::Clear;
+    const std::optional<Touch> touch = touched(world, point, halfSize);
+    if (!touch) return Contact::Clear;
+    if (touch->material == Unloaded && !known(world, chunkOf(touch->cell))) return Contact::Unloaded;
+    return reachesUnloaded(world, point, halfSize) ? Contact::Unloaded : Contact::Solid;
 }
 
 std::optional<Position> recoverFromTerrain(const VoxelWorld& world, Position point, double halfSize) {

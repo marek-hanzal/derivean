@@ -59,8 +59,8 @@ public:
     // A suspended body keeps its place and takes no part in the dynamics until it is released,
     // when it goes on with the motion it had.
     void suspend(JPH::BodyID id, bool suspended);
-    // Reads of one body take no lock: the bodies are touched on the game thread only, never during
-    // an update.
+    // pose, extent and verticalExtent take no lock: they are called on the game thread only, never
+    // during an update, when Jolt's own jobs move the bodies.
     Pose pose(JPH::BodyID id) const;
     std::pair<Position, Position> extent(JPH::BodyID id) const;   // corners of the body's bounds
     Position eye() const;

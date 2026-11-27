@@ -17,14 +17,31 @@ double millisecondsSince(Clock::time_point start) {
 
 int64_t stepAt(const sim::Calendar& calendar) { return int64_t(std::floor(calendar.seconds / sim::AirStep)); }
 
-// What the game reads of the weather is its state: the step's work space and the Poisson solver
-// stay with the working copy, which they are handed back to.
+// The work spaces of a step and the Poisson solver are not part of the weather: they are set aside
+// while the working state is copied and handed back to it, even when the copy fails.
+struct SetAside {
+    sim::Atmosphere& air;
+    sim::AirWork work;
+    sim::PoissonSolver poisson;
+    std::vector<sim::Field<double>> haze, plume;
+    explicit SetAside(sim::Atmosphere& from)
+        : air(from), work(std::move(from.work)), poisson(std::move(from.poisson)), haze(std::move(from.haze.work)), plume(std::move(from.plume.work)) {}
+    SetAside(const SetAside&) = delete;
+    SetAside& operator=(const SetAside&) = delete;
+    ~SetAside() {
+        air.work = std::move(work);
+        air.poisson = std::move(poisson);
+        air.haze.work = std::move(haze);
+        air.plume.work = std::move(plume);
+    }
+};
+
 WeatherState publish(sim::Atmosphere& air) {
-    sim::AirWork work = std::move(air.work);
-    sim::PoissonSolver poisson = std::move(air.poisson);
-    auto copy = std::make_shared<const sim::Atmosphere>(air);
-    air.work = std::move(work);
-    air.poisson = std::move(poisson);
+    std::shared_ptr<const sim::Atmosphere> copy;
+    {
+        const SetAside aside(air);
+        copy = std::make_shared<const sim::Atmosphere>(air);
+    }
     auto clouds = std::make_shared<const sim::CloudField>(sim::cloudField(*copy));
     return {std::move(copy), std::move(clouds)};
 }

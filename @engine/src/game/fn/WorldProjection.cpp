@@ -150,7 +150,7 @@ std::optional<VoxelBox> voxelBox(const Game& game, Cell center) {
         int ringLow = low, ringHigh = high;
         // The ring's columns in rows: whole rows at its ends, the two sides between them.
         for (int dz = -ring; dz <= ring && whole; ++dz) {
-            const int step = std::abs(dz) == ring ? 1 : std::max(1, 2 * ring);
+            const int step = std::abs(dz) == ring ? 1 : 2 * ring;
             for (int dx = -ring; dx <= ring && whole; dx += step) whole = complete(center.x + dx, center.z + dz, ringLow, ringHigh);
         }
         if (!whole) break;
