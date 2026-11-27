@@ -37,6 +37,9 @@ void settleDust(Domain& domain, const WindGraph& graph, const std::vector<float>
         for (int s = 0; s < DustSizes; ++s) {
             float& air = load[s][i];
             air += raised[i] * area * DustShare[s];
+            // No air here gives nothing down and nothing on: load, rain and shares are finite and
+            // never negative, so every sum the cell would add to is +0 or more and keeps its bits.
+            if (air == 0) continue;
             const float falls = air * (1.0f - std::exp(-cell / DustFall[s] * (1.0f + domain.rain[i] / DustWashRain)));
             air -= falls, settled += falls;
             for (int k = 0; k < 2; ++k) {
@@ -56,7 +59,8 @@ void settleDust(Domain& domain, const WindGraph& graph, const std::vector<float>
     // again what lands on it; plants hold it, and they grow as far as the rain keeps up with the air.
     if (wind.farDust.size() == cells)
         for (size_t i = 0; i < cells; ++i) {
-            if (domain.hold[i] != Free) continue;
+            // No far dust brings none down: its finite share would be +0.
+            if (domain.hold[i] != Free || wind.farDust[i] == 0) continue;
             const float green = 1.0f - aridityOf(domain.rain[i], domain.warmthNow[i]), kept = green * green;
             const float arriving = wind.farDust[i] * (1.0f + domain.rain[i] / DustWashRain) * kept * float(domain.step) * area;
             wind.ledger.dustIn += arriving;
