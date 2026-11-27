@@ -80,7 +80,7 @@ std::shared_ptr<Tile> madeParent(const Setting& setting, TileKey key, const Vall
     tile->seaLevel = seaLevelAt(setting, setting.age);
     const size_t cells = size_t(TileCells) * TileCells;
     tile->now.resize(cells);
-    for (auto* field : {&tile->water, &tile->discharge, &tile->load, &tile->uplift, &tile->rebound, &tile->ice, &tile->iceAge, &tile->erosionRate, &tile->depositionRate,
+    for (auto* field : {&tile->water, &tile->discharge, &tile->load, &tile->uplift, &tile->rebound, &tile->ice, &tile->iceAge, &tile->iceSpeed, &tile->erosionRate, &tile->depositionRate,
                         &tile->eroded, &tile->deposited, &tile->uplifted, &tile->rain, &tile->warmth, &tile->shed})
         field->assign(cells, 0.0f);
     tile->flowTo.assign(cells, 255);

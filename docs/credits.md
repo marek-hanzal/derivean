@@ -28,7 +28,7 @@ The aim is that every physical model carries its source, the model taken, where 
 | Coasts, waves and river mouths | [credits/coasts.md](credits/coasts.md) | 19 |
 | Wind-blown sand and dust | [credits/aeolian.md](credits/aeolian.md) | 4 |
 | Volcanism | [credits/volcanism.md](credits/volcanism.md) | 12 |
-| Ice sheets, glacial erosion and firn | [credits/ice.md](credits/ice.md) | 6 |
+| Ice sheets, glacial erosion and firn | [credits/ice.md](credits/ice.md) | 7 |
 | Atmosphere, haze, clouds and snow | [credits/atmosphere.md](credits/atmosphere.md) | 33 |
 | Astronomy and the geometry of the sphere | [credits/astronomy-geometry.md](credits/astronomy-geometry.md) | 28 |
 | Rendering | [credits/rendering.md](credits/rendering.md) | 8 |

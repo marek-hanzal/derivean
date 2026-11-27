@@ -26,7 +26,7 @@ Domain groundDomain(const GroundSpec& spec) {
     domain.fold.assign(cells, 0.0f);
     for (auto* field : {&domain.tectonic, &domain.residual, &domain.weakness, &domain.rebound, &domain.trend, &domain.uplift, &domain.rainBase, &domain.rain,
                         &domain.warmth, &domain.runoff, &domain.warmthNow, &domain.inflow, &domain.inflowLoad, &domain.settledFlow, &domain.settledLoad, &domain.windX,
-                        &domain.windZ, &domain.rimSlope, &domain.rimFloor, &domain.surface, &domain.level, &domain.discharge, &domain.ice, &domain.iceAge,
+                        &domain.windZ, &domain.rimSlope, &domain.rimFloor, &domain.surface, &domain.level, &domain.discharge, &domain.ice, &domain.iceAge, &domain.iceSpeed,
                         &domain.erosionRate, &domain.depositionRate, &domain.eroded, &domain.deposited, &domain.uplifted, &domain.shed, &domain.stream})
         field->assign(cells, 0.0f);
     domain.quality.assign(cells, 1.0f);

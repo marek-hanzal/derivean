@@ -40,7 +40,7 @@ std::shared_ptr<const Tile> slope() {
     for (size_t i = 0; i < Cells; ++i)
         site->now.rock[i] = site->now.datum[i] = 1000.0f - 0.4f * float(i % TileCells);
     site->now.sediment[Fines].assign(Cells, 0.2f);
-    for (auto* field : {&site->discharge, &site->load, &site->ice, &site->iceAge, &site->uplift, &site->rain, &site->shed})
+    for (auto* field : {&site->discharge, &site->load, &site->ice, &site->iceAge, &site->iceSpeed, &site->uplift, &site->rain, &site->shed})
         field->assign(Cells, 0.0f);
     site->water.assign(Cells, -1e9f);
     site->flowTo.assign(Cells, 255);

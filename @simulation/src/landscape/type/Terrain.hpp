@@ -71,6 +71,7 @@ struct Tile {
     std::vector<float> rebound;     // m/yr the plate floats back up as erosion unloads it; carried down to children
     std::vector<float> ice;         // m of glacier ice under the present climate
     std::vector<float> iceAge;      // m of ice at the last glacial maximum
+    std::vector<float> iceSpeed;    // m/yr, the fastest a valley glacier slid over the cell in the cold phases of its replay, spread across its width; zero where none did
     std::vector<float> erosionRate, depositionRate;   // m/yr, recent mean
     std::vector<float> eroded, deposited, uplifted;   // m over the window
     std::vector<float> rain, warmth;                  // m/yr and °C used at the end
@@ -162,6 +163,11 @@ struct Domain {
 
     // Records.
     std::vector<float> ice, iceAge;
+    std::vector<float> iceSpeed;    // m/yr, the fastest a valley glacier slid over the cell in the cold phases so far
+    // Site only: the parent's ice at the last glacial maximum, valley glacier or sheet, which a
+    // tile of a kilometre lies inside, as its surface (m) and its sliding speed (m/yr); the
+    // surface is far below the ground where the parent held no glacier. Empty at the other levels.
+    std::vector<float> parentIceTop, parentIceSpeed;
     int taken{};                    // steps done
     std::vector<float> erosionRate, depositionRate;
     std::vector<float> eroded, deposited, uplifted;
