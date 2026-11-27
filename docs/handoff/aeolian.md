@@ -49,6 +49,8 @@ Seen on hand-built beds of 320² cells of 4 m, winds of 10 m/s (`.out/aeolian/de
 
 **Which side of dust is built:** the geological side (loess laid during Region tile building). The calendar side — a dust storm during play as an `AirSource` for `addSource` in `atmosphere/type/Plume.hpp` — is not built; see section 6.
 
+**Speed (27 Nov, ground-speed stream, Neon's audits 018, 025).** Bit-exact (fingerprints of every tile equal at 1.2 and 4.6 Gyr): the bed's surface is read from one array a round (`topAt` falls back to the bed only across the edge), the gust shares are constants, each band adds what enters from held cells into its own local sum and stores it once, and, in the commit with the other `std::hypot` sites, the climb test compares squares (no tile moved). `windTurns` lives in `Turns.cpp`. Windows harness, 4.6 Gyr: `blowBed` 6 382 → 5 115 s summed over 42 calls that run side by side, 0 differing calls. Numbers in the main repo's `.out/ground-speed/results.md`.
+
 ## 3. In progress
 
 Fourth run, 26 Nov, on the lead's list. Pictures and logs in `.out/aeolian/w/`; nothing is half-edited. The cover-wash diagnosis of the trade-wind desert (the Region strips cover with the streams each cell hides, so the wind gets 6 mm a step there) still stands; the proposal is in section 6.
