@@ -42,11 +42,15 @@ double side(double ax, double ay, double bx, double by, double px, double py) {
 }
 
 // Walks the tree: outer contours positive, holes negative, after the projection back onto the sphere.
+// A degenerate sliver of next to no area has the sign of the rounding of its fan (about 1e-16 of a
+// cell's area per triangle, 1e-6 m² at level 7; one seen at -2e-8 m²), so the sign is checked only
+// above 1e-14 R² per vertex (0.4 m²), far below anything a threshold of half a cell can feel.
 void addTree(const Clipper2Lib::PolyPath64& node, UnionArea& result) {
     for (const auto& child : node) {
         const double area = contourArea(child->Polygon());
         const bool hole = child->IsHole();
-        if ((hole && area > 0) || (!hole && area < 0)) {
+        const double noise = 1e-14 * PlanetRadius * PlanetRadius * double(child->Polygon().size());
+        if (std::abs(area) > noise && ((hole && area > 0) || (!hole && area < 0))) {
             std::fprintf(stderr, "geometry: a contour of a union has the wrong sign (%g m², hole %d)\n", area, int(hole));
             std::abort();
         }
@@ -120,8 +124,14 @@ double sphericalArea(const PlanePolygon& polygon) {
 UnionArea unionArea(const std::vector<PlanePolygon>& polygons) {
     UnionArea result;
     Clipper2Lib::Paths64 subjects;
-    for (const PlanePolygon& polygon : polygons)
-        if (polygon.count >= 3) subjects.push_back(pathOf(polygon));
+    // A clip along a shared edge leaves slivers of no area (a polygon folded onto one segment). Clipper2
+    // 1.5.4 then nests a whole neighbouring part as a hole of the union (seen on the level-7 history), so
+    // duplicate and collinear corners are trimmed first and what has no area left is dropped.
+    for (const PlanePolygon& polygon : polygons) {
+        if (polygon.count < 3) continue;
+        Clipper2Lib::Path64 path = Clipper2Lib::TrimCollinear(pathOf(polygon), false);
+        if (path.size() >= 3) subjects.push_back(std::move(path));
+    }
     if (subjects.empty()) return result;
     Clipper2Lib::Clipper64 clipper;
     clipper.AddSubject(subjects);

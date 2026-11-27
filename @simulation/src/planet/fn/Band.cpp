@@ -107,6 +107,7 @@ void coupleBand(const Globe& globe, Band& band) {
             const int32_t r = band.region[size_t(w.cell)];
             if (r >= 0) band.lists[size_t(fill[size_t(r)]++)] = {band.pieces[b], w.area};
         }
+    band.born.assign(band.regionCells.size(), {});
 }
 
 void requireBandHeld(const Globe& globe, const Band& band) {
@@ -126,6 +127,16 @@ void joinBand(const Globe& globe, Band& band, int piece) {
     band.dead.resize(globe.pieces.size(), 0);
     band.member[size_t(piece)] = 1;
     band.pieces.push_back(piece);
+    std::vector<CellWeight> weights;
+    std::vector<int> cells, work;
+    const CrustPiece& crust = globe.pieces[size_t(piece)];
+    const double sum = exactWeights(*globe.grid, crust, weights, cells, work);
+    require(std::abs(sum - crust.area) <= 1e-9 * crust.area, "exact overlaps of a new footprint miss its area", sum / crust.area - 1);
+    for (const CellWeight& w : weights) {
+        const int32_t r = band.region[size_t(w.cell)];
+        require(r >= 0, "a new footprint reaches out of the band's region", double(w.cell));
+        band.born[size_t(r)].push_back({piece, w.area * crust.area / sum});
+    }
 }
 
 BandList listOf(const Band& band, int cell) {

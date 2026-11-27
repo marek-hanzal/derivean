@@ -5,7 +5,9 @@
 #include "GlobeHemispheres.hpp"
 
 #include "geometry/fn/Rotation.hpp"
+#include "planet/fn/Band.hpp"
 #include "planet/fn/Rotate.hpp"
+
 
 
 using namespace derivean::sim;
@@ -71,19 +73,36 @@ void checkRecords() {
 }
 
 // Test 14: an oblique boundary, a transform and a boundary along face diagonals through cube vertices,
-// each over the same 192 Myr in steps of dt, dt/2 and dt/4. The consumed and born areas agree to 2 %.
-// The substeps adapt to the motion (Codex V4), so dt and dt/2 can run the same substep and the
-// difference of dt against dt/2 is not asked to exceed that of dt/2 against dt/4; a row of level-5
-// cells along the trench is itself about 2 % of what it consumes in that time.
+// each over the same 192 Myr in steps of dt, dt/2 and dt/4, and at dt with the substeps the motion asks
+// for doubled and quadrupled (Codex V4: the same outer step, so only the substep changes). The consumed
+// and born areas agree to 2 % and the substep error does not grow as the substep shrinks; a row of
+// level-5 cells along the trench is itself about 2 % of what it consumes in that time. The substeps
+// adapt to the motion, so dt and dt/2 can run the same substep and the difference of dt against dt/2
+// is not asked to exceed that of dt/2 against dt/4. Every run keeps the local cover of §4 (the union in
+// each cell): nothing open or doubled outside the band, no cell more than ½ open (§4), under 1 % of the
+// sphere open or doubled, and a transform neither bears nor consumes.
+GlobeCover outsideBand(const Globe& globe) {
+    Band band;
+    markBand(globe, 1, band);
+    return measureCover(globe, band.decide);
+}
+
 struct Run {
-    double born{}, consumed{}, drift{}, cover{};
-    Holes holes;
+    double born{}, consumed{}, drift{};
+    GlobeCover cover, outside;
+    long churned{}, substeps{};
 };
 
-Run run(Vec3 pole, Vec3 split, double dt) {
+Run run(Vec3 pole, Vec3 split, double dt, int refine = 1) {
     Hemispheres h = hemispheres(pole, 0.05, 300.0f, 300.0f, normalized(split));
-    for (double t = 0; t < 192 * Myr - 1; t += dt) advance(h, dt);
-    return {h.globe.ledger.born, h.globe.ledger.consumed, felsicDrift(h), coverage(h), holesOf(h.globe)};
+    for (double t = 0; t < 192 * Myr - 1; t += dt) advance(h, dt, refine);
+    return {h.globe.ledger.born, h.globe.ledger.consumed, felsicDrift(h), measureCover(h.globe), outsideBand(h.globe), h.globe.stats.churned, h.globe.stats.substeps};
+}
+
+void checkCover(const Run& r) {
+    expect(std::abs(r.drift) < 1e-12, "a step size loses crust", r.drift);
+    expect(r.outside.worstHole < 0.05 && r.outside.worstOverlap < 0.05, "a cell outside the band is left open or covered twice", std::max(r.outside.worstHole, r.outside.worstOverlap));
+    expect(r.cover.worstHole < 0.5 && r.cover.hole < 0.01 && r.cover.overlap < 0.01, "the band leaves holes or overlaps", std::max(r.cover.worstHole, 100 * std::max(r.cover.hole, r.cover.overlap)));
 }
 
 void checkSubsteps() {
@@ -92,21 +111,24 @@ void checkSubsteps() {
         const char* name;
         Vec3 pole, split;
     };
+    const auto gap = [](double a, double c) { return std::abs(a / c - 1); };
     for (const Boundary& b : {Boundary{"oblique", {1, 0, 0.35}, {0, 0, 1}}, Boundary{"vertex", {0.3, 0.3, 1}, {1, -1, 0}}, Boundary{"transform", {0, 0, 1}, {0, 0, 1}}}) {
         const Run full = run(b.pole, b.split, 4 * Myr), half = run(b.pole, b.split, 2 * Myr), quarter = run(b.pole, b.split, 1 * Myr);
-        for (const Run& r : {full, half, quarter}) {
-            expect(std::abs(r.drift) < 1e-12, "a step size loses crust", r.drift);
-            expect(r.holes.worst < 0.75, "a step size leaves a cell outside the band uncovered by 0.75 or more", r.holes.worst);
-            expect(r.holes.open < 0.06, "a step size opens over 6 % of the cells outside the band by a fifth", r.holes.open);
-        }
+        for (const Run& r : {full, half, quarter}) checkCover(r);
         if (b.name[0] == 't') {
-            for (const Run& r : {full, half, quarter}) expect(r.born + r.consumed < 20 * cell, "a transform churns crust", (r.born + r.consumed) / cell);
+            for (const Run& r : {full, half, quarter})
+                expect(r.born + r.consumed < 20 * cell && r.churned == 0, "a transform churns crust", (r.born + r.consumed) / cell);
             continue;
         }
-        const auto gap = [](double a, double c) { return std::abs(a / c - 1); };
         for (const Run* r : {&full, &half})
             expect(gap(r->born, quarter.born) <= 0.02 && gap(r->consumed, quarter.consumed) <= 0.02, "a step differs from dt/4 by more than 2 %",
                    std::max(gap(r->born, quarter.born), gap(r->consumed, quarter.consumed)));
+        const Run twice = run(b.pole, b.split, 4 * Myr, 2), four = run(b.pole, b.split, 4 * Myr, 4);
+        for (const Run& r : {twice, four}) checkCover(r);
+        expect(twice.substeps == 2 * full.substeps && four.substeps == 4 * full.substeps, "the substeps are not refined", double(twice.substeps));
+        const double coarse = std::max(gap(full.born, four.born), gap(full.consumed, four.consumed));
+        const double fine = std::max(gap(twice.born, four.born), gap(twice.consumed, four.consumed));
+        expect(coarse <= 0.02 && fine <= std::max(coarse, 0.005), "the substep error does not shrink with the substep", fine);
     }
 }
 

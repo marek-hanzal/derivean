@@ -8,8 +8,9 @@ namespace derivean::sim {
 // pieces): the applied Euler vectors, the band, then in each substep the rotation, the exact coupling
 // of the band, consumption by a stable transfer plan and births where a contact opens (S3-design.md
 // §3–§4). Ends with every piece turned, the consumed gone, the pieces in key order and the coupling
-// of the whole globe (exact for the band's pieces, cloud-in-cell for the rest).
-void advancePlates(Globe& globe, double dt, int step);
+// of the whole globe (exact for the band's pieces, cloud-in-cell for the rest). `refine` multiplies the
+// substeps the motion asks for, so a convergence test can halve them at the same step (Codex V4).
+void advancePlates(Globe& globe, double dt, int step, int refine = 1);
 
 // What the consumption and the births of a substep need to know about it.
 struct Substep {

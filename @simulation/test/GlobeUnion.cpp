@@ -1,6 +1,7 @@
 // Coverage by union (S3-design.md §4, §11 test 7, Codex V2 and C2): a strip of 10⁻⁶ of a cell, the
 // threshold ½ ± 10⁻⁶ from both sides, two footprints over the same 30 %, a ring of four with a hole,
-// the mirror cases for births and a union independent of the order of its inputs.
+// the mirror cases for births, a union independent of the order of its inputs, and a sliver of no area
+// that must not turn a neighbouring part into a hole.
 #include "GlobeFixture.hpp"
 
 #include "geometry/fn/Union.hpp"
@@ -87,6 +88,31 @@ void checkOrder() {
     expect(sameBits(forward, backward) && sameBits(forward, turned), "a union depends on the order of its footprints", forward - backward);
 }
 
+PlanePolygon polygon(int count, std::array<double, 7> x, std::array<double, 7> y) {
+    PlanePolygon p;
+    p.count = count;
+    for (int k = 0; k < count; ++k) p.x[size_t(k)] = x[size_t(k)], p.y[size_t(k)] = y[size_t(k)];
+    return p;
+}
+
+// Six parts clipped to one cell on the level-7 history of seed 1234; the fourth folds onto one segment
+// of the first's and the sixth's edges. Clipper2 nested the sixth as a hole of the rest (+9e8 m², a
+// fatal sign) until slivers were trimmed; the union is that of the five with area.
+void checkSliver() {
+    const std::vector<PlanePolygon> parts{
+        polygon(3, {-0.0058710607892270717, -0.0028731749586722332, -0.005728496884011231}, {-0.0046012206094022149, -0.005377190379755762, -0.0031894854590740927}),
+        polygon(3, {0.004626986621063648, 0.0046987462987644665, 0.0038189334796703972}, {-0.0073185247025391708, -0.0066475807183780872, -0.007109369035512206}),
+        polygon(7, {-0.005728496884011231, -0.0028731749586722328, 0.0038189334796703981, 0.0046987462987644673, 0.0055507465893388369, 0.0025291430914510917, -0.0054588612637405188}, {-0.0031894854590740931, -0.005377190379755762, -0.0071093690355122051, -0.0066475807183780872, 0.0013185151139871677, 0.00360264968514724, -0.00051942614539031494}),
+        polygon(5, {-0.0046683724690768941, -0.0058710607892270717, -0.0058710607892270717, -0.0046683724690768941, -0.0046683724690768941}, {0.007308367402195157, -0.0046012206094022141, -0.0046012206094022141, 0.007308367402195157, 0.007308367402195157}),
+        polygon(4, {0.005550746589338836, 0.0059025785016513701, 0.0049493983778495379, 0.0025291430914510917}, {0.0013185151139871677, 0.004608099356354662, 0.0048515818809978595, 0.00360264968514724}),
+        polygon(4, {-0.0046683724690768941, -0.005143723566477504, 0.0011109928174144884, 0.00096575701707847874}, {0.0073083674021951562, 0.0026012162342225181, 0.0031255993015605293, 0.0058691723988581043}),
+    };
+    std::vector<PlanePolygon> five(parts);
+    five.erase(five.begin() + 3);
+    const UnionArea all = unionArea(parts), solid = unionArea(five);
+    expect(all.holes == 0 && sameBits(all.area, solid.area), "a sliver of no area changes a union", all.area - solid.area);
+}
+
 } // namespace
 
 void testGlobeUnion() {
@@ -94,4 +120,5 @@ void testGlobeUnion() {
     checkThreshold();
     checkHole();
     checkOrder();
+    checkSliver();
 }

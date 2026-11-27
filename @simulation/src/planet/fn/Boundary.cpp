@@ -70,7 +70,8 @@ Vec3 towards(Vec3 from, Vec3 to) {
     return size > 0 ? along * (1.0 / size) : Vec3{};
 }
 
-void advancePlates(Globe& globe, double dt, int step) {
+void advancePlates(Globe& globe, double dt, int step, int refine) {
+    auto mark = std::chrono::steady_clock::now();
     applyKinematics(globe, dt);
     const SphereGrid& grid = *globe.grid;
     const double shortest = shortestEdgeOf(grid);
@@ -80,7 +81,8 @@ void advancePlates(Globe& globe, double dt, int step) {
 
     Band band;
     markBand(globe, sweep, band);
-    const int substeps = substepCount(fastestRelative(globe, band), dt, shortest);
+    const int substeps = refine * substepCount(fastestRelative(globe, band), dt, shortest);
+    clockPhase(globe, GlobePhase::Band, mark);
     std::vector<Rotation> turnBy(globe.applied.size());
     for (size_t p = 0; p < turnBy.size(); ++p) turnBy[p] = rotationOf(globe.applied[p], dt / substeps);
 
@@ -92,6 +94,7 @@ void advancePlates(Globe& globe, double dt, int step) {
         bearInBand(globe, band, substep);
         ++globe.stats.substeps;
     }
+    clockPhase(globe, GlobePhase::Substeps, mark);
     // Pieces away from the band turn by the same rotations in the same order, so two pieces with the
     // same history keep the same bits wherever they were.
     requireBandHeld(globe, band);
@@ -100,6 +103,7 @@ void advancePlates(Globe& globe, double dt, int step) {
         if (!band.member[k]) rest.push_back(int32_t(k));
     for (int index = 0; index < substeps; ++index) turn(globe.pieces, turnBy, rest);
 
+    clockPhase(globe, GlobePhase::Rest, mark);
     globe.stats.bandCells += long(band.cells.size());
     std::vector<CrustPiece> kept;
     std::vector<uint8_t> exact;
@@ -118,6 +122,7 @@ void advancePlates(Globe& globe, double dt, int step) {
     for (const size_t i : order) globe.pieces.push_back(std::move(kept[i])), flags.push_back(exact[i]);
     for (const uint8_t f : flags) globe.stats.exactPieces += f;
     couple(grid, globe.pieces, flags, false, globe.coupling);
+    clockPhase(globe, GlobePhase::Couple, mark);
 }
 
 } // namespace derivean::sim

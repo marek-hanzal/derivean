@@ -48,6 +48,7 @@ struct CrustPiece {
     PieceKey key;
     int32_t birth{};        // cell of its footprint at birth; the footprint is Q · that cell
     double area{};          // m², the birth cell's; a rotation keeps it
+    double bornAt{};        // yr: the substep that bore it, or the body's time for the primordial crust
     uint16_t plate{};
 };
 
@@ -100,15 +101,20 @@ struct GlobeLedger {
     double subducted{}, accreted{}, erupted{}, stacked{};
     double born{}, consumed{};      // m² of footprint made at ridges and consumed at trenches and collisions
     double consumedFelsic{};        // m³ the consumed pieces held when they were consumed
+    double churned{};               // m² of footprint consumed within ChurnAge of its birth (S3-design.md test 14)
     CrustStock interior;            // net gain of the interior since the start (negative: it gave)
     double waterInventory{};        // m³, all water the body holds (as the flat history: a closed stock, S3d replaces it)
 };
 
+// Wall time of a step's phases, s (diagnostics only: no state reads it, so determinism ignores it).
+enum class GlobePhase : uint8_t { Band, Substeps, Rest, Couple, Contacts, Elevation, Climate, Surface, Count };
+
 // What the boundary events did, for `terra globe` and the tests.
 struct GlobeStats {
-    long substeps{}, rounds{}, births{}, consumptions{}, cancelled{}, deferred{};
+    std::array<double, size_t(GlobePhase::Count)> seconds{};
+    long substeps{}, rounds{}, births{}, consumptions{}, cancelled{}, deferred{}, churned{}, welded{};   // welded: births with no lattice slot
+    long contested{};   // candidates two or more overriding plates cover (triple junctions)
     long bandCells{}, exactPieces{}, unions{};
-    double worstHole{}, worstOverlap{};   // share of a cell, in the band
 };
 
 struct Globe {

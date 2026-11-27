@@ -7,6 +7,7 @@
 #include "geometry/fn/SphereGrid.hpp"
 #include "geometry/fn/SpherePolygon.hpp"
 #include "planet/constant/Globe.hpp"
+#include "planet/fn/Coupling.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -61,6 +62,7 @@ Globe makeGlobe(uint64_t seed, int level, PlateSpeeds speeds, double time) {
         piece.key = {-1, cell, 0};
         piece.birth = cell;
         piece.area = grid->area[size_t(cell)];
+        piece.bornAt = globe.time;
         piece.column = primordialColumnAt(seed, centre, cell, globe.time);
         piece.stock = {double(piece.column.crust) * piece.area, OceanicCrust * piece.area};
         refreshColumn(piece);
@@ -114,6 +116,13 @@ void giveFelsic(CrustPiece& piece, double volume) {
 void globeFailure(const char* what, double value) {
     std::fprintf(stderr, "globe: %s (%.17g)\n", what, value);
     std::abort();
+}
+
+void restoreKeyOrder(Globe& globe) {
+    const auto byKey = [](const CrustPiece& a, const CrustPiece& b) { return a.key < b.key; };
+    if (std::is_sorted(globe.pieces.begin(), globe.pieces.end(), byKey)) return;
+    sortPieces(globe.pieces);
+    couple(*globe.grid, globe.pieces, {}, true, globe.coupling);
 }
 
 void sortPieces(std::vector<CrustPiece>& pieces) {

@@ -19,6 +19,7 @@ namespace {
 
 constexpr double ConsumedShare = 0.5;   // of a footprint covered by overriding plates (Codex V2: a discrete choice)
 constexpr int Behind = 8;               // pieces of its own plate a donor's surplus may back into
+constexpr double ChurnAge = 10 * Myr;   // a piece consumed younger than this is churn (S3-design.md test 14)
 
 struct Overrider {
     int piece{};
@@ -146,7 +147,7 @@ void consumeInBand(Globe& globe, Band& band, const Substep& substep) {
         input.felsic.push_back(p.stock.felsic);
         input.basalt.push_back(p.stock.basalt);
         input.sediment.push_back(std::min(p.stock.felsic, double(coverThickness(p.record.cover)) * p.area));
-        input.room.push_back(std::max(0.0, double(StackLimit) - double(p.column.crust)) * p.area);
+        input.room.push_back(std::max(0.0, double(StackLimit) * p.area - p.stock.felsic));
         return local[size_t(piece)];
     };
     std::vector<int> partners;
@@ -194,6 +195,11 @@ void consumeInBand(Globe& globe, Band& band, const Substep& substep) {
             const double cover = count == 1 ? single : unionOver(globe, k, overriders, q, globe.stats.unions);
             if (cover > best || (cover == best && q < plate)) best = cover, plate = q;
         }
+        for (const Overrider& o : overriders)
+            if (globe.pieces[size_t(o.piece)].plate != globe.pieces[size_t(overriders[0].piece)].plate) {
+                ++globe.stats.contested;
+                break;
+            }
         PlanCandidate candidate;
         candidate.piece = localOf(k);
         double total = 0;
@@ -232,10 +238,13 @@ void consumeInBand(Globe& globe, Band& band, const Substep& substep) {
         band.dead[size_t(k)] = 1;
         globe.ledger.consumed += gone.area;
         ++globe.stats.consumptions;
+        if (gone.key.step >= 0 && globe.time + (substep.index + 1) * substep.duration - gone.bornAt < ChurnAge) globe.ledger.churned += gone.area, ++globe.stats.churned;
     }
-    // A cancelled donor jams its plate for the substep: its crust per planet step of the jam, so the brake
-    // does not depend on how many substeps a step takes.
-    for (const int c : plan.cancelled) globe.motion[size_t(input.plate[size_t(c)])].resistance += input.felsic[size_t(c)] * substep.duration / PlanetStep;
+    // A cancelled donor jams its plate by what it could not place in the round that cancelled it (§4;
+    // Codex DREV-CLAUDE-005-02), once per settled plan and per planet step of the substep: the donor
+    // stays and meets the same shortfall in every substep, so the brake does not grow with their count.
+    for (size_t i = 0; i < plan.cancelled.size(); ++i)
+        globe.motion[size_t(input.plate[size_t(plan.cancelled[i])])].resistance += plan.shortfall[i] * substep.duration / PlanetStep;
 }
 
 } // namespace derivean::sim

@@ -3,6 +3,8 @@
 #include "geometry/type/SpherePolygon.hpp"
 #include "planet/type/Globe.hpp"
 
+#include <chrono>
+
 namespace derivean::sim {
 
 // A globe at `level` holding the cooled primordial body at `time` (at most TectonicsStart): one piece
@@ -38,6 +40,17 @@ inline void require(bool holds, const char* what, double value = 0) {
 
 // Puts pieces back into key order (a no-op when they are, which is how the history keeps them).
 void sortPieces(std::vector<CrustPiece>& pieces);
+// The same for a globe whose storage was put out of order (S3-design.md test 10): the pieces sorted and,
+// only if they had to be, coupled again with exact weights. A step reads pieces in storage order, so
+// the history calls this first.
+void restoreKeyOrder(Globe& globe);
+
+// Adds the wall time since `mark` to a phase of the step and moves the mark on.
+inline void clockPhase(Globe& globe, GlobePhase phase, std::chrono::steady_clock::time_point& mark) {
+    const auto now = std::chrono::steady_clock::now();
+    globe.stats.seconds[size_t(phase)] += std::chrono::duration<double>(now - mark).count();
+    mark = now;
+}
 
 // Compensated sum (Neumaier 1974) in the order given, so totals over pieces in key order do not
 // depend on the thread count and their error does not grow with the number of pieces.

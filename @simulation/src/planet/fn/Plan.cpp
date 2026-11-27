@@ -17,29 +17,41 @@ struct Round {
     const PlanInput& input;
     const std::vector<int>& slot;        // piece → index into input.candidates, or -1
     const std::vector<uint8_t>& active;  // per candidate index
+    std::vector<uint8_t> state;          // per piece: 0 not met, 1 on the path, 2 resolved
+    std::vector<std::vector<std::pair<int, double>>> reach;   // per resolved piece: survivors and shares, by key
     std::vector<int> path;
     std::vector<int> cycle;
 
     bool consumed(int piece) const { return slot[size_t(piece)] >= 0 && active[size_t(slot[size_t(piece)])]; }
 
-    // Follows a donor's receivers through consumed pieces to survivors, multiplying the shares.
+    // A consumed piece's survivors: its receivers' shares, through consumed receivers to the pieces that
+    // survive, each consumed piece resolved once in the round (Codex DREV-CLAUDE-005-02: converging
+    // branches must not be walked again). Shares add in the order of the receivers, then of the keys.
     // Returns false on a cycle, whose members are then in `cycle`.
-    bool route(int piece, double share, std::map<PieceKey, std::pair<int, double>>& survivors) {
+    bool resolve(int piece) {
+        state[size_t(piece)] = 1;
         path.push_back(piece);
+        std::map<PieceKey, std::pair<int, double>> survivors;
         for (const PlanShare& to : input.candidates[size_t(slot[size_t(piece)])].receivers) {
             if (!consumed(to.piece)) {
                 auto& entry = survivors[input.key[size_t(to.piece)]];
                 entry.first = to.piece;
-                entry.second += share * to.share;
+                entry.second += to.share;
                 continue;
             }
-            const auto again = std::find(path.begin(), path.end(), to.piece);
-            if (again != path.end()) {
-                cycle.assign(again, path.end());
+            if (state[size_t(to.piece)] == 1) {
+                cycle.assign(std::find(path.begin(), path.end(), to.piece), path.end());
                 return false;
             }
-            if (!route(to.piece, share * to.share, survivors)) return false;
+            if (state[size_t(to.piece)] == 0 && !resolve(to.piece)) return false;
+            for (const auto& [survivor, share] : reach[size_t(to.piece)]) {
+                auto& entry = survivors[input.key[size_t(survivor)]];
+                entry.first = survivor;
+                entry.second += to.share * share;
+            }
         }
+        for (const auto& [key, entry] : survivors) reach[size_t(piece)].push_back(entry);
+        state[size_t(piece)] = 2;
         path.pop_back();
         return true;
     }
@@ -66,34 +78,32 @@ PlanResult planTransfers(const PlanInput& input) {
         ++result.rounds;
         result.transfers.clear();
         result.consumed.clear();
-        Round round{input, slot, active, {}, {}};
-        std::vector<std::vector<std::pair<int, double>>> routes(input.candidates.size());
+        Round round{input, slot, active, std::vector<uint8_t>(input.key.size(), 0), std::vector<std::vector<std::pair<int, double>>>(input.key.size()), {}, {}};
         bool restart = false;
         for (const int c : order) {
-            if (!active[size_t(c)]) continue;
-            std::map<PieceKey, std::pair<int, double>> survivors;
+            const int k = input.candidates[size_t(c)].piece;
+            if (!active[size_t(c)] || round.state[size_t(k)] == 2) continue;
             round.path.clear();
-            if (!round.route(input.candidates[size_t(c)].piece, 1.0, survivors)) {
+            if (!round.resolve(k)) {
                 const int keep = lowestKey(input, round.cycle);
                 active[size_t(slot[size_t(keep)])] = 0;
                 result.deferred.push_back(keep);
                 restart = true;
                 break;
             }
-            for (const auto& [key, entry] : survivors) routes[size_t(c)].push_back(entry);
         }
         if (restart) continue;
 
         // Room is reserved from nothing in every round, donors in key order (C3).
         std::vector<double> room(input.room);
-        std::vector<int> unplaced;
+        std::vector<std::pair<int, double>> unplaced;   // donor, m³ it could not place
         for (const int c : order) {
             if (!active[size_t(c)]) continue;
             const PlanCandidate& candidate = input.candidates[size_t(c)];
             const int k = candidate.piece;
             const double felsic = input.felsic[size_t(k)], sediment = input.sediment[size_t(k)], basalt = input.basalt[size_t(k)];
             double left = 0;
-            for (const auto& [r, share] : routes[size_t(c)]) {
+            for (const auto& [r, share] : round.reach[size_t(k)]) {
                 if (input.sinks(k, r)) {
                     const double scraped = std::min(OffscrapeShare * sediment * share, felsic * share);
                     const double put = std::clamp(room[size_t(r)], 0.0, scraped);
@@ -117,13 +127,14 @@ PlanResult planTransfers(const PlanInput& input) {
                 left -= put;
                 result.transfers.push_back({k, b, TransferKind::Back, put, 0.0, put / felsic});
             }
-            if (left > FitTolerance * felsic) unplaced.push_back(k);
+            if (left > FitTolerance * felsic) unplaced.push_back({k, left});
             result.consumed.push_back(k);
         }
         if (unplaced.empty()) return result;
-        const int cancel = lowestKey(input, unplaced);
-        active[size_t(slot[size_t(cancel)])] = 0;
-        result.cancelled.push_back(cancel);
+        const auto cancel = *std::min_element(unplaced.begin(), unplaced.end(), [&](const auto& a, const auto& b) { return input.key[size_t(a.first)] < input.key[size_t(b.first)]; });
+        active[size_t(slot[size_t(cancel.first)])] = 0;
+        result.cancelled.push_back(cancel.first);
+        result.shortfall.push_back(cancel.second);
     }
     globeFailure("a transfer plan did not settle in N + 1 rounds", double(input.candidates.size()));
 }

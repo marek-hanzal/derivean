@@ -58,6 +58,7 @@ struct PlanResult {
     std::vector<Transfer> transfers;   // by donor key, then in the order the donor's routes were met
     std::vector<int> consumed;         // in key order
     std::vector<int> cancelled;        // could not be placed: survive with their overlap, brake their plate
+    std::vector<double> shortfall;     // per cancelled donor: m³ it could not place in the round that cancelled it
     std::vector<int> deferred;         // lowest key of a cycle: survives this substep, decided again in the next
     int rounds{};
 };

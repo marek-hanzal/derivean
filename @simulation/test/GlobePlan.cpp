@@ -1,12 +1,14 @@
 // The transfer plan (S3-design.md §4, §11 test 7, Codex V2, DREV-CLAUDE-003-03 and C3): the A/B/C
 // fixture settles in three rounds with nothing consumed, a chain ends in its survivor with the kind
 // decided there, a cycle defers its lowest key, two donors share a receiver's room by key and back up,
-// and the plan does not depend on how the pieces are numbered.
+// a receiver short of room cancels its donor with the shortfall, a layered graph of 42 candidates
+// resolves each piece once, and the plan does not depend on how the pieces are numbered.
 #include "GlobeFixture.hpp"
 
 #include "planet/fn/Plan.hpp"
 
 #include <algorithm>
+#include <chrono>
 
 using namespace derivean::sim;
 using namespace derivean::sim::globe_test;
@@ -173,6 +175,41 @@ void checkSubduction() {
     expect(accreted == 1 && felsic == 7 && basalt == 6, "subduction does not scrape a quarter of the sediment", accreted);
 }
 
+// A receiver nearly full (Codex DREV-CLAUDE-005-02): 1 m³ into room for 0.9, nothing behind. The donor
+// is cancelled, moves nothing, and its shortfall is the 0.1 it could not place in that round.
+void checkShortfall() {
+    Case c;
+    c.pieces = {{{0, 1, 0}, 0, 1, 0, 0, 0}, {{0, 2, 0}, 1, 20, 0, 0, 0.9}};
+    c.candidates = {{0, {{1, 1.0}}, {}}};
+    const PlanResult plan = planned(c);
+    expect(plan.consumed.empty() && plan.transfers.empty() && plan.cancelled.size() == 1, "a donor short of room is not cancelled");
+    expect(plan.shortfall.size() == 1 && std::abs(plan.shortfall[0] - 0.1) < 1e-15, "the shortfall is not what the receiver had no room for", plan.shortfall.empty() ? -1 : plan.shortfall[0]);
+}
+
+// Codex DREV-CLAUDE-005-02: 21 layers of two candidates, each sharing half into both of the next
+// layer's, the last into two survivors. Walking every route is 2²¹ per donor; resolving each piece
+// once with its survivors merged is linear. Every donor ends half on each survivor.
+void checkLayers() {
+    constexpr int Layers = 21;
+    Case c;
+    for (int i = 0; i < 2 * Layers + 2; ++i) c.pieces.push_back({{0, i + 1, 0}, i / 2, 1, 0, 0, i >= 2 * Layers ? 1000.0 : 0.0});
+    for (int i = 0; i < 2 * Layers; ++i) {
+        const int next = 2 * (i / 2 + 1);
+        c.candidates.push_back({i, {{next, 0.5}, {next + 1, 0.5}}, {}});
+    }
+    const auto start = std::chrono::steady_clock::now();
+    const PlanResult plan = planned(c);
+    const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    expect(plan.consumed.size() == 2 * Layers && plan.cancelled.empty() && plan.rounds == 1, "the layered graph does not consume every layer in one round");
+    double on[2] = {};
+    for (const Transfer& t : plan.transfers) {
+        expect(t.to >= 2 * Layers && t.kind == TransferKind::Collide, "a layer's crust does not end on a survivor", t.to);
+        on[t.to - 2 * Layers] += t.felsic;
+    }
+    expect(plan.transfers.size() == 4 * Layers && on[0] == Layers && on[1] == Layers, "the shares of a layered graph are not merged", double(plan.transfers.size()));
+    expect(seconds < 1, "a layered graph walks its routes", seconds);   // linear: microseconds; every route: 2²¹ per donor
+}
+
 } // namespace
 
 void testGlobePlan() {
@@ -181,4 +218,6 @@ void testGlobePlan() {
     checkCycle();
     checkCapacity();
     checkSubduction();
+    checkShortfall();
+    checkLayers();
 }

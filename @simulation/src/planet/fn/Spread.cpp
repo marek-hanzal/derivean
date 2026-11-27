@@ -2,12 +2,10 @@
 
 #include "geometry/constant/Sphere.hpp"
 #include "geometry/fn/Rotation.hpp"
-#include "geometry/fn/Overlap.hpp"
 #include "geometry/fn/SphereGrid.hpp"
-#include "geometry/fn/SpherePolygon.hpp"
-#include "geometry/fn/Union.hpp"
 #include "planet/constant/Globe.hpp"
 #include "planet/constant/Scale.hpp"
+#include "planet/fn/Lattice.hpp"
 #include "planet/fn/Pieces.hpp"
 #include "tectonics/fn/Euler.hpp"
 
@@ -17,11 +15,13 @@
 namespace derivean::sim {
 namespace {
 
-constexpr double BornShare = 0.5;     // of a cell left uncovered by the union of its pieces
 constexpr float StretchShare = 0.4f;  // of a continental neighbour's crust and cover that necks into the gap (Crossing.cpp)
 
-// The nearest live piece of each of the two nearest plates to a cell, among the band's pieces listed
-// within two rings of it (nearest by chord from the cell's centre; the lower key on a tie).
+// The nearest live piece of each of the two nearest plates to a cell, among the band's pieces over the
+// cells within two rings of it as the substep started (nearest by chord from the cell's centre; the
+// lower key on a tie). This substep's births are left out: one would make its own plate the nearer for
+// the next cell across the axis too, and that plate would take the whole gap, so the axis would wander
+// off the symmetry of the spreading. Coverage, slots and necks read them.
 struct Nearest {
     int first{-1}, second{-1};
 };
@@ -36,23 +36,20 @@ Nearest nearestPlates(const Globe& globe, const Band& band, int cell) {
     const Vec3 x = globe.grid->centre[size_t(cell)];
     std::vector<std::pair<double, int>> best;   // per plate seen: distance, piece
     std::vector<int> plates;
-    for (const int32_t c : near) {
-        const BandList list = listOf(band, c);
-        for (const PieceWeight* w = list.begin; w != list.end; ++w) {
-            if (band.dead[size_t(w->piece)]) continue;
-            const CrustPiece& piece = globe.pieces[size_t(w->piece)];
+    for (const int32_t c : near)
+        forListed(band, c, [&](int k, double) {
+            const CrustPiece& piece = globe.pieces[size_t(k)];
             const Vec3 d = centreOf(*globe.grid, piece) - x;
             const double distance = dot(d, d);
             const auto at = std::find(plates.begin(), plates.end(), int(piece.plate));
             if (at == plates.end()) {
                 plates.push_back(piece.plate);
-                best.push_back({distance, w->piece});
-                continue;
+                best.push_back({distance, k});
+                return;
             }
             auto& [seen, holder] = best[size_t(at - plates.begin())];
-            if (distance < seen || (distance == seen && piece.key < globe.pieces[size_t(holder)].key)) seen = distance, holder = w->piece;
-        }
-    }
+            if (distance < seen || (distance == seen && piece.key < globe.pieces[size_t(holder)].key)) seen = distance, holder = k;
+        });
     std::vector<size_t> order(plates.size());
     for (size_t i = 0; i < order.size(); ++i) order[i] = i;
     std::sort(order.begin(), order.end(), [&](size_t a, size_t b) {
@@ -63,60 +60,6 @@ Nearest nearestPlates(const Globe& globe, const Band& band, int cell) {
     if (order.size() >= 1) nearest.first = best[order[0]].second;
     if (order.size() >= 2) nearest.second = best[order[1]].second;
     return nearest;
-}
-
-// The area of a cell its live pieces cover together, with the pieces born earlier in this substep,
-// which the band's lists do not hold yet.
-double coveredArea(const Globe& globe, const Band& band, int cell, const std::vector<int>& born, long& unions) {
-    const SphereGrid& grid = *globe.grid;
-    const double area = grid.area[size_t(cell)];
-    const Vec3 x = grid.centre[size_t(cell)];
-    const SpherePolygon home = polygonOf(grid, cell);
-    const BandList list = listOf(band, cell);
-    std::vector<int> pieces;
-    double sum = 0, most = 0;
-    for (const PieceWeight* w = list.begin; w != list.end; ++w)
-        if (!band.dead[size_t(w->piece)]) sum += w->area, most = std::max(most, w->area), pieces.push_back(w->piece);
-    for (const int f : born) {
-        const Vec3 d = centreOf(grid, globe.pieces[size_t(f)]) - x;
-        if (dot(d, d) * PlanetRadius * PlanetRadius > 9 * area) continue;
-        const double w = overlapArea(home, footprintOf(grid, globe.pieces[size_t(f)]));
-        if (w > 0) sum += w, most = std::max(most, w), pieces.push_back(f);
-    }
-    if (most >= BornShare * area || sum < BornShare * area) return std::max(sum, most);
-    const TangentPlane plane = tangentPlaneAt(x);
-    const PlanePolygon own = projected(plane, home);
-    std::vector<PlanePolygon> parts;
-    for (const int k : pieces) parts.push_back(clipped(projected(plane, footprintOf(grid, globe.pieces[size_t(k)])), own));
-    ++unions;
-    return unionArea(parts).area;
-}
-
-// How far to move a new footprint from its cell along `normal` (rad) to weld it onto its own plate:
-// the share of the cell the plate's live pieces behind it (centres on the far side of `normal`) still
-// cover, as a length across the cell. For a straight trailing edge that is flush; for a ragged one it
-// leaves about as much gap as overlap, so the area the plate covers stays what it was given. The pieces
-// beside the cell along the ridge share edges with it and no move along `normal` takes it off them.
-double weldTurn(const Globe& globe, const Band& band, int cell, int plate, Vec3 x, Vec3 normal) {
-    const SphereGrid& grid = *globe.grid;
-    const double area = grid.area[size_t(cell)];
-    std::vector<int32_t> seen;
-    const SpherePolygon home = polygonOf(grid, cell);
-    double kept = 0;
-    const auto gather = [&](int c) {
-        const BandList list = listOf(band, c);
-        for (const PieceWeight* w = list.begin; w != list.end; ++w) {
-            if (band.dead[size_t(w->piece)] || globe.pieces[size_t(w->piece)].plate != plate) continue;
-            if (std::find(seen.begin(), seen.end(), w->piece) != seen.end()) continue;
-            seen.push_back(w->piece);
-            const CrustPiece& piece = globe.pieces[size_t(w->piece)];
-            if (dot(centreOf(grid, piece) - x, normal) < 0) kept += overlapArea(home, footprintOf(grid, piece));
-        }
-    };
-    gather(cell);
-    for (const int32_t other : (*globe.rings)[size_t(cell)])
-        if (other >= 0) gather(other);
-    return std::min(kept, area) / std::sqrt(area) / PlanetRadius;
 }
 
 void resetMarks(CrustPiece& piece) {
@@ -138,9 +81,9 @@ bool neck(Globe& globe, const Band& band, int cell, int plate, CrustPiece& fresh
         const int other = neighbourOf(grid, cell, k);
         int best = -1;
         double most = 0;
-        const BandList list = listOf(band, other);
-        for (const PieceWeight* w = list.begin; w != list.end; ++w)
-            if (!band.dead[size_t(w->piece)] && globe.pieces[size_t(w->piece)].plate == plate && w->area > most) best = w->piece, most = w->area;
+        forLive(band, other, [&](int k, double area) {
+            if (globe.pieces[size_t(k)].plate == plate && area > most) best = k, most = area;
+        });
         if (best < 0 || globe.pieces[size_t(best)].column.crust < 0.5f * float(ContinentalLimit)) continue;
         const double length = grid.edge[size_t(grid.edges[size_t(cell)][size_t(k)])].length;
         int slot = 0;
@@ -181,27 +124,52 @@ bool neck(Globe& globe, const Band& band, int cell, int plate, CrustPiece& fresh
 
 void bearInBand(Globe& globe, Band& band, const Substep& substep) {
     const SphereGrid& grid = *globe.grid;
-    std::vector<int> born;   // this substep's new pieces
     for (const int32_t cell : band.cells) {
         const double area = grid.area[size_t(cell)];
-        if (area - coveredArea(globe, band, cell, born, globe.stats.unions) < BornShare * area) continue;
+        // Open where ½ or more is uncovered, the union at most ½. The union is under the sum and over
+        // the largest overlap, so a sum of ½ or less is open and one overlap strictly over ½ is not;
+        // between them the union decides (at exactly ½ it may be exactly ½ although the sum is more).
+        // A closed cell still looks for a slot while its overlaps sum to under 1 − SlotHint.
+        const Over over = overOf(globe, band, cell, -1, {}, {});
+        const double half = BornShare * area;
+        const bool open = !(over.sum > half && (over.most > half || unionInCell(globe, cell, over.pieces, over.sum, globe.stats.unions) > half));
+        if (!open && over.sum >= (1 - SlotHint) * area) continue;
         const Nearest nearest = nearestPlates(globe, band, cell);
         if (nearest.second < 0) continue;
-        const CrustPiece& p = globe.pieces[size_t(nearest.first)];
-        const CrustPiece& q = globe.pieces[size_t(nearest.second)];
+        // The plate whose edge here is the older bears if it has an open slot, else the other; the nearer
+        // plate on a tie. A ridge's floor so goes to its two plates by turns and its axis stays in the
+        // middle of the gap: the nearer plate alone lets the axis walk by half a cell at every birth,
+        // the cell order deciding the ties.
+        const bool older = globe.pieces[size_t(nearest.second)].bornAt < globe.pieces[size_t(nearest.first)].bornAt;
+        const int choice[2] = {older ? nearest.second : nearest.first, older ? nearest.first : nearest.second};
         const Vec3 x = grid.centre[size_t(cell)];
-        const Vec3 normal = towards(x, x + (centreOf(grid, q) - centreOf(grid, p)));
-        if (closingAt(globe.applied[p.plate], globe.applied[q.plate], x, normal).convergence >= 0) continue;
+        const Vec3 apart = centreOf(grid, globe.pieces[size_t(nearest.second)]) - centreOf(grid, globe.pieces[size_t(nearest.first)]);
+        const Vec3 normal = towards(x, x + apart);   // from the nearer plate towards the other
+        const int near = globe.pieces[size_t(nearest.first)].plate, far = globe.pieces[size_t(nearest.second)].plate;
+        if (closingAt(globe.applied[near], globe.applied[far], x, normal).convergence >= 0) continue;
 
         CrustPiece fresh;
-        // New crust welds onto the trailing edge of its plate: the footprint is the cell moved away from
-        // the plate's own pieces, towards the other plate (weldTurn). A footprint left on the cell would
-        // overlap its own plate for good, by up to half a cell at every birth (deviation from
-        // S3-design.md §4's Q = I, docs/handoff/planet-globe.md).
-        fresh.rotation = rotationAbout(cross(x, normal), weldTurn(globe, band, cell, p.plate, x, normal));
+        int bearer = -1;
+        Slot slot;
+        for (int c = 0; c < 2 && bearer < 0; ++c) {
+            const int plate = globe.pieces[size_t(choice[c])].plate;
+            if (openSlot(globe, band, cell, plate, plate == near ? normal : normal * -1.0, open, slot))
+                bearer = c, fresh.rotation = slot.rotation, fresh.birth = slot.birth;
+        }
+        if (bearer < 0 && !open) continue;
+        if (bearer < 0) {
+            // No slot of either lattice fits: the cell moved away from the nearer plate's pieces welds onto
+            // its trailing edge (weldTurn; deviation from S3-design.md §4's Q = I).
+            bearer = choice[0] == nearest.first ? 0 : 1;
+            fresh.rotation = rotationAbout(cross(x, normal), weldTurn(globe, band, cell, near, x, normal));
+            fresh.birth = cell;
+            ++globe.stats.welded;
+        }
+        const CrustPiece& p = globe.pieces[size_t(choice[bearer])];
+        const CrustPiece& q = globe.pieces[size_t(choice[1 - bearer])];
         fresh.key = {substep.step, cell, substep.index};
-        fresh.birth = cell;
-        fresh.area = area;
+        fresh.area = grid.area[size_t(fresh.birth)];
+        fresh.bornAt = globe.time + (substep.index + 1) * substep.duration;   // births follow the substep's turn
         fresh.plate = p.plate;
         // A plate behind that keeps pace fills the gap itself; only a real parting stretches crust.
         const Vec3 own = velocityAt(globe.applied[p.plate], x);
@@ -211,15 +179,14 @@ void bearInBand(Globe& globe, Band& band, const Substep& substep) {
             fresh.column = CrustColumn{};
             fresh.column.quietSince = float(globe.time);
             fresh.column.basement = Basement::Oceanic;
-            fresh.stock.basalt = OceanicCrust * area;
+            fresh.stock.basalt = OceanicCrust * fresh.area;
             globe.ledger.interior.basalt -= fresh.stock.basalt;
         }
         refreshColumn(fresh);
         resetMarks(fresh);
         globe.pieces.push_back(fresh);
         joinBand(globe, band, int(globe.pieces.size()) - 1);
-        born.push_back(int(globe.pieces.size()) - 1);
-        globe.ledger.born += area;
+        globe.ledger.born += fresh.area;
         ++globe.stats.births;
     }
 }

@@ -26,6 +26,9 @@ struct Band {
     std::vector<CellWeight> weights;
     std::vector<int32_t> listStart;       // per region cell + 1
     std::vector<PieceWeight> lists;       // in piece order
+    // The pieces born in the current substep, with their exact overlaps per region cell, so every later
+    // birth of the substep reads them (Codex DREV-CLAUDE-005-01); coupleBand folds them into the lists.
+    std::vector<std::vector<PieceWeight>> born;   // per region cell
 };
 
 // Marks the band from the globe's coupling at the start of a step.
@@ -37,7 +40,7 @@ void coupleBand(const Globe& globe, Band& band);
 // Fatal when a piece outside the band reaches a deciding cell at the step's end: the band missed it.
 void requireBandHeld(const Globe& globe, const Band& band);
 
-// Adds a piece born in this substep to the band (its footprint is its cell).
+// Adds a piece born in this substep to the band with its exact overlaps.
 void joinBand(const Globe& globe, Band& band, int piece);
 
 // The band's pieces over a region cell, or nothing outside the region.
@@ -46,5 +49,21 @@ struct BandList {
     const PieceWeight* end{};
 };
 BandList listOf(const Band& band, int cell);
+
+// Calls live(piece, area) for every live band piece over a region cell as the substep started
+// (forListed), and those with this substep's births after them in the order they were born (forLive);
+// nothing outside the region.
+template <class Live> void forListed(const Band& band, int cell, Live live) {
+    const int32_t r = band.region[size_t(cell)];
+    if (r < 0) return;
+    for (int32_t k = band.listStart[size_t(r)]; k < band.listStart[size_t(r) + 1]; ++k)
+        if (!band.dead[size_t(band.lists[size_t(k)].piece)]) live(band.lists[size_t(k)].piece, band.lists[size_t(k)].area);
+}
+template <class Live> void forLive(const Band& band, int cell, Live live) {
+    forListed(band, cell, live);
+    const int32_t r = band.region[size_t(cell)];
+    if (r < 0) return;
+    for (const PieceWeight& w : band.born[size_t(r)]) live(w.piece, w.area);
+}
 
 } // namespace derivean::sim
