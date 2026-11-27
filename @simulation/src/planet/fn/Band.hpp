@@ -11,7 +11,8 @@ namespace derivean::sim {
 // a deciding cell (a ring more than the sweep and the footprint need, for the ring metric against the
 // geodesic one): those are the band's pieces, the only ones coupled exactly in the substeps. Deciding
 // is never done from cloud-in-cell weights. The weights list every piece in the cell of its centre, and
-// `requireBandHeld` checks at the step's end that no piece outside the band reaches a deciding cell.
+// `requireBandHeld` checks along every substep's turn that no piece outside the band reaches a deciding
+// cell.
 struct Band {
     int sweep{};
     std::vector<uint8_t> decide;          // per cell
@@ -37,8 +38,17 @@ void markBand(const Globe& globe, int sweep, Band& band);
 // Exact overlaps of every live band piece as the pieces stand; lists per region cell.
 void coupleBand(const Globe& globe, Band& band);
 
-// Fatal when a piece outside the band reaches a deciding cell at the step's end: the band missed it.
-void requireBandHeld(const Globe& globe, const Band& band);
+// The pieces outside the band whose centre at the step's start lies within sweep + 3 rings of a deciding
+// cell: the only ones a step's turn could bring to one (a ring more than the footprint needs, for the
+// ring metric against the geodesic one). Read before the pieces outside the band turn.
+std::vector<int32_t> nearBand(const Globe& globe, const Band& band);
+
+// Fatal when one of `near` reaches a deciding cell in the substep it has just turned through (`dt`, yr):
+// the band missed it (Codex DREV-CLAUDE-005-04). Checked after the turn, at the piece's end position and
+// back along its arc at points at most half the shortest edge apart, the substep's start included. A
+// footprint is one cell turned, so with its centre within a quarter edge of a point it reaches no further
+// than the ring of that point's cell.
+void requireBandHeld(const Globe& globe, const Band& band, const std::vector<int32_t>& near, double dt, double shortest);
 
 // Adds a piece born in this substep to the band with its exact overlaps.
 void joinBand(const Globe& globe, Band& band, int piece);

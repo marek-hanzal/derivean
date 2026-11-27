@@ -1,6 +1,8 @@
 #include "planet/fn/Band.hpp"
 
+#include "geometry/constant/Sphere.hpp"
 #include "geometry/fn/Cell.hpp"
+#include "geometry/fn/Rotation.hpp"
 #include "geometry/fn/SphereGrid.hpp"
 #include "planet/fn/Coupling.hpp"
 #include "planet/fn/Pieces.hpp"
@@ -110,15 +112,30 @@ void coupleBand(const Globe& globe, Band& band) {
     band.born.assign(band.regionCells.size(), {});
 }
 
-void requireBandHeld(const Globe& globe, const Band& band) {
+std::vector<int32_t> nearBand(const Globe& globe, const Band& band) {
     const SphereGrid& grid = *globe.grid;
-    for (size_t k = 0; k < band.member.size(); ++k) {
-        if (band.member[k]) continue;
-        // A footprint is one cell turned, so it reaches no further than the ring of its centre's cell.
-        const int cell = indexOf(grid, cellOf(centreOf(grid, globe.pieces[k]), grid.level));
-        bool reaches = band.decide[size_t(cell)];
-        for (const int32_t other : (*globe.rings)[size_t(cell)]) reaches = reaches || (other >= 0 && band.decide[size_t(other)]);
-        require(!reaches, "a piece outside the band reaches a deciding cell", double(k));
+    std::vector<uint8_t> near = band.decide;
+    std::vector<int32_t> cells = band.cells;
+    widen(*globe.rings, near, cells, band.sweep + 3);
+    std::vector<int32_t> pieces;
+    for (size_t k = 0; k < band.member.size(); ++k)
+        if (!band.member[k] && near[size_t(indexOf(grid, cellOf(centreOf(grid, globe.pieces[k]), grid.level)))]) pieces.push_back(int32_t(k));
+    return pieces;
+}
+
+void requireBandHeld(const Globe& globe, const Band& band, const std::vector<int32_t>& near, double dt, double shortest) {
+    const SphereGrid& grid = *globe.grid;
+    for (const int32_t k : near) {
+        const CrustPiece& piece = globe.pieces[size_t(k)];
+        const Vec3 euler = globe.applied[piece.plate];
+        const int samples = std::max(1, int(std::ceil(length(euler) * PlanetRadius * dt / (0.5 * shortest))));
+        for (int j = 0; j <= samples; ++j) {
+            const Rotation back = j == 0 ? piece.rotation : compose(rotationOf(euler, -dt * j / samples), piece.rotation);
+            const int cell = indexOf(grid, cellOf(rotate(back, grid.centre[size_t(piece.birth)]), grid.level));
+            bool reaches = band.decide[size_t(cell)];
+            for (const int32_t other : (*globe.rings)[size_t(cell)]) reaches = reaches || (other >= 0 && band.decide[size_t(other)]);
+            require(!reaches, "a piece outside the band reaches a deciding cell", double(k));
+        }
     }
 }
 

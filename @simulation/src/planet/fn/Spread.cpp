@@ -15,6 +15,7 @@
 namespace derivean::sim {
 namespace {
 
+constexpr int BirthsPerCell = 3;      // births one deciding cell may take in a substep
 constexpr float StretchShare = 0.4f;  // of a continental neighbour's crust and cover that necks into the gap (Crossing.cpp)
 
 // The nearest live piece of each of the two nearest plates to a cell, among the band's pieces over the
@@ -120,11 +121,10 @@ bool neck(Globe& globe, const Band& band, int cell, int plate, CrustPiece& fresh
     return true;
 }
 
-} // namespace
-
-void bearInBand(Globe& globe, Band& band, const Substep& substep) {
+// One birth over a deciding cell, if it needs one; whether a piece was laid. `order` is the key's.
+bool bearCell(Globe& globe, Band& band, int cell, const Substep& substep, int order) {
     const SphereGrid& grid = *globe.grid;
-    for (const int32_t cell : band.cells) {
+    {
         const double area = grid.area[size_t(cell)];
         // Open where ½ or more is uncovered, the union at most ½. The union is under the sum and over
         // the largest overlap, so a sum of ½ or less is open and one overlap strictly over ½ is not;
@@ -133,9 +133,11 @@ void bearInBand(Globe& globe, Band& band, const Substep& substep) {
         const Over over = overOf(globe, band, cell, -1, {}, {});
         const double half = BornShare * area;
         const bool open = !(over.sum > half && (over.most > half || unionInCell(globe, cell, over.pieces, over.sum, globe.stats.unions) > half));
-        if (!open && over.sum >= (1 - SlotHint) * area) continue;
+        if (!open && over.sum >= (1 - SlotHint) * area) return false;
         const Nearest nearest = nearestPlates(globe, band, cell);
-        if (nearest.second < 0) continue;
+        if (nearest.first < 0) return false;
+        if (nearest.second < 0)
+            return open && fillCell(globe, band, cell, globe.pieces[size_t(nearest.first)].plate, {substep.step, cell, order}, globe.time + (substep.index + 1) * substep.duration);
         // The plate whose edge here is the older bears if it has an open slot, else the other; the nearer
         // plate on a tie. A ridge's floor so goes to its two plates by turns and its axis stays in the
         // middle of the gap: the nearer plate alone lets the axis walk by half a cell at every birth,
@@ -146,7 +148,8 @@ void bearInBand(Globe& globe, Band& band, const Substep& substep) {
         const Vec3 apart = centreOf(grid, globe.pieces[size_t(nearest.second)]) - centreOf(grid, globe.pieces[size_t(nearest.first)]);
         const Vec3 normal = towards(x, x + apart);   // from the nearer plate towards the other
         const int near = globe.pieces[size_t(nearest.first)].plate, far = globe.pieces[size_t(nearest.second)].plate;
-        if (closingAt(globe.applied[near], globe.applied[far], x, normal).convergence >= 0) continue;
+        if (closingAt(globe.applied[near], globe.applied[far], x, normal).convergence >= 0)
+            return open && fillCell(globe, band, cell, near, {substep.step, cell, order}, globe.time + (substep.index + 1) * substep.duration);
 
         CrustPiece fresh;
         int bearer = -1;
@@ -156,7 +159,7 @@ void bearInBand(Globe& globe, Band& band, const Substep& substep) {
             if (openSlot(globe, band, cell, plate, plate == near ? normal : normal * -1.0, open, slot))
                 bearer = c, fresh.rotation = slot.rotation, fresh.birth = slot.birth;
         }
-        if (bearer < 0 && !open) continue;
+        if (bearer < 0 && !open) return false;
         if (bearer < 0) {
             // No slot of either lattice fits: the cell moved away from the nearer plate's pieces welds onto
             // its trailing edge (weldTurn; deviation from S3-design.md §4's Q = I).
@@ -167,7 +170,7 @@ void bearInBand(Globe& globe, Band& band, const Substep& substep) {
         }
         const CrustPiece& p = globe.pieces[size_t(choice[bearer])];
         const CrustPiece& q = globe.pieces[size_t(choice[1 - bearer])];
-        fresh.key = {substep.step, cell, substep.index};
+        fresh.key = {substep.step, cell, order};
         fresh.area = grid.area[size_t(fresh.birth)];
         fresh.bornAt = globe.time + (substep.index + 1) * substep.duration;   // births follow the substep's turn
         fresh.plate = p.plate;
@@ -175,20 +178,51 @@ void bearInBand(Globe& globe, Band& band, const Substep& substep) {
         const Vec3 own = velocityAt(globe.applied[p.plate], x);
         const double speed = length(own);
         const bool stretch = speed > 0 && dot(velocityAt(globe.applied[q.plate], x), own) / speed < 0.5 * speed;
-        if (!stretch || !neck(globe, band, cell, fresh.plate, fresh)) {
-            fresh.column = CrustColumn{};
-            fresh.column.quietSince = float(globe.time);
-            fresh.column.basement = Basement::Oceanic;
-            fresh.stock.basalt = OceanicCrust * fresh.area;
-            globe.ledger.interior.basalt -= fresh.stock.basalt;
-        }
-        refreshColumn(fresh);
-        resetMarks(fresh);
-        globe.pieces.push_back(fresh);
-        joinBand(globe, band, int(globe.pieces.size()) - 1);
-        globe.ledger.born += fresh.area;
-        ++globe.stats.births;
+        layNewPiece(globe, band, fresh, cell, stretch);
     }
+    return true;
+}
+
+} // namespace
+
+// A cell still open after its birth (a slot that straddles it) gets another, up to BirthsPerCell in a
+// substep; the key's order is substep · BirthsPerCell + the birth's number.
+void bearInBand(Globe& globe, Band& band, const Substep& substep) {
+    for (const int32_t cell : band.cells)
+        for (int n = 0; n < BirthsPerCell && bearCell(globe, band, cell, substep, substep.index * BirthsPerCell + n); ++n) {
+        }
+}
+
+
+bool fillCell(Globe& globe, Band& band, int cell, int plate, PieceKey key, double bornAt) {
+    CrustPiece fresh;
+    Slot slot;
+    fresh.birth = cell;
+    if (openSlot(globe, band, cell, plate, {}, true, slot)) fresh.rotation = slot.rotation, fresh.birth = slot.birth;
+    else ++globe.stats.welded;
+    fresh.key = key;
+    fresh.area = globe.grid->area[size_t(fresh.birth)];
+    fresh.bornAt = bornAt;
+    fresh.plate = uint16_t(plate);
+    layNewPiece(globe, band, fresh, cell, true);
+    ++globe.stats.filled;
+    return true;
+}
+
+void layNewPiece(Globe& globe, Band& band, CrustPiece fresh, int cell, bool stretch) {
+    if (!stretch || !neck(globe, band, cell, fresh.plate, fresh)) {
+        fresh.column = CrustColumn{};
+        fresh.column.quietSince = float(globe.time);
+        fresh.column.basement = Basement::Oceanic;
+        fresh.stock.basalt = OceanicCrust * fresh.area;
+        globe.ledger.interior.basalt -= fresh.stock.basalt;
+    }
+    refreshColumn(fresh);
+    resetMarks(fresh);
+    globe.pieces.push_back(fresh);
+    joinBand(globe, band, int(globe.pieces.size()) - 1);
+    globe.ledger.born += fresh.area;
+    ++globe.stats.births;
 }
 
 } // namespace derivean::sim

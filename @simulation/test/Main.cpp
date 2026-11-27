@@ -19,6 +19,7 @@ void testGlobeBoundary();
 void testGlobeBalance();
 void testGlobeDeterminism();
 void testGlobeBridge();
+void testGlobeEpochs();
 void testClouds();
 void testAtmosphere();
 void testSnow();
@@ -80,6 +81,7 @@ constexpr Test Tests[] = {
     {"testGlobeBalance", testGlobeBalance},
     {"testGlobeDeterminism", testGlobeDeterminism},
     {"testGlobeBridge", testGlobeBridge},
+    {"testGlobeEpochs", testGlobeEpochs},
     {"testClouds", testClouds},
     {"testAtmosphere", testAtmosphere},
     {"testSnow", testSnow},

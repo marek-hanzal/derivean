@@ -13,7 +13,7 @@
 namespace derivean::sim {
 
 inline constexpr double BornShare = 0.5;   // of a cell left uncovered by the union of its pieces
-inline constexpr double SlotClash = 0.02;  // of a lattice slot its plate may already cover (rounding of shared edges)
+inline constexpr double SlotClash = 0.02;  // of a lattice slot its own plate may already cover (rounding of shared edges)
 inline constexpr double SlotHint = 0.1;    // a cell whose overlaps sum to less than 1 − this may hold an open slot
 inline constexpr double SlotFill = 0.25;   // of a slot left open for it to fill an open cell that has no open slot
 
@@ -32,7 +32,8 @@ Over overOf(const Globe& globe, const Band& band, int cell, int plate, Vec3 x, V
 // How far (rad) to move a new footprint from its cell along `normal` to weld it onto its own plate.
 double weldTurn(Globe& globe, const Band& band, int cell, int plate, Vec3 x, Vec3 normal);
 
-// A slot of a plate's lattice next to the gap: its birth cell and the rotation of the piece it continues.
+// A slot of a plate's lattice next to the gap, on the side of its pieces that `normal` points to (any
+// side for a zero normal): its birth cell and the rotation of the piece it continues.
 struct Slot {
     int birth{-1};
     Rotation rotation;

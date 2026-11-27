@@ -52,10 +52,13 @@ double weldTurn(Globe& globe, const Band& band, int cell, int plate, Vec3 x, Vec
 // with T exactly, so ridge crust goes on in its plate's lattice instead of in the mantle grid's, where
 // the plate's pieces stand shifted by fractions of a cell and every birth leaves a hole or an overlap
 // (Codex DREV-CLAUDE-005-01). A slot is open when the union of the live pieces over it leaves ½ of it or
-// more uncovered and the plate's own pieces cover under SlotClash of it; the most open one is taken
+// more uncovered and the pieces of T's own plate cover under SlotClash of it; the most open one is taken
 // (the lower key of T, then the lower edge, on a tie; a slot whose overlaps sum to ½ or less is ranked
-// by that sum, a bound of its union, since it is open either way). A hole of one slot that straddles mantle cells
-// leaves each of them under half open, so slots are looked for wherever the cell is not covered.
+// by that sum, a bound of its union, since it is open either way). It may graze the cell and leave it
+// open, so a cell takes up to three births in a substep (Spread.cpp); ranking by the cover of the cell
+// instead walks the ridge's axis by 3.8 cells in 200 Myr. A hole of one slot that straddles mantle cells
+// leaves each of them under half open, so slots are looked for wherever the cell is not covered. With
+// a zero `normal` (a seam inside one plate, planet/fn/Seam.hpp) a slot may lie across any edge of T.
 bool openSlot(Globe& globe, const Band& band, int cell, int plate, Vec3 normal, bool cellOpen, Slot& slot) {
     const SphereGrid& grid = *globe.grid;
     const SpherePolygon home = polygonOf(grid, cell);
@@ -69,7 +72,7 @@ bool openSlot(Globe& globe, const Band& band, int cell, int plate, Vec3 normal, 
     for (const int32_t other : (*globe.rings)[size_t(cell)])
         if (other >= 0) gather(other);
     std::sort(near.begin(), near.end(), [&](int a, int b) { return globe.pieces[size_t(a)].key < globe.pieces[size_t(b)].key; });
-    double best = 0, bestCover = 0;   // the most open slot; else, in an open cell, the one covering most of it
+    double best = 0, bestCover = 0;   // the open slot covering most of the cell; else, in an open cell, the fill covering most of it
     Slot fill;
     std::vector<int> over;
     for (const int t : near) {
@@ -79,7 +82,7 @@ bool openSlot(Globe& globe, const Band& band, int cell, int plate, Vec3 normal, 
         for (int k = 0; k < 4; ++k) {
             const int next = neighbourOf(grid, template_.birth, k);
             const Vec3 centre = rotate(template_.rotation, grid.centre[size_t(next)]);
-            if (dot(centre - from, normal) <= 0) continue;
+            if (dot(normal, normal) > 0 && dot(centre - from, normal) <= 0) continue;
             const SpherePolygon footprint = rotated(polygonOf(grid, next), template_.rotation);
             const double cover = overlapArea(home, footprint);
             if (cover <= 0) continue;

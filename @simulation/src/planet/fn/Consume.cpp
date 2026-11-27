@@ -7,9 +7,10 @@
 #include "geometry/fn/Rotation.hpp"
 #include "geometry/fn/SphereGrid.hpp"
 #include "geometry/fn/Union.hpp"
-#include "planet/fn/FlatView.hpp"
+#include "planet/fn/Lattice.hpp"
 #include "planet/fn/Pieces.hpp"
 #include "planet/fn/Plan.hpp"
+#include "planet/fn/Transfers.hpp"
 #include "tectonics/fn/Euler.hpp"
 
 #include <algorithm>
@@ -20,7 +21,6 @@ namespace {
 
 constexpr double ConsumedShare = 0.5;   // of a footprint covered by overriding plates (Codex V2: a discrete choice)
 constexpr int Behind = 8;               // pieces of its own plate a donor's surplus may back into
-constexpr double ChurnAge = 10 * Myr;   // a piece consumed younger than this is churn (S3-design.md test 14)
 
 struct Overrider {
     int piece{};
@@ -95,67 +95,60 @@ std::vector<int> behindOf(const Globe& globe, const Band& band, int k) {
     return found;
 }
 
-// As the flat Crossing.cpp's markStacked, with the strike of the contact between the two pieces.
-void markStacked(CrustPiece& piece, double time, float strike) {
-    piece.column.orogenTime = piece.column.quietSince = float(time);
-    piece.column.exhumed = 0;
-    piece.column.fabric = strike;
-    piece.column.basement = Basement::Orogen;
-}
-
-void book(Globe& globe, const Transfer& t, const std::vector<int>& global, std::vector<Cover>& covers, std::vector<int>& coverOf) {
-    CrustPiece& from = globe.pieces[size_t(global[size_t(t.from)])];
-    const double felsic = takeFelsic(from, t.felsic);
-    const double basalt = std::clamp(t.basalt, 0.0, from.stock.basalt);
-    from.stock.basalt -= basalt;
-    if (t.to < 0) {
-        globe.ledger.interior.felsic += felsic;
-        globe.ledger.interior.basalt += basalt;
-        globe.ledger.subducted += felsic;
-        return;
+// Holds back every candidate over a cell that the candidates together keep at least half covered and
+// the other live pieces do not (Codex DREV-CLAUDE-005-04): consuming them would open it by more than
+// half at a trench, where the sinking plate has not yet moved into the room its consumed edge leaves.
+// They wait until the overriding plate covers more of the cell; a hold is not a cancellation and
+// brakes nothing. The cells' unions are measured once per substep.
+void holdOpening(Globe& globe, const Band& band, PlanPieces& plan, const std::vector<size_t>& bandOf) {
+    std::vector<PlanCandidate>& candidates = plan.input.candidates;
+    if (candidates.empty()) return;
+    std::vector<uint8_t> candidate(globe.pieces.size(), 0);
+    for (const PlanCandidate& c : candidates) candidate[size_t(plan.global[size_t(c.piece)])] = 1;
+    std::vector<int8_t> opens(band.regionCells.size(), -1);   // per region cell: unknown, no, yes
+    std::vector<int> all, rest;
+    const auto opening = [&](int cell) {
+        int8_t& known = opens[size_t(band.region[size_t(cell)])];
+        if (known >= 0) return known == 1;
+        all.clear(), rest.clear();
+        double sumAll = 0, sumRest = 0;
+        forLive(band, cell, [&](int k, double area) {
+            all.push_back(k), sumAll += area;
+            if (!candidate[size_t(k)]) rest.push_back(k), sumRest += area;
+        });
+        const double half = BornShare * globe.grid->area[size_t(cell)];
+        known = 0;
+        if (sumRest < sumAll && sumAll >= half && unionInCell(globe, cell, rest, sumRest, globe.stats.unions) < half)
+            known = unionInCell(globe, cell, all, sumAll, globe.stats.unions) >= half;
+        return known == 1;
+    };
+    size_t kept = 0;
+    for (size_t c = 0; c < candidates.size(); ++c) {
+        bool hold = false;
+        for (int32_t s = band.weightStart[bandOf[c]]; s < band.weightStart[bandOf[c] + 1] && !hold; ++s) {
+            const int cell = band.weights[size_t(s)].cell;
+            hold = band.region[size_t(cell)] >= 0 && opening(cell);
+        }
+        if (hold) {
+            ++globe.stats.held;
+            continue;
+        }
+        if (kept != c) candidates[kept] = std::move(candidates[c]);
+        ++kept;
     }
-    CrustPiece& to = globe.pieces[size_t(global[size_t(t.to)])];
-    giveFelsic(to, felsic);
-    to.stock.basalt += basalt;
-    const float gain = float(felsic / to.area);
-    to.column.tectonicGain += gain;
-    if (t.kind == TransferKind::Accrete) {
-        addDeposit(to.record.cover, globe.time, gain, Facies{0, 60, 195, 0, 0, 0});
-        globe.ledger.accreted += felsic;
-        return;
-    }
-    // The donor's cover as it was before its first transfer of the substep goes along by share.
-    if (felsic <= 0) return;
-    Cover share = covers[size_t(coverOf[size_t(t.from)])];
-    scaleCover(share, float(t.cover * from.area / to.area));
-    stackCover(to.record.cover, share);
-    const Vec3 at = centreOf(*globe.grid, to);
-    markStacked(to, globe.time, flatStrikeOf(at, towards(at, centreOf(*globe.grid, from))));
-    globe.motion[from.plate].resistance += felsic;
-    globe.ledger.stacked += felsic;
+    candidates.resize(kept);
 }
 
 } // namespace
 
 void consumeInBand(Globe& globe, Band& band, const Substep& substep) {
     const SphereGrid& grid = *globe.grid;
-    PlanInput input;
-    std::vector<int> global, local(globe.pieces.size(), -1);
-    const auto localOf = [&](int piece) {
-        if (local[size_t(piece)] >= 0) return local[size_t(piece)];
-        const CrustPiece& p = globe.pieces[size_t(piece)];
-        local[size_t(piece)] = int(global.size());
-        global.push_back(piece);
-        input.key.push_back(p.key);
-        input.plate.push_back(p.plate);
-        input.felsic.push_back(p.stock.felsic);
-        input.basalt.push_back(p.stock.basalt);
-        input.sediment.push_back(std::min(p.stock.felsic, double(coverThickness(p.record.cover)) * p.area));
-        input.room.push_back(std::max(0.0, double(StackLimit) * p.area - p.stock.felsic));
-        return local[size_t(piece)];
-    };
+    PlanPieces plan{{}, {}, std::vector<int>(globe.pieces.size(), -1)};
+    PlanInput& input = plan.input;
+    const auto localOf = [&](int piece) { return plan.localOf(globe, piece); };
     std::vector<int> partners;
     std::vector<Overrider> overriders;
+    std::vector<size_t> bandOf;   // per candidate: its index among the band's pieces
     const size_t coupled = band.weightStart.size() - 1;
     for (size_t b = 0; b < coupled; ++b) {
         const int k = band.pieces[b];
@@ -213,42 +206,25 @@ void consumeInBand(Globe& globe, Band& band, const Substep& substep) {
             if (globe.pieces[size_t(o.piece)].plate == plate) candidate.receivers.push_back({localOf(o.piece), o.overlap / total});
         for (const int other : behindOf(globe, band, k)) candidate.behind.push_back(localOf(other));
         input.candidates.push_back(std::move(candidate));
+        bandOf.push_back(b);
     }
+    holdOpening(globe, band, plan, bandOf);
     if (input.candidates.empty()) return;
     // Two oceans never stack: a chain that ends on an older ocean still sends the donor down.
     input.sinks = [&](int donor, int survivor) {
-        const int d = global[size_t(donor)], s = global[size_t(survivor)];
+        const int d = plan.global[size_t(donor)], s = plan.global[size_t(survivor)];
         return sinksUnder(globe, d, s) || (!continental(globe.pieces[size_t(d)]) && !continental(globe.pieces[size_t(s)]));
     };
-    const PlanResult plan = planTransfers(input);
-    globe.stats.rounds += plan.rounds;
-    globe.stats.cancelled += long(plan.cancelled.size());
-    globe.stats.deferred += long(plan.deferred.size());
-
-    // Covers are read as they stood before any transfer, so a donor's share does not depend on order.
-    std::vector<Cover> covers;
-    std::vector<int> coverOf(global.size(), -1);
-    for (const int d : plan.consumed) coverOf[size_t(d)] = int(covers.size()), covers.push_back(globe.pieces[size_t(global[size_t(d)])].record.cover);
-    for (const Transfer& t : plan.transfers) book(globe, t, global, covers, coverOf);
-    for (const int d : plan.consumed) globe.ledger.consumedFelsic += input.felsic[size_t(d)];
-    for (const int d : plan.consumed) {
-        const int k = global[size_t(d)];
-        CrustPiece& gone = globe.pieces[size_t(k)];
-        // What rounding of the shares leaves on a consumed piece goes to the interior with it.
-        globe.ledger.interior.felsic += gone.stock.felsic;
-        globe.ledger.interior.basalt += gone.stock.basalt;
-        globe.ledger.subducted += gone.stock.felsic;
-        gone.stock = {};
-        band.dead[size_t(k)] = 1;
-        globe.ledger.consumed += gone.area;
-        ++globe.stats.consumptions;
-        if (gone.key.step >= 0 && globe.time + (substep.index + 1) * substep.duration - gone.bornAt < ChurnAge) globe.ledger.churned += gone.area, ++globe.stats.churned;
-    }
+    const PlanResult result = planTransfers(input);
+    globe.stats.rounds += result.rounds;
+    globe.stats.cancelled += long(result.cancelled.size());
+    globe.stats.deferred += long(result.deferred.size());
+    applyPlan(globe, band, plan, result, substep);
     // A cancelled donor jams its plate by what it could not place in the round that cancelled it (§4;
     // Codex DREV-CLAUDE-005-02), once per settled plan and per planet step of the substep: the donor
     // stays and meets the same shortfall in every substep, so the brake does not grow with their count.
-    for (size_t i = 0; i < plan.cancelled.size(); ++i)
-        globe.motion[size_t(input.plate[size_t(plan.cancelled[i])])].resistance += plan.shortfall[i] * substep.duration / PlanetStep;
+    for (size_t i = 0; i < result.cancelled.size(); ++i)
+        globe.motion[size_t(input.plate[size_t(result.cancelled[i])])].resistance += result.shortfall[i] * substep.duration / PlanetStep;
 }
 
 } // namespace derivean::sim

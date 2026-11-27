@@ -97,14 +97,22 @@ void advancePlates(Globe& globe, double dt, int step, int refine) {
     clockPhase(globe, GlobePhase::Substeps, mark);
     // Pieces away from the band turn by the same rotations in the same order, so two pieces with the
     // same history keep the same bits wherever they were.
-    requireBandHeld(globe, band);
+    const std::vector<int32_t> near = nearBand(globe, band);
     std::vector<int32_t> rest;
     for (size_t k = 0; k < band.member.size(); ++k)
         if (!band.member[k]) rest.push_back(int32_t(k));
-    for (int index = 0; index < substeps; ++index) turn(globe.pieces, turnBy, rest);
+    for (int index = 0; index < substeps; ++index) {
+        turn(globe.pieces, turnBy, rest);
+        requireBandHeld(globe, band, near, dt / substeps, shortest);
+    }
 
     clockPhase(globe, GlobePhase::Rest, mark);
     globe.stats.bandCells += long(band.cells.size());
+    settleBand(globe, band);
+    clockPhase(globe, GlobePhase::Couple, mark);
+}
+
+void settleBand(Globe& globe, const Band& band) {
     std::vector<CrustPiece> kept;
     std::vector<uint8_t> exact;
     kept.reserve(globe.pieces.size());
@@ -121,8 +129,7 @@ void advancePlates(Globe& globe, double dt, int step, int refine) {
     std::vector<uint8_t> flags;
     for (const size_t i : order) globe.pieces.push_back(std::move(kept[i])), flags.push_back(exact[i]);
     for (const uint8_t f : flags) globe.stats.exactPieces += f;
-    couple(grid, globe.pieces, flags, false, globe.coupling);
-    clockPhase(globe, GlobePhase::Couple, mark);
+    couple(*globe.grid, globe.pieces, flags, false, globe.coupling);
 }
 
 } // namespace derivean::sim

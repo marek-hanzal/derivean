@@ -11,6 +11,7 @@
 #include "planet/fn/GlobeSurface.hpp"
 #include "planet/fn/Pieces.hpp"
 #include "planet/fn/Rotate.hpp"
+#include "planet/fn/Seam.hpp"
 
 #include <cmath>
 
@@ -57,7 +58,7 @@ Globe startGlobe(uint64_t seed, double time, int level, PlateSpeeds speeds) {
 void stepGlobe(Globe& globe, int64_t step, Workers& workers) {
     restoreKeyOrder(globe);
     const double before = globe.time;
-    if (before >= globe.epoch.end) enterGlobeEpoch(globe);
+    if (before >= globe.epoch.end) reorganisePlates(globe, int(step));
     if (strataSlot(before) != strataSlot(before - PlanetStep)) {
         forCovers(globe, retireOldest);
         forCovers(globe, buryCover);

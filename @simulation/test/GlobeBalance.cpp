@@ -79,8 +79,9 @@ void checkRecords() {
 // level-5 cells along the trench is itself about 2 % of what it consumes in that time. The substeps
 // adapt to the motion, so dt and dt/2 can run the same substep and the difference of dt against dt/2
 // is not asked to exceed that of dt/2 against dt/4. Every run keeps the local cover of §4 (the union in
-// each cell): nothing open or doubled outside the band, no cell more than ½ open (§4), under 1 % of the
-// sphere open or doubled, and a transform neither bears nor consumes.
+// each cell): nothing open or doubled outside the band, no cell more than ½ open (§4) at the end and
+// every 16 Myr of the run, under 1 % of the sphere open or doubled, and a transform neither bears nor
+// consumes.
 GlobeCover outsideBand(const Globe& globe) {
     Band band;
     markBand(globe, 1, band);
@@ -91,16 +92,22 @@ struct Run {
     double born{}, consumed{}, drift{};
     GlobeCover cover, outside;
     long churned{}, substeps{};
+    double worstHole{};   // over the run, every 16 Myr (Codex DREV-CLAUDE-005-04: not only at the end)
 };
 
 Run run(Vec3 pole, Vec3 split, double dt, int refine = 1) {
     Hemispheres h = hemispheres(pole, 0.05, 300.0f, 300.0f, normalized(split));
-    for (double t = 0; t < 192 * Myr - 1; t += dt) advance(h, dt, refine);
-    return {h.globe.ledger.born, h.globe.ledger.consumed, felsicDrift(h), measureCover(h.globe), outsideBand(h.globe), h.globe.stats.churned, h.globe.stats.substeps};
+    double worst = 0;
+    for (double t = 0; t < 192 * Myr - 1; t += dt) {
+        advance(h, dt, refine);
+        if (std::fmod(t + dt, 16 * Myr) < 0.5 * dt) worst = std::max(worst, measureCover(h.globe).worstHole);
+    }
+    return {h.globe.ledger.born, h.globe.ledger.consumed, felsicDrift(h), measureCover(h.globe), outsideBand(h.globe), h.globe.stats.churned, h.globe.stats.substeps, worst};
 }
 
 void checkCover(const Run& r) {
     expect(std::abs(r.drift) < 1e-12, "a step size loses crust", r.drift);
+    expect(r.worstHole < 0.5, "a cell is open by half or more during the run", r.worstHole);
     expect(r.outside.worstHole < 0.05 && r.outside.worstOverlap < 0.05, "a cell outside the band is left open or covered twice", std::max(r.outside.worstHole, r.outside.worstOverlap));
     expect(r.cover.worstHole < 0.5 && r.cover.hole < 0.01 && r.cover.overlap < 0.01, "the band leaves holes or overlaps", std::max(r.cover.worstHole, 100 * std::max(r.cover.hole, r.cover.overlap)));
 }
