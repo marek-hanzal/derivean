@@ -6,7 +6,8 @@ namespace derivean::sim {
 
 // A new epoch on the globe: convection reorganises and every piece is dealt to the plate under its
 // centre. Only `plate` changes; Q, the birth cell and the record go on bit for bit (Codex V1). Each
-// plate then gets its Euler vector from its new crust (tectonics/fn/Euler.hpp) and the swell of the
+// plate then gets its Euler vector from its new crust (tectonics/fn/Euler.hpp) and the mean age of its
+// ocean floor, which sets the polarity of its trenches for the epoch (sinksUnder), and the swell of the
 // epoch is laid on the mantle grid.
 void enterGlobeEpoch(Globe& globe);
 

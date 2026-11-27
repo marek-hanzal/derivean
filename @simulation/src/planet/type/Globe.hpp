@@ -6,6 +6,7 @@
 #include "planet/type/Planet.hpp"
 #include "tectonics/type/Euler.hpp"
 
+#include <array>
 #include <memory>
 
 namespace derivean::sim {
@@ -47,8 +48,13 @@ struct CrustPiece {
     PieceKey key;
     int32_t birth{};        // cell of its footprint at birth; the footprint is Q · that cell
     double area{};          // m², the birth cell's; a rotation keeps it
+    double bornAt{};        // yr: the substep that bore it, or the body's time for the primordial crust
     uint16_t plate{};
 };
+
+// The cells round a cell: across its four edges and at its corners, eight inside a face and on face
+// edges, seven at a cube vertex (where three cells meet); -1 pads.
+using CellRing = std::array<int32_t, 8>;
 
 // The overlap of pieces and cells: per piece the cells it covers and per cell the pieces that cover it,
 // each with the area in m². Exact (candidates and overlaps of S3a) where the piece is flagged, cheap
@@ -72,9 +78,12 @@ struct Coupling {
 };
 inline constexpr int CouplingSlots = 16;
 
-// A plate's brake inside an epoch: continental crust jammed at its leading contacts, m³.
+// What a plate carries through an epoch besides its Euler vector.
 struct GlobeMotion {
-    double resistance{};
+    double resistance{};   // m³: continental crust jammed at its leading contacts, its brake
+    // yr: the area mean of the age of the plate's ocean floor as the epoch starts, 0 for a plate with no
+    // ocean then. Which of two oceans sinks is the plates' choice, not the pieces' (sinksUnder).
+    double oceanAge{};
 };
 
 // The nearest cell of another plate as a cell of the mantle grid sees it, with the relative motion of
@@ -93,15 +102,29 @@ struct GlobeContact {
 struct GlobeLedger {
     double eroded{}, deposited{}, precipitated{};
     double subducted{}, accreted{}, erupted{}, stacked{};
+    double delaminated{};           // m³ of felsic crust a suture sent into the interior for want of room (in `interior`; Kay & Kay 1993, docs/credits)
     double born{}, consumed{};      // m² of footprint made at ridges and consumed at trenches and collisions
+    double consumedFelsic{};        // m³ the consumed pieces held when they were consumed
+    double churned{};               // m² of footprint consumed within ChurnAge of its birth (S3-design.md test 14)
     CrustStock interior;            // net gain of the interior since the start (negative: it gave)
+    double waterInventory{};        // m³, all water the body holds (as the flat history: a closed stock, S3d replaces it)
 };
+
+// Wall time of a step's phases, s (diagnostics only: no state reads it, so determinism ignores it).
+enum class GlobePhase : uint8_t { Band, Substeps, Rest, Couple, Contacts, Elevation, Climate, Surface, Count };
 
 // What the boundary events did, for `terra globe` and the tests.
 struct GlobeStats {
-    long substeps{}, rounds{}, births{}, consumptions{}, cancelled{}, deferred{};
+    std::array<double, size_t(GlobePhase::Count)> seconds{};
+    long substeps{}, rounds{}, births{}, consumptions{}, cancelled{}, deferred{}, churned{}, welded{};   // welded: births with no lattice slot
+    long contested{};   // candidates two or more overriding plates cover (triple junctions)
     long bandCells{}, exactPieces{}, unions{};
-    double worstHole{}, worstOverlap{};   // share of a cell, in the band
+    long filled{};   // births where no contact opens: fillCell (at closings too) and fillSlot in the band (not the fossils' slots)
+    long held{};   // candidates held back since consuming them would open a cell by more than half
+    long sutured{}, fossil{};   // seams: consumed by their own plate, born in old band slots at reorganisations
+    long seamsRefused{};        // suture donors a plan found no room for nearby: placed farther or delaminated
+    long unsettled{};           // reorganisations whose seams did not settle in SeamRounds
+    long unsettledSubsteps{};                 // substeps whose sutures still consumed after BearRounds rounds of births
 };
 
 struct Globe {
@@ -109,6 +132,7 @@ struct Globe {
     double time{};
     PlateSpeeds speeds{PlateSpeeds::Today};
     std::shared_ptr<const SphereGrid> grid;
+    std::shared_ptr<const std::vector<CellRing>> rings;   // per cell of the grid
     std::vector<CrustPiece> pieces;      // in key order
     Coupling coupling;
     SphereField<float> elevation;        // m, view of the solid surface against the datum

@@ -10,10 +10,14 @@ if os.scriptdir() == os.projectdir() then
     if is_plat("windows") then set_toolchains("clang-cl") end
 end
 
+-- Polygon union of crust footprints in the planet's boundary band (docs/credits/libraries.md).
+add_requires("clipper2 1.5.4")
+
 target("derivean-simulation")
     set_kind("static")
     add_files("src/**.cpp")
     add_includedirs("src", {public = true})
+    add_packages("clipper2", {public = true})
     -- Fused multiply-adds round alike on macOS and Windows (docs/windows.md#determinism; flags per
     -- docs/credits/libraries.md, platform documentation): clang on both, fusing a * b + c inside one
     -- expression and nowhere else, and on x86-64 with the FMA3 of AVX2 so that every fusion arm64

@@ -160,6 +160,7 @@ van Oosterom, A., Strackee, J. (1983). The solid angle of a plane triangle. *IEE
 - **Model:** the tan(E/2) formula for spherical excess; cell area as excess × R².
 - **Used in:** `@simulation/src/geometry/fn/Metric.hpp:10`, `@simulation/src/geometry/fn/Metric.cpp:35`.
 - **Used in (S3a):** the area of a polygon and of an overlap as the fan's excesses from plane coordinates, `@simulation/src/geometry/fn/Overlap.hpp:12`, `@simulation/src/geometry/fn/Overlap.cpp:88`.
+- **Used in (S3b):** the signed area of each contour of a union of footprints, outer contours positive and holes negative, `@simulation/src/geometry/fn/Union.hpp:20`, `@simulation/src/geometry/fn/Union.cpp:32`.
 
 ### Rodrigues 1840; do Carmo 1976: rotation and holonomy
 Rodrigues, O. (1840). Des lois géométriques qui régissent les déplacements d'un système solide dans l'espace… *Journal de Mathématiques Pures et Appliquées* 5, 380–440. http://www.numdam.org/item/JMPA_1840_1_5__380_0/
@@ -208,7 +209,7 @@ Jones, P. W. (1999). First- and second-order conservative remapping schemes for 
 - **Used in:** planned, `.out/lead/handover/PLANET.md:207`.
 - **Used in (S3a):** the overlap of two convex geodesic polygons, the weight of a crust piece's footprint in a mantle cell, `@simulation/src/geometry/fn/Overlap.hpp:7`.
 - **Checked by:** `@simulation/test/GeometrySphereOverlap.cpp:57`, `:114`: a cell with itself, its parent and its neighbours; the overlaps over the candidates summing to the footprint's area to 1e-12 before any normalisation.
-- **Used in (S3b):** the coupling of crust pieces and mantle cells, exact in the boundary band and cloud-in-cell normalised inside plates, `@simulation/src/planet/type/Globe.hpp:17`, `@simulation/src/planet/fn/Coupling.hpp:13`.
+- **Used in (S3b):** the coupling of crust pieces and mantle cells, exact in the boundary band and cloud-in-cell normalised inside plates, `@simulation/src/planet/type/Globe.hpp:17`, `@simulation/src/planet/fn/Coupling.hpp:13`. Surface processes, arcs, rifts, plumes and the flow of thick crust book their volumes into the pieces over a cell by the same weights (`forPiecesOver`, `@simulation/src/planet/fn/Coupling.hpp:28`), and the flat view reads cell views by them (`@simulation/src/planet/fn/FlatView.cpp`).
 - **Checked by (S3b):** `@simulation/test/GlobeCoupling.cpp` (identity at rest, the sum in every substep of a rigid turn).
 
 ### Lauritzen, Nair and Ullrich 2010: CSLAM, overlaps on the cubed sphere
@@ -221,3 +222,10 @@ Sutherland, I. E., Hodgman, G. W. (1974). Reentrant polygon clipping. *Communica
 - **Model:** clipping a polygon by each edge of a convex polygon in turn, here in the gnomonic tangent plane.
 - **Used in:** `@simulation/src/geometry/fn/Overlap.hpp:10`, `@simulation/src/geometry/fn/Overlap.cpp:60`, `:126`.
 - **Checked by:** `@simulation/test/GeometrySphereOverlap.cpp:57`.
+- **Used in (S3b):** clipping footprints to the piece or cell a union is measured in, `@simulation/src/geometry/fn/Union.hpp:14`, `@simulation/src/geometry/fn/Union.cpp:87`.
+- **Checked by (S3b):** `@simulation/test/GlobeUnion.cpp`.
+
+### Sobel and Feldman 1968: the 3 × 3 gradient
+Sobel, I., Feldman, G. (1968). A 3 × 3 isotropic gradient operator for image processing. Talk at the Stanford Artificial Intelligence Project; printed in Duda, R. O., Hart, P. E. (1973), *Pattern Classification and Scene Analysis*, Wiley, 271–272. ISBN 0-471-22361-1.
+- **Model:** the direction of a field's gradient from the 1-2-1 weighted differences over a cell's 3 × 3 block, here the elevation over a cube face's grid, so the angle of a shore against the grid lines is measured without the bias of a two-cell difference.
+- **Used in (S3b):** the shore-grain metric of `terra globe`, `@simulation/tool/GlobeRocks.cpp:52` (S3-design.md §11 test 12).

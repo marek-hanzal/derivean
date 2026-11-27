@@ -2,6 +2,7 @@
 
 #include "geometry/constant/Sphere.hpp"
 #include "geometry/fn/Rotation.hpp"
+#include "planet/fn/Boundary.hpp"
 #include "planet/fn/Pieces.hpp"
 #include "tectonics/fn/Euler.hpp"
 
@@ -42,6 +43,15 @@ void enterGlobeEpoch(Globe& globe) {
     }
     setEuler(globe.epoch, sin2, continental, globe.speeds);
     globe.motion.assign(plates, GlobeMotion{});
+    // The polarity of the plate's trenches for the epoch (sinksUnder; Stern 2002, docs/credits). A plate
+    // with no ocean now keeps age 0, so the ocean it opens in the epoch overrides every older plate's.
+    std::vector<double> ocean(plates, 0.0);   // the plate's ocean floor, m²
+    for (const CrustPiece& piece : globe.pieces) {
+        if (continentalPiece(piece)) continue;
+        globe.motion[piece.plate].oceanAge += double(piece.column.oceanAge) * piece.area;
+        ocean[piece.plate] += piece.area;
+    }
+    for (size_t p = 0; p < plates; ++p) globe.motion[p].oceanAge = ocean[p] > 0 ? globe.motion[p].oceanAge / ocean[p] : 0;
     globe.applied.assign(plates, Vec3{});
     for (size_t cell = 0; cell < globe.swell.value.size(); ++cell) globe.swell.value[cell] = float(swellAt(globe.epoch, globe.grid->centre[cell]));
 }

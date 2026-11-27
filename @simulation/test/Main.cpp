@@ -20,6 +20,13 @@ void testAtmosphereSphere();
 void testGeometrySphere();
 void testGlobeKinematics();
 void testGlobeCoupling();
+void testGlobeUnion();
+void testGlobePlan();
+void testGlobeBoundary();
+void testGlobeBalance();
+void testGlobeDeterminism();
+void testGlobeBridge();
+void testGlobeEpochs();
 void testClouds();
 void testAtmosphere();
 void testSnow();
@@ -89,6 +96,13 @@ constexpr Test Tests[] = {
     {"testGeometrySphere", testGeometrySphere, "unit"},
     {"testGlobeKinematics", testGlobeKinematics, "unit"},
     {"testGlobeCoupling", testGlobeCoupling, "unit"},
+    {"testGlobeUnion", testGlobeUnion, "unit"},
+    {"testGlobePlan", testGlobePlan, "unit"},
+    {"testGlobeBoundary", testGlobeBoundary, "unit"},
+    {"testGlobeBalance", testGlobeBalance, "unit"},
+    {"testGlobeDeterminism", testGlobeDeterminism, "unit"},
+    {"testGlobeBridge", testGlobeBridge, "unit"},
+    {"testGlobeEpochs", testGlobeEpochs, "unit"},
     {"testClouds", testClouds, "weather"},
     {"testAtmosphere", testAtmosphere, "weather"},
     {"testSnow", testSnow, "weather"},
