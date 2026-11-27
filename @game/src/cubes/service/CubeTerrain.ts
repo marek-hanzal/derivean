@@ -1,6 +1,6 @@
 import { type Group, type Material, type Vector3 } from "three/webgpu";
 import type { Frame, WorldInfo } from "../../../contract/GameBridge";
-import { FreeLevel, Overlap } from "../constant/levels";
+import { FreeLevel, LevelSlots, Overlap } from "../constant/levels";
 import { levelSquares } from "../fn/levelSquares";
 import { type Box, Everywhere, Nowhere, setLevel } from "../fn/levelTable";
 import type { Casting } from "../type/Casting";
@@ -20,8 +20,12 @@ export function createCubeTerrain(content: Group, world: WorldInfo, levels: Leve
   const water: (FaceBatch | undefined)[] = [];
   const far = new Map<number, { level: number; sheets: number }>();
   const pieces = new Map<number, FaceBatch>();
-  let voxelBox: Frame["voxelBox"] = null;
-  let boxes: NonNullable<Frame["cubes"]>["levels"] = [];
+  // Every level drawn, the voxels first, and the edge of each far level by level: kept from frame to frame and
+  // changed when the far levels are.
+  const all: { level: number; edge: number; box: Frame["voxelBox"] }[] = [{ level: 0, edge: world.voxelSize, box: null }];
+  const edges: (number | undefined)[] = [];
+  // Where each level is among the squares of a frame, -1 for none.
+  const squareAt = new Array<number>(LevelSlots).fill(-1);
   // Pieces that came, went or moved.
   let stirred = 0;
 
@@ -50,7 +54,7 @@ export function createCubeTerrain(content: Group, world: WorldInfo, levels: Leve
     }
     for (const { id, position, rotation } of frame.debris) pieces.get(id)?.pose(position, rotation);
     stirred += frame.spawned.length + frame.retired.length + frame.debris.length;
-    voxelBox = frame.voxelBox;
+    all[0].box = frame.voxelBox;
     if (!frame.cubes) return;
     for (const id of frame.cubes.removed) drop(id);
     for (const { id, level, edge, origin, quads, water: sheets } of frame.cubes.added) {
@@ -65,7 +69,12 @@ export function createCubeTerrain(content: Group, world: WorldInfo, levels: Leve
       });
       far.set(id, { level, sheets: sheets.length });
     }
-    boxes = frame.cubes.levels;
+    all.length = 1;
+    edges.length = 0;
+    for (const box of frame.cubes.levels) {
+      all.push(box);
+      edges[box.level] = box.edge;
+    }
   }
 
   return {
@@ -74,16 +83,19 @@ export function createCubeTerrain(content: Group, world: WorldInfo, levels: Leve
     // far level along the square it leaves to the finer ones. A level reaches a sliver into the coarser one
     // around it, so the two meet without a crack. Returns the squares, from the finest level drawn.
     place(origin: Vector3) {
-      for (const batch of [voxels, ...ground, ...water]) batch?.follow(origin);
+      voxels.follow(origin);
+      for (const batch of ground) batch?.follow(origin);
+      for (const batch of water) batch?.follow(origin);
       setLevel(levels, FreeLevel, origin, world.voxelSize, 0, Everywhere, Nowhere, Nowhere, -1);
-      const all = [{ level: 0, edge: world.voxelSize, box: voxelBox }, ...boxes];
-      heights?.place(origin, boxes.reduce<number[]>((edges, { level, edge }) => { edges[level] = edge; return edges; }, []));
+      heights?.place(origin, edges);
       const squares = levelSquares(all);
+      squareAt.fill(-1);
+      squares.forEach((square, index) => { squareAt[square.level] = index; });
       let finerGround: Box = Nowhere;
       let finerWater: Box = Nowhere;
       let finer = -1;
       for (const { level, edge } of all) {
-        const at = squares.findIndex((square) => square.level === level);
+        const at = squareAt[level];
         const own = at < 0 ? Nowhere : squares[at].own;
         const shown = own !== Nowhere;
         setLevel(levels, level, origin, edge, shown ? (squares[at + 1]?.edge ?? edge) * Overlap : 0, own, finerGround, finerWater, finer);

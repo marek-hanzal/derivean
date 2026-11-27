@@ -69,6 +69,8 @@ export function createSunShadow(world: WorldInfo, levels: LevelTable, clouds?: C
   const across = new Vector3();
   const up = new Vector3();
   const centre = new Vector3();
+  // Each cascade's square this frame.
+  const owned: (Box | undefined)[] = [];
   let frame = 0;
 
   // The square of ground a cascade's own levels fill: that of the coarsest of them that is drawn.
@@ -124,14 +126,15 @@ export function createSunShadow(world: WorldInfo, levels: LevelTable, clouds?: C
       let next = -1;
       let urgency = 1;
       cascades.forEach((cascade, index) => {
-        const square = squareOf(index, state.squares);
+        const square = owned[index] = squareOf(index, state.squares);
         if (!square) {
           cascade.drawn = undefined;
           return;
         }
         const { drawn } = cascade;
         if (!drawn) return draw(renderer, index, state, square);
-        const moved = Math.hypot(state.eye.x - drawn.centre.x, state.eye.z - drawn.centre.z) > cascade.half * MoveShare;
+        const dx = state.eye.x - drawn.centre.x, dz = state.eye.z - drawn.centre.z;
+        const moved = dx * dx + dz * dz > (cascade.half * MoveShare) ** 2;
         if (!moved && drawn.sun.angleTo(state.sun) <= SunTurn && state.stamp(index) === drawn.stamp) return;
         // The cascade that has waited longest for its turn goes first; of two that have, the coarser.
         const waited = (frame - drawn.frame) / DrawEvery[index];
@@ -140,7 +143,7 @@ export function createSunShadow(world: WorldInfo, levels: LevelTable, clouds?: C
           next = index;
         }
       });
-      if (next >= 0) draw(renderer, next, state, squareOf(next, state.squares)!);
+      if (next >= 0) draw(renderer, next, state, owned[next]!);
       cascades.forEach(({ drawn, half, size }, index) => {
         if (!drawn) return squares[index].set(1, 1, -1, -1);
         const { square, sun, clip } = drawn;
