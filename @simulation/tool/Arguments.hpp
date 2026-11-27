@@ -33,6 +33,8 @@ struct Arguments {
 };
 
 int planetCommand(const Arguments& arguments);
+int approxCommand(const Arguments& arguments);
+int approxCheckCommand(const Arguments& arguments);
 int mapCommand(const Arguments& arguments);
 int chartCommand(const Arguments& arguments);
 int probeCommand(const Arguments& arguments);
