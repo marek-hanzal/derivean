@@ -65,9 +65,10 @@ double sideOf(double ax, double ay, double bx, double by, double px, double py) 
 }
 
 // Sutherland & Hodgman (1974): keeps the part of `subject` left of the directed line a → b. Each clip
-// adds at most one corner, so eight corners clipped by eight edges need at most sixteen.
-void clip(Flat& subject, double ax, double ay, double bx, double by) {
-    Flat kept;
+// adds at most one corner, so eight corners clipped by eight edges need at most sixteen. The kept part
+// goes into `kept`, so a chain of clips alternates two buffers.
+void clip(const Flat& subject, Flat& kept, double ax, double ay, double bx, double by) {
+    kept.count = 0;
     const int n = subject.count;
     if (n == 0) return;
     double previousSide = sideOf(ax, ay, bx, by, subject.x[size_t(n - 1)], subject.y[size_t(n - 1)]);
@@ -88,7 +89,6 @@ void clip(Flat& subject, double ax, double ay, double bx, double by) {
         }
         previousSide = side;
     }
-    subject = kept;
 }
 
 // Σ of the fan's excesses, tan(E/2) = |P1 · (P2 × P3)| / (|P1||P2||P3| + (P1·P2)|P3| + (P2·P3)|P1| +
@@ -137,16 +137,19 @@ double overlapArea(const PreparedPolygon& a, const SpherePolygon& b) {
     assert(capA.reach < LargestReach && capB.reach < LargestReach);
     if (length(capA.centre - capB.centre) > capA.reach + capB.reach + ApartMargin) return 0;
     const Plane plane{capA.centre, a.first, a.second};
-    Flat piece;
-    piece.count = a.count;
-    std::copy(a.x.begin(), a.x.begin() + a.count, piece.x.begin());
-    std::copy(a.y.begin(), a.y.begin() + a.count, piece.y.begin());
+    std::array<Flat, 2> buffers;
+    Flat* piece = &buffers[0];
+    Flat* kept = &buffers[1];
+    piece->count = a.count;
+    std::copy(a.x.begin(), a.x.begin() + a.count, piece->x.begin());
+    std::copy(a.y.begin(), a.y.begin() + a.count, piece->y.begin());
     const Flat edge = project(plane, b);
-    for (int k = 0; k < edge.count && piece.count > 0; ++k) {
+    for (int k = 0; k < edge.count && piece->count > 0; ++k) {
         const size_t next = size_t((k + 1) % edge.count);
-        clip(piece, edge.x[size_t(k)], edge.y[size_t(k)], edge.x[next], edge.y[next]);
+        clip(*piece, *kept, edge.x[size_t(k)], edge.y[size_t(k)], edge.x[next], edge.y[next]);
+        std::swap(piece, kept);
     }
-    return excessOf(piece) * PlanetRadius * PlanetRadius;
+    return excessOf(*piece) * PlanetRadius * PlanetRadius;
 }
 
 } // namespace derivean::sim
