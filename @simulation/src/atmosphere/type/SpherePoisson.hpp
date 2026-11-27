@@ -1,6 +1,6 @@
 #pragma once
 
-#include "atmosphere/type/SphereMatrix.hpp"
+#include "atmosphere/type/StencilMatrix.hpp"
 #include "geometry/type/SphereGrid.hpp"
 
 #include <vector>
@@ -13,8 +13,10 @@ namespace derivean::sim {
 struct PoissonLevel {
     int level{};
     int side{};
-    SphereMatrix stiffness;
-    std::vector<double> solution, source, residual;
+    StencilMatrix stiffness;
+    std::vector<double> inverseDiagonal;
+    double largest{};                                          // λmax of D⁻¹K, estimated
+    std::vector<double> solution, source, residual, direction, product;   // work space
 };
 
 // Inverting the weather grid's Laplacian, Δψ = ζ, by conjugate gradients (Hestenes & Stiefel 1952) on
@@ -23,9 +25,8 @@ struct PoissonLevel {
 // diagonal.
 struct SpherePoisson {
     std::vector<PoissonLevel> levels;             // [0] is the grid's own level, then ever coarser
-    std::vector<double> inverseDiagonal;          // Jacobi preconditioner of levels[0]
-    bool multigrid{};
-    int smoothing{2};                             // Gauss–Seidel sweeps before and after the coarse step, ≥ 1
+    bool multigrid{};                             // else the preconditioner is levels[0]'s diagonal
+    int smoothing{3};                             // Chebyshev degree before and after the coarse step, ≥ 1
     // Work space, no state between solves; one solve at a time per SpherePoisson.
     std::vector<double> target, residual, direction, product, preconditioned;
 };
