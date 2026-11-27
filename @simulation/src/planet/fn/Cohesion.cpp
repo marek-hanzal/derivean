@@ -1,3 +1,5 @@
+// 265 lines, one owner: a pass's splits, joins and the dealing of their pieces share PlateRegions and
+// the order of keepPlatesWhole, which splitting them apart would only forward.
 #include "planet/fn/Cohesion.hpp"
 
 #include "geometry/fn/Cell.hpp"
@@ -128,7 +130,7 @@ std::vector<int32_t> deal(Globe& globe, const PlateRegions& regions, const std::
     }
     for (int c = 0; c < grid.cells; ++c) {
         const int32_t k = regions.dominant[size_t(c)];
-        if (k >= 0) dominant[size_t(k)] = 1;
+        if (k >= 0 && regions.owner[size_t(c)] >= 0) dominant[size_t(k)] = 1;   // a free cell's rounding is no cover
         const int32_t r = regions.region[size_t(c)];
         if (r < 0 || to[size_t(r)] < 0) continue;
         if (target[size_t(k)] < 0) target[size_t(k)] = to[size_t(r)], from[size_t(k)] = r;

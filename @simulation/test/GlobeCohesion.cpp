@@ -4,8 +4,8 @@
 // - A fragment parted from its plate's other cells by free cells alone is one region with them: nothing
 //   joins, splits or is reported unsettled.
 // - A piece whose exact overlaps reach its free neighbours by rounding (1e-17 of a cell) owns its cell
-//   only: cut off by another plate's ring it is one cell and its own cover, so it joins and splits off
-//   nothing.
+//   only: cut off by another plate's ring it is one cell and its own cover, so it joins that plate and
+//   nothing splits off.
 // - A region of the covered area and cells splits off with a new id; a plate left with no piece ends
 //   once; ids are unique and given in order; a second pass repeats no event; the stock closes.
 #include "GlobeFixture.hpp"
@@ -48,12 +48,20 @@ int ownerId(const Globe& globe, int cell) {
     return piece >= 0 ? globe.motion[globe.pieces[size_t(piece)].plate].id : -1;
 }
 
-// The stock with the interior closes to sum rounding: a seam's births and consumptions add pieces in
-// another order (as testGlobeEpochs' drift).
+// The stock with the interior closes, each part to 1e-15 of itself: the interior's ledger adds a seam's
+// births and consumptions one by one in plain doubles (planet/fn/Lay, Transfers), so a closing may leave
+// an ulp or two of it (the rounding fixture: 4 m³ of basalt, a few ulps of its sum), where the fixtures with no
+// seam close exactly.
 bool stockCloses(const Globe& globe, CrustStock before) {
     const CrustStock after = totalStock(globe.pieces);
-    const double bound = 1e-12 * (before.felsic + before.basalt);
-    return std::abs(after.felsic + globe.ledger.interior.felsic - before.felsic) <= bound && std::abs(after.basalt + globe.ledger.interior.basalt - before.basalt) <= bound;
+    return std::abs(after.felsic + globe.ledger.interior.felsic - before.felsic) <= 1e-15 * before.felsic &&
+           std::abs(after.basalt + globe.ledger.interior.basalt - before.basalt) <= 1e-15 * before.basalt;
+}
+
+// Whether every piece names a plate there is.
+bool platesValid(const Globe& globe) {
+    return std::all_of(globe.pieces.begin(), globe.pieces.end(), [&](const CrustPiece& piece) { return piece.plate < globe.epoch.plates.size(); }) &&
+           globe.motion.size() == globe.epoch.plates.size() && globe.applied.size() == globe.epoch.plates.size();
 }
 
 // Only the pieces born in the given cells, with their plates.
@@ -74,7 +82,7 @@ void checkLongestBorder() {
     std::array<int, 4> sides{0, 1, 2, 3};
     const auto edgeAt = [&](int k) { return grid.edge[size_t(grid.edges[size_t(fragment)][size_t(k)])]; };
     std::sort(sides.begin(), sides.end(), [&](int a, int b) { return edgeAt(a).length < edgeAt(b).length; });
-    expect(edgeAt(sides[0]).length < edgeAt(sides[3]).length, "the border fixture's edges are of one length");
+    expect(edgeAt(sides[2]).length < edgeAt(sides[3]).length, "the border fixture has no one longest edge");
     for (CrustPiece& piece : globe.pieces) piece.plate = 3;
     globe.pieces[size_t(fragment)].plate = 4;
     for (int i = 18; i <= 20; ++i) globe.pieces[size_t(cellAtFace0(grid, i, 19))].plate = 4;
@@ -84,7 +92,7 @@ void checkLongestBorder() {
     couple(grid, globe.pieces, {}, true, globe.coupling);
     keepPlatesWhole(globe, 1);
     expect(ownerId(globe, fragment) == longest, "a fragment does not join the plate of its longest border", ownerId(globe, fragment));
-    expect(globe.stats.fragmentsJoined == 1 && globe.stats.wholeUnsettled == 0 && stockCloses(globe, stock), "the border fixture does not settle whole", double(globe.stats.fragmentsJoined));
+    expect(globe.stats.fragmentsJoined == 1 && globe.stats.wholeUnsettled == 0 && stockCloses(globe, stock) && platesValid(globe), "the border fixture does not settle whole", double(globe.stats.fragmentsJoined));
 }
 
 // The first cell from (4, 4) whose piece's weights hold it alone (CIC), or hold it and only rounding
@@ -175,7 +183,7 @@ void checkIdentity() {
     expect(std::adjacent_find(ids.begin(), ids.end()) == ids.end() && ids.back() < globe.platesMade && globe.epoch.sites == 2, "plate ids repeat or run past those given");
     keepPlatesWhole(globe, 2);
     expect(globe.splits.size() == 1 && globe.plateEnds.size() == 1 && globe.platesMade == next + 1, "a second pass repeats a split or an end", double(globe.splits.size()));
-    expect(globe.stats.wholeUnsettled == 0 && stockCloses(globe, stock), "the identity fixture does not close");
+    expect(globe.stats.wholeUnsettled == 0 && stockCloses(globe, stock) && platesValid(globe), "the identity fixture does not close");
 }
 
 } // namespace
