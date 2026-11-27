@@ -34,14 +34,6 @@ bool invertTrial(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& 
     return true;
 }
 
-// Drops the older time levels, so the next step is a forward step and its first guess the last ψ.
-// Only with ζ, ψ and the fluxes consistent: after setVorticity's inversion or when the step changes.
-void restart(SphereFlow& flow) {
-    flow.before = flow.vorticity;
-    flow.started = false;
-    flow.levels = 1;
-}
-
 // The candidate becomes the state; the accepted ψ move one level back.
 void acceptTrial(SphereFlow& flow) {
     std::swap(flow.vorticity, flow.trialVorticity);
@@ -81,6 +73,12 @@ void tendencyOf(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& s
 
 } // namespace
 
+void restartHistory(SphereFlow& flow) {
+    flow.before = flow.vorticity;
+    flow.started = false;
+    flow.levels = 1;
+}
+
 double rotationRateAt(double age) { return 2 * std::numbers::pi / deepTimeAt(age).siderealDay; }
 
 SphereFlow makeSphereFlow(const SphereGrid& grid, double rotation) {
@@ -102,7 +100,7 @@ bool setVorticity(SphereFlow& flow, const SphereGrid& grid, const SphereStencil&
     flow.trialStream = flow.stream;
     if (!invertTrial(flow, grid, stencil, poisson)) return false;
     acceptTrial(flow);
-    restart(flow);
+    restartHistory(flow);
     return true;
 }
 
@@ -110,7 +108,7 @@ void setStep(SphereFlow& flow, double step) {
     assert(step > 0);
     if (step == flow.step) return;
     flow.step = step;
-    restart(flow);
+    restartHistory(flow);
 }
 
 const std::vector<double>& baseLevel(const SphereFlow& flow) { return flow.started ? flow.before : flow.vorticity; }

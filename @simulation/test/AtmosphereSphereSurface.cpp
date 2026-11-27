@@ -145,10 +145,67 @@ void checkMountainSpin() {
     }
 }
 
+// Terrain set after a taken window of four 900 s steps at level 5, on the westerly above: the next
+// step's response at the windward and lee slopes is the response of twelve steps of 75 s to 3 %
+// (measured 1.002 and 0.998; 1.958 with the old background's history kept, as Codex DREV-CLAUDE-010-04
+// found 1.953 on his own wind). Setting the same terrain again, and sea level on a flow at sea level,
+// restarts nothing: the next window is bit for bit the one without the call. The restart is setStep's,
+// bit for bit, with no inversion.
+void checkSurfaceSwitch() {
+    const SphereGrid grid = makeSphereGrid(5);
+    const SphereStencil stencil = makeSphereStencil(grid);
+    SpherePoisson poisson = makeSpherePoisson(grid, stencil);
+    constexpr double U = 10;
+    SphereFlow sea = makeSphereFlow(grid, rotationRateAt(PresentAge));
+    std::vector<double> solid(size_t(grid.cells));
+    for (int c = 0; c < grid.cells; ++c) solid[size_t(c)] = 2 * U / PlanetRadius * grid.centre[size_t(c)].z;
+    expect(setVorticity(sea, grid, stencil, poisson, solid), "the westerly did not invert");
+    SphereHour hour;
+    hour.steps = 4;
+    expect(advanceSphereHour(hour, sea, grid, stencil, poisson, SphereForcing{}) && sea.step == 900 && sea.started, "the window was not four steps");
+    const std::vector<double> height = mountains(grid);
+
+    SphereFlow hill = sea, fineSea = sea, fineHill = sea;
+    setSurface(hill, grid, height);
+    setSurface(fineHill, grid, height);
+    // The restart is setStep's, with ζ, ψ and the fluxes as they were (no inversion).
+    SphereFlow stepped = sea;
+    stepped.coriolis = hill.coriolis;
+    setStep(stepped, 450);
+    setStep(stepped, 900);
+    expect(sameState(hill, stepped) && !hill.started && hill.inversion.iterations == sea.inversion.iterations, "the new background was not setStep's restart");
+    setStep(fineSea, 75);
+    setStep(fineHill, 75);
+    const SphereFlow seaBefore = sea;
+    expect(stepSphereFlow(sea, grid, stencil, poisson) && stepSphereFlow(hill, grid, stencil, poisson), "a 900 s step did not converge");
+    for (int k = 0; k < 12; ++k)
+        expect(stepSphereFlow(fineSea, grid, stencil, poisson) && stepSphereFlow(fineHill, grid, stencil, poisson), "a 75 s step did not converge", k);
+    const double degrees = Spread / std::sqrt(2.0) / (PlanetRadius * std::cos(45 * Radians)) / Radians;
+    for (double latitude : {45.0, -45.0})
+        for (int side : {-1, 1}) {
+            const size_t c = size_t(nearest(grid, pointAt(latitude, side * degrees)));
+            const double ratio = (hill.vorticity[c] - sea.vorticity[c]) / (fineHill.vorticity[c] - fineSea.vorticity[c]);
+            expect(std::abs(ratio - 1) < 0.03, "a terrain set after a window took the old history", ratio);
+        }
+
+    // The same terrain again and sea level again: the next window as without the call, bit for bit.
+    SphereFlow again = hill, plain = hill, seaAgain = seaBefore, seaPlain = seaBefore;
+    setSurface(again, grid, height);
+    setSurface(seaAgain, grid, {});
+    expect(again.started && seaAgain.started, "the same background restarted the history");
+    SphereHour a = hour, b = hour, c = hour, d = hour;
+    expect(advanceSphereHour(a, again, grid, stencil, poisson, SphereForcing{}) && advanceSphereHour(b, plain, grid, stencil, poisson, SphereForcing{}) &&
+               advanceSphereHour(c, seaAgain, grid, stencil, poisson, SphereForcing{}) &&
+               advanceSphereHour(d, seaPlain, grid, stencil, poisson, SphereForcing{}),
+           "a window after the same background was not taken");
+    expect(sameState(again, plain) && sameState(seaAgain, seaPlain), "the same background changed the run");
+}
+
 } // namespace
 
 void derivean::sim::atmosphere_sphere_test::checkSurface() {
     checkBackground();
     checkZeroHour();
     checkMountainSpin();
+    checkSurfaceSwitch();
 }

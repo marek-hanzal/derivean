@@ -18,7 +18,8 @@ namespace derivean::sim {
 // caller passes the same height as the closures' friction (makeSphereClosures); nothing ties the two
 // until the globe's surface owns it (S4.5). It replaces the background whole, so it may be called again with new terrain;
 // the background is fixed for the flow within a window (SphereFlowStart does not hold it), so set it
-// between windows.
+// between windows. A background that changes restarts the leapfrog's history (restartHistory), whose
+// older level was made with the old one; the same background given again changes nothing, bit for bit.
 void setSurface(SphereFlow& flow, const SphereGrid& grid, const std::vector<double>& height);
 
 } // namespace derivean::sim
