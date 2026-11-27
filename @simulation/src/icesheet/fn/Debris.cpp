@@ -51,7 +51,7 @@ void carryDebris(Domain& domain, const SheetField& field, const std::vector<int3
         const int x = cell % size, z = cell / size;
         float load[SedimentClasses] = {carried[0][i], carried[1][i], carried[2][i]};
         float young[SedimentClasses] = {fresh[0][i], fresh[1][i], fresh[2][i]};
-        const bool free = domain.hold[i] == Free;
+        const bool free = domain.hold[i] == Free, owned = domain.owned(x, z);
         const auto keep = [&](float room, std::vector<float>* kind, double& booked) {
             // Lays what fits into `room` (m³) here; the rest goes on with the meltwater and out of this account.
             const float all = load[0] + load[1] + load[2];
@@ -59,7 +59,8 @@ void carryDebris(Domain& domain, const SheetField& field, const std::vector<int3
             const float kept = std::min(1.0f, room / all);
             const float stays[SedimentClasses] = {load[0] * kept, load[1] * kept, load[2] * kept};
             lay(domain, i, stays, span, kind, booked);
-            totals.left += all * (1 - kept), domain.ledger.sedimentOut += all * (1 - kept);
+            totals.left += all * (1 - kept);
+            if (owned) domain.ledger.sedimentOut += all * (1 - kept);
         };
         if (field.thickness[i] <= 0) {
             // Ground the ice does not cover: what it brought this far stays as its end moraine, up
@@ -103,18 +104,21 @@ void carryDebris(Domain& domain, const SheetField& field, const std::vector<int3
             if (free) keep(MoraineLimit * area, left ? &left->till : nullptr, totals.lodged);
             continue;
         }
-        // Only what crosses between the cells that evolve and the others is booked as entering or leaving.
+        // The sheet's totals count what crosses between the cells that evolve and the others; the
+        // tile's ledger what crosses between its own cells and the rest of the domain, halo included.
         for (int k = 0; k < 8; ++k) {
             if (fall[k] <= 0) continue;
-            const size_t n = domain.index(x + NeighborX[k], z + NeighborZ[k]);
+            const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
+            const size_t n = domain.index(nx, nz);
             const bool into = domain.hold[n] == Free;
-            if (!free && !into) continue;
             const float share = fall[k] / total, all = (load[0] + load[1] + load[2]) * share;
+            if (owned != domain.owned(nx, nz)) (owned ? domain.ledger.sedimentOut : domain.ledger.sedimentIn) += all;
+            if (!free && !into) continue;
             if (free && !into) {
-                totals.left += all, domain.ledger.sedimentOut += all;
+                totals.left += all;
                 continue;
             }
-            if (!free) totals.entered += all, domain.ledger.sedimentIn += all;
+            if (!free) totals.entered += all;
             for (int c = 0; c < SedimentClasses; ++c) carried[c][n] += load[c] * share, fresh[c][n] += young[c] * share;
         }
     }
