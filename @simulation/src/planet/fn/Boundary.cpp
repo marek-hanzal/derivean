@@ -3,6 +3,7 @@
 #include "geometry/constant/Sphere.hpp"
 #include "geometry/fn/Rotation.hpp"
 #include "planet/constant/Scale.hpp"
+#include "planet/fn/BandHeld.hpp"
 #include "planet/fn/Coupling.hpp"
 #include "planet/fn/Pieces.hpp"
 #include "planet/fn/Rotate.hpp"
