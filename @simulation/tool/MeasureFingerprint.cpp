@@ -16,7 +16,11 @@
 #include <cmath>
 #include <cstdio>
 #include <map>
+#if defined(_WIN32)
+#include <windows.h>
+#else
 #include <sys/resource.h>
+#endif
 #ifdef __APPLE__
 #include <libproc.h>
 #include <unistd.h>
@@ -121,7 +125,23 @@ Vec2 riverMouth(const Tile& tile) {
     return {(tile.key.x * TileCells + double(best % TileCells) + 0.5) * cell, (tile.key.z * TileCells + double(best / TileCells) + 0.5) * cell};
 }
 
-double cpuSeconds(const timeval& t) { return double(t.tv_sec) + 1e-6 * double(t.tv_usec); }
+// s of user and system time the process has spent.
+struct CpuTime {
+    double user{}, sys{};
+};
+CpuTime cpuNow() {
+#if defined(_WIN32)
+    FILETIME created, exited, kernel, user;
+    if (!GetProcessTimes(GetCurrentProcess(), &created, &exited, &kernel, &user)) return {};
+    const auto seconds = [](const FILETIME& t) { return 1e-7 * double((uint64_t(t.dwHighDateTime) << 32) | t.dwLowDateTime); };
+    return {seconds(user), seconds(kernel)};
+#else
+    rusage usage{};
+    getrusage(RUSAGE_SELF, &usage);
+    const auto seconds = [](const timeval& t) { return double(t.tv_sec) + 1e-6 * double(t.tv_usec); };
+    return {seconds(usage.ru_utime), seconds(usage.ru_stime)};
+#endif
+}
 
 // Instructions and cycles the process has retired, where the system counts them (macOS): unlike
 // times they hardly move with the machine's load. Zero elsewhere.
@@ -245,17 +265,15 @@ int measureFingerprint(const Arguments& arguments) {
         double wall = 1e30, user = 1e30, sys = 1e30, instructions = 1e30, cycles = 1e30;
         bool same = true;
         for (int repeat = 0; repeat < repeats; ++repeat) {
-            rusage before{}, after{};
-            getrusage(RUSAGE_SELF, &before);
+            const CpuTime before = cpuNow();
             const Counters start = countersNow();
             lap();
             const auto again = replayTile(alone, key, needed.lookup());
             wall = std::min(wall, lap());
             const Counters end = countersNow();
-            getrusage(RUSAGE_SELF, &after);
+            const CpuTime after = cpuNow();
             instructions = std::min(instructions, end.instructions - start.instructions), cycles = std::min(cycles, end.cycles - start.cycles);
-            user = std::min(user, cpuSeconds(after.ru_utime) - cpuSeconds(before.ru_utime));
-            sys = std::min(sys, cpuSeconds(after.ru_stime) - cpuSeconds(before.ru_stime));
+            user = std::min(user, after.user - before.user), sys = std::min(sys, after.sys - before.sys);
             same = same && printOf(*again) == prints.at(key);
         }
         std::printf("time %-13s level %d  wall %.2f s  user %.2f s  sys %.2f s  instructions %.4g  cycles %.4g  %s\n", what.c_str(), int(key.level), wall, user, sys,
