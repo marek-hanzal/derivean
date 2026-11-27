@@ -6,7 +6,7 @@
 #include <cstdlib>
 
 #if defined(__aarch64__)
-#include <arm_neon.h>
+#include "atmosphere/fn/StencilNeon.hpp"
 #endif
 
 namespace derivean::sim {
@@ -20,7 +20,7 @@ bool insideFace(int side, int row) {
     return i >= Margin && i < side - Margin && j >= Margin && j < side - Margin;
 }
 
-// Grid line dj outer, neighbour di inner; applyEightInteriorRowsNeon adds its taps in this order.
+// Grid line dj outer, neighbour di inner; the NEON kernels (StencilNeon.hpp) add their taps in this order.
 std::array<int, Entries> offsetsFor(int side) {
     std::array<int, Entries> offset{};
     int k = 0;
@@ -44,85 +44,43 @@ bool regularOf(const SphereMatrix& matrix, int side, const std::array<int, Entri
     return true;
 }
 
-#if defined(__aarch64__)
-// Eight consecutive interior rows of one block. Each of the five grid lines dj = −2..2 is loaded
-// once, and the neighbours di are formed in registers by vextq_f64 instead of reloading x per
-// entry. The taps run in offsetsFor's order (dj outer, di inner), so every sum adds its 21 products
-// in column order as the compressed row does; vfmaq_f64 fuses each product with its sum, which is
-// what clang makes of `sum += value * x` under -ffp-contract=on (Arm Neon Intrinsics Reference and
-// the Clang manual, docs/credits/libraries.md, platform documentation).
-void applyEightInteriorRowsNeon(const double* __restrict blockValues, int blockCount,
-                                const double* __restrict centerInput, int side,
-                                double* __restrict outputPointer) {
-    float64x2_t sum0 = vdupq_n_f64(0.0), sum1 = sum0, sum2 = sum0, sum3 = sum0;
-    const double* weightPointer = blockValues;
-
-    auto accumulateTap = [&](float64x2_t lane0, float64x2_t lane1, float64x2_t lane2, float64x2_t lane3) {
-        sum0 = vfmaq_f64(sum0, vld1q_f64(weightPointer + 0), lane0);
-        sum1 = vfmaq_f64(sum1, vld1q_f64(weightPointer + 2), lane1);
-        sum2 = vfmaq_f64(sum2, vld1q_f64(weightPointer + 4), lane2);
-        sum3 = vfmaq_f64(sum3, vld1q_f64(weightPointer + 6), lane3);
-        weightPointer += blockCount;
-    };
-
-    auto accumulateThreeTaps = [&](const double* rowPointer) {
-        const float64x2_t xM1_0 = vld1q_f64(rowPointer - 1), x1_2 = vld1q_f64(rowPointer + 1);
-        const float64x2_t x3_4  = vld1q_f64(rowPointer + 3), x5_6 = vld1q_f64(rowPointer + 5);
-        const float64x2_t x7_8  = vld1q_f64(rowPointer + 7);
-        accumulateTap(xM1_0, x1_2, x3_4, x5_6);
-        accumulateTap(vextq_f64(xM1_0, x1_2, 1), vextq_f64(x1_2, x3_4, 1),
-                      vextq_f64(x3_4, x5_6, 1),  vextq_f64(x5_6, x7_8, 1));
-        accumulateTap(x1_2, x3_4, x5_6, x7_8);
-    };
-
-    auto accumulateFiveTaps = [&](const double* rowPointer) {
-        const float64x2_t xM2_M1 = vld1q_f64(rowPointer - 2), x0_1 = vld1q_f64(rowPointer + 0);
-        const float64x2_t x2_3   = vld1q_f64(rowPointer + 2), x4_5 = vld1q_f64(rowPointer + 4);
-        const float64x2_t x6_7   = vld1q_f64(rowPointer + 6), x8_9 = vld1q_f64(rowPointer + 8);
-        const float64x2_t xM1_0 = vextq_f64(xM2_M1, x0_1, 1), x1_2 = vextq_f64(x0_1, x2_3, 1);
-        const float64x2_t x3_4  = vextq_f64(x2_3,   x4_5, 1), x5_6 = vextq_f64(x4_5, x6_7, 1);
-        const float64x2_t x7_8  = vextq_f64(x6_7,   x8_9, 1);
-        accumulateTap(xM2_M1, x0_1, x2_3, x4_5);
-        accumulateTap(xM1_0,  x1_2, x3_4, x5_6);
-        accumulateTap(x0_1,   x2_3, x4_5, x6_7);
-        accumulateTap(x1_2,   x3_4, x5_6, x7_8);
-        accumulateTap(x2_3,   x4_5, x6_7, x8_9);
-    };
-
-    accumulateThreeTaps(centerInput - 2 * side);
-    accumulateFiveTaps(centerInput - side);
-    accumulateFiveTaps(centerInput);
-    accumulateFiveTaps(centerInput + side);
-    accumulateThreeTaps(centerInput + 2 * side);
-
-    vst1q_f64(outputPointer + 0, sum0);
-    vst1q_f64(outputPointer + 2, sum1);
-    vst1q_f64(outputPointer + 4, sum2);
-    vst1q_f64(outputPointer + 6, sum3);
-}
-#endif
 
 // applyMatrix on a shared matrix, grid line by grid line with the six faces inside, so one line of
 // `inner` stays in L1 while all six faces use it instead of the whole face streaming six times. Every
 // row is written once with the sum forEachProduct gives it; only the order of the rows differs.
-void applySharedMatrix(const StencilMatrix& matrix, const double* __restrict x, double* __restrict y) {
+template <class Real> void applySharedMatrix(const StencilMatrixOf<Real>& matrix, const Real* __restrict x, Real* __restrict y) {
     const int side = matrix.side, run = side - 2 * Margin;
-    auto write = [y](size_t r, double sum) { y[r] = sum; };
+    auto write = [y](size_t r, Real sum) { y[r] = sum; };
     for (size_t k = 0; k < matrix.seamRow.size(); ++k) y[size_t(matrix.seamRow[k])] = seamProduct(matrix, k, x);
-    const double* line = matrix.inner.data();
+    const Real* line = matrix.inner.data();
     for (int j = Margin; j < side - Margin; ++j, line += size_t(Entries) * size_t(run))
         for (int face = 0; face < 6; ++face) {
-            const double* v = line;
+            const Real* v = line;
             for (int i0 = 0; i0 < run; i0 += Chunk) {
                 const int count = std::min(Chunk, run - i0), first = (face * side + j) * side + Margin + i0;
                 int i = 0;
 #if defined(__aarch64__)
-                for (; i + 8 <= count; i += 8) applyEightInteriorRowsNeon(v + i, count, x + first + i, side, y + first + i);
+                constexpr int rows = NeonRows<Real>;
+                for (; i + rows <= count; i += rows) productNeon(v + i, count, x + first + i, side, y + first + i);
 #endif
                 blockProduct(matrix, v, count, first, x, i, write);
                 v += Entries * count;
             }
         }
+}
+
+template <class Real> void applyStencil(const StencilMatrixOf<Real>& matrix, const std::vector<Real>& field, std::vector<Real>& result) {
+    result.resize(matrix.diagonal.size());
+    if (matrix.shared) {
+        applySharedMatrix(matrix, field.data(), result.data());
+        return;
+    }
+    Real* y = result.data();
+    forEachProduct(matrix, field.data(), [y](size_t r, Real sum) { y[r] = sum; });
+}
+
+std::vector<float> narrowedOf(const std::vector<double>& values) {
+    return std::vector<float>(values.begin(), values.end());
 }
 
 } // namespace
@@ -201,13 +159,26 @@ StencilMatrix makeStencilMatrix(const SphereMatrix& matrix, int side) {
 }
 
 void applyMatrix(const StencilMatrix& matrix, const std::vector<double>& field, std::vector<double>& result) {
-    result.resize(matrix.diagonal.size());
-    if (matrix.shared) {
-        applySharedMatrix(matrix, field.data(), result.data());
-        return;
-    }
-    double* y = result.data();
-    forEachProduct(matrix, field.data(), [y](size_t r, double sum) { y[r] = sum; });
+    applyStencil(matrix, field, result);
+}
+
+void applyMatrix(const StencilMatrixOf<float>& matrix, const std::vector<float>& field, std::vector<float>& result) {
+    applyStencil(matrix, field, result);
+}
+
+StencilMatrixOf<float> narrowed(const StencilMatrix& matrix) {
+    StencilMatrixOf<float> narrow;
+    narrow.side = matrix.side;
+    narrow.interior = matrix.interior;
+    narrow.shared = matrix.shared;
+    narrow.offset = matrix.offset;
+    narrow.inner = narrowedOf(matrix.inner);
+    narrow.seamRow = matrix.seamRow;
+    narrow.start = matrix.start;
+    narrow.column = matrix.column;
+    narrow.value = narrowedOf(matrix.value);
+    narrow.diagonal = narrowedOf(matrix.diagonal);
+    return narrow;
 }
 
 } // namespace derivean::sim

@@ -73,6 +73,7 @@ inline std::vector<double> rossbyHaurwitz(const SphereGrid& grid, double rotatio
 
 // Tests run on several resolutions; levels 4 to 6 keep the suite fast (6 × 16² to 6 × 64² cells).
 void checkPoisson();
+void checkMultigrid();
 void checkFlow();
 void checkTracer();
 void checkDrift();

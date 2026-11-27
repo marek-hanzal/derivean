@@ -228,6 +228,7 @@ void testAtmosphereSphere() {
     checkFluxes();
     checkTruncation();
     checkPoisson();
+    checkMultigrid();
     checkFlow();
     checkTracer();
     checkDrift();
