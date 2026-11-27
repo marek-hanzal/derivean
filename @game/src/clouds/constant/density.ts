@@ -27,7 +27,8 @@ const literal = (value: number) => value.toFixed(1);
 //   bands   per band two layers, [cover, base, top, extinction per metre] and [ice, billow, breadth, streak]
 //   shapes  heaped, smooth and cellular noise; details fine noise for wisps; both share `repeat`, a repeating
 //           linear sampler
-//   levels  for each cover step, the noise level above which that share of a layer lies, per character
+//   levels  for each cover step, the noise level above which that share of a layer lies, per character, read
+//           through `repeat` at texel centres, so it filters between steps and never wraps
 export const DensityWgsl = `
 ${CloudSkyStruct}
 
@@ -60,11 +61,10 @@ fn cloudForm(characters: vec3f, billow: f32) -> f32 {
   return mix(characters.b, characters.r, (billow - 0.55) / 0.45);
 }
 
-fn coverLevels(levels: texture_2d<f32>, cover: f32) -> vec3f {
-  let at = clamp(cover, 0.0, 1.0) * ${literal(CoverSteps)};
-  let low = u32(floor(at));
-  let high = min(low + 1u, ${CoverSteps}u);
-  return mix(textureLoad(levels, vec2u(low, 0u), 0).rgb, textureLoad(levels, vec2u(high, 0u), 0).rgb, at - floor(at));
+// The levels between two tabulated covers, filtered by the sampler: texel i is centred at (i + 0.5) / texels.
+fn coverLevels(levels: texture_2d<f32>, filtered: sampler, cover: f32) -> vec3f {
+  let at = (clamp(cover, 0.0, 1.0) * ${literal(CoverSteps)} + 0.5) / ${literal(CoverSteps + 1)};
+  return textureSampleLevel(levels, filtered, vec2f(at, 0.5), 0.0).rgb;
 }
 
 // Extinction per metre of one band at a render-space point in x, its ice share in y. \`fine\` adds wisps.
@@ -115,7 +115,7 @@ fn bandCloudOf(c: CloudSky, bands: texture_2d_array<f32>, bandSampler: sampler, 
     let above = textureSampleLevel(bands, bandSampler, cell, band * 2 + 2, 0.0).x * select(1.0, 0.45, band == 1);
     cover = mix(cover, min(cover, above), tower * smoothstep(0.7, 1.0, h));
   }
-  let level = cloudForm(coverLevels(levels, cover), billow);
+  let level = cloudForm(coverLevels(levels, repeat, cover), billow);
   var body = cloudForm(characters, billow) - level;
   if (body <= -0.12) { return vec2f(0.0, ice); }
   // Wisps move the cloud's surface in and out; without them (far away, or for light on its way) it sits at their
