@@ -30,6 +30,8 @@ These are binding and are not in the original briefs.
 - **Two machines, one result** (27 Nov, about 10:00): heavy builds, tests and long runs are spread over this Mac and the Windows machine (`ssh serakki-obsidian`) so neither idles while the other is saturated. A test passing on one platform stands for both during the work (do it first, fix it later); the whole suite runs on both when a larger chapter closes. Comparisons of fingerprints and timings stay on one machine, since tiles still differ by libm.
 - Window title stays "DeRivean · Fable". The fixture demo ("The Stacked Channels") is gone; only the simulated world matters.
 
+- **One maths library on both platforms: hybrid** (27 Nov, about 19:00). Measured in the main repo's `.out/lead/libm/report.md`: CORE-MATH (correctly rounded) gives identical bits on macOS and Windows; on Windows it is as fast as the Universal CRT or faster, on macOS it costs +20 % instructions in the flat atmosphere and +11 % in the tile build, nearly all in a few hot places. Decision: committed tables or deterministic approximations for the hot places (waves, haze, beach face, stream power, `breakSlopes`, `atan2f` of −1/0/1), their values computed once with CORE-MATH; CORE-MATH for every other call; then one set of fingerprints for both platforms. It moves the world, so tests measure properties, not today's world. Runs in the Windows port stream after tile-speed's tables are merged.
+
 ## State of the tree
 
 Last checkpoint commit: `38b4939` (work in progress, not a verified state). Later work is uncommitted unless a newer commit exists.
