@@ -110,7 +110,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     city.floor = ground.rock;
     // Massive rock scales the strength by at most one, so where exposure and bareness alone leave
     // it under 0.05 no bed is read for it.
-    if (ground.pile.thickness <= 0 && exposure * bare > 0.05f) {
+    if (!(ground.pile.thickness > 0) && exposure * bare > 0.05f) {
         float depth = std::max(0.0f, ground.datum - ground.rock) + 0.1f;
         const StrataUnit unit = unitAt(setting.strata, depth, fold);
         Bed top = bedAt(setting.seed, setting.strata, unit, depth, material, bodies);

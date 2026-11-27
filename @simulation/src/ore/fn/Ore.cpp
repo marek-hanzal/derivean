@@ -34,13 +34,13 @@ SetFrame frameOf(const OreField& field, int set, Vec2 material) {
     return {material.x * c + material.z * s, -material.x * s + material.z * c};
 }
 
-Fracture fractureOf(uint64_t seed, const OreField& field, int set, int64_t number) {
+VeinFracture fractureOf(uint64_t seed, const OreField& field, int set, int64_t number) {
     const uint64_t base = stream(seed, OreStream) + uint64_t(set);
-    Fracture fracture;
+    VeinFracture fracture;
     fracture.number = number;
     // A fracture is sealed only while the ground around it is veined enough, so a vein ends where
     // the district thins rather than at a lattice edge.
-    fracture.sealed = unit(base, number, 1) < 0.85 * field.veining;
+    fracture.sealed = !(unit(base, number, 1) >= 0.85 * field.veining);
     if (!fracture.sealed) return fracture;
     fracture.centre = (double(number) + 0.15 + 0.70 * unit(base, number, 2)) * VeinSpacing;
     const double widest = 0.2 + 2.4 * std::pow(unit(base, number, 3), 2.2);
@@ -50,7 +50,7 @@ Fracture fractureOf(uint64_t seed, const OreField& field, int set, int64_t numbe
 
 // The vein of set `set` at a point `across` the set and `depth` below the datum, in the cell of
 // `fracture`. A fracture stays inside its lattice cell, so the neighbours never need to be looked at.
-Vein veinOf(uint64_t seed, int set, const Fracture& fracture, double along, double across, float depth, bool shaped) {
+Vein veinOf(uint64_t seed, int set, const VeinFracture& fracture, double along, double across, float depth, bool shaped) {
     Vein vein;
     if (!fracture.sealed) return vein;
     vein.offset = across - fracture.centre;
@@ -124,7 +124,10 @@ Material cuttingRock(uint64_t seed, const OreField& field, VeinColumn& column, f
     for (int set = 0; set < 2; ++set) {
         const double across = column.across[set] - double(depth) * SetLean[set];
         const int64_t number = int64_t(std::floor(across / VeinSpacing));
-        if (number != column.last[set].number) column.last[set] = fractureOf(seed, field, set, number);
+        if (!column.asked[set] || number != column.last[set].number) {
+            column.last[set] = fractureOf(seed, field, set, number);
+            column.asked[set] = true;
+        }
         const Vein vein = veinOf(seed, set, column.last[set], column.along[set], across, depth, true);
         if (vein.present && std::abs(vein.offset) < vein.half) return Material::OreVein;
     }

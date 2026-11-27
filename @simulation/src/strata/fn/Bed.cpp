@@ -38,7 +38,10 @@ double bodyPattern(uint64_t seed, Vec2 material) {
 
 double bodiesAt(uint64_t seed, Vec2 material, BodyMemo* memo) {
     if (!memo) return bodyPattern(seed, material);
-    if (!memo->known) memo->pattern = bodyPattern(seed, material), memo->known = true;
+    if (!memo->known) {
+        memo->pattern = bodyPattern(seed, material);
+        memo->known = true;
+    }
     return memo->pattern;
 }
 

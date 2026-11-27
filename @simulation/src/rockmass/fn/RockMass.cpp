@@ -108,6 +108,8 @@ float columnJointDistance(uint64_t seed, uint64_t body, Vec2 across, float width
 float fractureShare(uint64_t seed, const RockMass& mass, Vec2 material, float depth, float width) {
     double intact = 1.0 - mass.crush;
     for (int set = 0; set < JointSets; ++set) {
+        // Orders only widen, so where the widest is too fine to see, every order is.
+        static_assert(OrderStep >= 1.0f);
         float spacing = mass.sets[set].spacing, widest = spacing;
         for (int k = 1; k < JointOrders; ++k) widest *= OrderStep;
         if (widest < 3.0f * width) continue;
