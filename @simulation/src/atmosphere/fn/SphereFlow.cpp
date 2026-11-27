@@ -79,11 +79,15 @@ void tendencyOf(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& s
     for (int c = 0; c < grid.cells; ++c) tendency[size_t(c)] /= grid.area[size_t(c)];
 }
 
-// The van Leer limiter (van Leer 1974) of the ratio of the upstream to the local difference.
-double limiter(double upstream, double local) {
+// The van Leer limiter (van Leer 1974) of the ratio r of the upstream to the local difference, times
+// the local difference: φ(r) · local = 2 · upstream · local / (upstream + local), zero where they
+// differ in sign, with one division instead of the ratio's two. It is formed as 2 · upstream · (local /
+// (upstream + local)), a share in (0, 1): the product itself falls below the normal range in a
+// tracer's tail (differences of 1e-165) and, rounded there, let the tracer dip below zero.
+double limitedDifference(double upstream, double local) {
     if (upstream * local <= 0) return 0;
-    const double ratio = upstream / local;
-    return 2 * ratio / (1 + ratio);
+    const double share = local / (upstream + local);
+    return 2 * upstream * share;
 }
 
 } // namespace
@@ -173,7 +177,7 @@ void advectTracer(const SphereGrid& grid, const SphereStencil& stencil, const st
         const double local = tracer[size_t(down)] - tracer[size_t(up)];
         const double upstream = tracer[size_t(up)] - tracer[size_t(behind)];
         const double courant = std::abs(flux[e]) * step / grid.area[size_t(up)];
-        const double face = tracer[size_t(up)] + 0.5 * limiter(upstream, local) * (1 - courant) * local;
+        const double face = tracer[size_t(up)] + 0.5 * limitedDifference(upstream, local) * (1 - courant);
         const double moved = flux[e] * step * face;
         work[size_t(edge.left)] -= moved;
         work[size_t(edge.right)] += moved;
