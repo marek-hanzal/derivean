@@ -17,7 +17,10 @@ void add(Tally& to, const Tally& part) {
 // A body its straits did not book counts too: the sum over all bodies would hide what moved between them.
 double imbalanceOf(const WorldBudget& b, double Tally::*part) {
     const WaterFlows& f = b.flows;
-    const double sea = std::abs(b.ocean.*part + b.others.*part - b.oceanAtStart.*part) / std::max(1.0, b.oceanAtStart.*part);
+    // The salt of the sea is in its bodies and in the crust of the cells that fell dry.
+    const bool salt = part == &Tally::salt;
+    const double crust = salt ? b.crust : 0.0, crustAtStart = salt ? b.crustAtStart : 0.0;
+    const double sea = std::abs(b.ocean.*part + b.others.*part + crust - (b.oceanAtStart.*part + crustAtStart)) / std::max(1.0, b.oceanAtStart.*part + crustAtStart);
     const double live = b.live.*part - (b.adopted.*part + f.inflow.*part + f.rain.*part + f.fromBody.*part - f.evaporation.*part - f.outflow.*part);
     const double passed = f.inflow.*part + f.rain.*part + f.fromBody.*part + f.evaporation.*part + f.outflow.*part;
     return std::max(sea, b.unbooked.*part) + std::abs(live) / std::max({1.0, b.live.*part, b.adopted.*part, 1e-5 * passed});
@@ -38,6 +41,9 @@ WorldBudget budgetOf(World& world) {
     }
     for (const Tally& moved : ocean.moved) add(budget.moved, {std::abs(moved.water), std::abs(moved.salt)});
     budget.oceanAtStart = ocean.initial;
+    budget.oceanAtStart.salt -= ocean.initialCrust;
+    budget.crust = crustOf(ocean.grid);
+    budget.crustAtStart = ocean.initialCrust;
     budget.unbooked = ocean.unbooked;
 
     const double area = specOf(Level::Site).cell * specOf(Level::Site).cell;

@@ -58,8 +58,10 @@ struct WorldBudget {
     Tally ocean;          // the body that holds Ocean::anchor
     Tally others;         // every other body
     Tally oceanAtStart;   // what all of them held at the start
+    double crust{};       // kg of salt on the dry cells of the planet grid
+    double crustAtStart{};
     Tally moved;          // what went through the straits, summed without sign
-    Tally unbooked;       // worst share of a body's change its straits' transfers did not book
+    Tally unbooked;       // worst share of a body's change its account did not explain
     Tally live;           // standing on live tiles
     Tally adopted;        // what those tiles held when they became live
     WaterFlows flows;     // what crossed their edge since

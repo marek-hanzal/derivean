@@ -149,9 +149,9 @@ void segments(Ocean& ocean, Exchange& exchange, const Throat& throat, double sec
 
 // The next throat of the round reads the lakes as this one left them.
 void flowThrough(Ocean& ocean, Exchange& exchange, const Throat& throat, double seconds) {
-    const size_t before = exchange.transfers.size();
+    const size_t before = exchange.segments;
     segments(ocean, exchange, throat, seconds);
-    if (exchange.transfers.size() > before) relake(ocean, exchange);
+    if (exchange.segments > before) relake(ocean, exchange);
 }
 
 } // namespace derivean::sim

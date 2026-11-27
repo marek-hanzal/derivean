@@ -80,7 +80,9 @@ void jumpTo(World& world, double seconds) {
         state.overlay = Overlay{};
         state.applied = 0;
         state.calendar.seconds = 0;
-        world.ocean = fillOcean(world.planet, world.options.age);
+        const std::shared_ptr<const Ocean> start = world.ocean.start;
+        world.ocean = start ? Ocean(*start) : fillOcean(world.planet, world.options.age);
+        world.ocean.start = start;
     }
     advance(world, seconds - state.calendar.seconds);
     syncLive(world);

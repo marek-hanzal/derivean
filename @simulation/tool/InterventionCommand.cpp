@@ -26,6 +26,7 @@ void printTally(const ScenarioReport& report, const char* unit, double Tally::*p
     row(report, "ocean", [&](const WorldBudget& b) { return b.ocean.*part; });
     row(report, "other bodies", [&](const WorldBudget& b) { return b.others.*part; });
     row(report, "  ocean and others", [&](const WorldBudget& b) { return b.ocean.*part + b.others.*part; }, " %15.12g");
+    row(report, "crust on dry ground", [&](const WorldBudget& b) { return part == &Tally::salt ? b.crust : 0.0; });
     row(report, "moved between bodies", [&](const WorldBudget& b) { return b.moved.*part; });
     row(report, "  unbooked share", [&](const WorldBudget& b) { return b.unbooked.*part; });
     row(report, "on live tiles", [&](const WorldBudget& b) { return b.live.*part; }, " %15.9g");

@@ -151,6 +151,8 @@ void testMergeAndPart() {
 
 } // namespace
 
+void testStraitLedger();   // HydrologyLedger.cpp
+
 void testStraitBodies() {
     testCarriedStrength();
     testCrust();
@@ -158,4 +160,5 @@ void testStraitBodies() {
     testMerging();
     testMergeAndPart();
     testReversal();
+    testStraitLedger();
 }

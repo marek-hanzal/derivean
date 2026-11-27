@@ -33,6 +33,7 @@ inline Ocean settled(Ocean ocean) {
     ocean.initial = stockOf(ocean.grid);
     WaterFlows unused;
     ocean.lakes = settle(ocean.grid, ocean.basins, {}, unused);
+    ocean.initialCrust = crustOf(ocean.grid);
     ocean.anchor = anchorOf(ocean);
     return ocean;
 }
@@ -46,9 +47,9 @@ struct Box {
     double salinity{Salinity};   // kg/m³ of what it is filled with
 };
 
-inline Ocean boxes(int width, int height, double ridge, std::initializer_list<Box> list) {
+inline Ocean boxes(int width, int height, double ridge, std::initializer_list<Box> list, double cell = Cell) {
     Ocean ocean;
-    shapeGrid(ocean.grid, width, height, Cell);
+    shapeGrid(ocean.grid, width, height, cell);
     ocean.grid.periodic = true;
     for (float& ground : ocean.grid.ground) ground = float(ridge);
     for (const Box& box : list) {
@@ -78,7 +79,7 @@ inline Strait channel(const Ocean& ocean, int ax, int az, int bx, int bz, double
 // The bodies still hold all the water and salt the fixture began with, none of it negative, and
 // every integration closed each body that took part against its transfers.
 inline void expectClosed(const Ocean& ocean, const char* where) {
-    const Tally now = stockOf(ocean.grid);
+    const Tally now = stockOf(ocean.grid);   // the crust's salt with it
     for (size_t cell = 0; cell < ocean.grid.cells(); ++cell)
         expect(ocean.grid.depth[cell] >= 0 && ocean.grid.salt[cell] >= 0, where, double(cell));
     expect(near(now.water, ocean.initial.water, 1e-12), "the straits made or lost water", now.water / ocean.initial.water - 1);

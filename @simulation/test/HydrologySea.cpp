@@ -83,7 +83,7 @@ void testDryEndAbove() {
     expect(!openStrait(sea, channel(sea, 6, 6, 6, 6, ThroatArea, -100.0)), "a strait between one cell and itself was cut");
     expect(openStrait(sea, channel(sea, 6, 6, 24, 6, ThroatArea, -100.0)) && openStrait(sea, channel(sea, 6, 7, 16, 8, ThroatArea, -100.0)), "the strait was refused");
     drain(sea, 30 * DaySeconds);
-    expect(!seaMoved(sea) && sea.grid.depth == untouched.grid.depth && sea.grid.salt == untouched.grid.salt, "water climbed to a dry end above the sea");
+    expect(sea.moved[0].water == 0 && sea.moved[1].water == 0 && sea.changes == 0 && sea.grid.depth == untouched.grid.depth && sea.grid.salt == untouched.grid.salt, "water climbed to a dry end above the sea");
 }
 
 // Sloping bowls: the levels come from the flooding tree, and where they meet is the level that

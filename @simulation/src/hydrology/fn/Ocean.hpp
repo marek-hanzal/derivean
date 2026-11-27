@@ -25,10 +25,8 @@ bool openStrait(Ocean& ocean, const Strait& strait);
 void drainOcean(Ocean& ocean, double seconds);
 void settleOcean(Ocean& ocean);
 
-// True once a strait has moved any water: until then every body is as the planet left it.
-bool seaMoved(const Ocean& ocean);
-
 Tally stockOf(const WaterGrid& grid);
+double crustOf(const WaterGrid& grid);   // kg of salt on the dry cells
 
 // Bodies by falling volume; the world ocean is the one flagged `ocean`.
 std::vector<SeaBody> seaBodies(const Ocean& ocean);

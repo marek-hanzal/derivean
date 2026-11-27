@@ -53,6 +53,7 @@ Ocean fillOcean(const Planet& planet, double age) {
     ocean.initial = stockOf(grid);
     WaterFlows unused;
     ocean.lakes = settle(grid, ocean.basins, {}, unused);
+    ocean.initialCrust = crustOf(grid);
     ocean.anchor = anchorOf(ocean);
     return ocean;
 }
@@ -136,8 +137,11 @@ bool openStrait(Ocean& ocean, const Strait& strait) {
     return true;
 }
 
-bool seaMoved(const Ocean& ocean) {
-    return std::any_of(ocean.moved.begin(), ocean.moved.end(), [](const Tally& moved) { return moved.water != 0; });
+double crustOf(const WaterGrid& grid) {
+    double crust = 0;
+    for (size_t cell = 0; cell < grid.cells(); ++cell)
+        if (grid.depth[cell] <= 0) crust += grid.salt[cell] * grid.cell * grid.cell;
+    return crust;
 }
 
 std::vector<SeaBody> seaBodies(const Ocean& ocean) {
