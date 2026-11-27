@@ -2,6 +2,7 @@
 
 #include "astronomy/fn/DeepTime.hpp"
 #include "atmosphere/fn/SphereOperators.hpp"
+#include "atmosphere/fn/SphereFlowGuess.hpp"
 #include "atmosphere/fn/SpherePoisson.hpp"
 
 #include <algorithm>
@@ -20,26 +21,33 @@ constexpr double FilterStrength = 0.1;
 constexpr double FilterSplit = 0.53;
 
 // Inverts the candidate vorticity into the candidate stream function and fluxes, starting from the
-// accepted ψ; the accepted state is not touched.
+// guess in flow.trialStream; the accepted state is not touched.
 bool invertTrial(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson) {
-    flow.trialStream = flow.stream;
     flow.inversion = solveSpherePoisson(poisson, grid, flow.trialVorticity, flow.trialStream, flow.tolerance, flow.limit);
     if (!flow.inversion.converged) return false;
     flow.trialFlux = streamFluxOf(grid, stencil, flow.trialStream);
     return true;
 }
 
-// Drops the older time level, so the next step is a forward step. Only with ζ, ψ and the fluxes
-// consistent: after setVorticity's inversion or when the step changes.
+// Drops the older time levels, so the next step is a forward step and its first guess the last ψ.
+// Only with ζ, ψ and the fluxes consistent: after setVorticity's inversion or when the step changes.
 void restart(SphereFlow& flow) {
     flow.before = flow.vorticity;
     flow.started = false;
+    flow.levels = 1;
 }
 
+// The candidate becomes the state; the accepted ψ move one level back.
 void acceptTrial(SphereFlow& flow) {
     std::swap(flow.vorticity, flow.trialVorticity);
+    std::swap(flow.streamBackTwo, flow.streamBack);
+    std::swap(flow.streamBack, flow.stream);
     std::swap(flow.stream, flow.trialStream);
+    std::swap(flow.productBackTwo, flow.productBack);
+    std::swap(flow.productBack, flow.product);
     std::swap(flow.flux, flow.trialFlux);
+    // Without the projection no K ψ was formed, so only the new ψ itself counts.
+    flow.levels = flow.projection > 0 ? std::min(flow.levels + 1, 3) : 1;
 }
 
 // −∇·(v q) per cell with the edge value of q the mean of its two cells moved to the edge's midpoint
@@ -92,6 +100,7 @@ bool setVorticity(SphereFlow& flow, const SphereGrid& grid, const SphereStencil&
                   const std::vector<double>& vorticity) {
     assert(vorticity.size() == size_t(grid.cells));
     flow.trialVorticity = vorticity;
+    flow.trialStream = flow.stream;
     if (!invertTrial(flow, grid, stencil, poisson)) return false;
     acceptTrial(flow);
     restart(flow);
@@ -125,6 +134,7 @@ bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStenci
             flow.trialVorticity[c] = next - (1 - FilterSplit) * curve;
         }
     }
+    guessStream(flow, grid, poisson);
     if (!invertTrial(flow, grid, stencil, poisson)) return false;
     acceptTrial(flow);
     std::swap(flow.before, flow.trialBefore);

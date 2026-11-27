@@ -16,8 +16,8 @@ Asselin, R. (1972). Frequency filter for time integrations. *Monthly Weather Rev
 
 Williams, P. D. (2009). A proposed modification to the Robert–Asselin time filter. *Monthly Weather Review* 137(8), 2538–2546. doi:10.1175/2009MWR2724.1
 - **Model:** the Robert–Asselin–Williams filter damping the computational mode of the leapfrog step, strength 0.1.
-- **Used in:** `@simulation/src/atmosphere/fn/Circulation.cpp:15` (cited by name only); on the sphere `@simulation/src/atmosphere/fn/SphereFlow.cpp:16`, `SphereFlow.hpp:36`; `docs/handoff/atmosphere-sphere.md:86`.
-- **Checked by:** `@simulation/test/AtmosphereSphereStep.cpp:74` (a window ending in a shorter step, with the restart, against equal steps).
+- **Used in:** `@simulation/src/atmosphere/fn/Circulation.cpp:15` (cited by name only); on the sphere `@simulation/src/atmosphere/fn/SphereFlow.cpp:17`, `SphereFlow.hpp:36`; `docs/handoff/atmosphere-sphere.md:86`.
+- **Checked by:** `@simulation/test/AtmosphereSphereStep.cpp:76` (a window ending in a shorter step, with the restart, against equal steps).
 - **Limits:** the leapfrog and the filter take the three time levels as equally spaced; on the sphere the step is part of the flow's state and a change of it restarts with a forward step (`@simulation/src/atmosphere/fn/SphereFlow.hpp:24`).
 
 ### Alduchov and Eskridge 1996: the Magnus formula
@@ -185,10 +185,17 @@ Higham, N. J., Mary, T. (2022). Mixed precision algorithms in numerical linear a
 - **Checked by:** `@simulation/test/AtmosphereSphereMultigrid.cpp:24` (symmetric to float32 rounding, positive, within its rounding of the double cycle, exact under power-of-two scaling, finite for a subnormal residual, zero for zero), `:114` (the same CG iterations as the double cycle), `:135` (the float32 product bit for bit as the row sums), `@simulation/test/AtmosphereSpherePoisson.cpp:121` (the reported residual in both precisions).
 - **Approximations:** the float32 cycle is symmetric only to its rounding (asymmetry under 4.3e-9 on levels 5 to 8), so plain CG rather than flexible CG relies on it taking the same iterations as the double cycle, which it does from 1e-6 to 1e-12.
 
+### Fischer 1998: projection of successive solutions
+Fischer, P. F. (1998). Projection techniques for iterative solution of Ax = b with successive right-hand sides. *Computer Methods in Applied Mechanics and Engineering* 163(1–4), 193–204. doi:10.1016/S0045-7825(98)00012-7 (record checked in Crossref, whose title drops "Ax = b"; the paper itself not read).
+- **Model:** the first guess of an iterative solve as the projection, in the energy norm x K x, of the new solution on the span of earlier solutions, so the first guess is never worse in that norm than any of them. Here the span is the last three accepted ψ of the flow, in differences, solved through a 3 × 3 Gram matrix; Fischer builds a K-orthonormal basis instead. Neon's DREV-NEON-019-01 (`.out/review-mailbox/from-neon/DREV-NEON-019-01.txt`) proposed it as the fallback to extrapolation in time.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereFlowGuess.cpp:12`, `@simulation/src/atmosphere/fn/SphereFlow.hpp:39`; `docs/handoff/atmosphere-sphere.md:89`.
+- **Checked by:** `@simulation/test/AtmosphereSphereStep.cpp:122` (fewer iterations on the Rossby–Haurwitz wave, the flow within the tolerance, restarts), `:26` (a refused step leaves the history).
+- **Approximations:** only three levels; a difference whose Cholesky pivot falls below 1e-12 of its diagonal is dropped.
+
 ### Holmes and Featherstone 2002: normalised Legendre recursions
 Holmes, S. A., Featherstone, W. E. (2002). A unified approach to the Clenshaw summation and the recursive computation of very high degree and order normalised associated Legendre functions. *Journal of Geodesy* 76(5), 279–299. doi:10.1007/s00190-002-0216-2
 - **Model:** the 4π-normalised associated Legendre functions by the standard forward column recursions (their eqs. 11–13), for the spherical harmonics of the eddy band.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereHarmonics.hpp:7`, `@simulation/src/atmosphere/fn/SphereHarmonics.cpp:9`, the eddy band's shared recursion `@simulation/src/atmosphere/fn/EddyBand.cpp:28`; `docs/handoff/atmosphere-sphere.md:100`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereHarmonics.hpp:7`, `@simulation/src/atmosphere/fn/SphereHarmonics.cpp:9`, the eddy band's shared recursion `@simulation/src/atmosphere/fn/EddyBand.cpp:28`; `docs/handoff/atmosphere-sphere.md:109`.
 - **Checked by:** `@simulation/test/AtmosphereSphere.cpp:175` (Δ Y = −l(l + 1)/R² Y), `@simulation/test/AtmosphereSphereBand.cpp:66`, `:73` (the shared recursion against the harmonics mode by mode).
 
 ### van Leer 1974; Sweby 1984: the limited tracer flux
@@ -196,7 +203,7 @@ van Leer, B. (1974). Towards the ultimate conservative difference scheme. II. Mo
 
 Sweby, P. K. (1984). High resolution schemes using flux limiters for hyperbolic conservation laws. *SIAM Journal on Numerical Analysis* 21(5), 995–1011. doi:10.1137/0721062
 - **Model:** upwind flux plus a Lax–Wendroff correction limited by the van Leer limiter of the ratio of successive differences.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereFlow.hpp:49`, `@simulation/src/atmosphere/fn/SphereFlow.cpp:68`; `docs/handoff/atmosphere-sphere.md:88`.
+- **Used in:** `@simulation/src/atmosphere/fn/SphereFlow.hpp:50`, `@simulation/src/atmosphere/fn/SphereFlow.cpp:76`; `docs/handoff/atmosphere-sphere.md:98`.
 - **Checked by:** `@simulation/test/AtmosphereSphereFlow.cpp:154` (mass, bounds, a uniform tracer).
 - **Approximations:** the correction runs along one grid line per edge; across the lines the scheme is upwind and diffusive.
 
@@ -209,7 +216,7 @@ Neumaier, A. (1974). Rundungsfehleranalyse einiger Verfahren zur Summation endli
 ### Haurwitz 1940: the Rossby–Haurwitz wave
 Haurwitz, B. (1940). The motion of atmospheric disturbances on the spherical Earth. *Journal of Marine Research* 3(3), 254–267. https://elischolar.library.yale.edu/journal_of_marine_research/575 (unverified: pages, given as 254–267 by Williamson et al. 1992 and as 245–267 elsewhere)
 - **Model:** the wave of wavenumber 4 as an exact solution of the non-divergent barotropic vorticity equation, turning at ν = (R(3 + R) ω − 2Ω) / ((1 + R)(2 + R)) (Williamson et al. 1992, eq. 136 of the ORNL/TM-11895 report).
-- **Checked by:** `@simulation/test/AtmosphereSphereFixture.hpp:57`, `@simulation/test/AtmosphereSphereFlow.cpp:54`, `@simulation/test/AtmosphereSphereStep.cpp:74`; `docs/handoff/atmosphere-sphere.md:92`.
+- **Checked by:** `@simulation/test/AtmosphereSphereFixture.hpp:57`, `@simulation/test/AtmosphereSphereFlow.cpp:54`, `@simulation/test/AtmosphereSphereStep.cpp:76`; `docs/handoff/atmosphere-sphere.md:102`.
 
 ## Snow (approved, not yet written)
 

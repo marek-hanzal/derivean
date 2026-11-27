@@ -35,8 +35,9 @@ void setStep(SphereFlow& flow, double step);
 // slowly at the cube vertices, so the closures must damp it (docs/handoff/atmosphere-sphere.md).
 // Leapfrog in time with the Robert–Asselin–Williams filter (Robert 1966, Asselin 1972, Williams 2009)
 // at flow.step, as the flat-world circulation; the first step after a restart is a forward step.
-// The candidate ψ is found with the last one as the first guess, and the step is accepted only if
-// that converges: then it returns true; otherwise it returns false and leaves the state as it was,
+// The candidate ψ is found from guessStream's first guess (the accepted ψ of the last three steps
+// projected on the new source, Fischer 1998; restarts drop the older ones), and the step is accepted
+// only if that converges: then it returns true; otherwise it returns false and leaves the state as it was,
 // so a retry (with a larger limit, say) computes the same step a clean run does. Without a positive
 // step (setStep not called) it returns false and does nothing.
 [[nodiscard]] bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson);

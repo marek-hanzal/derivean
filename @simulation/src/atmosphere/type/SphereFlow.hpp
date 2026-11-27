@@ -12,7 +12,8 @@ namespace derivean::sim {
 // (Charney, Fjørtoft & von Neumann 1950). Nothing consumes it yet; S4 adds the closures today's
 // flat-world circulation has (relaxation, friction, eddy growth, damping) on top of this core.
 //
-// The state (vorticity, before, stream, flux, started) is always one accepted step: a step or a new
+// The state (vorticity, before, stream, flux, started, and the first guess's history: streamBack,
+// streamBackTwo, productBack, productBackTwo, levels) is always one accepted step: a step or a new
 // vorticity whose inversion does not converge leaves it as it was. Leapfrog and its filter need
 // equally spaced time levels, so the step is part of the state: set it with setStep, which restarts
 // the history when it changes; change vorticity only through setVorticity, which restarts it too.
@@ -22,6 +23,12 @@ struct SphereFlow {
     std::vector<double> vorticity;     // ζ now, 1/s
     std::vector<double> before;        // ζ one step back (leapfrog)
     std::vector<double> stream;        // ψ, m²/s, zero area mean
+    // The accepted ψ one and two steps back and their K ψ, for the first guess of the next inversion;
+    // `levels` counts the accepted ψ one step apart, stream included, the older ones with their K ψ
+    // (1 to 3; 1 after a restart or a step without the projection). `product` is work space: K ψₙ from the guess until the step is accepted.
+    std::vector<double> streamBack, streamBackTwo, productBack, productBackTwo, product;
+    int levels{1};
+    int projection{3};                 // accepted ψ the first guess combines, 0 to 3 (0: the last ψ as it is)
     std::vector<double> flux;          // per edge, ψ(from) − ψ(to): m²/s per metre of depth, out of left
     PoissonReport inversion;           // of the last attempted inversion, accepted or not
     double tolerance{1e-9};            // of each inversion, relative to the source
