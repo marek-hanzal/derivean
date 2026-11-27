@@ -151,7 +151,9 @@ void reportGround(World& world, Vec2 centre, double span) {
                 for (int x = std::max(0, int(stone.x / 0.25f) - reach); x <= std::min(TileCells - 1, int(stone.x / 0.25f) + reach); ++x) under[size_t(z) * TileCells + size_t(x)] = 1;
         }
         for (size_t i = 0; i < under.size(); ++i, ++cells) {
-            const float coarse = tile->now.sediment[Coarse][i], sand = tile->now.sediment[Sand][i], fines = tile->now.sediment[Fines][i];
+            // Qualified: the local Cover kinds hide the sediment class Sand.
+            const float coarse = tile->now.sediment[SedimentClass::Coarse][i], sand = tile->now.sediment[SedimentClass::Sand][i],
+                        fines = tile->now.sediment[SedimentClass::Fines][i];
             const float ground = tile->now.rock[i] + coarse + sand + fines;
             const Cover kind = tile->water[i] > ground + 0.01f ? Water : detail.crust[i] > 0.01f ? Spring : under[i] ? Stone : coarse + sand + fines < 0.03f ? Rock
                                : fines > 0.02f ? (Material(detail.fineKind[i]) == Material::Clay ? Clay : detail.bare[i] ? Silt : Soil) : sand > 0.02f ? Sand
