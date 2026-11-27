@@ -6,6 +6,15 @@
 #include <memory>
 
 namespace derivean::sim {
+namespace {
+
+thread_local int claimsHeld = 0;
+
+} // namespace
+
+Workers::Claim::Claim() { ++claimsHeld; }
+
+Workers::Claim::~Claim() { --claimsHeld; }
 
 Workers::Workers(unsigned threads) {
     if (threads == 0) threads = std::max(1u, std::thread::hardware_concurrency() - 1);
@@ -75,7 +84,7 @@ void Workers::loop() {
 void Workers::helpUntil(const std::function<bool()>& done) {
     std::unique_lock lock(mutex_);
     while (!done()) {
-        if (runOne(lock)) continue;
+        if (claimsHeld == 0 && runOne(lock)) continue;
         wake_.wait_for(lock, std::chrono::milliseconds(2));
     }
 }
