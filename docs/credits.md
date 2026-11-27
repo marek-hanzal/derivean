@@ -32,10 +32,11 @@ The aim is that every physical model carries its source, the model taken, where 
 | Atmosphere, haze, clouds and snow | [credits/atmosphere.md](credits/atmosphere.md) | 39 |
 | Astronomy and the geometry of the sphere | [credits/astronomy-geometry.md](credits/astronomy-geometry.md) | 35 |
 | Rendering | [credits/rendering.md](credits/rendering.md) | 13 |
+| Elementary functions | [credits/numerics.md](credits/numerics.md) | 3 |
 | Engine, libraries and tools | [credits/libraries.md](credits/libraries.md) | 26 |
 | Reference data for comparison with Earth | [credits/reference-data.md](credits/reference-data.md) | 12 |
 
-An entry may group the papers of one model; together the files cite about 194 works, 18 software projects and 8 platform documents.
+An entry may group the papers of one model; together the files cite about 197 works, 18 software projects and 8 platform documents.
 
 ## Not yet identified
 
