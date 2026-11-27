@@ -5,6 +5,7 @@
 #include "icesheet/fn/Balance.hpp"
 #include "icesheet/fn/Flow.hpp"
 
+#include <algorithm>
 #include <functional>
 
 namespace derivean::sim {
@@ -36,20 +37,30 @@ float recordedIce(const Domain& domain, int x, int z, int stage) {
 
 } // namespace
 
-std::vector<float> boxMean(const std::vector<float>& field, int n, int radius) {
-    std::vector<float> along(field.size()), both(field.size());
-    for (int pass = 0; pass < 2; ++pass) {
-        const std::vector<float>& from = pass ? along : field;
-        std::vector<float>& to = pass ? both : along;
-        for (int z = 0; z < n; ++z)
-            for (int x = 0; x < n; ++x) {
-                float sum = 0;
-                for (int d = -radius; d <= radius; ++d)
-                    sum += pass ? from[size_t(std::clamp(z + d, 0, n - 1)) * size_t(n) + size_t(x)] : from[size_t(z) * size_t(n) + size_t(std::clamp(x + d, 0, n - 1))];
-                to[size_t(z) * size_t(n) + size_t(x)] = sum / float(2 * radius + 1);
-            }
+void boxMean(const std::vector<float>& field, int n, int radius, std::vector<float>& out, std::vector<float>& along) {
+    // Each window's sum starts at 0 and adds its cells in float in the order of d, however the loops
+    // nest, so every mean equals a loop per cell's bit for bit (a NaN's sign aside); with d outermost
+    // a row of sums adds side by side.
+    const float width = float(2 * radius + 1);
+    std::vector<float> sums(static_cast<size_t>(n));
+    const auto add = [&](const float* row, int d) {   // sums[x] += row[x + d], clamped to the row
+        const int from = std::clamp(-d, 0, n), to = std::clamp(n - d, 0, n);
+        for (int x = 0; x < from; ++x) sums[size_t(x)] += row[0];
+        for (int x = from; x < to; ++x) sums[size_t(x)] += row[x + d];
+        for (int x = to; x < n; ++x) sums[size_t(x)] += row[n - 1];
+    };
+    along.resize(field.size());
+    for (int z = 0; z < n; ++z) {
+        std::fill(sums.begin(), sums.end(), 0.0f);
+        for (int d = -radius; d <= radius; ++d) add(field.data() + size_t(z) * size_t(n), d);
+        for (int x = 0; x < n; ++x) along[size_t(z) * size_t(n) + size_t(x)] = sums[size_t(x)] / width;
     }
-    return both;
+    out.resize(field.size());   // after the rows have read `field`, which `out` may be
+    for (int z = 0; z < n; ++z) {
+        std::fill(sums.begin(), sums.end(), 0.0f);
+        for (int d = -radius; d <= radius; ++d) add(along.data() + size_t(std::clamp(z + d, 0, n - 1)) * size_t(n), 0);
+        for (int x = 0; x < n; ++x) out[size_t(z) * size_t(n) + size_t(x)] = sums[size_t(x)] / width;
+    }
 }
 
 bool iceReaches(const Domain& domain, const SheetSource& source) {
@@ -123,7 +134,8 @@ void solveStage(const Domain& domain, SheetWork& work, int stage, double towards
     }
     // The source's sheet lies on ground far smoother than a domain's; its thickness is taken over
     // the domain's ground averaged as widely, which puts its surface, not its thickness, on every cell.
-    const std::vector<float> level = boxMean(grid.bed, n, SmoothRadius);
+    std::vector<float> level, along;
+    boxMean(grid.bed, n, SmoothRadius, level, along);
     for (int z = 0; z < n; ++z) {
         for (int x = 0; x < n; ++x) {
             const size_t i = grid.index(x, z);

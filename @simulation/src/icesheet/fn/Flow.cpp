@@ -76,7 +76,7 @@ void weigh(IceGrid& grid, Workers* workers, Rounds* rounds) {
 
 // One round for row z: every cell from the state of the round before.
 void advanceRow(const IceGrid& grid, Rounds& rounds, int z, bool crustSinks) {
-    const float inverse = float(1.0 / grid.cell), area = float(grid.cell * grid.cell);
+    const float inverse = float(1.0 / grid.cell), area = float(grid.cell * grid.cell), perArea = 1.0f / area;
     const int rows[3] = {beside(grid, z - 1, grid.height), z, beside(grid, z + 1, grid.height)};
     std::vector<float>& next = rounds.next;
     const size_t first = grid.index(0, z);
@@ -133,7 +133,7 @@ void advanceRow(const IceGrid& grid, Rounds& rounds, int z, bool crustSinks) {
             stiffest = std::max(stiffest, mobility);
         }
         // Snow that falls into open water builds nothing.
-        const float rate = (here <= 0 && water > 0 ? std::min(grid.balance[i], 0.0f) : grid.balance[i]) + gain / area;
+        const float rate = (here <= 0 && water > 0 ? std::min(grid.balance[i], 0.0f) : grid.balance[i]) + gain * perArea;
         float step = stiffest > 0 ? std::min(LongestStep, area / (Stiffness * stiffest)) : LongestStep;
         if (std::abs(rate) * step > LargestChange) step = LargestChange / std::abs(rate);
         // A front in water breaks off along every face that looks onto open water; a slab that

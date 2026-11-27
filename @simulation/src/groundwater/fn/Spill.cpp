@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <limits>
-#include <queue>
 #include <stdexcept>
 #include <utility>
 
@@ -101,12 +100,13 @@ void spillHollows(Domain& domain, const std::vector<float>& share, std::vector<f
 
     // Cells with water still to pass on, the highest in the route's order first: the route hands
     // water only to cells after it in the order, so most cells are passed once.
-    std::priority_queue<std::pair<int32_t, int32_t>> due;
+    std::vector<std::pair<int32_t, int32_t>>& due = work.due;
+    due.clear();
     // A share small enough to round to nothing is not queued: queued again and again, cells holding
     // nothing would be passed on once for every way into them.
     const auto add = [&](int32_t cell, float water) {
         if (water <= 0) return;
-        if (extra[size_t(cell)] <= 0) due.emplace(domain.rank[size_t(cell)], cell);
+        if (extra[size_t(cell)] <= 0) due.emplace_back(domain.rank[size_t(cell)], cell), std::push_heap(due.begin(), due.end());
         extra[size_t(cell)] += water;
     };
     const auto spill = [&](int32_t cell, float water) {
@@ -135,8 +135,9 @@ void spillHollows(Domain& domain, const std::vector<float>& share, std::vector<f
     while (!due.empty()) {
         if (remaining == 0) throw std::logic_error("spillHollows: visit limit exhausted before the queue drained");
         --remaining;
-        const int32_t c = due.top().second;
-        due.pop();
+        std::pop_heap(due.begin(), due.end());
+        const int32_t c = due.back().second;
+        due.pop_back();
         const float water = extra[size_t(c)];
         extra[size_t(c)] = 0;
         // A finished neighbour's cell hands on what that neighbour recorded (landscape/fn/Flow.cpp):

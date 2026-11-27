@@ -115,8 +115,8 @@ void readRegionalColumns(const Setting& setting, TileKey key, const Tile* const 
                 walkBeds(bed, walk);
                 const DeepColumn deep = deepColumnOf(walk.layers, walk.count);
                 column.transmissivity = deep.transmissivity, column.confined = deep.confined, column.depth = std::max(0.0f, column.ground - walk.base);
-                const float slope = float(std::hypot(tiles.ground(gx + 1, gz) - tiles.ground(gx - 1, gz), tiles.ground(gx, gz + 1) - tiles.ground(gx, gz - 1)) / (2 * cell));
-                const Soak soak{tile.rain[from], tile.warmth[from], slope, {bed.cover[0], bed.cover[1], bed.cover[2]}, tile.ice[from], Material(tile.rock[from])};
+                const float riseX = tiles.ground(gx + 1, gz) - tiles.ground(gx - 1, gz), riseZ = tiles.ground(gx, gz + 1) - tiles.ground(gx, gz - 1);
+                const Soak soak{tile.rain[from], tile.warmth[from], float(std::sqrt(riseX * riseX + riseZ * riseZ) / (2 * cell)), {bed.cover[0], bed.cover[1], bed.cover[2]}, tile.ice[from], Material(tile.rock[from])};
                 // As a local column takes it (fn/Columns.cpp): the cell's own soak and what a dry
                 // country's loose bed took from passing floods beyond that share.
                 const float share = infiltrationShare(soak);
@@ -139,18 +139,23 @@ std::shared_ptr<RegionalTile> solveRegional(TileKey key, const std::vector<Regio
     std::vector<float> head(cells, Unset);
     std::vector<int32_t> parent(cells, -1);
     using Item = std::pair<float, int32_t>;
-    std::priority_queue<Item, std::vector<Item>, std::greater<Item>> open;
+    std::vector<Item> heap;
+    heap.reserve(cells);
+    std::priority_queue<Item, std::vector<Item>, std::greater<Item>> open(std::greater<Item>{}, std::move(heap));
     for (size_t i = 0; i < cells; ++i) {
         if (field[i].confined && !field[i].outlet) continue;
         head[i] = field[i].outlet ? field[i].stage : field[i].ground;
         open.push({head[i], int32_t(i)});
     }
     std::vector<uint8_t> done(cells, 0);
+    std::vector<int32_t> closed;   // cells in the order the search settled them: rising head, then index
+    closed.reserve(cells);
     while (!open.empty()) {
         const auto [level, at] = open.top();
         open.pop();
         if (done[size_t(at)] || level > head[size_t(at)]) continue;
         done[size_t(at)] = 1;
+        closed.push_back(at);
         const int x = at % size, z = at / size;
         for (int k = 0; k < 8; ++k) {
             const int nx = x + NeighborX[k], nz = z + NeighborZ[k];
@@ -167,11 +172,22 @@ std::shared_ptr<RegionalTile> solveRegional(TileKey key, const std::vector<Regio
         }
     }
 
-    // Each cell's water follows its way down, highest heads first; every step of a way goes lower.
-    // What it carries is summed by flow: where it went down, how deep and how far it went.
-    std::vector<int32_t> order(cells);
-    std::iota(order.begin(), order.end(), 0);
-    std::sort(order.begin(), order.end(), [&](int32_t a, int32_t b) { return head[size_t(a)] > head[size_t(b)] || (head[size_t(a)] == head[size_t(b)] && a < b); });
+    // Each cell's water follows its way down, highest heads first, equal ones by index; every step of
+    // a way goes lower. What it carries is summed by flow: where it went down, how deep and how far.
+    // The search (Dijkstra 1959, docs/credits/hydrology.md) settled cells by rising head and index: that backwards, equal heads kept forwards.
+    const auto before = [&](int32_t a, int32_t b) { return head[size_t(a)] > head[size_t(b)] || (head[size_t(a)] == head[size_t(b)] && a < b); };
+    std::vector<int32_t> order;
+    order.reserve(cells);
+    for (size_t i = 0; i < cells; ++i) if (head[i] == Unset) order.push_back(int32_t(i));
+    for (size_t end = closed.size(); end > 0;) {
+        size_t begin = end - 1;
+        while (begin > 0 && head[size_t(closed[begin - 1])] == head[size_t(closed[end - 1])]) --begin;
+        order.insert(order.end(), closed.begin() + std::ptrdiff_t(begin), closed.begin() + std::ptrdiff_t(end));
+        end = begin;
+    }
+    // A step that rounds away against its head lets the search settle a cell out of that order.
+    if (order.size() != cells || !std::is_sorted(order.begin(), order.end(), before))
+        order.resize(cells), std::iota(order.begin(), order.end(), 0), std::sort(order.begin(), order.end(), before);
     std::vector<double> all(cells), own(cells), rate(cells), high(cells), deep(cells), far(cells, 0.0);
     const auto inside = [&](size_t i) {
         const int x = int(i % size_t(size)), z = int(i / size_t(size));
@@ -193,7 +209,7 @@ std::shared_ptr<RegionalTile> solveRegional(TileKey key, const std::vector<Regio
         const int x = at % size, z = at / size;
         if (parent[i] >= 0) {
             const size_t to = size_t(parent[i]);
-            const double step = std::hypot(double(int(to % size_t(size)) - x), double(int(to / size_t(size)) - z)) * cell;
+            const double step = (int(to % size_t(size)) != x && int(to / size_t(size)) != z ? std::sqrt(2.0) : 1.0) * cell;   // to a neighbour
             all[to] += all[i], own[to] += own[i], rate[to] += rate[i], high[to] += high[i], deep[to] += deep[i], far[to] += far[i] + all[i] * step;
             continue;
         }
