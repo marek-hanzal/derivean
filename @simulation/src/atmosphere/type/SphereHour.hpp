@@ -9,7 +9,8 @@ enum class HourRefusal {
     Courant,     // a step would have taken more than `limit` of a cell's content out of it
     Inversion,   // a step's inversion did not converge
     Forcing,     // a step's forcing was not admissible (admissibleForcing); no further try
-    Shortest,    // the steps cannot grow: the last try took window / shortest of them
+    Shortest,    // the steps cannot grow: the last try took window / shortest of them, or the window
+                 // is shorter than `shortest` and no try is made (steps 0)
 };
 
 struct HourTry {

@@ -11,7 +11,8 @@
 namespace derivean::sim {
 namespace {
 
-// The most steps a window may take: none shorter than `shortest`, and few enough to double in an int.
+// The most steps a window may take: none shorter than `shortest`, and few enough to double in an int;
+// at least one, since advanceWindow refuses a window shorter than `shortest`.
 int mostSteps(const SphereHour& hour) {
     const double most = std::floor(hour.window / hour.shortest);
     return int(std::clamp(most, 1.0, double(INT_MAX / 2)));
@@ -46,12 +47,11 @@ void predict(SphereHour& hour, int steps, double worst, bool retried) {
     hour.calm = 0;
 }
 
-// One window; the forcing of each step from `source`, or `held` when there is none.
-bool advanceWindow(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
-                   const SphereForcingSource* source, const SphereForcing* held) {
-    assert(hour.window > 0 && hour.shortest > 0 && hour.steps >= 1 && hour.attempts >= 1);
-    hour.refusals.clear();
-    const SphereFlow start = flow;
+// The tries of one window; the forcing of each step from `source`, or `held` when there is none.
+// The source's output is emptied before each call, so a term it fills on one try only (a friction
+// at the coarse step, say) does not reach the next.
+bool tryWindow(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
+               const SphereForcingSource* source, const SphereForcing* held, const SphereFlow& start) {
     const int most = mostSteps(hour);
     SphereForcing filled;
     int steps = std::min(hour.steps, most);
@@ -69,7 +69,11 @@ bool advanceWindow(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, c
                 refused = true, reason = HourRefusal::Courant;
                 break;
             }
-            if (source) (*source)(flow, filled);
+            if (source) {
+                filled.tendency.clear();
+                filled.friction.clear();
+                (*source)(flow, filled);
+            }
             const SphereForcing& forcing = source ? filled : *held;
             if (!admissibleForcing(forcing, size_t(grid.cells))) {
                 refused = true, reason = HourRefusal::Forcing;
@@ -96,6 +100,28 @@ bool advanceWindow(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, c
         steps = std::min(2 * steps, most);
     }
     return false;   // the flow is `start` again since the last refusal
+}
+
+// One window as a transaction: a window shorter than the shortest step is refused before the flow or
+// the steps change; whatever a try throws (the source, an allocation) puts the flow and the hour back as they
+// came in and passes on.
+bool advanceWindow(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
+                   const SphereForcingSource* source, const SphereForcing* held) {
+    assert(hour.window > 0 && hour.shortest > 0 && hour.steps >= 1 && hour.attempts >= 1);
+    if (hour.window < hour.shortest) {
+        hour.refusals.assign(1, {HourRefusal::Shortest, 0, 0});
+        return false;
+    }
+    const SphereHour entry = hour;
+    const SphereFlow start = flow;
+    hour.refusals.clear();
+    try {
+        return tryWindow(hour, flow, grid, stencil, poisson, source, held, start);
+    } catch (...) {
+        flow = start;
+        hour = entry;
+        throw;
+    }
 }
 
 } // namespace

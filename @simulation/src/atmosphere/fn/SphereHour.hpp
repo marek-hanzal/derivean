@@ -14,7 +14,10 @@ namespace derivean::sim {
 // false when every try was refused, with the flow as it was before the window, its history
 // included, the reasons in hour.refusals and hour.steps unchanged, so the same call repeats the same
 // tries. A refused try leaves nothing behind: the next one computes what a clean run from the
-// window's start with its steps computes, bit for bit (the source a function of the flow alone).
+// window's start with its steps computes, bit for bit (the source reading only the flow and a context
+// fixed for the window). A window shorter than `shortest` is refused (`Shortest`, no steps) before the
+// flow or the steps change; an exception from a try puts the flow and the hour back as they came in
+// and passes on.
 [[nodiscard]] bool advanceSphereHour(SphereHour& hour, SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil,
                                      SpherePoisson& poisson, const SphereForcingSource& source);
 
