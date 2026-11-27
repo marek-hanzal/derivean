@@ -9,7 +9,8 @@ namespace derivean::sim {
 // The barotropic (single-layer, non-divergent) flow on the weather grid: relative vorticity ζ is
 // carried by the wind of its own stream function, Δψ = ζ, and the planet's rotation enters through
 // the Coriolis parameter f = 2Ω sin φ, so the carried quantity is the absolute vorticity ζ + f
-// (Charney, Fjørtoft & von Neumann 1950). Nothing consumes it yet; S4 adds the closures today's
+// (Charney, Fjørtoft & von Neumann 1950); over terrain the background is f squeezed by the column
+// (setSurface, fn/SphereSurface), so `coriolis` is not 2Ω sin φ in general. Nothing consumes it yet; S4 adds the closures today's
 // flat-world circulation has (relaxation, friction, eddy growth, damping) on top of this core, as a
 // SphereForcing of the step.
 //
@@ -23,7 +24,7 @@ namespace derivean::sim {
 // eachStateVector), so a field added to the state joins them there; the rest is work space or fixed.
 struct SphereFlow {
     double rotation{};                 // Ω, 1/s
-    std::vector<double> coriolis;      // f per cell, 1/s
+    std::vector<double> coriolis;      // the background carried with ζ per cell, 1/s: f, or f · (1 + min(h, 2500) / 10 000) after setSurface
     std::vector<double> vorticity;     // ζ now, 1/s
     std::vector<double> before;        // ζ one step back (leapfrog)
     std::vector<double> stream;        // ψ, m²/s, zero area mean

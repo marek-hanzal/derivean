@@ -28,8 +28,9 @@ struct HourTry {
 // SphereFlow names its state (vorticity, before, stream, flux, started, the first guess's history)
 // and what a step reads besides (step, known with trialProduct, the last inversion's report). The
 // rest of the flow is work space a step writes before it reads (product, the other trial vectors,
-// tendency, absolute, atVertex) or fixed for the flow (rotation, coriolis, projection, tolerance,
-// limit), and is neither copied nor restored (Neon DREV-NEON-059).
+// tendency, absolute, atVertex) or fixed for the flow (rotation, projection, tolerance, limit;
+// coriolis within a window, setSurface changing it between windows), and is neither copied nor
+// restored (Neon DREV-NEON-059).
 struct SphereFlowStart {
     std::vector<double> vorticity, before, stream, streamBack, streamBackTwo, productBack, productBackTwo, flux;
     std::vector<double> trialProduct;   // only while `known`
