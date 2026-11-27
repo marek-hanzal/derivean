@@ -17,7 +17,8 @@ constexpr float Freeboard = 0.02f;   // m a bed stays below the water that burie
 //
 // A plume covers a few cells around the mouths, so each class keeps the cells it holds anything in
 // and works only those, in rising index order: the order of a sweep over the whole domain, so every
-// sum is taken in the same order and the result is that sweep's to the bit.
+// sum is taken in the same order and the result is that sweep's to the bit. It starts from the cells
+// the river fed, the only ones not at zero, and leaves every cell at zero for the next step.
 void settlePlume(Domain& domain, FlowScratch& scratch, float dt, float area) {
     constexpr int Rounds = 16;
     constexpr float Spread = 0.2f;                                    // share passed to each of four neighbours per round
@@ -31,20 +32,32 @@ void settlePlume(Domain& domain, FlowScratch& scratch, float dt, float area) {
     const auto owned = [&](size_t i) { return domain.owned(int(i % size_t(size)), int(i / size_t(size))); };
     double entered = 0, laidHere = 0;
     bool any = false;
+    // Each cell once: the river's pass visits every cell of the flow order once.
+    std::vector<int32_t>& fed = scratch.plumeFed;
+    std::sort(fed.begin(), fed.end());
     for (int c = 0; c < SedimentClasses; ++c) {
         const std::vector<float>& cloud = scratch.plume[c];
         std::vector<int32_t>& active = scratch.plumeCells[c];
         active.clear();
         // A cell the sweeps work is one not at zero or below, NaN included; what entered and whether
         // anything did count only what is above zero.
-        for (size_t i = 0; i < cloud.size(); ++i) {
+        for (const int32_t cell : fed) {
+            const size_t i = size_t(cell);
             if (cloud[i] <= 0) continue;
-            active.push_back(int32_t(i));
+            active.push_back(cell);
             if (cloud[i] > 0 && owned(i)) entered += cloud[i];
             any = any || cloud[i] > 0;
         }
     }
-    if (!any) return;
+    // Every cell still holding anything is one the river fed or one the last round worked.
+    const auto clear = [&] {
+        for (int c = 0; c < SedimentClasses; ++c) {
+            for (const int32_t cell : fed) scratch.plume[c][size_t(cell)] = 0;
+            for (const int32_t cell : scratch.plumeCells[c]) scratch.plume[c][size_t(cell)] = 0;
+        }
+        fed.clear();
+    };
+    if (!any) return clear();
     std::vector<float>& next = scratch.plumeNext;
     std::vector<uint8_t>& mark = scratch.plumeMark;
     std::vector<int32_t>& reached = scratch.plumeReached;
@@ -107,6 +120,7 @@ void settlePlume(Domain& domain, FlowScratch& scratch, float dt, float area) {
     }
     // What a full basin could not take stays suspended and leaves with the water.
     (entered > laidHere ? domain.ledger.sedimentOut : domain.ledger.sedimentIn) += std::abs(entered - laidHere);
+    clear();
 }
 
 } // namespace derivean::sim

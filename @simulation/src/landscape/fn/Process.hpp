@@ -15,7 +15,8 @@ struct FlowScratch {
     std::vector<float> next;                     // m, surface after cutting and filling
     std::vector<float> flux[SedimentClasses];    // m³/yr of sediment passing through
     std::vector<float> settle[SedimentClasses];  // m laid down this step, by class
-    std::vector<float> plume[SedimentClasses];   // m³ of sediment suspended in standing water
+    std::vector<float> plume[SedimentClasses];   // m³ of sediment suspended in standing water; zero outside a flow step
+    std::vector<int32_t> plumeFed;               // cells carryLoad's last pass fed anything into the plume, each once; empty outside a flow step
     std::vector<int32_t> plumeCells[SedimentClasses], plumeReached;   // cells a class's plume may hold anything in, rising
     std::vector<float> plumeNext;                // one round's spread; zero outside the cells it reached
     std::vector<uint8_t> plumeMark;              // 1 on the cells of `plumeReached`; zero between rounds
@@ -58,7 +59,9 @@ void routeWater(Domain& domain, FlowScratch& scratch);
 void cutAndFill(Domain& domain, FlowScratch& scratch);
 
 // Plume.cpp — sediment that reached standing water this step spreads from where it entered and
-// settles; `dt` and `area` are the step in years and the cell in m².
+// settles; `dt` and `area` are the step in years and the cell in m². It reads only the cells of
+// `scratch.plumeFed`, so a writer of `scratch.plume` lists each cell it fills there, once; it
+// leaves the plume zero and the list empty.
 void settlePlume(Domain& domain, FlowScratch& scratch, float dt, float area);
 
 // Hillslope.cpp — regolith production, solution, creep and slope failure.
