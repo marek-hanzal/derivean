@@ -55,35 +55,36 @@ int32_t nearestPlateOf(const Globe& globe, const PlateRegions& regions, const st
     return -1;
 }
 
-// The plate a fragment joins: the one whose largest region shares the most cell edges with it, else the
-// one sharing the most edges at all (a fragment among other fragments), so a join does not feed another
-// plate's fragment; one meeting other plates at corners only counts corners, one meeting none the plate
-// of the nearest cell (staying if that is its own). Of two fragments joining no largest region that would
-// each take the other's plate only the lower goes, else they would swap for ever.
+// The plate a fragment joins: the one whose largest region shares the longest border with it (metres of
+// cell edges, SphereEdge::length; lead, 27 Nov), else the one sharing the longest border at all (a
+// fragment among other fragments), so a join does not feed another plate's fragment; the lower plate on an
+// exact tie. One meeting other plates at corners only counts corners, one meeting none the plate of the
+// nearest cell (staying if that is its own). Of two fragments joining no largest region that would each
+// take the other's plate only the lower goes, else they would swap for ever.
 std::vector<int32_t> joinsOf(const Globe& globe, const PlateRegions& regions) {
     const SphereGrid& grid = *globe.grid;
     const size_t plates = globe.epoch.plates.size();
     std::vector<int32_t> to(regions.plate.size(), -1);
     std::vector<uint8_t> aside(regions.plate.size(), 0);   // joins no plate's largest region
-    std::vector<long> shared(2 * plates, 0);   // with a plate's largest region, then with any of it
+    std::vector<double> shared(2 * plates, 0);   // m (corners: their count) with a plate's largest region, then with any of it
     std::vector<std::vector<int32_t>> cells(regions.plate.size());
     for (int c = 0; c < grid.cells; ++c)
         if (regions.region[size_t(c)] >= 0) cells[size_t(regions.region[size_t(c)])].push_back(c);
-    const auto count = [&](size_t r, int32_t m) {
+    const auto count = [&](size_t r, int32_t m, double length) {
         const int32_t other = m >= 0 ? regions.owner[size_t(m)] : -1;
         if (other < 0 || other == regions.plate[r]) return;
-        ++shared[plates + size_t(other)];
-        shared[size_t(other)] += regions.largest[size_t(other)] == regions.region[size_t(m)];
+        shared[plates + size_t(other)] += length;
+        if (regions.largest[size_t(other)] == regions.region[size_t(m)]) shared[size_t(other)] += length;
     };
     for (size_t r = 0; r < to.size(); ++r) {
         if (regions.largest[size_t(regions.plate[r])] == int32_t(r)) continue;
         std::fill(shared.begin(), shared.end(), 0);
         for (const int32_t c : cells[r])
-            for (int e = 0; e < 4; ++e) count(r, neighbourOf(grid, c, e));
-        if (std::all_of(shared.begin(), shared.end(), [](long n) { return n == 0; }))
+            for (int e = 0; e < 4; ++e) count(r, neighbourOf(grid, c, e), grid.edge[size_t(grid.edges[size_t(c)][size_t(e)])].length);
+        if (std::all_of(shared.begin(), shared.end(), [](double n) { return n == 0; }))
             for (const int32_t c : cells[r])
-                for (const int32_t m : (*globe.rings)[size_t(c)]) count(r, m);
-        long most = 0;
+                for (const int32_t m : (*globe.rings)[size_t(c)]) count(r, m, 1);
+        double most = 0;
         for (size_t p = 0; p < shared.size() && (most == 0 || p < plates); ++p)
             if (shared[p] > most) most = shared[p], to[r] = int32_t(p % plates), aside[r] = p >= plates;
         if (most == 0) {

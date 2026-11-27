@@ -117,11 +117,13 @@ struct GlobeLedger {
 struct PlateSplit {
     double time{};        // yr
     int32_t parent{}, child{};   // ids (GlobeMotion::id)
-    double area{};        // sr, of the region's cells
+    double area{};        // sr the parent covered in the region's cells (planet/fn/Regions)
     int32_t pieces{};     // dealt to the child
 };
 
-// A plate left with no piece within its epoch (planet/fn/Cohesion), dropped from the plates.
+// A plate left with no piece within its epoch (planet/fn/Cohesion), dropped from the plates. Every epoch
+// gives its plates new ids (enterGlobeEpoch), so the plates an epoch's end replaces are not recorded
+// here: an id ends here at most once, within the epoch that made it or its parent.
 struct PlateEnd {
     double time{};        // yr
     int32_t id{};
@@ -170,7 +172,7 @@ struct Globe {
     double seaLevel{}, surfaceWater{}, surfaceKelvin{};
     GlobeLedger ledger;
     std::vector<PlateSplit> splits;      // every split of the history, in order
-    std::vector<PlateEnd> plateEnds;     // every plate dropped within an epoch, in order
+    std::vector<PlateEnd> plateEnds;     // every plate dropped within its epoch, in order (not the plates an epoch's end replaces)
     int32_t platesMade{};                // ids given
     GlobeStats stats;
 };
