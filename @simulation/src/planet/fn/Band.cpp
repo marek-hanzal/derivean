@@ -59,6 +59,7 @@ void fillBand(const Globe& globe, int sweep, const std::vector<uint8_t>& core, c
     const SphereGrid& grid = *globe.grid;
     const std::vector<CellRing>& rings = *globe.rings;
     const Coupling& coupling = globe.coupling;
+    require(grid.level <= 8, "the slots' UnionShortfall holds to level 8 (planet/fn/Lattice.hpp)", grid.level);
     band.sweep = sweep;
     band.decide = core;
     band.cells = coreCells;

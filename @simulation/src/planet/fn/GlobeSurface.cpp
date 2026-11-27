@@ -168,6 +168,7 @@ void shapeGlobeSurface(Globe& globe, double dt) {
         const float water = sea - elevation[cell];
         return !temperate || water <= PlatformDepth || water >= ShelfDepth ? 0.0 : double(water - PlatformDepth) / IsostaticRise;
     };
+    require(grid.level <= 9, "the warm shelves' latitude test holds to level 9", grid.level);
     std::vector<uint8_t> warm(cells);
     double pulling = 0, shelfRoom = 0, deepArea = 0;
     for (size_t cell = 0; cell < cells; ++cell) {

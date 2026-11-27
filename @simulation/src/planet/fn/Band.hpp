@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geometry/fn/SpherePolygon.hpp"
+#include "geometry/type/SpherePolygon.hpp"
 #include "planet/type/Globe.hpp"
 
 namespace derivean::sim {
@@ -51,7 +51,8 @@ struct Band {
     uint32_t footprintCall{};
     // Per cell, for interiorSlot: whether a slot centred over it is measured (1, 0, or −1 not yet
     // known; a property of `decide` and `region` alone), and the generation in which pieces of two
-    // plates were seen over it and its ring (births only add pieces, so that holds for the generation).
+    // plates were seen over it and its ring: a birth (joinBand) and a consumption (planet/fn/Transfers)
+    // each start a new generation, so it holds while the pieces stay those it saw.
     std::vector<int8_t> slotCell;
     std::vector<uint32_t> mixedStamp;
 };

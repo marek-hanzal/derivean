@@ -1,6 +1,5 @@
 #pragma once
 
-#include "geometry/fn/SpherePolygon.hpp"
 #include "geometry/type/SphereGrid.hpp"
 #include "geometry/type/SpherePolygon.hpp"
 
