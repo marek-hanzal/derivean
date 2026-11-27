@@ -69,6 +69,11 @@ Ford, L. R., Jr. (1956). *Network flow theory*. RAND Corporation, Paper P-923, S
 - **Used in:** `@simulation/src/groundwater/fn/Levels.cpp:75` (`spreadLevels`).
 - **Limits:** the sweeps stop at `LevelSweeps` = 36 on purpose, so that every tile computes its shared cells alike (`@simulation/src/groundwater/constant/Hydraulics.hpp`); a cell farther than that from any outlet holds no converged stand.
 
+### Dijkstra 1959: label-setting search
+Dijkstra, E. W. (1959). A note on two problems in connexion with graphs. *Numerische Mathematik* 1, 269–271. doi:10.1007/BF01386390
+- **Model:** the head of the regional ground water, spread from its outlets so that every cell is settled once, at its least head; cells are settled in order of rising head, which is also the order, read backwards, in which the regional flow sums what each way down carries.
+- **Used in:** `@simulation/src/groundwater/fn/Regional.cpp:131` (`solveRegional`).
+
 ### Torricelli 1644; Kirchhoff 1869; Lienhard and Lienhard 1984: flow through a strait's throat
 Torricelli, E. (1644). *Opera geometrica*. Florentiae: typis Amatoris Massae & Laurentii de Landis. https://archive.org/details/operageometrica00torr (the section *De motu gravium naturaliter descendentium* and its appendix on the motion of water; the page of the efflux statement not checked)
 
