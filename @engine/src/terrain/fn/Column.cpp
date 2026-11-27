@@ -3,6 +3,8 @@
 #include "planet/constant/Scale.hpp"
 #include "simulation/fn/Query.hpp"
 
+#include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <map>
@@ -62,11 +64,16 @@ ChunkVoxels compress(Cell key, const Slab& voxels) {
                     for (int z = 0; z < VoxelsPerMeter; ++z)
                         std::copy_n(voxels.begin() + slabIndex({tx * VoxelsPerMeter, ty * VoxelsPerMeter + y, tz * VoxelsPerMeter + z}),
                                     VoxelsPerMeter, detail.begin() + (y * VoxelsPerMeter + z) * VoxelsPerMeter);
-                const int occupied = int(std::count_if(detail.begin(), detail.end(), [](Material m) { return m != Material::Air; }));
+                int occupied = 0;
+                bool uniform = true;
+                for (Material m : detail) {
+                    occupied += m != Material::Air;
+                    uniform &= m == detail.front();
+                }
                 if (!occupied) continue;
                 TerrainTile tile;
                 tile.occupied = occupied;
-                if (std::all_of(detail.begin(), detail.end(), [&](Material m) { return m == detail.front(); })) tile.uniform = detail.front();
+                if (uniform) tile.uniform = detail.front();
                 else tile.detail = std::make_unique<TerrainTile::Detail>(detail);
                 chunk.tiles.emplace_back(key * side + Cell{tx, ty, tz}, std::move(tile));
                 chunk.occupied += size_t(occupied);
@@ -77,25 +84,61 @@ ChunkVoxels compress(Cell key, const Slab& voxels) {
     return chunk;
 }
 
+// The untouched world a chunk's face reads beyond it: one voxel thick, and on the sides a voxel
+// wider than the chunk, because the occlusion of a face at an edge looks at the cells diagonally
+// across it.
+Bounds faceBox(Bounds area, Cell normal) {
+    Bounds face = area;
+    const int axis = normal.x ? 0 : normal.y ? 1 : 2;
+    face.min[axis] = normal[axis] > 0 ? area.max[axis] : area.min[axis] - 1;
+    face.max[axis] = face.min[axis] + 1;
+    if (!normal.y) {
+        --face.min.y;
+        ++face.max.y;
+        if (normal.x) --face.min.z, ++face.max.z;
+    }
+    return face;
+}
+
+// The faces beside each meshed chunk, by level and in the order of the sideways Neighbors. A side
+// has one footprint up the whole column, so each is read in one sampleBlocks call; every chunk's
+// part is the block its face alone would read.
+constexpr std::array<size_t, 4> Sideways{0, 1, 4, 5};
+using Sides = std::map<int, std::array<Slab, Sideways.size()>>;
+size_t sideOf(size_t neighbor) { return size_t(std::find(Sideways.begin(), Sideways.end(), neighbor) - Sideways.begin()); }
+
+Sides sampleSides(sim::World& world, int x, int z, const std::vector<int>& levels) {
+    Sides sides;
+    if (levels.empty()) return sides;
+    std::vector<sim::BlockSpan> spans(levels.size());
+    for (size_t side = 0; side < Sideways.size(); ++side) {
+        const Cell normal = Neighbors[Sideways[side]];
+        for (size_t i = 0; i < levels.size(); ++i) {
+            const Bounds face = faceBox(chunkBounds({x, levels[i], z}), normal);
+            const Cell size = face.size();
+            Slab& voxels = sides[levels[i]][side];
+            voxels.resize(size_t(size.x) * size.y * size.z);
+            spans[i] = {face.min.y * double(VoxelSize), size.y, voxels.data()};
+        }
+        const Bounds face = faceBox(chunkBounds({x, levels.front(), z}), normal);
+        const Cell size = face.size();
+        sim::sampleBlocks(world, {face.min.x * double(VoxelSize), 0, face.min.z * double(VoxelSize), VoxelSize, size.x, 0, size.z},
+                          spans.data(), spans.size());
+    }
+    return sides;
+}
+
 // Faces of one chunk against what lies around it: the levels made here above and below, the
-// untouched world everywhere else. The sides are read a voxel wider than the chunk, because the
-// occlusion of a face at an edge looks at the cells diagonally across it.
-FaceMesh mesh(sim::World& world, const std::map<int, Slab>& slabs, Cell key, const Slab& voxels) {
+// untouched world everywhere else.
+FaceMesh mesh(sim::World& world, const std::map<int, Slab>& slabs, const Sides& sides, Cell key, const Slab& voxels) {
     const Bounds area = chunkBounds(key);
     Voxels padded(area.padded(1));
     for (int y = 0; y < ChunkSide; ++y)
         for (int z = 0; z < ChunkSide; ++z)
             std::copy_n(voxels.begin() + slabIndex({0, y, z}), ChunkSide, padded.cells.begin() + padded.index(area.min + Cell{0, y, z}));
-    for (Cell normal : Neighbors) {
-        Bounds face = area;
-        const int axis = normal.x ? 0 : normal.y ? 1 : 2;
-        face.min[axis] = normal[axis] > 0 ? area.max[axis] : area.min[axis] - 1;
-        face.max[axis] = face.min[axis] + 1;
-        if (!normal.y) {
-            --face.min.y;
-            ++face.max.y;
-            if (normal.x) --face.min.z, ++face.max.z;
-        }
+    for (size_t index = 0; index < Neighbors.size(); ++index) {
+        const Cell normal = Neighbors[index];
+        const Bounds face = faceBox(area, normal);
         const auto beside = normal.y ? slabs.find(key.y + normal.y) : slabs.end();
         if (beside != slabs.end()) {
             if (beside->second.empty()) continue;
@@ -105,7 +148,8 @@ FaceMesh mesh(sim::World& world, const std::map<int, Slab>& slabs, Cell key, con
                             padded.cells.begin() + padded.index({area.min.x, face.min.y, area.min.z + z}));
             continue;
         }
-        const Slab outside = sample(world, face);
+        const Slab sampled = normal.y ? sample(world, face) : Slab{};
+        const Slab& outside = normal.y ? sampled : sides.at(key.y)[sideOf(index)];
         const Cell size = face.size();
         for (int y = 0; y < size.y; ++y)
             for (int z = 0; z < size.z; ++z)
@@ -170,12 +214,14 @@ ColumnResult generateColumn(sim::World& world, const ColumnRequest& request) {
             if (edits[i] != Untouched) voxels[i] = Material(edits[i]);
     }
 
+    std::vector<int> meshed;
     for (const auto& [level, voxels] : slabs) {
-        const Cell key{request.x, level, request.z};
-        ColumnChunk chunk{compress(key, voxels), request.mesh, {}};
-        if (request.mesh && chunk.voxels.occupied) chunk.faces = mesh(world, slabs, key, voxels);
-        result.chunks.push_back(std::move(chunk));
+        result.chunks.push_back({compress({request.x, level, request.z}, voxels), request.mesh, {}});
+        if (request.mesh && result.chunks.back().voxels.occupied) meshed.push_back(level);
     }
+    const Sides sides = sampleSides(world, request.x, request.z, meshed);
+    for (ColumnChunk& chunk : result.chunks)
+        if (sides.contains(chunk.voxels.key.y)) chunk.faces = mesh(world, slabs, sides, chunk.voxels.key, slabs.at(chunk.voxels.key.y));
     result.milliseconds = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
     return result;
 }

@@ -76,4 +76,15 @@ struct Block {
 
 void sampleBlock(World& world, const Block& block, Material* materials);
 
+// Blocks of one footprint at several heights: each span is filled as sampleBlock fills the block of
+// its originY and countY (the footprint's own are not read), and the work of the footprint's columns
+// is done once.
+struct BlockSpan {
+    double originY{};
+    int countY{};
+    Material* materials{};
+};
+
+void sampleBlocks(World& world, const Block& footprint, const BlockSpan* spans, size_t count);
+
 } // namespace derivean::sim
