@@ -1,6 +1,7 @@
 #pragma once
 
 #include "planet/constant/Scale.hpp"
+#include "voxel/type/CellCache.hpp"
 #include "voxel/type/Volume.hpp"
 
 #include <memory>
@@ -19,6 +20,16 @@ struct TerrainTile {
     Material uniform{Material::Air};
     std::unique_ptr<Detail> detail;
     int occupied{};
+};
+
+// The tiles of a chunk that holds matter, by tile offset in the chunk. A tile without matter is
+// uniform air and has no detail.
+struct TerrainChunk {
+    static constexpr int TileSide = ChunkSide / VoxelsPerMeter;
+    static constexpr int TileCount = TileSide * TileSide * TileSide;
+
+    std::array<TerrainTile, TileCount> tiles;
+    size_t occupied{};   // voxels that are not air
 };
 
 // What rock that has no voxels yet answers as: solid, so nothing flows, falls or collapses into it.
@@ -48,10 +59,14 @@ struct StreamedExtent {
 inline constexpr int WorldFloorLevel = int(sim::WorldFloor / (ChunkSide * double(VoxelSize)));
 
 struct VoxelWorld {
-    std::unordered_map<Cell, TerrainTile, CellHash> tiles;
-    std::unordered_map<Cell, size_t, CellHash> chunks;
+    // Only chunks that hold matter. Each of them is known: matter enters a chunk only by loading it or
+    // by an edit, which marks it loaded, and unloading drops the chunk with its matter.
+    std::unordered_map<Cell, TerrainChunk, CellHash> chunks;
     int voidLevel{WorldFloorLevel};                  // chunk level below which there is nothing
     std::optional<StreamedExtent> streamed;          // absent: the stored voxels are all there is
+    // What chunk lookups found: reads cluster in space. Only VoxelWorld.cpp inserts and erases chunks, and
+    // forgets each such key here.
+    mutable CellCache<TerrainChunk> found;
 };
 
 Material materialAt(const VoxelWorld& world, Cell point);

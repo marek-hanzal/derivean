@@ -23,7 +23,7 @@ void sparseTerrain() {
     expect(carve(world, floor, 1, BrushShape::Cube).size() == 1, "Lowest authored material should be destructible");
     expect(!inVoid(world, -1000) && inVoid(world, sim::WorldFloor - 1), "Only the world floor bounds the world, whatever material is left");
     removeVoxel(world, sky);
-    expect(world.tiles.empty() && world.chunks.empty(), "Empty tiles survived removal");
+    expect(world.chunks.empty(), "Empty tiles survived removal");
 }
 
 void independentTroughsAndVoid() {
@@ -65,7 +65,7 @@ void damAndDisplacement() {
     seedWater(water, world, {{-4, floor + 1, -3}, {0, floor + 4, 4}});
     const auto downstream = [&] {
         uint64_t count = 0;
-        for (const auto& [point, amount] : water.cells) if (point.x > 0) count += amount;
+        forEachWater(water, [&](Cell point, int amount) { if (point.x > 0) count += uint64_t(amount); });
         return count;
     };
     simulate(water, world, 180);

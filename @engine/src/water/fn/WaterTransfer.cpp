@@ -1,6 +1,8 @@
 #include "water/type/WaterTransfer.hpp"
 #include "particles/type/VoxelContact.hpp"
 
+#include <algorithm>
+#include <bit>
 #include <utility>
 
 namespace derivean {
@@ -12,9 +14,11 @@ constexpr int MaxLateralUnits = WaterUnits / 4;
 
 int64_t waterHead(const WaterState& state, Cell at) {
     int amount = waterAt(state, at);
-    while (amount == WaterUnits && waterAt(state, at - Down)) {
+    while (amount == WaterUnits) {
+        const int above = waterAt(state, at - Down);
+        if (!above) break;
         at = at - Down;
-        amount = waterAt(state, at);
+        amount = above;
     }
     return int64_t(at.y) * WaterUnits + amount;
 }
@@ -35,13 +39,34 @@ void fall(WaterState& state, const VoxelWorld& world, Cell from, int units) {
     addWater(state, below, transfer);
 }
 
+// The cells woken since the last tick, each once, their wakes cleared. A brick that kept only wakes goes.
+std::vector<Cell> takeAwake(WaterState& state) {
+    std::vector<Cell> active;
+    for (Cell tile : state.rousing) {
+        WaterBrick* found = brickAt(state, tile);
+        if (!found || !found->listed) continue;
+        WaterBrick& brick = *found;
+        brick.listed = false;
+        const Cell origin = tile * VoxelsPerMeter;
+        for (size_t word = 0; word < brick.awake.size(); ++word) {
+            for (uint64_t bits = brick.awake[word]; bits; bits &= bits - 1) {
+                const int i = int(word * 64) + std::countr_zero(bits);
+                active.push_back(origin + Cell{i % VoxelsPerMeter, i / (VoxelsPerMeter * VoxelsPerMeter), i / VoxelsPerMeter % VoxelsPerMeter});
+            }
+            brick.awake[word] = 0;
+        }
+        if (!brick.wet) dropBrick(state, tile);
+    }
+    state.rousing.clear();
+    return active;
+}
+
 } // namespace
 
 void tickWater(WaterState& state, const VoxelWorld& world) {
     const size_t rotation = size_t(state.ticks++ % Lateral.size());
-    if (state.awake.empty()) return;
-    std::vector<Cell> active(state.awake.begin(), state.awake.end());
-    state.awake.clear();
+    if (state.rousing.empty()) return;
+    std::vector<Cell> active = takeAwake(state);
     std::sort(active.begin(), active.end(), [](Cell a, Cell b) {
         if (a.y != b.y) return a.y < b.y;
         return std::pair(a.x, a.z) < std::pair(b.x, b.z);
