@@ -1,6 +1,7 @@
 #include "landscape/fn/Process.hpp"
 #include "measure/fn/Plane.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -72,14 +73,19 @@ void testLandscapePlume() {
         expect(std::abs(domain.ledger.deposited - 3 * Volume) < 1e-4 * Volume && domain.ledger.sedimentOut + domain.ledger.sedimentIn < 1e-4 * Volume,
                "the ledger of a deep lake moves sediment across the edge", domain.ledger.sedimentOut + domain.ledger.sedimentIn);
     }
-    // A film of water: the bed fills to just below it and the rest leaves; the ledger closes.
+    // A film of water: the bed fills to 2 cm below it and no higher, and the rest stays suspended
+    // and leaves, booked as sent out.
     {
-        Domain domain = lake(0.03f);
+        constexpr float Film = 0.03f, Freeboard = 0.02f;
+        Domain domain = lake(Film);
         const Outcome settled = settle(domain);
         const double laid = settled.laid[Coarse] + settled.laid[Sand] + settled.laid[Fines];
         expect(laid > 0 && laid < 3 * Volume && settled.suspended > 0, "a film of water took all or none of the plume", laid);
+        float highest = -1e9f;
+        for (size_t i = 0; i < domain.cells(); ++i) highest = std::max(highest, domain.ground.rock[i] + domain.sedimentAt(i));
+        expect(highest > -Film && highest <= -Freeboard + 1e-6f, "the plume's bed rose above its water or did not reach it", highest);
         expect(std::abs(domain.ledger.deposited - laid) < 1e-4 * Volume, "the ledger did not book what was laid", domain.ledger.deposited - laid);
-        expect(std::abs(domain.ledger.deposited + domain.ledger.sedimentOut - domain.ledger.sedimentIn - 3 * Volume) < 1e-4 * Volume, "laid and sent out are not what entered",
-               domain.ledger.deposited + domain.ledger.sedimentOut - domain.ledger.sedimentIn - 3 * Volume);
+        expect(std::abs(domain.ledger.sedimentOut - (3 * Volume - laid)) < 1e-4 * Volume && domain.ledger.sedimentIn == 0, "what the film could not take was not sent out",
+               domain.ledger.sedimentOut - (3 * Volume - laid));
     }
 }
