@@ -5,6 +5,7 @@
 #include "planet/type/Planet.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <map>
 
 namespace derivean::sim {
@@ -86,12 +87,25 @@ std::vector<Throat> throatsOf(const Ocean& ocean) {
 // in time: the first ends an hour after the newest strait was cut, each later one is as long as
 // all before it together, up to a year. Fixed rounds make the turns the same however time is fed
 // in; taking turns is first order in the round and exact only where the throats share no sea.
-double roundEnd(const Ocean& ocean) {
-    const double age = ocean.seconds - ocean.opened;
-    if (age < FirstRound) return ocean.opened + FirstRound;
+// Offsets are whole seconds from `opened` (exact below 2^53 s); this is the first one past `age`.
+double nextRoundOffset(double age) {
+    if (age < FirstRound) return FirstRound;
     const double length = std::min(LongestRound, FirstRound * std::exp2(std::floor(std::log2(age / FirstRound))));
-    return ocean.opened + (std::floor(age / length) + 1.0) * length;
+    return (std::floor(age / length) + 1.0) * length;
 }
+
+} // namespace
+
+// A round ends where `opened + offset` rounds to, and the integration stops on that stored time.
+// The age read back from it can fall short of the offset, so the search starts half the first
+// round early, at most one end back, and takes whole rounds until the stored end lies past now.
+double roundEnd(const Ocean& ocean) {
+    double offset = nextRoundOffset(ocean.seconds - ocean.opened - 0.5 * FirstRound);
+    while (ocean.opened + offset <= ocean.seconds && std::isfinite(offset)) offset = nextRoundOffset(offset);
+    return ocean.opened + offset;
+}
+
+namespace {
 
 // Integrates gathered time: all of it when `all`, else only the rounds that have ended. Each round
 // reads the surfaces again, so a throat sees what the one before it left.
