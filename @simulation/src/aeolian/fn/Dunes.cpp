@@ -170,9 +170,13 @@ void launch(SandBed& bed, Work& work, Vec2 heading, double hop, const DuneRun& r
     for (int parity = 0; parity < 2; ++parity) {
         eachRange(bed, (bands + 1 - parity) / 2, [&](int begin, int end) {
             for (int pick = begin; pick < end; ++pick) {
+                // Summed on the thread's own stack in the same order and stored once: bands that run
+                // side by side keep their totals in one cache line.
                 const int band = 2 * pick + parity;
+                double entered = work.entered[size_t(band)];
                 for (int z = work.band[size_t(band)]; z < work.band[size_t(band) + 1]; ++z)
-                    for (int x = 0; x < size; ++x) send(bed, work, x, z, heading, hop, work.entered[size_t(band)]);
+                    for (int x = 0; x < size; ++x) send(bed, work, x, z, heading, hop, entered);
+                work.entered[size_t(band)] = entered;
             }
         });
     }
