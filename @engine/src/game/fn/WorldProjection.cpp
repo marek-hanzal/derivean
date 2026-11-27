@@ -148,9 +148,11 @@ std::optional<VoxelBox> voxelBox(const Game& game, Cell center) {
     for (int ring = 0; ring <= LoadRadius; ++ring) {
         bool whole = true;
         int ringLow = low, ringHigh = high;
-        for (int dz = -ring; dz <= ring && whole; ++dz)
-            for (int dx = -ring; dx <= ring && whole; ++dx)
-                if (std::max(std::abs(dx), std::abs(dz)) == ring) whole = complete(center.x + dx, center.z + dz, ringLow, ringHigh);
+        // The ring's columns in rows: whole rows at its ends, the two sides between them.
+        for (int dz = -ring; dz <= ring && whole; ++dz) {
+            const int step = std::abs(dz) == ring ? 1 : std::max(1, 2 * ring);
+            for (int dx = -ring; dx <= ring && whole; dx += step) whole = complete(center.x + dx, center.z + dz, ringLow, ringHigh);
+        }
         if (!whole) break;
         radius = ring;
         low = ringLow;
