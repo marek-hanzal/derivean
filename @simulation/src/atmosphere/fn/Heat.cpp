@@ -79,7 +79,7 @@ void settleHeat(Atmosphere& atmosphere) {
 // overturning cells, and by warm air gliding up over colder air.
 void stepHeat(Atmosphere& atmosphere, int begin, int end) {
     const int n = AirCells;
-    const double airKeep = std::exp(-AirStep / AirCoupling), upperKeep = std::exp(-AirStep / UpperSettling);
+    static const double airKeep = std::exp(-AirStep / AirCoupling), upperKeep = std::exp(-AirStep / UpperSettling);
     const double ekmanReach = EkmanDepth * LiftTime;
     const double glideReach = LiftTime / (Stability * AirStep);
     for (int z = begin; z < end; ++z) {
