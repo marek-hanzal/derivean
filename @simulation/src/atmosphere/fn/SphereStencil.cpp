@@ -81,6 +81,8 @@ SphereStencil makeSphereStencil(const SphereGrid& grid) {
         }
     stencil.carry.reserve(stencil.edge.size());
     for (const EdgeStencil& edge : stencil.edge) stencil.carry.push_back({dot(edge.offset, edge.across), dot(edge.offset, edge.along)});
+    stencil.topology.reserve(grid.edge.size());
+    for (const SphereEdge& edge : grid.edge) stencil.topology.push_back({edge.left, edge.right, edge.from, edge.to});
     stencil.vertexCells.reserve(grid.vertex.size());
     for (const SphereVertex& vertex : grid.vertex) {
         std::array<int, 4> cells = vertex.cells;
