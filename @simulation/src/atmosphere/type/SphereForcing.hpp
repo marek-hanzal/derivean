@@ -21,9 +21,12 @@ struct SphereForcing {
 
 // Fills the forcing of the next wind step from the flow it steps from (its ζ, the level before, ψ),
 // as closures that read the state do: relaxation, damping, eddy growth. `forcing` is the caller's
-// storage, kept from step to step so its vectors are reused. A source must be a function of the flow
-// alone: a try taken back asks it again for the same steps, and only then is the retaken window a
-// clean run (a source with its own state, a random sequence or a counter, restores it itself).
+// storage, its vectors emptied before each call with their capacity kept; a term the source leaves
+// empty is no term. A source may read only the flow and a context fixed for the window: a try taken
+// back asks it again for the same steps, and only then is the retaken window a clean run. Time, the
+// eddies and whatever else changes during the window (S4.3) go to it explicitly as the try's
+// context, never as state the source keeps or reads from outside. What it throws ends the window
+// with the flow and the hour as they came in (advanceSphereHour).
 using SphereForcingSource = std::function<void(const SphereFlow& flow, SphereForcing& forcing)>;
 
 } // namespace derivean::sim

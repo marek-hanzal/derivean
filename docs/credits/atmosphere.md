@@ -210,8 +210,8 @@ Sweby, P. K. (1984). High resolution schemes using flux limiters for hyperbolic 
 ### Courant, Friedrichs & Lewy 1928: the Courant limit of the wind step
 Courant, R., Friedrichs, K. & Lewy, H. (1928). Über die partiellen Differenzengleichungen der mathematischen Physik. *Mathematische Annalen* 100, 32–74. doi:10.1007/BF01448839
 - **Model:** an explicit step is stable only while the flow carries less than a cell's content out of it in one step; here the outflow Courant number summed over a cell's edges, kept below 0.4 for the wind.
-- **Used in:** `@simulation/src/atmosphere/fn/SphereTransport.hpp:14`, `@simulation/src/atmosphere/type/SphereHour.hpp:23`; `docs/handoff/atmosphere-sphere.md:130`.
-- **Checked by:** `@simulation/test/AtmosphereSphereHour.cpp:71` (a window taken back at its second step and retaken in twice the steps, bit for bit a clean run).
+- **Used in:** `@simulation/src/atmosphere/fn/SphereTransport.hpp:14`, `@simulation/src/atmosphere/type/SphereHour.hpp:24`; `docs/handoff/atmosphere-sphere.md:130`.
+- **Checked by:** `@simulation/test/AtmosphereSphereHour.cpp:73` (a window taken back at its second step and retaken in twice the steps, bit for bit a clean run).
 - **Approximations:** 0.4 is the tests' margin for the leapfrog with the filter, not a derived bound.
 
 ### Neumaier 1974: compensated summation

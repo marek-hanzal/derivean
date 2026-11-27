@@ -2,6 +2,7 @@
 // Courant limit after a step it took is taken back whole and, with twice the steps, lands on the bits
 // of a clean run from the window's start; a window no try can take leaves the flow as it was; the
 // steps rise at once and fall only after calm windows, so the leapfrog restarts only then.
+// About 260 lines: one controller's cases over one shared spinning flow, kept together.
 #include "AtmosphereSphereFixture.hpp"
 
 #include "astronomy/constant/DeepTime.hpp"
@@ -12,6 +13,7 @@
 
 #include <functional>
 #include <limits>
+#include <stdexcept>
 
 using namespace derivean::sim;
 using namespace derivean::sim::atmosphere_sphere_test;
@@ -183,6 +185,69 @@ void checkRetriedNotCalm() {
     expect(hour.steps == 4 && hour.calm == 0, "a retried window counted as calm", hour.steps);
 }
 
+// The window as a transaction (Codex DREV-CLAUDE-007-03). A source that throws at the second step,
+// after the first was taken, leaves the flow and the hour as they came in and the exception passes
+// on. A source that adds friction only at the coarse step (1800 s) does not hand it to the finer try
+// that follows the refusal: the retaken window is the clean fine run bit for bit. A window shorter
+// than the shortest step is refused before anything changes.
+void checkTransaction() {
+    {
+        Spin s = spinning(2, 0.2);
+        const SphereFlow start = s.flow;
+        SphereHour hour;
+        hour.steps = 2, hour.calm = 1, hour.courant = 0.12;
+        hour.refusals.push_back({HourRefusal::Courant, 1, 0});
+        const SphereHour entry = hour;
+        int calls = 0;
+        bool caught = false;
+        try {
+            (void)advanceSphereHour(hour, s.flow, s.grid, s.stencil, s.poisson, [&calls](const SphereFlow&, SphereForcing&) {
+                if (++calls == 2) throw std::runtime_error("a closure failed after a step was taken");
+            });
+        } catch (const std::runtime_error&) {
+            caught = true;
+        }
+        expect(caught && calls == 2, "the source's exception did not pass on", calls);
+        expect(sameFlow(s.flow, start) && !s.flow.started && s.flow.step == 0, "an exception left part of the window in the flow");
+        expect(hour.steps == entry.steps && hour.calm == entry.calm && hour.courant == entry.courant && hour.refusals.size() == 1 &&
+                   hour.refusals[0].steps == 1,
+               "an exception changed the hour", hour.steps);
+    }
+    {
+        Spin s = spinning(2, 0.36);
+        const SphereFlow start = s.flow;
+        auto source = [](const SphereFlow& flow, SphereForcing& forcing) {
+            forcing.tendency.resize(flow.vorticity.size());
+            for (size_t c = 0; c < flow.vorticity.size(); ++c) forcing.tendency[c] = 0.4 * flow.vorticity[c] / Hour;
+            if (flow.step == 1800) forcing.friction.assign(flow.vorticity.size(), 1e-7);
+        };
+        SphereHour hour;
+        hour.steps = 2;
+        expect(advanceSphereHour(hour, s.flow, s.grid, s.stencil, s.poisson, source) && hour.refusals.size() == 1 && hour.refusals[0].at == 1,
+               "the coarse try was not refused after its first step", double(hour.refusals.size()));
+        SphereFlow clean = start;
+        setStep(clean, Hour / 4);
+        SphereForcing forcing;
+        for (int k = 0; k < 4; ++k) {
+            forcing = SphereForcing{};
+            source(clean, forcing);
+            expect(stepSphereFlow(clean, s.grid, s.stencil, s.poisson, forcing), "a clean step was not accepted", k);
+        }
+        expect(sameFlow(s.flow, clean), "the coarse try's friction reached the fine one");
+    }
+    {
+        Spin s = spinning(2, 0.1);
+        const SphereFlow start = s.flow;
+        SphereHour hour;
+        hour.steps = 3, hour.calm = 1, hour.courant = 0.12;
+        hour.shortest = 4000;
+        expect(!advanceSphereHour(hour, s.flow, s.grid, s.stencil, s.poisson, SphereForcing{}), "a window shorter than the shortest step was taken");
+        expect(hour.refusals.size() == 1 && hour.refusals[0].reason == HourRefusal::Shortest && hour.refusals[0].steps == 0 && sameFlow(s.flow, start) &&
+                   hour.steps == 3 && hour.calm == 1 && hour.courant == 0.12,
+               "a window shorter than the shortest step was not refused cleanly", double(hour.refusals.size()));
+    }
+}
+
 } // namespace
 
 void derivean::sim::atmosphere_sphere_test::checkHour() {
@@ -190,5 +255,6 @@ void derivean::sim::atmosphere_sphere_test::checkHour() {
     checkExhausted();
     checkBounds();
     checkRetriedNotCalm();
+    checkTransaction();
     checkHysteresis();
 }
