@@ -7,9 +7,10 @@
 #include <cstdint>
 #include <limits>
 
-// Approximations for the simulation's hot maths calls: exp, log, pow, tanh, atanh and cbrt; sine,
-// cosine and arcs are in ApproxAngle.hpp. Rare calls use the correctly rounded core/fn/Exact.hpp
-// instead. The reductions follow Muller and Cody and Waite (docs/credits/numerics.md).
+// Approximations for the simulation's hot maths calls: exp, log, pow, tanh, sinh, atanh and cbrt;
+// sine, cosine, tangent and arcs are in ApproxAngle.hpp, the error function in ApproxErf.hpp. Rare
+// calls use the correctly rounded core/fn/Exact.hpp instead. The reductions follow Muller and Cody
+// and Waite (docs/credits/numerics.md).
 //
 // Built only from + − × ÷, sqrt, fma and exact bit operations, each rounded as IEEE 754 says, with
 // every polynomial and every a · b + c written as explicit fma, so that no compiler contracts it
@@ -21,8 +22,9 @@
 //   double  1e-10;  float  1 ulp.
 // Where the exact result is ±0 or ±∞, the result is a zero or a subnormal, or ±∞, of the same
 // sign; the zeros' and infinities' cases follow the C library. The one exception is pow within
-// its bound of the overflow threshold, which may give the largest double for ∞ or ∞ for it. Small arguments are not returned as
-// themselves: sin(x) = x and log(1 + x) = x hold to the bound only.
+// its bound of the overflow threshold, which may give the largest double for ∞ or ∞ for it.
+// Small arguments are not returned as themselves: sin(x) = x and log(1 + x) = x hold to the bound
+// only.
 // Each function's comment states the properties its users rely on; testApprox measures bounds and
 // properties, and `terra approx-check` runs every float on the heavy machine.
 //
@@ -174,6 +176,22 @@ inline double tanh(double x) {
 }
 inline float tanh(float x) { return float(tanh(double(x))); }
 
+// Hyperbolic sine. Odd, increasing to within the bound, sinh(0) = 0. Up to 22 as
+// (E + E / (E + 1)) / 2 with E = e^|x| − 1, which does not cancel near 0 (FDLIBM's form,
+// docs/credits/numerics.md); beyond, e^|x| / 2 as (e^(|x|/2))² / 2, and ±∞ above the largest x
+// whose sinh is finite in double (FDLIBM's threshold).
+inline double sinh(double x) {
+    const double a = std::abs(x);
+    if (a > 0x1.633ce8fb9f87dp+9) return std::copysign(detail::Infinity, x);
+    if (a > 22) {
+        const double h = exp(0.5 * a);
+        return std::copysign(0.5 * h * h, x);
+    }
+    const double e = expm1(a);
+    return std::copysign(0.5 * (e + e / (e + 1)), x);
+}
+inline float sinh(float x) { return float(sinh(double(x))); }
+
 // Inverse hyperbolic tangent. Odd, increasing to within the bound, atanh(0) = 0, ±∞ at ±1, NaN
 // beyond.
 inline double atanh(double x) {
@@ -219,6 +237,7 @@ DERIVEAN_APPROX_ONLY_FLOATS(expm1)
 DERIVEAN_APPROX_ONLY_FLOATS(log)
 DERIVEAN_APPROX_ONLY_FLOATS(log2)
 DERIVEAN_APPROX_ONLY_FLOATS(tanh)
+DERIVEAN_APPROX_ONLY_FLOATS(sinh)
 DERIVEAN_APPROX_ONLY_FLOATS(atanh)
 DERIVEAN_APPROX_ONLY_FLOATS(cbrt)
 #undef DERIVEAN_APPROX_ONLY_FLOATS
