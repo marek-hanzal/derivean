@@ -24,7 +24,7 @@ The aim is that every physical model carries its source, the model taken, where 
 | --- | --- | --- |
 | Planet, tectonics and earthquakes | [credits/planet.md](credits/planet.md) | 14 |
 | Landscape and erosion | [credits/landscape.md](credits/landscape.md) | 5 |
-| Hydrology and groundwater | [credits/hydrology.md](credits/hydrology.md) | 18 |
+| Hydrology and groundwater | [credits/hydrology.md](credits/hydrology.md) | 19 |
 | Coasts, waves and river mouths | [credits/coasts.md](credits/coasts.md) | 19 |
 | Wind-blown sand and dust | [credits/aeolian.md](credits/aeolian.md) | 4 |
 | Volcanism | [credits/volcanism.md](credits/volcanism.md) | 12 |
