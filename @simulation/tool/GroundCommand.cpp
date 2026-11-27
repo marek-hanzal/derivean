@@ -9,6 +9,10 @@
 #include <ctime>
 #include <map>
 
+#if defined(_WIN32)
+#include <windows.h>
+#endif
+
 using namespace derivean::sim;
 
 namespace {
@@ -17,9 +21,18 @@ double seconds(std::chrono::steady_clock::time_point since) { return std::chrono
 
 // Processor time the calling thread has used: what a piece of work costs however busy the machine is.
 double threadSeconds() {
+#if defined(_WIN32)
+    FILETIME created, exited, kernel, user;
+    if (!GetThreadTimes(GetCurrentThread(), &created, &exited, &kernel, &user)) return 0.0;
+    // Kernel and user time together, as CLOCK_THREAD_CPUTIME_ID counts them; in 100 ns units but
+    // advanced only at the scheduler's tick (about 15.6 ms), so only long work is timed truly.
+    const auto ticks = [](FILETIME time) { return double((uint64_t(time.dwHighDateTime) << 32) | time.dwLowDateTime); };
+    return 1e-7 * (ticks(kernel) + ticks(user));
+#else
     timespec used{};
     clock_gettime(CLOCK_THREAD_CPUTIME_ID, &used);
     return double(used.tv_sec) + 1e-9 * double(used.tv_nsec);
+#endif
 }
 
 // Mean and scatter (standard deviation over mean) of a list of distances.
