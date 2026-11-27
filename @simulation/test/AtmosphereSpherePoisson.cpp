@@ -128,7 +128,7 @@ void checkReportedResidual() {
         for (double& value : source) value *= laplacianEigenvalue(4);
         for (double tolerance : {1e-10, 1e-9, 1e-6}) {
             for (int start = 0; start < 2; ++start) {
-                // Warm: from the solution of a source moved by a tenth of the tolerance's size.
+                // Warm: from the solution of a source scaled by up to 1 + 2000 · tolerance.
                 std::fill(psi.begin(), psi.end(), 0.0);
                 if (start == 1) {
                     nudged = source;

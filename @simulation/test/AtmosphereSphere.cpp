@@ -67,7 +67,7 @@ void checkSharedFaces() {
         const SphereMatrix full = makeLaplacian(grid, makeSphereStencil(grid));
         SphereMatrix shared = full;
         const double differ = shareFaceInteriors(shared, grid.side);
-        expect(differ < 1e-12, "the faces' interiors differ by more than rounding", differ);
+        expect(grid.side >= 5 ? differ >= 0 && differ < 1e-12 : differ < 0, "the faces' interiors differ by more than rounding", differ);
         double largest = 0;
         for (int r = 0; r < grid.cells; ++r)
             for (int e = shared.start[size_t(r)]; e < shared.start[size_t(r) + 1]; ++e) {

@@ -37,7 +37,8 @@ struct SpherePoisson {
 // the result; it is never silently replaced.
 struct PoissonReport {
     int iterations{};
-    double residual{};        // ‖K ψ − b‖ / ‖b‖ at the end; below a tolerance of 1e-10 from a fresh product
+    double residual{};        // ‖K ψ − b‖ / ‖b‖ at the end: below a tolerance of 1e-10 from a fresh
+                              // product, from 1e-10 up CG's recursive estimate (within 1.3e-5 of the tolerance)
     double sourceMean{};      // area mean of the source, removed before solving (zero for a vorticity)
     bool converged{};
 };

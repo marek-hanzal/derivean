@@ -1,6 +1,7 @@
 #include "atmosphere/fn/StencilMatrix.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstdlib>
 
@@ -9,9 +10,7 @@ namespace {
 
 // Interior rows are visited face by face, grid line by grid line, i from 2 to side − 3, which is
 // also their order in `inner`.
-constexpr int Margin = 2;
-constexpr int Chunk = 64;   // rows of a grid line whose values are stored together
-constexpr int Entries = 21;
+constexpr int Margin = StencilMatrix::Margin, Chunk = StencilMatrix::Chunk, Entries = StencilMatrix::Entries;
 
 bool insideFace(int side, int row) {
     const int rest = row % (side * side), i = rest % side, j = rest / side;
@@ -45,7 +44,7 @@ bool regularOf(const SphereMatrix& matrix, int side, const std::array<int, Entri
 
 double shareFaceInteriors(SphereMatrix& matrix, int side, double limit) {
     const std::array<int, Entries> offset = offsetsFor(side);
-    if (!regularOf(matrix, side, offset)) return 0;
+    if (!regularOf(matrix, side, offset)) return -1;
     const int area = side * side, rows = int(matrix.diagonal.size());
     double largest = 0, differ = 0;
     for (double value : matrix.value) largest = std::max(largest, std::abs(value));
@@ -69,7 +68,9 @@ double shareFaceInteriors(SphereMatrix& matrix, int side, double limit) {
             const int c = matrix.column[size_t(e)];
             if (!insideFace(side, c)) continue;
             const auto begin = matrix.column.begin() + matrix.start[size_t(c)], end = matrix.column.begin() + matrix.start[size_t(c) + 1];
-            matrix.value[size_t(e)] = matrix.value[size_t(std::lower_bound(begin, end, r) - matrix.column.begin())];
+            const auto found = std::lower_bound(begin, end, r);
+            assert(found != end && *found == r);   // structurally symmetric
+            matrix.value[size_t(e)] = matrix.value[size_t(found - matrix.column.begin())];
         }
     }
     return differ;

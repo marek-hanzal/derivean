@@ -72,21 +72,24 @@ PoissonReport solveSpherePoisson(SpherePoisson& poisson, const SphereGrid& grid,
         rz = dotOf(r, z);
     }
     // The products p · q and r · r are summed in the loops that form q and r, in ascending order, as
-    // dotOf sums them.
+    // dotOf sums them; the product is its own statement so it is not contracted into a fused
+    // multiply-add, which dotOf's vectorised loop does not use either.
     const double* direction = p.data();
     double* product = q.data();
     while (report.residual > tolerance && report.iterations < limit) {
         double pq = 0;
         forEachProduct(poisson.levels[0].stiffness, direction, [&](size_t c, double kp) {
             product[c] = kp;
-            pq += direction[c] * kp;
+            const double term = direction[c] * kp;
+            pq += term;
         });
         const double alpha = rz / pq;
         double rr = 0;
         for (size_t c = 0; c < n; ++c) {
             result[c] += alpha * p[c];
             r[c] -= alpha * q[c];
-            rr += r[c] * r[c];
+            const double term = r[c] * r[c];
+            rr += term;
         }
         ++report.iterations;
         report.residual = std::sqrt(rr) / bNorm;

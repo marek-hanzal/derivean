@@ -14,6 +14,9 @@ namespace derivean::sim {
 // add the same products in the same column order as the assembled SphereMatrix, so the product is the
 // same bit for bit.
 struct StencilMatrix {
+    static constexpr int Margin = 2;    // interior rows have 2 ≤ i, j < side − 2
+    static constexpr int Chunk = 64;    // rows of a grid line whose values are stored together
+    static constexpr int Entries = 21;  // neighbours of an interior row
     int side{};                       // cells along a face edge
     int interior{};                   // rows in the structured part, all six faces (0 when side < 5)
     bool shared{};                    // `inner` holds one face's interior, used by all six
