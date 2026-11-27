@@ -115,11 +115,16 @@ CellField curlOf(const SphereGrid& grid, const SphereStencil& stencil, const Edg
 }
 
 EdgeField streamFluxOf(const SphereGrid& grid, const SphereStencil& stencil, const CellField& stream) {
-    assert(stencil.weight.size() == grid.vertex.size());
-    EdgeField flux(grid.edge.size());
-    for (size_t e = 0; e < flux.size(); ++e)
-        flux[e] = vertexValue(grid, stencil, stream, grid.edge[e].from) - vertexValue(grid, stencil, stream, grid.edge[e].to);
+    EdgeField flux;
+    CellField atVertex;
+    streamFluxOf(grid, stencil, stream, flux, atVertex);
     return flux;
+}
+
+void streamFluxOf(const SphereGrid& grid, const SphereStencil& stencil, const CellField& stream, EdgeField& flux, CellField& atVertex) {
+    vertexValues(grid, stencil, stream, atVertex);
+    flux.resize(grid.edge.size());
+    for (size_t e = 0; e < flux.size(); ++e) flux[e] = atVertex[size_t(grid.edge[e].from)] - atVertex[size_t(grid.edge[e].to)];
 }
 
 SphereMatrix makeLaplacian(const SphereGrid& grid, const SphereStencil& tables) {

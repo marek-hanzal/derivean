@@ -30,7 +30,7 @@ bool invertTrial(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& 
     if (!flow.inversion.converged) return false;
     // Below a tolerance of 1e-10 the solver formed K of the candidate ψ: kept for the next guess.
     if (flow.inversion.product) std::swap(flow.trialProduct, poisson.product);
-    flow.trialFlux = streamFluxOf(grid, stencil, flow.trialStream);
+    streamFluxOf(grid, stencil, flow.trialStream, flow.trialFlux, flow.atVertex);
     return true;
 }
 

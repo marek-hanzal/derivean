@@ -41,6 +41,10 @@ CellField curlOf(const SphereGrid& grid, const SphereStencil& stencil, const Edg
 // so the wind's divergence is zero to rounding in every cell, and a uniform tracer stays uniform.
 EdgeField streamFluxOf(const SphereGrid& grid, const SphereStencil& stencil, const CellField& stream);
 
+// The same into `flux`, with ψ at the vertices formed once into `atVertex` (work space): each vertex
+// serves four edges, and the fluxes are the same bit for bit.
+void streamFluxOf(const SphereGrid& grid, const SphereStencil& stencil, const CellField& stream, EdgeField& flux, CellField& atVertex);
+
 // The Laplacian's stiffness K = Σ_edges diamond · Gᵀ G, with G the edge gradient above: symmetric by
 // construction, positive semi-definite, and zero on constants to rounding (each G row sums to zero). It
 // is the energy ½ Σ diamond |∇ψ|² of the discrete duality finite-volume method (Hermeline 2000;
