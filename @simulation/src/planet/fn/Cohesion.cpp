@@ -41,16 +41,27 @@ int32_t ownerAfter(const PlateRegions& regions, const std::vector<int32_t>& to, 
     return r >= 0 && !to.empty() && to[size_t(r)] >= 0 ? to[size_t(r)] : regions.owner[size_t(cell)];
 }
 
-// The plate of the cell nearest `from` across rings outside region `skip`, or -1 if none.
-int32_t nearestPlateOf(const Globe& globe, const PlateRegions& regions, const std::vector<int32_t>& to, const std::vector<int32_t>& from, int32_t skip) {
-    std::vector<uint8_t> seen(regions.owner.size(), 0);
+// The cells a pass's searches for the nearest plate have seen, by search.
+struct Seen {
+    std::vector<uint32_t> stamp;
+    uint32_t search = 0;
+};
+
+// The plate of the cell nearest `from` (not empty) across rings outside region `skip`, or -1 if none.
+int32_t nearestPlateOf(const Globe& globe, const PlateRegions& regions, const std::vector<int32_t>& to, const std::vector<int32_t>& from, int32_t skip, Seen& seen) {
+    const auto plateAt = [&](int32_t c) {
+        const int32_t plate = ownerAfter(regions, to, c);
+        return plate >= 0 && regions.region[size_t(c)] != skip ? plate : -1;
+    };
+    if (const int32_t plate = plateAt(from[0]); plate >= 0) return plate;   // most stranded pieces lie on a plate
+    if (seen.stamp.size() != regions.owner.size()) seen.stamp.assign(regions.owner.size(), 0), seen.search = 0;
+    if (++seen.search == 0) std::fill(seen.stamp.begin(), seen.stamp.end(), 0), seen.search = 1;
     std::vector<int32_t> front = from;
-    for (const int32_t c : from) seen[size_t(c)] = 1;
+    for (const int32_t c : from) seen.stamp[size_t(c)] = seen.search;
     for (size_t i = 0; i < front.size(); ++i) {
-        const int32_t plate = ownerAfter(regions, to, front[i]);
-        if (plate >= 0 && regions.region[size_t(front[i])] != skip) return plate;
+        if (const int32_t plate = plateAt(front[i]); plate >= 0) return plate;
         for (const int32_t m : (*globe.rings)[size_t(front[i])])
-            if (m >= 0 && !seen[size_t(m)]) seen[size_t(m)] = 1, front.push_back(m);
+            if (m >= 0 && seen.stamp[size_t(m)] != seen.search) seen.stamp[size_t(m)] = seen.search, front.push_back(m);
     }
     return -1;
 }
@@ -66,6 +77,7 @@ std::vector<int32_t> joinsOf(const Globe& globe, const PlateRegions& regions) {
     const size_t plates = globe.epoch.plates.size();
     std::vector<int32_t> to(regions.plate.size(), -1);
     std::vector<uint8_t> aside(regions.plate.size(), 0);   // joins no plate's largest region
+    Seen seen;
     std::vector<double> shared(2 * plates, 0);   // m (corners: their count) with a plate's largest region, then with any of it
     std::vector<std::vector<int32_t>> cells(regions.plate.size());   // of the regions that are not their plate's largest
     for (int c = 0; c < grid.cells; ++c) {
@@ -90,7 +102,7 @@ std::vector<int32_t> joinsOf(const Globe& globe, const PlateRegions& regions) {
         for (size_t p = 0; p < shared.size() && (most == 0 || p < plates); ++p)
             if (shared[p] > most) most = shared[p], to[r] = int32_t(p % plates), aside[r] = p >= plates;
         if (most == 0) {
-            const int32_t plate = nearestPlateOf(globe, regions, {}, cells[r], int32_t(r));
+            const int32_t plate = nearestPlateOf(globe, regions, {}, cells[r], int32_t(r), seen);
             to[r] = plate == regions.plate[r] ? -1 : plate, aside[r] = 1;
         }
         for (size_t s = 0; s < r && aside[r]; ++s)
@@ -145,10 +157,11 @@ std::vector<int32_t> deal(Globe& globe, const PlateRegions& regions, const std::
 long dealStranded(Globe& globe, const PlateRegions& regions, const std::vector<int32_t>& to, std::vector<int32_t>& left) {
     const SphereGrid& grid = *globe.grid;
     long moved = 0;
+    Seen seen;
     for (CrustPiece& piece : globe.pieces) {
         if (piece.plate < regions.largest.size() && regions.largest[piece.plate] >= 0) continue;
         const int cell = centreCellOf(grid, piece);
-        const int32_t plate = nearestPlateOf(globe, regions, to, {cell}, -1);
+        const int32_t plate = nearestPlateOf(globe, regions, to, {cell}, -1, seen);
         if (plate < 0) continue;
         piece.plate = uint16_t(plate), ++moved;
         left.push_back(cell);
