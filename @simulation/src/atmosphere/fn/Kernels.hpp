@@ -25,7 +25,8 @@ void prepareTransport(Atmosphere& atmosphere);
 enum class Carried { Temperature, Vapour, Cloud };
 
 // Carries `from` one wind step along the wind of a band into `to` in flux form: what leaves a
-// cell enters its neighbour. `from` is used as work space when the step takes several passes.
+// cell enters its neighbour. `from` is used as work space when the step takes several passes, and
+// `slope` holds the slopes of a pass; Cloud leaves it untouched.
 void advect(const Atmosphere& atmosphere, AirField& from, AirField& to, AirField& slope, int band, Carried kind);
 
 // Share of the low band's rotational wind each band moves with; the westerly shear comes on top.

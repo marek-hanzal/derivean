@@ -55,9 +55,10 @@ CloudField cloudField(const Atmosphere& atmosphere) {
     field.ashAloft.resize(cells);
     field.ashLevel.resize(cells);
     field.snowLine.resize(cells);
-    field.snowLadder.reserve(cells * SnowRungs);
+    field.snowLadder.resize(atmosphere.snowLadder.cells.size() * SnowRungs);
+    float* rung = field.snowLadder.data();
     for (const SnowColumn& rungs : atmosphere.snowLadder.cells)
-        for (double pack : rungs) field.snowLadder.push_back(float(pack));
+        for (double pack : rungs) *rung++ = float(pack);
     for (int z = 0; z < AirCells; ++z) {
         for (int x = 0; x < AirCells; ++x) {
             const size_t cell = atmosphere.ground.index(x, z);
