@@ -105,7 +105,8 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
       const device = (renderer.backend as { device?: { queue: { onSubmittedWorkDone(): Promise<void> } } }).device;
       const benched = stage;
       if (!benched || !device || benching) return null;
-      const timed = { cloudy: [] as number[], clear: [] as number[] };
+      // Per batch: milliseconds a frame until the GPU is done, and of those, the page's own to submit the frames.
+      const timed = { cloudy: [] as number[], clear: [] as number[], cloudySubmit: [] as number[], clearSubmit: [] as number[] };
       const shown = benched.cloudsShown;
       benching = true;
       benched.hold();
@@ -117,6 +118,7 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
           await device.queue.onSubmittedWorkDone();
           const began = performance.now();
           for (let frame = 0; frame < frames; frame++) benched.draw(renderer, () => {});
+          timed[cloudy ? "cloudySubmit" : "clearSubmit"].push((performance.now() - began) / frames);
           await device.queue.onSubmittedWorkDone();
           timed[cloudy ? "cloudy" : "clear"].push((performance.now() - began) / frames);
         }
@@ -127,7 +129,10 @@ export function createCubeScene(canvas: HTMLCanvasElement, failed: (error: unkno
       const median = (values: number[]) => Number([...values].sort((a, b) => a - b)[values.length >> 1].toFixed(3));
       const cloudy = median(timed.cloudy);
       const clear = median(timed.clear);
-      return { frames, batches, cloudyMs: cloudy, clearMs: clear, cloudMs: Number((cloudy - clear).toFixed(3)), ...timed };
+      return {
+        frames, batches, cloudyMs: cloudy, clearMs: clear, cloudMs: Number((cloudy - clear).toFixed(3)),
+        cloudySubmitMs: median(timed.cloudySubmit), clearSubmitMs: median(timed.clearSubmit), ...timed,
+      };
     },
     timings: () => ({ cpuMs, gpuMs }),
     renderStats,
