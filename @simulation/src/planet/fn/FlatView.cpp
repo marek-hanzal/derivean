@@ -116,15 +116,19 @@ Planet flatViewOf(const Globe& globe) {
             planet.precipitation.cells[i] = globe.precipitation.value[size_t(cell)];
             const GlobeContact& contact = globe.contact.value[size_t(cell)];
             if (contact.across < 0) continue;
-            ContactCell& flat = planet.contact.cells[i];
             const SurfaceFrame frame = geographicFrame(direction);
             // The way to the contact, along its normal, is a displacement: J⁻¹ takes it to flat metres.
-            flat.distance = float(length(vectorIn(frame, j, contact.normal * double(contact.distance))));
+            // One J⁻¹ stretches beyond reach is no contact of the view: it keeps the empty record, as the
+            // cells outside the zone do, so no reader mixes in its motion.
+            const float distance = float(length(vectorIn(frame, j, contact.normal * double(contact.distance))));
+            if (distance >= ContactReach) continue;
+            ContactCell& flat = planet.contact.cells[i];
+            flat.distance = distance;
             flat.convergence = contact.convergence;
             flat.shear = contact.shear;
             const Vec2 normal = normalIn(frame, j, contact.normal);
             flat.normalX = float(normal.x), flat.normalZ = float(normal.z);
-            if (flat.distance < ContactReach) planet.contactZone.push_back(uint32_t(i));
+            planet.contactZone.push_back(uint32_t(i));
         }
     }
     for (size_t p = 0; p < plates; ++p) planet.epoch.plates[p].velocity = count[p] > 0 ? velocity[p] * (1.0 / count[p]) : Vec2{};

@@ -53,6 +53,8 @@ inline ContactSample contactAt(const Planet& planet, Vec2 position) {
         const ContactCell& cell = planet.contact.at(wrapIndex(ix + ox, PlanetCells), wrapIndex(iz + oz, PlanetCells));
         const double weight = (ox ? tx : 1 - tx) * (oz ? tz : 1 - tz);
         sample.distance += weight * std::min(double(cell.distance), 2.0 * ContactReach);
+        // Motion only from the contacts within reach, the zone's: a record beyond it carries none.
+        if (cell.distance >= ContactReach) continue;
         sample.convergence += weight * cell.convergence;
         sample.shear += weight * std::abs(cell.shear);
     }

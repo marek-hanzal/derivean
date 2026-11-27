@@ -1,6 +1,7 @@
 // The bridge G between the globe and the flat world (S3-design.md §8, §11 test 11): latitudes, the two
 // sheets, constant fields, east, J against a finite difference of G, vectors J⁻¹v and normals Jᵀn
-// (Codex V7), the poles and the folds (V6), and the view's contacts closing where the globe's close.
+// (Codex V7), the poles and the folds (V6), the view's contacts closing where the globe's close, and a
+// contact J⁻¹ stretches beyond reach carrying no motion into the view (lead, 27 Nov).
 // Live tiles (S3e), the material space (S3m) and crustFrame over the bridge (S3e) are tested there.
 #include "GlobeFixture.hpp"
 
@@ -12,6 +13,7 @@
 #include "planet/fn/FlatView.hpp"
 #include "planet/fn/GlobeContacts.hpp"
 #include "planet/fn/GlobeEvolve.hpp"
+#include "planet/fn/Sample.hpp"
 #include "tectonics/fn/Euler.hpp"
 #include "tectonics/type/Plates.hpp"
 
@@ -133,6 +135,40 @@ void checkContactSigns() {
     expect(checked > 100 && double(across) > 0.9 * double(checked), "the view's contact normals do not point at the other plate", double(across) / std::max(1.0, double(checked)));
 }
 
+// A globe contact within reach whose way J⁻¹ stretches beyond it in the view (towards the poles, where
+// the view's east runs long) is no contact of the view: the cell keeps the empty record, as cells outside
+// the zone do, and contactAt at its centre, where it alone weighs, mixes in no convergence and no shear.
+void checkStretchedContacts() {
+    Globe globe = startGlobe(42, TectonicsStart, 4, PlateSpeeds::Today);
+    globe.time = 0.5 * (globe.epoch.start + globe.epoch.end);
+    traceGlobeContacts(globe);
+    const Planet view = flatViewOf(globe);
+    long stretched = 0, moving = 0;
+    for (int z = 0; z < PlanetCells; ++z)
+        for (int x = 0; x < PlanetCells; ++x) {
+            const Vec2 at = planetCellCenter(x, z);
+            const int cell = indexOf(*globe.grid, cellOf(globeDirectionOf(at), globe.grid->level));
+            const GlobeContact& contact = globe.contact.value[size_t(cell)];
+            if (contact.across < 0) continue;
+            const Vec2 way = flatVector(at, contact.normal * double(contact.distance));
+            if (std::sqrt(way.x * way.x + way.z * way.z) < 0.999 * ContactReach) continue;
+            const ContactCell& flat = view.contact.at(x, z);
+            if (flat.distance < ContactReach) continue;   // at the rounding of reach, the view's float decides
+            ++stretched, moving += std::abs(contact.convergence) > 1e-3f || std::abs(contact.shear) > 1e-3f;
+            const ContactSample sample = contactAt(view, at);
+            expect(flat.distance == ContactCell{}.distance && flat.convergence == 0 && flat.shear == 0 && flat.normalX == 0 && flat.normalZ == 0,
+                   "a contact the view stretches beyond reach keeps its record", flat.convergence);
+            expect(sample.convergence == 0 && sample.shear == 0, "contactAt mixes in a contact beyond reach", sample.convergence);
+        }
+    expect(stretched > 10 && moving > 10, "no globe contact is stretched beyond reach in the view", double(stretched));
+    // contactAt reads motion from the zone's records only, whatever a record beyond reach holds.
+    Planet planted = view;
+    ContactCell& far = planted.contact.at(3, 5);
+    far.distance = 1.5f * ContactReach, far.convergence = 0.02f, far.shear = -0.01f;
+    const ContactSample sample = contactAt(planted, planetCellCenter(3, 5));
+    expect(sample.convergence == 0 && sample.shear == 0 && sample.distance == 1.5 * double(ContactReach), "contactAt mixes in a record beyond reach", sample.convergence);
+}
+
 void checkConstantFields() {
     Globe globe = startGlobe(42, TectonicsStart, 4, PlateSpeeds::Today);
     std::fill(globe.swell.value.begin(), globe.swell.value.end(), 7.0f);
@@ -155,5 +191,6 @@ void testGlobeBridge() {
     checkVectors();
     checkJacobian();
     checkContactSigns();
+    checkStretchedContacts();
     checkConstantFields();
 }
