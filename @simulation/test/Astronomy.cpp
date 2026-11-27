@@ -191,15 +191,15 @@ void testSolarTime() {
     expect(std::abs(highest / Minute - 16.4) < 0.2 && std::abs(highestDay - 307) <= 3, "the November extreme of the equation of time is off (min)", highest / Minute);
 }
 
-} // namespace
-
 // The closed-form daily mean against the mean of insolation sampled every minute over the 24 h
-// centred on the instant, at every 15° of latitude and four dates (solstices, equinox, perihelion);
-// and its two ends, polar day (the pole's sin δ) and polar night (zero).
+// centred on the instant, at every 15° of latitude and either side of the polar circles on four dates (solstices,
+// equinox, perihelion); and its two ends, polar day (the pole's sin δ) and polar night (zero).
 void testDailyInsolation() {
     double worst = 0;
     for (double date : {2460389.625, 2460483.0, 2460312.5, 2461030.5})
-        for (double latitude = -90; latitude <= 90; latitude += 15) {
+        for (int row = 0; row <= 16; ++row) {
+            constexpr double Circle[] = {-66.7, -66.4, 66.4, 66.7};
+            const double latitude = row < 13 ? -90 + 15 * row : Circle[row - 13];
             const Vec3 up = upAt(latitude, 15);
             double sampled = 0;
             for (int m = 0; m < 24 * 60; ++m) sampled += insolation(skyOn(date, (m + 0.5 - 12 * 60) * Minute), up);
@@ -215,6 +215,8 @@ void testDailyInsolation() {
     expect(std::abs(pole - irradiance(june) * sinDeclination) < 1e-9 * irradiance(june), "the pole's polar day is not S sin δ", pole);
     expect(dailyMeanInsolation(june, {0, 0, -1}) == 0 && dailyMeanInsolation(june, upAt(-70, 0)) == 0, "polar night is not dark");
 }
+
+} // namespace
 
 void testAstronomy() {
     testAgainstHorizons();
