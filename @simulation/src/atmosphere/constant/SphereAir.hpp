@@ -45,6 +45,13 @@ inline constexpr double SphereEddyEvery = 2 * 3600.0;     // s
 inline constexpr double SphereEnvelopeReach = 11.25;      // degrees
 inline constexpr double SphereEddyLimit = 1.5e-5;         // 1/s, root-mean-square vorticity
 
+// The terrain's squeeze of the column at the flat world's metres (atmosphere/fn/Circulation.cpp owns
+// them until the switch): terrain of height h shortens a column of TerrainDepth by min(h,
+// TerrainLimit), raising the background of its potential vorticity to f · (1 + min(h, TerrainLimit) /
+// TerrainDepth) (setSurface).
+inline constexpr double SphereTerrainDepth = 10000.0;   // m of air column the terrain squeezes
+inline constexpr double SphereTerrainLimit = 2500.0;    // m of terrain the column still feels
+
 // From PolarCap degrees to a pole the belts' zonal wind tapers to zero (sphereSeasonOf). A wind
 // tangent to the sphere has a value at a pole only if its zonal mean is zero there, and Stokes round
 // a cap of angular radius θ gives it the vorticity u / (R tan(θ/2)), which grows as 1/θ as the grid

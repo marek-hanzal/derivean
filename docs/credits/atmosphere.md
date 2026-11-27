@@ -251,6 +251,12 @@ Holton, J. R., Hakim, G. J. (2012). *An Introduction to Dynamic Meteorology*, 5t
 - **Used in:** `@simulation/src/atmosphere/fn/Season.cpp:64`; on the sphere `@simulation/src/atmosphere/fn/SphereSeason.hpp:25`, `@simulation/src/atmosphere/fn/SphereSeason.cpp:101`.
 - **Checked by:** `@simulation/test/AtmosphereSphereSeason.cpp:150` (0.5 °C per degree shears 6 m/s at 45°), `:158` (four times as steep, held at the limit).
 
+### Holton and Hakim 2012: potential vorticity over terrain
+Holton, J. R., Hakim, G. J. (2012). *An Introduction to Dynamic Meteorology*, 5th edition. Academic Press (International Geophysics 88), chapter 4. ISBN 978-0-12-384866-6. https://shop.elsevier.com/books/an-introduction-to-dynamic-meteorology/holton/978-0-12-384866-6
+- **Model:** a shallow layer of depth H keeps its potential vorticity (ζ + f) / H, so a column shortened by terrain spins less: to first order in h / H and for ζ ≪ f (the ζ h / H term left out) the background of the carried absolute vorticity gains f h / H. The flat world's `absolute` (`atmosphere/fn/Circulation.cpp:45`) and the sphere's background take it with H = 10 km and the terrain felt to 2 500 m, a tuned depth rather than the atmosphere's.
+- **Used in:** `@simulation/src/atmosphere/fn/Circulation.cpp:45` (cited by its idea only); on the sphere `@simulation/src/atmosphere/fn/SphereSurface.hpp:15`, `@simulation/src/atmosphere/fn/SphereSurface.cpp:20`.
+- **Checked by:** `@simulation/test/AtmosphereSphereSurface.cpp:119` (a westerly over a mountain loses ζ on the windward slope and gains it in the lee by −t u ∂(f h / H)/∂x, both hemispheres), `:60` (the background over terrain, sea level bit for bit).
+
 ## Snow (approved, not yet written)
 
 ### Sturm et al. 2010: bulk density of snow

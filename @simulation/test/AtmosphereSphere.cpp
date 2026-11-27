@@ -240,6 +240,7 @@ void testAtmosphereSphere() {
     checkDamping();
     checkClosures();
     checkEddies();
+    checkSurface();
     checkSeason();
     checkSeasonInputs();
     checkSeasonPoles();
