@@ -41,8 +41,9 @@ struct Weather {
 
 // Orders the first state for the start date; returns at once. The spin-up is the whole of the
 // work until the first state is published, and the game waits for it: it runs on a pool of its
-// own, nature.startThreads wide, not on the two threads that step the weather afterwards. The
-// state does not depend on the thread count.
+// own, nature.startThreads wide, not on nature.air, which steps the weather afterwards. The
+// state does not depend on the thread count. The pool reads nature's planet until it is joined,
+// so the Weather must not outlive nature.
 void startWeather(Weather& weather, Nature& nature, const sim::Calendar& start);
 
 // Blocks until that first state exists.

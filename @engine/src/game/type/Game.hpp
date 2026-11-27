@@ -71,7 +71,7 @@ struct Game {
     Nature nature;
     Position spawn{};
     sim::Calendar calendar;  // the world clock: the planet's age and the calendar time played since
-    Weather weather;
+    Weather weather;         // after nature: its start pool reads nature's planet until joined
     double clock{};          // s of play
     bool flying{};
     bool held{};             // the player waits for the voxels around them

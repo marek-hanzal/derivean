@@ -40,7 +40,7 @@ void quiesce(sim::Workers& pool) {
     gate->changed.notify_all();
 }
 
-// The spin-up of the first weather on the Mac: 3.1 s on two threads, 1.9 s on four, 1.1 s on eight.
+// The game waits for the spin-up of the first weather; it gains little beyond eight threads.
 constexpr unsigned StartThreads = 8;
 
 } // namespace

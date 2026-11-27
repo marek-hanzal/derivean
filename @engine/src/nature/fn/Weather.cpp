@@ -48,7 +48,7 @@ WeatherState publish(sim::Atmosphere& air) {
 
 void collect(Weather& weather) {
     for (WeatherResult& result : weather.finished->collect()) {
-        weather.start.reset();
+        if (!weather.seen.air) weather.start.reset();  // the first state: its pool is done
         weather.working = std::move(result.working);
         weather.seen = std::move(result.state);
         weather.flying = false;
