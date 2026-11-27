@@ -1,11 +1,10 @@
-// 265 lines, one owner: a pass's splits, joins and the dealing of their pieces share PlateRegions and
+// 269 lines, one owner: a pass's splits, joins and the dealing of their pieces share PlateRegions and
 // the order of keepPlatesWhole, which splitting them apart would only forward.
 #include "planet/fn/Cohesion.hpp"
 
 #include "geometry/fn/Cell.hpp"
 #include "geometry/fn/SphereGrid.hpp"
 #include "planet/fn/Band.hpp"
-#include "planet/fn/Coupling.hpp"
 #include "planet/fn/Pieces.hpp"
 #include "planet/fn/Seam.hpp"
 
@@ -114,13 +113,14 @@ std::vector<int32_t> joinsOf(const Globe& globe, const PlateRegions& regions) {
 }
 
 // Deals the pieces of every region that goes somewhere to its plate; per region the pieces dealt, and
-// the cells a join leaves (the regions' and the centres of their pieces). `regions` are measured on the
-// coupling as it stands, so their dominant pieces are the coupling's. A piece of the plate that
-// covers no cell most and is centred off its plate's cells goes with the moving region it covers most:
-// left behind, it would cover the region most once the closing took the rest, and the births take its plate.
+// the cells a join leaves (the regions' and the centres of their pieces). A region that moves is of a
+// plate in two regions or more, so its cells' dominant pieces and its plate's pieces' overlaps are real
+// (planet/fn/Regions). A piece of the plate that covers no cell most and is centred off its plate's
+// cells goes with the moving region it covers most: left behind, it would cover the region most once
+// the closing took the rest, and the births take its plate.
 std::vector<int32_t> deal(Globe& globe, const PlateRegions& regions, const std::vector<int32_t>& to, std::vector<int32_t>& left) {
     const SphereGrid& grid = *globe.grid;
-    const Coupling& coupling = globe.coupling;
+    const RealWeights& real = regions.real;
     std::vector<int32_t> target(globe.pieces.size(), -1), dealt(to.size(), 0), from(globe.pieces.size(), -1), centre(globe.pieces.size());
     std::vector<uint8_t> dominant(globe.pieces.size(), 0);
     for (size_t k = 0; k < globe.pieces.size(); ++k) {
@@ -136,12 +136,16 @@ std::vector<int32_t> deal(Globe& globe, const PlateRegions& regions, const std::
         if (target[size_t(k)] < 0) target[size_t(k)] = to[size_t(r)], from[size_t(k)] = r;
         left.push_back(c);
     }
+    std::vector<uint8_t> moving(globe.epoch.plates.size(), 0);
+    for (size_t r = 0; r < to.size(); ++r)
+        if (to[r] >= 0) moving[size_t(regions.plate[r])] = 1;
     for (size_t k = 0; k < globe.pieces.size(); ++k) {
         const CrustPiece& piece = globe.pieces[k];
-        if (target[k] >= 0 || dominant[k] || regions.owner[size_t(centre[k])] == piece.plate) continue;
+        if (target[k] >= 0 || dominant[k] || regions.owner[size_t(centre[k])] == piece.plate || !moving[piece.plate]) continue;
+        require(real.begin[k] >= 0, "a piece of a plate in two regions has no real overlaps", double(k));
         double most = 0;
-        for (int32_t w = coupling.pieceStart[k]; w < coupling.pieceStart[k + 1]; ++w) {
-            const CellWeight& weight = coupling.byPiece[size_t(w)];
+        for (int32_t w = real.begin[k]; w < real.end[k]; ++w) {
+            const CellWeight& weight = real.weights[size_t(w)];
             const int32_t r = regions.region[size_t(weight.cell)];
             if (r >= 0 && to[size_t(r)] >= 0 && regions.plate[size_t(r)] == piece.plate && weight.area > most) most = weight.area, target[k] = to[size_t(r)], from[k] = r;
         }

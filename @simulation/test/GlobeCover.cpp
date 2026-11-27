@@ -5,6 +5,7 @@
 // - A moved 2 × 2 patch whose cloud-in-cell weights sum under 0.002 sr covers more: it splits off.
 // - Of two regions, the one whose cloud-in-cell weights sum less but whose crust covers more is the
 //   plate's largest: it keeps the plate's id and the other splits off.
+// - An unmoved patch whose weights keep to four cells holds the fourteen its crust stands on: it splits.
 #include "GlobeCases.hpp"
 #include "GlobeFixture.hpp"
 
@@ -35,21 +36,24 @@ void ringOf(Globe& globe, const std::vector<CrustPiece>& original, int i, int j)
             if (a == i - 3 || a == i + 4 || b == j - 3 || b == j + 4) globe.pieces.push_back(original[size_t(cellAtFace0(*globe.grid, a, b))]), globe.pieces.back().plate = 1;
 }
 
-// sr a region's cells hold of the given pieces' footprints, by clipping and union cell by cell.
-double coverOf(const Globe& globe, const PlateRegions& regions, int32_t region, const std::vector<CrustPiece>& pieces) {
+// m² cell `c` holds of the given pieces' footprints, by clipping and union.
+double cellCover(const Globe& globe, int c, const std::vector<CrustPiece>& pieces) {
     const SphereGrid& grid = *globe.grid;
-    double cover = 0;
-    for (int c = 0; c < grid.cells; ++c) {
-        if (regions.region[size_t(c)] != region) continue;
-        const TangentPlane plane = tangentPlaneAt(grid.centre[size_t(c)]);
-        const PlanePolygon cell = projected(plane, polygonOf(grid, c));
-        std::vector<PlanePolygon> parts;
-        for (const CrustPiece& piece : pieces) {
-            const PlanePolygon part = clipped(projected(plane, footprintOf(grid, piece)), cell);
-            if (part.count >= 3) parts.push_back(part);
-        }
-        if (!parts.empty()) cover += unionArea(parts).area;
+    const TangentPlane plane = tangentPlaneAt(grid.centre[size_t(c)]);
+    const PlanePolygon cell = projected(plane, polygonOf(grid, c));
+    std::vector<PlanePolygon> parts;
+    for (const CrustPiece& piece : pieces) {
+        const PlanePolygon part = clipped(projected(plane, footprintOf(grid, piece)), cell);
+        if (part.count >= 3) parts.push_back(part);
     }
+    return parts.empty() ? 0 : unionArea(parts).area;
+}
+
+// sr a region's cells hold of the given pieces' footprints.
+double coverOf(const Globe& globe, const PlateRegions& regions, int32_t region, const std::vector<CrustPiece>& pieces) {
+    double cover = 0;
+    for (int c = 0; c < globe.grid->cells; ++c)
+        if (regions.region[size_t(c)] == region) cover += cellCover(globe, c, pieces);
     return cover / (PlanetRadius * PlanetRadius);
 }
 
@@ -110,11 +114,15 @@ void checkOverlappingCover(bool exact) {
            "overlapping crust under 0.002 sr splits off a plate", globe.splits.empty() ? 0 : globe.splits.front().area);
 }
 
-// Codex's cloud-in-cell fixtures (DREV-CLAUDE-008-05): a 2 × 2 patch of plate 0 moved to (5, 5) by 0.03
-// of a cell and ringed by plate 1, against a strip of plate 0 elsewhere (threshold) or a 2 × 2 block of
-// 0.002005–0.00202 sr (largest). The patch's cloud-in-cell weights sum under 0.002 sr and its real crust
-// covers more; the block's weights sum more than the patch's and its crust covers less.
-void checkCloudCover(bool largest) {
+// Codex's cloud-in-cell fixtures (DREV-CLAUDE-008-05): a 2 × 2 patch of plate 0 moved to (5, 5) by
+// `shift` of a cell and ringed by plate 1, against a strip of plate 0 elsewhere (threshold) or a 2 × 2
+// block of 0.002005–0.00202 sr (largest). The patch's cloud-in-cell weights sum under 0.002 sr and its
+// real crust covers more; the block's weights sum more than the patch's and its crust covers less.
+// Moved by nothing (independent reviewer, lead 27 Nov), each piece's cloud-in-cell weight stands in its
+// target cell alone (under 0.002 sr in all), while its footprint, born in a larger cell mid-face, reaches
+// cells round the patch: the region is the fourteen cells its crust stands on, over 0.002 sr, and it
+// splits.
+void checkCloudCover(bool largest, double shift) {
     Globe globe = twoPlates();
     const SphereGrid& grid = *globe.grid;
     const std::vector<CrustPiece> original = globe.pieces;
@@ -125,7 +133,7 @@ void checkCloudCover(bool largest) {
             CrustPiece piece = original[size_t(cellAtFace0(grid, 16 + x, 31 + y))];
             const Vec3 born = grid.centre[size_t(piece.birth)], p = grid.centre[size_t(cellAtFace0(grid, i + x, j + y))];
             const Vec3 u = grid.centre[size_t(cellAtFace0(grid, i + x + 1, j + y))] - p, v = grid.centre[size_t(cellAtFace0(grid, i + x, j + y + 1))] - p;
-            const Vec3 target = normalized(p + u * 0.03 + v * 0.03), axis = cross(born, target);
+            const Vec3 target = normalized(p + u * shift + v * shift), axis = cross(born, target);
             piece.rotation = rotationAbout(axis, std::atan2(length(axis), dot(born, target)));
             piece.plate = 0;
             patch.push_back(piece);
@@ -153,6 +161,23 @@ void checkCloudCover(bool largest) {
     const PlateRegions regions = plateRegionsOf(globe);
     const int32_t moved = regions.region[size_t(cellAtFace0(grid, i, j))], rest = regions.region[size_t(otherCell)];
     expect(moved >= 0 && rest >= 0 && moved != rest && regions.plate[size_t(moved)] == 0 && regions.plate[size_t(rest)] == 0 && regions.cells[size_t(moved)] >= MicroplateCells, "the cloud-in-cell fixture's regions are not two of plate 0", largest);
+    if (shift == 0) {
+        int cic = 0, standing = 0;   // cells round the patch plate 0 owns by its weights, and its footprints stand on
+        double cover = 0;
+        for (int a = i - 2; a <= i + 3; ++a)
+            for (int b = j - 2; b <= j + 3; ++b) {
+                const int c = cellAtFace0(grid, a, b);
+                const double share = OwnedShare * grid.area[size_t(c)], area = cellCover(globe, c, patch);
+                double weight = 0;
+                for (int32_t s = globe.coupling.cellStart[size_t(c)]; s < globe.coupling.cellStart[size_t(c) + 1]; ++s)
+                    if (globe.pieces[size_t(globe.coupling.byCell[size_t(s)].piece)].plate == 0) weight += globe.coupling.byCell[size_t(s)].area;
+                cic += weight >= share;
+                if (area >= share) ++standing, cover += area / (PlanetRadius * PlanetRadius);
+            }
+        expect(cic == 4 && standing == 14 && cover > MicroplateArea, "the unmoved patch's weights do not keep to four cells", double(standing));
+        expect(regions.cells[size_t(moved)] == standing && std::abs(regions.area[size_t(moved)] - cover) <= 1e-9 * cover,
+               "a region holds the cells its cloud-in-cell weights reach, not those its crust stands on", double(regions.cells[size_t(moved)]));
+    }
     const double movedCover = coverOf(globe, regions, moved, patch), restCover = coverOf(globe, regions, rest, other);
     const double movedSum = summedOf(globe, regions, moved), restSum = summedOf(globe, regions, rest);
     expect(movedSum < MicroplateArea && movedCover > MicroplateArea && (!largest || (restSum > movedSum && restCover > MicroplateArea && restCover < movedCover)),
@@ -172,6 +197,7 @@ void checkCloudCover(bool largest) {
 void testGlobeCover() {
     checkOverlappingCover(true);
     checkOverlappingCover(false);
-    checkCloudCover(false);
-    checkCloudCover(true);
+    checkCloudCover(false, 0.03);
+    checkCloudCover(true, 0.03);
+    checkCloudCover(false, 0);
 }

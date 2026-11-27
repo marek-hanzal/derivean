@@ -17,6 +17,8 @@ void couple(const SphereGrid& grid, const std::vector<CrustPiece>& pieces, const
 
 // The exact overlaps of one piece, unnormalised, with their sum.
 double exactWeights(const SphereGrid& grid, const CrustPiece& piece, std::vector<CellWeight>& weights, std::vector<int>& cells, std::vector<int>& work);
+// The exact overlaps of one piece normalised to its area, as `couple` weighs a flagged piece.
+void exactCoupling(const SphereGrid& grid, const CrustPiece& piece, std::vector<CellWeight>& weights, std::vector<int>& cells, std::vector<int>& work);
 void cicWeights(const SphereGrid& grid, const CrustPiece& piece, std::vector<CellWeight>& weights);
 
 // The piece with the largest weight in a cell (the lower key on a tie), -1 if none covers it.

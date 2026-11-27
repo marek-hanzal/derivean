@@ -45,6 +45,12 @@ double exactWeights(const SphereGrid& grid, const CrustPiece& piece, std::vector
     return sum;
 }
 
+void exactCoupling(const SphereGrid& grid, const CrustPiece& piece, std::vector<CellWeight>& weights, std::vector<int>& cells, std::vector<int>& work) {
+    const double sum = exactWeights(grid, piece, weights, cells, work);
+    require(std::abs(sum - piece.area) <= CoverageTolerance * piece.area, "exact overlaps of a footprint miss its area", sum / piece.area - 1);
+    for (CellWeight& w : weights) w.area *= piece.area / sum;
+}
+
 void cicWeights(const SphereGrid& grid, const CrustPiece& piece, std::vector<CellWeight>& weights) {
     weights.clear();
     const FacePoint point = facePointOf(centreOf(grid, piece));
@@ -74,9 +80,7 @@ void couple(const SphereGrid& grid, const std::vector<CrustPiece>& pieces, const
         for (size_t k = size_t(begin); k < size_t(end); ++k) {
             const CrustPiece& piece = pieces[k];
             if (allExact || (k < exact.size() && exact[k])) {
-                const double sum = exactWeights(grid, piece, weights, cells, work);
-                require(std::abs(sum - piece.area) <= CoverageTolerance * piece.area, "exact overlaps of a footprint miss its area", sum / piece.area - 1);
-                for (CellWeight& w : weights) w.area *= piece.area / sum;
+                exactCoupling(grid, piece, weights, cells, work);
                 coupling.exact[k] = 1;
             } else {
                 cicWeights(grid, piece, weights);
