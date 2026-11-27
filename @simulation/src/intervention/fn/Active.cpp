@@ -41,6 +41,20 @@ void readColumns(LiveSet& set, const EditedTile& tile, const Ground& from) {
     });
 }
 
+// m, where a cell's water stands as the tile carries it: below the ground where it holds none.
+float levelOf(float ground, double depth) { return depth > OpenWater ? float(double(ground) + depth) : ground - 1.0f; }
+
+// A tile's live columns and water go into the grid, and the level the tile carries is derived from
+// them there and then: queries read that level, also before any solver step stores the grid. The
+// rim keeps the level it carries.
+void readLive(LiveSet& set, EditedTile& tile) {
+    readColumns(set, tile, tile.now);
+    readWater(set, tile);
+    eachCell(set, tile, [&](size_t from, size_t at) {
+        if (set.grid.kindOf(int32_t(from)) != CellKind::Rim) tile.water[at] = levelOf(set.grid.ground[from], set.grid.depth[from]);
+    });
+}
+
 // The grid of one group. It is first filled with the untouched tiles: they give the rim, the rivers
 // that enter across it, and the discharge every bed is in balance with. The rim is the outermost
 // ring of cells; it keeps the untouched ground and the untouched standing water, and where water
@@ -105,10 +119,7 @@ LiveSet buildSet(World& world, std::vector<EditedTile*> tiles) {
     // A bed under standing water is in balance with nothing: once laid bare it cuts at full power.
     for (size_t cell = 0; cell < grid.cells(); ++cell) grid.balance[cell] = grid.depth[cell] > 0 ? 0.0f : float(streamPower(grid, untouched, cell));
 
-    for (const EditedTile* tile : set.tiles) {
-        readColumns(set, *tile, tile->now);
-        readWater(set, *tile);
-    }
+    for (EditedTile* tile : set.tiles) readLive(set, *tile);
     return set;
 }
 
@@ -176,11 +187,10 @@ void regroup(World& world) {
             sets.push_back(buildSet(world, members));
             sets.back().seconds = sets.back().shaped = now;
         } else {
-            for (const EditedTile* tile : members) {
+            for (EditedTile* tile : members) {
                 // An edit moves columns and may push water aside; both are read back.
                 if (!tile->touched) continue;
-                readColumns(*same, *tile, tile->now);
-                readWater(*same, *tile);
+                readLive(*same, *tile);
                 changed = true;
             }
             sets.push_back(std::move(*same));
@@ -206,7 +216,7 @@ void storeSet(LiveSet& set) {
             for (int c = 0; c < SedimentClasses; ++c) tile->now.sediment[c][at] = grid.solid.sediment[c][from];
             tile->depth[at] = grid.depth[from];
             tile->salt[at] = grid.salt[from];
-            tile->water[at] = grid.depth[from] > OpenWater ? float(double(grid.ground[from]) + grid.depth[from]) : grid.ground[from] - 1.0f;
+            tile->water[at] = levelOf(grid.ground[from], grid.depth[from]);
             tile->discharge[at] = grid.discharge[from];
         });
     }
