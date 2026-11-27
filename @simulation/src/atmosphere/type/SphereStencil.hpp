@@ -9,6 +9,8 @@ namespace derivean::sim {
 
 // The weather's finite-volume discretisation on top of the geometry's sphere grid
 // (geometry/type/SphereGrid.hpp): per edge and per vertex, in the grid's edge and vertex order.
+// `topology` and `vertexCells` are compact copies of the grid's own facts, filled only from it so
+// the step reads a few bytes an edge; the grid stays their owner.
 //
 // The gradient at an edge's midpoint comes from two differences: across the edge (right − left) and
 // along it (to − from, values at the vertices). In the gnomonic tangent plane at the midpoint `across`

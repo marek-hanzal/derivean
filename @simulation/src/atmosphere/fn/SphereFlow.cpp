@@ -167,7 +167,7 @@ double outflowCourant(const SphereGrid& grid, const std::vector<double>& flux, d
 
 void advectTracer(const SphereGrid& grid, const SphereStencil& stencil, const std::vector<double>& flux, double step, std::vector<double>& tracer,
                   std::vector<double>& work) {
-    assert(stencil.behind.size() == flux.size() && stencil.topology.size() == flux.size());
+    assert(stencil.behind.size() == flux.size() && stencil.topology.size() == flux.size() && flux.size() == grid.edge.size());
     work.assign(size_t(grid.cells), 0.0);
     for (size_t e = 0; e < flux.size(); ++e) {
         const EdgeTopology& edge = stencil.topology[e];
