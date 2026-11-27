@@ -33,6 +33,7 @@ struct ColliderQueue {
     std::shared_ptr<Mailbox<ShapeResult>> finished;
     uint64_t tickets{};
     bool stale{};            // chunks entered or left the world since colliders were last matched
+    std::vector<Cell> debris, centers;   // scratch of each match: the chunks of moving bodies, and those with the player's
 };
 
 // What the renderer already holds of a streamed world, and what waits to be meshed for it.

@@ -38,10 +38,12 @@ void requestShape(Game& game, Cell key) {
 
 void streamColliders(Game& game) {
     collectShapes(game);
-    std::vector<Cell> debris;
+    std::vector<Cell>& debris = game.colliders.debris;
+    std::vector<Cell>& centers = game.colliders.centers;
+    debris.clear();
     for (const auto& body : game.bodies)
         if (!body.suspended) debris.push_back(chunkOf(cellAt(game.physics.pose(body.id).position)));
-    std::vector<Cell> centers = debris;
+    centers.assign(debris.begin(), debris.end());
     centers.push_back(chunkOf(cellAt(game.physics.eye())));
     std::sort(centers.begin(), centers.end());
     centers.erase(std::unique(centers.begin(), centers.end()), centers.end());
