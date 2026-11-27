@@ -19,28 +19,34 @@ using namespace std::chrono_literals;
 // when B came through within `patience`; a hang is let go by `abort` so the test can end.
 bool comesThrough(bool guarded, std::chrono::milliseconds patience) {
     Workers pool(1);
-    std::atomic<bool> xDone{false}, rDone{false}, abort{false}, waiting{false}, blocked{false}, finished{false};
+    std::atomic<bool> xDone{false}, rDone{false}, abort{false}, blocked{false}, finished{false}, takenByB{false};
+    std::atomic<int> checks{0};   // how often B looked whether R is in
+    std::atomic<std::thread::id> bId{};
     // The pool thread is held up until R is in, so the task for X stays queued.
     pool.submit([&] {
         blocked = true;
         while (!rDone && !abort) std::this_thread::sleep_for(1ms);
     });
     while (!blocked) std::this_thread::sleep_for(1ms);
-    pool.submit([&] { pool.helpUntil([&] { return xDone || abort; }); });
-    // C finishes R once B waits for it.
+    pool.submit([&] {
+        if (std::this_thread::get_id() == bId) takenByB = true;
+        pool.helpUntil([&] { return xDone || abort; });
+    });
+    // C finishes R once B has shown which way it waits: it took the task, or it looked twice
+    // and so passed the queued task by once.
     std::thread c([&] {
-        while (!waiting && !abort) std::this_thread::sleep_for(1ms);
-        std::this_thread::sleep_for(20ms);
+        while (!takenByB && checks < 2 && !abort) std::this_thread::sleep_for(1ms);
         rDone = true;
         pool.notify();
     });
     std::thread b([&] {
+        bId = std::this_thread::get_id();
         {
             // B builds X: it waits for R, then X is done.
             std::optional<Workers::Claim> claim;
             if (guarded) claim.emplace();
             pool.helpUntil([&] {
-                waiting = true;
+                ++checks;
                 return rDone || abort;
             });
             xDone = true;

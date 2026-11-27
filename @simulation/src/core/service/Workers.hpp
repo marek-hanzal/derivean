@@ -43,8 +43,8 @@ public:
         Claim& operator=(const Claim&) = delete;
     };
 
-    // Runs queued tasks on the calling thread until `done` holds; a thread holding a Claim only
-    // waits. Lets a waiter work for the tasks it waits on without parking a pool thread. `done` is
+    // Runs queued tasks on the calling thread until `done` holds; a thread holding a Claim, or one
+    // of a pool that is stopping, only waits. Lets a waiter work for the tasks it waits on without parking a pool thread. `done` is
     // called with the pool's lock held, so it may take locks of its own that are never held while
     // calling into the pool; whoever makes it true calls notify().
     void helpUntil(const std::function<bool()>& done);
