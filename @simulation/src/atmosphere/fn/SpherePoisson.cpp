@@ -10,6 +10,8 @@
 namespace derivean::sim {
 namespace {
 
+constexpr double TrustedResidual = 1e-10;
+
 void precondition(SpherePoisson& poisson, const std::vector<double>& r, std::vector<double>& z) {
     if (poisson.multigrid) {
         assert(poisson.smoothing >= 1);   // without smoothing the V-cycle is singular and CG breaks down
@@ -24,8 +26,8 @@ void precondition(SpherePoisson& poisson, const std::vector<double>& r, std::vec
 
 SpherePoisson makeSpherePoisson(const SphereGrid& grid, const SphereStencil& stencil, bool multigrid) {
     SpherePoisson poisson;
-    poisson.levels.push_back(makePoissonLevel(grid, stencil));
     poisson.multigrid = multigrid && grid.level >= 2;
+    poisson.levels.push_back(makePoissonLevel(grid, stencil, poisson.multigrid ? LevelUse::Finest : LevelUse::Diagonal));
     if (poisson.multigrid)
         for (PoissonLevel& level : coarserLevels(grid.level)) poisson.levels.push_back(std::move(level));
     return poisson;
@@ -69,26 +71,43 @@ PoissonReport solveSpherePoisson(SpherePoisson& poisson, const SphereGrid& grid,
         p = z;
         rz = dotOf(r, z);
     }
+    // The products p · q and r · r are summed in the loops that form q and r, in ascending order, as
+    // dotOf sums them; the product is its own statement so it is not contracted into a fused
+    // multiply-add, which dotOf's vectorised loop does not use either.
+    const double* direction = p.data();
+    double* product = q.data();
     while (report.residual > tolerance && report.iterations < limit) {
-        applyMatrix(poisson.levels[0].stiffness, p, q);
-        const double alpha = rz / dotOf(p, q);
+        double pq = 0;
+        forEachProduct(poisson.levels[0].stiffness, direction, [&](size_t c, double kp) {
+            product[c] = kp;
+            const double term = direction[c] * kp;
+            pq += term;
+        });
+        const double alpha = rz / pq;
+        double rr = 0;
         for (size_t c = 0; c < n; ++c) {
             result[c] += alpha * p[c];
             r[c] -= alpha * q[c];
+            const double term = r[c] * r[c];
+            rr += term;
         }
         ++report.iterations;
-        report.residual = std::sqrt(dotOf(r, r)) / bNorm;
+        report.residual = std::sqrt(rr) / bNorm;
         if (report.residual <= tolerance || report.iterations == limit) break;
         precondition(poisson, r, z);
         const double next = dotOf(r, z), beta = next / rz;
         rz = next;
         for (size_t c = 0; c < n; ++c) p[c] = z[c] + beta * p[c];
     }
-    // The recursive residual drifts from the true one below about 1e-13 (it fell to 1e-22 while the
-    // true one stayed at 2e-13), so the report and `converged` come from one more product.
-    applyMatrix(poisson.levels[0].stiffness, result, q);
-    for (size_t c = 0; c < n; ++c) r[c] = b[c] - q[c];
-    report.residual = std::sqrt(dotOf(r, r)) / bNorm;
+    // The recursive residual drifts from the true one below about 1e-13 of ‖b‖ (it fell to 1e-22
+    // while the true one stayed at 2e-13). From TrustedResidual up the drift is at most 1.3e-5 of the
+    // tolerance (levels 5 to 7, cold and warm; tested to a hundredth), so the recursive residual is
+    // reported; below it the report and `converged` come from one more product.
+    if (tolerance < TrustedResidual) {
+        applyMatrix(poisson.levels[0].stiffness, result, q);
+        for (size_t c = 0; c < n; ++c) r[c] = b[c] - q[c];
+        report.residual = std::sqrt(dotOf(r, r)) / bNorm;
+    }
     report.converged = report.residual <= tolerance;
     const double mean = areaMean(grid, result);
     for (double& value : result) value -= mean;

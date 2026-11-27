@@ -27,7 +27,7 @@ constexpr int PowerSteps = 12;
 double largestEigenvalue(PoissonLevel& level) {
     const size_t n = level.inverseDiagonal.size();
     std::vector<double>& x = level.direction;
-    std::vector<double>& kx = level.product;
+    std::vector<double>& kx = level.spare;
     for (size_t c = 0; c < n; ++c) {
         const int rest = int(c) % (level.side * level.side);
         x[c] = ((rest % level.side + rest / level.side) % 2 == 0 ? 1.0 : -1.0) + 1e-3 * double(c % 7);
@@ -59,7 +59,7 @@ void smooth(PoissonLevel& level, const std::vector<double>& b, std::vector<doubl
     const size_t n = b.size();
     std::vector<double>& r = level.residual;
     std::vector<double>& d = level.direction;
-    std::vector<double>& kd = level.product;
+    std::vector<double>& kd = level.spare;
     const double low = ChebyshevLow * level.largest, high = ChebyshevHigh * level.largest;
     const double theta = 0.5 * (high + low), delta = 0.5 * (high - low), sigma = theta / delta;
     double rho = 1 / sigma;
@@ -101,7 +101,7 @@ void solveCoarsest(PoissonLevel& level, const std::vector<double>& source, std::
     mean /= double(n);
     std::vector<double>& r = level.residual;
     std::vector<double>& p = level.direction;
-    std::vector<double>& q = level.product;
+    std::vector<double>& q = level.spare;
     for (size_t c = 0; c < n; ++c) {
         solution[c] = 0;
         r[c] = source[c] - mean;
@@ -165,17 +165,21 @@ void cycle(std::vector<PoissonLevel>& levels, size_t at, int degree, const std::
 
 } // namespace
 
-PoissonLevel makePoissonLevel(const SphereGrid& grid, const SphereStencil& stencil) {
+PoissonLevel makePoissonLevel(const SphereGrid& grid, const SphereStencil& stencil, LevelUse use) {
     PoissonLevel level;
     level.level = grid.level;
     level.side = grid.side;
-    level.stiffness = makeStencilMatrix(makeLaplacian(grid, stencil), grid.side);
+    SphereMatrix laplacian = makeLaplacian(grid, stencil);
+    shareFaceInteriors(laplacian, grid.side);
+    level.stiffness = makeStencilMatrix(laplacian, grid.side);
     const size_t n = size_t(grid.cells);
-    level.solution.assign(n, 0.0);
-    level.source = level.residual = level.direction = level.product = level.solution;
     level.inverseDiagonal.resize(n);
     for (size_t c = 0; c < n; ++c) level.inverseDiagonal[c] = 1.0 / level.stiffness.diagonal[c];
-    level.largest = largestEigenvalue(level);
+    if (use == LevelUse::Diagonal) return level;
+    level.residual.assign(n, 0.0);
+    level.direction = level.spare = level.residual;
+    if (use != LevelUse::Finest) level.solution = level.source = level.residual;
+    if (use != LevelUse::Coarsest) level.largest = largestEigenvalue(level);
     return level;
 }
 
@@ -183,13 +187,13 @@ std::vector<PoissonLevel> coarserLevels(int finest) {
     std::vector<PoissonLevel> levels;
     for (int l = finest - 1; l >= CoarsestLevel; --l) {
         const SphereGrid grid = makeSphereGrid(l);
-        levels.push_back(makePoissonLevel(grid, makeSphereStencil(grid)));
+        levels.push_back(makePoissonLevel(grid, makeSphereStencil(grid), l == CoarsestLevel ? LevelUse::Coarsest : LevelUse::Coarser));
     }
     return levels;
 }
 
 void vCycle(std::vector<PoissonLevel>& levels, int smoothing, const std::vector<double>& r, std::vector<double>& z) {
-    assert(smoothing >= 1 && r.size() == levels[0].source.size());
+    assert(smoothing >= 1 && levels.size() >= 2 && r.size() == levels[0].inverseDiagonal.size());
     z.resize(r.size());
     cycle(levels, 0, smoothing, r, z);
 }

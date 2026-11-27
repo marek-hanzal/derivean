@@ -116,6 +116,41 @@ void checkFailure() {
            slow.iterations);
 }
 
+// From a tolerance of 1e-10 up the solve reports CG's recursive residual; on levels 5 to 7, cold and
+// warm, it stays within a hundredth of the tolerance of the true ‖b − K ψ‖ / ‖b‖.
+void checkReportedResidual() {
+    for (int level = 5; level <= 7; ++level) {
+        const SphereGrid grid = makeSphereGrid(level);
+        const SphereStencil stencil = makeSphereStencil(grid);
+        SpherePoisson poisson = makeSpherePoisson(grid, stencil);
+        const std::vector<double> u = harmonicField(grid, 4, 2);
+        std::vector<double> source = u, psi(size_t(grid.cells), 0.0), product, nudged;
+        for (double& value : source) value *= laplacianEigenvalue(4);
+        for (double tolerance : {1e-10, 1e-9, 1e-6}) {
+            for (int start = 0; start < 2; ++start) {
+                // Warm: from the solution of a source scaled by up to 1 + 2000 · tolerance.
+                std::fill(psi.begin(), psi.end(), 0.0);
+                if (start == 1) {
+                    nudged = source;
+                    for (size_t c = 0; c < nudged.size(); ++c) nudged[c] *= 1 + 1e3 * tolerance * double(c % 3);
+                    (void)solveSpherePoisson(poisson, grid, nudged, psi, tolerance, 100);
+                }
+                const PoissonReport report = solveSpherePoisson(poisson, grid, source, psi, tolerance, 100);
+                applyMatrix(poisson.levels[0].stiffness, psi, product);
+                double rr = 0, bb = 0;
+                for (size_t c = 0; c < psi.size(); ++c) {
+                    const double b = -grid.area[c] * (source[c] - report.sourceMean);
+                    rr += (b - product[c]) * (b - product[c]);
+                    bb += b * b;
+                }
+                const double truth = std::sqrt(rr / bb);
+                expect(report.converged && std::abs(truth - report.residual) < 1e-2 * tolerance, "the recursive residual drifts from the true one",
+                       std::abs(truth - report.residual) / tolerance);
+            }
+        }
+    }
+}
+
 // Preconditioned CG needs a symmetric positive preconditioner: y · B x = x · B y and x · B x > 0 for
 // the V-cycle B on residual-like fields (zero sum).
 void checkPreconditioner() {
@@ -151,7 +186,7 @@ void checkPreconditioner() {
 void checkLargestEigenvalue() {
     for (int level = 2; level <= 5; ++level) {
         const SphereGrid grid = makeSphereGrid(level);
-        const PoissonLevel at = makePoissonLevel(grid, makeSphereStencil(grid));
+        const PoissonLevel at = makePoissonLevel(grid, makeSphereStencil(grid), LevelUse::Coarser);
         std::uint64_t state = uint64_t(level);
         std::vector<double> x(size_t(grid.cells)), kx;
         for (double& value : x) {
@@ -187,6 +222,7 @@ void checkPoisson() {
     checkFailure();
     checkPreconditioner();
     checkLargestEigenvalue();
+    checkReportedResidual();
 }
 
 } // namespace derivean::sim::atmosphere_sphere_test

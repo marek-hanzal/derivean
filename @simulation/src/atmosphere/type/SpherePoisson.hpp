@@ -15,8 +15,10 @@ struct PoissonLevel {
     int side{};
     StencilMatrix stiffness;
     std::vector<double> inverseDiagonal;
-    double largest{};                                          // λmax of D⁻¹K, estimated
-    std::vector<double> solution, source, residual, direction, product;   // work space
+    double largest{};                     // λmax of D⁻¹K, estimated on smoothed levels
+    std::vector<double> solution, source;   // the coarse correction and its source (not on the finest)
+    // Work space: the smoother's residual and directions, CG's on the coarsest level.
+    std::vector<double> residual, direction, spare;
 };
 
 // Inverting the weather grid's Laplacian, Δψ = ζ, by conjugate gradients (Hestenes & Stiefel 1952) on
@@ -35,7 +37,8 @@ struct SpherePoisson {
 // the result; it is never silently replaced.
 struct PoissonReport {
     int iterations{};
-    double residual{};        // ‖K ψ − b‖ / ‖b‖ at the end, from a fresh product
+    double residual{};        // ‖K ψ − b‖ / ‖b‖ at the end: below a tolerance of 1e-10 from a fresh
+                              // product, from 1e-10 up CG's recursive estimate (within 1.3e-5 of the tolerance)
     double sourceMean{};      // area mean of the source, removed before solving (zero for a vorticity)
     bool converged{};
 };

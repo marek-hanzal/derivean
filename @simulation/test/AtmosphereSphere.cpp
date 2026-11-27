@@ -58,6 +58,46 @@ void checkGrid() {
     }
 }
 
+// The six faces' interiors agree to rounding; shared from face 0 they keep K symmetric bit for bit
+// and positive, the split form stores one face and still gives the shared matrix's product bit for
+// bit, and the product moves by rounding only.
+void checkSharedFaces() {
+    for (int level = 2; level <= 7; ++level) {
+        const SphereGrid grid = makeSphereGrid(level);
+        const SphereMatrix full = makeLaplacian(grid, makeSphereStencil(grid));
+        SphereMatrix shared = full;
+        const double differ = shareFaceInteriors(shared, grid.side);
+        expect(grid.side >= 5 ? differ >= 0 && differ < 1e-12 : differ < 0, "the faces' interiors differ by more than rounding", differ);
+        double largest = 0;
+        for (int r = 0; r < grid.cells; ++r)
+            for (int e = shared.start[size_t(r)]; e < shared.start[size_t(r) + 1]; ++e) {
+                const int c = shared.column[size_t(e)];
+                const auto row = shared.column.begin() + shared.start[size_t(c)], end = shared.column.begin() + shared.start[size_t(c) + 1];
+                const auto found = std::lower_bound(row, end, r);
+                expect(found != end && *found == r && shared.value[size_t(found - shared.column.begin())] == shared.value[size_t(e)],
+                       "the shared stiffness is not symmetric bit for bit", r);
+                if (c == r) expect(shared.diagonal[size_t(r)] == shared.value[size_t(e)], "the shared diagonal is not the matrix's", r);
+                largest = std::max(largest, std::abs(shared.value[size_t(e)]));
+            }
+        const StencilMatrix split = makeStencilMatrix(shared, grid.side);
+        expect(split.shared == (grid.side >= 5) && split.inner.size() * 6 == size_t(21 * split.interior), "the split form does not share one face",
+               level);
+        const std::vector<double> field = noise(size_t(grid.cells), uint64_t(level + 10));
+        std::vector<double> before, after, splitProduct;
+        applyMatrix(full, field, before);
+        applyMatrix(shared, field, after);
+        applyMatrix(split, field, splitProduct);
+        expect(splitProduct == after, "the shared split product differs from the shared matrix's", level);
+        double moved = 0, energy = 0;
+        for (int c = 0; c < grid.cells; ++c) {
+            moved = std::max(moved, std::abs(after[size_t(c)] - before[size_t(c)]));
+            energy += field[size_t(c)] * after[size_t(c)];
+        }
+        expect(moved < 1e-12 * largest, "sharing the faces moves the product by more than rounding", moved / largest);
+        expect(energy > 0, "the shared stiffness is not positive", energy);
+    }
+}
+
 // K is symmetric bit for bit, zero on constants and positive elsewhere; its Rayleigh quotient on the
 // degree-1 harmonic is the eigenvalue 2 / R².
 void checkStiffness() {
@@ -108,6 +148,7 @@ void checkStiffness() {
         applyMatrix(split, field, splitProduct);
         expect(splitProduct == product, "the split stiffness product differs from the assembled one", level);
     }
+    checkSharedFaces();
 }
 
 // One flux per edge: the area-weighted divergence of any fluxes sums to zero over the closed grid,
