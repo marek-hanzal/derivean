@@ -120,11 +120,12 @@ double cpuSeconds(const timeval& t) { return double(t.tv_sec) + 1e-6 * double(t.
 
 } // namespace
 
-// terra measure fingerprint [--age 1.2e9|4.6e9] [--threads n] [--time 0|1] [--blocks 0|1]
+// terra measure fingerprint [--age 1.2e9|4.6e9] [--threads n] [--time 0|1] [--repeat n] [--blocks 0|1]
 // Builds a fixed set of tiles of seed 42 (river, coast and glaciated country at every level) and
 // prints one hash over every field of each of them and of every tile they were built from. Two
 // builds that print the same lines made the same world to the bit. With --time 1 each target is
-// then replayed once more on the calling thread alone and timed.
+// then replayed on the calling thread alone, --repeat times, and the least wall and user time are
+// printed: on a loaded machine one replay's time says more about the scheduler than the code.
 int measureFingerprint(const Arguments& arguments) {
     const double age = arguments.number("age", 4.6e9);
     Lap lap;
@@ -212,17 +213,24 @@ int measureFingerprint(const Arguments& arguments) {
     // One thread: the replay alone, as the atlas makes it, without the pool a ground tile may use.
     Setting alone = world.atlas.setting();
     alone.workers = nullptr;
+    const int repeats = int(std::max(1.0, std::min(100.0, arguments.number("repeat", 1))));   // each of wall, user, sys is its own least
     for (const auto& [what, key] : targets) {
         const Dependencies needed = requireDependencies(world, key);
-        rusage before{}, after{};
-        getrusage(RUSAGE_SELF, &before);
-        lap();
-        const auto again = replayTile(alone, key, needed.lookup());
-        const double wall = lap();
-        getrusage(RUSAGE_SELF, &after);
-        std::printf("time %-13s level %d  wall %.2f s  user %.2f s  sys %.2f s  %s\n", what.c_str(), int(key.level), wall,
-                    cpuSeconds(after.ru_utime) - cpuSeconds(before.ru_utime), cpuSeconds(after.ru_stime) - cpuSeconds(before.ru_stime),
-                    printOf(*again) == prints.at(key) ? "same" : "DIFFERS");
+        double wall = 1e30, user = 1e30, sys = 1e30;
+        bool same = true;
+        for (int repeat = 0; repeat < repeats; ++repeat) {
+            rusage before{}, after{};
+            getrusage(RUSAGE_SELF, &before);
+            lap();
+            const auto again = replayTile(alone, key, needed.lookup());
+            wall = std::min(wall, lap());
+            getrusage(RUSAGE_SELF, &after);
+            user = std::min(user, cpuSeconds(after.ru_utime) - cpuSeconds(before.ru_utime));
+            sys = std::min(sys, cpuSeconds(after.ru_stime) - cpuSeconds(before.ru_stime));
+            same = same && printOf(*again) == prints.at(key);
+        }
+        std::printf("time %-13s level %d  wall %.2f s  user %.2f s  sys %.2f s  %s\n", what.c_str(), int(key.level), wall, user, sys, same ? "same" : "DIFFERS");
+        std::fflush(stdout);
     }
     return 0;
 }
