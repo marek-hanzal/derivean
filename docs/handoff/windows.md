@@ -102,7 +102,7 @@ Bridge tests (`node --test @napi/test/*.test.cjs`, `.out/windows-port/windows-sc
 
 - macOS: 14 of 15 pass; "the world describes itself and arrives around a player who waits for it" fails ("waiting keeps the player where the world put them"), the bridge's side of the engine check that fails on macOS (section 2).
 - Windows: all 15 pass, `cubes.test.cjs` and `session.test.cjs` together in 1 277 s (`.out/windows-port/windows/napi-rest.log`), `chart.test.cjs` four tests beside the simulation suite and the chart around the player alone on the quiet machine (`chart-alone.log`, 444 s, its Ground tile 102 s after the player stands on land). The macOS failure passes here: the Windows world is another world (section 3). Run beside the simulation suite, the chart around the player reached its 900 s limit waiting for that Ground tile.
-- After that limit the test's wait loop goes on, so the test file's process never ends and `node --test` hangs (twice for hours here). It is a test fault on any platform, filed in section 5.
+- The file's wait loops end on the test's signal at its limit, so a test that runs out of time fails, names what it waited for, and the run ends.
 
 ## 5. Next
 
@@ -110,5 +110,3 @@ Bridge tests (`node --test @napi/test/*.test.cjs`, `.out/windows-port/windows-sc
 2. **A cross-machine check in the tree.** The probe belongs in `terra` (for example `terra digest`), so that the lead compares one line per level from both machines after a merge or a compiler upgrade.
 3. The engine is not bit-identical across machines and was not asked to be: Jolt is built without `cross_platform_deterministic`, and the engine's own floating point is outside the simulation's rule only in the sense that it is not checked. It matters once two machines must agree on a session (shared worlds, replays).
 4. Windows' game window: start `mise run play` through an interactive session on the machine (as Codex's scheduled-task runs do) once the lead allows it.
-5. `@simulation/tool/GroundCommand.cpp:153` reads `tile->now.sediment[Sand]` where `Sand` is the tool's own cover kind 7, not the sediment class: an out-of-bounds read in a diagnostic (clang warns `-Warray-bounds` on both platforms). Not a platform matter; left for the tool's owner.
-6. The bridge tests' wait loops (`while (… !== "ground") { session.advance(…); await sleep(50); }` in `@napi/test/chart.test.cjs`, lines 53, 80 and 91) have no end of their own: when a test reaches its timeout, `node:test` reports it and the loop keeps the process alive, so the run never finishes. Stopping each loop on the test context's `signal` ends the file. Not a platform matter; for the bridge's owner.
