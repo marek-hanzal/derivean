@@ -6,6 +6,8 @@
 #include "relief/type/City.hpp"
 #include "volcanic/fn/Volcanic.hpp"
 
+#include <optional>
+
 namespace derivean::sim {
 namespace {
 
@@ -95,7 +97,9 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
     const float middle = std::max(0.0f, ground.datum - float(bottom + 0.5 * count * step));
     const bool cut = (setting.ore.veining != 0 || setting.ore.pipeRadius != 0) &&
                      nearCuttingRock(setting.seed, setting.ore, material, middle, float(0.35 * 0.5 * count * step + 1.0));
-    VeinColumn veins{material};   // the veins every point of the column is asked about
+    // The veins every point of the column is asked about; made only where one passes near.
+    std::optional<VeinColumn> veins;
+    if (cut) veins.emplace(VeinColumn{material});
     const float bare = float(1.0 - smoothstep(0.5 * BareCover, BareCover, loose));
     // Beds stand back from a face that is open to the weather: bare here and bare at its foot. A
     // steep rock surface buried in its own waste has no face.
@@ -210,7 +214,7 @@ void formColumn(const FormSetting& setting, const GroundLattice& lattice, float 
                     result = layer.rock;
                 }
                 if (cut) {
-                    const Material body = cuttingRock(setting.seed, setting.ore, veins, depth, laidDown);
+                    const Material body = cuttingRock(setting.seed, setting.ore, *veins, depth, laidDown);
                     if (body != Material::Air) result = body;
                 }
                 if (plug != Material::Air) result = bare > 0.5f && neckOpen(setting.seed, neck, x, y, z, (ground.rock - y) / neckSlope, float(step)) ? Material::Air : plug;
