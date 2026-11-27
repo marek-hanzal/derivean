@@ -8,20 +8,29 @@ struct Planet;
 
 Ocean fillOcean(const Planet& planet, double age);
 
-// Adds an opening; what has gathered is integrated first, since it ran without it.
-void openVoid(Ocean& ocean, const VoidOpening& opening);
+// The deepest cell of the body holding the most water: the ocean is known by it, not by the
+// deepest cell of the planet, which may lie in a small cut-off pit.
+int32_t anchorOf(const Ocean& ocean);
 
-// Lets `seconds` pass for the openings: orifice flow under the water column above each mouth,
-// integrated exactly between the heights at which the wet area or the connection changes. Time is
-// gathered and integrated a day at a time: a tick drains less than the stock can resolve, so
-// ticks integrated one by one would drift. `settleOcean` integrates what has gathered at once;
-// call it before reading the sea for a budget.
+// Cuts a strait; what has gathered is integrated first, since it ran without it. Refused (false)
+// for ends that coincide or lie off the grid, a throat with no area, and on a grid that drains
+// across its rim, where water could leave the bodies.
+bool openStrait(Ocean& ocean, const Strait& strait);
+
+// Lets `seconds` pass for the straits: orifice flow from the upper body into the lower, integrated
+// exactly between the moments the wet areas, the bodies or the outflow change. Time is gathered and
+// integrated a day at a time: a tick moves less than the stocks can resolve, so ticks integrated
+// one by one would drift. `settleOcean` integrates what has gathered at once; call it before
+// reading the sea for a budget.
 void drainOcean(Ocean& ocean, double seconds);
 void settleOcean(Ocean& ocean);
 
+// True once a strait has moved any water: until then every body is as the planet left it.
+bool seaMoved(const Ocean& ocean);
+
 Tally stockOf(const WaterGrid& grid);
 
-// Bodies by falling volume. With no opening, `seaBodies(ocean)[0]` is the world ocean.
+// Bodies by falling volume; the world ocean is the one flagged `ocean`.
 std::vector<SeaBody> seaBodies(const Ocean& ocean);
 
 // What the air and the landscape may read. Planet cell indices wrap.

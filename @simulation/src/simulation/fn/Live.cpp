@@ -78,9 +78,9 @@ void overlayLive(const World& world, Vec2 position, SurfaceSample& sample) {
         return;
     }
     // Sea over untouched ground stands at the level its tile was built for. The sea only moves once
-    // an opening drains it; live tiles follow it by themselves.
+    // a strait carries water between bodies; live tiles follow it by themselves.
     const float built = float(world.ocean.pristineLevel);
-    if (world.ocean.openings.empty() || sample.water <= sample.ground || sample.water > built + 0.5f || editedTile(world, tileAt(Level::Site, position))) return;
+    if (!seaMoved(world.ocean) || sample.water <= sample.ground || sample.water > built + 0.5f || editedTile(world, tileAt(Level::Site, position))) return;
     const float now = float(seaLevelNear(world.ocean, planetPoint(world.options.seed, position)));
     if (std::abs(now - built) > 1e-3f) sample.water = now > sample.ground ? now : sample.ground - 1.0f;
 }

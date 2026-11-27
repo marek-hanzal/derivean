@@ -1,63 +1,35 @@
 #include "hydrology/fn/Ocean.hpp"
 
+#include "hydrology/fn/Strait.hpp"
 #include "hydrology/fn/Water.hpp"
 #include "planet/type/Planet.hpp"
 
+#include <algorithm>
 #include <map>
 
 namespace derivean::sim {
 namespace {
 
 constexpr double Gathered = 86400.0;   // s that must gather before the sea is integrated
-constexpr double FirstRound = 3600.0;  // s, and longest round: openings in different places take turns
+constexpr double FirstRound = 3600.0;  // s, and longest round: throats in different places take turns
 constexpr double LongestRound = 3.15576e7;
 
-// One opening for `seconds`. Head h over the mouth falls as dh/dt = −C·A·√(2gh) / (wet area), and
-// the wet area is constant between the heights of two cells, so √h falls linearly in each such
-// slice. When the surface reaches the saddle a basin's children met at, the basin is empty and the
-// child the opening lies in carries on alone: the other child keeps what it holds.
-void drainThrough(Ocean& ocean, const VoidOpening& opening, double seconds) {
-    const BasinTree& tree = ocean.basins;
-    const double mouth = std::max(opening.mouth, double(tree.height[size_t(opening.cell)]));
-    const double pull = OrificeCoefficient * opening.area * std::sqrt(2 * Gravity);
-    for (double left = seconds; left > 0;) {
-        // The surface over the opening belongs to the topmost basin above it holding water of its own.
-        int32_t holder = -1;
-        for (int32_t id = tree.basinOf[size_t(opening.cell)]; id > 0; id = tree.basins[size_t(id)].parent)
-            if (ocean.lakes.own[size_t(id)] > 0) holder = id;
-        if (holder < 0) return;
-        const Basin& basin = tree.basins[size_t(holder)];
-        const auto heightOf = [&](int32_t member) { return double(tree.height[size_t(tree.members[size_t(basin.first + member)])]); };
-        double level = levelOf(tree, holder, ocean.lakes.own[size_t(holder)]);
-        if (level <= basin.base) {
-            // Less than the level can show is left above the saddle; the basin is empty.
-            ocean.lakes.own[size_t(holder)] = 0;
-            continue;
-        }
-        const double floor = std::max(basin.base, mouth);
-        if (level <= floor) return;
-        int32_t wet = 0;
-        while (wet < basin.count && heightOf(wet) < level) ++wet;
-        while (left > 0 && level > floor) {
-            const double bottom = std::max(floor, wet > 0 ? heightOf(wet - 1) : basin.base);
-            const double pace = pull / (2.0 * double(basin.below + wet) * tree.area);   // fall of √h per second
-            const double from = std::sqrt(level - mouth), to = std::sqrt(bottom - mouth);
-            if ((from - to) / pace >= left) {
-                const double root = from - left * pace;
-                level = mouth + root * root;
-                left = 0;
-                break;
-            }
-            left -= (from - to) / pace;
-            level = bottom;
-            if (wet > 0 && heightOf(wet - 1) >= level) --wet;
-        }
-        ocean.lakes.own[size_t(holder)] = level <= basin.base ? 0.0 : std::min(ocean.lakes.own[size_t(holder)], volumeOf(tree, holder, level));
-        if (level > basin.base) return;
-    }
-}
-
 } // namespace
+
+int32_t anchorOf(const Ocean& ocean) {
+    std::map<int32_t, double> held;
+    const auto lakeOf = [&](size_t cell) { return ocean.lakes.lakeOf[size_t(ocean.basins.basinOf[cell])]; };
+    for (size_t cell = 0; cell < ocean.grid.cells(); ++cell)
+        if (ocean.grid.depth[cell] > 0) held[lakeOf(cell)] += ocean.grid.depth[cell] * ocean.basins.area;
+    int32_t largest = 0;
+    double most = 0;
+    for (const auto& entry : held)
+        if (entry.second > most) most = entry.second, largest = entry.first;
+    int32_t anchor = -1;
+    for (size_t cell = 0; cell < ocean.grid.cells(); ++cell)
+        if (ocean.grid.depth[cell] > 0 && lakeOf(cell) == largest && (anchor < 0 || ocean.grid.depth[cell] > ocean.grid.depth[size_t(anchor)])) anchor = int32_t(cell);
+    return anchor;
+}
 
 Ocean fillOcean(const Planet& planet, double age) {
     Ocean ocean;
@@ -81,25 +53,36 @@ Ocean fillOcean(const Planet& planet, double age) {
     ocean.initial = stockOf(grid);
     WaterFlows unused;
     ocean.lakes = settle(grid, ocean.basins, {}, unused);
+    ocean.anchor = anchorOf(ocean);
     return ocean;
 }
 
 namespace {
 
-// Openings side by side act as one throat.
-std::vector<VoidOpening> throatsOf(const Ocean& ocean) {
-    std::vector<VoidOpening> throats;
-    for (const VoidOpening& opening : ocean.openings) {
-        const double mouth = std::max(opening.mouth, double(ocean.basins.height[size_t(opening.cell)]));
-        const auto same = std::find_if(throats.begin(), throats.end(), [&](const VoidOpening& other) { return other.cell == opening.cell && other.mouth == mouth; });
-        if (same == throats.end()) throats.push_back({opening.cell, opening.area, mouth});
-        else same->area += opening.area;
+// Straits between the same two cells with the same effective sill act as one throat. The throat
+// starts and ends on the ground of its ends, so its highest point is never under either of them.
+std::vector<Throat> throatsOf(const Ocean& ocean) {
+    std::vector<Throat> throats;
+    const std::vector<float>& height = ocean.basins.height;
+    for (size_t index = 0; index < ocean.straits.size(); ++index) {
+        Strait strait = ocean.straits[index];
+        strait.sill = std::max({strait.sill, double(height[size_t(strait.a)]), double(height[size_t(strait.b)])});
+        const auto same = std::find_if(throats.begin(), throats.end(), [&](const Throat& throat) {
+            const Strait& way = throat.way;
+            return way.sill == strait.sill && std::min(way.a, way.b) == std::min(strait.a, strait.b) && std::max(way.a, way.b) == std::max(strait.a, strait.b);
+        });
+        if (same == throats.end()) {
+            throats.push_back({strait, {index}});
+        } else {
+            same->way.area += strait.area;
+            same->straits.push_back(index);
+        }
     }
     return throats;
 }
 
 // Throats in different places may share a sea, and then take turns in rounds. The rounds are fixed
-// in time: the first ends an hour after the newest opening was made, each later one is as long as
+// in time: the first ends an hour after the newest strait was cut, each later one is as long as
 // all before it together, up to a year. Fixed rounds make the turns the same however time is fed
 // in; taking turns is first order in the round and exact only where the throats share no sea.
 double roundEnd(const Ocean& ocean) {
@@ -109,34 +92,23 @@ double roundEnd(const Ocean& ocean) {
     return ocean.opened + (std::floor(age / length) + 1.0) * length;
 }
 
-// Integrates gathered time: all of it when `all`, else only the rounds that have ended.
+// Integrates gathered time: all of it when `all`, else only the rounds that have ended. Each round
+// reads the surfaces again, so a throat sees what the one before it left.
 void integrate(Ocean& ocean, bool all) {
     const double target = ocean.seconds + ocean.pending;
-    const std::vector<VoidOpening> throats = throatsOf(ocean);
+    const std::vector<Throat> throats = throatsOf(ocean);
     const double before = ocean.seconds;
+    Exchange exchange;
+    if (!throats.empty()) exchange = openExchange(ocean);
     while (ocean.seconds < target) {
         const double end = throats.size() < 2 ? target : std::min(target, roundEnd(ocean));
         if (end >= target && !all && throats.size() > 1 && roundEnd(ocean) > target) break;
-        for (const VoidOpening& throat : throats) drainThrough(ocean, throat, end - ocean.seconds);
+        for (const Throat& throat : throats) flowThrough(ocean, exchange, throat, end - ocean.seconds);
         ocean.seconds = end;
     }
     ocean.pending = target - ocean.seconds;
     if (throats.empty() || ocean.seconds == before) return;
-    refreshLakes(ocean.basins, ocean.lakes);
-    // Water leaves mixed, so what stays keeps its strength. A cell whose depth did not change is
-    // left exactly as it was: a sea nothing drains must not drift by rounding.
-    WaterGrid& grid = ocean.grid;
-    const double area = ocean.basins.area;
-    for (size_t cell = 0; cell < grid.cells(); ++cell) {
-        const double was = grid.depth[cell];
-        const double now = std::max(0.0, ocean.lakes.level[size_t(ocean.basins.basinOf[cell])] - double(grid.ground[cell]));
-        if (was <= 0 || now >= was * (1.0 - 1e-12)) continue;
-        const double kept = grid.salt[cell] * now / was;
-        ocean.escaped.water += (was - now) * area;
-        ocean.escaped.salt += (grid.salt[cell] - kept) * area;
-        grid.depth[cell] = now;
-        grid.salt[cell] = kept;
-    }
+    closeExchange(ocean, exchange);
 }
 
 } // namespace
@@ -148,10 +120,24 @@ void drainOcean(Ocean& ocean, double seconds) {
 
 void settleOcean(Ocean& ocean) { integrate(ocean, true); }
 
-void openVoid(Ocean& ocean, const VoidOpening& opening) {
+bool openStrait(Ocean& ocean, const Strait& strait) {
+    const int32_t cells = int32_t(ocean.grid.cells());
+    if (strait.a == strait.b || strait.a < 0 || strait.b < 0 || strait.a >= cells || strait.b >= cells || !(strait.area > 0)) return false;
+    // Water poured on a grid that drains across its rim could leave it; a strait must only move water
+    // between bodies. The planet grid has no rim.
+    const BasinTree& tree = ocean.basins;
+    for (const Basin& basin : tree.basins)
+        if (basin.parent == 0) return false;
+    if (tree.leafOf[size_t(strait.a)] <= 0 || tree.leafOf[size_t(strait.b)] <= 0) return false;
     settleOcean(ocean);
-    ocean.openings.push_back(opening);
+    ocean.straits.push_back(strait);
+    ocean.moved.push_back({});
     ocean.opened = ocean.seconds;
+    return true;
+}
+
+bool seaMoved(const Ocean& ocean) {
+    return std::any_of(ocean.moved.begin(), ocean.moved.end(), [](const Tally& moved) { return moved.water != 0; });
 }
 
 std::vector<SeaBody> seaBodies(const Ocean& ocean) {
@@ -166,8 +152,13 @@ std::vector<SeaBody> seaBodies(const Ocean& ocean) {
         body.stock.salt += ocean.grid.salt[cell] * area;
         ++body.cells;
     }
-    for (const VoidOpening& opening : ocean.openings)
-        if (ocean.grid.depth[size_t(opening.cell)] > 0) byLake[lakeOf(size_t(opening.cell))].draining = true;
+    for (const Throat& throat : throatsOf(ocean)) {
+        const auto wet = [&](int32_t end) { return ocean.grid.depth[size_t(end)] > 0; };
+        if (wet(throat.way.a)) ++byLake[lakeOf(size_t(throat.way.a))].straits;
+        if (wet(throat.way.b) && !(wet(throat.way.a) && lakeOf(size_t(throat.way.a)) == lakeOf(size_t(throat.way.b))))
+            ++byLake[lakeOf(size_t(throat.way.b))].straits;
+    }
+    if (ocean.anchor >= 0 && ocean.grid.depth[size_t(ocean.anchor)] > 0) byLake[lakeOf(size_t(ocean.anchor))].ocean = true;
     std::vector<SeaBody> bodies;
     for (const auto& entry : byLake) bodies.push_back(entry.second);
     std::stable_sort(bodies.begin(), bodies.end(), [](const SeaBody& a, const SeaBody& b) { return a.stock.water > b.stock.water; });

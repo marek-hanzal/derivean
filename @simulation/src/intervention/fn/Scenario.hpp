@@ -76,7 +76,8 @@ ScenarioReport runLakeCascade(World& world, const StreamSite& site);
 ScenarioReport runDiversion(World& world, const StreamSite& site, double years);
 
 // ScenarioOcean.cpp
-// A shaft is opened in the deepest floor of the world ocean and widens to a breach.
-ScenarioReport runOceanDrain(World& world);
+// A strait is cut from the deepest floor of the world ocean to the lowest closed depression above
+// its surface. Water does not run uphill: nothing moves, and the bodies stay as they were.
+ScenarioReport runStrait(World& world);
 
 } // namespace derivean::sim

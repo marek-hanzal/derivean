@@ -11,7 +11,8 @@ enum class EditKind : uint8_t {
     Lower,   // cut the ground down to the stroke's height where it stands above it
     Raise,   // build it up to the stroke's height where it lies below it
     Level,   // both
-    Void,    // open a passage from the sea bed at `from` down into the void
+    Strait,  // cut a channel with its bed at `heightFrom` between the planet cells under `from` and `to`;
+             // ends in one cell (closer than a planet cell) cut nothing, and the edit stays in history
     Deposit, // lay rock and loose material, and let the ground founder, by the cells of a grid
 };
 
@@ -42,9 +43,9 @@ struct Edit {
     EditKind kind{EditKind::Lower};
     Vec2 from, to;                     // m
     double width{};                    // m
-    double heightFrom{}, heightTo{};   // m; for Void, heightFrom is the elevation of the mouth
+    double heightFrom{}, heightTo{};   // m; for Strait, heightFrom is its bed
     SedimentClass fill{Sand};          // what a raise is built of
-    double area{};                     // m², throat of a void opening
+    double area{};                     // m², throat of a strait
     std::shared_ptr<const Deposit> deposit;   // for Deposit; shared, as a replayed history copies its edits
 };
 
@@ -63,8 +64,8 @@ inline Edit watch(Vec2 at) {
     return {0.0, EditKind::Raise, at, at, 0.0, -1e30, -1e30, Sand, 0.0};
 }
 
-inline Edit voidOpening(Vec2 at, double area, double mouth) {
-    return {0.0, EditKind::Void, at, at, 0.0, mouth, mouth, Sand, area};
+inline Edit strait(Vec2 from, Vec2 to, double area, double sill) {
+    return {0.0, EditKind::Strait, from, to, 0.0, sill, sill, Sand, area};
 }
 
 // The rectangle of the grid, `from` and `to` its corners.

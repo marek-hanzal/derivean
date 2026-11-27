@@ -23,6 +23,13 @@ void refreshLakes(const BasinTree& tree, Lakes& lakes);
 // every lake ends mixed.
 Lakes settle(WaterGrid& grid, const BasinTree& tree, std::vector<Tally> parcels, WaterFlows& flows);
 
+// The way `settle` pours, for water entering at one leaf: a full basin passes it up into its
+// parent once its sibling is full too, otherwise across its saddle. `pourTarget` is the first
+// basin with room, 0 when the water would leave the grid; `pour` adds `volume` to `own` and
+// returns what left the grid.
+int32_t pourTarget(const BasinTree& tree, const std::vector<double>& own, int32_t leaf);
+double pour(const BasinTree& tree, std::vector<double>& own, int32_t leaf, double volume);
+
 // Steady.cpp — the quiet solver: what `years` of river inflow and `climateYears` of rain, runoff
 // and evaporation leave behind once the water has come to rest.
 Lakes fillAndSpill(WaterGrid& grid, const BasinTree& tree, double years, double climateYears, WaterFlows& flows);

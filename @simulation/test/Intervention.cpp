@@ -7,45 +7,38 @@ using namespace derivean::sim;
 
 namespace {
 
-// A finite ocean with a hole in its floor: the stock falls, what is lost is in the ledger, and
-// seas behind sills are left behind with their water and their salt.
+// The planet's ocean is a finite stock in bodies that straits connect. A strait from the ocean to
+// a dry depression above it moves nothing: water does not climb. The fixtures in HydrologySea.cpp
+// and HydrologyStrait.cpp carry the flow itself, since the planet's sea fills everything under its
+// level until S3e and so has no dry depression under it.
 void testOcean(World& world) {
-    const ScenarioReport report = runOceanDrain(world);
+    const ScenarioReport report = runStrait(world);
+    expectLive(report.failure.empty() && report.stages.size() == 3, "the strait scenario did not run", double(report.stages.size()));
     expectClosed(report);
     const auto value = [&](size_t stage, const char* measure) { return valueOf(report, stage, measure); };
     const WorldBudget& start = report.stages[0].budget;
-    const WorldBudget& shaft = report.stages[1].budget;
-    const WorldBudget& breach = report.stages[2].budget;
-    const WorldBudget& last = report.stages[3].budget;
-    expectLive(start.escaped.water == 0 && start.ocean.water > 0.99 * world.planet.surfaceWater && start.ocean.water < 1.01 * world.planet.surfaceWater,
+    const WorldBudget& last = report.stages[2].budget;
+    expectLive(start.ocean.water > 0.99 * world.planet.surfaceWater && start.ocean.water < 1.01 * world.planet.surfaceWater,
                "the ocean does not start as the planet's surface water", start.ocean.water / world.planet.surfaceWater);
     expectLive(std::abs(start.ocean.salt / start.ocean.water - world.ocean.salinity) < 1e-9 && world.ocean.salinity > 20 && world.ocean.salinity < 36, "the ocean's salinity is off", world.ocean.salinity);
-
-    // A century through a mine shaft: the head hardly changes, so the loss is the orifice law.
-    const double expected = OrificeCoefficient * 100.0 * std::sqrt(2 * Gravity * value(1, "head over the mouth")) * 100 * YearSeconds;
-    expectLive(std::abs(shaft.escaped.water - expected) < 0.01 * expected, "the shaft does not drain by the orifice law", shaft.escaped.water / expected);
-    expectLive(value(1, "sea level") < value(0, "sea level") - 0.05 && value(1, "sea level") > value(0, "sea level") - 1.0, "a century of the shaft did not lower the sea by decimetres");
-    expectLive(std::abs(shaft.escaped.salt / shaft.escaped.water - world.ocean.salinity) < 1e-9, "water left without its salt");
-
-    // The breach: the sea falls past sills, and what lies behind them stays.
-    expectLive(breach.ocean.water < 0.8 * shaft.ocean.water && last.ocean.water < breach.ocean.water, "the breach does not drain the ocean");
-    expectLive(value(2, "cut-off seas") >= 1 && breach.cutOff.water > 0 && last.cutOff.water >= breach.cutOff.water * (1 - 1e-12), "no sea was cut off behind a sill");
-    expectLive(std::abs(last.cutOff.salt / last.cutOff.water - world.ocean.salinity) < 1e-9, "the cut-off seas changed their salinity");
-    expectLive(value(3, "head over the mouth") < 1e-6 && last.ocean.water < 1e-3 * start.ocean.water, "the connected ocean did not drain to the opening", value(3, "head over the mouth"));
-    expectLive(last.cutOff.water > 1e-4 * start.ocean.water, "nothing worth the name was left behind the sills", last.cutOff.water / start.ocean.water);
-    // What depended on the water changes with it: the open water the air can draw on shrinks.
-    expectLive(value(3, "open water cells") < 0.95 * value(0, "open water cells"), "the open water did not shrink");
+    expectLive(value(0, "depression above the sea") > 0, "the depression does not lie above the sea", value(0, "depression above the sea"));
+    expectLive(world.ocean.straits.size() == 1 && world.ocean.straits[0].a == world.ocean.anchor, "the strait does not start at the ocean's anchor");
+    expectLive(last.moved.water == 0 && !seaMoved(world.ocean), "water climbed through the strait", last.moved.water);
+    expectLive(last.ocean.water == start.ocean.water && last.others.water == start.others.water && value(2, "sea level") == value(0, "sea level"), "the bodies changed");
+    expectLive(value(2, "open water cells") == value(0, "open water cells"), "the open water changed");
     int open = 0;
     for (int z = 0; z < PlanetCells; ++z)
         for (int x = 0; x < PlanetCells; ++x) open += openWaterAt(world.ocean, x, z);
-    expectLive(open == int(value(3, "open water cells")), "the open-water accessor disagrees with the sea");
+    expectLive(open == int(value(2, "open water cells")), "the open-water accessor disagrees with the sea");
 
     // The same history replayed in one jump ends in the same sea.
-    const double escaped = world.ocean.escaped.water, now = world.interventions.calendar.seconds;
+    const std::vector<double> depth = world.ocean.grid.depth, salt = world.ocean.grid.salt;
+    const double now = world.interventions.calendar.seconds;
     jumpTo(world, 0);
-    expectLive(world.ocean.escaped.water == 0 && world.interventions.calendar.seconds == 0, "a jump back to the start left the sea drained");
+    // The strait was cut at the start, so it is cut again there.
+    expectLive(world.interventions.calendar.seconds == 0 && world.ocean.straits.size() == 1 && !seaMoved(world.ocean) && world.ocean.grid.depth == depth, "a jump back to the start did not rebuild the untouched sea");
     jumpTo(world, now);
-    expectLive(std::abs(world.ocean.escaped.water - escaped) <= Closed * escaped, "the replayed sea differs", world.ocean.escaped.water - escaped);
+    expectLive(world.ocean.straits.size() == 1 && world.ocean.grid.depth == depth && world.ocean.grid.salt == salt, "the replayed sea differs");
 }
 
 // The cascade: an upper lake is let into a lower one, which reaches its sill and floods a third.

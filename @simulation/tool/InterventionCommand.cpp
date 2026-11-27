@@ -24,9 +24,10 @@ void printTally(const ScenarioReport& report, const char* unit, double Tally::*p
     for (const ScenarioStage& stage : report.stages) std::printf(" %15.15s", stage.label.c_str());
     std::printf("\n");
     row(report, "ocean", [&](const WorldBudget& b) { return b.ocean.*part; });
-    row(report, "cut-off seas", [&](const WorldBudget& b) { return b.cutOff.*part; });
-    row(report, "escaped to the void", [&](const WorldBudget& b) { return b.escaped.*part; });
-    row(report, "  sum of the three", [&](const WorldBudget& b) { return b.ocean.*part + b.cutOff.*part + b.escaped.*part; }, " %15.12g");
+    row(report, "other bodies", [&](const WorldBudget& b) { return b.others.*part; });
+    row(report, "  ocean and others", [&](const WorldBudget& b) { return b.ocean.*part + b.others.*part; }, " %15.12g");
+    row(report, "moved between bodies", [&](const WorldBudget& b) { return b.moved.*part; });
+    row(report, "  unbooked share", [&](const WorldBudget& b) { return b.unbooked.*part; });
     row(report, "on live tiles", [&](const WorldBudget& b) { return b.live.*part; }, " %15.9g");
     row(report, "  adopted with the tiles", [&](const WorldBudget& b) { return b.adopted.*part; }, " %15.9g");
     row(report, "  + rivers in", [&](const WorldBudget& b) { return b.flows.inflow.*part; }, " %15.9g");
@@ -92,7 +93,7 @@ int interventionCommand(const std::string& scenario, const Arguments& arguments)
         return seconds;
     };
     if (scenario == "ocean" || scenario == "all") {
-        printReport(runOceanDrain(world));
+        printReport(runStrait(world));
         std::printf("ran in %.3f s\n", lap());
     }
     if (scenario == "ocean") return 0;
