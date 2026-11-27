@@ -238,6 +238,19 @@ Haurwitz, B. (1940). The motion of atmospheric disturbances on the spherical Ear
 - **Model:** the wave of wavenumber 4 as an exact solution of the non-divergent barotropic vorticity equation, turning at ν = (R(3 + R) ω − 2Ω) / ((1 + R)(2 + R)) (Williamson et al. 1992, eq. 136 of the ORNL/TM-11895 report).
 - **Checked by:** `@simulation/test/AtmosphereSphereFixture.hpp:57`, `@simulation/test/AtmosphereSphereFlow.cpp:55`, `@simulation/test/AtmosphereSphereStep.cpp:79`; `docs/handoff/atmosphere-sphere.md:102`.
 
+### Phillips 1954; Stone 1978: the supercriticality of a two-layer atmosphere
+Phillips, N. A. (1954). Energy transformations and meridional circulations associated with simple baroclinic waves in a two-level, quasi-geostrophic model. *Tellus* 6(3), 273–286. doi:10.1111/j.2153-3490.1954.tb01123.x
+Stone, P. H. (1978). Baroclinic adjustment. *Journal of the Atmospheric Sciences* 35(4), 561–571. https://ntrs.nasa.gov/citations/19780052267
+- **Model:** a two-layer atmosphere turns a meridional temperature gradient into baroclinic eddies once it passes a critical value (Phillips); the gradient's distance past it, its supercriticality, scales with f / β = a tan φ (Stone), so the same contrast is stable in the tropics and stormy in mid-latitudes. `storminess` takes the gradient times tan φ between a calm and a full contrast of its own (`climate/fn/Zonal.cpp`), a tuned ramp on that measure, not either paper's numbers.
+- **Used in:** `@simulation/src/climate/type/Climate.hpp:51` (cited by its idea only), `@simulation/src/climate/fn/Zonal.cpp:53`, `@simulation/src/atmosphere/fn/Season.cpp:57`; on the sphere `@simulation/src/atmosphere/fn/SphereSeason.hpp:21`, `@simulation/src/atmosphere/fn/SphereSeason.cpp:90`.
+- **Checked by:** `@simulation/test/AtmosphereSphereSeason.cpp:149` (a band's growth is EddyGrowth · storminess of its centred gradient, the polar bands' of half of it).
+
+### Holton and Hakim 2012: the thermal wind
+Holton, J. R., Hakim, G. J. (2012). *An Introduction to Dynamic Meteorology*, 5th edition. Academic Press (International Geophysics 88), section 3.4. ISBN 978-0-12-384866-6. https://shop.elsevier.com/books/an-introduction-to-dynamic-meteorology/holton/978-0-12-384866-6
+- **Model:** the vertical shear of the geostrophic wind is proportional to the horizontal temperature gradient, westerly where the air cools poleward. The flat world's season (`atmosphere/fn/Season.cpp:64`) and the sphere's take it as 12 m/s per °C per degree of poleward cooling times sin 2|φ|, at most 12 m/s, a tuned scale rather than the relation's own constants.
+- **Used in:** `@simulation/src/atmosphere/fn/Season.cpp:64`; on the sphere `@simulation/src/atmosphere/fn/SphereSeason.hpp:23`, `@simulation/src/atmosphere/fn/SphereSeason.cpp:92`.
+- **Checked by:** `@simulation/test/AtmosphereSphereSeason.cpp:148` (0.5 °C per degree shears 6 m/s at 45°), `:156` (four times as steep, held at the limit).
+
 ## Snow (approved, not yet written)
 
 ### Sturm et al. 2010: bulk density of snow
