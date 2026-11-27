@@ -1,7 +1,9 @@
+// 264 lines, kept whole: one plume, from its sources through the air to the ground and the snow.
 #include "atmosphere/fn/Kernels.hpp"
 
 #include "core/service/Workers.hpp"
 
+#include <atomic>
 
 namespace derivean::sim {
 namespace {
@@ -25,6 +27,7 @@ constexpr double BuryingSnow = 5.0;     // kg/m² of fresh snow that hides the a
 // (Heat.cpp), and without a floor a trace buried ever deeper would lie on until the exponent underflowed.
 constexpr double TraceAsh = 1e-9;
 constexpr int Carriers = 3 * PlumeLevels;
+constexpr int RowGrain = 16;   // rows per task of settling and soot
 
 double sum(const Field<double>& field) {
     double all = 0;
@@ -103,7 +106,8 @@ void emit(Atmosphere& atmosphere, const AirSource& source, double seconds) {
 
 // Dust settles from level to level and to the ground, gas turns into veil, the veil thins out,
 // and rain takes down what the two lower bands hold. The same pass measures what is left overhead.
-void settle(Atmosphere& atmosphere) {
+// Rows are worked side by side; the totals are then summed cell by cell in the order of a single sweep.
+void settle(Atmosphere& atmosphere, Workers& workers) {
     Plume& plume = atmosphere.plume;
     double falling[PlumeLevels], turning[PlumeLevels], thinning[PlumeLevels];
     for (int level = 0; level < PlumeLevels; ++level) {
@@ -111,48 +115,64 @@ void settle(Atmosphere& atmosphere) {
         turning[level] = 1.0 - std::exp(-AirStep / (Conversion[level] * DaySeconds));
         thinning[level] = 1.0 - std::exp(-AirStep / (VeilLife[level] * DaySeconds));
     }
-    double ashFallen = 0, sulphurFallen = 0, left = 0;
+    // What each cell put down this step, kept for the sums, in the first carrier's transport space:
+    // settling follows the transport, which allocated it, and every transport writes its output
+    // whole before reading it and never reads the slope of a cloud field.
+    std::vector<double>& ashOf = plume.work[0].cells;
+    std::vector<double>& sulphurOf = plume.work[1].cells;
+    workers.parallelFor(AirCells, [&](int begin, int end) {
+        for (size_t cell = size_t(begin) * AirCells; cell < size_t(end) * AirCells; ++cell) {
+            const double rain = (atmosphere.rainRate.cells[cell] + atmosphere.snowRate.cells[cell]) * AirStep;
+            const double washed = rain > 0 ? 1.0 - std::exp(-Washing * rain) : 0.0;
+            double ash = 0, sulphur = 0, dustOver = 0, veilOver = 0, arriving = 0, sinking = 0, low = 0;
+            for (int level = PlumeLevels - 1; level >= 0; --level) {
+                const size_t at = size_t(level);
+                double dust = plume.dust[at].cells[cell] + arriving, gas = plume.gas[at].cells[cell], veil = plume.veil[at].cells[cell] + sinking;
+                const double out = level <= Middle ? washed : 0.0;
+                const double turned = gas * turning[level];
+                gas -= turned;
+                veil += turned;
+                const double gasDown = gas * out, veilGone = veil * (out + (1.0 - out) * thinning[level]);
+                const double dustDown = dust * out, dustFalling = (dust - dustDown) * falling[level];
+                plume.dust[at].cells[cell] = dust = dust - dustDown - dustFalling;
+                plume.gas[at].cells[cell] = gas = gas - gasDown;
+                plume.veil[at].cells[cell] = veil = veil - veilGone;
+                arriving = level > Low ? dustFalling : 0.0;
+                sinking = level == PlumeLevels - 1 ? veilGone : 0.0;
+                ash += dustDown + (level == Low ? dustFalling : 0.0);
+                sulphur += gasDown + (level == PlumeLevels - 1 ? 0.0 : veilGone);
+                dustOver += dust;
+                veilOver += veil;
+                if (level == Low) low = AshOptics * dust + VeilOptics * veil;
+            }
+            plume.dustFallen.cells[cell] += ash;
+            plume.fallen.cells[cell] += ash;
+            plume.fallRate.cells[cell] += ash / AirStep;
+            ashOf[cell] = ash, sulphurOf[cell] = sulphur;
+            const double ashDepth = AshOptics * dustOver, veilDepth = VeilOptics * veilOver;
+            plume.depth.cells[cell] = ashDepth + veilDepth;
+            plume.lowDepth.cells[cell] = low;
+            // 1 − e⁻⁰ is +0 for either zero.
+            const double ashShare = ashDepth == 0 ? 0.0 : 1.0 - std::exp(-ashDepth), veilShare = veilDepth == 0 ? 0.0 : 1.0 - std::exp(-veilDepth);
+            plume.dimming.cells[cell] = 1.0 - (1.0 - AshDim * ashShare) * (1.0 - VeilDim * veilShare);
+        }
+    }, RowGrain);
+    double ashFallen = 0, sulphurFallen = 0, left = 0, haze = 0, gasOf[PlumeLevels] = {};
     for (size_t cell = 0; cell < plume.fallen.size(); ++cell) {
-        const double rain = (atmosphere.rainRate.cells[cell] + atmosphere.snowRate.cells[cell]) * AirStep;
-        const double washed = rain > 0 ? 1.0 - std::exp(-Washing * rain) : 0.0;
-        double ash = 0, sulphur = 0, dustOver = 0, veilOver = 0, arriving = 0, sinking = 0, low = 0;
         for (int level = PlumeLevels - 1; level >= 0; --level) {
             const size_t at = size_t(level);
-            double dust = plume.dust[at].cells[cell] + arriving, gas = plume.gas[at].cells[cell], veil = plume.veil[at].cells[cell] + sinking;
-            const double out = level <= Middle ? washed : 0.0;
-            const double turned = gas * turning[level];
-            gas -= turned;
-            veil += turned;
-            const double gasDown = gas * out, veilGone = veil * (out + (1.0 - out) * thinning[level]);
-            const double dustDown = dust * out, dustFalling = (dust - dustDown) * falling[level];
-            plume.dust[at].cells[cell] = dust = dust - dustDown - dustFalling;
-            plume.gas[at].cells[cell] = gas = gas - gasDown;
-            plume.veil[at].cells[cell] = veil = veil - veilGone;
-            arriving = level > Low ? dustFalling : 0.0;
-            sinking = level == PlumeLevels - 1 ? veilGone : 0.0;
-            ash += dustDown + (level == Low ? dustFalling : 0.0);
-            sulphur += gasDown + (level == PlumeLevels - 1 ? 0.0 : veilGone);
-            dustOver += dust;
-            veilOver += veil;
-            if (level == Low) low = AshOptics * dust + VeilOptics * veil;
-            left += dust + gas + veil;
+            const double gas = plume.gas[at].cells[cell];
+            left += plume.dust[at].cells[cell] + gas + plume.veil[at].cells[cell];
+            gasOf[at] += gas;
         }
-        plume.dustFallen.cells[cell] += ash;
-        plume.fallen.cells[cell] += ash;
-        plume.fallRate.cells[cell] += ash / AirStep;
-        plume.falling = plume.falling || ash > 0;
-        ashFallen += ash;
-        sulphurFallen += sulphur;
-        const double ashDepth = AshOptics * dustOver, veilDepth = VeilOptics * veilOver;
-        plume.depth.cells[cell] = ashDepth + veilDepth;
-        plume.lowDepth.cells[cell] = low;
-        plume.dimming.cells[cell] = 1.0 - (1.0 - AshDim * (1.0 - std::exp(-ashDepth))) * (1.0 - VeilDim * (1.0 - std::exp(-veilDepth)));
+        plume.falling = plume.falling || ashOf[cell] > 0;
+        ashFallen += ashOf[cell];
+        sulphurFallen += sulphurOf[cell];
+        haze += plume.depth.cells[cell];
     }
     // Once what is left no longer dims anything, it is put down where it floats and the sky is clean.
-    double haze = 0;
-    for (double depth : plume.depth.cells) haze += depth;
     double gas = 0;
-    for (const Field<double>& level : plume.gas) gas += sum(level);
+    for (const double level : gasOf) gas += level;
     plume.aloft = left > 0;
     if (plume.aloft && (haze + VeilOptics * gas) / double(plume.depth.size()) < ClearSky) {
         for (size_t cell = 0; cell < plume.fallen.size(); ++cell) {
@@ -172,17 +192,24 @@ void settle(Atmosphere& atmosphere) {
 }
 
 // Ash that fell this step lies on the snow; snow that fell on it hides it, and it is gone where
-// the pack is gone.
-void soot(Atmosphere& atmosphere) {
+// the pack is gone. Where nothing lies or no snow falls the share left is the ash itself.
+void soot(Atmosphere& atmosphere, Workers& workers) {
     Plume& plume = atmosphere.plume;
-    plume.sooted = false;
-    for (size_t cell = 0; cell < plume.onSnow.size(); ++cell) {
-        const double lying = atmosphere.snow.cells[cell] > 0
-                                 ? (plume.onSnow.cells[cell] + plume.fallRate.cells[cell] * AirStep) * std::exp(-atmosphere.snowRate.cells[cell] * AirStep / BuryingSnow)
-                                 : 0.0;
-        plume.onSnow.cells[cell] = lying >= TraceAsh ? lying : 0.0;
-        plume.sooted = plume.sooted || lying >= TraceAsh;
-    }
+    std::atomic<bool> sooted{false};
+    workers.parallelFor(AirCells, [&](int begin, int end) {
+        bool any = false;
+        for (size_t cell = size_t(begin) * AirCells; cell < size_t(end) * AirCells; ++cell) {
+            double lying = 0.0;
+            if (atmosphere.snow.cells[cell] > 0) {
+                const double ash = plume.onSnow.cells[cell] + plume.fallRate.cells[cell] * AirStep, burying = atmosphere.snowRate.cells[cell];
+                lying = ash == 0 || burying == 0 ? ash : ash * std::exp(-burying * AirStep / BuryingSnow);
+            }
+            plume.onSnow.cells[cell] = lying >= TraceAsh ? lying : 0.0;
+            any = any || lying >= TraceAsh;
+        }
+        if (any) sooted.store(true, std::memory_order_relaxed);
+    }, RowGrain);
+    plume.sooted = sooted.load(std::memory_order_relaxed);
 }
 
 } // namespace
@@ -210,7 +237,7 @@ void stepPlume(Atmosphere& atmosphere, Workers& workers) {
         if (seconds > 0) emit(atmosphere, source, seconds);
     }
     if (!plume.aloft) {
-        soot(atmosphere);
+        soot(atmosphere, workers);
         return;
     }
 
@@ -230,8 +257,8 @@ void stepPlume(Atmosphere& atmosphere, Workers& workers) {
             }
         }
     });
-    settle(atmosphere);
-    soot(atmosphere);
+    settle(atmosphere, workers);
+    soot(atmosphere, workers);
 }
 
 } // namespace derivean::sim
