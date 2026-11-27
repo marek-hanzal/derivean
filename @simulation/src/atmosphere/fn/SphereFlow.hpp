@@ -1,6 +1,7 @@
 #pragma once
 
 #include "atmosphere/type/SphereFlow.hpp"
+#include "atmosphere/type/SphereForcing.hpp"
 #include "atmosphere/type/SphereStencil.hpp"
 #include "geometry/type/SphereGrid.hpp"
 
@@ -42,15 +43,14 @@ void setStep(SphereFlow& flow, double step);
 // step (setStep not called) it returns false and does nothing.
 [[nodiscard]] bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson);
 
-// The largest share of a cell's content the fluxes take out of it in `step` (the outflow Courant
-// number summed over its edges). The tests step at 0.4 (flow) and 0.45 (tracer).
-double outflowCourant(const SphereGrid& grid, const std::vector<double>& flux, double step);
-
-// Moves a passive tracer (amount per area) one forward step with the edge fluxes: upwind plus a
-// van Leer-limited (van Leer 1974) Lax–Wendroff correction along the grid line (Sweby 1984), so the
-// area integral is kept to rounding and a uniform tracer stays uniform; below Courant 0.5 the tests
-// see no value leave the range it started in.
-void advectTracer(const SphereGrid& grid, const SphereStencil& stencil, const std::vector<double>& flux, double step,
-                  std::vector<double>& tracer, std::vector<double>& work);
+// The same step with the closures' forcing (SphereForcing; Codex DREV-CLAUDE-007-01 point 1). Over
+// the span s (2Δt, or Δt in a forward step) the level before (ζₙ in a forward step) takes
+// x = before + s · (advection + tendency), friction keeps keep = 1 / (1 + s · r) of it, and the area
+// mean is taken out where it is kept: next = keep · (x − c), c = Σ A keep x / Σ A keep, so
+// Σ A next = 0 to rounding whatever r and the tendency are. Then the filter and the inversion as
+// above; both time levels keep a zero mean. A forcing with both vectors empty is the step above, bit
+// for bit; one with a value not finite, or a rate below zero, is refused (false, nothing changed).
+[[nodiscard]] bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
+                                  const SphereForcing& forcing);
 
 } // namespace derivean::sim

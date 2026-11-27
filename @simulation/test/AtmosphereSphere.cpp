@@ -233,6 +233,8 @@ void testAtmosphereSphere() {
     checkTracer();
     checkDrift();
     checkStep();
+    checkForcing();
+    checkHour();
     checkEddyBand();
     checkLatitudeBands();
 }

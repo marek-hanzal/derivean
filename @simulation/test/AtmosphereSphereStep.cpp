@@ -8,6 +8,7 @@
 #include "atmosphere/fn/SphereFlowGuess.hpp"
 #include "atmosphere/fn/SphereOperators.hpp"
 #include "atmosphere/fn/SpherePoisson.hpp"
+#include "atmosphere/fn/SphereTransport.hpp"
 #include "atmosphere/fn/StencilMatrix.hpp"
 
 using namespace derivean::sim;

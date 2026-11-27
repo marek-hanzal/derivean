@@ -79,17 +79,6 @@ void tendencyOf(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& s
     for (int c = 0; c < grid.cells; ++c) tendency[size_t(c)] /= grid.area[size_t(c)];
 }
 
-// The van Leer limiter (van Leer 1974) of the ratio r of the upstream to the local difference, times
-// the local difference: φ(r) · local = 2 · upstream · local / (upstream + local), zero where they
-// differ in sign, with one division instead of the ratio's two. It is formed as 2 · upstream · (local /
-// (upstream + local)), a share in (0, 1): the product itself falls below the normal range in a
-// tracer's tail (differences of 1e-165) and, rounded there, let the tracer dip below zero.
-double limitedDifference(double upstream, double local) {
-    if (upstream * local <= 0) return 0;
-    const double share = local / (upstream + local);
-    return 2 * upstream * share;
-}
-
 } // namespace
 
 double rotationRateAt(double age) { return 2 * std::numbers::pi / deepTimeAt(age).siderealDay; }
@@ -124,6 +113,66 @@ void setStep(SphereFlow& flow, double step) {
     restart(flow);
 }
 
+namespace {
+
+// Whether a forcing can be applied: its vectors empty or one value per cell, every value finite and
+// every friction rate at least zero.
+bool admissible(const SphereForcing& forcing, size_t cells) {
+    if (!forcing.tendency.empty()) {
+        if (forcing.tendency.size() != cells) return false;
+        for (double t : forcing.tendency)
+            if (!std::isfinite(t)) return false;
+    }
+    if (!forcing.friction.empty()) {
+        if (forcing.friction.size() != cells) return false;
+        for (double r : forcing.friction)
+            if (!(r >= 0 && std::isfinite(r))) return false;
+    }
+    return true;
+}
+
+// Into flow.trialVorticity, the forced level next = keep · (x − c) of stepSphereFlow with a forcing.
+// The products are statements of their own, so neither platform fuses them (docs/windows.md).
+void forcedLevel(SphereFlow& flow, const SphereGrid& grid, const SphereForcing& forcing, const std::vector<double>& base, double span) {
+    const size_t n = size_t(grid.cells);
+    const bool pushed = !forcing.tendency.empty(), braked = !forcing.friction.empty();
+    flow.keep.resize(n);
+    double held = 0, weight = 0;
+    for (size_t c = 0; c < n; ++c) {
+        const double total = pushed ? flow.tendency[c] + forcing.tendency[c] : flow.tendency[c];
+        const double change = span * total;
+        const double x = base[c] + change;
+        double keep = 1;
+        if (braked) {
+            const double brake = span * forcing.friction[c];
+            keep = 1 / (1 + brake);
+        }
+        flow.trialVorticity[c] = x;
+        flow.keep[c] = keep;
+        const double kept = grid.area[c] * keep;
+        const double content = kept * x;
+        held += content;
+        weight += kept;
+    }
+    const double centre = held / weight;
+    for (size_t c = 0; c < n; ++c) {
+        const double off = flow.trialVorticity[c] - centre;
+        flow.trialVorticity[c] = flow.keep[c] * off;
+    }
+}
+
+// The candidate's first guess and inversion, then the candidate becomes the state.
+bool finishStep(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson) {
+    const bool withProduct = guessStream(flow, grid, poisson);
+    if (!invertTrial(flow, grid, stencil, poisson, withProduct)) return false;
+    acceptTrial(flow);
+    std::swap(flow.before, flow.trialBefore);
+    flow.started = true;
+    return true;
+}
+
+} // namespace
+
 bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson) {
     if (!(flow.step > 0)) return false;   // also NaN
     const double step = flow.step;
@@ -144,45 +193,30 @@ bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStenci
             flow.trialVorticity[c] = next - (1 - FilterSplit) * curve;
         }
     }
-    const bool withProduct = guessStream(flow, grid, poisson);
-    if (!invertTrial(flow, grid, stencil, poisson, withProduct)) return false;
-    acceptTrial(flow);
-    std::swap(flow.before, flow.trialBefore);
-    flow.started = true;
-    return true;
+    return finishStep(flow, grid, stencil, poisson);
 }
 
-double outflowCourant(const SphereGrid& grid, const std::vector<double>& flux, double step) {
-    double worst = 0;
-    for (int c = 0; c < grid.cells; ++c) {
-        double out = 0;
-        for (int e : grid.edges[size_t(c)]) {
-            const double leaving = grid.edge[size_t(e)].left == c ? flux[size_t(e)] : -flux[size_t(e)];
-            out += std::max(0.0, leaving);
+bool stepSphereFlow(SphereFlow& flow, const SphereGrid& grid, const SphereStencil& stencil, SpherePoisson& poisson,
+                    const SphereForcing& forcing) {
+    if (forcing.tendency.empty() && forcing.friction.empty()) return stepSphereFlow(flow, grid, stencil, poisson);
+    if (!(flow.step > 0) || !admissible(forcing, size_t(grid.cells))) return false;
+    const size_t n = size_t(grid.cells);
+    tendencyOf(flow, grid, stencil, flow.vorticity, flow.tendency);
+    flow.trialVorticity.resize(n);
+    flow.trialBefore.resize(n);
+    if (!flow.started) {
+        forcedLevel(flow, grid, forcing, flow.vorticity, flow.step);
+        flow.trialBefore = flow.vorticity;
+    } else {
+        forcedLevel(flow, grid, forcing, flow.before, 2 * flow.step);
+        for (size_t c = 0; c < n; ++c) {
+            const double next = flow.trialVorticity[c];
+            const double curve = 0.5 * FilterStrength * (flow.before[c] - 2 * flow.vorticity[c] + next);
+            flow.trialBefore[c] = flow.vorticity[c] + FilterSplit * curve;
+            flow.trialVorticity[c] = next - (1 - FilterSplit) * curve;
         }
-        worst = std::max(worst, out * step / grid.area[size_t(c)]);
     }
-    return worst;
-}
-
-void advectTracer(const SphereGrid& grid, const SphereStencil& stencil, const std::vector<double>& flux, double step, std::vector<double>& tracer,
-                  std::vector<double>& work) {
-    assert(stencil.behind.size() == flux.size() && stencil.topology.size() == flux.size() && flux.size() == grid.edge.size());
-    work.assign(size_t(grid.cells), 0.0);
-    for (size_t e = 0; e < flux.size(); ++e) {
-        const EdgeTopology& edge = stencil.topology[e];
-        const bool outOfLeft = flux[e] > 0;
-        const int up = outOfLeft ? edge.left : edge.right, down = outOfLeft ? edge.right : edge.left;
-        const int behind = stencil.behind[e][outOfLeft ? 0 : 1];
-        const double local = tracer[size_t(down)] - tracer[size_t(up)];
-        const double upstream = tracer[size_t(up)] - tracer[size_t(behind)];
-        const double courant = std::abs(flux[e]) * step / grid.area[size_t(up)];
-        const double face = tracer[size_t(up)] + 0.5 * limitedDifference(upstream, local) * (1 - courant);
-        const double moved = flux[e] * step * face;
-        work[size_t(edge.left)] -= moved;
-        work[size_t(edge.right)] += moved;
-    }
-    for (int c = 0; c < grid.cells; ++c) tracer[size_t(c)] += work[size_t(c)] / grid.area[size_t(c)];
+    return finishStep(flow, grid, stencil, poisson);
 }
 
 } // namespace derivean::sim

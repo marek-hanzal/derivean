@@ -10,7 +10,8 @@ namespace derivean::sim {
 // carried by the wind of its own stream function, Δψ = ζ, and the planet's rotation enters through
 // the Coriolis parameter f = 2Ω sin φ, so the carried quantity is the absolute vorticity ζ + f
 // (Charney, Fjørtoft & von Neumann 1950). Nothing consumes it yet; S4 adds the closures today's
-// flat-world circulation has (relaxation, friction, eddy growth, damping) on top of this core.
+// flat-world circulation has (relaxation, friction, eddy growth, damping) on top of this core, as a
+// SphereForcing of the step.
 //
 // The state (vorticity, before, stream, flux, started, and the first guess's history: streamBack,
 // streamBackTwo, productBack, productBackTwo, levels) is always one accepted step: a step or a new
@@ -42,9 +43,10 @@ struct SphereFlow {
     // Work space, one call at a time per flow: the candidate state of a step before it is accepted,
     // and the tendency's intermediates. atVertex is shared: tendencyOf fills it with the absolute
     // vorticity at the vertices and reads it, then invertTrial fills it with ψ for the stream flux.
-    // trialProduct: K trialStream when the first guess formed it, K ψₙ while `known`.
+    // trialProduct: K trialStream when the first guess formed it, K ψₙ while `known`. keep: the
+    // forcing's friction factor per cell over the step's span.
     std::vector<double> trialVorticity, trialBefore, trialStream, trialFlux, trialProduct;
-    std::vector<double> tendency, absolute, atVertex;
+    std::vector<double> tendency, absolute, atVertex, keep;
 };
 
 } // namespace derivean::sim
