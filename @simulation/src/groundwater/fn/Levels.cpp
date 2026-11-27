@@ -84,7 +84,8 @@ void spreadLevels(WaterField& field) {
     // Per cell and neighbour: the lower storey's rise along the edge, and the upper storey's sum of
     // gradients over ease that the run multiplies, kept apart so the stand is formed as before.
     std::vector<float> lowerUp(cells * 8), upperFall(cells * 8);
-    std::vector<uint8_t> changed(cells, 1), changedNext(cells);
+    // Per cell and per row: changed in the last sweep. A row none of whose cells or neighbours' cells changed is copied whole.
+    std::vector<uint8_t> changed(cells, 1), changedNext(cells), rowChanged(size_t(size), 1), rowNext(size_t(size), 0);
     field.level.resize(cells * 2);
     for (size_t i = 0; i < cells; ++i) {
         const AquiferColumn& column = field.column[i];
@@ -120,7 +121,16 @@ void spreadLevels(WaterField& field) {
     const auto same = [](float a, float b) { return std::bit_cast<uint32_t>(a) == std::bit_cast<uint32_t>(b); };
     for (int sweep = 0; sweep < LevelSweeps; ++sweep) {
         forRows(field, [&](int begin, int end) {
-            for (int z = begin; z < end; ++z)
+            for (int z = begin; z < end; ++z) {
+                const size_t row = field.index(0, z);
+                if (sweep > 0 && !rowChanged[size_t(z)] && !(z > 0 && rowChanged[size_t(z) - 1]) && !(z + 1 < size && rowChanged[size_t(z) + 1])) {
+                    std::copy_n(field.level.begin() + std::ptrdiff_t(row * 2), size * 2, next.begin() + std::ptrdiff_t(row * 2));
+                    std::copy_n(rise.begin() + std::ptrdiff_t(row), size, riseNext.begin() + std::ptrdiff_t(row));
+                    std::fill_n(changedNext.begin() + std::ptrdiff_t(row), size, uint8_t(0));
+                    rowNext[size_t(z)] = 0;
+                    continue;
+                }
+                uint8_t anyChanged = 0;
                 for (int x = 0; x < size; ++x) {
                     const size_t i = field.index(x, z);
                     bool moved = sweep == 0;
@@ -151,12 +161,16 @@ void spreadLevels(WaterField& field) {
                     next[i * 2 + Lower] = drains ? column.stage : std::max(column.base, reached ? std::min(column.ground, nearest) : lowest);
                     riseNext[i] = drains ? 0.0f : reached ? least : Unreached;
                     changedNext[i] = !same(next[i * 2 + Upper], field.level[i * 2 + Upper]) || !same(next[i * 2 + Lower], field.level[i * 2 + Lower]) || !same(riseNext[i], rise[i]);
+                    anyChanged |= changedNext[i];
                 }
+                rowNext[size_t(z)] = anyChanged;
+            }
         });
         field.level.swap(next);
         rise.swap(riseNext);
         changed.swap(changedNext);
-        if (std::none_of(changed.begin(), changed.end(), [](uint8_t c) { return c != 0; })) break;
+        rowChanged.swap(rowNext);
+        if (std::none_of(rowChanged.begin(), rowChanged.end(), [](uint8_t c) { return c != 0; })) break;
     }
 }
 
