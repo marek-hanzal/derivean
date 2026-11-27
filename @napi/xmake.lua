@@ -1,9 +1,11 @@
 set_xmakever("3.1.2")
 set_project("derivean")
-set_allowedplats("macosx", "linux")
+set_allowedplats("macosx", "windows")
+set_allowedarchs("windows|x64")
 set_languages("cxx20")
 set_exceptions("cxx")
 add_rules("mode.release", "mode.debug")
+if is_plat("windows") then set_toolchains("clang-cl") end
 includes("../@simulation")
 includes("../@engine")
 
@@ -16,6 +18,33 @@ target("derivean")
     -- A thread that is terminated mid-call (a worker at app quit) can no longer take an exception: without
     -- the swallow, node-addon-api throws again out of its own catch and the process aborts.
     add_defines("NAPI_VERSION=8", "NAPI_CPP_EXCEPTIONS", "NODE_API_SWALLOW_UNTHROWABLE_EXCEPTIONS")
+    if is_plat("windows") then
+        -- A Windows DLL resolves every import at link time, so Node-API comes from an import library
+        -- built from node-api-headers' export list. It names node.exe; the import is delayed and
+        -- src/windows/HostImports.cpp binds it to the executable that loads the addon.
+        add_files("src/windows/*.cpp")
+        add_shflags("/DELAYLOAD:node.exe", {force = true})
+        add_syslinks("delayimp")
+        on_config(function (target)
+            target:add("linkdirs", target:autogendir())
+            target:add("links", "node")
+        end)
+        before_link(function (target)
+            local lib = path.join(target:autogendir(), "node.lib")
+            local def = path.join(os.scriptdir(), "node_modules/node-api-headers/def/node_api.def")
+            -- The toolchain's librarian: link.exe -lib by default; with LLVM's tools xmake picks
+            -- llvm-ar, which takes no .def, so its sibling llvm-lib is used.
+            local program, name = target:tool("ar")
+            local argv = {"/nologo", "/machine:x64", "/def:" .. def, "/out:" .. lib}
+            if name == "link" then table.insert(argv, 1, "-lib") end
+            if name == "llvm_ar" or name == "ar" then program = program:gsub("llvm%-ar", "llvm-lib") end
+            local envs = {}
+            for _, toolchain in ipairs(target:toolchains()) do envs = os.joinenvs(envs, toolchain:runenvs()) end
+            os.mkdir(path.directory(lib))
+            vprint("import library %s (%s)", program, tostring(name))
+            os.vrunv(program, argv, {envs = envs})
+        end)
+    end
     -- Stamps the addon with the tree it was linked from, next to it as derivean.node.json, on every
     -- link: the build time, the HEAD commit, whether the sources it links (@simulation, @engine,
     -- @napi) differ from it, and a SHA-256 over their diff and their untracked files. From the root:

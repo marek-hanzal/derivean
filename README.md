@@ -2,9 +2,9 @@
 
 A desktop voxel physics sandbox on a simulated planet. The launcher takes a seed, the planet's age, and an optional spawn position, and generates that world before you enter it.
 
-## Run on macOS (Apple Silicon)
+## Run on macOS (Apple Silicon) or Windows (x86-64)
 
-Install mise and the Xcode Command Line Tools, then run these commands from the repository root.
+DeRivean supports macOS and Windows; Linux is not supported. On macOS install mise and the Xcode Command Line Tools. On Windows install mise, Git and Visual Studio 2022 Build Tools with the C++ workload, on a processor with AVX2; [Windows](docs/windows.md) says why and what the build does there. Then run these commands from the repository root.
 
 ```sh
 mise trust --all
@@ -12,7 +12,7 @@ mise run setup
 mise run play
 ```
 
-The first build downloads Jolt, Electron, and JavaScript dependencies. Run `mise run check` to build the game, type-check the renderer, and run the native and bridge tests. See the [architecture](docs/architecture.md) for module ownership.
+The first build downloads Jolt, Electron, and JavaScript dependencies. Run `mise run check` to build the game, type-check the renderer, and run the native and bridge tests; on Windows not all of them pass yet, see [Windows](docs/windows.md#determinism). See the [architecture](docs/architecture.md) for module ownership.
 
 | Input | Action |
 | --- | --- |
