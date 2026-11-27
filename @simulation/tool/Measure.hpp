@@ -38,3 +38,4 @@ int measureFuture(const Arguments& arguments);        // MeasureWorld.cpp
 int measurePerformance(const Arguments& arguments);   // MeasurePerformance.cpp
 int measureEarth(const Arguments& arguments);         // MeasureEarth.cpp
 int measureFingerprint(const Arguments& arguments);   // MeasureFingerprint.cpp
+int measureSphere(const Arguments& arguments);        // MeasureSphere.cpp

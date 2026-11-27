@@ -68,6 +68,14 @@ SphereClosures makeSphereClosures(const SphereGrid& grid, const SpherePoisson& p
     return closures;
 }
 
+void startEddies(SphereClosures& closures, const SphereFlow& flow) {
+    if (closures.band.memberCell.size() != flow.vorticity.size() || closures.bands.first.size() != flow.vorticity.size())
+        throw std::invalid_argument("the eddy band or the bands are not of the flow's grid");
+    filterEddyBand(closures.band, flow.vorticity, closures.staged);
+    closures.eddy.swap(closures.staged);
+    closures.since = 0;
+}
+
 void eddyFeeding(SphereClosures& closures, const SphereGrid& grid, const std::vector<double>& eddy, std::vector<double>& feeding) {
     const size_t cells = eddy.size(), count = closures.bands.area.size();
     closures.square.resize(cells);

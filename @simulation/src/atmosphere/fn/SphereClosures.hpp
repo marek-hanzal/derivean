@@ -39,6 +39,14 @@ inline constexpr double JetBalance = 1e-12;
 // checked); `eddy` and `feeding` are neither the closures' work space nor each other.
 void eddyFeeding(SphereClosures& closures, const SphereGrid& grid, const std::vector<double>& eddy, std::vector<double>& feeding);
 
+// The eddies of a flow's start (Codex DREV-CLAUDE-010-03, point 3): the band of its ζ, published at
+// once with `since` zero, as the flat world's settleCirculation filters its first vorticity, so the
+// first windows grow eddies rather than waiting eddyEvery for the first refresh. Called once where the
+// starting state is built, before the first window, whatever the cadence; `staged` is its work space
+// as a refresh's. Throws std::invalid_argument, changing nothing, when the band or the bands are not
+// of the flow's grid (as closuresFit asks of both).
+void startEddies(SphereClosures& closures, const SphereFlow& flow);
+
 // The forcing of the next step from the level it starts from (baseLevel): per band
 // (jet − ⟨level⟩) / relaxation spread back to the cells, plus the eddies' tendency (eddyFeeding of
 // the published eddies), plus the damping with `poisson`'s K; the friction rates. Throws

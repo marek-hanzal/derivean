@@ -34,7 +34,8 @@ struct SphereClosures {
     double since{};                     // s of windows taken since that refresh
     double eddyEvery{};                 // s between refreshes
     // Work space, one call at a time: band means; the eddies' squares, envelope and growth; the
-    // refresh a window holds before it is published; the eddies' tendency of the window.
+    // refresh a window holds before it is published (and startEddies' before it publishes); the
+    // eddies' tendency of the window.
     std::vector<double> mean, square, feed, staged, feeding;
 };
 
