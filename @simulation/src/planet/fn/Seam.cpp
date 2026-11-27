@@ -37,9 +37,8 @@ double unionOverPiece(Globe& globe, int k, const std::vector<int>& pieces) {
 size_t suture(Globe& globe, Band& band, const Substep& substep) {
     const SphereGrid& grid = *globe.grid;
     PlanPieces plan{{}, {}, std::vector<int>(globe.pieces.size(), -1)};
-    std::vector<int> over, receivers, cells, work, scratch;
+    std::vector<int> over, receivers, cells;
     std::vector<double> overlap;
-    std::vector<CellWeight> weights;
     std::vector<std::vector<int>> cellsOf;   // per candidate
     // The pieces coupled at the substep's start, then those born in it (planet/fn/Band.hpp).
     const size_t coupled = band.weightStart.size() - 1;
@@ -51,20 +50,20 @@ size_t suture(Globe& globe, Band& band, const Substep& substep) {
         if (b < coupled) {
             for (int32_t s = band.weightStart[b]; s < band.weightStart[b + 1]; ++s) cells.push_back(band.weights[size_t(s)].cell);
         } else {
-            exactWeights(grid, piece, weights, scratch, work);
-            for (const CellWeight& w : weights) cells.push_back(w.cell);
+            for (int32_t s = band.bornStart[b - coupled]; s < band.bornStart[b - coupled + 1]; ++s) cells.push_back(band.bornWeights[size_t(s)].cell);
         }
         bool deciding = false;
+        for (const int cell : cells) deciding = deciding || band.decide[size_t(cell)];
+        if (!deciding) continue;
         over.clear();
         for (const int cell : cells) {
-            deciding = deciding || band.decide[size_t(cell)];
             forLive(band, cell, [&](int l, double) {
                 if (l != k && globe.pieces[size_t(l)].plate == piece.plate && !tiles(globe.pieces[size_t(l)], piece) &&
                     !listed(over, l))
                     over.push_back(l);
             });
         }
-        if (!deciding || over.empty()) continue;
+        if (over.empty()) continue;
         std::sort(over.begin(), over.end(), [&](int a, int c) { return globe.pieces[size_t(a)].key < globe.pieces[size_t(c)].key; });
         const PreparedPolygon footprint = preparedOf(footprintOf(grid, piece));
         receivers.clear(), overlap.clear();
@@ -186,7 +185,9 @@ bool closeSeams(Globe& globe, Band& band, int step, int phase, Workers* workers)
     // its half, so both repeat until neither changes anything (a few rounds; bounded for safety).
     int round = 0;
     for (; round < SeamRounds; ++round) {
-        coupleBand(globe, band, workers);   // the last round's fossils become candidates of this one's sutures
+        // The last round's fossils become candidates of this one's sutures; nothing moves between rounds.
+        if (round == 0) coupleBand(globe, band, workers);
+        else recoupleBand(band);
         if (sutureBand(globe, band, seam) + fill(globe, band, seam, round, phase * SeamKeys) == 0) break;
     }
     const bool settled = round < SeamRounds;

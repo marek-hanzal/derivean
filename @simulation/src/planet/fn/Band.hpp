@@ -34,6 +34,9 @@ struct Band {
     // The pieces born in the current substep, with their exact overlaps per region cell, so every later
     // birth of the substep reads them (Codex DREV-CLAUDE-005-01); coupleBand folds them into the lists.
     std::vector<std::vector<PieceWeight>> born;   // per region cell
+    // The same overlaps per birth, in birth order: band piece weightStart.size() − 1 + i is birth i.
+    std::vector<int32_t> bornStart{0};
+    std::vector<CellWeight> bornWeights;
     // The openness of lattice slots inside one plate (planet/fn/Interior.hpp) as last measured, per
     // piece and edge, valid while its stamp is `slotGeneration`: a new substep, a new piece and a
     // consumed one each start a new generation, so nothing measured before them is read.
@@ -57,6 +60,10 @@ void markBandAt(const Globe& globe, int sweep, const std::vector<int32_t>& cells
 
 // Exact overlaps of every live band piece as the pieces stand; lists per region cell.
 void coupleBand(const Globe& globe, Band& band, Workers* workers = nullptr);
+
+// coupleBand when no band piece has moved since the last one (closeSeams' rounds): the overlaps of the
+// pieces coupled then are kept and the births' are taken from joinBand, the same bits as coupleBand.
+void recoupleBand(Band& band);
 
 // The rings round a point within which every cell that a footprint centred there can reach lies: a
 // footprint reaches at most its cell's largest chord to a corner from its centre, and two of those plus

@@ -17,6 +17,27 @@ namespace {
 constexpr int BandGrain = 64;   // band pieces a pool range takes at least
 
 // Widens a set of cells by `rings` rings, in place; `cells` lists the set.
+// The band's lists per region cell from its pieces' overlaps, a new generation of slots, no births.
+void listBand(Band& band) {
+    const size_t n = band.pieces.size();
+    band.listStart.assign(band.regionCells.size() + 1, 0);
+    for (const CellWeight& w : band.weights)
+        if (band.region[size_t(w.cell)] >= 0) ++band.listStart[size_t(band.region[size_t(w.cell)]) + 1];
+    for (size_t r = 0; r < band.regionCells.size(); ++r) band.listStart[r + 1] += band.listStart[r];
+    band.lists.resize(size_t(band.listStart.back()));
+    std::vector<int32_t> fill(band.listStart.begin(), band.listStart.end() - 1);
+    for (size_t b = 0; b < n; ++b)
+        for (int32_t s = band.weightStart[b]; s < band.weightStart[b + 1]; ++s) {
+            const CellWeight& w = band.weights[size_t(s)];
+            const int32_t r = band.region[size_t(w.cell)];
+            if (r >= 0) band.lists[size_t(fill[size_t(r)]++)] = {band.pieces[b], w.area};
+        }
+    band.born.assign(band.regionCells.size(), {});
+    band.bornStart.assign(1, 0);
+    band.bornWeights.clear();
+    ++band.slotGeneration;
+}
+
 void widen(const std::vector<CellRing>& rings, std::vector<uint8_t>& set, std::vector<int32_t>& cells, int count) {
     std::vector<int32_t> frontier(cells), next;
     for (int ring = 0; ring < count; ++ring) {
@@ -141,20 +162,27 @@ void coupleBand(const Globe& globe, Band& band, Workers* workers) {
     for (size_t b = 0; b < n; ++b) band.weightStart[b + 1] = band.weightStart[b] + counts[b];
     band.weights.resize(size_t(band.weightStart[n]));
     for (size_t b = 0; b < n; ++b) std::copy_n(slots.begin() + std::ptrdiff_t(b * CouplingSlots), counts[b], band.weights.begin() + band.weightStart[b]);
-    band.listStart.assign(band.regionCells.size() + 1, 0);
-    for (const CellWeight& w : band.weights)
-        if (band.region[size_t(w.cell)] >= 0) ++band.listStart[size_t(band.region[size_t(w.cell)]) + 1];
-    for (size_t r = 0; r < band.regionCells.size(); ++r) band.listStart[r + 1] += band.listStart[r];
-    band.lists.resize(size_t(band.listStart.back()));
-    std::vector<int32_t> fill(band.listStart.begin(), band.listStart.end() - 1);
-    for (size_t b = 0; b < n; ++b)
-        for (int32_t s = band.weightStart[b]; s < band.weightStart[b + 1]; ++s) {
-            const CellWeight& w = band.weights[size_t(s)];
-            const int32_t r = band.region[size_t(w.cell)];
-            if (r >= 0) band.lists[size_t(fill[size_t(r)]++)] = {band.pieces[b], w.area};
+    listBand(band);
+}
+
+void recoupleBand(Band& band) {
+    const size_t coupled = band.weightStart.size() - 1, n = band.pieces.size();
+    std::vector<int32_t> start(n + 1, 0);
+    std::vector<CellWeight> weights;
+    weights.reserve(band.weights.size() + band.bornWeights.size());
+    for (size_t b = 0; b < n; ++b) {
+        if (!band.dead[size_t(band.pieces[b])]) {
+            const bool born = b >= coupled;
+            const std::vector<CellWeight>& from = born ? band.bornWeights : band.weights;
+            const int32_t begin = born ? band.bornStart[b - coupled] : band.weightStart[b];
+            const int32_t end = born ? band.bornStart[b - coupled + 1] : band.weightStart[b + 1];
+            require(end - begin <= CouplingSlots, "a band footprint meets too many cells", double(end - begin));
+            weights.insert(weights.end(), from.begin() + begin, from.begin() + end);
         }
-    band.born.assign(band.regionCells.size(), {});
-    ++band.slotGeneration;
+        start[b + 1] = int32_t(weights.size());
+    }
+    band.weightStart = std::move(start), band.weights = std::move(weights);
+    listBand(band);
 }
 
 std::vector<int32_t> nearBand(const Globe& globe, const Band& band) {
@@ -212,7 +240,9 @@ void joinBand(const Globe& globe, Band& band, int piece) {
         const int32_t r = band.region[size_t(w.cell)];
         require(r >= 0, "a new footprint reaches out of the band's region", double(w.cell));
         band.born[size_t(r)].push_back({piece, w.area * crust.area / sum});
+        band.bornWeights.push_back({w.cell, w.area * crust.area / sum});
     }
+    band.bornStart.push_back(int32_t(band.bornWeights.size()));
 }
 
 BandList listOf(const Band& band, int cell) {
