@@ -4,6 +4,7 @@
 #include "nature/type/Mailbox.hpp"
 
 #include <array>
+#include <deque>
 #include <memory>
 #include <optional>
 #include <unordered_map>
@@ -34,7 +35,7 @@ struct CubeLevel {
     bool active{};
     Cell centre{};                                         // column {x, 0, z} the eye was in when the level was planned
     std::unordered_map<Cell, CubeSlot, CellHash> slots;    // every column the level wants, by {x, 0, z}
-    std::vector<Cell> todo;                                // columns to build, the nearest last
+    std::deque<Cell> todo;                                 // columns to build, the nearest last; stale ones join at the front
     size_t wanted{};                                       // columns reaching into the level's box at full reach and its band
     size_t shown{};                                        // columns the renderer holds
     size_t held{};                                         // of the wanted columns, those the renderer holds

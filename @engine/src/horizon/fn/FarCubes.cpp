@@ -57,15 +57,19 @@ void plan(FarCubes& far, int index, Position eye, CubeDelta& delta) {
         forget(far, level, slot->second, delta);
         slot = level.slots.erase(slot);
     }
-    level.todo.clear();
+    // What is missing shrinks a box; what is only stale waits behind it. Each column's place in that
+    // order is read once, as it is listed.
+    using Order = std::pair<bool, int>;
+    std::vector<std::pair<Order, Cell>> listed;
     for (int z = centre.z - load; z <= centre.z + load; ++z)
         for (int x = centre.x - load; x <= centre.x + load; ++x) {
             const CubeSlot& slot = level.slots[{x, 0, z}];
-            if ((slot.shown.empty() || slot.stale) && !slot.built && !slot.ticket) level.todo.push_back({x, 0, z});
+            if ((slot.shown.empty() || slot.stale) && !slot.built && !slot.ticket)
+                listed.push_back({{slot.shown.empty(), -ringOf({x, 0, z}, centre)}, {x, 0, z}});
         }
-    // What is missing shrinks a box; what is only stale waits behind it.
-    const auto later = [&](Cell chunk) { return std::pair(level.slots.at(chunk).shown.empty(), -ringOf(chunk, centre)); };
-    std::sort(level.todo.begin(), level.todo.end(), [&](Cell a, Cell b) { return later(a) < later(b); });
+    std::sort(listed.begin(), listed.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+    level.todo.clear();
+    for (const auto& [order, chunk] : listed) level.todo.push_back(chunk);
 }
 
 void receive(FarCubes& far) {
@@ -100,7 +104,7 @@ void compare(FarCubes& far, const sim::World& world) {
         if (slot == level.slots.end() || slot->second.shown.empty() || slot->second.ticket || slot->second.built) continue;
         if (slot->second.stale || cubeDetail(world, key) == slot->second.detail) continue;
         slot->second.stale = true;
-        level.todo.insert(level.todo.begin(), {key.x, 0, key.z});
+        level.todo.push_front({key.x, 0, key.z});
     }
 }
 
